@@ -1,20 +1,51 @@
-# OS
-.DS_Store
-Thumbs.db
-
-# Editors
-.vscode/
-.idea/
-*.swp
-
-# Node / build
-node_modules/
-dist/
+# =======================
+# Flutter
+# =======================
+.dart_tool/
+.packages
+.pub/
 build/
+*.iml
+*.lock
+flutter_*.log
+*.dart_tool
 
-# Secrets / Firebase (لاحقاً)
-.env
-*.local
+# =======================
+# Firebase
+# =======================
 google-services.json
 GoogleService-Info.plist
 firebase-debug.log
+.firebase/
+.env
+*.local
+
+# =======================
+# OS
+# =======================
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# =======================
+# Editors
+# =======================
+.vscode/
+.idea/
+*.code-workspace
+
+# =======================
+# Node / Cloud Functions
+# =======================
+node_modules/
+functions/node_modules/
+
+# =======================
+# Misc
+# =======================
+*.log
+*.pid
+*.seed
+*.pid.lock
+coverage/
