@@ -53,11 +53,13 @@ class MyOffersScreen extends StatelessWidget {
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 15),
-                      decoration: BoxDecoration(
-                        color: AppTheme.surfaceBlack,
-                        borderRadius: BorderRadius.circular(0, bottomRadius: Radius.circular(20)),
-                        border: Border(bottom: BorderSide(color: AppTheme.primaryGold.withOpacity(0.3))),
+                    decoration: BoxDecoration(
+                      color: AppTheme.surfaceBlack,
+                      borderRadius: const BorderRadius.vertical(
+                        bottom: Radius.circular(20),
                       ),
+                      border: Border(bottom: BorderSide(color: AppTheme.primaryGold.withOpacity(0.3))),
+                    ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
