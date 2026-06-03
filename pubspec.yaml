@@ -11,11 +11,11 @@ dependencies:
     sdk: flutter
 
   # Firebase
-  firebase_core: ^2.24.2
+  firebase_core: ^2.32.0
   firebase_auth: ^4.16.0
   cloud_firestore: ^4.14.0
   firebase_storage: ^11.6.0
-  firebase_messaging: ^14.7.15
+  firebase_messaging: ^14.9.4
   cloud_functions: ^4.6.0
 
   # State Management
@@ -24,10 +24,10 @@ dependencies:
   # UI & Utilities
   cached_network_image: ^3.3.0
   image_picker: ^1.0.7
-  flutter_image_compress: ^2.1.0
+  flutter_image_compress: ^2.3.0
   intl: ^0.19.0
   url_launcher: ^6.2.2
-  share_plus: ^7.2.1
+  share_plus: ^9.0.0
   flutter_local_notifications: ^17.0.0
 
   # Navigation
