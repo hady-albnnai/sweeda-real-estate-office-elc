@@ -6,14 +6,16 @@ import 'package:sweeda_real_estate_office_elc/providers/auth_provider.dart';
 import 'package:sweeda_real_estate_office_elc/providers/config_provider.dart';
 import 'package:sweeda_real_estate_office_elc/providers/offer_provider.dart';
 import 'package:sweeda_real_estate_office_elc/providers/request_provider.dart';
-import 'package:sweeda_// Fix the imports and class name
 import 'package:sweeda_real_estate_office_elc/providers/appointment_provider.dart';
 import 'package:sweeda_real_estate_office_elc/providers/notification_provider.dart';
 import 'package:sweeda_real_estate_office_elc/providers/payment_provider.dart';
 import 'package:sweeda_real_estate_office_elc/providers/admin_provider.dart';
 
 void main() {
-  testWidgets('App should load', (WidgetTester tester) async {
+  // Standard flutter test setup
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets('Basic App Load Test', (WidgetTester tester) async {
     await tester.pumpWidget(
       MultiProvider(
         providers: [
@@ -30,6 +32,8 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    
+    // We check if MyApp is successfully rendered
     expect(find.byType(MyApp), findsOneWidget);
   });
 }

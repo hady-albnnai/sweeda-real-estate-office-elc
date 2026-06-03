@@ -63,13 +63,8 @@ class AppTheme {
         ),
         labelStyle: const TextStyle(color: textGrey),
       ),
-      cardTheme: CardTheme(
-        color: surfaceBlack,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: primaryGold, width: 0.5),
-        ),
-      ),
+      // Removed cardTheme to avoid version conflict, 
+      // we will handle card styling inside the widgets themselves for stability.
     );
   }
 }
