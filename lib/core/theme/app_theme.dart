@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // Luxury Color Palette
-  static const Color primaryGold = Color(0xFFD4AF37); // Royal Gold
-  static const Color deepBlack = Color(0xFF121212);   // Charcoal Black
-  static const Color lightGold = Color(0xFFF9E4B7);   // Soft Gold for accents
-  static const Color surfaceBlack = Color(0xFF1E1E1E); // Slightly lighter black for cards
+  static const Color primaryGold = Color(0xFFD4AF37);
+  static const Color deepBlack = Color(0xFF121212);
+  static const Color lightGold = Color(0xFFF9E4B7);
+  static const Color surfaceBlack = Color(0xFF1E1E1E);
   static const Color errorRed = Color(0xFFCF6679);
   static const Color textWhite = Color(0xFFF5F5F5);
   static const Color textGrey = Color(0xFFB0B0B0);
