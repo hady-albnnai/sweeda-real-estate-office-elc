@@ -2,105 +2,110 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
+import 'package:go_router/go_router.dart';
 
-/// شاشة تسجيل الدخول — إدخال رقم الموبايل
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
-}
-
-class _LoginScreenState extends State<LoginScreen> {
-  final _phoneController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-
-  @override
-  void dispose() {
-    _phoneController.dispose();
-    super.dispose();
-  }
-
-  void _sendOTP() {
-    if (_formKey.currentState!.validate()) {
-      final phone = '${_phoneController.text}';
-      context.read<AuthProvider>().sendOTP(phone);
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    final TextEditingController phoneController = TextEditingController();
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('تسجيل الدخول'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.phone_android,
-                size: 80,
-                color: AppTheme.primaryColor,
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'أدخل رقم موبايلك للتسجيل',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'سيتم إرسال رمز تحقق إلى رقمك',
-                style: TextStyle(color: Colors.grey),
-              ),
-              const SizedBox(height: 32),
-              TextFormField(
-                controller: _phoneController,
-                keyboardType: TextInputType.phone,
-                textDirection: TextDirection.ltr,
-                decoration: const InputDecoration(
-                  labelText: 'رقم الموبايل',
-                  hintText: '09XXXXXXXX',
-                  prefixText: '+963 ',
-                  prefixStyle: TextStyle(fontSize: 16),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'الرجاء إدخال رقم الموبايل';
-                  }
-                  if (value.length < 9) {
-                    return 'رقم الموبايل غير صحيح';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 24),
-              Consumer<AuthProvider>(
-                builder: (context, auth, _) {
-                  return SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: auth.isLoading ? null : _sendOTP,
-                      child: auth.isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text('إرسال رمز التحقق', style: TextStyle(fontSize: 16)),
-                    ),
-                  );
-                },
-              ),
-            ],
+      body: Stack(
+        children: [
+          // Background decoration
+          Positioned(
+            top: -100,
+            right: -100,
+            child: CircleAvatar(
+              radius: 150,
+              backgroundColor: AppTheme.primaryGold.withOpacity(0.1),
+            ),
           ),
-        ),
+          Padding(
+            padding: const EdgeInsets.all(30.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Logo/Header
+                Center(
+                  child: Column(
+                    children: [
+                      Image.asset(
+                        'assets/images/logo.png',
+                        height: 150,
+                      ),
+                      const SizedBox(height: 20),
+                      const Text(
+                        'مرحباً بك مجدداً',
+                        style: TextStyle(
+                          color: AppTheme.textWhite,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Text(
+                        'سجل دخولك للمتابعة',
+                        style: TextStyle(color: AppTheme.textGrey, fontSize: 16),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 50),
+                // Phone Input
+                const Text(
+                  'رقم الموبايل',
+                  style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: phoneController,
+                  keyboardType: TextInputType.phone,
+                  textAlign: TextAlign.left,
+                  style: const TextStyle(color: AppTheme.textWhite),
+                  decoration: InputDecoration(
+                    hintText: '09XXXXXXXX',
+                    prefixIcon: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Text(
+                        '+963',
+                        style: const TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 30),
+                // Login Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 55,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      if (phoneController.text.length == 10) {
+                        bool success = await authProvider.sendOTP(phoneController.text);
+                        if (success) {
+                          context.push('/otp');
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('حدث خطأ في إرسال الرمز')),
+                          );
+                        }
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('يرجى إدخال رقم هاتف صحيح')),
+                        );
+                      }
+                    },
+                    child: const Text('إرسال رمز التحقق'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
