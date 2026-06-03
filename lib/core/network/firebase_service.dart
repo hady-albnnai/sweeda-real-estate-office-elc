@@ -7,12 +7,12 @@ class FirebaseService {
   factory FirebaseService() => _instance;
   FirebaseService._internal();
 
-  // Renamed to init to match all calls in the app
-  Future<void> init() async {
+  // Unified method name to 'initialize' to resolve all conflicts
+  Future<void> initialize() async {
     try {
       await Firebase.initializeApp();
     } catch (e) {
-      print('Firebase init error: $e');
+      print('Firebase initialization error: $e');
     }
   }
 
