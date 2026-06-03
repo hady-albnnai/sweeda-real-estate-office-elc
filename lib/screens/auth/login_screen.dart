@@ -24,6 +24,14 @@ class LoginScreen extends StatelessWidget {
               backgroundColor: AppTheme.primaryGold.withOpacity(0.1),
             ),
           ),
+          Positioned(
+            bottom: -80,
+            left: -80,
+            child: CircleAvatar(
+              radius: 120,
+              backgroundColor: AppTheme.primaryGold.withOpacity(0.05),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.all(30.0),
             child: Column(
@@ -34,9 +42,29 @@ class LoginScreen extends StatelessWidget {
                 Center(
                   child: Column(
                     children: [
-                      Image.asset(
-                        'assets/images/logo.png',
+                      // Logo with dark blended background
+                      Container(
                         height: 150,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.surfaceBlack,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppTheme.primaryGold.withOpacity(0.15),
+                              blurRadius: 20,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        child: Image.asset(
+                          'assets/images/logo.png',
+                          height: 126,
+                          fit: BoxFit.contain,
+                        ),
                       ),
                       const SizedBox(height: 20),
                       const Text(
