@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../models/offer_model.dart';
 import '../../providers/offer_provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../widgets/book_appointment_sheet.dart';
 
 class OfferDetailScreen extends StatelessWidget {
   final String offerId;
@@ -131,16 +132,21 @@ class OfferDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 40),
                   // Action Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 55,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        // Handle booking
-                      },
-                      child: const Text('حجز موعد للمعاينة'),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 55,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (context) => BookAppointmentSheet(offer: offer),
+                          );
+                        },
+                        child: const Text('حجز موعد للمعاينة'),
+                      ),
                     ),
-                  ),
                   const SizedBox(height: 30),
                 ],
               ),

@@ -6,6 +6,7 @@ import '../../screens/visitor/search_screen.dart';
 import '../../screens/auth/login_screen.dart';
 import '../../screens/auth/otp_verification_screen.dart';
 import '../../screens/user/my_offers_screen.dart';
+import '../../screens/user/add_offer_screen.dart';
 import '../../screens/auth/setup_profile_screen.dart';
 
 class AppRouter {
