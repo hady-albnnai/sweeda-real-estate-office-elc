@@ -11,6 +11,7 @@ class AuthProvider with ChangeNotifier {
   User? _user;
   UserModel? _userModel;
   String? _currentUserPhone;
+  String? _verificationId;
   bool _isNewUser = false;
 
   User? get currentUser => _user;
@@ -26,37 +27,44 @@ class AuthProvider with ChangeNotifier {
         phoneNumber: '+963$phone',
         verificationCompleted: (PhoneAuthCredential credential) async {
           await _auth.signInWithCredential(credential);
+          _user = FirebaseAuth.instance.currentUser;
+          await _loadUserData();
         },
         verificationFailed: (FirebaseAuthException e) {
           print('Verification failed: ${e.message}');
         },
         codeSent: (String verificationId, int? resendToken) {
-          // Handle code sent
+          _verificationId = verificationId;
         },
-        codeAutoRetrievalTimeout: (String verificationId) {},
+        codeAutoRetrievalTimeout: (String verificationId) {
+          _verificationId = verificationId;
+        },
       );
       return true;
     } catch (e) {
+      print('sendOTP error: $e');
       return false;
     }
   }
 
   Future<bool> verifyOTP(String code) async {
     try {
-      // Note: In real app, we need verificationId from sendOTP
-      // For simulation/prototype, we'll assume success or use dummy logic
-      // In production, you'd use PhoneAuthProvider.credential(verificationId, smsCode)
-      
-      // Mocking successful login for prototype purposes
-      // await _auth.signInWithCredential(...); 
-      
-      // Simulate user login
-      _user = FirebaseAuth.instance.currentUser; 
-      // This is a stub, real implementation needs the verificationId
-      
+      if (_verificationId == null) {
+        print('verifyOTP error: verificationId is null');
+        return false;
+      }
+
+      final credential = PhoneAuthProvider.credential(
+        verificationId: _verificationId!,
+        smsCode: code,
+      );
+
+      final result = await _auth.signInWithCredential(credential);
+      _user = result.user;
       await _loadUserData();
-      return true;
+      return _user != null;
     } catch (e) {
+      print('verifyOTP error: $e');
       return false;
     }
   }

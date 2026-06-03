@@ -15,14 +15,9 @@ class LoginScreen extends StatelessWidget {
     return Scaffold(
       body: Stack(
         children: [
-          // Background decoration
-          Positioned(
-            top: -100,
-            right: -100,
-            child: CircleAvatar(
-              radius: 150,
-              backgroundColor: AppTheme.primaryGold.withOpacity(0.1),
-            ),
+          // Background dark
+          Container(
+            color: AppTheme.deepBlack,
           ),
           Padding(
             padding: const EdgeInsets.all(30.0),
@@ -34,11 +29,42 @@ class LoginScreen extends StatelessWidget {
                 Center(
                   child: Column(
                     children: [
-                      Image.asset(
-                        'assets/images/logo.png',
-                        height: 150,
+                      Container(
+                        width: 200,
+                        height: 200,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppTheme.primaryGold,
+                            width: 3,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppTheme.primaryGold.withOpacity(0.3),
+                              blurRadius: 20,
+                              spreadRadius: 5,
+                            ),
+                          ],
+                        ),
+                        child: ClipOval(
+                          child: Image.asset(
+                            'assets/images/logo.png',
+                            fit: BoxFit.cover,
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 15),
+                      const Text(
+                        'المكتب العقاري الالكتروني',
+                        style: TextStyle(
+                          color: AppTheme.primaryGold,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 1.5,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 15),
                       const Text(
                         'مرحباً بك مجدداً',
                         style: TextStyle(
