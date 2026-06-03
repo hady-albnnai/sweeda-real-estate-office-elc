@@ -7,8 +7,8 @@ class FirebaseService {
   factory FirebaseService() => _instance;
   FirebaseService._internal();
 
-  // Unified method name to 'initialize' to resolve all conflicts
-  Future<void> initialize() async {
+  // Made static so it can be called as FirebaseService.initialize()
+  static Future<void> initialize() async {
     try {
       await Firebase.initializeApp();
     } catch (e) {
