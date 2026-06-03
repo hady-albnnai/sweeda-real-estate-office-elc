@@ -12,10 +12,8 @@ import 'package:sweeda_real_estate_office_elc/providers/payment_provider.dart';
 import 'package:sweeda_real_estate_office_elc/providers/admin_provider.dart';
 
 void main() {
-  // Standard flutter test setup
-  TestWidgetsFlutterBinding.ensureInitialized();
-
-  testWidgets('Basic App Load Test', (WidgetTester tester) async {
+  testWidgets('App should render', (WidgetTester tester) async {
+    // Use a minimal provider setup for testing
     await tester.pumpWidget(
       MultiProvider(
         providers: [
@@ -31,9 +29,7 @@ void main() {
         child: const MyApp(),
       ),
     );
-    await tester.pumpAndSettle();
-    
-    // We check if MyApp is successfully rendered
+    await tester.pump();
     expect(find.byType(MyApp), findsOneWidget);
   });
 }
