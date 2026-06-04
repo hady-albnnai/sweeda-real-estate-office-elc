@@ -83,7 +83,6 @@ class NotificationProvider with ChangeNotifier {
     return SupabaseService().client
         .from(DbTables.notifications)
         .stream(primaryKey: ['id'])
-        .match({'uid': userId, 'i_del': 0})
         .order('ts_crt', ascending: false)
         .map((data) => data.map((d) => Map<String, dynamic>.from(d)).toList());
   }

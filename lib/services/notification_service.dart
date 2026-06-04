@@ -23,10 +23,11 @@ class NotificationService {
 
       client.from(DbTables.notifications)
           .stream(primaryKey: ['id'])
-          .match({'uid': user.id, 'i_del': 0})
           .listen((data) {
             for (var row in data) {
-              _showLocalNotif(row['ttl'] ?? '', row['bdy'] ?? '');
+              if ((row['uid'] ?? '') == user.id && (row['i_del'] ?? 0) == 0) {
+                _showLocalNotif(row['ttl'] ?? '', row['bdy'] ?? '');
+              }
             }
           });
       debugPrint('✅ NotificationService: Realtime listener active');

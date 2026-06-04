@@ -50,7 +50,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               style: const TextStyle(color: AppTheme.primaryGold, fontSize: 20, fontWeight: FontWeight.bold),
               decoration: InputDecoration(counterText: '', filled: true, fillColor: AppTheme.surfaceBlack,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppTheme.primaryGold))),
-              onChanged: (v) { if (v.isNotEmpty && i < 5) _nodes[i+1].requestFocus(); else if (v.isEmpty && i > 0) _nodes[i-1].requestFocus(); }))),
+              onChanged: (v) { if (v.isNotEmpty && i < 5) _nodes[i+1].requestFocus(); else if (v.isEmpty && i > 0) _nodes[i-1].requestFocus(); })))),
           const SizedBox(height: 40),
           SizedBox(width: double.infinity, height: 55,
             child: ElevatedButton(onPressed: () async {
