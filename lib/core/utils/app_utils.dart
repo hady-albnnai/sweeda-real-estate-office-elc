@@ -1,23 +1,26 @@
 import 'package:intl/intl.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// أدوات مساعدة للتنسيق والتحقق
 class AppUtils {
-  /// تنسيق السعر
   static String formatPrice(num price, {int currency = 0}) {
     final formatter = NumberFormat('#,###');
     final symbol = currency == 0 ? '\$' : 'ل.س';
     return '${formatter.format(price)} $symbol';
   }
 
-  /// تحويل timestamp إلى نص
   static String formatTimestamp(dynamic ts, {String pattern = 'yyyy/MM/dd'}) {
     if (ts == null) return '';
-    final date = (ts as Timestamp).toDate();
+    DateTime date;
+    if (ts is DateTime) {
+      date = ts;
+    } else if (ts is String) {
+      date = DateTime.parse(ts);
+    } else {
+      return '';
+    }
     return DateFormat(pattern, 'ar').format(date);
   }
 
-  /// تحويل رقم الحالة إلى نص
   static String offerStatusText(int status) {
     switch (status) {
       case 0: return 'مسودة';
@@ -31,23 +34,13 @@ class AppUtils {
     }
   }
 
-  /// تحويل رقم نوع العرض إلى نص
-  static String offerTypeText(int type) {
-    return type == 0 ? 'عقار' : 'سيارة';
-  }
+  static String offerTypeText(int type) => type == 0 ? 'عقار' : 'سيارة';
+  static String transactionText(int type) => type == 0 ? 'بيع' : 'إيجار';
 
-  /// تحويل رقم المعاملة إلى نص
-  static String transactionText(int type) {
-    return type == 0 ? 'بيع' : 'إيجار';
-  }
-
-  /// التحقق من رقم الهاتف
   static bool isValidPhone(String phone) {
-    final regex = RegExp(r'^09\d{8}$');
-    return regex.hasMatch(phone);
+    return RegExp(r'^09\d{8}$').hasMatch(phone);
   }
 
-  /// تقطيع النص الطويل
   static String truncate(String text, int maxLength) {
     if (text.length <= maxLength) return text;
     return '${text.substring(0, maxLength)}...';

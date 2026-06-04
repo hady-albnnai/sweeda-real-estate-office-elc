@@ -13,40 +13,59 @@ class NotificationProvider with ChangeNotifier {
   int get unreadCount => _unreadCount;
 
   Future<void> fetchNotifications(String userId) async {
-    _isLoading = true; notifyListeners();
+    _isLoading = true;
+    notifyListeners();
     try {
       final response = await SupabaseService().client
-          .from(DbTables.notifications).select()
-          .eq('uid', userId).eq('i_del', 0)
+          .from(DbTables.notifications)
+          .select()
+          .eq('uid', userId)
+          .eq('i_del', 0)
           .order('ts_crt', ascending: false);
       _notifications = (response as List).map((d) =>
-          NotificationModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String)).toList();
+          NotificationModel.fromSupabase(
+              Map<String, dynamic>.from(d), d['id'] as String)).toList();
       _unreadCount = _notifications.where((n) => !n.isRead).length;
-    } catch (e) { debugPrint('❌ fetchNotifications error: $e'); }
-    _isLoading = false; notifyListeners();
+    } catch (e) {
+      debugPrint('❌ fetchNotifications error: $e');
+    }
+    _isLoading = false;
+    notifyListeners();
   }
 
   Future<void> markAsRead(String notificationId) async {
     try {
-      await SupabaseService().client.from(DbTables.notifications)
-          .update({'i_rd': 1}).eq('id', notificationId);
-      final index = _notifications.indexWhere((n) => n.id == notificationId);
-      if (index != -1) await fetchNotifications(_notifications[index].uid);
-    } catch (e) { debugPrint('❌ markAsRead error: $e'); }
+      await SupabaseService().client
+          .from(DbTables.notifications)
+          .update({'i_rd': 1})
+          .eq('id', notificationId);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('❌ markAsRead error: $e');
+    }
   }
 
   Future<void> markAllAsRead(String userId) async {
     try {
-      await SupabaseService().client.from(DbTables.notifications)
-          .update({'i_rd': 1}).eq('uid', userId).eq('i_rd', 0);
-      _unreadCount = 0; await fetchNotifications(userId);
-    } catch (e) { debugPrint('❌ markAllAsRead error: $e'); }
+      await SupabaseService().client
+          .from(DbTables.notifications)
+          .update({'i_rd': 1})
+          .eq('uid', userId)
+          .eq('i_rd', 0);
+      _unreadCount = 0;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('❌ markAllAsRead error: $e');
+    }
   }
 
   Future<bool> sendNotification({
-    required String userId, required int type,
-    required String title, required String body,
-    String action = '', String refId = '',
+    required String userId,
+    required int type,
+    required String title,
+    required String body,
+    String action = '',
+    String refId = '',
   }) async {
     try {
       await SupabaseService().client.from(DbTables.notifications).insert({
@@ -54,12 +73,18 @@ class NotificationProvider with ChangeNotifier {
         'act': action, 'ref_id': refId,
       });
       return true;
-    } catch (e) { debugPrint('❌ sendNotification error: $e'); return false; }
+    } catch (e) {
+      debugPrint('❌ sendNotification error: $e');
+      return false;
+    }
   }
 
-  void listenForNewNotifications(String userId, Function() onNew) {
-    SupabaseService().client.from(DbTables.notifications)
-        .stream(primaryKey: ['id']).eq('uid', userId).eq('i_del', 0)
-        .listen((data) { if (data.isNotEmpty) { fetchNotifications(userId); onNew(); } });
+  Stream<List<Map<String, dynamic>>> notificationsStream(String userId) {
+    return SupabaseService().client
+        .from(DbTables.notifications)
+        .stream(primaryKey: ['id'])
+        .match({'uid': userId, 'i_del': 0})
+        .order('ts_crt', ascending: false)
+        .map((data) => data.map((d) => Map<String, dynamic>.from(d)).toList());
   }
 }

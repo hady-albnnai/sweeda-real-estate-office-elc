@@ -23,7 +23,7 @@ class NotificationService {
 
       client.from(DbTables.notifications)
           .stream(primaryKey: ['id'])
-          .eq('uid', user.id).eq('i_del', 0)
+          .match({'uid': user.id, 'i_del': 0})
           .listen((data) {
             for (var row in data) {
               _showLocalNotif(row['ttl'] ?? '', row['bdy'] ?? '');
