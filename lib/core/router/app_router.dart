@@ -15,8 +15,15 @@ import '../screens/auth/otp_verification_screen.dart';
 import '../screens/auth/setup_profile_screen.dart';
 
 // === User ===
+import '../screens/user/user_home_screen.dart';
 import '../screens/user/my_offers_screen.dart';
 import '../screens/user/add_offer_screen.dart';
+import '../screens/user/my_requests_screen.dart';
+import '../screens/user/my_appointments_screen.dart';
+import '../screens/user/favorites_screen.dart';
+import '../screens/user/profile_screen.dart';
+import '../screens/user/settings_screen.dart';
+import '../screens/user/add_request_screen.dart';
 
 // === Broker ===
 import '../screens/broker/broker_appointments_screen.dart';
@@ -72,13 +79,11 @@ class AppRouter {
       ),
 
       // ═══════════════════════════════════════
-      // 👤 USER (مستخدم)
+      // 👤 USER (مستخدم) — ✅ كامل
       // ═══════════════════════════════════════
       GoRoute(
         path: '/user/home',
-        builder: (context, state) => const Scaffold(
-          body: Center(child: Text('🏠 الشاشة الرئيسية للمستخدم')),
-        ),
+        builder: (context, state) => const UserHomeScreen(),
       ),
       GoRoute(
         path: '/user/my-offers',
@@ -90,33 +95,27 @@ class AppRouter {
       ),
       GoRoute(
         path: '/user/my-requests',
-        builder: (context, state) => const Scaffold(
-          body: Center(child: Text('📋 طلباتي — قيد التطوير')),
-        ),
+        builder: (context, state) => const MyRequestsScreen(),
+      ),
+      GoRoute(
+        path: '/user/add-request',
+        builder: (context, state) => const AddRequestScreen(),
       ),
       GoRoute(
         path: '/user/my-appointments',
-        builder: (context, state) => const Scaffold(
-          body: Center(child: Text('📅 مواعيدي — قيد التطوير')),
-        ),
+        builder: (context, state) => const MyAppointmentsScreen(),
       ),
       GoRoute(
         path: '/user/favorites',
-        builder: (context, state) => const Scaffold(
-          body: Center(child: Text('❤️ المفضلة — قيد التطوير')),
-        ),
+        builder: (context, state) => const FavoritesScreen(),
       ),
       GoRoute(
         path: '/user/profile',
-        builder: (context, state) => const Scaffold(
-          body: Center(child: Text('👤 الملف الشخصي — قيد التطوير')),
-        ),
+        builder: (context, state) => const ProfileScreen(),
       ),
       GoRoute(
         path: '/user/settings',
-        builder: (context, state) => const Scaffold(
-          body: Center(child: Text('⚙️ الإعدادات — قيد التطوير')),
-        ),
+        builder: (context, state) => const SettingsScreen(),
       ),
 
       // ═══════════════════════════════════════
