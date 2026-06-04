@@ -53,6 +53,18 @@ class AppointmentProvider with ChangeNotifier {
     } catch (e) { debugPrint('❌ fetchAppointmentsForMyOffers error: $e'); return []; }
   }
 
+  Future<bool> cancelAppointment(String appointmentId, String userId, String reason) async {
+    try {
+      await SupabaseService().client.from(DbTables.appointments).update({
+        'sts': 3,
+        'cnl_by': userId,
+        'cnl_rsn': reason,
+      }).eq('id', appointmentId);
+      await fetchMyAppointments(userId);
+      notifyListeners(); return true;
+    } catch (e) { debugPrint('❌ cancelAppointment error: $e'); return false; }
+  }
+
   Future<bool> updateStatus(String appointmentId, int newStatus, {int? feedback}) async {
     try {
       final data = {'sts': newStatus, 'dt_end': DateTime.now().toIso8601String()};
