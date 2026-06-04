@@ -1,76 +1,67 @@
-import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import '../models/appointment_model.dart';
-import '../core/network/firebase_service.dart';
+import '../core/network/supabase_service.dart';
+import '../core/constants/db_constants.dart';
 
 class AppointmentProvider with ChangeNotifier {
-  final FirebaseFirestore _db = FirebaseService().db;
   List<AppointmentModel> _myAppointments = [];
-  List<AppointmentModel> get myAppointments => _myAppointments;
+  bool _isLoading = false;
 
-  // Book a new appointment
+  List<AppointmentModel> get myAppointments => _myAppointments;
+  bool get isLoading => _isLoading;
+
   Future<bool> bookAppointment({
-    required String uId,
-    required String oId,
-    required String day,
-    required String time,
+    required String userId, required String offerId, required String ownerId,
+    DateTime? dateTime,
   }) async {
     try {
-      DocumentReference docRef = _db.collection('appointments').doc();
-      AppointmentModel appointment = AppointmentModel(
-        id: docRef.id,
-        uId: uId,
-        oId: oId,
-        day: day,
-        time: time,
-        sts: 0, // Pending
-        fbkOwn: 0,
-        fbkReq: 0,
-        dtC: DateTime.now(),
-        dtU: DateTime.now(),
+      final appointment = AppointmentModel(
+        id: '', offId: offerId, ownId: ownerId,
+        dt: dateTime ?? DateTime.now().add(const Duration(days: 1)),
+        sts: 0, fbkOwn: 0, fbkReq: 0, tsCrt: DateTime.now(),
       );
-
-      await docRef.set(appointment.toMap());
-      await fetchMyAppointments(uId);
-      notifyListeners();
-      return true;
-    } catch (e) {
-      print('Error booking appointment: $e');
-      return false;
-    }
+      await SupabaseService().client.from(DbTables.appointments).insert(appointment.toMap());
+      await fetchMyAppointments(userId);
+      notifyListeners(); return true;
+    } catch (e) { debugPrint('❌ bookAppointment error: $e'); return false; }
   }
 
-  // Fetch appointments for a specific user
-  Future<void> fetchMyAppointments(String uId) async {
+  Future<void> fetchMyAppointments(String userId) async {
+    _isLoading = true; notifyListeners();
     try {
-      QuerySnapshot snapshot = await _db
-          .collection('appointments')
-          .where('uId', isEqualTo: uId)
-          .orderBy('dtC', descending: true)
-          .get();
-
-      _myAppointments = snapshot.docs
-          .map((doc) => AppointmentModel.fromFirestore(doc))
-          .toList();
-      notifyListeners();
-    } catch (e) {
-      print('Error fetching appointments: $e');
-    }
+      final response = await SupabaseService().client
+          .from(DbTables.appointments).select()
+          .eq('own_id', userId).order('dt', ascending: true);
+      _myAppointments = (response as List).map((d) =>
+          AppointmentModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String)).toList();
+    } catch (e) { debugPrint('❌ fetchMyAppointments error: $e'); }
+    _isLoading = false; notifyListeners();
   }
 
-  // Update appointment status (for owner/admin)
-  Future<bool> updateStatus(String appointmentId, int newStatus, int feedback) async {
+  Future<List<AppointmentModel>> fetchAppointmentsForMyOffers(String userId) async {
     try {
-      await _db.collection('appointments').doc(appointmentId).update({
-        'sts': newStatus,
-        'fbkOwn': feedback,
-        'dtU': Timestamp.now(),
-      });
-      notifyListeners();
-      return true;
-    } catch (e) {
-      print('Error updating status: $e');
-      return false;
-    }
+      final offersResponse = await SupabaseService().client
+          .from(DbTables.offers).select('id')
+          .eq('usr_id', userId).eq('i_del', 0);
+      final offerIds = (offersResponse as List).map((o) => o['id'] as String).toList();
+      if (offerIds.isEmpty) return [];
+      final response = await SupabaseService().client
+          .from(DbTables.appointments).select()
+          .inFilter('off_id', offerIds).order('dt', ascending: true);
+      return (response as List).map((d) =>
+          AppointmentModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String)).toList();
+    } catch (e) { debugPrint('❌ fetchAppointmentsForMyOffers error: $e'); return []; }
+  }
+
+  Future<bool> updateStatus(String appointmentId, int newStatus, {int? feedback}) async {
+    try {
+      final data = {'sts': newStatus, 'dt_end': DateTime.now().toIso8601String()};
+      if (feedback != null) {
+        data['fbk_own'] = feedback;
+        data['fbk_own_dt'] = DateTime.now().toIso8601String();
+      }
+      await SupabaseService().client.from(DbTables.appointments).update(data).eq('id', appointmentId);
+      notifyListeners(); return true;
+    } catch (e) { debugPrint('❌ updateStatus error: $e'); return false; }
   }
 }

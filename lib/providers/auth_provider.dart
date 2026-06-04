@@ -1,110 +1,101 @@
-import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
-import '../core/network/firebase_service.dart';
+import '../core/network/supabase_service.dart';
+import '../core/constants/db_constants.dart';
+import '../services/auth_service.dart';
 
 class AuthProvider with ChangeNotifier {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _db = FirebaseService().db;
-  
-  User? _user;
   UserModel? _userModel;
-  String? _currentUserPhone;
-  String? _verificationId;
+  String? _currentPhone;
+  String? _currentOtp;
   bool _isNewUser = false;
 
-  User? get currentUser => _user;
   UserModel? get userModel => _userModel;
-  String? get currentUserPhone => _currentUserPhone;
+  String? get currentPhone => _currentPhone;
+  String? get currentOtp => _currentOtp;
   bool get isNewUser => _isNewUser;
+  bool get isLoggedIn => _userModel != null;
+  bool get isAdmin => _userModel?.isAdmin ?? false;
+  bool get isBroker => _userModel?.isBroker ?? false;
 
-  // Login and OTP
   Future<bool> sendOTP(String phone) async {
     try {
-      _currentUserPhone = phone;
-      await _auth.verifyPhoneNumber(
-        phoneNumber: '+963$phone',
-        verificationCompleted: (PhoneAuthCredential credential) async {
-          await _auth.signInWithCredential(credential);
-          _user = FirebaseAuth.instance.currentUser;
-          await _loadUserData();
-        },
-        verificationFailed: (FirebaseAuthException e) {
-          print('Verification failed: ${e.message}');
-        },
-        codeSent: (String verificationId, int? resendToken) {
-          _verificationId = verificationId;
-        },
-        codeAutoRetrievalTimeout: (String verificationId) {
-          _verificationId = verificationId;
-        },
-      );
-      return true;
+      _currentPhone = phone;
+      final result = await AuthService().sendOTP(phone);
+      if (result['success'] == true) {
+        _currentOtp = result['fallbackOtp'] as String?;
+        if (_currentOtp != null) {
+          debugPrint('🔑 OTP for development: $_currentOtp');
+        }
+        return true;
+      }
+      return false;
     } catch (e) {
-      print('sendOTP error: $e');
+      debugPrint('❌ sendOTP error: $e');
       return false;
     }
   }
 
   Future<bool> verifyOTP(String code) async {
     try {
-      if (_verificationId == null) {
-        print('verifyOTP error: verificationId is null');
-        return false;
+      if (_currentPhone == null) return false;
+      final result = await AuthService().verifyOTP(_currentPhone!, code);
+      if (result['success'] == true) {
+        _isNewUser = result['isNewUser'] as bool;
+        await _loadUserData(result['userId'] as String);
+        return true;
       }
-
-      final credential = PhoneAuthProvider.credential(
-        verificationId: _verificationId!,
-        smsCode: code,
-      );
-
-      final result = await _auth.signInWithCredential(credential);
-      _user = result.user;
-      await _loadUserData();
-      return _user != null;
+      return false;
     } catch (e) {
-      print('verifyOTP error: $e');
+      debugPrint('❌ verifyOTP error: $e');
       return false;
     }
   }
 
-  Future<void> _loadUserData() async {
-    if (_user == null) return;
-    
-    DocumentSnapshot doc = await _db.collection('users').doc(_user!.uid).get();
-    if (doc.exists) {
-      _userModel = UserModel.fromFirestore(doc);
-      _isNewUser = false;
-    } else {
-      _isNewUser = true;
+  Future<void> _loadUserData(String userId) async {
+    try {
+      final response = await SupabaseService().client
+          .from(DbTables.users).select().eq('id', userId).single();
+      _userModel = UserModel.fromSupabase(response, userId);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('❌ _loadUserData error: $e');
     }
-    notifyListeners();
   }
 
   Future<bool> completeProfile({required String name, required String sid}) async {
     try {
-      if (_user == null) return false;
-      
-      await _db.collection('users').doc(_user!.uid).set({
-        'name': name,
-        'sid': sid,
-        'role': 0, // Default: User
-        'dtC': Timestamp.now(),
-        'dtU': Timestamp.now(),
-      });
-      
-      await _loadUserData();
+      if (_userModel == null) return false;
+      await SupabaseService().client.from(DbTables.users).update({
+        'nm': name, 'sid': sid,
+        'ts_upd': DateTime.now().toIso8601String(),
+      }).eq('id', _userModel!.uid);
+      await _loadUserData(_userModel!.uid);
       return true;
     } catch (e) {
+      debugPrint('❌ completeProfile error: $e');
       return false;
     }
   }
 
+  Future<void> refreshUser() async {
+    final userId = await AuthService().getSavedUserId();
+    if (userId != null) await _loadUserData(userId);
+  }
+
   Future<void> logout() async {
-    await _auth.signOut();
-    _user = null;
-    _userModel = null;
+    await AuthService().signOut();
+    _userModel = null; _currentPhone = null; _currentOtp = null; _isNewUser = false;
     notifyListeners();
+  }
+
+  Future<void> checkAuthStatus() async {
+    try {
+      final userId = await AuthService().getSavedUserId();
+      if (userId != null) await _loadUserData(userId);
+    } catch (e) {
+      debugPrint('⚠️ checkAuthStatus error: $e');
+    }
   }
 }

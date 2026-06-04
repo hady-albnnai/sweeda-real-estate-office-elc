@@ -1,45 +1,40 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class NotificationModel {
   final String id;
-  final String title;
-  final String msg;
-  final int type;      // Notification type
-  final String link;   // Deep link to specific screen/offer
-  final bool read;     // read status
-  final DateTime dtC;  // Created date
+  final String uid;
+  final int tp;
+  final String ttl;
+  final String bdy;
+  final String act;
+  final String refId;
+  final int iRd;
+  final int iDel;
+  final DateTime tsCrt;
 
   NotificationModel({
-    required this.id,
-    required this.title,
-    required this.msg,
-    required this.type,
-    required this.link,
-    required this.read,
-    required this.dtC,
+    required this.id, required this.uid, required this.tp,
+    required this.ttl, required this.bdy,
+    this.act = '', this.refId = '',
+    this.iRd = 0, this.iDel = 0, required this.tsCrt,
   });
+
+  factory NotificationModel.fromSupabase(Map<String, dynamic> data, String id) {
+    return NotificationModel(
+      id: id, uid: data['uid'] ?? '', tp: data['tp'] ?? 0,
+      ttl: data['ttl'] ?? '', bdy: data['bdy'] ?? '',
+      act: data['act'] ?? '', refId: data['ref_id'] ?? '',
+      iRd: data['i_rd'] ?? 0, iDel: data['i_del'] ?? 0,
+      tsCrt: DateTime.parse(data['ts_crt']),
+    );
+  }
 
   Map<String, dynamic> toMap() {
     return {
-      'title': title,
-      'msg': msg,
-      'type': type,
-      'link': link,
-      'read': read,
-      'dtC': Timestamp.fromDate(dtC),
+      'uid': uid, 'tp': tp, 'ttl': ttl, 'bdy': bdy,
+      'act': act, 'ref_id': refId,
+      'i_rd': iRd, 'i_del': iDel,
+      'ts_crt': tsCrt.toIso8601String(),
     };
   }
 
-  factory NotificationModel.fromFirestore(DocumentSnapshot doc) {
-    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-    return NotificationModel(
-      id: doc.id,
-      title: data['title'] ?? '',
-      msg: data['msg'] ?? '',
-      type: data['type'] ?? 0,
-      link: data['link'] ?? '',
-      read: data['read'] ?? false,
-      dtC: (data['dtC'] as Timestamp).toDate(),
-    );
-  }
+  bool get isRead => iRd == 1;
 }

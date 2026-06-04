@@ -1,35 +1,41 @@
-import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import '../models/payment_model.dart';
-import '../core/network/firebase_service.dart';
+import '../core/network/supabase_service.dart';
+import '../core/constants/db_constants.dart';
 
 class PaymentProvider with ChangeNotifier {
-  final FirebaseFirestore _db = FirebaseService().db;
   List<PaymentModel> _payments = [];
+  bool _isLoading = false;
+
   List<PaymentModel> get payments => _payments;
+  bool get isLoading => _isLoading;
 
   Future<bool> makePayment(PaymentModel payment) async {
     try {
-      DocumentReference docRef = _db.collection('payments').doc();
-      await docRef.set(payment.toMap());
-      notifyListeners();
-      return true;
-    } catch (e) {
-      print('Payment error: $e');
-      return false;
-    }
+      await SupabaseService().client.from(DbTables.payments).insert(payment.toMap());
+      await fetchPayments(payment.uid);
+      notifyListeners(); return true;
+    } catch (e) { debugPrint('❌ makePayment error: $e'); return false; }
   }
 
-  Future<void> fetchPayments(String uId) async {
+  Future<void> fetchPayments(String userId) async {
+    _isLoading = true; notifyListeners();
     try {
-      QuerySnapshot snapshot = await _db
-          .collection('payments')
-          .where('uId', isEqualTo: uId)
-          .get();
-      _payments = snapshot.docs.map((doc) => PaymentModel.fromFirestore(doc)).toList();
-      notifyListeners();
-    } catch (e) {
-      print('Error fetching payments: $e');
-    }
+      final response = await SupabaseService().client
+          .from(DbTables.payments).select()
+          .eq('uid', userId).order('ts_crt', ascending: false);
+      _payments = (response as List).map((d) =>
+          PaymentModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String)).toList();
+    } catch (e) { debugPrint('❌ fetchPayments error: $e'); }
+    _isLoading = false; notifyListeners();
+  }
+
+  Future<bool> updatePaymentStatus(String paymentId, int newStatus, {String? approvedBy}) async {
+    try {
+      final data = {'sts': newStatus};
+      if (approvedBy != null) data['appr_by'] = approvedBy;
+      await SupabaseService().client.from(DbTables.payments).update(data).eq('id', paymentId);
+      notifyListeners(); return true;
+    } catch (e) { debugPrint('❌ updatePaymentStatus error: $e'); return false; }
   }
 }

@@ -1,81 +1,149 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class OfferModel {
   final String id;
-  final String uId;      // User ID of the owner
-  final String title;    // Title of the offer
-  final int type;        // 1: Property, 2: Car
-  final int trans;       // 1: Sell, 2: Rent
-  final int cat;         // Category ID
-  final double prc;      // Price
-  final String loc;      // Location
-  final String desc;     // Description
-  final String spec;     // Specifications
-  final List<String> imgs; // Images URLs
-  final int sts;         // Status: 0=Pending, 1=Published, etc.
-  final int iPub;        // Is Published
-  final Map<String, List<String>> avl; // Availability
-  final DateTime dtC;    // Created date
-  final DateTime dtU;    // Updated date
+  final String usrId;
+  final String brkId;
+  final double brkPct;
+  final int typ;
+  final int trx;
+  final int cat;
+  final int sub;
+  final String ttl;
+  final double prc;
+  final int cur;
+  final Map<String, dynamic> loc;
+  final String desc;
+  final List<String> imgs;
+  final String vdo;
+  final int docTp;
+  final String docImg;
+  final String exactLoc;
+  final Map<String, dynamic> specs;
+  final double com;
+  final int sts;
+  final String rsn;
+  final int vws;
+  final int fvs;
+  final int iPub;
+  final int iSoc;
+  final int socPub;
+  final String socTxt;
+  final int iDup;
+  final String dupOf;
+  final Map<String, List<String>> avl;
+  final int iDel;
+  final DateTime tsCrt;
+  final DateTime? tsPub;
+  final DateTime? tsEnd;
+  final DateTime? tsRen;
 
   OfferModel({
     required this.id,
-    required this.uId,
-    required this.title,
-    required this.type,
-    required this.trans,
+    required this.usrId,
+    this.brkId = '',
+    this.brkPct = 0,
+    required this.typ,
+    required this.trx,
     required this.cat,
+    this.sub = 0,
+    required this.ttl,
     required this.prc,
-    required this.loc,
-    required this.desc,
-    required this.spec,
-    required this.imgs,
-    required this.sts,
-    required this.iPub,
-    required this.avl,
-    required this.dtC,
-    required this.dtU,
-  });
+    this.cur = 1,
+    Map<String, dynamic>? loc,
+    this.desc = '',
+    List<String>? imgs,
+    this.vdo = '',
+    this.docTp = 0,
+    this.docImg = '',
+    this.exactLoc = '',
+    Map<String, dynamic>? specs,
+    this.com = 0,
+    this.sts = 0,
+    this.rsn = '',
+    this.vws = 0,
+    this.fvs = 0,
+    this.iPub = 0,
+    this.iSoc = 0,
+    this.socPub = 0,
+    this.socTxt = '',
+    this.iDup = 0,
+    this.dupOf = '',
+    Map<String, List<String>>? avl,
+    this.iDel = 0,
+    required this.tsCrt,
+    this.tsPub,
+    this.tsEnd,
+    this.tsRen,
+  })  : loc = loc ?? {'r': 0, 'd': ''},
+        imgs = imgs ?? [],
+        specs = specs ?? {},
+        avl = avl ?? {};
+
+  factory OfferModel.fromSupabase(Map<String, dynamic> data, String id) {
+    return OfferModel(
+      id: id,
+      usrId: data['usr_id'] ?? '',
+      brkId: data['brk_id'] ?? '',
+      brkPct: (data['brk_pct'] ?? 0).toDouble(),
+      typ: data['typ'] ?? 0,
+      trx: data['trx'] ?? 0,
+      cat: data['cat'] ?? 0,
+      sub: data['sub'] ?? 0,
+      ttl: data['ttl'] ?? '',
+      prc: (data['prc'] ?? 0).toDouble(),
+      cur: data['cur'] ?? 1,
+      loc: data['loc'] != null
+          ? Map<String, dynamic>.from(data['loc'] as Map)
+          : {'r': 0, 'd': ''},
+      desc: data['desc'] ?? '',
+      imgs: data['imgs'] != null
+          ? List<String>.from(data['imgs'] as List)
+          : [],
+      vdo: data['vdo'] ?? '',
+      docTp: data['doc_tp'] ?? 0,
+      docImg: data['doc_img'] ?? '',
+      exactLoc: data['exact_loc'] ?? '',
+      specs: data['specs'] != null
+          ? Map<String, dynamic>.from(data['specs'] as Map)
+          : {},
+      com: (data['com'] ?? 0).toDouble(),
+      sts: data['sts'] ?? 0,
+      rsn: data['rsn'] ?? '',
+      vws: data['vws'] ?? 0,
+      fvs: data['fvs'] ?? 0,
+      iPub: data['i_pub'] ?? 0,
+      iSoc: data['i_soc'] ?? 0,
+      socPub: data['soc_pub'] ?? 0,
+      socTxt: data['soc_txt'] ?? '',
+      iDup: data['i_dup'] ?? 0,
+      dupOf: data['dup_of'] ?? '',
+      avl: data['avl'] != null
+          ? (data['avl'] as Map).map((k, v) =>
+              MapEntry(k.toString(), List<String>.from(v as List)))
+          : {},
+      iDel: data['i_del'] ?? 0,
+      tsCrt: DateTime.parse(data['ts_crt']),
+      tsPub: data['ts_pub'] != null ? DateTime.parse(data['ts_pub']) : null,
+      tsEnd: data['ts_end'] != null ? DateTime.parse(data['ts_end']) : null,
+      tsRen: data['ts_ren'] != null ? DateTime.parse(data['ts_ren']) : null,
+    );
+  }
 
   Map<String, dynamic> toMap() {
     return {
-      'uId': uId,
-      'title': title,
-      'type': type,
-      'trans': trans,
-      'cat': cat,
-      'prc': prc,
-      'loc': loc,
-      'desc': desc,
-      'spec': spec,
-      'imgs': imgs,
-      'sts': sts,
-      'iPub': iPub,
-      'avl': avl,
-      'dtC': Timestamp.fromDate(dtC),
-      'dtU': Timestamp.fromDate(dtU),
+      'usr_id': usrId, 'brk_id': brkId, 'brk_pct': brkPct,
+      'typ': typ, 'trx': trx, 'cat': cat, 'sub': sub,
+      'ttl': ttl, 'prc': prc, 'cur': cur, 'loc': loc,
+      'desc': desc, 'imgs': imgs, 'vdo': vdo,
+      'doc_tp': docTp, 'doc_img': docImg, 'exact_loc': exactLoc,
+      'specs': specs, 'com': com, 'sts': sts, 'rsn': rsn,
+      'vws': vws, 'fvs': fvs, 'i_pub': iPub, 'i_soc': iSoc,
+      'soc_pub': socPub, 'soc_txt': socTxt, 'i_dup': iDup,
+      'dup_of': dupOf.isEmpty ? null : dupOf,
+      'avl': avl, 'i_del': iDel,
+      'ts_crt': tsCrt.toIso8601String(),
+      'ts_pub': tsPub?.toIso8601String(),
+      'ts_end': tsEnd?.toIso8601String(),
+      'ts_ren': tsRen?.toIso8601String(),
     };
-  }
-
-  factory OfferModel.fromFirestore(DocumentSnapshot doc) {
-    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-    return OfferModel(
-      id: doc.id,
-      uId: data['uId'] ?? '',
-      title: data['title'] ?? 'بدون عنوان',
-      type: data['type'] ?? 1,
-      trans: data['trans'] ?? 1,
-      cat: data['cat'] ?? 0,
-      prc: (data['prc'] ?? 0).toDouble(),
-      loc: data['loc'] ?? '',
-      desc: data['desc'] ?? '',
-      spec: data['spec'] ?? '',
-      imgs: List<String>.from(data['imgs'] ?? []),
-      sts: data['sts'] ?? 0,
-      iPub: data['iPub'] ?? 0,
-      avl: Map<String, List<String>>.from(data['avl'] ?? {}),
-      dtC: (data['dtC'] as Timestamp).toDate(),
-      dtU: (data['dtU'] as Timestamp).toDate(),
-    );
   }
 }

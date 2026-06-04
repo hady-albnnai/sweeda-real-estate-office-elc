@@ -1,37 +1,84 @@
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter/foundation.dart';
+import '../core/network/supabase_service.dart';
+import '../core/constants/db_constants.dart';
 
-/// خدمة الإشعارات — FCM + داخلية
 class NotificationService {
-  final FirebaseMessaging _fcm = FirebaseMessaging.instance;
-  final FlutterLocalNotificationsPlugin _localNotifications =
+  static final FlutterLocalNotificationsPlugin _localNotif =
       FlutterLocalNotificationsPlugin();
 
   static Future<void> initialize() async {
-    // طلب الإذن
-    await FirebaseMessaging.instance.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
+    const android = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const initSettings = InitializationSettings(android: android);
+    await _localNotif.initialize(initSettings);
+    debugPrint('✅ NotificationService: initialized');
+    _listenToNotifications();
+  }
+
+  static void _listenToNotifications() {
+    try {
+      final client = SupabaseService().client;
+      final user = client.auth.currentUser;
+      if (user == null) return;
+
+      client.from(DbTables.notifications)
+          .stream(primaryKey: ['id'])
+          .eq('uid', user.id).eq('i_del', 0)
+          .listen((data) {
+            for (var row in data) {
+              _showLocalNotif(row['ttl'] ?? '', row['bdy'] ?? '');
+            }
+          });
+      debugPrint('✅ NotificationService: Realtime listener active');
+    } catch (e) {
+      debugPrint('⚠️ NotificationService: Realtime error: $e');
+    }
+  }
+
+  static Future<void> _showLocalNotif(String title, String body) async {
+    try {
+      const androidDetails = AndroidNotificationDetails(
+        'sweeda_channel', 'عقارات السويداء',
+        importance: Importance.high, priority: Priority.high,
+        icon: '@mipmap/ic_launcher',
+      );
+      await _localNotif.show(
+        DateTime.now().millisecondsSinceEpoch ~/ 1000,
+        title, body,
+        const NotificationDetails(android: androidDetails),
+      );
+    } catch (e) {
+      debugPrint('⚠️ Local notif error: $e');
+    }
+  }
+
+  static Future<void> showNotification({
+    required String title, required String body, String? payload,
+  }) async {
+    const androidDetails = AndroidNotificationDetails(
+      'sweeda_channel', 'عقارات السويداء',
+      importance: Importance.high, priority: Priority.high,
     );
-
-    // الحصول على token
-    final token = await FirebaseMessaging.instance.getToken();
-    print('FCM Token: $token');
-
-    // الاستماع للإشعارات
-    FirebaseMessaging.onMessage.listen(_handleMessage);
-    FirebaseMessaging.onMessageOpenedApp.listen(_handleMessageOpened);
+    await _localNotif.show(
+      DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      title, body,
+      const NotificationDetails(android: androidDetails),
+      payload: payload,
+    );
   }
 
-  static void _handleMessage(RemoteMessage message) {
-    // عرض الإشعار محلياً
-  }
-
-  static void _handleMessageOpened(RemoteMessage message) {
-    // التوجيه إلى الشاشة المناسبة
-    final action = message.data['act'];
-    final refId = message.data['refId'];
-    // التنقل حسب action
+  static Future<void> registerDeviceToken(String token) async {
+    try {
+      final client = SupabaseService().client;
+      final user = client.auth.currentUser;
+      if (user == null) return;
+      await client.from(DbTables.userDevices).upsert({
+        'uid': user.id, 'device_token': token,
+        'platform': 'android', 'is_active': true,
+        'ts_upd': DateTime.now().toIso8601String(),
+      });
+    } catch (e) {
+      debugPrint('⚠️ Device token error: $e');
+    }
   }
 }

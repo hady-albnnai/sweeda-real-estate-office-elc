@@ -1,40 +1,42 @@
-import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import '../models/request_model.dart';
-import '../core/network/firebase_service.dart';
+import '../core/network/supabase_service.dart';
+import '../core/constants/db_constants.dart';
 
 class RequestProvider with ChangeNotifier {
-  final FirebaseFirestore _db = FirebaseService().db;
   List<RequestModel> _myRequests = [];
+  bool _isLoading = false;
+
   List<RequestModel> get myRequests => _myRequests;
+  bool get isLoading => _isLoading;
 
   Future<bool> addRequest(RequestModel request) async {
     try {
-      DocumentReference docRef = _db.collection('requests').doc();
-      await docRef.set(request.toMap());
-      await fetchMyRequests(request.uId);
-      notifyListeners();
-      return true;
-    } catch (e) {
-      print('Error adding request: $e');
-      return false;
-    }
+      await SupabaseService().client.from(DbTables.requests).insert(request.toMap());
+      await fetchMyRequests(request.usrId);
+      notifyListeners(); return true;
+    } catch (e) { debugPrint('❌ addRequest error: $e'); return false; }
   }
 
-  Future<void> fetchMyRequests(String uId) async {
+  Future<void> fetchMyRequests(String userId) async {
+    _isLoading = true; notifyListeners();
     try {
-      QuerySnapshot snapshot = await _db
-          .collection('requests')
-          .where('uId', isEqualTo: uId)
-          .orderBy('dtC', descending: true)
-          .get();
-
-      _myRequests = snapshot.docs
-          .map((doc) => RequestModel.fromFirestore(doc))
-          .toList();
-      notifyListeners();
-    } catch (e) {
-      print('Error fetching requests: $e');
-    }
+      final response = await SupabaseService().client
+          .from(DbTables.requests).select()
+          .eq('usr_id', userId).eq('i_del', 0)
+          .order('ts_crt', ascending: false);
+      _myRequests = (response as List).map((d) =>
+          RequestModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String)).toList();
+    } catch (e) { debugPrint('❌ fetchMyRequests error: $e'); }
+    _isLoading = false; notifyListeners();
   }
+
+  Future<bool> updateRequest(String reqId, Map<String, dynamic> data) async {
+    try {
+      await SupabaseService().client.from(DbTables.requests).update(data).eq('id', reqId);
+      notifyListeners(); return true;
+    } catch (e) { debugPrint('❌ updateRequest error: $e'); return false; }
+  }
+
+  Future<bool> softDeleteRequest(String reqId) => updateRequest(reqId, {'i_del': 1});
 }

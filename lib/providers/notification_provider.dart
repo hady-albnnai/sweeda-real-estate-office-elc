@@ -1,36 +1,65 @@
-import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import '../models/notification_model.dart';
-import '../core/network/firebase_service.dart';
+import '../core/network/supabase_service.dart';
+import '../core/constants/db_constants.dart';
 
 class NotificationProvider with ChangeNotifier {
-  final FirebaseFirestore _db = FirebaseService().db;
   List<NotificationModel> _notifications = [];
+  bool _isLoading = false;
+  int _unreadCount = 0;
+
   List<NotificationModel> get notifications => _notifications;
+  bool get isLoading => _isLoading;
+  int get unreadCount => _unreadCount;
 
-  Future<void> fetchNotifications(String uId) async {
+  Future<void> fetchNotifications(String userId) async {
+    _isLoading = true; notifyListeners();
     try {
-      QuerySnapshot snapshot = await _db
-          .collection('notifications')
-          .where('uId', isEqualTo: uId)
-          .orderBy('dtC', descending: true)
-          .get();
-
-      _notifications = snapshot.docs
-          .map((doc) => NotificationModel.fromFirestore(doc))
-          .toList();
-      notifyListeners();
-    } catch (e) {
-      print('Error fetching notifications: $e');
-    }
+      final response = await SupabaseService().client
+          .from(DbTables.notifications).select()
+          .eq('uid', userId).eq('i_del', 0)
+          .order('ts_crt', ascending: false);
+      _notifications = (response as List).map((d) =>
+          NotificationModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String)).toList();
+      _unreadCount = _notifications.where((n) => !n.isRead).length;
+    } catch (e) { debugPrint('❌ fetchNotifications error: $e'); }
+    _isLoading = false; notifyListeners();
   }
 
   Future<void> markAsRead(String notificationId) async {
     try {
-      await _db.collection('notifications').doc(notificationId).update({'read': true});
-      notifyListeners();
-    } catch (e) {
-      print('Error marking as read: $e');
-    }
+      await SupabaseService().client.from(DbTables.notifications)
+          .update({'i_rd': 1}).eq('id', notificationId);
+      final index = _notifications.indexWhere((n) => n.id == notificationId);
+      if (index != -1) await fetchNotifications(_notifications[index].uid);
+    } catch (e) { debugPrint('❌ markAsRead error: $e'); }
+  }
+
+  Future<void> markAllAsRead(String userId) async {
+    try {
+      await SupabaseService().client.from(DbTables.notifications)
+          .update({'i_rd': 1}).eq('uid', userId).eq('i_rd', 0);
+      _unreadCount = 0; await fetchNotifications(userId);
+    } catch (e) { debugPrint('❌ markAllAsRead error: $e'); }
+  }
+
+  Future<bool> sendNotification({
+    required String userId, required int type,
+    required String title, required String body,
+    String action = '', String refId = '',
+  }) async {
+    try {
+      await SupabaseService().client.from(DbTables.notifications).insert({
+        'uid': userId, 'tp': type, 'ttl': title, 'bdy': body,
+        'act': action, 'ref_id': refId,
+      });
+      return true;
+    } catch (e) { debugPrint('❌ sendNotification error: $e'); return false; }
+  }
+
+  void listenForNewNotifications(String userId, Function() onNew) {
+    SupabaseService().client.from(DbTables.notifications)
+        .stream(primaryKey: ['id']).eq('uid', userId).eq('i_del', 0)
+        .listen((data) { if (data.isNotEmpty) { fetchNotifications(userId); onNew(); } });
   }
 }
