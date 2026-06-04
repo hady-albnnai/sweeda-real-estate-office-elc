@@ -2,7 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
 
 /// نقطة الوصول المركزية لـ Supabase
-/// بديل كامل لـ FirebaseService
+/// نقطة الوصول المركزية لـ Supabase
 class SupabaseService {
   static final SupabaseService _instance = SupabaseService._internal();
   factory SupabaseService() => _instance;

@@ -11,12 +11,6 @@ flutter_*.log
 *.dart_tool
 
 # =======================
-# Firebase
-# =======================
-google-services.json
-GoogleService-Info.plist
-firebase-debug.log
-.firebase/
 .env
 *.local
 
@@ -49,3 +43,6 @@ functions/node_modules/
 *.seed
 *.pid.lock
 coverage/
+
+# Supabase
+supabase/.env
