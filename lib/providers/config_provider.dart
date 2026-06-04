@@ -1,10 +1,8 @@
 import 'package:flutter/foundation.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../core/constants/firestore_constants.dart';
-import '../core/network/firebase_service.dart';
 import '../models/config_model.dart';
+import '../core/network/supabase_service.dart';
+import '../core/constants/db_constants.dart';
 
-/// مزود Config — يُحمّل مرة واحدة ويُخزّن محلياً
 class ConfigProvider extends ChangeNotifier {
   ConfigModel? _config;
   bool _isLoading = false;
@@ -15,30 +13,46 @@ class ConfigProvider extends ChangeNotifier {
   bool get isReady => _config != null;
   String? get error => _error;
 
-  /// تحميل Config من Firestore
   Future<void> loadConfig() async {
-    if (_config != null) return; // محمّل مسبقاً
-    
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
+    if (_config != null) return;
+    _isLoading = true; _error = null; notifyListeners();
     try {
-      final doc = await FirebaseFirestore.instance
-          .collection(FirestoreCollections.config)
-          .doc(ConfigKeys.main)
-          .get();
-
-      if (doc.exists) {
-        _config = ConfigModel.fromJson(doc.data()!);
+      final response = await SupabaseService().client
+          .from(DbTables.appConfig).select('value')
+          .eq('key', ConfigKeys.main).maybeSingle();
+      if (response != null && response['value'] != null) {
+        _config = ConfigModel.fromJson(
+          Map<String, dynamic>.from(response['value'] as Map));
       } else {
-        _error = 'Config غير موجود في Firestore';
+        _error = 'Config غير موجود في Supabase';
       }
     } catch (e) {
       _error = 'فشل تحميل Config: $e';
     }
+    _isLoading = false; notifyListeners();
+  }
 
-    _isLoading = false;
-    notifyListeners();
+  Future<bool> updateConfig(Map<String, dynamic> newConfig) async {
+    try {
+      await SupabaseService().client.from(DbTables.appConfig)
+          .update({'value': newConfig}).eq('key', ConfigKeys.main);
+      _config = ConfigModel.fromJson(newConfig);
+      notifyListeners(); return true;
+    } catch (e) {
+      debugPrint('❌ updateConfig error: $e'); return false;
+    }
+  }
+
+  void listenToConfigChanges() {
+    SupabaseService().client.from(DbTables.appConfig)
+        .stream(primaryKey: ['key']).listen((data) {
+      for (var row in data) {
+        if (row['key'] == ConfigKeys.main && row['value'] != null) {
+          _config = ConfigModel.fromJson(
+            Map<String, dynamic>.from(row['value'] as Map));
+          notifyListeners();
+        }
+      }
+    });
   }
 }

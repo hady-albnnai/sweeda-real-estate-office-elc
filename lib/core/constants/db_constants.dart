@@ -1,7 +1,5 @@
-/// أسماء مجموعات Firestore (Collection names)
-/// استخدام أسماء قصيرة لتقليل حجم البيانات
-class FirestoreCollections {
-  static const String config = 'config';
+/// أسماء الجداول في Supabase
+class DbTables {
   static const String users = 'users';
   static const String offers = 'offers';
   static const String requests = 'requests';
@@ -12,6 +10,24 @@ class FirestoreCollections {
   static const String deals = 'deals';
   static const String activityLog = 'activity_log';
   static const String stats = 'stats';
+  static const String appConfig = 'app_config';
+  static const String otpCodes = 'otp_codes';
+  static const String userDevices = 'user_devices';
+}
+
+/// أسماء دوال PostgreSQL
+class DbFunctions {
+  static const String generateOtp = 'generate_otp';
+  static const String verifyOtp = 'verify_otp';
+  static const String getUserByPhone = 'get_user_by_phone';
+  static const String checkOfferDuplicate = 'check_offer_duplicate';
+  static const String calculateCommission = 'calculate_commission';
+  static const String updateUserBadge = 'update_user_badge';
+  static const String getPendingOffersCount = 'get_pending_offers_count';
+  static const String addPoints = 'add_points';
+  static const String expireOffers = 'expire_offers';
+  static const String sendAppointmentReminders = 'send_appointment_reminders';
+  static const String createUserFromPhone = 'create_user_from_phone';
 }
 
 /// مفاتيح Config
@@ -37,15 +53,15 @@ class ConfigKeys {
   static const String roles = 'roles';
 }
 
-/// حالات العرض (Offer Status)
+/// حالات العرض
 class OfferStatus {
-  static const int draft = 0;         // مسودة
-  static const int review = 1;        // قيد المراجعة
-  static const int published = 2;     // منشور
-  static const int rejected = 3;      // مرفوض
-  static const int expired = 4;       // منتهي
-  static const int reserved = 5;      // محجوز
-  static const int completed = 6;     // مكتمل
+  static const int draft = 0;
+  static const int review = 1;
+  static const int published = 2;
+  static const int rejected = 3;
+  static const int expired = 4;
+  static const int reserved = 5;
+  static const int completed = 6;
 }
 
 /// حالات المستخدم
@@ -57,11 +73,11 @@ class UserStatus {
 
 /// الأدوار
 class UserRole {
-  static const int user = 0;       // مستخدم
-  static const int broker = 1;     // وسيط
-  static const int supervisor = 2; // مشرف
-  static const int deputy = 3;     // نائب
-  static const int manager = 4;    // مدير
+  static const int user = 0;
+  static const int broker = 1;
+  static const int supervisor = 2;
+  static const int deputy = 3;
+  static const int manager = 4;
 }
 
 /// أنواع البادجات
@@ -88,4 +104,10 @@ class NotificationType {
   static const int finance = 3;
   static const int account = 4;
   static const int rating = 5;
+}
+
+/// نوع العملة
+class Currency {
+  static const int dollar = 0;
+  static const int lbp = 1;
 }

@@ -1,29 +1,47 @@
-import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../core/network/supabase_service.dart';
 
-/// خدمة التخزين — الصور والملفات
 class StorageService {
-  final FirebaseStorage _storage = FirebaseStorage.instance;
+  final SupabaseStorageClient _storage = SupabaseService().storage;
 
-  /// رفع صورة
   Future<String> uploadImage({
-    required File file,
-    required String path,
-    String? userId,
+    required File file, required String path, String? userId,
   }) async {
     final fullPath = 'images/${userId ?? 'anonymous'}/$path';
-    final ref = _storage.ref().child(fullPath);
-    await ref.putFile(file);
-    return await ref.getDownloadURL();
+    final fileBytes = await file.readAsBytes();
+    await _storage.from('offer_images').uploadBinary(
+      fullPath, fileBytes,
+      fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
+    );
+    return _storage.from('offer_images').getPublicUrl(fullPath);
   }
 
-  /// حذف صورة
+  Future<String> uploadFile({
+    required File file, required String bucket, required String path,
+  }) async {
+    final fileBytes = await file.readAsBytes();
+    await _storage.from(bucket).uploadBinary(
+      path, fileBytes,
+      fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
+    );
+    return _storage.from(bucket).getPublicUrl(path);
+  }
+
+  Future<void> deleteFile(String bucket, String path) async {
+    try { await _storage.from(bucket).remove([path]); } catch (_) {}
+  }
+
   Future<void> deleteImage(String url) async {
     try {
-      final ref = _storage.refFromURL(url);
-      await ref.delete();
-    } catch (e) {
-      // تجاهل الخطأ إذا كانت الصورة غير موجودة
-    }
+      final uri = Uri.parse(url);
+      final segments = uri.pathSegments;
+      final idx = segments.indexOf('public');
+      if (idx + 1 < segments.length) {
+        final bucket = segments[idx + 1];
+        final filePath = segments.sublist(idx + 2).join('/');
+        await _storage.from(bucket).remove([filePath]);
+      }
+    } catch (_) {}
   }
 }

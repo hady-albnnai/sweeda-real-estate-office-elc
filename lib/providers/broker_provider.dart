@@ -1,48 +1,33 @@
-import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../core/network/firebase_service.dart';
+import 'package:flutter/foundation.dart';
 import '../models/appointment_model.dart';
+import '../core/network/supabase_service.dart';
+import '../core/constants/db_constants.dart';
 
 class BrokerProvider with ChangeNotifier {
-  final FirebaseFirestore _db = FirebaseService().db;
-
-  // Fetch appointments for a broker's offers
   Future<List<AppointmentModel>> getBrokerAppointments(String brokerId) async {
     try {
-      // Logic: Find all offers owned by this broker, then find appointments for those offers
-      QuerySnapshot offersSnap = await _db
-          .collection('offers')
-          .where('uId', isEqualTo: brokerId)
-          .get();
-      
-      List<String> offerIds = offersSnap.docs.map((doc) => doc.id).toList();
-      
+      final offersSnap = await SupabaseService().client
+          .from(DbTables.offers).select('id')
+          .eq('usr_id', brokerId).eq('i_del', 0);
+      final offerIds = (offersSnap as List).map((o) => o['id'] as String).toList();
       if (offerIds.isEmpty) return [];
-
-      QuerySnapshot appSnap = await _db
-          .collection('appointments')
-          .where('oId', whereIn: offerIds)
-          .get();
-
-      return appSnap.docs.map((doc) => AppointmentModel.fromFirestore(doc)).toList();
-    } catch (e) {
-      print('Broker appt error: $e');
-      return [];
-    }
+      final appSnap = await SupabaseService().client
+          .from(DbTables.appointments).select()
+          .inFilter('off_id', offerIds).order('dt', ascending: true);
+      return (appSnap as List).map((d) =>
+          AppointmentModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String)).toList();
+    } catch (e) { debugPrint('❌ getBrokerAppointments error: $e'); return []; }
   }
 
-  // Handle appointment request
   Future<bool> handleAppointment(String apptId, int feedback) async {
     try {
-      await _db.collection('appointments').doc(apptId).update({
-        'fbkOwn': feedback, // 1=Accept, 2=Reject, 3=Deadline
-        'sts': feedback == 1 ? 1 : (feedback == 2 ? 3 : 0),
-        'dtU': Timestamp.now(),
-      });
-      notifyListeners();
-      return true;
-    } catch (e) {
-      return false;
-    }
+      final now = DateTime.now().toIso8601String();
+      final data = {'fbk_own': feedback, 'fbk_own_dt': now};
+      if (feedback == 1) data['sts'] = 1;
+      else if (feedback == 2) data['sts'] = 3;
+      else data['sts'] = 0;
+      await SupabaseService().client.from(DbTables.appointments).update(data).eq('id', apptId);
+      notifyListeners(); return true;
+    } catch (e) { debugPrint('❌ handleAppointment error: $e'); return false; }
   }
 }

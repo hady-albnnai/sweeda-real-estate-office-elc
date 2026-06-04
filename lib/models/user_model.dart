@@ -1,34 +1,32 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../core/constants/firestore_constants.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// نموذج المستخدم — user
-/// الحقول بأسماء قصيرة لتقليل حجم البيانات (SPEC § naming)
+/// نموذج المستخدم — أسماء الحقول القصيرة تطابق قاعدة البيانات
 class UserModel {
   final String uid;
-  final String nm;           // الاسم
-  final String ph;           // الهاتف
-  final String ad;           // العنوان
-  final int role;            // المستوى: 0=مستخدم, 1=وسيط, 2=مشرف, 3=نائب, 4=مدير
-  final String sid;          // رقم الهوية
-  final String img;          // URL صورة البطاقة
-  final int pt;              // رصيد النقاط
-  final int bg;              // البادج: 0=new, 1=bronze, 2=silver, 3=gold, 4=diamond
-  final Timestamp? bgTs;     // تاريخ آخر ترقية للبادج
-  final int bPkg;            // الباقة: 0=free, 1=silver, 2=gold
-  final Timestamp? pkgEnd;   // تاريخ انتهاء الباقة
-  final int brk;             // هل هو وسيط؟ 0=لا, 1=نعم
-  final int brkCls;          // فئة الوساطة: 0=فرد, 1=مكتب, 2=شركة
-  final String brkNm;        // الاسم التجاري
-  final int sts;             // حالة الحساب: 0=نشط, 1=مجمّد, 2=محظور
-  final String banRsn;       // سبب الحظر
-  final Map<String, int> ntf;   // إعدادات الإشعارات
-  final Map<String, int> stats; // إحصائيات
-  final List<dynamic> wkLgn;    // آخر تسجيل دخول أسبوعي
-  final int strk;            // streak counter
-  final Timestamp? strkDt;   // آخر يوم streak
-  final int iDel;            // 0=موجود, 1=محذوف
-  final Timestamp tsCrt;     // تاريخ الإنشاء
-  final Timestamp? tsUpd;    // تاريخ آخر تحديث
+  final String nm;
+  final String ph;
+  final String ad;
+  final int role;
+  final String sid;
+  final String img;
+  final int pt;
+  final int bg;
+  final DateTime? bgTs;
+  final int bPkg;
+  final DateTime? pkgEnd;
+  final int brk;
+  final int brkCls;
+  final String brkNm;
+  final int sts;
+  final String banRsn;
+  final Map<String, dynamic> ntf;
+  final Map<String, dynamic> stats;
+  final List<dynamic> wkLgn;
+  final int strk;
+  final DateTime? strkDt;
+  final int iDel;
+  final DateTime tsCrt;
+  final DateTime? tsUpd;
 
   UserModel({
     required this.uid,
@@ -48,8 +46,8 @@ class UserModel {
     this.brkNm = '',
     this.sts = 0,
     this.banRsn = '',
-    Map<String, int>? ntf,
-    Map<String, int>? stats,
+    Map<String, dynamic>? ntf,
+    Map<String, dynamic>? stats,
     List<dynamic>? wkLgn,
     this.strk = 0,
     this.strkDt,
@@ -60,11 +58,9 @@ class UserModel {
         stats = stats ?? {'off': 0, 'req': 0, 'app': 0, 'dl': 0},
         wkLgn = wkLgn ?? [];
 
-  /// تحويل من Firestore إلى Model
-  factory UserModel.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+  factory UserModel.fromSupabase(Map<String, dynamic> data, String id) {
     return UserModel(
-      uid: doc.id,
+      uid: id,
       nm: data['nm'] ?? '',
       ph: data['ph'] ?? '',
       ad: data['ad'] ?? '',
@@ -73,62 +69,50 @@ class UserModel {
       img: data['img'] ?? '',
       pt: data['pt'] ?? 0,
       bg: data['bg'] ?? 0,
-      bgTs: data['bgTs'] as Timestamp?,
-      bPkg: data['bPkg'] ?? 0,
-      pkgEnd: data['pkgEnd'] as Timestamp?,
+      bgTs: data['bg_ts'] != null ? DateTime.parse(data['bg_ts']) : null,
+      bPkg: data['b_pkg'] ?? 0,
+      pkgEnd: data['pkg_end'] != null ? DateTime.parse(data['pkg_end']) : null,
       brk: data['brk'] ?? 0,
-      brkCls: data['brkCls'] ?? 0,
-      brkNm: data['brkNm'] ?? '',
+      brkCls: data['brk_cls'] ?? 0,
+      brkNm: data['brk_nm'] ?? '',
       sts: data['sts'] ?? 0,
-      banRsn: data['banRsn'] ?? '',
-      ntf: Map<String, int>.from(data['ntf'] ?? {}),
-      stats: Map<String, int>.from(data['stats'] ?? {}),
-      wkLgn: data['wkLgn'] ?? [],
+      banRsn: data['ban_rsn'] ?? '',
+      ntf: data['ntf'] != null
+          ? Map<String, dynamic>.from(data['ntf'] as Map)
+          : {'off': 0, 'app': 0, 'fin': 0, 'rat': 0},
+      stats: data['stats'] != null
+          ? Map<String, dynamic>.from(data['stats'] as Map)
+          : {'off': 0, 'req': 0, 'app': 0, 'dl': 0},
+      wkLgn: data['wk_lgn'] ?? [],
       strk: data['strk'] ?? 0,
-      strkDt: data['strkDt'] as Timestamp?,
-      iDel: data['iDel'] ?? 0,
-      tsCrt: data['tsCrt'] as Timestamp,
-      tsUpd: data['tsUpd'] as Timestamp?,
+      strkDt: data['strk_dt'] != null ? DateTime.parse(data['strk_dt']) : null,
+      iDel: data['i_del'] ?? 0,
+      tsCrt: DateTime.parse(data['ts_crt']),
+      tsUpd: data['ts_upd'] != null ? DateTime.parse(data['ts_upd']) : null,
     );
   }
 
-  /// تحويل إلى Map للتخزين في Firestore
-  Map<String, dynamic> toFirestore() {
+  Map<String, dynamic> toMap() {
     return {
-      'nm': nm,
-      'ph': ph,
-      'ad': ad,
-      'role': role,
-      'sid': sid,
-      'img': img,
-      'pt': pt,
-      'bg': bg,
-      'bgTs': bgTs,
-      'bPkg': bPkg,
-      'pkgEnd': pkgEnd,
-      'brk': brk,
-      'brkCls': brkCls,
-      'brkNm': brkNm,
-      'sts': sts,
-      'banRsn': banRsn,
-      'ntf': ntf,
-      'stats': stats,
-      'wkLgn': wkLgn,
-      'strk': strk,
-      'strkDt': strkDt,
-      'iDel': iDel,
-      'tsCrt': tsCrt,
-      'tsUpd': tsUpd ?? FieldValue.serverTimestamp(),
+      'nm': nm, 'ph': ph, 'ad': ad, 'role': role, 'sid': sid,
+      'img': img, 'pt': pt, 'bg': bg,
+      'bg_ts': bgTs?.toIso8601String(), 'b_pkg': bPkg,
+      'pkg_end': pkgEnd?.toIso8601String(), 'brk': brk,
+      'brk_cls': brkCls, 'brk_nm': brkNm, 'sts': sts,
+      'ban_rsn': banRsn, 'ntf': ntf, 'stats': stats,
+      'wk_lgn': wkLgn, 'strk': strk,
+      'strk_dt': strkDt?.toIso8601String(), 'i_del': iDel,
+      'ts_crt': tsCrt.toIso8601String(),
+      'ts_upd': tsUpd?.toIso8601String(),
     };
   }
 
-  // --- خصائص مساعدة ---
-  bool get isActive => sts == UserStatus.active;
-  bool get isFrozen => sts == UserStatus.frozen;
-  bool get isBanned => sts == UserStatus.banned;
+  bool get isActive => sts == 0;
+  bool get isFrozen => sts == 1;
+  bool get isBanned => sts == 2;
   bool get isBroker => brk == 1;
   bool get isDeleted => iDel == 1;
-  bool get isAdmin => role >= UserRole.supervisor;
+  bool get isAdmin => role >= 2;
 
   String get roleName {
     switch (role) {

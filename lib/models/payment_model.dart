@@ -1,49 +1,41 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class PaymentModel {
   final String id;
-  final String uId;      // User ID
-  final double amt;      // Amount
-  final String method;   // payment method (e.g., 'ShamCash', 'Transfer')
-  final int sts;         // status: 0=pending, 1=success, 2=rejected
-  final String ref;      // reference number or image URL
-  final DateTime dtC;    // Created date
-  final DateTime dtU;    // Updated date
+  final String uid;
+  final int tp;
+  final int pkg;
+  final double amt;
+  final int cur;
+  final int mtd;
+  final String proof;
+  final String ref;
+  final int sts;
+  final String? apprBy;
+  final DateTime tsCrt;
 
   PaymentModel({
-    required this.id,
-    required this.uId,
-    required this.amt,
-    required this.method,
-    required this.sts,
-    required this.ref,
-    required this.dtC,
-    required this.dtU,
+    required this.id, required this.uid, required this.tp,
+    this.pkg = 0, required this.amt, this.cur = 1, this.mtd = 0,
+    this.proof = '', this.ref = '', this.sts = 0,
+    this.apprBy, required this.tsCrt,
   });
+
+  factory PaymentModel.fromSupabase(Map<String, dynamic> data, String id) {
+    return PaymentModel(
+      id: id, uid: data['uid'] ?? '', tp: data['tp'] ?? 0,
+      pkg: data['pkg'] ?? 0, amt: (data['amt'] ?? 0).toDouble(),
+      cur: data['cur'] ?? 1, mtd: data['mtd'] ?? 0,
+      proof: data['proof'] ?? '', ref: data['ref'] ?? '',
+      sts: data['sts'] ?? 0, apprBy: data['appr_by'],
+      tsCrt: DateTime.parse(data['ts_crt']),
+    );
+  }
 
   Map<String, dynamic> toMap() {
     return {
-      'uId': uId,
-      'amt': amt,
-      'method': method,
-      'sts': sts,
-      'ref': ref,
-      'dtC': Timestamp.fromDate(dtC),
-      'dtU': Timestamp.fromDate(dtU),
+      'uid': uid, 'tp': tp, 'pkg': pkg, 'amt': amt,
+      'cur': cur, 'mtd': mtd, 'proof': proof, 'ref': ref,
+      'sts': sts, 'appr_by': apprBy,
+      'ts_crt': tsCrt.toIso8601String(),
     };
-  }
-
-  factory PaymentModel.fromFirestore(DocumentSnapshot doc) {
-    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-    return PaymentModel(
-      id: doc.id,
-      uId: data['uId'] ?? '',
-      amt: (data['amt'] ?? 0).toDouble(),
-      method: data['method'] ?? '',
-      sts: data['sts'] ?? 0,
-      ref: data['ref'] ?? '',
-      dtC: (data['dtC'] as Timestamp).toDate(),
-      dtU: (data['dtU'] as Timestamp).toDate(),
-    );
   }
 }

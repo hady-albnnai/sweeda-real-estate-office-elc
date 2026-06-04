@@ -1,65 +1,47 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class RequestModel {
   final String id;
-  final String uId;      // User ID
-  final int type;        // type (Property/Car)
-  final int trans;       // transaction (Sell/Rent/etc)
-  final int cat;         // category
-  final double prc;      // target price
-  final String loc;      // location
-  final String desc;     // description
-  final String spec;     // specifications (JSON or string)
-  final DateTime dtC;    // Created date
-  final DateTime dtU;    // Updated date
-  final int sts;         // status: 0=pending, 1=active, 2=completed, 3=cancelled
+  final int typ;
+  final int elm;
+  final String clNm;
+  final String clPh;
+  final double prc;
+  final int cur;
+  final String notes;
+  final Map<String, dynamic> specs;
+  final String usrId;
+  final int sts;
+  final Map<String, dynamic> matches;
+  final int iDel;
+  final DateTime tsCrt;
 
   RequestModel({
-    required this.id,
-    required this.uId,
-    required this.type,
-    required this.trans,
-    required this.cat,
-    required this.prc,
-    required this.loc,
-    required this.desc,
-    required this.spec,
-    required this.dtC,
-    required this.dtU,
-    required this.sts,
-  });
+    required this.id, required this.typ, required this.elm,
+    required this.clNm, required this.clPh,
+    this.prc = 0, this.cur = 1, this.notes = '',
+    Map<String, dynamic>? specs, required this.usrId,
+    this.sts = 0, Map<String, dynamic>? matches,
+    this.iDel = 0, required this.tsCrt,
+  })  : specs = specs ?? {}, matches = matches ?? {};
+
+  factory RequestModel.fromSupabase(Map<String, dynamic> data, String id) {
+    return RequestModel(
+      id: id, typ: data['typ'] ?? 0, elm: data['elm'] ?? 0,
+      clNm: data['cl_nm'] ?? '', clPh: data['cl_ph'] ?? '',
+      prc: (data['prc'] ?? 0).toDouble(), cur: data['cur'] ?? 1,
+      notes: data['notes'] ?? '',
+      specs: data['specs'] != null ? Map<String, dynamic>.from(data['specs'] as Map) : {},
+      usrId: data['usr_id'] ?? '', sts: data['sts'] ?? 0,
+      matches: data['matches'] != null ? Map<String, dynamic>.from(data['matches'] as Map) : {},
+      iDel: data['i_del'] ?? 0, tsCrt: DateTime.parse(data['ts_crt']),
+    );
+  }
 
   Map<String, dynamic> toMap() {
     return {
-      'uId': uId,
-      'type': type,
-      'trans': trans,
-      'cat': cat,
-      'prc': prc,
-      'loc': loc,
-      'desc': desc,
-      'spec': spec,
-      'dtC': Timestamp.fromDate(dtC),
-      'dtU': Timestamp.fromDate(dtU),
-      'sts': sts,
+      'typ': typ, 'elm': elm, 'cl_nm': clNm, 'cl_ph': clPh,
+      'prc': prc, 'cur': cur, 'notes': notes, 'specs': specs,
+      'usr_id': usrId, 'sts': sts, 'matches': matches,
+      'i_del': iDel, 'ts_crt': tsCrt.toIso8601String(),
     };
-  }
-
-  factory RequestModel.fromFirestore(DocumentSnapshot doc) {
-    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-    return RequestModel(
-      id: doc.id,
-      uId: data['uId'] ?? '',
-      type: data['type'] ?? 0,
-      trans: data['trans'] ?? 0,
-      cat: data['cat'] ?? 0,
-      prc: (data['prc'] ?? 0).toDouble(),
-      loc: data['loc'] ?? '',
-      desc: data['desc'] ?? '',
-      spec: data['spec'] ?? '',
-      dtC: (data['dtC'] as Timestamp).toDate(),
-      dtU: (data['dtU'] as Timestamp).toDate(),
-      sts: data['sts'] ?? 0,
-    );
   }
 }
