@@ -48,7 +48,7 @@ class OfferDetailScreen extends StatelessWidget {
                   const SizedBox(height: 20),
                   const Text('الوصف التفصيلي', style: TextStyle(color: AppTheme.primaryGold, fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
-                  Text(offer.desc, style: const TextStyle(color: AppTheme.textWhite, fontSize: 16, height: 1.5)),
+                  Text(offer.descript, style: const TextStyle(color: AppTheme.textWhite, fontSize: 16, height: 1.5)),
                   const SizedBox(height: 20),
                   GridView.count(
                     shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),

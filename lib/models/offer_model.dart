@@ -11,7 +11,7 @@ class OfferModel {
   final double prc;
   final int cur;
   final Map<String, dynamic> loc;
-  final String desc;
+  final String descript;
   final List<String> imgs;
   final String vdo;
   final int docTp;
@@ -49,7 +49,7 @@ class OfferModel {
     required this.prc,
     this.cur = 1,
     Map<String, dynamic>? loc,
-    this.desc = '',
+    this.descript = '',
     List<String>? imgs,
     this.vdo = '',
     this.docTp = 0,
@@ -94,7 +94,7 @@ class OfferModel {
       loc: data['loc'] != null
           ? Map<String, dynamic>.from(data['loc'] as Map)
           : {'r': 0, 'd': ''},
-      desc: data['desc'] ?? '',
+      descript: data['descript'] ?? '',
       imgs: data['imgs'] != null
           ? List<String>.from(data['imgs'] as List)
           : [],
@@ -133,7 +133,7 @@ class OfferModel {
       'usr_id': usrId, 'brk_id': brkId, 'brk_pct': brkPct,
       'typ': typ, 'trx': trx, 'cat': cat, 'sub': sub,
       'ttl': ttl, 'prc': prc, 'cur': cur, 'loc': loc,
-      'desc': desc, 'imgs': imgs, 'vdo': vdo,
+      'descript': descript, 'imgs': imgs, 'vdo': vdo,
       'doc_tp': docTp, 'doc_img': docImg, 'exact_loc': exactLoc,
       'specs': specs, 'com': com, 'sts': sts, 'rsn': rsn,
       'vws': vws, 'fvs': fvs, 'i_pub': iPub, 'i_soc': iSoc,
