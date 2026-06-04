@@ -102,11 +102,14 @@ class OfferProvider with ChangeNotifier {
 
   void listenToNewOffers(Function(OfferModel) onNewOffer) {
     SupabaseService().client.from(DbTables.offers)
-        .stream(primaryKey: ['id']).eq('i_pub', 1).eq('i_del', 0)
+        .stream(primaryKey: ['id'])
+        .order('ts_crt', ascending: false)
         .listen((data) {
       for (var row in data) {
-        onNewOffer(OfferModel.fromSupabase(
-            Map<String, dynamic>.from(row), row['id'] as String));
+        if ((row['i_pub'] ?? 0) == 1 && (row['i_del'] ?? 0) == 0) {
+          onNewOffer(OfferModel.fromSupabase(
+              Map<String, dynamic>.from(row), row['id'] as String));
+        }
       }
     });
   }

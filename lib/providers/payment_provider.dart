@@ -32,7 +32,7 @@ class PaymentProvider with ChangeNotifier {
 
   Future<bool> updatePaymentStatus(String paymentId, int newStatus, {String? approvedBy}) async {
     try {
-      final data = {'sts': newStatus};
+      final data = <String, dynamic>{'sts': newStatus};
       if (approvedBy != null) data['appr_by'] = approvedBy;
       await SupabaseService().client.from(DbTables.payments).update(data).eq('id', paymentId);
       notifyListeners(); return true;
