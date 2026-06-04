@@ -39,7 +39,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       typ: _selectedType!, trx: _selectedTrans ?? 0, cat: 0,
       prc: double.tryParse(_priceCtrl.text) ?? 0.0,
       loc: {'r': 0, 'd': _locCtrl.text},
-      desc: _descCtrl.text, specs: {'details': _specCtrl.text},
+      descript: _descCtrl.text, specs: {'details': _specCtrl.text},
       imgs: _selectedImages, sts: 0, iPUB: 0, avl: _availability,
       tsCrt: DateTime.now(), docTp: 0, brkId: '', brkPct: 0, sub: 0,
       cur: 1, vdo: '', docImg: '', exactLoc: '', com: 0, rsn: '',

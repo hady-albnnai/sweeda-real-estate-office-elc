@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS offers (
   ttl TEXT NOT NULL DEFAULT '', prc NUMERIC(15,2) NOT NULL DEFAULT 0,
   cur INTEGER DEFAULT 1 CHECK (cur IN (0,1)),
   loc JSONB DEFAULT '{"r":0,"d":""}'::jsonb,
-  desc TEXT DEFAULT '', imgs JSONB DEFAULT '[]'::jsonb,
+  descript TEXT DEFAULT '', imgs JSONB DEFAULT '[]'::jsonb,
   vdo TEXT DEFAULT '', doc_tp INTEGER DEFAULT 0, doc_img TEXT DEFAULT '',
   exact_loc TEXT DEFAULT '', specs JSONB DEFAULT '{}'::jsonb,
   com NUMERIC(10,2) DEFAULT 0, sts INTEGER DEFAULT 0 CHECK (sts BETWEEN 0 AND 6),
