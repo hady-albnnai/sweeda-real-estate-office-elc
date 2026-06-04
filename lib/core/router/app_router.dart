@@ -1,28 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
+// === Splash ===
 import '../screens/splash_screen.dart';
+
+// === Visitor ===
 import '../screens/visitor/home_screen.dart';
 import '../screens/visitor/offer_detail_screen.dart';
 import '../screens/visitor/search_screen.dart';
+
+// === Auth ===
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/otp_verification_screen.dart';
-import '../screens/admin/offers_review_screen.dart';
-import '../screens/broker/broker_appointments_screen.dart';
+import '../screens/auth/setup_profile_screen.dart';
+
+// === User ===
 import '../screens/user/my_offers_screen.dart';
 import '../screens/user/add_offer_screen.dart';
-import '../screens/auth/setup_profile_screen.dart';
+
+// === Broker ===
+import '../screens/broker/broker_appointments_screen.dart';
+
+// === Admin ===
+import '../screens/admin/offers_review_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: '/splash',
     routes: [
-      // Splash Screen
+      // ═══════════════════════════════════════
+      // 🎬 SPLASH
+      // ═══════════════════════════════════════
       GoRoute(
         path: '/splash',
         builder: (context, state) => const SplashScreen(),
       ),
 
-      // Visitor Routes
+      // ═══════════════════════════════════════
+      // 🌐 VISITOR (زائر)
+      // ═══════════════════════════════════════
       GoRoute(
         path: '/home',
         builder: (context, state) => const HomeScreen(),
@@ -39,7 +55,9 @@ class AppRouter {
         },
       ),
 
-      // Auth Routes
+      // ═══════════════════════════════════════
+      // 🔐 AUTH (مصادقة)
+      // ═══════════════════════════════════════
       GoRoute(
         path: '/login',
         builder: (context, state) => const LoginScreen(),
@@ -53,10 +71,14 @@ class AppRouter {
         builder: (context, state) => const SetupProfileScreen(),
       ),
 
-      // User Routes
+      // ═══════════════════════════════════════
+      // 👤 USER (مستخدم)
+      // ═══════════════════════════════════════
       GoRoute(
         path: '/user/home',
-        builder: (context, state) => const Scaffold(body: Center(child: Text('User Home'))),
+        builder: (context, state) => const Scaffold(
+          body: Center(child: Text('🏠 الشاشة الرئيسية للمستخدم')),
+        ),
       ),
       GoRoute(
         path: '/user/my-offers',
@@ -66,25 +88,123 @@ class AppRouter {
         path: '/user/add-offer',
         builder: (context, state) => const AddOfferScreen(),
       ),
+      GoRoute(
+        path: '/user/my-requests',
+        builder: (context, state) => const Scaffold(
+          body: Center(child: Text('📋 طلباتي — قيد التطوير')),
+        ),
+      ),
+      GoRoute(
+        path: '/user/my-appointments',
+        builder: (context, state) => const Scaffold(
+          body: Center(child: Text('📅 مواعيدي — قيد التطوير')),
+        ),
+      ),
+      GoRoute(
+        path: '/user/favorites',
+        builder: (context, state) => const Scaffold(
+          body: Center(child: Text('❤️ المفضلة — قيد التطوير')),
+        ),
+      ),
+      GoRoute(
+        path: '/user/profile',
+        builder: (context, state) => const Scaffold(
+          body: Center(child: Text('👤 الملف الشخصي — قيد التطوير')),
+        ),
+      ),
+      GoRoute(
+        path: '/user/settings',
+        builder: (context, state) => const Scaffold(
+          body: Center(child: Text('⚙️ الإعدادات — قيد التطوير')),
+        ),
+      ),
 
-      // Broker Routes
+      // ═══════════════════════════════════════
+      // 🤝 BROKER (وسيط/سمسار)
+      // ═══════════════════════════════════════
       GoRoute(
         path: '/broker/dashboard',
-        builder: (context, state) => const Scaffold(body: Center(child: Text('Broker Dashboard'))),
+        builder: (context, state) => const Scaffold(
+          body: Center(child: Text('📊 لوحة الوسيط — قيد التطوير')),
+        ),
+      ),
+      GoRoute(
+        path: '/broker/offers',
+        builder: (context, state) => const Scaffold(
+          body: Center(child: Text('🏠 عروض العملاء — قيد التطوير')),
+        ),
       ),
       GoRoute(
         path: '/broker/appointments',
         builder: (context, state) => const BrokerAppointmentsScreen(),
       ),
+      GoRoute(
+        path: '/broker/deals',
+        builder: (context, state) => const Scaffold(
+          body: Center(child: Text('🤝 الصفقات — قيد التطوير')),
+        ),
+      ),
+      GoRoute(
+        path: '/broker/stats',
+        builder: (context, state) => const Scaffold(
+          body: Center(child: Text('📈 الإحصائيات — قيد التطوير')),
+        ),
+      ),
 
-      // Admin Routes
+      // ═══════════════════════════════════════
+      // 🛡️ ADMIN (إدارة)
+      // ═══════════════════════════════════════
       GoRoute(
         path: '/admin/dashboard',
-        builder: (context, state) => const Scaffold(body: Center(child: Text('Admin Dashboard'))),
+        builder: (context, state) => const Scaffold(
+          body: Center(child: Text('🛡️ لوحة الإدارة — قيد التطوير')),
+        ),
+      ),
+      GoRoute(
+        path: '/admin/users',
+        builder: (context, state) => const Scaffold(
+          body: Center(child: Text('👥 إدارة المستخدمين — قيد التطوير')),
+        ),
       ),
       GoRoute(
         path: '/admin/review-offers',
         builder: (context, state) => const OffersReviewScreen(),
+      ),
+      GoRoute(
+        path: '/admin/appointments',
+        builder: (context, state) => const Scaffold(
+          body: Center(child: Text('📅 إدارة المواعيد — قيد التطوير')),
+        ),
+      ),
+      GoRoute(
+        path: '/admin/deals',
+        builder: (context, state) => const Scaffold(
+          body: Center(child: Text('🤝 إدارة الصفقات — قيد التطوير')),
+        ),
+      ),
+      GoRoute(
+        path: '/admin/payments',
+        builder: (context, state) => const Scaffold(
+          body: Center(child: Text('💰 المدفوعات — قيد التطوير')),
+        ),
+      ),
+      GoRoute(
+        path: '/admin/reports',
+        builder: (context, state) => const Scaffold(
+          body: Center(child: Text('📢 التبليغات — قيد التطوير')),
+        ),
+      ),
+      GoRoute(
+        path: '/admin/config',
+        builder: (context, state) => const Scaffold(
+          body: Center(child: Text('⚙️ إعدادات التطبيق — قيد التطوير')),
+        ),
+      ),
+      GoRoute(
+        path: '/admin/analytics',
+        builder: (context, state) => const Scaffold(
+          body: Center(child: Text('📊 التحليلات — قيد التطوير')),
+        ),
       ),
     ],
   );
