@@ -23,7 +23,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
       final auth = Provider.of<AuthProvider>(context, listen: false);
       final userId = auth.userModel?.uid;
       if (userId != null) {
-        Provider.of<RequestProvider>(context, listen: false).fetchRequests(userId);
+        Provider.of<RequestProvider>(context, listen: false).fetchMyRequests(userId);
       }
     });
   }
