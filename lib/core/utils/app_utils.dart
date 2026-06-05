@@ -14,11 +14,20 @@ class AppUtils {
     if (ts is DateTime) {
       date = ts;
     } else if (ts is String) {
-      date = DateTime.parse(ts);
+      try {
+        date = DateTime.parse(ts);
+      } catch (_) {
+        return '';
+      }
     } else {
       return '';
     }
-    return DateFormat(pattern, 'ar').format(date);
+    // محاولة العربية، وعند الفشل نستخدم الافتراضي
+    try {
+      return DateFormat(pattern, 'ar').format(date);
+    } catch (_) {
+      return DateFormat(pattern).format(date);
+    }
   }
 
   static String offerStatusText(int status) {

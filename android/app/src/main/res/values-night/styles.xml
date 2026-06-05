@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- شاشة الإقلاع أثناء بدء العملية (الوضع الداكن) -->
+    <!-- شاشة الإقلاع — تُطبَّق فوراً قبل تشغيل Flutter -->
     <style name="LaunchTheme" parent="@android:style/Theme.Black.NoTitleBar">
         <item name="android:windowBackground">@drawable/launch_background</item>
+        <!-- يمنع الشاشة البيضاء الافتراضية لـ Android -->
+        <item name="android:windowDisablePreview">true</item>
+        <item name="android:windowFullscreen">false</item>
+        <item name="android:windowContentOverlay">@null</item>
     </style>
-    <!-- الثيم بعد بدء العملية وأثناء تهيئة Flutter UI -->
+    <!-- الثيم بعد بدء التشغيل وأثناء تهيئة Flutter UI -->
     <style name="NormalTheme" parent="@android:style/Theme.Black.NoTitleBar">
         <item name="android:windowBackground">@color/splash_bg</item>
     </style>
