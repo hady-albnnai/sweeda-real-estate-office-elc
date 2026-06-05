@@ -1,7 +1,7 @@
 # 🚀 دليل التطوير — عقارات السويداء
 
 > **آخر تحديث:** 2026-06-05  
-> **Commit الحالي:** المرحلة 3 ✅ مكتملة  
+> **Commit الحالي:** المرحلة 4 ✅ مكتملة  
 > **المستودع:** https://github.com/hady-albnnai/sweeda-real-estate-office-elc
 
 ---
@@ -13,13 +13,13 @@
 | **السيرفر (Supabase)** | ✅ 100% | 13 جدول + 12 دالة RPC + RLS + Realtime |
 | **الموديلات** | ✅ 100% | 10 ملفات |
 | **الـ Providers** | ✅ 100% | 9 ملفات (broker + admin موسّعان بالكامل) |
-| **الـ Services** | ✅ 100% | auth, storage, notification |
+| **الـ Services** | ✅ 100% | auth, storage(+ضغط/رفع), notification, **business**, **local_cache(Hive)** |
 | **الـ Router** | ✅ 100% | 30 مسار (شاشات السمسار الـ4 مربوطة) |
 | **🎬 المرحلة 0: الأساس** | ✅ مكتملة | Splash + Firebase removal |
 | **👤 المرحلة 1: شاشات المستخدم** | ✅ مكتملة | 8 شاشات + BottomNavBar |
 | **🤝 المرحلة 2: لوحة السمسار** | ✅ مكتملة | 4 شاشات + ربط بالبروفايل |
 | **🛡️ المرحلة 3: لوحة الإدارة** | ✅ مكتملة | 9 شاشات (dashboard + 8 أقسام) |
-| **⚙️ المرحلة 4: المنطق الخلفي** | ⏳ لم تبدأ | Config + نقاط + باقات + صور |
+| **⚙️ المرحلة 4: المنطق الخلفي** | ✅ مكتملة | Config+Hive · نقاط · باقات/حصص · مطابقة · Streak · سوشال · رفع صور |
 | **✨ المرحلة 5: التحسينات** | ⏳ لم تبدأ | Realtime + Push + Offline |
 | **📦 المرحلة 6: البناء** | ⏳ لم تبدأ | APK + Testing |
 
@@ -88,16 +88,20 @@ firebase.json ❌ | functions/ ❌ | firebase_options.dart ❌ | firestore_servi
 
 **الدخول:** زر "لوحة الإدارة" في `profile_screen.dart` (يظهر لمن `isAdmin` أي role≥2).
 
-### 📌 المرحلة 4: المنطق الخلفي
-| # | العنصر | الوصف |
-|---|---|---|
-| 4.1 | Config Loading | تحميل Config من app_config + تخزين Hive |
-| 4.2 | المطابقة التلقائية | RPC: مطابقة الطلبات بالعروض |
-| 4.3 | نظام النقاط | RPC: add_points + update_user_badge |
-| 4.4 | نظام الباقات | مجاني/فضي/ذهبي + حدود النشر |
-| 4.5 | Streak System | تسجيل دخول يومي متتالي |
-| 4.6 | Social Media | توليد نص المنشور تلقائياً |
-| 4.7 | رفع الصور | Supabase Storage offer_images + ضغط |
+### ✅ المرحلة 4: المنطق الخلفي (مكتملة)
+| # | العنصر | التنفيذ | الحالة |
+|---|---|---|---|
+| 4.1 | Config Loading | `LocalCacheService` (Hive) + `ConfigProvider` كاش-أولاً ثم تحديث من السيرفر + تحميل بالـ Splash | ✅ |
+| 4.2 | المطابقة التلقائية | `BusinessService.matchOffersForRequest` (نوع + سعر ±20%) — تظهر للمستخدم عند إضافة طلب عبر BottomSheet | ✅ |
+| 4.3 | نظام النقاط | `BusinessService.addPoints` (RPC `add_points` + fallback) + `awardEvent`/`applyPenalty` حسب مفاتيح Config | ✅ |
+| 4.4 | الباقات والحصص | `canPublishOffer`/`canPublishRequest` + `offerQuota`/`requestQuota` (pkg → qta) — مطبّقة بشاشة إضافة العرض/الطلب | ✅ |
+| 4.5 | Streak System | `registerDailyStreak` + `AuthProvider.registerStreak` — يُستدعى بالـ HomeScreen ويمنح نقاط | ✅ |
+| 4.6 | Social Media | `generateSocialPost` + `markSocialPublished` + مشاركة عبر `share_plus` بشاشة تفاصيل العرض | ✅ |
+| 4.7 | رفع الصور | `StorageService` موسّع: اختيار (image_picker) + ضغط (flutter_image_compress) + رفع متعدد لـ `offer_images` | ✅ |
+
+> **ملفات جديدة:** `lib/core/services/local_cache_service.dart` · `lib/core/services/business_service.dart`  
+> **تبعية جديدة:** `path_provider: ^2.1.2` (لازمة لضغط الصور).  
+> **تهيئة:** `LocalCacheService.initialize()` تُستدعى في `main()` قبل `runApp`.
 
 ### 📌 المرحلة 5: التحسينات
 | # | العنصر | الوصف |
@@ -145,11 +149,12 @@ lib/
 │   ├── constants/db_constants.dart
 │   ├── network/supabase_service.dart
 │   ├── router/app_router.dart   # 30 مسار
+│   ├── services/                # business_service + local_cache_service (Hive)
 │   ├── theme/app_theme.dart     # Luxury Dark + RTL
 │   └── utils/app_utils.dart
 ├── models/                      # 10 ملفات
-├── providers/                   # 8 ملفات
-├── services/                    # auth, storage, notification
+├── providers/                   # 9 ملفات
+├── services/                    # auth, storage(+ضغط/رفع), notification
 ├── screens/
 │   ├── splash/splash_screen.dart         ✅
 │   ├── visitor/  (3 شاشات)               ✅
@@ -185,6 +190,6 @@ flutter analyze                # فحص أخطاء
 - [x] كل المسارات بالـ Router محددة
 - [x] المرحلة 2: لوحة السمسار (4 شاشات + ربط)
 - [x] المرحلة 3: لوحة الإدارة (9 شاشات + AdminProvider موسّع)
-- [ ] المرحلة 4: المنطق الخلفي
+- [x] المرحلة 4: المنطق الخلفي (Config/Hive + نقاط + باقات + مطابقة + Streak + سوشال + صور)
 - [ ] المرحلة 5: التحسينات
 - [ ] المرحلة 6: البناء والنشر

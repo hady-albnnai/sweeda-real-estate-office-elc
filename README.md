@@ -38,7 +38,8 @@ sweeda-real-estate-office-elc/
 │   ├── core/                      ← constants, network, router, theme, utils
 │   ├── models/                    ← 10 ملفات
 │   ├── providers/                 ← 9 ملفات
-│   ├── services/                  ← auth, storage, notification
+│   ├── services/                  ← auth, storage(+ضغط/رفع), notification
+│   ├── core/services/             ← business_service, local_cache_service (Hive)
 │   ├── screens/                   ← splash, visitor, auth, user(8), broker(5), admin(9)
 │   └── widgets/                   ← ويدجت مشتركة
 ├── prototype/                     ← نموذج HTML
@@ -85,7 +86,8 @@ flutter run
 | ✅ المرحلة 1: شاشات المستخدم (8 شاشات) | مكتملة |
 | ✅ المرحلة 2: لوحة السمسار (4 شاشات) | مكتملة |
 | ✅ المرحلة 3: لوحة الإدارة (9 شاشات) | مكتملة |
-| ⏳ المرحلة 4: المنطق الخلفي | التالية |
+| ✅ المرحلة 4: المنطق الخلفي (نقاط/باقات/مطابقة/streak/سوشال/صور) | مكتملة |
+| ⏳ المرحلة 5: التحسينات | التالية |
 
 ---
 
