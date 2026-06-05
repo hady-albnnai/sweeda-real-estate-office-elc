@@ -1,7 +1,7 @@
 # 🚀 دليل التطوير — عقارات السويداء
 
 > **آخر تحديث:** 2026-06-05  
-> **Commit الحالي:** المرحلة 5 ✅ مكتملة  
+> **Commit الحالي:** المرحلة 6 ✅ مُجهّزة (بناء + أمان + توثيق)  
 > **المستودع:** https://github.com/hady-albnnai/sweeda-real-estate-office-elc
 
 ---
@@ -21,7 +21,7 @@
 | **🛡️ المرحلة 3: لوحة الإدارة** | ✅ مكتملة | 9 شاشات (dashboard + 8 أقسام) |
 | **⚙️ المرحلة 4: المنطق الخلفي** | ✅ مكتملة | Config+Hive · نقاط · باقات/حصص · مطابقة · Streak · سوشال · رفع صور |
 | **✨ المرحلة 5: التحسينات** | ✅ مكتملة | Realtime + إشعارات + Offline + Shimmer + Splash |
-| **📦 المرحلة 6: البناء** | ⏳ لم تبدأ | APK + Testing |
+| **📦 المرحلة 6: البناء** | ✅ مُجهّزة | إعداد Gradle/توقيع + إزالة Firebase + ProGuard + دليل + مراجعة أمنية |
 
 ---
 
@@ -115,13 +115,16 @@ firebase.json ❌ | functions/ ❌ | firebase_options.dart ❌ | firestore_servi
 
 > **ملاحظة Push:** الإشعارات داخل التطبيق + Realtime + المحلية تعمل. إشعارات FCM الخارجية (والتطبيق مغلق) تتطلب Edge Function + مفتاح FCM — تُؤجَّل لمرحلة لاحقة عند الحاجة.
 
-### 📌 المرحلة 6: البناء والنشر
-| # | العنصر |
-|---|---|
-| 6.1 | Android APK + App Bundle |
-| 6.2 | iOS IPA + TestFlight |
-| 6.3 | Security Review (RLS + API keys) |
-| 6.4 | Testing شامل |
+### ✅ المرحلة 6: البناء والنشر (مُجهّزة)
+| # | العنصر | التنفيذ | الحالة |
+|---|---|---|---|
+| 6.1 | إعداد Android | إزالة Firebase/google-services من Gradle · `applicationId=com.sweeda.realestate` · توقيع release عبر `key.properties` · `minify+shrink` + `proguard-rules.pro` · نقل MainActivity للـ package الجديد | ✅ |
+| 6.2 | إعداد iOS | `bundle id=com.sweeda.realestate` · أذونات Info.plist (صور/كاميرا) بالعربي · لغة افتراضية ar | ✅ |
+| 6.3 | المراجعة الأمنية | `docs/SECURITY_REVIEW.md` (RLS · مفاتيح · توقيع · توصيات) | ✅ |
+| 6.4 | دليل البناء | `BUILD_GUIDE.md` خطوة بخطوة (Android/iOS/Supabase + مشاكل شائعة) | ✅ |
+| 6.5 | حماية الأسرار | `.gitignore` يستثني keystore/key.properties/google-services.json/.env | ✅ |
+
+> **⚠️ يتبقّى على الجهاز المحلي:** تنفيذ `flutter build apk/appbundle/ipa` فعلياً + إنشاء keystore + الرفع للمتاجر + تطبيق ترقيات RLS الإدارية (انظر SECURITY_REVIEW). لا يمكن تنفيذ أوامر البناء ضمن البيئة السحابية (لا يوجد Flutter SDK).
 
 ---
 
@@ -194,4 +197,4 @@ flutter analyze                # فحص أخطاء
 - [x] المرحلة 3: لوحة الإدارة (9 شاشات + AdminProvider موسّع)
 - [x] المرحلة 4: المنطق الخلفي (Config/Hive + نقاط + باقات + مطابقة + Streak + سوشال + صور)
 - [x] المرحلة 5: التحسينات (Realtime + إشعارات + Offline + Shimmer + Splash)
-- [ ] المرحلة 6: البناء والنشر
+- [x] المرحلة 6: البناء والنشر (تجهيز Gradle/توقيع/أمان/دليل — يتبقّى تنفيذ البناء محلياً)

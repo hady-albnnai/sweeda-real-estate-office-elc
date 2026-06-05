@@ -66,5 +66,20 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<!-- أذونات الوسائط (image_picker) -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>يحتاج التطبيق للوصول إلى الصور لإرفاقها بالعروض العقارية.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>يحتاج التطبيق للكاميرا لالتقاط صور العروض.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>يحتاج التطبيق لحفظ الصور في مكتبتك.</string>
+	<!-- دعم اللغة العربية كلغة افتراضية -->
+	<key>CFBundleDevelopmentRegion</key>
+	<string>ar</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>ar</string>
+		<string>en</string>
+	</array>
 </dict>
 </plist>

@@ -46,3 +46,24 @@ coverage/
 
 # Supabase
 supabase/.env
+
+# =======================
+# Android signing (حساس — لا يُرفع أبداً)
+# =======================
+android/key.properties
+*.jks
+*.keystore
+**/google-services.json
+
+# =======================
+# iOS signing / secrets
+# =======================
+ios/Runner/GoogleService-Info.plist
+*.mobileprovision
+*.p12
+
+# =======================
+# أسرار التطبيق
+# =======================
+.env
+.env.*
