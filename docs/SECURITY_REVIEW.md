@@ -48,6 +48,8 @@ USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role >= 2));
 ### 5. OTP
 `otp_codes` يسمح بـ INSERT للجميع (`WITH CHECK (true)`) — منطقي لتوليد OTP، لكن تأكّد أن `verify_otp` يحدّد محاولات فاشلة/انتهاء صلاحية لمنع brute-force.
 
+**✅ تحديث 2026-06-05:** أُضيف `generate_otp_v2` مع حدّ معدّل (5 طلبات/10 دقائق لكل identifier) + `verify_otp_v2` يحذف الكود بعد الاستخدام. الإرسال الفعلي للواتساب يتم عبر Edge Function `send-whatsapp-otp` التي تستخدم `service_role` (لا يُسرّب للعميل). راجع `docs/AUTH_SETUP.md`.
+
 ---
 
 ## 📋 قائمة تحقق أمنية قبل النشر
@@ -56,7 +58,7 @@ USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role >= 2));
 - [ ] إضافة سياسات UPDATE للمشرف على `payments`/`reports`/`deals` (البند 2)
 - [ ] نقل إنشاء الإشعارات إلى RPC `SECURITY DEFINER` (البند 3)
 - [ ] إنشاء keystore إنتاج + `key.properties` (غير مرفوع)
-- [ ] التأكد أن `verify_otp` يطبّق حد محاولات + انتهاء صلاحية
+- [x] التأكد أن `verify_otp` يطبّق حد محاولات + انتهاء صلاحية → ✅ `generate_otp_v2` (5 طلبات/10د) + `verify_otp_v2` (5 دقائق صلاحية + حذف بعد الاستخدام)
 - [ ] مراجعة bucket `offer_images`: عام للقراءة، والكتابة للمستخدمين المسجّلين فقط
 - [ ] تدوير (rotate) أي توكن GitHub استُخدم أثناء التطوير
 - [ ] تفعيل Email/Rate limiting في إعدادات مشروع Supabase

@@ -14,7 +14,7 @@
 | **الواجهة** | عربية بالكامل، اتجاه RTL، خط Cairo |
 | **الأدوار** | زائر · مستخدم · سمسار · إدارة |
 | **الـ Backend** | Supabase (PostgreSQL + Auth + Realtime + Storage + RPC Functions) |
-| **التحقق** | OTP عبر رقم الموبايل (Supabase Auth + RPC fallback) |
+| **التحقق** | طريقتان: **WhatsApp OTP** (Meta Cloud API عبر Edge Function) + **Email Magic Link** (Supabase Auth) — مع dev fallback |
 | **الإشعارات** | Realtime listener + Push Notifications |
 | **التقنية** | Flutter + Supabase + Provider + GoRouter |
 | **الإصدار المستهدف** | Android (API 24+) · iOS (15+) |
@@ -55,7 +55,9 @@ sweeda-real-estate-office-elc/
 `users` · `offers` · `requests` · `appointments` · `notifications` · `payments` · `reports` · `deals` · `activity_log` · `stats` · `app_config` · `otp_codes` · `user_devices`
 
 ### الدوال (12 دالة RPC)
-`generate_otp` · `verify_otp` · `create_user_from_phone` · `get_user_by_phone` · `check_offer_duplicate` · `calculate_commission` · `update_user_badge` · `get_pending_offers_count` · `add_points` · `soft_delete` · `expire_offers` · `send_appointment_reminders`
+`generate_otp` · `verify_otp` · `generate_otp_v2` · `verify_otp_v2` · `upsert_user_after_otp` · `get_user_by_email` · `create_user_from_phone` · `get_user_by_phone` · `check_offer_duplicate` · `calculate_commission` · `update_user_badge` · `get_pending_offers_count` · `add_points` · `soft_delete` · `expire_offers` · `send_appointment_reminders`
+
+**Edge Functions:** `send-whatsapp-otp` · `verify-whatsapp-otp` (راجع `docs/AUTH_SETUP.md` للتفعيل)
 
 ### Realtime
 `offers` · `notifications` · `appointments` · `deals` · `requests`
