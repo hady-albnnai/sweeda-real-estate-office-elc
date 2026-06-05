@@ -1,43 +1,133 @@
 # 📚 مرجع دوال Supabase (RPC + Edge Functions)
 
 > **مشروع:** عقارات السويداء  
-> **آخر تحديث:** 2026-06-05  
-> **المصدر:** `supabase/setup.sql` + `supabase/migrations/2026_06_05_whatsapp_email_auth.sql`
+> **آخر تحديث:** 2026-06-05 (المرحلة 10)  
+> **المصدر:** `supabase/setup.sql` + Migrations + Edge Functions
 
 ---
 
-## 📋 قائمة الدوال (16 دالة RPC + 2 Edge Functions)
+## 🟢 حالة التفعيل على السيرفر (vsgkgnjtebjxyqwpuopz)
+
+| الحالة | المحتوى |
+|---|---|
+| ✅ **مُطبّق على السيرفر** | كل دوال `setup.sql` الأصلية (12 دالة) |
+| ✅ **مُطبّق على السيرفر** | Migration المصادقة (`2026_06_05_whatsapp_email_auth.sql`) — 4 دوال + عمود `eml` + توسعة `otp_codes` |
+| ✅ **مُطبّق على السيرفر** | Migration الإحصائيات والإحالة (`2026_06_05_stats_triggers_and_wkLogin.sql`) — 6 دوال + 4 triggers + عمودي `ref_by`/`ref_cnt` |
+| ⚠️ **مكتوب لكن لم يُنشر بعد** | Edge Functions: `send-whatsapp-otp`, `verify-whatsapp-otp` (يحتاج `supabase functions deploy` + secrets META) |
+| ⚠️ **معلّق** | تفعيل Email SMTP (Resend) — تم في Dashboard ✅ بس Meta WhatsApp credentials لسا (يستخدم وضع التطوير) |
+
+---
+
+## 📋 قائمة الدوال (22 دالة RPC + 2 Edge Functions)
 
 ### دوال RPC (PostgreSQL):
 
 | # | اسم الدالة | المدخلات | المخرج | SECURITY DEFINER |
 |---|---|---|---|---|
+| **— مصادقة (Auth) —** | | | | |
 | 1 | `generate_otp` ⚠️ Legacy | `p_phone TEXT` | `TEXT` | ✅ |
 | 2 | `verify_otp` ⚠️ Legacy | `p_phone TEXT, p_code TEXT` | `BOOLEAN` | ✅ |
-| 3 | **`generate_otp_v2`** 🆕 | `p_identifier TEXT, p_channel TEXT` | `TEXT` | ✅ |
-| 4 | **`verify_otp_v2`** 🆕 | `p_identifier TEXT, p_code TEXT` | `BOOLEAN` | ✅ |
-| 5 | **`upsert_user_after_otp`** 🆕 | `p_identifier TEXT, p_channel TEXT` | `TABLE(user_id UUID, is_new BOOLEAN)` | ✅ |
-| 6 | **`get_user_by_email`** 🆕 | `p_email TEXT` | `SETOF users` | ✅ |
+| 3 | `generate_otp_v2` 🆕 | `p_identifier TEXT, p_channel TEXT` | `TEXT` | ✅ |
+| 4 | `verify_otp_v2` 🆕 | `p_identifier TEXT, p_code TEXT` | `BOOLEAN` | ✅ |
+| 5 | `upsert_user_after_otp` 🆕 | `p_identifier TEXT, p_channel TEXT` | `TABLE(user_id UUID, is_new BOOLEAN)` | ✅ |
+| 6 | `get_user_by_email` 🆕 | `p_email TEXT` | `SETOF users` | ✅ |
 | 7 | `get_user_by_phone` | `p_phone TEXT` | `SETOF users` | ✅ |
-| 8 | `check_offer_duplicate` | `ttl, prc, loc, usr_id` | `BOOLEAN` | ✅ |
-| 9 | `calculate_commission` | `prc, pct` | `NUMERIC` | ❌ |
-| 10 | `update_user_badge` | `p_uid UUID` | `VOID` | ❌ |
-| 11 | `get_pending_offers_count` | — | `INTEGER` | ❌ |
-| 12 | `add_points` | `p_uid, p_pts` | `VOID` | ❌ |
-| 13 | `soft_delete` | `p_table, p_id` | `VOID` | ✅ |
-| 14 | `expire_offers` | — | `VOID` | ❌ |
-| 15 | `send_appointment_reminders` | — | `VOID` | ❌ |
-| 16 | `create_user_from_phone` | `p_phone, p_nm` | `UUID` | ✅ |
+| 8 | `create_user_from_phone` | `p_phone, p_nm` | `UUID` | ✅ |
+| **— مستخدمون ونقاط —** | | | | |
+| 9 | `update_user_badge` | `p_uid UUID` | `VOID` | ❌ |
+| 10 | `add_points` | `p_uid, p_pts` | `VOID` | ❌ |
+| 11 | **`register_weekly_login`** 🆕🆕 | `p_uid UUID, p_pts INT=500` | `BOOLEAN` | ✅ |
+| 12 | **`apply_referral`** 🆕🆕 | `p_new_uid UUID, p_referrer_code TEXT, p_pts INT=1500` | `BOOLEAN` | ✅ |
+| **— عروض —** | | | | |
+| 13 | `check_offer_duplicate` | `ttl, prc, loc, usr_id` | `BOOLEAN` | ✅ |
+| 14 | `get_pending_offers_count` | — | `INTEGER` | ❌ |
+| 15 | `expire_offers` | — | `VOID` | ❌ |
+| **— صفقات ومواعيد —** | | | | |
+| 16 | `calculate_commission` | `prc, pct` | `NUMERIC` | ❌ |
+| 17 | `send_appointment_reminders` | — | `VOID` | ❌ |
+| **— عام —** | | | | |
+| 18 | `soft_delete` | `p_table, p_id` | `VOID` | ✅ |
+| **— Triggers Functions (تُستدعى تلقائياً) —** | | | | |
+| 19 | **`update_user_stats_on_offer`** 🆕🆕 | TRIGGER | `TRIGGER` | ✅ |
+| 20 | **`update_user_stats_on_request`** 🆕🆕 | TRIGGER | `TRIGGER` | ✅ |
+| 21 | **`update_user_stats_on_appointment`** 🆕🆕 | TRIGGER | `TRIGGER` | ✅ |
+| 22 | **`update_user_stats_on_deal`** 🆕🆕 | TRIGGER | `TRIGGER` | ✅ |
+
+### 🔗 Triggers Active على الجداول:
+
+| Trigger | الجدول | الحدث | الدالة |
+|---|---|---|---|
+| `trg_offers_stats` | `offers` | INSERT/UPDATE/DELETE | `update_user_stats_on_offer` |
+| `trg_requests_stats` | `requests` | INSERT/UPDATE/DELETE | `update_user_stats_on_request` |
+| `trg_appointments_stats` | `appointments` | INSERT/UPDATE/DELETE | `update_user_stats_on_appointment` |
+| `trg_deals_stats` | `deals` | INSERT/UPDATE/DELETE | `update_user_stats_on_deal` |
 
 ### Edge Functions (Deno):
 
-| # | الاسم | الغرض | المدخل JSON | المخرج JSON |
-|---|---|---|---|---|
-| 1 | **`send-whatsapp-otp`** 🆕 | يولّد OTP ويرسله عبر Meta WhatsApp Cloud API | `{ phone: "+963..." }` | `{ success, messageId? , devMode?, otp? }` |
-| 2 | **`verify-whatsapp-otp`** 🆕 | يتحقق + ينشئ user + يصدر session | `{ phone, code }` | `{ success, userId, isNew, session: { token_hash, ... } }` |
+| # | الاسم | الغرض | المدخل JSON | المخرج JSON | الحالة |
+|---|---|---|---|---|---|
+| 1 | `send-whatsapp-otp` 🆕 | يولّد OTP ويرسله عبر Meta WhatsApp Cloud API | `{ phone: "+963..." }` | `{ success, messageId?, devMode?, otp? }` | ⚠️ مكتوب — لم يُنشر |
+| 2 | `verify-whatsapp-otp` 🆕 | يتحقق + ينشئ user + يصدر session | `{ phone, code }` | `{ success, userId, isNew, session: { token_hash, ... } }` | ⚠️ مكتوب — لم يُنشر |
 
 > ⚠️ **`generate_otp` / `verify_otp` القديمة** ما زالت موجودة للتوافق الخلفي فقط — استخدم النسخة V2 في الكود الجديد.  
 > 📖 لخطوات تفعيل WhatsApp + Email Magic Link: راجع `docs/AUTH_SETUP.md`
+
+---
+
+## 🆕🆕 الدوال الجديدة (المرحلة 10) — مفصّلة
+
+### `register_weekly_login(p_uid UUID, p_pts INT DEFAULT 500)` → `BOOLEAN`
+
+تفحص آخر تسجيل دخول للمستخدم في `users.wk_lgn`. إذا مرّ 7 أيام أو أكثر → تمنحه `pts.wkL` (500 نقطة) وتضيف الوقت الحالي للقائمة. تعيد `TRUE` إذا منحت النقاط، `FALSE` إذا لم يحن الموعد.
+
+```sql
+SELECT register_weekly_login('uuid-...', 500);
+```
+
+```dart
+// Flutter (يُستدعى تلقائياً من AuthProvider.registerStreak)
+final granted = await client.rpc('register_weekly_login',
+  params: {'p_uid': uid, 'p_pts': 500});
+```
+
+**الجداول المتأثرة:** `users` (UPDATE `wk_lgn`, `pt`, `ts_upd`) + استدعاء `update_user_badge`.
+
+---
+
+### `apply_referral(p_new_uid UUID, p_referrer_code TEXT, p_pts INT DEFAULT 1500)` → `BOOLEAN`
+
+عند تسجيل مستخدم جديد بكود إحالة (أول 8 أحرف من uid المحيل):
+- يربط `users.ref_by` = uid المحيل
+- يزيد `users.ref_cnt` للمحيل
+- يمنح كلا الطرفين `pts.ref` (1500 نقطة)
+- يُحدّث البادج لكليهما
+
+```dart
+final ok = await client.rpc('apply_referral', params: {
+  'p_new_uid': newUid,
+  'p_referrer_code': 'A1B2C3D4',
+  'p_pts': 1500,
+});
+```
+
+**الحماية:**
+- يرفض الإحالة الذاتية (p_referrer_code → uid نفسه)
+- يرفض الإحالة المكررة (إذا `ref_by` موجود مسبقاً)
+
+---
+
+### `update_user_stats_on_*` — Triggers تلقائية
+
+دوال داخلية تستدعى تلقائياً عند أي INSERT/UPDATE/DELETE على الجداول التالية:
+
+| Trigger | يحدّث |
+|---|---|
+| `trg_offers_stats` | `users.stats.off` (عدد عروض المستخدم النشطة) |
+| `trg_requests_stats` | `users.stats.req` (عدد طلباته) |
+| `trg_appointments_stats` | `users.stats.app` (عدد مواعيده) |
+| `trg_deals_stats` | `users.stats.dl` (عدد صفقاته كبائع أو مشتري) |
+
+**لا تستدعى يدوياً** — تعمل في الخلفية.
 
 ---
 
@@ -449,12 +539,14 @@ await client.rpc('send_appointment_reminders');
 
 ## 📊 ملخص الجداول المتأثرة
 
-| الجدول | دوال القراءة | دوال الكتابة |
-|---|---|---|
-| `users` | `get_user_by_phone`, `get_user_by_email` 🆕 | `create_user_from_phone`, `upsert_user_after_otp` 🆕, `update_user_badge`, `add_points` |
-| `offers` | `check_offer_duplicate`, `get_pending_offers_count` | `expire_offers` |
-| `appointments` | — | `send_appointment_reminders` |
-| `otp_codes` | `verify_otp`, `verify_otp_v2` 🆕 | `generate_otp`, `verify_otp`, `generate_otp_v2` 🆕, `verify_otp_v2` 🆕 |
+| الجدول | دوال القراءة | دوال الكتابة | Triggers تلقائية |
+|---|---|---|---|
+| `users` | `get_user_by_phone`, `get_user_by_email` 🆕 | `create_user_from_phone`, `upsert_user_after_otp` 🆕, `update_user_badge`, `add_points`, `register_weekly_login` 🆕🆕, `apply_referral` 🆕🆕 | — (يُحدَّث `stats` عبر triggers على جداول أخرى) |
+| `offers` | `check_offer_duplicate`, `get_pending_offers_count` | `expire_offers` | `trg_offers_stats` 🆕🆕 → `users.stats.off` |
+| `requests` | — | — | `trg_requests_stats` 🆕🆕 → `users.stats.req` |
+| `appointments` | — | `send_appointment_reminders` | `trg_appointments_stats` 🆕🆕 → `users.stats.app` |
+| `deals` | — | — | `trg_deals_stats` 🆕🆕 → `users.stats.dl` |
+| `otp_codes` | `verify_otp`, `verify_otp_v2` 🆕 | `generate_otp`, `verify_otp`, `generate_otp_v2` 🆕, `verify_otp_v2` 🆕 | — |
 
 ---
 
@@ -472,6 +564,12 @@ await client.rpc('send_appointment_reminders');
 | `check_offer_duplicate` | ✅ | ✅ |
 | `soft_delete` | ✅ | ✅ |
 | `create_user_from_phone` | ✅ | ✅ |
+| `register_weekly_login` 🆕🆕 | ✅ | ✅ |
+| `apply_referral` 🆕🆕 | ✅ | ✅ |
+| `update_user_stats_on_offer` 🆕🆕 | ✅ | ✅ |
+| `update_user_stats_on_request` 🆕🆕 | ✅ | ✅ |
+| `update_user_stats_on_appointment` 🆕🆕 | ✅ | ✅ |
+| `update_user_stats_on_deal` 🆕🆕 | ✅ | ✅ |
 | `calculate_commission` | ❌ | ❌ |
 | `update_user_badge` | ❌ | ❌ |
 | `get_pending_offers_count` | ❌ | ❌ |
@@ -486,18 +584,24 @@ await client.rpc('send_appointment_reminders');
 | الملف | المحتوى |
 |---|---|
 | `supabase/setup.sql` | الكود الكامل (مصدر الحقيقة) |
-| `supabase/migrations/2026_06_05_whatsapp_email_auth.sql` 🆕 | Migration: V2 RPCs + `eml` + `otp_codes` channel |
-| `supabase/functions/send-whatsapp-otp/index.ts` 🆕 | Edge Function لإرسال OTP عبر Meta WhatsApp |
-| `supabase/functions/verify-whatsapp-otp/index.ts` 🆕 | Edge Function للتحقق وإصدار session |
+| `supabase/migrations/2026_06_05_whatsapp_email_auth.sql` 🆕 | Migration #1: V2 RPCs + `eml` + `otp_codes` channel — **مطبّق ✅** |
+| `supabase/migrations/2026_06_05_stats_triggers_and_wkLogin.sql` 🆕🆕 | Migration #2: 4 triggers + `register_weekly_login` + `apply_referral` + `ref_by`/`ref_cnt` — **مطبّق ✅** |
+| `supabase/functions/send-whatsapp-otp/index.ts` 🆕 | Edge Function لإرسال OTP عبر Meta WhatsApp — **لم يُنشر ⚠️** |
+| `supabase/functions/verify-whatsapp-otp/index.ts` 🆕 | Edge Function للتحقق وإصدار session — **لم يُنشر ⚠️** |
 | `supabase/SERVER_DOCS.md` | توثيق الجداول + RLS + Realtime |
 | `lib/core/constants/db_constants.dart` | أسماء الدوال كـ constants |
 | `lib/services/auth_service.dart` | استخدام WhatsApp OTP + Email Magic Link (الـ V2) |
 | `lib/screens/auth/login_screen.dart` | شاشة تسجيل الدخول بتبويبتين (واتساب/إيميل) |
+| `lib/screens/auth/setup_profile_screen.dart` 🆕🆕 | إكمال الملف + رفع صورة الهوية + الإقرار والتعهد |
 | `lib/screens/user/packages_screen.dart` 🆕 | شاشة عرض الباقات (تقرأ `app_config.pkg`) |
 | `lib/screens/user/payment_screen.dart` 🆕 | شاشة دفع الاشتراك (تكتب في `payments` بـ `tp=0`) |
 | `lib/screens/user/edit_offer_screen.dart` 🆕 | تعديل العرض (تستخدم `OfferProvider.updateOffer`/`softDeleteOffer`) |
 | `lib/screens/user/become_broker_screen.dart` 🆕 | طلب وساطة (تحدّث `brk_nm`/`brk_cls` + log في `activity_log`) |
 | `lib/screens/user/request_detail_screen.dart` 🆕 | تفاصيل الطلب + `BusinessService.matchOffersForRequest` |
+| `lib/screens/user/add_offer_screen.dart` 🆕🆕 | إضافة عرض + Step 4 (سند الملكية + إقرار) |
+| `lib/screens/user/referral_screen.dart` 🆕🆕 | شاشة الإحالة + كود + رابط + مشاركة |
+| `lib/screens/visitor/offer_detail_screen.dart` 🆕🆕 | تفاصيل العرض + زر التبليغ (`_reportOffer`) |
 | `docs/AUTH_SETUP.md` 🆕 | **دليل تفعيل المصادقة الكامل** (Meta + Supabase Email + Deploy) |
 | `docs/SCREENS_AUDIT.md` 🆕 | تدقيق شامل لحالة جميع الشاشات (37 شاشة) |
+| `docs/FEATURES_AUDIT.md` 🆕🆕 | تدقيق مزايا المواصفات الأصلية + خطة التنفيذ |
 | `DEVELOPMENT_GUIDE.md` | دليل التطوير الشامل |

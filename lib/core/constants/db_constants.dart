@@ -32,6 +32,10 @@ class DbFunctions {
   static const String expireOffers = 'expire_offers';
   static const String sendAppointmentReminders = 'send_appointment_reminders';
   static const String createUserFromPhone = 'create_user_from_phone';
+  // === المرحلة 10: stats triggers + إحالة + تسجيل دخول أسبوعي ===
+  static const String registerWeeklyLogin = 'register_weekly_login';
+  static const String applyReferral = 'apply_referral';
+  // ملاحظة: triggers (update_user_stats_on_*) لا تُستدعى يدوياً من Flutter
 }
 
 /// مفاتيح Config
