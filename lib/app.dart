@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'core/network/supabase_service.dart';
@@ -28,6 +30,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   bool _initialized = false;
   String? _initError;
+  StreamSubscription<AuthState>? _authSub;
 
   @override
   void initState() {
@@ -35,11 +38,44 @@ class _MyAppState extends State<MyApp> {
     _initializeApp();
   }
 
+  @override
+  void dispose() {
+    _authSub?.cancel();
+    super.dispose();
+  }
+
+  /// يستمع لتغيرات auth — ينفّذ تلقائياً تسجيل دخول الإيميل
+  /// بعد ما يفتح المستخدم الـ Magic Link.
+  void _listenAuthChanges(BuildContext ctx) {
+    _authSub?.cancel();
+    _authSub = SupabaseService().auth.onAuthStateChange.listen((data) async {
+      final event = data.event;
+      if (event == AuthChangeEvent.signedIn) {
+        final session = data.session;
+        if (session?.user.email != null &&
+            !session!.user.email!.endsWith('@whatsapp.local')) {
+          // إيميل حقيقي → magic link
+          final auth = ctx.read<AuthProvider>();
+          final ok = await auth.handleEmailSession();
+          if (ok && mounted) {
+            final go = AppRouter.router;
+            if (auth.isNewUser) {
+              go.go('/setup-profile');
+            } else {
+              go.go('/');
+            }
+          }
+        }
+      }
+    });
+  }
+
   Future<void> _initializeApp() async {
     try {
       await SupabaseService.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
       await NotificationService.initialize();
       if (mounted) setState(() => _initialized = true);
+      // ملاحظة: الـ listener يُربط بأول build (له context)
     } catch (e) {
       if (mounted) setState(() => _initError = e.toString());
     }
@@ -59,7 +95,14 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider(create: (_) => AdminProvider()),
         ChangeNotifierProvider(create: (_) => BrokerProvider()),
       ],
-      child: MaterialApp.router(
+      child: Builder(builder: (ctx) {
+        // ربط الـ listener مرة واحدة بعد ما يتوفر context الموجود فيه AuthProvider
+        if (_initialized && _authSub == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _listenAuthChanges(ctx);
+          });
+        }
+        return MaterialApp.router(
         title: 'المكتب العقاري الالكتروني',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.darkTheme,
@@ -90,7 +133,8 @@ class _MyAppState extends State<MyApp> {
           }
           return Directionality(textDirection: TextDirection.rtl, child: child!);
         },
-      ),
+      );
+      }),
     );
   }
 }
