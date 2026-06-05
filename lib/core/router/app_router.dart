@@ -2,47 +2,47 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 // === Splash ===
-import '../screens/splash_screen.dart';
+import '../../screens/splash_screen.dart';
 
 // === Visitor ===
-import '../screens/visitor/home_screen.dart';
-import '../screens/visitor/offer_detail_screen.dart';
-import '../screens/visitor/search_screen.dart';
+import '../../screens/visitor/home_screen.dart';
+import '../../screens/visitor/offer_detail_screen.dart';
+import '../../screens/visitor/search_screen.dart';
 
 // === Auth ===
-import '../screens/auth/login_screen.dart';
-import '../screens/auth/otp_verification_screen.dart';
-import '../screens/auth/setup_profile_screen.dart';
+import '../../screens/auth/login_screen.dart';
+import '../../screens/auth/otp_verification_screen.dart';
+import '../../screens/auth/setup_profile_screen.dart';
 
 // === User ===
-import '../screens/user/user_home_screen.dart';
-import '../screens/user/my_offers_screen.dart';
-import '../screens/user/add_offer_screen.dart';
-import '../screens/user/my_requests_screen.dart';
-import '../screens/user/my_appointments_screen.dart';
-import '../screens/user/favorites_screen.dart';
-import '../screens/user/profile_screen.dart';
-import '../screens/user/settings_screen.dart';
-import '../screens/user/notifications_screen.dart';
-import '../screens/user/add_request_screen.dart';
+import '../../screens/user/user_home_screen.dart';
+import '../../screens/user/my_offers_screen.dart';
+import '../../screens/user/add_offer_screen.dart';
+import '../../screens/user/my_requests_screen.dart';
+import '../../screens/user/my_appointments_screen.dart';
+import '../../screens/user/favorites_screen.dart';
+import '../../screens/user/profile_screen.dart';
+import '../../screens/user/settings_screen.dart';
+import '../../screens/user/notifications_screen.dart';
+import '../../screens/user/add_request_screen.dart';
 
 // === Broker ===
-import '../screens/broker/broker_dashboard_screen.dart';
-import '../screens/broker/broker_offers_screen.dart';
-import '../screens/broker/broker_appointments_screen.dart';
-import '../screens/broker/broker_deals_screen.dart';
-import '../screens/broker/broker_stats_screen.dart';
+import '../../screens/broker/broker_dashboard_screen.dart';
+import '../../screens/broker/broker_offers_screen.dart';
+import '../../screens/broker/broker_appointments_screen.dart';
+import '../../screens/broker/broker_deals_screen.dart';
+import '../../screens/broker/broker_stats_screen.dart';
 
 // === Admin ===
-import '../screens/admin/admin_dashboard_screen.dart';
-import '../screens/admin/users_management_screen.dart';
-import '../screens/admin/offers_review_screen.dart';
-import '../screens/admin/appointments_management_screen.dart';
-import '../screens/admin/deals_management_screen.dart';
-import '../screens/admin/payments_screen.dart';
-import '../screens/admin/reports_screen.dart';
-import '../screens/admin/config_editor_screen.dart';
-import '../screens/admin/analytics_screen.dart';
+import '../../screens/admin/admin_dashboard_screen.dart';
+import '../../screens/admin/users_management_screen.dart';
+import '../../screens/admin/offers_review_screen.dart';
+import '../../screens/admin/appointments_management_screen.dart';
+import '../../screens/admin/deals_management_screen.dart';
+import '../../screens/admin/payments_screen.dart';
+import '../../screens/admin/reports_screen.dart';
+import '../../screens/admin/config_editor_screen.dart';
+import '../../screens/admin/analytics_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
