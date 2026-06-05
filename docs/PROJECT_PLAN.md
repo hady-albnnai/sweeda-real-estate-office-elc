@@ -35,8 +35,10 @@
 | 9.4 | Splash لا يفحص حالة المستخدم → دائماً يفتح شاشة الزائر | أُضيف `auth.checkAuthStatus()` + توجيه حسب الدور |
 | 9.5 | Native splash (Android) ما يظهر اللوجو بحجم مناسب | تحديد `220x220 dp` في `launch_background.xml` |
 | 9.6 | `app.dart` magic link listener يستخدم `'/'` غير معرّف | نفس إصلاح 9.2 |
+| 9.7 | `LocaleDataException: Locale data has not been initialized` عند فتح Profile | `initializeDateFormatting('ar', null)` في main.dart + try/catch في `formatTimestamp` |
+| 9.8 | شاشة بيضاء قبل native splash على بعض أجهزة Android | إضافة `windowDisablePreview=true` + `windowContentOverlay=@null` في `styles.xml` |
 
-> الملفات المعدّلة (5): `setup_profile_screen.dart`, `otp_verification_screen.dart`, `splash_screen.dart`, `app.dart`, `launch_background.xml` (×2)
+> الملفات المعدّلة (7): `setup_profile_screen.dart`, `otp_verification_screen.dart`, `splash_screen.dart`, `app.dart`, `launch_background.xml` (×2), `main.dart`, `app_utils.dart`, `styles.xml` (×2)
 
 ---
 
