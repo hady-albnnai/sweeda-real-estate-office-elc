@@ -23,6 +23,7 @@ import '../screens/user/my_appointments_screen.dart';
 import '../screens/user/favorites_screen.dart';
 import '../screens/user/profile_screen.dart';
 import '../screens/user/settings_screen.dart';
+import '../screens/user/notifications_screen.dart';
 import '../screens/user/add_request_screen.dart';
 
 // === Broker ===
@@ -128,6 +129,10 @@ class AppRouter {
       GoRoute(
         path: '/user/settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/user/notifications',
+        builder: (context, state) => const NotificationsScreen(),
       ),
 
       // ═══════════════════════════════════════

@@ -1,7 +1,7 @@
 # 🚀 دليل التطوير — عقارات السويداء
 
 > **آخر تحديث:** 2026-06-05  
-> **Commit الحالي:** المرحلة 4 ✅ مكتملة  
+> **Commit الحالي:** المرحلة 5 ✅ مكتملة  
 > **المستودع:** https://github.com/hady-albnnai/sweeda-real-estate-office-elc
 
 ---
@@ -14,13 +14,13 @@
 | **الموديلات** | ✅ 100% | 10 ملفات |
 | **الـ Providers** | ✅ 100% | 9 ملفات (broker + admin موسّعان بالكامل) |
 | **الـ Services** | ✅ 100% | auth, storage(+ضغط/رفع), notification, **business**, **local_cache(Hive)** |
-| **الـ Router** | ✅ 100% | 30 مسار (شاشات السمسار الـ4 مربوطة) |
+| **الـ Router** | ✅ 100% | 31 مسار (+ شاشة الإشعارات) |
 | **🎬 المرحلة 0: الأساس** | ✅ مكتملة | Splash + Firebase removal |
 | **👤 المرحلة 1: شاشات المستخدم** | ✅ مكتملة | 8 شاشات + BottomNavBar |
 | **🤝 المرحلة 2: لوحة السمسار** | ✅ مكتملة | 4 شاشات + ربط بالبروفايل |
 | **🛡️ المرحلة 3: لوحة الإدارة** | ✅ مكتملة | 9 شاشات (dashboard + 8 أقسام) |
 | **⚙️ المرحلة 4: المنطق الخلفي** | ✅ مكتملة | Config+Hive · نقاط · باقات/حصص · مطابقة · Streak · سوشال · رفع صور |
-| **✨ المرحلة 5: التحسينات** | ⏳ لم تبدأ | Realtime + Push + Offline |
+| **✨ المرحلة 5: التحسينات** | ✅ مكتملة | Realtime + إشعارات + Offline + Shimmer + Splash |
 | **📦 المرحلة 6: البناء** | ⏳ لم تبدأ | APK + Testing |
 
 ---
@@ -103,15 +103,17 @@ firebase.json ❌ | functions/ ❌ | firebase_options.dart ❌ | firestore_servi
 > **تبعية جديدة:** `path_provider: ^2.1.2` (لازمة لضغط الصور).  
 > **تهيئة:** `LocalCacheService.initialize()` تُستدعى في `main()` قبل `runApp`.
 
-### 📌 المرحلة 5: التحسينات
-| # | العنصر | الوصف |
-|---|---|---|
-| 5.1 | Realtime Updates | تحديث فوري (Supabase stream) |
-| 5.2 | Push Notifications | FCM + Edge Functions |
-| 5.3 | Offline Support | Hive caching |
-| 5.4 | Error Handling | معالجة أخطاء + حالات فارغة |
-| 5.5 | Loading States | Shimmer animations |
-| 5.6 | Splash Polish | Progress bar + native splash |
+### ✅ المرحلة 5: التحسينات (مكتملة)
+| # | العنصر | التنفيذ | الحالة |
+|---|---|---|---|
+| 5.1 | Realtime Updates | `OfferProvider.subscribeRealtime()` (stream + فلترة يدوية) — مفعّل بالـ HomeScreen مع إلغاء بالـ dispose | ✅ |
+| 5.2 | الإشعارات | `notifications_screen.dart` + badge على أيقونة الجرس + الـ Realtime listener موجود بـ NotificationService (محلي). ملاحظة: Push عبر FCM يحتاج Edge Function لاحقاً | ✅ |
+| 5.3 | Offline Support | `OfferProvider` كاش-أولاً عبر Hive + لافتة "وضع دون اتصال" + `ConfigProvider` كاش | ✅ |
+| 5.4 | Error Handling | `AppErrorWidget`/`EmptyState` محدّثان بالثيم + استخدامهما مع زر إعادة محاولة | ✅ |
+| 5.5 | Loading States | `widgets/shimmer_loading.dart` (بطاقات/عناصر/شبكات وهمية) مستخدمة بالشاشات | ✅ |
+| 5.6 | Splash Polish | شريط تقدّم + slogan + الانتقال بعد تحميل Config فعلياً (لا تأخير ثابت) | ✅ |
+
+> **ملاحظة Push:** الإشعارات داخل التطبيق + Realtime + المحلية تعمل. إشعارات FCM الخارجية (والتطبيق مغلق) تتطلب Edge Function + مفتاح FCM — تُؤجَّل لمرحلة لاحقة عند الحاجة.
 
 ### 📌 المرحلة 6: البناء والنشر
 | # | العنصر |
@@ -159,10 +161,10 @@ lib/
 │   ├── splash/splash_screen.dart         ✅
 │   ├── visitor/  (3 شاشات)               ✅
 │   ├── auth/     (3 شاشات)               ✅
-│   ├── user/     (8 شاشات)               ✅ المرحلة 1 كاملة
+│   ├── user/     (9 شاشات)               ✅ المرحلة 1 + الإشعارات
 │   ├── broker/   (5 شاشات)               ✅ المرحلة 2 كاملة
 │   └── admin/    (9 شاشات)               ✅ المرحلة 3 كاملة
-└── widgets/                       # 10 ويدجت
+└── widgets/                       # 11 ويدجت (+ shimmer_loading)
 ```
 
 ---
@@ -191,5 +193,5 @@ flutter analyze                # فحص أخطاء
 - [x] المرحلة 2: لوحة السمسار (4 شاشات + ربط)
 - [x] المرحلة 3: لوحة الإدارة (9 شاشات + AdminProvider موسّع)
 - [x] المرحلة 4: المنطق الخلفي (Config/Hive + نقاط + باقات + مطابقة + Streak + سوشال + صور)
-- [ ] المرحلة 5: التحسينات
+- [x] المرحلة 5: التحسينات (Realtime + إشعارات + Offline + Shimmer + Splash)
 - [ ] المرحلة 6: البناء والنشر

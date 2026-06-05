@@ -1,31 +1,108 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../models/offer_model.dart';
 import '../core/network/supabase_service.dart';
 import '../core/constants/db_constants.dart';
+import '../core/services/local_cache_service.dart';
 
 class OfferProvider with ChangeNotifier {
   List<OfferModel> _offers = [];
   bool _isLoading = false;
   String? _error;
+  bool _fromCache = false;
+  StreamSubscription? _realtimeSub;
 
   List<OfferModel> get offers => _offers;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  bool get fromCache => _fromCache;
 
   Future<void> fetchOffers() async {
-    _isLoading = true; _error = null; notifyListeners();
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    // 1) عرض الكاش فوراً (دعم العمل دون اتصال)
+    if (_offers.isEmpty) {
+      final cached = LocalCacheService().getOffers();
+      if (cached.isNotEmpty) {
+        _offers = cached
+            .map((d) => OfferModel.fromSupabase(d, d['id'] as String))
+            .toList();
+        _fromCache = true;
+        notifyListeners();
+      }
+    }
+
+    // 2) جلب من السيرفر
     try {
       final response = await SupabaseService().client
-          .from(DbTables.offers).select()
-          .eq('i_del', 0).eq('i_pub', 1)
+          .from(DbTables.offers)
+          .select()
+          .eq('i_del', 0)
+          .eq('i_pub', 1)
           .order('ts_crt', ascending: false);
-      _offers = (response as List).map((d) =>
-          OfferModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String)).toList();
+      _offers = (response as List)
+          .map((d) =>
+              OfferModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String))
+          .toList();
+      _fromCache = false;
+      // حفظ في الكاش
+      await LocalCacheService()
+          .saveOffers(_offers.map((o) => {'id': o.id, ...o.toMap()}).toList());
     } catch (e) {
-      _error = 'فشل في جلب العروض: $e';
+      // عند الفشل: إن كان عندنا كاش نكمل به بدون خطأ صريح
+      if (_offers.isEmpty) {
+        _error = 'فشل في جلب العروض. تحقق من الاتصال.';
+      } else {
+        _fromCache = true;
+        debugPrint('⚠️ offers: استخدام الكاش (تعذّر الاتصال): $e');
+      }
       debugPrint('❌ fetchOffers error: $e');
     }
-    _isLoading = false; notifyListeners();
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  /// تفعيل التحديث الفوري (Realtime) لقائمة العروض المنشورة
+  void subscribeRealtime() {
+    _realtimeSub?.cancel();
+    try {
+      _realtimeSub = SupabaseService()
+          .client
+          .from(DbTables.offers)
+          .stream(primaryKey: ['id'])
+          .order('ts_crt', ascending: false)
+          .listen((data) {
+        final published = data
+            .where((row) =>
+                (row['i_pub'] ?? 0) == 1 && (row['i_del'] ?? 0) == 0)
+            .map((row) =>
+                OfferModel.fromSupabase(Map<String, dynamic>.from(row), row['id'] as String))
+            .toList();
+        if (published.isNotEmpty) {
+          _offers = published;
+          _fromCache = false;
+          LocalCacheService()
+              .saveOffers(_offers.map((o) => {'id': o.id, ...o.toMap()}).toList());
+          notifyListeners();
+        }
+      });
+      debugPrint('✅ OfferProvider: Realtime active');
+    } catch (e) {
+      debugPrint('⚠️ subscribeRealtime error: $e');
+    }
+  }
+
+  void unsubscribeRealtime() {
+    _realtimeSub?.cancel();
+    _realtimeSub = null;
+  }
+
+  @override
+  void dispose() {
+    _realtimeSub?.cancel();
+    super.dispose();
   }
 
   Future<List<OfferModel>> fetchUserOffers(String userId) async {
