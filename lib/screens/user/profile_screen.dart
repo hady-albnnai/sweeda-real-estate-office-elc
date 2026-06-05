@@ -182,6 +182,21 @@ class ProfileScreen extends StatelessWidget {
           _infoRow('🏷️ الباقة', _packageText(user.bPkg)),
           if (user.pkgEnd != null)
             _infoRow('⏰ انتهاء الباقة', AppUtils.formatTimestamp(user.pkgEnd!)),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => context.push('/user/packages'),
+              icon: const Icon(Icons.upgrade, color: AppTheme.primaryGold),
+              label: Text(
+                user.bPkg == 0 ? 'ترقية الباقة' : 'إدارة الاشتراك',
+                style: const TextStyle(color: AppTheme.primaryGold),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: AppTheme.primaryGold),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -266,6 +281,25 @@ class ProfileScreen extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryGold,
                 foregroundColor: AppTheme.deepBlack,
+                padding: const EdgeInsets.symmetric(vertical: 15),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+
+        // تقدّم لتصبح وسيطاً — للمستخدم العادي فقط
+        if (user != null && !user.isBroker && !user.isAdmin) ...[
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => context.push('/user/become-broker'),
+              icon: const Icon(Icons.handshake,
+                  color: AppTheme.primaryGold),
+              label: const Text('تقدّم لتصبح وسيطاً',
+                  style: TextStyle(color: AppTheme.primaryGold)),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: AppTheme.primaryGold),
                 padding: const EdgeInsets.symmetric(vertical: 15),
               ),
             ),

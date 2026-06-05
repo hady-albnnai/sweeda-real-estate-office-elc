@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/foundation.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/network/supabase_service.dart';
+import '../../core/constants/db_constants.dart';
 import '../../widgets/bottom_nav_bar.dart';
 
 /// شاشة الإعدادات
@@ -62,7 +65,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _sectionTitle('👤 الحساب'),
           _settingsTile('تعديل الملف الشخصي', Icons.edit, () {}),
           _settingsTile('تغيير كلمة المرور', Icons.lock, () {}),
-          _settingsTile('الباقة الحالية', Icons.card_membership, () {}),
+          _settingsTile('الباقة الحالية', Icons.card_membership,
+              () => context.push('/user/packages')),
 
           const SizedBox(height: 20),
 
@@ -143,18 +147,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (user == null) return;
 
     final ntf = Map<String, dynamic>.from(user.ntf);
+    // 0 = مفعّل, 1 = معطّل (حسب SPEC)
     ntf[key] = value ? 0 : 1;
 
-    await auth.completeProfile(name: user.nm, sid: user.sid);
-    // TODO: Update notification settings in Supabase
-    setState(() {
-      switch (key) {
-        case 'off': _notifOffers = value; break;
-        case 'app': _notifAppointments = value; break;
-        case 'fin': _notifFinance = value; break;
-        case 'rat': _notifRatings = value; break;
+    try {
+      await SupabaseService().client.from(DbTables.users).update({
+        'ntf': ntf,
+        'ts_upd': DateTime.now().toIso8601String(),
+      }).eq('id', user.uid);
+
+      await auth.refreshUser();
+
+      if (!mounted) return;
+      setState(() {
+        switch (key) {
+          case 'off':
+            _notifOffers = value;
+            break;
+          case 'app':
+            _notifAppointments = value;
+            break;
+          case 'fin':
+            _notifFinance = value;
+            break;
+          case 'rat':
+            _notifRatings = value;
+            break;
+        }
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم الحفظ ✅'), duration: Duration(seconds: 1)),
+      );
+    } catch (e) {
+      debugPrint('❌ toggle notif: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('فشل الحفظ')),
+        );
       }
-    });
+    }
   }
 
   void _showAboutDialog() {

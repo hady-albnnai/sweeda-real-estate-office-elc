@@ -26,6 +26,11 @@ import '../../screens/user/profile_screen.dart';
 import '../../screens/user/settings_screen.dart';
 import '../../screens/user/notifications_screen.dart';
 import '../../screens/user/add_request_screen.dart';
+import '../../screens/user/packages_screen.dart';
+import '../../screens/user/payment_screen.dart';
+import '../../screens/user/edit_offer_screen.dart';
+import '../../screens/user/become_broker_screen.dart';
+import '../../screens/user/request_detail_screen.dart';
 
 // === Broker ===
 import '../../screens/broker/broker_dashboard_screen.dart';
@@ -138,6 +143,37 @@ class AppRouter {
       GoRoute(
         path: '/user/notifications',
         builder: (context, state) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: '/user/packages',
+        builder: (context, state) => const PackagesScreen(),
+      ),
+      GoRoute(
+        path: '/user/payment',
+        builder: (context, state) {
+          final pkg = int.tryParse(state.uri.queryParameters['pkg'] ?? '0') ?? 0;
+          final amt =
+              double.tryParse(state.uri.queryParameters['amt'] ?? '0') ?? 0;
+          return PaymentScreen(packageId: pkg, amount: amt);
+        },
+      ),
+      GoRoute(
+        path: '/user/edit-offer/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return EditOfferScreen(offerId: id);
+        },
+      ),
+      GoRoute(
+        path: '/user/become-broker',
+        builder: (context, state) => const BecomeBrokerScreen(),
+      ),
+      GoRoute(
+        path: '/user/request/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return RequestDetailScreen(requestId: id);
+        },
       ),
 
       // ═══════════════════════════════════════

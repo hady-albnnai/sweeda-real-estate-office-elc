@@ -128,9 +128,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
             style: TextStyle(color: statusColors[req.sts] ?? Colors.grey, fontSize: 11, fontWeight: FontWeight.bold),
           ),
         ),
-        onTap: () {
-          // TODO: شاشة تفاصيل الطلب
-        },
+        onTap: () => context.push('/user/request/${req.id}'),
       ),
     );
   }

@@ -15,7 +15,21 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('المكتب العقاري الالكتروني'),
         actions: [
-          IconButton(icon: const Icon(Icons.notifications_none), onPressed: () {}),
+          IconButton(
+            icon: const Icon(Icons.notifications_none),
+            onPressed: () {
+              // الزائر بحاجة تسجيل دخول لرؤية الإشعارات
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text('سجّل دخولك لرؤية الإشعارات'),
+                  action: SnackBarAction(
+                    label: 'دخول',
+                    onPressed: () => context.push('/login'),
+                  ),
+                ),
+              );
+            },
+          ),
           IconButton(icon: const Icon(Icons.person_outline), onPressed: () => context.push('/login')),
         ],
       ),

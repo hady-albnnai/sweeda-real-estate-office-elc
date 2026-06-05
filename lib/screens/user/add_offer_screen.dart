@@ -99,7 +99,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     );
     if (quota['allowed'] != true) {
       setState(() => _submitting = false);
-      _snack(quota['reason'] as String);
+      _showQuotaDialog(quota['reason'] as String);
       return;
     }
 
@@ -162,6 +162,51 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   void _snack(String m) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
+  }
+
+  void _showQuotaDialog(String reason) {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppTheme.surfaceBlack,
+        title: const Row(
+          children: [
+            Icon(Icons.workspace_premium, color: AppTheme.primaryGold),
+            SizedBox(width: 8),
+            Text('تجاوزت الحصة',
+                style: TextStyle(color: AppTheme.textWhite)),
+          ],
+        ),
+        content: Text(
+          '$reason\n\nيمكنك ترقية باقتك للحصول على عدد أكبر من العروض الفعّالة.',
+          style: const TextStyle(color: AppTheme.textGrey),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('لاحقاً',
+                style: TextStyle(color: AppTheme.textGrey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context); // close add offer
+              // open packages
+              Future.microtask(() {
+                // ignore: use_build_context_synchronously
+                final ctx = context;
+                if (ctx.mounted) {
+                  // ignore: use_build_context_synchronously
+                  Navigator.of(ctx).pushNamed('/user/packages');
+                }
+              });
+            },
+            child: const Text('ترقية الباقة'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

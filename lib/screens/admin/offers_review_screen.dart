@@ -1,52 +1,512 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../providers/admin_provider.dart';
 import '../../models/offer_model.dart';
+import '../../models/user_model.dart';
+import '../../core/network/supabase_service.dart';
+import '../../core/constants/db_constants.dart';
 import '../../core/theme/app_theme.dart';
 
-class OffersReviewScreen extends StatelessWidget {
+/// شاشة مراجعة العروض الجديدة للإدارة
+/// تعرض الصور + معلومات المرسل + التفاصيل + كشف العروض المكررة
+/// + إجراءات قبول/رفض بسبب
+class OffersReviewScreen extends StatefulWidget {
   const OffersReviewScreen({super.key});
+
+  @override
+  State<OffersReviewScreen> createState() => _OffersReviewScreenState();
+}
+
+class _OffersReviewScreenState extends State<OffersReviewScreen> {
+  List<OfferModel> _offers = [];
+  bool _loading = true;
+
+  // كاش بيانات المرسلين: userId → UserModel
+  final Map<String, UserModel> _ownersCache = {};
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+  }
+
+  Future<void> _load() async {
+    setState(() => _loading = true);
+    final admin = context.read<AdminProvider>();
+    final offers = await admin.getPendingOffers();
+
+    // اجلب بيانات المرسلين دفعة واحدة
+    final uids = offers.map((o) => o.usrId).toSet().toList();
+    if (uids.isNotEmpty) {
+      try {
+        final usersData = await SupabaseService()
+            .client
+            .from(DbTables.users)
+            .select()
+            .inFilter('id', uids);
+        for (final u in usersData as List) {
+          final m = Map<String, dynamic>.from(u as Map);
+          final user = UserModel.fromSupabase(m, m['id'] as String);
+          _ownersCache[user.uid] = user;
+        }
+      } catch (e) {
+        debugPrint('❌ load owners: $e');
+      }
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _offers = offers;
+      _loading = false;
+    });
+  }
+
+  Future<void> _approve(OfferModel o) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppTheme.surfaceBlack,
+        title: const Text('تأكيد القبول',
+            style: TextStyle(color: AppTheme.textWhite)),
+        content: const Text(
+            'سيتم نشر العرض ليصبح مرئياً للجميع. هل أنت متأكد؟',
+            style: TextStyle(color: AppTheme.textGrey)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('إلغاء',
+                style: TextStyle(color: AppTheme.textGrey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            child: const Text('نشر',
+                style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+
+    final admin = context.read<AdminProvider>();
+    final ok = await admin.reviewOffer(o.id, true);
+    if (!mounted) return;
+    if (ok) {
+      _snack('✅ تم نشر العرض');
+      _load();
+    } else {
+      _snack('فشل النشر');
+    }
+  }
+
+  Future<void> _reject(OfferModel o) async {
+    final reason = await _askReason();
+    if (reason == null || !mounted) return;
+
+    final admin = context.read<AdminProvider>();
+    final ok = await admin.reviewOffer(o.id, false, reason: reason);
+    if (!mounted) return;
+    if (ok) {
+      _snack('تم رفض العرض');
+      _load();
+    } else {
+      _snack('فشل الرفض');
+    }
+  }
+
+  Future<String?> _askReason() async {
+    final ctrl = TextEditingController();
+    String? selected;
+    final presets = [
+      'صور غير واضحة',
+      'بيانات ناقصة',
+      'سعر غير منطقي',
+      'عرض مكرر',
+      'محتوى مخالف',
+      'سبب آخر',
+    ];
+
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setS) => AlertDialog(
+          backgroundColor: AppTheme.surfaceBlack,
+          title: const Text('سبب الرفض',
+              style: TextStyle(color: AppTheme.textWhite)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ...presets.map((p) => RadioListTile<String>(
+                      title: Text(p,
+                          style:
+                              const TextStyle(color: AppTheme.textWhite)),
+                      value: p,
+                      groupValue: selected,
+                      activeColor: AppTheme.primaryGold,
+                      onChanged: (v) => setS(() => selected = v),
+                    )),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: ctrl,
+                  maxLines: 2,
+                  style: const TextStyle(color: AppTheme.textWhite),
+                  decoration: const InputDecoration(
+                    hintText: 'تفاصيل إضافية (اختياري)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('إلغاء',
+                  style: TextStyle(color: AppTheme.textGrey)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (selected == null) return;
+                final extra = ctrl.text.trim();
+                final result =
+                    extra.isEmpty ? selected! : '$selected — $extra';
+                Navigator.pop(ctx, result);
+              },
+              style:
+                  ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text('رفض',
+                  style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _snack(String m) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
+
   @override
   Widget build(BuildContext context) {
-    final admin = Provider.of<AdminProvider>(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('مراجعة العروض الجديدة'), backgroundColor: Colors.transparent),
-      body: FutureBuilder<List<OfferModel>>(
-        future: admin.getPendingOffers(),
-        builder: (context, snap) {
-          if (snap.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator(color: AppTheme.primaryGold));
-          if (!snap.hasData || snap.data!.isEmpty) return const Center(child: Text('لا توجد عروض بانتظار المراجعة', style: TextStyle(color: AppTheme.textGrey)));
-          return ListView.builder(
-            padding: const EdgeInsets.all(15), itemCount: snap.data!.length,
-            itemBuilder: (context, i) {
-              final o = snap.data![i];
-              return Card(color: AppTheme.surfaceBlack, margin: const EdgeInsets.only(bottom: 15),
-                child: ListTile(contentPadding: const EdgeInsets.all(15),
-                  title: Text(o.ttl, style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold)),
-                  subtitle: Text('بواسطة: ${o.usrId}\nالسعر: ${o.prc}', style: const TextStyle(color: AppTheme.textGrey)),
-                  isThreeLine: true,
-                  trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-                    IconButton(icon: const Icon(Icons.check_circle, color: Colors.green, size: 30),
-                      onPressed: () async {
-                        if (await admin.reviewOffer(o.id, true)) {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم قبول ونشر العرض')));
-                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const OffersReviewScreen()));
-                        }
-                      }),
-                    const SizedBox(width: 10),
-                    IconButton(icon: const Icon(Icons.cancel, color: Colors.red, size: 30),
-                      onPressed: () async {
-                        if (await admin.reviewOffer(o.id, false)) {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم رفض العرض')));
-                          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const OffersReviewScreen()));
-                        }
-                      }),
-                  ]),
-                ));
-            },
-          );
-        },
+      backgroundColor: AppTheme.deepBlack,
+      appBar: AppBar(
+        title: Text('مراجعة العروض (${_offers.length})'),
+        backgroundColor: AppTheme.deepBlack,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: AppTheme.primaryGold),
+            onPressed: _load,
+          ),
+        ],
       ),
+      body: _loading
+          ? const Center(
+              child: CircularProgressIndicator(color: AppTheme.primaryGold))
+          : _offers.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.check_circle_outline,
+                          size: 80,
+                          color: Colors.green.withOpacity(0.6)),
+                      const SizedBox(height: 20),
+                      const Text(
+                        'لا توجد عروض بانتظار المراجعة 🎉',
+                        style: TextStyle(
+                            color: AppTheme.textGrey, fontSize: 16),
+                      ),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  color: AppTheme.primaryGold,
+                  onRefresh: _load,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(12),
+                    itemCount: _offers.length,
+                    itemBuilder: (_, i) => _offerCard(_offers[i]),
+                  ),
+                ),
+    );
+  }
+
+  Widget _offerCard(OfferModel o) {
+    final owner = _ownersCache[o.usrId];
+    final hasImage = o.imgs.isNotEmpty;
+    final isDup = o.iDup == 1;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceBlack,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isDup ? Colors.orange : AppTheme.primaryGold.withOpacity(0.3),
+          width: isDup ? 1.5 : 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // تحذير العرض المكرر
+          if (isDup)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.2),
+                borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(13)),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.warning_amber,
+                      color: Colors.orange, size: 16),
+                  SizedBox(width: 6),
+                  Text('⚠️ عرض مكرّر محتمل',
+                      style: TextStyle(
+                          color: Colors.orange,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12)),
+                ],
+              ),
+            ),
+
+          // الصور
+          if (hasImage)
+            SizedBox(
+              height: 180,
+              child: PageView.builder(
+                itemCount: o.imgs.length,
+                itemBuilder: (_, i) => Image.network(
+                  o.imgs[i].toString(),
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    color: AppTheme.deepBlack,
+                    child: const Center(
+                      child: Icon(Icons.broken_image,
+                          color: AppTheme.textGrey, size: 50),
+                    ),
+                  ),
+                ),
+              ),
+            )
+          else
+            Container(
+              height: 120,
+              color: AppTheme.deepBlack,
+              child: const Center(
+                child: Icon(Icons.image_not_supported,
+                    color: AppTheme.textGrey, size: 50),
+              ),
+            ),
+
+          // التفاصيل
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // عنوان + سعر
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        o.ttl,
+                        style: const TextStyle(
+                            color: AppTheme.textWhite,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    Text(
+                      '${o.prc.toStringAsFixed(0)} ${o.cur == 0 ? '\$' : 'ل.س'}',
+                      style: const TextStyle(
+                          color: AppTheme.primaryGold,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+
+                // النوع + المعاملة
+                Wrap(spacing: 6, children: [
+                  _chip(o.typ == 0 ? '🏠 عقار' : '🚗 سيارة', Colors.blue),
+                  _chip(o.trx == 0 ? 'بيع' : 'إيجار', Colors.purple),
+                  if (o.imgs.isNotEmpty)
+                    _chip('${o.imgs.length} صور',
+                        AppTheme.primaryGold),
+                ]),
+                const SizedBox(height: 10),
+
+                // الموقع
+                Row(
+                  children: [
+                    const Icon(Icons.location_on,
+                        color: AppTheme.textGrey, size: 14),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        (o.loc['d'] ?? 'غير محدد').toString(),
+                        style: const TextStyle(
+                            color: AppTheme.textGrey, fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+
+                // الوصف
+                if (o.descript.isNotEmpty) ...[
+                  Text(
+                    o.descript,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        color: AppTheme.textWhite, fontSize: 13),
+                  ),
+                  const SizedBox(height: 10),
+                ],
+
+                // المرسل
+                const Divider(color: AppTheme.textGrey, height: 16),
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 18,
+                      backgroundColor: AppTheme.primaryGold,
+                      child: Text(
+                        (owner?.nm.isNotEmpty == true
+                                ? owner!.nm[0]
+                                : '؟')
+                            .toUpperCase(),
+                        style: const TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            owner?.nm.isNotEmpty == true
+                                ? owner!.nm
+                                : 'مستخدم بدون اسم',
+                            style: const TextStyle(
+                                color: AppTheme.textWhite,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13),
+                          ),
+                          Text(
+                            owner?.ph ?? '—',
+                            style: const TextStyle(
+                                color: AppTheme.textGrey, fontSize: 11),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (owner != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryGold.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '${owner.pt} نقطة',
+                          style: const TextStyle(
+                              color: AppTheme.primaryGold,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // أزرار الإجراءات
+          Container(
+            decoration: const BoxDecoration(
+              border: Border(
+                top: BorderSide(color: AppTheme.deepBlack, width: 1),
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextButton.icon(
+                    onPressed: () => _reject(o),
+                    icon: const Icon(Icons.cancel, color: Colors.red),
+                    label: const Text('رفض',
+                        style: TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold)),
+                    style: TextButton.styleFrom(
+                      padding:
+                          const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                  ),
+                ),
+                Container(width: 1, height: 36, color: AppTheme.deepBlack),
+                Expanded(
+                  child: TextButton.icon(
+                    onPressed: () => context.push('/offer/${o.id}'),
+                    icon: const Icon(Icons.preview,
+                        color: AppTheme.textWhite),
+                    label: const Text('معاينة',
+                        style: TextStyle(color: AppTheme.textWhite)),
+                    style: TextButton.styleFrom(
+                      padding:
+                          const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                  ),
+                ),
+                Container(width: 1, height: 36, color: AppTheme.deepBlack),
+                Expanded(
+                  child: TextButton.icon(
+                    onPressed: () => _approve(o),
+                    icon: const Icon(Icons.check_circle,
+                        color: Colors.green),
+                    label: const Text('قبول',
+                        style: TextStyle(
+                            color: Colors.green,
+                            fontWeight: FontWeight.bold)),
+                    style: TextButton.styleFrom(
+                      padding:
+                          const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _chip(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.4)),
+      ),
+      child: Text(label,
+          style: TextStyle(
+              color: color, fontSize: 11, fontWeight: FontWeight.bold)),
     );
   }
 }
