@@ -18,11 +18,13 @@ class LoginScreen extends StatelessWidget {
           child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Center(child: Column(children: [
-                Container(height: 150, padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(16),
-                    boxShadow: [BoxShadow(color: AppTheme.primaryGold.withOpacity(0.15), blurRadius: 20, spreadRadius: 2)]),
-                  child: Image.asset('assets/images/logo_app.png', height: 126, fit: BoxFit.contain)),
-                const SizedBox(height: 20),
+                Container(
+                  width: 220, height: 220,
+                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(28),
+                    boxShadow: [BoxShadow(color: AppTheme.primaryGold.withOpacity(0.25), blurRadius: 30, spreadRadius: 4)]),
+                  child: ClipRRect(borderRadius: BorderRadius.circular(28),
+                    child: Image.asset('assets/images/logo_app.png', fit: BoxFit.cover))),
+                const SizedBox(height: 24),
                 const Text('مرحباً بك مجدداً', style: TextStyle(color: AppTheme.textWhite, fontSize: 28, fontWeight: FontWeight.bold)),
                 const Text('سجل دخولك للمتابعة', style: TextStyle(color: AppTheme.textGrey, fontSize: 16)),
               ])),
