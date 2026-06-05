@@ -20,8 +20,33 @@
 | ✅ **المرحلة 7: المصادقة الجديدة** | **مكتملة** | WhatsApp + Email Magic Link | — |
 | ✅ **المرحلة 8: الشاشات المتبقية** | **مكتملة** | packages + payment + edit + broker + request | — |
 | ✅ **المرحلة 9: إصلاحات ما بعد الاختبار** | **مكتملة** | setup_profile overflow + routes + splash logo + native splash | — |
+| ✅ **المرحلة 10: المزايا الناقصة (Critical)** | **مكتملة** | إقرار + صورة هوية + صورة سند + تبليغ + ربط pen + stats triggers + wk_lgn + referral | — |
 
 **النسبة الإجمالية: ~98% مكتمل** (يتبقّى تنفيذ البناء/النشر على الجهاز المحلي + ترقيات RLS)
+
+---
+
+## 🎯 المرحلة 10: تنفيذ المزايا الناقصة من المواصفات (✅ مكتملة — 2026-06-05)
+
+> راجع `docs/FEATURES_AUDIT.md` للتفاصيل الكاملة.
+
+### الجزء A: المزايا القاعدية
+| # | الميزة | التنفيذ |
+|---|---|---|
+| 10.1 | **الإقرار والتعهد** (`txts.plg`) | dialog يعرض النص من config + checkbox إجباري في `setup_profile_screen` و `add_offer_screen` |
+| 10.2 | **صورة الهوية** (`users.img`) | حقل رفع صورة في `setup_profile_screen` + bucket `ids/{uid}/` |
+| 10.3 | **صورة سند الملكية** (`doc_img` + `doc_tp`) | Step 4 جديد في `add_offer_screen` (dropdown نوع السند من config + رفع صورة) |
+| 10.4 | **زر التبليغ** للمستخدم النهائي | زر flag في AppBar الـ `offer_detail_screen` + dialog مع `rptRsn` من config |
+
+### الجزء B: المنطق الخلفي
+| # | الميزة | التنفيذ |
+|---|---|---|
+| 10.5 | **خصم النقاط** (`pen`) مربوط بأحداث | `reviewOffer` يطبّق `pen.rej3` بعد 3 رفض، `updateAppointmentStatus` يطبّق `pen.noSh` (-500) و `pen.cnl3` (-300) |
+| 10.6 | **users.stats** تحديث تلقائي | 4 PostgreSQL Triggers على offers/requests/appointments/deals + Backfill للحسابات الموجودة |
+| 10.7 | **wk_lgn** تسجيل دخول أسبوعي | RPC `register_weekly_login` + استدعاء من `AuthProvider.registerStreak` |
+| 10.8 | **نظام الإحالة** (`referral`) | عمود `ref_by`+`ref_cnt` + RPC `apply_referral` + شاشة `referral_screen` كاملة |
+
+> Migration SQL جديد: `supabase/migrations/2026_06_05_stats_triggers_and_wkLogin.sql`
 
 ---
 

@@ -154,7 +154,27 @@ class AuthProvider with ChangeNotifier {
     if (result['changed'] == true) {
       await _loadUserData(_userModel!.uid);
     }
+    // فحص تسجيل الدخول الأسبوعي
+    await _checkWeeklyLogin(config);
     return result;
+  }
+
+  /// يستدعي RPC register_weekly_login لمنح نقاط wkL أسبوعياً
+  Future<void> _checkWeeklyLogin(dynamic config) async {
+    if (_userModel == null) return;
+    try {
+      final pts = config?.weeklyLoginPoints ?? 500;
+      final granted = await SupabaseService().client.rpc(
+        'register_weekly_login',
+        params: {'p_uid': _userModel!.uid, 'p_pts': pts},
+      );
+      if (granted == true) {
+        debugPrint('✅ wk_lgn granted +$pts to ${_userModel!.uid}');
+        await _loadUserData(_userModel!.uid);
+      }
+    } catch (e) {
+      debugPrint('⚠️ register_weekly_login failed: $e');
+    }
   }
 
   Future<void> logout() async {
