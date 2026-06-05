@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
+import 'core/services/local_cache_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // تهيئة التخزين المحلي (Hive) — للكاش ودعم العمل دون اتصال
+  await LocalCacheService.initialize();
 
   try {
     await Supabase.initialize(
@@ -17,3 +21,4 @@ void main() async {
 
   runApp(const MyApp());
 }
+

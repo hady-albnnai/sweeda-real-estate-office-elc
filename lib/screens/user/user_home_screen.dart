@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/offer_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/config_provider.dart';
 import '../../widgets/offer_card.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import '../../core/theme/app_theme.dart';
@@ -23,8 +24,24 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final config = Provider.of<ConfigProvider>(context, listen: false);
+      await config.loadConfig();
+      if (!mounted) return;
       Provider.of<OfferProvider>(context, listen: false).fetchOffers();
+      // تسجيل سلسلة الدخول اليومي (Streak) + منح النقاط
+      final auth = Provider.of<AuthProvider>(context, listen: false);
+      if (auth.isLoggedIn) {
+        final res = await auth.registerStreak(config.config);
+        if (mounted && res['awarded'] == true) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('🔥 سلسلة دخولك: ${res['streak']} يوم — حصلت على نقاط!'),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      }
     });
   }
 

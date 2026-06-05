@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 import '../core/network/supabase_service.dart';
 import '../core/constants/db_constants.dart';
+import '../core/services/business_service.dart';
 import '../services/auth_service.dart';
 
 class AuthProvider with ChangeNotifier {
@@ -82,6 +83,18 @@ class AuthProvider with ChangeNotifier {
   Future<void> refreshUser() async {
     final userId = await AuthService().getSavedUserId();
     if (userId != null) await _loadUserData(userId);
+  }
+
+  /// تسجيل سلسلة الدخول اليومي (Streak) وتحديث المستخدم محلياً.
+  /// يُمرَّر [config] من ConfigProvider لمنح نقاط Streak الصحيحة.
+  Future<Map<String, dynamic>> registerStreak(dynamic config) async {
+    if (_userModel == null) return {'streak': 0, 'changed': false};
+    final result =
+        await BusinessService().registerDailyStreak(_userModel!.uid, config);
+    if (result['changed'] == true) {
+      await _loadUserData(_userModel!.uid); // تحديث strk + النقاط
+    }
+    return result;
   }
 
   Future<void> logout() async {

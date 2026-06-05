@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 import 'package:go_router/go_router.dart';
 import '../../providers/offer_provider.dart';
-import '../../providers/auth_provider.dart';
 import '../../widgets/offer_card.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/services/local_cache_service.dart';
 
-/// شاشة المفضلة — تحفظ محلياً بـ SharedPreferences
+/// شاشة المفضلة — تحفظ محلياً بـ Hive (LocalCacheService)
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
 
@@ -28,14 +26,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   }
 
   Future<void> _loadFavorites() async {
-    final prefs = await SharedPreferences.getInstance();
-    final auth = Provider.of<AuthProvider>(context, listen: false);
-    final userId = auth.userModel?.uid ?? '';
-    final favJson = prefs.getString('favorites_$userId') ?? '[]';
-    setState(() {
-      _favIds = List<String>.from(jsonDecode(favJson));
-      _isLoading = false;
-    });
+    _favIds = LocalCacheService().getFavorites();
+    setState(() => _isLoading = false);
     // جلب بيانات العروض المفضلة
     if (_favIds.isNotEmpty) {
       await Provider.of<OfferProvider>(context, listen: false).fetchOffers();
@@ -43,16 +35,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   }
 
   Future<void> _toggleFavorite(String offerId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final auth = Provider.of<AuthProvider>(context, listen: false);
-    final userId = auth.userModel?.uid ?? '';
-
-    if (_favIds.contains(offerId)) {
-      _favIds.remove(offerId);
-    } else {
-      _favIds.add(offerId);
-    }
-    await prefs.setString('favorites_$userId', jsonEncode(_favIds));
+    await LocalCacheService().toggleFavorite(offerId);
+    _favIds = LocalCacheService().getFavorites();
     setState(() {});
   }
 

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../core/theme/app_theme.dart';
+import '../providers/config_provider.dart';
 
 // ============================================================
 // ملاحظة للرجوع لها لاحقا:
@@ -45,6 +47,9 @@ class _SplashScreenState extends State<SplashScreen>
     );
 
     _controller.forward();
+
+    // تحميل إعدادات التطبيق مبكراً (كاش Hive ثم تحديث من السيرفر)
+    Provider.of<ConfigProvider>(context, listen: false).loadConfig();
 
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
