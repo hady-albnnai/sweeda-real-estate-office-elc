@@ -48,7 +48,7 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 20),
 
             // معلومات الحساب
-            _infoCard(user),
+          _infoCard(user, context),
             const SizedBox(height: 20),
 
             // إحصائيات النشاط
@@ -160,7 +160,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _infoCard(user) {
+  Widget _infoCard(user, BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
