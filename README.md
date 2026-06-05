@@ -39,7 +39,7 @@ sweeda-real-estate-office-elc/
 │   ├── models/                    ← 10 ملفات
 │   ├── providers/                 ← 9 ملفات
 │   ├── services/                  ← auth, storage, notification
-│   ├── screens/                   ← splash, visitor, auth, user(8), broker(5), admin
+│   ├── screens/                   ← splash, visitor, auth, user(8), broker(5), admin(9)
 │   └── widgets/                   ← ويدجت مشتركة
 ├── prototype/                     ← نموذج HTML
 ├── assets/                        ← صور + أيقونات
@@ -84,7 +84,8 @@ flutter run
 | ✅ شاشة السبلاش | مكتملة |
 | ✅ المرحلة 1: شاشات المستخدم (8 شاشات) | مكتملة |
 | ✅ المرحلة 2: لوحة السمسار (4 شاشات) | مكتملة |
-| ⏳ المرحلة 3: لوحة الإدارة | التالية |
+| ✅ المرحلة 3: لوحة الإدارة (9 شاشات) | مكتملة |
+| ⏳ المرحلة 4: المنطق الخلفي | التالية |
 
 ---
 

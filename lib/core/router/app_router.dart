@@ -33,7 +33,15 @@ import '../screens/broker/broker_deals_screen.dart';
 import '../screens/broker/broker_stats_screen.dart';
 
 // === Admin ===
+import '../screens/admin/admin_dashboard_screen.dart';
+import '../screens/admin/users_management_screen.dart';
 import '../screens/admin/offers_review_screen.dart';
+import '../screens/admin/appointments_management_screen.dart';
+import '../screens/admin/deals_management_screen.dart';
+import '../screens/admin/payments_screen.dart';
+import '../screens/admin/reports_screen.dart';
+import '../screens/admin/config_editor_screen.dart';
+import '../screens/admin/analytics_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -151,15 +159,11 @@ class AppRouter {
       // ═══════════════════════════════════════
       GoRoute(
         path: '/admin/dashboard',
-        builder: (context, state) => const Scaffold(
-          body: Center(child: Text('🛡️ لوحة الإدارة — قيد التطوير')),
-        ),
+        builder: (context, state) => const AdminDashboardScreen(),
       ),
       GoRoute(
         path: '/admin/users',
-        builder: (context, state) => const Scaffold(
-          body: Center(child: Text('👥 إدارة المستخدمين — قيد التطوير')),
-        ),
+        builder: (context, state) => const UsersManagementScreen(),
       ),
       GoRoute(
         path: '/admin/review-offers',
@@ -167,39 +171,27 @@ class AppRouter {
       ),
       GoRoute(
         path: '/admin/appointments',
-        builder: (context, state) => const Scaffold(
-          body: Center(child: Text('📅 إدارة المواعيد — قيد التطوير')),
-        ),
+        builder: (context, state) => const AppointmentsManagementScreen(),
       ),
       GoRoute(
         path: '/admin/deals',
-        builder: (context, state) => const Scaffold(
-          body: Center(child: Text('🤝 إدارة الصفقات — قيد التطوير')),
-        ),
+        builder: (context, state) => const DealsManagementScreen(),
       ),
       GoRoute(
         path: '/admin/payments',
-        builder: (context, state) => const Scaffold(
-          body: Center(child: Text('💰 المدفوعات — قيد التطوير')),
-        ),
+        builder: (context, state) => const PaymentsScreen(),
       ),
       GoRoute(
         path: '/admin/reports',
-        builder: (context, state) => const Scaffold(
-          body: Center(child: Text('📢 التبليغات — قيد التطوير')),
-        ),
+        builder: (context, state) => const ReportsScreen(),
       ),
       GoRoute(
         path: '/admin/config',
-        builder: (context, state) => const Scaffold(
-          body: Center(child: Text('⚙️ إعدادات التطبيق — قيد التطوير')),
-        ),
+        builder: (context, state) => const ConfigEditorScreen(),
       ),
       GoRoute(
         path: '/admin/analytics',
-        builder: (context, state) => const Scaffold(
-          body: Center(child: Text('📊 التحليلات — قيد التطوير')),
-        ),
+        builder: (context, state) => const AnalyticsScreen(),
       ),
     ],
   );
