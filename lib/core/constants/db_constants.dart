@@ -19,6 +19,10 @@ class DbTables {
 class DbFunctions {
   static const String generateOtp = 'generate_otp';
   static const String verifyOtp = 'verify_otp';
+  static const String generateOtpV2 = 'generate_otp_v2';
+  static const String verifyOtpV2 = 'verify_otp_v2';
+  static const String upsertUserAfterOtp = 'upsert_user_after_otp';
+  static const String getUserByEmail = 'get_user_by_email';
   static const String getUserByPhone = 'get_user_by_phone';
   static const String checkOfferDuplicate = 'check_offer_duplicate';
   static const String calculateCommission = 'calculate_commission';

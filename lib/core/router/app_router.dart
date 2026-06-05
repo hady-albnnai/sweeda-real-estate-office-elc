@@ -13,6 +13,7 @@ import '../../screens/visitor/search_screen.dart';
 import '../../screens/auth/login_screen.dart';
 import '../../screens/auth/otp_verification_screen.dart';
 import '../../screens/auth/setup_profile_screen.dart';
+import '../../screens/auth/check_email_screen.dart';
 
 // === User ===
 import '../../screens/user/user_home_screen.dart';
@@ -89,6 +90,10 @@ class AppRouter {
       GoRoute(
         path: '/setup-profile',
         builder: (context, state) => const SetupProfileScreen(),
+      ),
+      GoRoute(
+        path: '/check-email',
+        builder: (context, state) => const CheckEmailScreen(),
       ),
 
       // ═══════════════════════════════════════

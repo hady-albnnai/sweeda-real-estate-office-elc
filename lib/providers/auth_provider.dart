@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 import '../core/network/supabase_service.dart';
 import '../core/constants/db_constants.dart';
@@ -9,55 +8,117 @@ import '../services/auth_service.dart';
 class AuthProvider with ChangeNotifier {
   UserModel? _userModel;
   String? _currentPhone;
+  String? _currentEmail;
   String? _currentOtp;
+  AuthChannel _channel = AuthChannel.whatsapp;
   bool _isNewUser = false;
 
   UserModel? get userModel => _userModel;
   String? get currentPhone => _currentPhone;
+  String? get currentEmail => _currentEmail;
   String? get currentOtp => _currentOtp;
+  AuthChannel get channel => _channel;
   bool get isNewUser => _isNewUser;
   bool get isLoggedIn => _userModel != null;
   bool get isAdmin => _userModel?.isAdmin ?? false;
   bool get isBroker => _userModel?.isBroker ?? false;
 
-  Future<bool> sendOTP(String phone) async {
+  // ════════════════════════════════════════════════════════════════════
+  // 📱 WhatsApp
+  // ════════════════════════════════════════════════════════════════════
+
+  Future<bool> sendWhatsAppOTP(String phone) async {
     try {
       _currentPhone = phone;
-      final result = await AuthService().sendOTP(phone);
+      _channel = AuthChannel.whatsapp;
+      final result = await AuthService().sendWhatsAppOTP(phone);
       if (result['success'] == true) {
         _currentOtp = result['fallbackOtp'] as String?;
         if (_currentOtp != null) {
           debugPrint('🔑 OTP for development: $_currentOtp');
         }
+        notifyListeners();
         return true;
       }
       return false;
     } catch (e) {
-      debugPrint('❌ sendOTP error: $e');
+      debugPrint('❌ sendWhatsAppOTP error: $e');
       return false;
     }
   }
 
-  Future<bool> verifyOTP(String code) async {
+  Future<bool> verifyWhatsAppOTP(String code) async {
     try {
       if (_currentPhone == null) return false;
-      final result = await AuthService().verifyOTP(_currentPhone!, code);
+      final result =
+          await AuthService().verifyWhatsAppOTP(_currentPhone!, code);
       if (result['success'] == true) {
-        _isNewUser = result['isNewUser'] as bool;
+        _isNewUser = result['isNewUser'] as bool? ?? false;
         await _loadUserData(result['userId'] as String);
         return true;
       }
       return false;
     } catch (e) {
-      debugPrint('❌ verifyOTP error: $e');
+      debugPrint('❌ verifyWhatsAppOTP error: $e');
       return false;
     }
   }
 
+  // ════════════════════════════════════════════════════════════════════
+  // 📧 Email Magic Link
+  // ════════════════════════════════════════════════════════════════════
+
+  Future<bool> sendEmailMagicLink(String email) async {
+    try {
+      _currentEmail = email;
+      _channel = AuthChannel.email;
+      final result = await AuthService().sendEmailMagicLink(email);
+      notifyListeners();
+      return result['success'] == true;
+    } catch (e) {
+      debugPrint('❌ sendEmailMagicLink error: $e');
+      return false;
+    }
+  }
+
+  /// يُستدعى تلقائياً عند فتح التطبيق من deep link الماجيك لينك
+  Future<bool> handleEmailSession() async {
+    try {
+      final result = await AuthService().handleEmailSession();
+      if (result['success'] == true) {
+        _isNewUser = result['isNewUser'] as bool? ?? false;
+        await _loadUserData(result['userId'] as String);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      debugPrint('❌ handleEmailSession error: $e');
+      return false;
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════════════
+  // 🔁 توافقية مع الكود القديم
+  // ════════════════════════════════════════════════════════════════════
+
+  @Deprecated('استخدم sendWhatsAppOTP')
+  Future<bool> sendOTP(String phone) => sendWhatsAppOTP(phone);
+
+  @Deprecated('استخدم verifyWhatsAppOTP')
+  Future<bool> verifyOTP(String code) => verifyWhatsAppOTP(code);
+
+  // ════════════════════════════════════════════════════════════════════
+  // المستخدم
+  // ════════════════════════════════════════════════════════════════════
+
   Future<void> _loadUserData(String userId) async {
     try {
-      final response = await SupabaseService().client
-          .from(DbTables.users).select().eq('id', userId).single();
+      final response = await SupabaseService()
+          .client
+          .from(DbTables.users)
+          .select()
+          .eq('id', userId)
+          .single();
       _userModel = UserModel.fromSupabase(response, userId);
       notifyListeners();
     } catch (e) {
@@ -69,7 +130,8 @@ class AuthProvider with ChangeNotifier {
     try {
       if (_userModel == null) return false;
       await SupabaseService().client.from(DbTables.users).update({
-        'nm': name, 'sid': sid,
+        'nm': name,
+        'sid': sid,
         'ts_upd': DateTime.now().toIso8601String(),
       }).eq('id', _userModel!.uid);
       await _loadUserData(_userModel!.uid);
@@ -85,21 +147,23 @@ class AuthProvider with ChangeNotifier {
     if (userId != null) await _loadUserData(userId);
   }
 
-  /// تسجيل سلسلة الدخول اليومي (Streak) وتحديث المستخدم محلياً.
-  /// يُمرَّر [config] من ConfigProvider لمنح نقاط Streak الصحيحة.
   Future<Map<String, dynamic>> registerStreak(dynamic config) async {
     if (_userModel == null) return {'streak': 0, 'changed': false};
     final result =
         await BusinessService().registerDailyStreak(_userModel!.uid, config);
     if (result['changed'] == true) {
-      await _loadUserData(_userModel!.uid); // تحديث strk + النقاط
+      await _loadUserData(_userModel!.uid);
     }
     return result;
   }
 
   Future<void> logout() async {
     await AuthService().signOut();
-    _userModel = null; _currentPhone = null; _currentOtp = null; _isNewUser = false;
+    _userModel = null;
+    _currentPhone = null;
+    _currentEmail = null;
+    _currentOtp = null;
+    _isNewUser = false;
     notifyListeners();
   }
 
