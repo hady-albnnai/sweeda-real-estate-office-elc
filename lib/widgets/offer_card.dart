@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../models/offer_model.dart';
-import '../../core/theme/app_theme.dart';
+import '../models/offer_model.dart';
+import '../core/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 
 class OfferCard extends StatelessWidget {
