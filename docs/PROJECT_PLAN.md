@@ -19,8 +19,24 @@
 | ✅ المرحلة 6: البناء والنشر | **مُجهّزة** | إعداد+أمان+دليل | تنفيذ البناء محلياً |
 | ✅ **المرحلة 7: المصادقة الجديدة** | **مكتملة** | WhatsApp + Email Magic Link | — |
 | ✅ **المرحلة 8: الشاشات المتبقية** | **مكتملة** | packages + payment + edit + broker + request | — |
+| ✅ **المرحلة 9: إصلاحات ما بعد الاختبار** | **مكتملة** | setup_profile overflow + routes + splash logo + native splash | — |
 
 **النسبة الإجمالية: ~98% مكتمل** (يتبقّى تنفيذ البناء/النشر على الجهاز المحلي + ترقيات RLS)
+
+---
+
+## 🐛 المرحلة 9: إصلاحات ما بعد الاختبار الأول (✅ مكتملة — 2026-06-05)
+
+| # | المشكلة | الحل |
+|---|---|---|
+| 9.1 | `setup_profile_screen` RenderFlex overflowed by 67px | معاد بناؤها: SafeArea + SingleChildScrollView + حقول مدمجة |
+| 9.2 | `context.go('/')` بعد تسجيل الدخول → "no routes for location" | توجيه حسب الدور (`/user/home`, `/broker/dashboard`, `/admin/dashboard`) |
+| 9.3 | شاشة Splash تستخدم أيقونة افتراضية (`apartment_rounded`) | الآن تستخدم `assets/images/logo_app.png` مع errorBuilder |
+| 9.4 | Splash لا يفحص حالة المستخدم → دائماً يفتح شاشة الزائر | أُضيف `auth.checkAuthStatus()` + توجيه حسب الدور |
+| 9.5 | Native splash (Android) ما يظهر اللوجو بحجم مناسب | تحديد `220x220 dp` في `launch_background.xml` |
+| 9.6 | `app.dart` magic link listener يستخدم `'/'` غير معرّف | نفس إصلاح 9.2 |
+
+> الملفات المعدّلة (5): `setup_profile_screen.dart`, `otp_verification_screen.dart`, `splash_screen.dart`, `app.dart`, `launch_background.xml` (×2)
 
 ---
 
