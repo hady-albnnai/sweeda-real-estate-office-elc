@@ -13,12 +13,12 @@
 | ✅ المرحلة 0: الأساس | مكتملة | Splash + Firebase removal + Router | — |
 | ✅ المرحلة 1: شاشات المستخدم | **مكتملة** | 8/8 | — |
 | ✅ المرحلة 2: لوحة السمسار | **مكتملة** | 4/4 | — |
-| ⏳ المرحلة 3: لوحة الإدارة | التالية | 1/9 | 8 |
+| ✅ المرحلة 3: لوحة الإدارة | **مكتملة** | 9/9 | — |
 | ⏳ المرحلة 4: المنطق الخلفي | لم تبدأ | 0/7 ميزة | 7 |
 | ⏳ المرحلة 5: التحسينات | لم تبدأ | 0/6 تحسين | 6 |
 | ⏳ المرحلة 6: البناء والنشر | لم تبدأ | 0/4 عنصر | 4 |
 
-**النسبة الإجمالية: ~38% مكتمل**
+**النسبة الإجمالية: ~52% مكتمل**
 
 ---
 
@@ -51,18 +51,20 @@
 
 ---
 
-## 📌 المرحلة 3: لوحة الإدارة
+## 📌 المرحلة 3: لوحة الإدارة (✅ مكتملة)
 
-| # | الملف | الوصف | المدة التقديرية |
+| # | الملف | الوصف | الحالة |
 |---|---|---|---|
-| 3.1 | `admin_dashboard_screen.dart` | لوحة رئيسية | 2h |
-| 3.2 | `users_management_screen.dart` | حظر/تجميد/صلاحيات | 2h |
-| 3.3 | `appointments_management_screen.dart` | إدارة المواعيد | 1.5h |
-| 3.4 | `deals_management_screen.dart` | صفقات + عمولات | 2h |
-| 3.5 | `payments_screen.dart` | مدفوعات + موافقة | 1.5h |
-| 3.6 | `reports_screen.dart` | تبليغات + إجراء | 1.5h |
-| 3.7 | `config_editor_screen.dart` | تعديل إعدادات ديناميكي | 2h |
-| 3.8 | `analytics_screen.dart` | إحصائيات + رسوم | 2h |
+| 3.1 | `admin_dashboard_screen.dart` | لوحة رئيسية + إحصائيات + عدّادات إجراءات | ✅ |
+| 3.2 | `users_management_screen.dart` | بحث + حظر/تجميد/تفعيل + تغيير الدور | ✅ |
+| 3.3 | `appointments_management_screen.dart` | كل المواعيد + فلترة + فرض/إكمال/إلغاء | ✅ |
+| 3.4 | `deals_management_screen.dart` | صفقات + إتمام + تسجيل العمولة | ✅ |
+| 3.5 | `payments_screen.dart` | موافقة/رفض + تفعيل الباقة + إثبات الدفع | ✅ |
+| 3.6 | `reports_screen.dart` | تبليغات + إجراء (تحذير/تجميد/حظر) | ✅ |
+| 3.7 | `config_editor_screen.dart` | تعديل النقاط/العمولة/الحصص (دمج آمن) | ✅ |
+| 3.8 | `analytics_screen.dart` | إحصائيات شاملة + أشرطة نسب | ✅ |
+
+> **`AdminProvider`** موسّع: `getAllUsers/setUserStatus/ban/freeze/activate/updateUserRole/softDeleteUser` · `getAllAppointments/updateAppointmentStatus/forceAppointment` · `getAllDeals/createDeal/completeDeal` · `getAllPayments/approvePayment/rejectPayment` · `getAllReports/handleReport` · `getStats/getActionCounts`.
 
 ---
 
@@ -106,7 +108,7 @@
 
 ## 📈 ملخص
 
-- **الشاشات المكتملة:** 19/39 (السمسار: 5 شاشات تشمل المعاينة)
+- **الشاشات المكتملة:** 28/39 (المستخدم 8 · السمسار 5 · الإدارة 9 + أساسيات)
 - **الميزات المكتملة:** 0/7
 - **التحسينات المكتملة:** 0/6
-- **إجمالي التقدم:** ~38%
+- **إجمالي التقدم:** ~52%

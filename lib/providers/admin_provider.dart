@@ -1,72 +1,423 @@
 import 'package:flutter/foundation.dart';
 import '../models/offer_model.dart';
+import '../models/user_model.dart';
+import '../models/appointment_model.dart';
+import '../models/deal_model.dart';
+import '../models/payment_model.dart';
+import '../models/report_model.dart';
 import '../core/network/supabase_service.dart';
 import '../core/constants/db_constants.dart';
 
+/// Provider لوحة الإدارة (role >= 2)
+/// يجمع كل عمليات الإدارة: العروض، المستخدمون، المواعيد، الصفقات،
+/// المدفوعات، التبليغات، الإحصائيات.
 class AdminProvider with ChangeNotifier {
+  bool _isLoading = false;
+  String? _error;
+
+  bool get isLoading => _isLoading;
+  String? get error => _error;
+
+  void _setLoading(bool v) {
+    _isLoading = v;
+    notifyListeners();
+  }
+
+  // ═══════════════════════════════════════
+  // 1) العروض (مراجعة)
+  // ═══════════════════════════════════════
   Future<List<OfferModel>> getPendingOffers() async {
     try {
       final response = await SupabaseService().client
-          .from(DbTables.offers).select()
-          .eq('sts', 0).eq('i_del', 0).order('ts_crt', ascending: false);
-      return (response as List).map((d) =>
-          OfferModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String)).toList();
-    } catch (e) { debugPrint('❌ getPendingOffers error: $e'); return []; }
+          .from(DbTables.offers)
+          .select()
+          .eq('sts', 0)
+          .eq('i_del', 0)
+          .order('ts_crt', ascending: false);
+      return (response as List)
+          .map((d) =>
+              OfferModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String))
+          .toList();
+    } catch (e) {
+      debugPrint('❌ getPendingOffers error: $e');
+      return [];
+    }
   }
 
-  Future<bool> reviewOffer(String offerId, bool approve) async {
+  Future<bool> reviewOffer(String offerId, bool approve, {String reason = ''}) async {
     try {
       final now = DateTime.now().toIso8601String();
       await SupabaseService().client.from(DbTables.offers).update({
-        'sts': approve ? 1 : 3, 'i_pub': approve ? 1 : 0,
-        'ts_pub': approve ? now : null, 'ts_upd': now,
+        'sts': approve ? 2 : 3,
+        'i_pub': approve ? 1 : 0,
+        'rsn': reason,
+        'ts_pub': approve ? now : null,
+        'ts_upd': now,
       }).eq('id', offerId);
-      notifyListeners(); return true;
-    } catch (e) { debugPrint('❌ reviewOffer error: $e'); return false; }
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('❌ reviewOffer error: $e');
+      return false;
+    }
+  }
+
+  // ═══════════════════════════════════════
+  // 2) المستخدمون (إدارة)
+  // ═══════════════════════════════════════
+  Future<List<UserModel>> getAllUsers({String? search}) async {
+    try {
+      var q = SupabaseService().client
+          .from(DbTables.users)
+          .select()
+          .eq('i_del', 0);
+      if (search != null && search.isNotEmpty) {
+        q = q.or('nm.ilike.%$search%,ph.ilike.%$search%');
+      }
+      final response = await q.order('ts_crt', ascending: false);
+      return (response as List)
+          .map((d) =>
+              UserModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String))
+          .toList();
+    } catch (e) {
+      debugPrint('❌ getAllUsers error: $e');
+      return [];
+    }
   }
 
   Future<bool> updateUserRole(String uid, int newRole) async {
     try {
       await SupabaseService().client.from(DbTables.users).update({
-        'role': newRole, 'ts_upd': DateTime.now().toIso8601String(),
-      }).eq('id', uid);
-      notifyListeners(); return true;
-    } catch (e) { debugPrint('❌ updateUserRole error: $e'); return false; }
-  }
-
-  Future<bool> activatePackage(String paymentId, String uid, int packageType) async {
-    try {
-      final pkgDurations = {0: 30, 1: 45, 2: 60};
-      await SupabaseService().client.from(DbTables.payments)
-          .update({'sts': 1}).eq('id', paymentId);
-      final pkgEnd = DateTime.now().add(Duration(days: pkgDurations[packageType] ?? 30));
-      final user = await SupabaseService().client
-          .from(DbTables.users).select('pt').eq('id', uid).single();
-      final currentPts = (user['pt'] as int? ?? 0) + 100;
-      await SupabaseService().client.from(DbTables.users).update({
-        'b_pkg': packageType, 'pkg_end': pkgEnd.toIso8601String(),
-        'pt': currentPts, 'ts_upd': DateTime.now().toIso8601String(),
-      }).eq('id', uid);
-      notifyListeners(); return true;
-    } catch (e) { debugPrint('❌ activatePackage error: $e'); return false; }
-  }
-
-  Future<bool> banUser(String uid, String reason) async {
-    try {
-      await SupabaseService().client.from(DbTables.users).update({
-        'sts': 2, 'ban_rsn': reason,
+        'role': newRole,
+        'brk': newRole == 1 ? 1 : 0,
         'ts_upd': DateTime.now().toIso8601String(),
       }).eq('id', uid);
-      notifyListeners(); return true;
-    } catch (e) { debugPrint('❌ banUser error: $e'); return false; }
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('❌ updateUserRole error: $e');
+      return false;
+    }
   }
 
+  /// تغيير حالة المستخدم: 0=نشط, 1=مجمّد, 2=محظور
+  Future<bool> setUserStatus(String uid, int status, {String reason = ''}) async {
+    try {
+      await SupabaseService().client.from(DbTables.users).update({
+        'sts': status,
+        'ban_rsn': status == 0 ? '' : reason,
+        'ts_upd': DateTime.now().toIso8601String(),
+      }).eq('id', uid);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('❌ setUserStatus error: $e');
+      return false;
+    }
+  }
+
+  Future<bool> banUser(String uid, String reason) => setUserStatus(uid, 2, reason: reason);
+  Future<bool> freezeUser(String uid, String reason) => setUserStatus(uid, 1, reason: reason);
+  Future<bool> activateUser(String uid) => setUserStatus(uid, 0);
+
+  Future<bool> softDeleteUser(String uid) async {
+    try {
+      await SupabaseService().client.from(DbTables.users).update({
+        'i_del': 1,
+        'ts_upd': DateTime.now().toIso8601String(),
+      }).eq('id', uid);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('❌ softDeleteUser error: $e');
+      return false;
+    }
+  }
+
+  // ═══════════════════════════════════════
+  // 3) المواعيد (إدارة)
+  // ═══════════════════════════════════════
+  Future<List<AppointmentModel>> getAllAppointments() async {
+    try {
+      final response = await SupabaseService().client
+          .from(DbTables.appointments)
+          .select()
+          .order('dt', ascending: false);
+      return (response as List)
+          .map((d) => AppointmentModel.fromSupabase(
+              Map<String, dynamic>.from(d), d['id'] as String))
+          .toList();
+    } catch (e) {
+      debugPrint('❌ getAllAppointments error: $e');
+      return [];
+    }
+  }
+
+  Future<bool> updateAppointmentStatus(String apptId, int status,
+      {String adminNote = ''}) async {
+    try {
+      final data = <String, dynamic>{'sts': status};
+      if (adminNote.isNotEmpty) data['admin_nt'] = adminNote;
+      await SupabaseService()
+          .client
+          .from(DbTables.appointments)
+          .update(data)
+          .eq('id', apptId);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('❌ updateAppointmentStatus error: $e');
+      return false;
+    }
+  }
+
+  /// فرض موعد من قبل الإدارة
+  Future<bool> forceAppointment(String apptId, String adminId) async {
+    try {
+      await SupabaseService().client.from(DbTables.appointments).update({
+        'i_force': 1,
+        'force_by': adminId,
+        'sts': 1,
+      }).eq('id', apptId);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('❌ forceAppointment error: $e');
+      return false;
+    }
+  }
+
+  // ═══════════════════════════════════════
+  // 4) الصفقات (إدارة)
+  // ═══════════════════════════════════════
+  Future<List<DealModel>> getAllDeals() async {
+    try {
+      final response = await SupabaseService().client
+          .from(DbTables.deals)
+          .select()
+          .eq('i_del', 0)
+          .order('ts_crt', ascending: false);
+      return (response as List)
+          .map((d) =>
+              DealModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String))
+          .toList();
+    } catch (e) {
+      debugPrint('❌ getAllDeals error: $e');
+      return [];
+    }
+  }
+
+  /// إنشاء صفقة (استمارة المندوب)
+  Future<bool> createDeal(DealModel deal) async {
+    try {
+      await SupabaseService().client.from(DbTables.deals).insert(deal.toMap());
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('❌ createDeal error: $e');
+      return false;
+    }
+  }
+
+  /// إتمام صفقة (sts=1) + تسجيل العمولة
+  Future<bool> completeDeal(String dealId, String adminId,
+      {double? commission, String? note}) async {
+    try {
+      final data = <String, dynamic>{
+        'sts': 1,
+        'cmpl_by': adminId,
+        'ts_cmpl': DateTime.now().toIso8601String(),
+      };
+      if (commission != null) data['com_val'] = commission;
+      if (note != null) data['com_note'] = note;
+      await SupabaseService()
+          .client
+          .from(DbTables.deals)
+          .update(data)
+          .eq('id', dealId);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('❌ completeDeal error: $e');
+      return false;
+    }
+  }
+
+  // ═══════════════════════════════════════
+  // 5) المدفوعات (إدارة)
+  // ═══════════════════════════════════════
+  Future<List<PaymentModel>> getAllPayments({int? status}) async {
+    try {
+      var q = SupabaseService().client.from(DbTables.payments).select();
+      if (status != null) q = q.eq('sts', status);
+      final response = await q.order('ts_crt', ascending: false);
+      return (response as List)
+          .map((d) =>
+              PaymentModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String))
+          .toList();
+    } catch (e) {
+      debugPrint('❌ getAllPayments error: $e');
+      return [];
+    }
+  }
+
+  /// الموافقة على دفعة + تفعيل الباقة للمستخدم
+  Future<bool> approvePayment(String paymentId, String uid, int packageType,
+      String adminId) async {
+    try {
+      final pkgDurations = {0: 30, 1: 45, 2: 60};
+      await SupabaseService().client.from(DbTables.payments).update({
+        'sts': 1,
+        'appr_by': adminId,
+      }).eq('id', paymentId);
+      final pkgEnd =
+          DateTime.now().add(Duration(days: pkgDurations[packageType] ?? 30));
+      await SupabaseService().client.from(DbTables.users).update({
+        'b_pkg': packageType,
+        'pkg_end': pkgEnd.toIso8601String(),
+        'ts_upd': DateTime.now().toIso8601String(),
+      }).eq('id', uid);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('❌ approvePayment error: $e');
+      return false;
+    }
+  }
+
+  Future<bool> rejectPayment(String paymentId, String adminId) async {
+    try {
+      await SupabaseService().client.from(DbTables.payments).update({
+        'sts': 2,
+        'appr_by': adminId,
+      }).eq('id', paymentId);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('❌ rejectPayment error: $e');
+      return false;
+    }
+  }
+
+  // ═══════════════════════════════════════
+  // 6) التبليغات (إدارة)
+  // ═══════════════════════════════════════
+  Future<List<ReportModel>> getAllReports({int? status}) async {
+    try {
+      var q = SupabaseService().client.from(DbTables.reports).select();
+      if (status != null) q = q.eq('sts', status);
+      final response = await q.order('ts_crt', ascending: false);
+      return (response as List)
+          .map((d) =>
+              ReportModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String))
+          .toList();
+    } catch (e) {
+      debugPrint('❌ getAllReports error: $e');
+      return [];
+    }
+  }
+
+  /// اتخاذ إجراء على تبليغ
+  /// action: 0=لا إجراء, 1=تحذير, 2=تجميد, 3=حظر
+  Future<bool> handleReport(String reportId, int action, String adminId,
+      {String note = '', int duration = 0}) async {
+    try {
+      await SupabaseService().client.from(DbTables.reports).update({
+        'sts': 1, // تمت المعالجة
+        'act': action,
+        'act_dur': duration,
+        'note': note,
+        'act_by': adminId,
+      }).eq('id', reportId);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('❌ handleReport error: $e');
+      return false;
+    }
+  }
+
+  // ═══════════════════════════════════════
+  // 7) الإحصائيات الشاملة
+  // ═══════════════════════════════════════
   Future<Map<String, dynamic>> getStats() async {
     try {
-      final offers = await SupabaseService().client.from(DbTables.offers).select('id').eq('i_del', 0);
-      final users = await SupabaseService().client.from(DbTables.users).select('id').eq('i_del', 0);
-      final pending = await SupabaseService().client.from(DbTables.offers).select('id').eq('sts', 0).eq('i_del', 0);
-      return {'totalOffers': (offers as List).length, 'totalUsers': (users as List).length, 'pendingOffers': (pending as List).length};
-    } catch (e) { debugPrint('❌ getStats error: $e'); return {}; }
+      final offers = await SupabaseService()
+          .client
+          .from(DbTables.offers)
+          .select('id, sts')
+          .eq('i_del', 0);
+      final users = await SupabaseService()
+          .client
+          .from(DbTables.users)
+          .select('id, sts, role')
+          .eq('i_del', 0);
+      final deals = await SupabaseService()
+          .client
+          .from(DbTables.deals)
+          .select('id, sts, com_val')
+          .eq('i_del', 0);
+      final appts = await SupabaseService()
+          .client
+          .from(DbTables.appointments)
+          .select('id, sts');
+
+      final offersList = offers as List;
+      final usersList = users as List;
+      final dealsList = deals as List;
+      final apptsList = appts as List;
+
+      return {
+        'totalOffers': offersList.length,
+        'pendingOffers': offersList.where((o) => (o['sts'] ?? 0) == 0).length,
+        'publishedOffers': offersList.where((o) => (o['sts'] ?? 0) == 2).length,
+        'totalUsers': usersList.length,
+        'activeUsers': usersList.where((u) => (u['sts'] ?? 0) == 0).length,
+        'bannedUsers': usersList.where((u) => (u['sts'] ?? 0) == 2).length,
+        'brokers': usersList.where((u) => (u['role'] ?? 0) == 1).length,
+        'totalDeals': dealsList.length,
+        'completedDeals': dealsList.where((d) => (d['sts'] ?? 0) == 1).length,
+        'totalCommission': dealsList
+            .where((d) => (d['sts'] ?? 0) == 1)
+            .fold<double>(
+                0, (s, d) => s + (((d['com_val'] ?? 0) as num).toDouble())),
+        'totalAppointments': apptsList.length,
+        'completedAppointments':
+            apptsList.where((a) => (a['sts'] ?? 0) == 2).length,
+      };
+    } catch (e) {
+      debugPrint('❌ getStats error: $e');
+      return {};
+    }
+  }
+
+  /// عدّاد سريع للعناصر التي تحتاج إجراء (للوحة الرئيسية)
+  Future<Map<String, int>> getActionCounts() async {
+    try {
+      final pendingOffers = await SupabaseService()
+          .client
+          .from(DbTables.offers)
+          .select('id')
+          .eq('sts', 0)
+          .eq('i_del', 0);
+      final pendingPayments = await SupabaseService()
+          .client
+          .from(DbTables.payments)
+          .select('id')
+          .eq('sts', 0);
+      final openReports = await SupabaseService()
+          .client
+          .from(DbTables.reports)
+          .select('id')
+          .eq('sts', 0);
+      return {
+        'pendingOffers': (pendingOffers as List).length,
+        'pendingPayments': (pendingPayments as List).length,
+        'openReports': (openReports as List).length,
+      };
+    } catch (e) {
+      debugPrint('❌ getActionCounts error: $e');
+      return {};
+    }
   }
 }

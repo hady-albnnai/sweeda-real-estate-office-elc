@@ -1,7 +1,7 @@
 # 🚀 دليل التطوير — عقارات السويداء
 
 > **آخر تحديث:** 2026-06-05  
-> **Commit الحالي:** المرحلة 2 ✅ مكتملة  
+> **Commit الحالي:** المرحلة 3 ✅ مكتملة  
 > **المستودع:** https://github.com/hady-albnnai/sweeda-real-estate-office-elc
 
 ---
@@ -12,13 +12,13 @@
 |---|---|---|
 | **السيرفر (Supabase)** | ✅ 100% | 13 جدول + 12 دالة RPC + RLS + Realtime |
 | **الموديلات** | ✅ 100% | 10 ملفات |
-| **الـ Providers** | ✅ 100% | 9 ملفات (broker موسّع: stats/offers/deals/appointments) |
+| **الـ Providers** | ✅ 100% | 9 ملفات (broker + admin موسّعان بالكامل) |
 | **الـ Services** | ✅ 100% | auth, storage, notification |
 | **الـ Router** | ✅ 100% | 30 مسار (شاشات السمسار الـ4 مربوطة) |
 | **🎬 المرحلة 0: الأساس** | ✅ مكتملة | Splash + Firebase removal |
 | **👤 المرحلة 1: شاشات المستخدم** | ✅ مكتملة | 8 شاشات + BottomNavBar |
 | **🤝 المرحلة 2: لوحة السمسار** | ✅ مكتملة | 4 شاشات + ربط بالبروفايل |
-| **🛡️ المرحلة 3: لوحة الإدارة** | ⏳ لم تبدأ | 8 شاشات stub |
+| **🛡️ المرحلة 3: لوحة الإدارة** | ✅ مكتملة | 9 شاشات (dashboard + 8 أقسام) |
 | **⚙️ المرحلة 4: المنطق الخلفي** | ⏳ لم تبدأ | Config + نقاط + باقات + صور |
 | **✨ المرحلة 5: التحسينات** | ⏳ لم تبدأ | Realtime + Push + Offline |
 | **📦 المرحلة 6: البناء** | ⏳ لم تبدأ | APK + Testing |
@@ -71,17 +71,22 @@ firebase.json ❌ | functions/ ❌ | firebase_options.dart ❌ | firestore_servi
 
 **الدخول للوحة:** زر "لوحة الوسيط" في `profile_screen.dart` (يظهر لمن `role==1` أو `isBroker`). كذلك زر "لوحة الإدارة" لمن `isAdmin` (role≥2).
 
-### 📌 المرحلة 3: لوحة الإدارة
-| # | الملف | الوصف |
-|---|---|---|
-| 3.1 | `admin_dashboard_screen.dart` | لوحة الإدارة الرئيسية |
-| 3.2 | `users_management_screen.dart` | إدارة المستخدمين (حظر/تجميد) |
-| 3.3 | `appointments_management_screen.dart` | إدارة جميع المواعيد |
-| 3.4 | `deals_management_screen.dart` | الصفقات + العمولات + استمارة المندوب |
-| 3.5 | `payments_screen.dart` | إدارة المدفوعات + الموافقة/الرفض |
-| 3.6 | `reports_screen.dart` | عرض التبليغات + اتخاذ إجراء |
-| 3.7 | `config_editor_screen.dart` | تعديل إعدادات التطبيق ديناميكياً |
-| 3.8 | `analytics_screen.dart` | الإحصائيات الشاملة + رسوم بيانية |
+### ✅ المرحلة 3: لوحة الإدارة (مكتملة)
+| # | الملف | الوصف | الحالة |
+|---|---|---|---|
+| 3.1 | `admin_dashboard_screen.dart` | لوحة رئيسية + إحصائيات + عدّادات إجراءات + شبكة تنقّل | ✅ |
+| 3.2 | `users_management_screen.dart` | بحث + حظر/تجميد/تفعيل + تغيير الدور | ✅ |
+| 3.3 | `appointments_management_screen.dart` | كل المواعيد + فلترة + فرض/إكمال/إلغاء | ✅ |
+| 3.4 | `deals_management_screen.dart` | الصفقات + إتمام + تسجيل العمولة + ملخّص | ✅ |
+| 3.5 | `payments_screen.dart` | موافقة/رفض + تفعيل الباقة + إثبات الدفع | ✅ |
+| 3.6 | `reports_screen.dart` | عرض التبليغات + اتخاذ إجراء (تحذير/تجميد/حظر) | ✅ |
+| 3.7 | `config_editor_screen.dart` | تعديل النقاط/العمولة/الحصص ديناميكياً (دمج آمن) | ✅ |
+| 3.8 | `analytics_screen.dart` | إحصائيات شاملة + أشرطة نسب (بدون مكتبات) | ✅ |
+| — | `offers_review_screen.dart` | مراجعة العروض — موجودة مسبقاً (مربوطة بالداشبورد) | ✅ |
+
+**`AdminProvider` تم توسعته بالكامل:** مراجعة عروض · إدارة مستخدمين (`getAllUsers`/`setUserStatus`/`ban`/`freeze`/`activate`/`updateUserRole`/`softDeleteUser`) · مواعيد (`getAllAppointments`/`updateAppointmentStatus`/`forceAppointment`) · صفقات (`getAllDeals`/`createDeal`/`completeDeal`) · مدفوعات (`getAllPayments`/`approvePayment`/`rejectPayment`) · تبليغات (`getAllReports`/`handleReport`) · إحصائيات (`getStats`/`getActionCounts`).
+
+**الدخول:** زر "لوحة الإدارة" في `profile_screen.dart` (يظهر لمن `isAdmin` أي role≥2).
 
 ### 📌 المرحلة 4: المنطق الخلفي
 | # | العنصر | الوصف |
@@ -151,7 +156,7 @@ lib/
 │   ├── auth/     (3 شاشات)               ✅
 │   ├── user/     (8 شاشات)               ✅ المرحلة 1 كاملة
 │   ├── broker/   (5 شاشات)               ✅ المرحلة 2 كاملة
-│   └── admin/    (1 شاشة + 8 stubs)      ⏳ المرحلة 3
+│   └── admin/    (9 شاشات)               ✅ المرحلة 3 كاملة
 └── widgets/                       # 10 ويدجت
 ```
 
@@ -179,7 +184,7 @@ flutter analyze                # فحص أخطاء
 - [x] BottomNavigationBar يعمل
 - [x] كل المسارات بالـ Router محددة
 - [x] المرحلة 2: لوحة السمسار (4 شاشات + ربط)
-- [ ] المرحلة 3: لوحة الإدارة
+- [x] المرحلة 3: لوحة الإدارة (9 شاشات + AdminProvider موسّع)
 - [ ] المرحلة 4: المنطق الخلفي
 - [ ] المرحلة 5: التحسينات
 - [ ] المرحلة 6: البناء والنشر
