@@ -12,6 +12,8 @@ import '../../core/services/business_service.dart';
 import '../../core/network/supabase_service.dart';
 import '../../models/offer_model.dart';
 import '../../services/storage_service.dart';
+import '../../widgets/location_picker.dart';
+import 'package:latlong2/latlong.dart';
 
 class AddOfferScreen extends StatefulWidget {
   const AddOfferScreen({super.key});
@@ -31,6 +33,8 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
 
   final List<XFile> _pickedImages = [];
   XFile? _docImage; // صورة سند الملكية
+  XFile? _pickedVideo; // فيديو العرض (اختياري)
+  LatLng? _pickedLocation; // الموقع الدقيق على الخريطة (اختياري)
   int? _selectedDocType; // نوع السند من config.docTp
   bool _agreePledge = false; // الإقرار والتعهد
   bool _submitting = false;
@@ -135,6 +139,14 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     }
   }
 
+  Future<void> _pickVideo() async {
+    final file = await _storage.pickVideo();
+    if (file != null) {
+      setState(() => _pickedVideo = file);
+      _snack('تم اختيار الفيديو ✅');
+    }
+  }
+
   Future<void> _submit() async {
     final auth = context.read<AuthProvider>();
     final offerProv = context.read<OfferProvider>();
@@ -195,6 +207,16 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       );
     }
 
+    // 2.5) رفع الفيديو (اختياري)
+    String videoUrl = '';
+    if (_pickedVideo != null) {
+      setState(() => _progressMsg = 'جارٍ رفع الفيديو...');
+      videoUrl = await _storage.uploadOfferVideo(
+        xfile: _pickedVideo!,
+        userId: user.uid,
+      ) ?? '';
+    }
+
     // 3) رفع صورة سند الملكية
     setState(() => _progressMsg = 'جارٍ رفع سند الملكية...');
     final docUrl = await _uploadDocImage(user.uid) ?? '';
@@ -216,6 +238,10 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       descript: _descCtrl.text,
       specs: {'details': _specCtrl.text},
       imgs: imageUrls,
+      vdo: videoUrl,
+      exactLoc: _pickedLocation != null
+          ? '${_pickedLocation!.latitude},${_pickedLocation!.longitude}'
+          : '',
       docTp: _selectedDocType!,
       docImg: docUrl,
       sts: 0,
@@ -391,15 +417,64 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
               controller: _specCtrl,
               maxLines: 3,
               decoration: const InputDecoration(labelText: 'المواصفات')),
+          const SizedBox(height: 20),
+          // الموقع الدقيق على الخريطة
+          const Row(children: [
+            Icon(Icons.map, color: AppTheme.primaryGold, size: 18),
+            SizedBox(width: 6),
+            Text('الموقع الدقيق على الخريطة (اختياري)',
+                style: TextStyle(
+                    color: AppTheme.primaryGold,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13)),
+          ]),
+          const SizedBox(height: 4),
+          const Text('اضغط على الخريطة لتحديد موقع العقار بدقة',
+              style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+          const SizedBox(height: 8),
+          LocationPicker(
+            initial: _pickedLocation,
+            onPicked: (loc) => setState(() => _pickedLocation = loc),
+            height: 250,
+          ),
+          if (_pickedLocation != null) ...[
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Row(children: [
+                const Icon(Icons.check_circle, color: Colors.green, size: 14),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    'تم تحديد الموقع: ${_pickedLocation!.latitude.toStringAsFixed(4)}, ${_pickedLocation!.longitude.toStringAsFixed(4)}',
+                    style: const TextStyle(
+                        color: Colors.green, fontSize: 11),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.red, size: 16),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  onPressed: () => setState(() => _pickedLocation = null),
+                ),
+              ]),
+            ),
+          ],
         ]),
         isActive: _currentStep >= 1,
       );
 
   Step _step3() => Step(
-        title: const Text('الصور',
+        title: const Text('الصور والفيديو',
             style: TextStyle(
                 color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
-        content: Column(children: [
+        content: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          // الصور
           ElevatedButton.icon(
             onPressed: _pickImages,
             icon: const Icon(Icons.add_photo_alternate),
@@ -429,6 +504,55 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
                   ],
                 );
               }).toList(),
+            ),
+          const SizedBox(height: 20),
+          const Divider(color: AppTheme.textGrey),
+          const SizedBox(height: 10),
+          // الفيديو (اختياري)
+          const Text('🎬 فيديو للعرض (اختياري)',
+              style: TextStyle(
+                  color: AppTheme.primaryGold,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13)),
+          const SizedBox(height: 4),
+          const Text('فيديو قصير (حد أقصى 60 ثانية، 50 MB) — يزيد فرص البيع',
+              style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+          const SizedBox(height: 8),
+          if (_pickedVideo == null)
+            OutlinedButton.icon(
+              onPressed: _pickVideo,
+              icon: const Icon(Icons.video_library, color: AppTheme.primaryGold),
+              label: const Text('اختر فيديو',
+                  style: TextStyle(color: AppTheme.primaryGold)),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: AppTheme.primaryGold),
+              ),
+            )
+          else
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.green),
+              ),
+              child: Row(children: [
+                const Icon(Icons.check_circle, color: Colors.green, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'تم اختيار: ${_pickedVideo!.name}',
+                    style: const TextStyle(
+                        color: AppTheme.textWhite, fontSize: 12),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.red, size: 18),
+                  onPressed: () => setState(() => _pickedVideo = null),
+                ),
+              ]),
             ),
         ]),
         isActive: _currentStep >= 2,

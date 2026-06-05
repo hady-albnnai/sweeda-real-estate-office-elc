@@ -158,6 +158,57 @@ class StorageService {
     return _storage.from(bucket).getPublicUrl(path);
   }
 
+  // ═══════════════════════════════════════
+  // 🎬 الفيديو (المرحلة D)
+  // ═══════════════════════════════════════
+
+  /// اختيار فيديو من المعرض (الحد الأقصى: 60 ثانية لتوفير المساحة)
+  Future<XFile?> pickVideo({Duration maxDuration = const Duration(seconds: 60)}) async {
+    try {
+      return await _picker.pickVideo(
+        source: ImageSource.gallery,
+        maxDuration: maxDuration,
+      );
+    } catch (e) {
+      debugPrint('❌ pickVideo error: $e');
+      return null;
+    }
+  }
+
+  /// رفع فيديو لعرض
+  Future<String?> uploadOfferVideo({
+    required XFile xfile,
+    required String userId,
+    String? offerId,
+  }) async {
+    try {
+      final fileName =
+          '${DateTime.now().millisecondsSinceEpoch}_${xfile.name}';
+      final fullPath = 'videos/$userId/${offerId ?? 'draft'}/$fileName';
+
+      final bytes = kIsWeb
+          ? await xfile.readAsBytes()
+          : await File(xfile.path).readAsBytes();
+
+      // فحص الحجم (حد أقصى 50 MB)
+      if (bytes.length > 50 * 1024 * 1024) {
+        debugPrint('❌ Video too large: ${bytes.length} bytes');
+        return null;
+      }
+
+      await _storage.from(offerBucket).uploadBinary(
+            fullPath,
+            bytes,
+            fileOptions: const FileOptions(
+                cacheControl: '3600', upsert: true, contentType: 'video/mp4'),
+          );
+      return _storage.from(offerBucket).getPublicUrl(fullPath);
+    } catch (e) {
+      debugPrint('❌ uploadOfferVideo error: $e');
+      return null;
+    }
+  }
+
   Future<void> deleteFile(String bucket, String path) async {
     try {
       await _storage.from(bucket).remove([path]);

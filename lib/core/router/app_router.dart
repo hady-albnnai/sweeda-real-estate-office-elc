@@ -44,6 +44,7 @@ import '../../screens/broker/broker_stats_screen.dart';
 // === Admin ===
 import '../../screens/admin/admin_dashboard_screen.dart';
 import '../../screens/admin/users_management_screen.dart';
+import '../../screens/admin/user_details_screen.dart';
 import '../../screens/admin/offers_review_screen.dart';
 import '../../screens/admin/appointments_management_screen.dart';
 import '../../screens/admin/deals_management_screen.dart';
@@ -223,6 +224,13 @@ class AppRouter {
       GoRoute(
         path: '/admin/users',
         builder: (context, state) => const UsersManagementScreen(),
+      ),
+      GoRoute(
+        path: '/admin/user/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return UserDetailsScreen(userId: id);
+        },
       ),
       GoRoute(
         path: '/admin/review-offers',

@@ -60,7 +60,7 @@
 | `broker_deals_screen.dart` | 237 | ✅ |
 | `broker_stats_screen.dart` | 213 | ✅ |
 
-### 🛡️ Admin (9) — كاملة
+### 🛡️ Admin (10) — كاملة (+ user_details الجديدة)
 | الملف | السطور | الحالة |
 |---|---|---|
 | `admin_dashboard_screen.dart` | 284 | ✅ |
