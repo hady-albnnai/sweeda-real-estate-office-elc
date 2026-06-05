@@ -68,8 +68,12 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     if (ok) {
       if (auth.isNewUser) {
         context.go('/setup-profile');
+      } else if (auth.isAdmin) {
+        context.go('/admin/dashboard');
+      } else if (auth.isBroker) {
+        context.go('/broker/dashboard');
       } else {
-        context.go('/');
+        context.go('/user/home');
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
