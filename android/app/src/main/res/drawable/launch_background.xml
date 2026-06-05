@@ -4,8 +4,11 @@
     <!-- خلفية داكنة تطابق ثيم التطبيق -->
     <item android:drawable="@color/splash_bg" />
 
-    <!-- اللوجو الكبير في المنتصف -->
-    <item>
+    <!-- اللوجو في المنتصف بحجم مضبوط -->
+    <item
+        android:width="220dp"
+        android:height="220dp"
+        android:gravity="center">
         <bitmap
             android:gravity="center"
             android:src="@drawable/splash_logo" />

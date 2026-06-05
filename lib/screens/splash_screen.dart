@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../core/theme/app_theme.dart';
 import '../providers/config_provider.dart';
+import '../providers/auth_provider.dart';
 
 // ============================================================
 // ملاحظة للرجوع لها لاحقا:
@@ -52,15 +53,30 @@ class _SplashScreenState extends State<SplashScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) => _bootstrap());
   }
 
-  /// تحميل الإعدادات ثم الانتقال (بحد أدنى زمني لإظهار الشعار)
+  /// تحميل الإعدادات + فحص الجلسة ثم الانتقال
   Future<void> _bootstrap() async {
     final config = Provider.of<ConfigProvider>(context, listen: false);
+    final auth = Provider.of<AuthProvider>(context, listen: false);
     // نشغّل التحميل والحد الأدنى للعرض بالتوازي
     await Future.wait([
       config.loadConfig(),
+      auth.checkAuthStatus(),
       Future.delayed(const Duration(milliseconds: 1800)),
     ]);
-    if (mounted) context.go('/home');
+    if (!mounted) return;
+
+    // التوجّه حسب حالة المستخدم
+    if (auth.isLoggedIn) {
+      if (auth.isAdmin) {
+        context.go('/admin/dashboard');
+      } else if (auth.isBroker) {
+        context.go('/broker/dashboard');
+      } else {
+        context.go('/user/home');
+      }
+    } else {
+      context.go('/home'); // شاشة الزائر
+    }
   }
 
   @override
@@ -106,10 +122,15 @@ class _SplashScreenState extends State<SplashScreen>
                       child: ClipOval(
                         child: Container(
                           color: AppTheme.surfaceBlack,
-                          child: Icon(
-                            Icons.apartment_rounded,
-                            size: 65,
-                            color: AppTheme.primaryGold,
+                          padding: const EdgeInsets.all(8),
+                          child: Image.asset(
+                            'assets/images/logo_app.png',
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, __, ___) => const Icon(
+                              Icons.apartment_rounded,
+                              size: 65,
+                              color: AppTheme.primaryGold,
+                            ),
                           ),
                         ),
                       ),

@@ -22,8 +22,8 @@
 
 ### 🔐 Auth (4) — كاملة
 - `login_screen.dart` (283 سطر) — تبويبتين واتساب/إيميل
-- `otp_verification_screen.dart` (202 سطر)
-- `setup_profile_screen.dart` (95 سطر)
+- `otp_verification_screen.dart` (208 سطر) — ✅ توجيه بعد التحقق حسب الدور (admin/broker/user)
+- `setup_profile_screen.dart` (145 سطر) — ✅ معاد بناؤها: SafeArea + SingleChildScrollView (إصلاح overflow) + توجيه حسب الدور
 - `check_email_screen.dart` (96 سطر)
 
 ### 🌐 Visitor (3) — كاملة
