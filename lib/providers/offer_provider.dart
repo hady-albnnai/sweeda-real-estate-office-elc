@@ -41,6 +41,9 @@ class OfferProvider with ChangeNotifier {
           .select()
           .eq('i_del', 0)
           .eq('i_pub', 1)
+          .order('i_pin', ascending: false) // المثبّتة أولاً
+          .order('i_fms', ascending: false) // ثم المميّزة
+          .order('i_bst', ascending: false) // ثم Boost
           .order('ts_crt', ascending: false);
       _offers = (response as List)
           .map((d) =>

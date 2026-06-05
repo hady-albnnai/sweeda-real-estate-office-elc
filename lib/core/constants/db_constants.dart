@@ -35,6 +35,9 @@ class DbFunctions {
   // === المرحلة 10: stats triggers + إحالة + تسجيل دخول أسبوعي ===
   static const String registerWeeklyLogin = 'register_weekly_login';
   static const String applyReferral = 'apply_referral';
+  // === المرحلة C: ترقيات العروض (spd) ===
+  static const String purchaseOfferBoost = 'purchase_offer_boost';
+  static const String expireOfferBoosts = 'expire_offer_boosts';
   // ملاحظة: triggers (update_user_stats_on_*) لا تُستدعى يدوياً من Flutter
 }
 

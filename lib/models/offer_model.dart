@@ -30,6 +30,16 @@ class OfferModel {
   final int iDup;
   final String dupOf;
   final Map<String, List<String>> avl;
+  // ─── ترقيات (spd) ───
+  final int iPin; // مثبّت في الأعلى
+  final int iBst; // boosted
+  final int iFms; // عرض مميّز (Featured)
+  final DateTime? pinEnd;
+  final DateTime? bstEnd;
+  final DateTime? fmsEnd;
+  final int dscPct; // خصم % على عمولة المكتب
+  final DateTime? dscEnd;
+  // ───────────────────
   final int iDel;
   final DateTime tsCrt;
   final DateTime? tsPub;
@@ -68,6 +78,14 @@ class OfferModel {
     this.iDup = 0,
     this.dupOf = '',
     Map<String, List<String>>? avl,
+    this.iPin = 0,
+    this.iBst = 0,
+    this.iFms = 0,
+    this.pinEnd,
+    this.bstEnd,
+    this.fmsEnd,
+    this.dscPct = 0,
+    this.dscEnd,
     this.iDel = 0,
     required this.tsCrt,
     this.tsPub,
@@ -120,6 +138,14 @@ class OfferModel {
           ? (data['avl'] as Map).map((k, v) =>
               MapEntry(k.toString(), List<String>.from(v as List)))
           : {},
+      iPin: data['i_pin'] ?? 0,
+      iBst: data['i_bst'] ?? 0,
+      iFms: data['i_fms'] ?? 0,
+      pinEnd: data['pin_end'] != null ? DateTime.parse(data['pin_end']) : null,
+      bstEnd: data['bst_end'] != null ? DateTime.parse(data['bst_end']) : null,
+      fmsEnd: data['fms_end'] != null ? DateTime.parse(data['fms_end']) : null,
+      dscPct: data['dsc_pct'] ?? 0,
+      dscEnd: data['dsc_end'] != null ? DateTime.parse(data['dsc_end']) : null,
       iDel: data['i_del'] ?? 0,
       tsCrt: DateTime.parse(data['ts_crt']),
       tsPub: data['ts_pub'] != null ? DateTime.parse(data['ts_pub']) : null,
@@ -139,7 +165,14 @@ class OfferModel {
       'vws': vws, 'fvs': fvs, 'i_pub': iPub, 'i_soc': iSoc,
       'soc_pub': socPub, 'soc_txt': socTxt, 'i_dup': iDup,
       'dup_of': dupOf.isEmpty ? null : dupOf,
-      'avl': avl, 'i_del': iDel,
+      'avl': avl,
+      'i_pin': iPin, 'i_bst': iBst, 'i_fms': iFms,
+      'pin_end': pinEnd?.toIso8601String(),
+      'bst_end': bstEnd?.toIso8601String(),
+      'fms_end': fmsEnd?.toIso8601String(),
+      'dsc_pct': dscPct,
+      'dsc_end': dscEnd?.toIso8601String(),
+      'i_del': iDel,
       'ts_crt': tsCrt.toIso8601String(),
       'ts_pub': tsPub?.toIso8601String(),
       'ts_end': tsEnd?.toIso8601String(),

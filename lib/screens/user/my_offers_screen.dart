@@ -264,18 +264,22 @@ class _MyOffersScreenState extends State<MyOffersScreen>
                   Container(width: 1, height: 30, color: AppTheme.deepBlack),
                   Expanded(
                     child: _actionBtn(
-                      icon: Icons.visibility,
-                      label: 'عرض',
-                      color: AppTheme.textWhite,
-                      onTap: () => context.push('/offer/${o.id}'),
+                      icon: Icons.rocket_launch,
+                      label: 'ترقية',
+                      color: Colors.purple,
+                      onTap: () async {
+                        final result = await context
+                            .push('/user/boost-offer/${o.id}');
+                        if (result == true) _refresh();
+                      },
                     ),
                   ),
                   Container(width: 1, height: 30, color: AppTheme.deepBlack),
                   Expanded(
                     child: _actionBtn(
-                      icon: Icons.share,
-                      label: 'مشاركة',
-                      color: Colors.blue,
+                      icon: Icons.visibility,
+                      label: 'عرض',
+                      color: AppTheme.textWhite,
                       onTap: () => context.push('/offer/${o.id}'),
                     ),
                   ),
