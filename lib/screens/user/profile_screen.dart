@@ -288,6 +288,25 @@ class ProfileScreen extends StatelessWidget {
           const SizedBox(height: 12),
         ],
 
+        // دعوة الأصدقاء
+        if (user != null) ...[
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => context.push('/user/referral'),
+              icon: const Icon(Icons.card_giftcard,
+                  color: AppTheme.primaryGold),
+              label: const Text('دعوة الأصدقاء واربح نقاط',
+                  style: TextStyle(color: AppTheme.primaryGold)),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: AppTheme.primaryGold),
+                padding: const EdgeInsets.symmetric(vertical: 15),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+
         // تقدّم لتصبح وسيطاً — للمستخدم العادي فقط
         if (user != null && !user.isBroker && !user.isAdmin) ...[
           SizedBox(

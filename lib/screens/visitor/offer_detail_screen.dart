@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:go_router/go_router.dart';
 import '../../models/offer_model.dart';
 import '../../providers/offer_provider.dart';
 import '../../providers/auth_provider.dart';
@@ -8,6 +9,8 @@ import '../../providers/config_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/services/business_service.dart';
 import '../../core/services/local_cache_service.dart';
+import '../../core/network/supabase_service.dart';
+import '../../core/constants/db_constants.dart';
 import '../../widgets/book_appointment_sheet.dart';
 
 class OfferDetailScreen extends StatefulWidget {
@@ -64,6 +67,129 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
     await Share.share(text, subject: _offer!.ttl);
   }
 
+  Future<void> _reportOffer() async {
+    if (_offer == null) return;
+    final auth = context.read<AuthProvider>();
+    if (!auth.isLoggedIn) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('يجب تسجيل الدخول لتبليغ عن عرض'),
+          action: SnackBarAction(
+            label: 'دخول',
+            onPressed: () => context.push('/login'),
+          ),
+        ),
+      );
+      return;
+    }
+
+    final config = context.read<ConfigProvider>().config;
+    final reasons = (config?.reportReasons ?? const [
+      'إعلان وهمي / غير موجود',
+      'احتيال / نصب',
+      'معلومات مضللة',
+      'مضايقة / سلوك غير لائق',
+      'عرض مكرر',
+      'آخر',
+    ]).cast<String>();
+
+    String? selected;
+    final notesCtrl = TextEditingController();
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setS) => AlertDialog(
+          backgroundColor: AppTheme.surfaceBlack,
+          title: const Row(children: [
+            Icon(Icons.flag, color: Colors.red),
+            SizedBox(width: 8),
+            Text('تبليغ عن العرض',
+                style: TextStyle(color: AppTheme.textWhite)),
+          ]),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text('اختر سبب التبليغ:',
+                    style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                const SizedBox(height: 6),
+                ...reasons.map((r) => RadioListTile<String>(
+                      value: r,
+                      groupValue: selected,
+                      onChanged: (v) => setS(() => selected = v),
+                      title: Text(r,
+                          style:
+                              const TextStyle(color: AppTheme.textWhite)),
+                      activeColor: AppTheme.primaryGold,
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                    )),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: notesCtrl,
+                  maxLines: 2,
+                  style: const TextStyle(color: AppTheme.textWhite),
+                  decoration: const InputDecoration(
+                    hintText: 'تفاصيل إضافية (اختياري)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('إلغاء',
+                  style: TextStyle(color: AppTheme.textGrey)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (selected == null) return;
+                Navigator.pop(ctx, true);
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text('إرسال التبليغ',
+                  style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (result != true || selected == null || !mounted) return;
+
+    try {
+      // فهرس السبب من القائمة (rsn integer حسب schema)
+      final rsnIndex = reasons.indexOf(selected!);
+      await SupabaseService().client.from(DbTables.reports).insert({
+        'rep_uid': auth.userModel!.uid,
+        'tgt_uid': _offer!.usrId,
+        'tgt_tp': 1, // 0=user, 1=offer, 2=request
+        'tgt_id': _offer!.id,
+        'rsn': rsnIndex < 0 ? 0 : rsnIndex,
+        'det': notesCtrl.text.trim(),
+        'sts': 0,
+        'ts_crt': DateTime.now().toIso8601String(),
+      });
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('✅ تم إرسال التبليغ، شكراً لمساعدتنا'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      debugPrint('❌ report: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('فشل إرسال التبليغ، حاول مرة أخرى')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) {
@@ -117,6 +243,11 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                 icon: const Icon(Icons.arrow_back_ios),
                 onPressed: () => Navigator.pop(context)),
             actions: [
+              IconButton(
+                icon: const Icon(Icons.flag_outlined),
+                tooltip: 'تبليغ',
+                onPressed: _reportOffer,
+              ),
               IconButton(
                 icon: const Icon(Icons.share),
                 onPressed: _share,

@@ -46,14 +46,54 @@ class AdminProvider with ChangeNotifier {
 
   Future<bool> reviewOffer(String offerId, bool approve, {String reason = ''}) async {
     try {
+      final sb = SupabaseService().client;
       final now = DateTime.now().toIso8601String();
-      await SupabaseService().client.from(DbTables.offers).update({
+
+      // اجلب صاحب العرض قبل التحديث (لتطبيق pen عند الرفض)
+      String? ownerUid;
+      try {
+        final r = await sb
+            .from(DbTables.offers)
+            .select('usr_id')
+            .eq('id', offerId)
+            .maybeSingle();
+        ownerUid = r?['usr_id'] as String?;
+      } catch (_) {}
+
+      await sb.from(DbTables.offers).update({
         'sts': approve ? 2 : 3,
         'i_pub': approve ? 1 : 0,
         'rsn': reason,
         'ts_pub': approve ? now : null,
         'ts_upd': now,
       }).eq('id', offerId);
+
+      // ─── تطبيق penalty rej3 (-1000 نقطة) بعد ثالث رفض متتالٍ ───
+      if (!approve && ownerUid != null) {
+        try {
+          // عد العروض المرفوضة آخر 30 يوم لنفس المالك
+          final since = DateTime.now()
+              .subtract(const Duration(days: 30))
+              .toIso8601String();
+          final rejected = await sb
+              .from(DbTables.offers)
+              .select('id')
+              .eq('usr_id', ownerUid)
+              .eq('sts', 3)
+              .gte('ts_upd', since);
+          final count = (rejected as List).length;
+          // كل 3 رفضات متتالية → عقوبة
+          if (count > 0 && count % 3 == 0) {
+            await sb.rpc('add_points',
+                params: {'p_uid': ownerUid, 'p_pts': -1000});
+            debugPrint(
+                '⚠️ pen.rej3 applied to $ownerUid (count=$count)');
+          }
+        } catch (e) {
+          debugPrint('⚠️ pen.rej3 failed: $e');
+        }
+      }
+
       notifyListeners();
       return true;
     } catch (e) {
@@ -156,13 +196,61 @@ class AdminProvider with ChangeNotifier {
   Future<bool> updateAppointmentStatus(String apptId, int status,
       {String adminNote = ''}) async {
     try {
+      final sb = SupabaseService().client;
       final data = <String, dynamic>{'sts': status};
       if (adminNote.isNotEmpty) data['admin_nt'] = adminNote;
-      await SupabaseService()
-          .client
-          .from(DbTables.appointments)
-          .update(data)
-          .eq('id', apptId);
+
+      // اجلب بيانات الموعد قبل التحديث (لتطبيق pen)
+      String? reqUid;
+      String? offId;
+      try {
+        final r = await sb
+            .from(DbTables.appointments)
+            .select('req_id, own_id, off_id')
+            .eq('id', apptId)
+            .maybeSingle();
+        // ملاحظة: req_id = طالب الموعد (clientside)
+        // own_id = صاحب العرض
+        reqUid = r?['own_id'] as String?; // المحاسَب عادةً = صاحب العرض
+        offId = r?['off_id'] as String?;
+      } catch (_) {}
+
+      await sb.from(DbTables.appointments).update(data).eq('id', apptId);
+
+      // ─── pen.noSh (-500): الحالة 5 = لم يحضر ───
+      if (status == 5 && reqUid != null) {
+        try {
+          await sb.rpc('add_points',
+              params: {'p_uid': reqUid, 'p_pts': -500});
+          debugPrint('⚠️ pen.noSh applied to $reqUid');
+        } catch (e) {
+          debugPrint('⚠️ pen.noSh failed: $e');
+        }
+      }
+
+      // ─── pen.cnl3 (-300): بعد ثالث إلغاء متتالي ───
+      if (status == 4 && reqUid != null) {
+        try {
+          final since = DateTime.now()
+              .subtract(const Duration(days: 30))
+              .toIso8601String();
+          final canceled = await sb
+              .from(DbTables.appointments)
+              .select('id')
+              .eq('own_id', reqUid)
+              .eq('sts', 4)
+              .gte('ts_crt', since);
+          final count = (canceled as List).length;
+          if (count > 0 && count % 3 == 0) {
+            await sb.rpc('add_points',
+                params: {'p_uid': reqUid, 'p_pts': -300});
+            debugPrint('⚠️ pen.cnl3 applied to $reqUid (count=$count)');
+          }
+        } catch (e) {
+          debugPrint('⚠️ pen.cnl3 failed: $e');
+        }
+      }
+
       notifyListeners();
       return true;
     } catch (e) {
