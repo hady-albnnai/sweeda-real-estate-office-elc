@@ -5,6 +5,7 @@ class UserModel {
   final String uid;
   final String nm;
   final String ph;
+  final String? eml; // الإيميل (المرحلة 7)
   final String ad;
   final int role;
   final String sid;
@@ -32,6 +33,7 @@ class UserModel {
     required this.uid,
     required this.nm,
     required this.ph,
+    this.eml,
     this.ad = '',
     this.role = 0,
     this.sid = '',
@@ -63,6 +65,7 @@ class UserModel {
       uid: id,
       nm: data['nm'] ?? '',
       ph: data['ph'] ?? '',
+      eml: data['eml'] as String?,
       ad: data['ad'] ?? '',
       role: data['role'] ?? 0,
       sid: data['sid'] ?? '',

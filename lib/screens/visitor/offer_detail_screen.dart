@@ -12,6 +12,8 @@ import '../../core/services/local_cache_service.dart';
 import '../../core/network/supabase_service.dart';
 import '../../core/constants/db_constants.dart';
 import '../../widgets/book_appointment_sheet.dart';
+import '../../widgets/video_player_widget.dart';
+import '../../widgets/location_picker.dart';
 
 class OfferDetailScreen extends StatefulWidget {
   final String offerId;
@@ -307,6 +309,45 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                       style: const TextStyle(
                           color: AppTheme.textWhite, fontSize: 16, height: 1.5)),
                   const SizedBox(height: 20),
+
+                  // فيديو العرض (إذا موجود)
+                  if (offer.vdo.isNotEmpty) ...[
+                    const Row(children: [
+                      Icon(Icons.play_circle, color: AppTheme.primaryGold),
+                      SizedBox(width: 8),
+                      Text('فيديو العرض',
+                          style: TextStyle(
+                              color: AppTheme.primaryGold,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold)),
+                    ]),
+                    const SizedBox(height: 10),
+                    OfferVideoPlayer(videoUrl: offer.vdo),
+                    const SizedBox(height: 20),
+                  ],
+
+                  // الموقع على الخريطة (إذا exact_loc موجود)
+                  if (offer.exactLoc.contains(',')) ...[
+                    const Row(children: [
+                      Icon(Icons.map, color: AppTheme.primaryGold),
+                      SizedBox(width: 8),
+                      Text('الموقع على الخريطة',
+                          style: TextStyle(
+                              color: AppTheme.primaryGold,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold)),
+                    ]),
+                    const SizedBox(height: 10),
+                    Builder(builder: (_) {
+                      final parts = offer.exactLoc.split(',');
+                      final lat = double.tryParse(parts[0].trim());
+                      final lng = double.tryParse(parts[1].trim());
+                      if (lat == null || lng == null) return const SizedBox();
+                      return LocationViewer(lat: lat, lng: lng);
+                    }),
+                    const SizedBox(height: 20),
+                  ],
+                  
                   GridView.count(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),

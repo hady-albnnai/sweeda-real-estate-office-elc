@@ -87,6 +87,10 @@
 	<string>يحتاج التطبيق للكاميرا لالتقاط صور العروض.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>يحتاج التطبيق لحفظ الصور في مكتبتك.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>يحتاج التطبيق للوصول لموقعك لتحديد موقع العقار بدقة على الخريطة.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>يحتاج التطبيق للوصول لموقعك لتحديد موقع العقار بدقة على الخريطة.</string>
 	<!-- دعم اللغة العربية كلغة افتراضية -->
 	<key>CFBundleDevelopmentRegion</key>
 	<string>ar</string>

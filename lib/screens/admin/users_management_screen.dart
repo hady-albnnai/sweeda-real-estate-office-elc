@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../providers/admin_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/user_model.dart';
@@ -114,6 +115,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        onTap: () => context.push('/admin/user/${u.uid}'),
         leading: CircleAvatar(
           backgroundColor: AppTheme.primaryGold.withOpacity(0.15),
           child: Text(u.nm.isNotEmpty ? u.nm[0] : '؟',

@@ -22,7 +22,7 @@
 | ✅ **المرحلة 9: إصلاحات ما بعد الاختبار** | **مكتملة** | setup_profile overflow + routes + splash logo + native splash | — |
 | ✅ **المرحلة 10 (A+B): المزايا الناقصة Critical** | **مكتملة** | إقرار + صورة هوية + صورة سند + تبليغ + ربط pen + stats triggers + wk_lgn + referral | — |
 | ✅ **المرحلة 10 (C): ترقيات العروض spd** | **مكتملة** | shaشة boost + 5 ترقيات (ren/pin/bst/dsc5/fms) + شارات + ترتيب تلقائي | — |
-| ⏳ **المرحلة 10 (D): فيديو + خريطة + admin user details** | **التالية** | حقل vdo بـ add_offer + Map picker + شاشة تفاصيل مستخدم للإدارة | — |
+| ✅ **المرحلة 10 (D): فيديو + خريطة + admin user details** | **مكتملة** | video_player+chewie + flutter_map+geolocator + شاشة UserDetails بـ 4 tabs | — |
 | ⏳ **المرحلة 10 (E): Cron + FCM + Auto Social** | **لاحقة** | pg_cron jobs + FCM Push + نشر سوشيال تلقائي | — |
 | ⏸️ **WhatsApp Production (Meta 555)** | **مؤجّلة** | الكود جاهز 100% — مؤجّلة لحين إنشاء صفحة FB خارج سوريا للاستفادة من ميزات الإعلان والربح | راجع `docs/WHATSAPP_ACTIVATION_PLAN.md` |
 

@@ -19,6 +19,10 @@
     <!-- Phone (for OTP autofill convenience, optional) -->
     <uses-permission android:name="android.permission.RECEIVE_SMS"/>
 
+    <!-- Location (المرحلة D: اختيار موقع العرض على الخريطة) -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+
     <application
         android:label="عقارات السويداء"
         android:name="${applicationName}"
