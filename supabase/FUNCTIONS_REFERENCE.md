@@ -493,5 +493,11 @@ await client.rpc('send_appointment_reminders');
 | `lib/core/constants/db_constants.dart` | أسماء الدوال كـ constants |
 | `lib/services/auth_service.dart` | استخدام WhatsApp OTP + Email Magic Link (الـ V2) |
 | `lib/screens/auth/login_screen.dart` | شاشة تسجيل الدخول بتبويبتين (واتساب/إيميل) |
+| `lib/screens/user/packages_screen.dart` 🆕 | شاشة عرض الباقات (تقرأ `app_config.pkg`) |
+| `lib/screens/user/payment_screen.dart` 🆕 | شاشة دفع الاشتراك (تكتب في `payments` بـ `tp=0`) |
+| `lib/screens/user/edit_offer_screen.dart` 🆕 | تعديل العرض (تستخدم `OfferProvider.updateOffer`/`softDeleteOffer`) |
+| `lib/screens/user/become_broker_screen.dart` 🆕 | طلب وساطة (تحدّث `brk_nm`/`brk_cls` + log في `activity_log`) |
+| `lib/screens/user/request_detail_screen.dart` 🆕 | تفاصيل الطلب + `BusinessService.matchOffersForRequest` |
 | `docs/AUTH_SETUP.md` 🆕 | **دليل تفعيل المصادقة الكامل** (Meta + Supabase Email + Deploy) |
+| `docs/SCREENS_AUDIT.md` 🆕 | تدقيق شامل لحالة جميع الشاشات (37 شاشة) |
 | `DEVELOPMENT_GUIDE.md` | دليل التطوير الشامل |
