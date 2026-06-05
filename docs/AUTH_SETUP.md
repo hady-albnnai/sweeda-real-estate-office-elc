@@ -1,6 +1,8 @@
 # 🔐 دليل إعداد المصادقة (WhatsApp OTP + Email Magic Link)
 
-> هذا الدليل يشرح كل الخطوات اللازمة لتفعيل تسجيل الدخول عبر **واتساب** (Meta WhatsApp Cloud API) و **الإيميل** (Supabase Magic Link).
+> ⚠️ **تحديث 2026-06-05:** بعد الاختبار، تم اكتشاف أن سوريا (+963) محظورة من تسجيل أرقام WhatsApp Business API.
+> **خطة التفعيل الكاملة (5 مراحل) محفوظة في:** [`docs/WHATSAPP_ACTIVATION_PLAN.md`](WHATSAPP_ACTIVATION_PLAN.md)
+> **الوضع الحالي:** التطبيق يعمل بـ **Dev Mode** للواتساب (OTP يظهر بصندوق برتقالي) + **Email Magic Link كامل عبر Resend SMTP** ✅
 
 ---
 
