@@ -38,6 +38,8 @@
 | 10 | `add_points` | `p_uid, p_pts` | `VOID` | ❌ |
 | 11 | **`register_weekly_login`** 🆕🆕 | `p_uid UUID, p_pts INT=500` | `BOOLEAN` | ✅ |
 | 12 | **`apply_referral`** 🆕🆕 | `p_new_uid UUID, p_referrer_code TEXT, p_pts INT=1500` | `BOOLEAN` | ✅ |
+| 12.1 | **`purchase_offer_boost`** 🆕🆕🆕 | `p_uid UUID, p_offer_id UUID, p_boost_type TEXT, p_cost INT` | `JSONB` | ✅ |
+| 12.2 | **`expire_offer_boosts`** 🆕🆕🆕 | — | `INTEGER` | ✅ |
 | **— عروض —** | | | | |
 | 13 | `check_offer_duplicate` | `ttl, prc, loc, usr_id` | `BOOLEAN` | ✅ |
 | 14 | `get_pending_offers_count` | — | `INTEGER` | ❌ |

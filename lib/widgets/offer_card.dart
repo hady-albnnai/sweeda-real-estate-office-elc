@@ -7,6 +7,24 @@ class OfferCard extends StatelessWidget {
   final OfferModel offer;
   const OfferCard({super.key, required this.offer});
 
+  static Widget _boostBadge(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(6),
+        boxShadow: const [
+          BoxShadow(color: Colors.black45, blurRadius: 3, offset: Offset(0, 1))
+        ],
+      ),
+      child: Text(text,
+          style: const TextStyle(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.bold)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -30,6 +48,21 @@ class OfferCard extends StatelessWidget {
                       image: NetworkImage(offer.imgs.isNotEmpty ? offer.imgs[0] : 'https://via.placeholder.com/400x200'),
                       fit: BoxFit.cover,
                     ),
+                  ),
+                ),
+                // شارات الترقيات (spd)
+                Positioned(
+                  top: 15, left: 15,
+                  child: Wrap(
+                    spacing: 4, runSpacing: 4,
+                    children: [
+                      if (offer.iPin == 1)
+                        _boostBadge('📌 مثبّت', Colors.orange),
+                      if (offer.iFms == 1)
+                        _boostBadge('⭐ مميّز', AppTheme.primaryGold),
+                      if (offer.iBst == 1)
+                        _boostBadge('🚀 Boost', Colors.purple),
+                    ],
                   ),
                 ),
                 Positioned(

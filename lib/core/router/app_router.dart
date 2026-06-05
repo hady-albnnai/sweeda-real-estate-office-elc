@@ -32,6 +32,7 @@ import '../../screens/user/edit_offer_screen.dart';
 import '../../screens/user/become_broker_screen.dart';
 import '../../screens/user/request_detail_screen.dart';
 import '../../screens/user/referral_screen.dart';
+import '../../screens/user/boost_offer_screen.dart';
 
 // === Broker ===
 import '../../screens/broker/broker_dashboard_screen.dart';
@@ -179,6 +180,13 @@ class AppRouter {
       GoRoute(
         path: '/user/referral',
         builder: (context, state) => const ReferralScreen(),
+      ),
+      GoRoute(
+        path: '/user/boost-offer/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return BoostOfferScreen(offerId: id);
+        },
       ),
 
       // ═══════════════════════════════════════
