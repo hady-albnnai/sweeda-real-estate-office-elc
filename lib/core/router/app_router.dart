@@ -26,7 +26,11 @@ import '../screens/user/settings_screen.dart';
 import '../screens/user/add_request_screen.dart';
 
 // === Broker ===
+import '../screens/broker/broker_dashboard_screen.dart';
+import '../screens/broker/broker_offers_screen.dart';
 import '../screens/broker/broker_appointments_screen.dart';
+import '../screens/broker/broker_deals_screen.dart';
+import '../screens/broker/broker_stats_screen.dart';
 
 // === Admin ===
 import '../screens/admin/offers_review_screen.dart';
@@ -123,15 +127,11 @@ class AppRouter {
       // ═══════════════════════════════════════
       GoRoute(
         path: '/broker/dashboard',
-        builder: (context, state) => const Scaffold(
-          body: Center(child: Text('📊 لوحة الوسيط — قيد التطوير')),
-        ),
+        builder: (context, state) => const BrokerDashboardScreen(),
       ),
       GoRoute(
         path: '/broker/offers',
-        builder: (context, state) => const Scaffold(
-          body: Center(child: Text('🏠 عروض العملاء — قيد التطوير')),
-        ),
+        builder: (context, state) => const BrokerOffersScreen(),
       ),
       GoRoute(
         path: '/broker/appointments',
@@ -139,15 +139,11 @@ class AppRouter {
       ),
       GoRoute(
         path: '/broker/deals',
-        builder: (context, state) => const Scaffold(
-          body: Center(child: Text('🤝 الصفقات — قيد التطوير')),
-        ),
+        builder: (context, state) => const BrokerDealsScreen(),
       ),
       GoRoute(
         path: '/broker/stats',
-        builder: (context, state) => const Scaffold(
-          body: Center(child: Text('📈 الإحصائيات — قيد التطوير')),
-        ),
+        builder: (context, state) => const BrokerStatsScreen(),
       ),
 
       // ═══════════════════════════════════════

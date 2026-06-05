@@ -252,8 +252,45 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _actionButtons(BuildContext context, AuthProvider auth) {
+    final user = auth.userModel;
     return Column(
       children: [
+        // لوحة الوسيط — تظهر للسماسرة فقط
+        if (user != null && (user.isBroker || user.role == 1)) ...[
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => context.push('/broker/dashboard'),
+              icon: const Icon(Icons.handshake),
+              label: const Text('لوحة الوسيط'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryGold,
+                foregroundColor: AppTheme.deepBlack,
+                padding: const EdgeInsets.symmetric(vertical: 15),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+
+        // لوحة الإدارة — تظهر للمشرفين فأعلى (role >= 2)
+        if (user != null && user.isAdmin) ...[
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => context.push('/admin/dashboard'),
+              icon: const Icon(Icons.shield),
+              label: const Text('لوحة الإدارة'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryGold.withOpacity(0.85),
+                foregroundColor: AppTheme.deepBlack,
+                padding: const EdgeInsets.symmetric(vertical: 15),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+
         SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(

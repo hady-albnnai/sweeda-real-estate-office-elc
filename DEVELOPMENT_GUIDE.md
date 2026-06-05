@@ -1,7 +1,7 @@
 # 🚀 دليل التطوير — عقارات السويداء
 
-> **آخر تحديث:** 2026-06-04  
-> **Commit الحالي:** المرحلة 1 ✅ مكتملة  
+> **آخر تحديث:** 2026-06-05  
+> **Commit الحالي:** المرحلة 2 ✅ مكتملة  
 > **المستودع:** https://github.com/hady-albnnai/sweeda-real-estate-office-elc
 
 ---
@@ -12,12 +12,12 @@
 |---|---|---|
 | **السيرفر (Supabase)** | ✅ 100% | 13 جدول + 12 دالة RPC + RLS + Realtime |
 | **الموديلات** | ✅ 100% | 10 ملفات |
-| **الـ Providers** | ✅ 100% | 8 ملفات (+ cancelAppointment) |
+| **الـ Providers** | ✅ 100% | 9 ملفات (broker موسّع: stats/offers/deals/appointments) |
 | **الـ Services** | ✅ 100% | auth, storage, notification |
-| **الـ Router** | ✅ 100% | 30 مسار |
+| **الـ Router** | ✅ 100% | 30 مسار (شاشات السمسار الـ4 مربوطة) |
 | **🎬 المرحلة 0: الأساس** | ✅ مكتملة | Splash + Firebase removal |
 | **👤 المرحلة 1: شاشات المستخدم** | ✅ مكتملة | 8 شاشات + BottomNavBar |
-| **🤝 المرحلة 2: لوحة السمسار** | ⏳ لم تبدأ | 4 شاشات stub |
+| **🤝 المرحلة 2: لوحة السمسار** | ✅ مكتملة | 4 شاشات + ربط بالبروفايل |
 | **🛡️ المرحلة 3: لوحة الإدارة** | ⏳ لم تبدأ | 8 شاشات stub |
 | **⚙️ المرحلة 4: المنطق الخلفي** | ⏳ لم تبدأ | Config + نقاط + باقات + صور |
 | **✨ المرحلة 5: التحسينات** | ⏳ لم تبدأ | Realtime + Push + Offline |
@@ -58,13 +58,18 @@ firebase.json ❌ | functions/ ❌ | firebase_options.dart ❌ | firestore_servi
 | 1.7 | `add_request_screen.dart` | نموذج إضافة طلب (Stepper 3 خطوات) | ✅ |
 | 1.8 | `bottom_nav_bar.dart` | شريط تنقل سفلي (5 أيقونات) | ✅ |
 
-### 📌 المرحلة 2: لوحة السمسار
-| # | الملف | الوصف |
-|---|---|---|
-| 2.1 | `broker_dashboard_screen.dart` | لوحة تحكم + إحصائيات سريعة |
-| 2.2 | `broker_offers_screen.dart` | عروض العملاء المرتبطين |
-| 2.3 | `broker_deals_screen.dart` | الصفقات النشطة والمكتملة |
-| 2.4 | `broker_stats_screen.dart` | رسوم بيانية تفصيلية |
+### ✅ المرحلة 2: لوحة السمسار (مكتملة)
+| # | الملف | الوصف | الحالة |
+|---|---|---|---|
+| 2.1 | `broker_dashboard_screen.dart` | لوحة تحكم + 4 بطاقات إحصائيات + تنقّل للأقسام | ✅ |
+| 2.2 | `broker_offers_screen.dart` | عروض السمسار (خاصة + مُسندة) + فلترة بالحالة | ✅ |
+| 2.3 | `broker_deals_screen.dart` | الصفقات + ملخّص العمولات + فلترة (نشطة/مكتملة) | ✅ |
+| 2.4 | `broker_stats_screen.dart` | إحصائيات تفصيلية + أشرطة نسب (بدون مكتبات خارجية) | ✅ |
+| — | `broker_appointments_screen.dart` | طلبات المعاينة (قبول/رفض) — موجودة مسبقاً | ✅ |
+
+**`BrokerProvider` تم توسيعه:** `fetchBrokerStats` · `fetchBrokerOffers` · `fetchBrokerDeals` · `fetchBrokerAppointments` / `getBrokerAppointments` · `handleAppointment` · `completeAppointment`. الحالة محفوظة داخلياً (offers/deals/appointments/stats) + getters.
+
+**الدخول للوحة:** زر "لوحة الوسيط" في `profile_screen.dart` (يظهر لمن `role==1` أو `isBroker`). كذلك زر "لوحة الإدارة" لمن `isAdmin` (role≥2).
 
 ### 📌 المرحلة 3: لوحة الإدارة
 | # | الملف | الوصف |
@@ -145,8 +150,8 @@ lib/
 │   ├── visitor/  (3 شاشات)               ✅
 │   ├── auth/     (3 شاشات)               ✅
 │   ├── user/     (8 شاشات)               ✅ المرحلة 1 كاملة
-│   ├── broker/   (1 شاشة + 4 stubs)      ⏳
-│   └── admin/    (1 شاشة + 8 stubs)      ⏳
+│   ├── broker/   (5 شاشات)               ✅ المرحلة 2 كاملة
+│   └── admin/    (1 شاشة + 8 stubs)      ⏳ المرحلة 3
 └── widgets/                       # 10 ويدجت
 ```
 
@@ -173,7 +178,7 @@ flutter analyze                # فحص أخطاء
 - [x] شاشات المرحلة 1 كاملة
 - [x] BottomNavigationBar يعمل
 - [x] كل المسارات بالـ Router محددة
-- [ ] المرحلة 2: لوحة السمسار
+- [x] المرحلة 2: لوحة السمسار (4 شاشات + ربط)
 - [ ] المرحلة 3: لوحة الإدارة
 - [ ] المرحلة 4: المنطق الخلفي
 - [ ] المرحلة 5: التحسينات
