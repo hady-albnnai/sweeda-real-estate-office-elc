@@ -14,14 +14,16 @@
 | **الموديلات** | ✅ 100% | 10 ملفات |
 | **الـ Providers** | ✅ 100% | 9 ملفات (broker + admin موسّعان بالكامل) |
 | **الـ Services** | ✅ 100% | auth, storage(+ضغط/رفع), notification, **business**, **local_cache(Hive)** |
-| **الـ Router** | ✅ 100% | 31 مسار (+ شاشة الإشعارات) |
+| **الـ Router** | ✅ 100% | **36 مسار** (+ شاشات auth/packages/payment/edit-offer/become-broker/request) |
 | **🎬 المرحلة 0: الأساس** | ✅ مكتملة | Splash + Firebase removal |
-| **👤 المرحلة 1: شاشات المستخدم** | ✅ مكتملة | 8 شاشات + BottomNavBar |
-| **🤝 المرحلة 2: لوحة السمسار** | ✅ مكتملة | 4 شاشات + ربط بالبروفايل |
-| **🛡️ المرحلة 3: لوحة الإدارة** | ✅ مكتملة | 9 شاشات (dashboard + 8 أقسام) |
+| **👤 المرحلة 1: شاشات المستخدم** | ✅ مكتملة | **13 شاشة** + BottomNavBar |
+| **🤝 المرحلة 2: لوحة السمسار** | ✅ مكتملة | 5 شاشات (broker_appointments أُعيد بناؤها) |
+| **🛡️ المرحلة 3: لوحة الإدارة** | ✅ مكتملة | 9 شاشات (offers_review أُعيد بناؤها) |
 | **⚙️ المرحلة 4: المنطق الخلفي** | ✅ مكتملة | Config+Hive · نقاط · باقات/حصص · مطابقة · Streak · سوشال · رفع صور |
 | **✨ المرحلة 5: التحسينات** | ✅ مكتملة | Realtime + إشعارات + Offline + Shimmer + Splash |
 | **📦 المرحلة 6: البناء** | ✅ مُجهّزة | إعداد Gradle/توقيع + إزالة Firebase + ProGuard + دليل + مراجعة أمنية |
+| **🔐 المرحلة 7: المصادقة الجديدة** | ✅ مكتملة | WhatsApp OTP (Meta Cloud API) + Email Magic Link — راجع `docs/AUTH_SETUP.md` |
+| **🆕 المرحلة 8: الشاشات المتبقية** | ✅ مكتملة | packages + payment + edit_offer + become_broker + request_detail + إعادة بناء 3 شاشات ضعيفة — راجع `docs/SCREENS_AUDIT.md` |
 
 ---
 
@@ -65,7 +67,7 @@ firebase.json ❌ | functions/ ❌ | firebase_options.dart ❌ | firestore_servi
 | 2.2 | `broker_offers_screen.dart` | عروض السمسار (خاصة + مُسندة) + فلترة بالحالة | ✅ |
 | 2.3 | `broker_deals_screen.dart` | الصفقات + ملخّص العمولات + فلترة (نشطة/مكتملة) | ✅ |
 | 2.4 | `broker_stats_screen.dart` | إحصائيات تفصيلية + أشرطة نسب (بدون مكتبات خارجية) | ✅ |
-| — | `broker_appointments_screen.dart` | طلبات المعاينة (قبول/رفض) — موجودة مسبقاً | ✅ |
+| 2.5 | `broker_appointments_screen.dart` | **معاد بناؤها** (51→519 سطر) — تبويبات + تفاصيل العميل + اتصال/واتساب + إكمال المعاينة | ✅ |
 
 **`BrokerProvider` تم توسيعه:** `fetchBrokerStats` · `fetchBrokerOffers` · `fetchBrokerDeals` · `fetchBrokerAppointments` / `getBrokerAppointments` · `handleAppointment` · `completeAppointment`. الحالة محفوظة داخلياً (offers/deals/appointments/stats) + getters.
 
@@ -82,7 +84,7 @@ firebase.json ❌ | functions/ ❌ | firebase_options.dart ❌ | firestore_servi
 | 3.6 | `reports_screen.dart` | عرض التبليغات + اتخاذ إجراء (تحذير/تجميد/حظر) | ✅ |
 | 3.7 | `config_editor_screen.dart` | تعديل النقاط/العمولة/الحصص ديناميكياً (دمج آمن) | ✅ |
 | 3.8 | `analytics_screen.dart` | إحصائيات شاملة + أشرطة نسب (بدون مكتبات) | ✅ |
-| — | `offers_review_screen.dart` | مراجعة العروض — موجودة مسبقاً (مربوطة بالداشبورد) | ✅ |
+| 3.9 | `offers_review_screen.dart` | **معاد بناؤها** (52→512 سطر) — صور PageView + اسم/هاتف المرسل + كشف العروض المكررة + سبب رفض بـ presets | ✅ |
 
 **`AdminProvider` تم توسعته بالكامل:** مراجعة عروض · إدارة مستخدمين (`getAllUsers`/`setUserStatus`/`ban`/`freeze`/`activate`/`updateUserRole`/`softDeleteUser`) · مواعيد (`getAllAppointments`/`updateAppointmentStatus`/`forceAppointment`) · صفقات (`getAllDeals`/`createDeal`/`completeDeal`) · مدفوعات (`getAllPayments`/`approvePayment`/`rejectPayment`) · تبليغات (`getAllReports`/`handleReport`) · إحصائيات (`getStats`/`getActionCounts`).
 
@@ -128,13 +130,46 @@ firebase.json ❌ | functions/ ❌ | firebase_options.dart ❌ | firestore_servi
 
 ---
 
+### ✅ المرحلة 7: المصادقة الجديدة (مكتملة — 2026-06-05)
+| # | العنصر | التنفيذ | الحالة |
+|---|---|---|---|
+| 7.1 | شاشة Login بتبويبتين | واتساب (افتراضي) + إيميل — `login_screen.dart` | ✅ |
+| 7.2 | WhatsApp OTP | عبر Edge Function `send-whatsapp-otp` + Meta Cloud API + RPC `generate_otp_v2` | ✅ |
+| 7.3 | Email Magic Link | Supabase Auth المدمج + Deep Link `io.supabase.sweeda://login-callback` | ✅ |
+| 7.4 | Edge Functions | `send-whatsapp-otp` + `verify-whatsapp-otp` (Deno) | ✅ |
+| 7.5 | Migration SQL | `eml` column + `otp_codes.channel/identifier` + 4 RPCs v2 | ✅ |
+| 7.6 | معالج Deep Link | Listener في `app.dart` يلتقط جلسة الإيميل تلقائياً | ✅ |
+| 7.7 | Android Manifest + iOS Info.plist | scheme `io.supabase.sweeda` مُضاف | ✅ |
+| 7.8 | وضع التطوير | لو ما عُيِّنت secrets Meta، يرجع OTP بالـ response | ✅ |
+
+> **التفاصيل الكاملة:** `docs/AUTH_SETUP.md` (Meta WhatsApp + Supabase Email + Deploy)
+
+---
+
+### ✅ المرحلة 8: استكمال الشاشات المتبقية (مكتملة — 2026-06-05)
+| # | الشاشة | الوصف | الحالة |
+|---|---|---|---|
+| 8.1 | `packages_screen.dart` (327س) | عرض 3 باقات (مجاني/فضي/ذهبي) + مقارنة مزايا + بطاقة الباقة الحالية | ✅ |
+| 8.2 | `payment_screen.dart` (506س) | دفع اشتراك: 3 طرق + إثبات صورة + معلومات بنكية + تأكيد للإدارة | ✅ |
+| 8.3 | `edit_offer_screen.dart` (588س) | تعديل/تجديد/حذف العرض + إدارة الصور (موجودة+جديدة) + شريط حالة | ✅ |
+| 8.4 | `become_broker_screen.dart` (413س) | نموذج تقديم لوساطة + 3 حالات (مفعّل/قيد المراجعة/تقديم) | ✅ |
+| 8.5 | `request_detail_screen.dart` (452س) | تفاصيل الطلب + عروض مطابقة تلقائياً (`matchOffersForRequest`) + حذف | ✅ |
+| 8.6 | `my_offers_screen.dart` (352س) | **معاد بناؤها** — TabBar حسب الحالة + بطاقات + أزرار تعديل/عرض/مشاركة + FAB | ✅ |
+| 8.7 | `offers_review_screen.dart` (512س) | **معاد بناؤها** — PageView للصور + بيانات المرسل + كشف المكرر + dialog سبب الرفض | ✅ |
+| 8.8 | `broker_appointments_screen.dart` (519س) | **معاد بناؤها** — TabBar + تفاصيل العميل + اتصال/واتساب + إكمال المعاينة | ✅ |
+| 8.9 | إصلاح TODOs و الأزرار المعطلة | settings (حفظ في Supabase) · home (snackbar) · my_requests (route) · add_offer (dialog ترقية) · profile (زر become_broker + ترقية) | ✅ |
+
+> **التفاصيل الكاملة:** `docs/SCREENS_AUDIT.md`
+
+---
+
 ## 🗄️ مرجع Supabase السريع
 
 ### الجداول (13)
-`users` · `offers` · `requests` · `appointments` · `notifications` · `payments` · `reports` · `deals` · `activity_log` · `stats` · `app_config` · `otp_codes` · `user_devices`
+`users` (مع عمود `eml` الجديد) · `offers` · `requests` · `appointments` · `notifications` · `payments` · `reports` · `deals` · `activity_log` · `stats` · `app_config` · `otp_codes` (مع `channel`+`identifier`) · `user_devices`
 
-### الدوال (12)
-راجع: `supabase/FUNCTIONS_REFERENCE.md`
+### الدوال (16 RPC + 2 Edge Functions)
+راجع: `supabase/FUNCTIONS_REFERENCE.md` — يشمل: `generate_otp_v2` · `verify_otp_v2` · `upsert_user_after_otp` · `get_user_by_email` + Edge Functions: `send-whatsapp-otp` · `verify-whatsapp-otp`
 
 ### Realtime
 `offers` · `notifications` · `appointments` · `deals` · `requests`

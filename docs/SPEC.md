@@ -279,4 +279,4 @@ supabase/
 `offers` · `notifications` · `appointments` · `deals` · `requests`
 
 ### Storage
-`offer_images` (Public bucket)
+`offer_images` (Public bucket) — يُستخدم أيضاً لإثباتات الدفع تحت مسار `payments/{userId}/` (راجع `payment_screen.dart`). يمكن إنشاء bucket `payment_proofs` منفصل لاحقاً للأمان.
