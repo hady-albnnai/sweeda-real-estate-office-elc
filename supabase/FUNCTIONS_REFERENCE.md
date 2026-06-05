@@ -13,12 +13,13 @@
 | ✅ **مُطبّق على السيرفر** | كل دوال `setup.sql` الأصلية (12 دالة) |
 | ✅ **مُطبّق على السيرفر** | Migration المصادقة (`2026_06_05_whatsapp_email_auth.sql`) — 4 دوال + عمود `eml` + توسعة `otp_codes` |
 | ✅ **مُطبّق على السيرفر** | Migration الإحصائيات والإحالة (`2026_06_05_stats_triggers_and_wkLogin.sql`) — 6 دوال + 4 triggers + عمودي `ref_by`/`ref_cnt` |
+| ✅ **مُطبّق على السيرفر** | Migration ترقيات العروض (`2026_06_05_offer_boosts.sql`) — 2 دالة + 8 أعمدة (`i_pin`, `i_bst`, `i_fms`, `pin_end`, `bst_end`, `fms_end`, `dsc_pct`, `dsc_end`) |
 | ⚠️ **مكتوب لكن لم يُنشر بعد** | Edge Functions: `send-whatsapp-otp`, `verify-whatsapp-otp` (يحتاج `supabase functions deploy` + secrets META) |
 | ⚠️ **معلّق** | تفعيل Email SMTP (Resend) — تم في Dashboard ✅ بس Meta WhatsApp credentials لسا (يستخدم وضع التطوير) |
 
 ---
 
-## 📋 قائمة الدوال (22 دالة RPC + 2 Edge Functions)
+## 📋 قائمة الدوال (24 دالة RPC + 2 Edge Functions)
 
 ### دوال RPC (PostgreSQL):
 
@@ -36,24 +37,25 @@
 | **— مستخدمون ونقاط —** | | | | |
 | 9 | `update_user_badge` | `p_uid UUID` | `VOID` | ❌ |
 | 10 | `add_points` | `p_uid, p_pts` | `VOID` | ❌ |
-| 11 | **`register_weekly_login`** 🆕🆕 | `p_uid UUID, p_pts INT=500` | `BOOLEAN` | ✅ |
-| 12 | **`apply_referral`** 🆕🆕 | `p_new_uid UUID, p_referrer_code TEXT, p_pts INT=1500` | `BOOLEAN` | ✅ |
-| 12.1 | **`purchase_offer_boost`** 🆕🆕🆕 | `p_uid UUID, p_offer_id UUID, p_boost_type TEXT, p_cost INT` | `JSONB` | ✅ |
-| 12.2 | **`expire_offer_boosts`** 🆕🆕🆕 | — | `INTEGER` | ✅ |
+| 11 | `register_weekly_login` 🆕🆕 | `p_uid UUID, p_pts INT=500` | `BOOLEAN` | ✅ |
+| 12 | `apply_referral` 🆕🆕 | `p_new_uid UUID, p_referrer_code TEXT, p_pts INT=1500` | `BOOLEAN` | ✅ |
 | **— عروض —** | | | | |
 | 13 | `check_offer_duplicate` | `ttl, prc, loc, usr_id` | `BOOLEAN` | ✅ |
 | 14 | `get_pending_offers_count` | — | `INTEGER` | ❌ |
 | 15 | `expire_offers` | — | `VOID` | ❌ |
+| **— ترقيات العروض (spd) —** | | | | |
+| 16 | `purchase_offer_boost` 🆕🆕🆕 | `p_uid UUID, p_offer_id UUID, p_boost_type TEXT, p_cost INT` | `JSONB` | ✅ |
+| 17 | `expire_offer_boosts` 🆕🆕🆕 | — | `INTEGER` | ✅ |
 | **— صفقات ومواعيد —** | | | | |
-| 16 | `calculate_commission` | `prc, pct` | `NUMERIC` | ❌ |
-| 17 | `send_appointment_reminders` | — | `VOID` | ❌ |
+| 18 | `calculate_commission` | `prc, pct` | `NUMERIC` | ❌ |
+| 19 | `send_appointment_reminders` | — | `VOID` | ❌ |
 | **— عام —** | | | | |
-| 18 | `soft_delete` | `p_table, p_id` | `VOID` | ✅ |
+| 20 | `soft_delete` | `p_table, p_id` | `VOID` | ✅ |
 | **— Triggers Functions (تُستدعى تلقائياً) —** | | | | |
-| 19 | **`update_user_stats_on_offer`** 🆕🆕 | TRIGGER | `TRIGGER` | ✅ |
-| 20 | **`update_user_stats_on_request`** 🆕🆕 | TRIGGER | `TRIGGER` | ✅ |
-| 21 | **`update_user_stats_on_appointment`** 🆕🆕 | TRIGGER | `TRIGGER` | ✅ |
-| 22 | **`update_user_stats_on_deal`** 🆕🆕 | TRIGGER | `TRIGGER` | ✅ |
+| 21 | `update_user_stats_on_offer` 🆕🆕 | TRIGGER | `TRIGGER` | ✅ |
+| 22 | `update_user_stats_on_request` 🆕🆕 | TRIGGER | `TRIGGER` | ✅ |
+| 23 | `update_user_stats_on_appointment` 🆕🆕 | TRIGGER | `TRIGGER` | ✅ |
+| 24 | `update_user_stats_on_deal` 🆕🆕 | TRIGGER | `TRIGGER` | ✅ |
 
 ### 🔗 Triggers Active على الجداول:
 
@@ -130,6 +132,75 @@ final ok = await client.rpc('apply_referral', params: {
 | `trg_deals_stats` | `users.stats.dl` (عدد صفقاته كبائع أو مشتري) |
 
 **لا تستدعى يدوياً** — تعمل في الخلفية.
+
+---
+
+## 🆕🆕🆕 دوال ترقيات العروض (المرحلة C — spd) — مفصّلة
+
+### `purchase_offer_boost(p_uid UUID, p_offer_id UUID, p_boost_type TEXT, p_cost INTEGER)` → `JSONB`
+
+شراء ترقية لعرض موجود باستخدام نقاط المستخدم. تتحقق من الملكية + رصيد النقاط ثم تطبّق الترقية وتخصم النقاط وتسجّل في `activity_log`.
+
+**الأنواع المدعومة (`p_boost_type`):**
+
+| النوع | الوصف | المدة | الكلفة من Config |
+|---|---|---|---|
+| `'ren'` | تجديد العرض (تمديد ts_end + تنشيط من المنتهي) | 30 يوم إضافية | `spd.ren` (500) |
+| `'pin'` | تثبيت في الأعلى (`i_pin=1`) | 7 أيام | `spd.pin` (2000) |
+| `'bst'` | Boost — وصول أكبر (`i_bst=1`) | 14 يوم | `spd.bst` (4000) |
+| `'dsc5'` | خصم 5% على عمولة المكتب (`dsc_pct=5`) | 60 يوم | `spd.dsc5` (3000) |
+| `'fms'` | عرض مميّز Featured (`i_fms=1`) | 30 يوم | `spd.fms` (8000) |
+
+**المخرج (JSONB):**
+
+```json
+// نجاح
+{ "success": true, "result": { "boost_type": "pin", "duration_days": 7 }, "new_balance": 1500 }
+
+// فشل (أمثلة)
+{ "success": false, "error": "INSUFFICIENT_POINTS", "current_points": 500, "required": 2000 }
+{ "success": false, "error": "OFFER_NOT_FOUND" }
+{ "success": false, "error": "NOT_OWNER" }
+{ "success": false, "error": "INVALID_BOOST_TYPE" }
+```
+
+```dart
+// Flutter
+final res = await client.rpc('purchase_offer_boost', params: {
+  'p_uid': uid,
+  'p_offer_id': offerId,
+  'p_boost_type': 'pin',
+  'p_cost': 2000,
+});
+if (res['success'] == true) {
+  print('New balance: ${res['new_balance']}');
+}
+```
+
+**الجداول المتأثرة:**
+- `offers` (UPDATE: حسب نوع الترقية)
+- `users` (UPDATE `pt`)
+- `activity_log` (INSERT)
+
+---
+
+### `expire_offer_boosts()` → `INTEGER`
+
+تُلغي تلقائياً جميع الترقيات المنتهية (يرجع عدد الـ pins التي أُلغيت). **مخصصة للـ cron jobs اليومية.**
+
+```sql
+SELECT expire_offer_boosts();  -- يرجع: 5 (مثلاً)
+```
+
+**ما تفعله:**
+- `i_pin=0` و `pin_end=NULL` لكل عرض `pin_end < NOW()`
+- نفس الشي لـ `i_bst` و `i_fms`
+- `dsc_pct=0` و `dsc_end=NULL` للخصومات المنتهية
+
+**استدعاء يدوي (اختياري):**
+```dart
+final count = await client.rpc('expire_offer_boosts');
+```
 
 ---
 
@@ -543,8 +614,9 @@ await client.rpc('send_appointment_reminders');
 
 | الجدول | دوال القراءة | دوال الكتابة | Triggers تلقائية |
 |---|---|---|---|
-| `users` | `get_user_by_phone`, `get_user_by_email` 🆕 | `create_user_from_phone`, `upsert_user_after_otp` 🆕, `update_user_badge`, `add_points`, `register_weekly_login` 🆕🆕, `apply_referral` 🆕🆕 | — (يُحدَّث `stats` عبر triggers على جداول أخرى) |
-| `offers` | `check_offer_duplicate`, `get_pending_offers_count` | `expire_offers` | `trg_offers_stats` 🆕🆕 → `users.stats.off` |
+| `users` | `get_user_by_phone`, `get_user_by_email` 🆕 | `create_user_from_phone`, `upsert_user_after_otp` 🆕, `update_user_badge`, `add_points`, `register_weekly_login` 🆕🆕, `apply_referral` 🆕🆕, `purchase_offer_boost` 🆕🆕🆕 (يخصم pt) | — (يُحدَّث `stats` عبر triggers على جداول أخرى) |
+| `offers` | `check_offer_duplicate`, `get_pending_offers_count` | `expire_offers`, `purchase_offer_boost` 🆕🆕🆕, `expire_offer_boosts` 🆕🆕🆕 | `trg_offers_stats` 🆕🆕 → `users.stats.off` |
+| `activity_log` | — | `purchase_offer_boost` 🆕🆕🆕 (يسجّل كل عملية شراء) | — |
 | `requests` | — | — | `trg_requests_stats` 🆕🆕 → `users.stats.req` |
 | `appointments` | — | `send_appointment_reminders` | `trg_appointments_stats` 🆕🆕 → `users.stats.app` |
 | `deals` | — | — | `trg_deals_stats` 🆕🆕 → `users.stats.dl` |
@@ -568,6 +640,8 @@ await client.rpc('send_appointment_reminders');
 | `create_user_from_phone` | ✅ | ✅ |
 | `register_weekly_login` 🆕🆕 | ✅ | ✅ |
 | `apply_referral` 🆕🆕 | ✅ | ✅ |
+| `purchase_offer_boost` 🆕🆕🆕 | ✅ | ✅ |
+| `expire_offer_boosts` 🆕🆕🆕 | ✅ | ✅ |
 | `update_user_stats_on_offer` 🆕🆕 | ✅ | ✅ |
 | `update_user_stats_on_request` 🆕🆕 | ✅ | ✅ |
 | `update_user_stats_on_appointment` 🆕🆕 | ✅ | ✅ |
@@ -588,6 +662,8 @@ await client.rpc('send_appointment_reminders');
 | `supabase/setup.sql` | الكود الكامل (مصدر الحقيقة) |
 | `supabase/migrations/2026_06_05_whatsapp_email_auth.sql` 🆕 | Migration #1: V2 RPCs + `eml` + `otp_codes` channel — **مطبّق ✅** |
 | `supabase/migrations/2026_06_05_stats_triggers_and_wkLogin.sql` 🆕🆕 | Migration #2: 4 triggers + `register_weekly_login` + `apply_referral` + `ref_by`/`ref_cnt` — **مطبّق ✅** |
+| `supabase/migrations/2026_06_05_offer_boosts.sql` 🆕🆕🆕 | Migration #3: `purchase_offer_boost` + `expire_offer_boosts` + 8 أعمدة ترقيات — **مطبّق ✅** |
+| `lib/screens/user/boost_offer_screen.dart` 🆕🆕🆕 | شاشة شراء ترقيات العروض (5 خيارات: ren/pin/bst/dsc5/fms) |
 | `supabase/functions/send-whatsapp-otp/index.ts` 🆕 | Edge Function لإرسال OTP عبر Meta WhatsApp — **لم يُنشر ⚠️** |
 | `supabase/functions/verify-whatsapp-otp/index.ts` 🆕 | Edge Function للتحقق وإصدار session — **لم يُنشر ⚠️** |
 | `supabase/SERVER_DOCS.md` | توثيق الجداول + RLS + Realtime |
