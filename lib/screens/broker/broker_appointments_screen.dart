@@ -1,51 +1,519 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../providers/broker_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/appointment_model.dart';
+import '../../models/offer_model.dart';
+import '../../models/user_model.dart';
+import '../../core/network/supabase_service.dart';
+import '../../core/constants/db_constants.dart';
 import '../../core/theme/app_theme.dart';
 
-class BrokerAppointmentsScreen extends StatelessWidget {
+/// شاشة طلبات المعاينة للسمسار — مع فلترة بالحالة + تفاصيل العميل
+/// + إجراءات: قبول / رفض / إكمال المعاينة + اتصال/واتساب
+class BrokerAppointmentsScreen extends StatefulWidget {
   const BrokerAppointmentsScreen({super.key});
+
   @override
-  Widget build(BuildContext context) {
-    final brokerProv = Provider.of<BrokerProvider>(context);
-    final auth = Provider.of<AuthProvider>(context);
+  State<BrokerAppointmentsScreen> createState() =>
+      _BrokerAppointmentsScreenState();
+}
+
+class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tab;
+  List<AppointmentModel> _all = [];
+  bool _loading = true;
+
+  final Map<String, OfferModel> _offers = {};
+  final Map<String, UserModel> _owners = {};
+
+  // فلاتر: -1=الكل, 0=قيد الانتظار, 1=مقبول, 2=مرفوض, 3=مكتمل
+  static const _tabs = [
+    ('قيد الانتظار', 0),
+    ('مقبول', 1),
+    ('مكتمل', 3),
+    ('الكل', -1),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _tab = TabController(length: _tabs.length, vsync: this);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+  }
+
+  @override
+  void dispose() {
+    _tab.dispose();
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    setState(() => _loading = true);
+    final auth = context.read<AuthProvider>();
+    final broker = context.read<BrokerProvider>();
     final brokerId = auth.userModel?.uid ?? '';
-    return Scaffold(
-      appBar: AppBar(title: const Text('طلبات المعاينة'), backgroundColor: Colors.transparent),
-      body: FutureBuilder<List<AppointmentModel>>(
-        future: brokerProv.getBrokerAppointments(brokerId),
-        builder: (context, snap) {
-          if (snap.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator(color: AppTheme.primaryGold));
-          if (!snap.hasData || snap.data!.isEmpty) return const Center(child: Text('لا توجد طلبات مواعيد حالياً', style: TextStyle(color: AppTheme.textGrey)));
-          return ListView.builder(
-            padding: const EdgeInsets.all(15), itemCount: snap.data!.length,
-            itemBuilder: (context, i) {
-              final a = snap.data![i];
-              return Card(color: AppTheme.surfaceBlack, margin: const EdgeInsets.only(bottom: 15),
-                child: ListTile(
-                  title: Text('طلب معاينة - عرض #${a.offId.substring(0, 8)}', style: const TextStyle(color: AppTheme.textWhite)),
-                  subtitle: Text('التاريخ: ${a.dt.toString().split('.').first}', style: const TextStyle(color: AppTheme.textGrey)),
-                  trailing: a.sts == 0 ? Row(mainAxisSize: MainAxisSize.min, children: [
-                    IconButton(icon: const Icon(Icons.check, color: AppTheme.primaryGold),
-                      onPressed: () async {
-                        await brokerProv.handleAppointment(a.id, 1);
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم قبول الموعد')));
-                        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const BrokerAppointmentsScreen()));
-                      }),
-                    IconButton(icon: const Icon(Icons.close, color: Colors.red),
-                      onPressed: () async {
-                        await brokerProv.handleAppointment(a.id, 2);
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم رفض الموعد')));
-                        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const BrokerAppointmentsScreen()));
-                      }),
-                  ]) : Text('الحالة: ${a.sts}', style: const TextStyle(color: AppTheme.primaryGold)),
-                ));
-            },
-          );
-        },
+    final list = await broker.getBrokerAppointments(brokerId);
+
+    // اجلب العروض وأصحابها
+    final offIds = list.map((a) => a.offId).where((e) => e.isNotEmpty).toSet();
+    if (offIds.isNotEmpty) {
+      try {
+        final offData = await SupabaseService()
+            .client
+            .from(DbTables.offers)
+            .select()
+            .inFilter('id', offIds.toList());
+        for (final o in offData as List) {
+          final m = Map<String, dynamic>.from(o as Map);
+          _offers[m['id'] as String] =
+              OfferModel.fromSupabase(m, m['id'] as String);
+        }
+      } catch (e) {
+        debugPrint('❌ load offers: $e');
+      }
+    }
+
+    final ownIds = list.map((a) => a.ownId).where((e) => e.isNotEmpty).toSet();
+    if (ownIds.isNotEmpty) {
+      try {
+        final ownData = await SupabaseService()
+            .client
+            .from(DbTables.users)
+            .select()
+            .inFilter('id', ownIds.toList());
+        for (final u in ownData as List) {
+          final m = Map<String, dynamic>.from(u as Map);
+          _owners[m['id'] as String] =
+              UserModel.fromSupabase(m, m['id'] as String);
+        }
+      } catch (e) {
+        debugPrint('❌ load owners: $e');
+      }
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _all = list;
+      _loading = false;
+    });
+  }
+
+  List<AppointmentModel> _byStatus(int s) =>
+      s == -1 ? _all : _all.where((a) => a.sts == s).toList();
+
+  Future<void> _accept(AppointmentModel a) async {
+    final broker = context.read<BrokerProvider>();
+    final ok = await broker.handleAppointment(a.id, 1);
+    if (!mounted) return;
+    if (ok) {
+      _snack('✅ تم قبول الموعد');
+      _load();
+    } else {
+      _snack('فشل القبول');
+    }
+  }
+
+  Future<void> _reject(AppointmentModel a) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppTheme.surfaceBlack,
+        title: const Text('رفض الموعد',
+            style: TextStyle(color: AppTheme.textWhite)),
+        content: const Text('هل أنت متأكد من رفض هذا الموعد؟',
+            style: TextStyle(color: AppTheme.textGrey)),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('إلغاء',
+                  style: TextStyle(color: AppTheme.textGrey))),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child:
+                const Text('رفض', style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
     );
+    if (confirm != true || !mounted) return;
+    final broker = context.read<BrokerProvider>();
+    final ok = await broker.handleAppointment(a.id, 2);
+    if (!mounted) return;
+    if (ok) {
+      _snack('تم رفض الموعد');
+      _load();
+    } else {
+      _snack('فشل الرفض');
+    }
+  }
+
+  Future<void> _complete(AppointmentModel a) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppTheme.surfaceBlack,
+        title: const Text('إكمال المعاينة',
+            style: TextStyle(color: AppTheme.textWhite)),
+        content: const Text(
+          'هل تم تنفيذ المعاينة فعلياً؟\nسيتم تسجيلها كمعاينة مكتملة (يمكن لاحقاً تسجيل صفقة منها).',
+          style: TextStyle(color: AppTheme.textGrey),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('إلغاء',
+                  style: TextStyle(color: AppTheme.textGrey))),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
+            child: const Text('إكمال',
+                style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+    final broker = context.read<BrokerProvider>();
+    final ok = await broker.completeAppointment(a.id);
+    if (!mounted) return;
+    if (ok) {
+      _snack('✅ تم تسجيل المعاينة كمكتملة');
+      _load();
+    } else {
+      _snack('فشل الإكمال');
+    }
+  }
+
+  Future<void> _call(String phone) async {
+    final uri = Uri.parse('tel:$phone');
+    if (await canLaunchUrl(uri)) await launchUrl(uri);
+  }
+
+  Future<void> _whatsapp(String phone) async {
+    final clean = phone.replaceAll(RegExp(r'[^\d+]'), '');
+    final uri = Uri.parse('https://wa.me/$clean');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  void _snack(String m) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppTheme.deepBlack,
+      appBar: AppBar(
+        title: const Text('طلبات المعاينة'),
+        backgroundColor: AppTheme.deepBlack,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: AppTheme.primaryGold),
+            onPressed: _load,
+          ),
+        ],
+        bottom: TabBar(
+          controller: _tab,
+          isScrollable: true,
+          indicatorColor: AppTheme.primaryGold,
+          labelColor: AppTheme.primaryGold,
+          unselectedLabelColor: AppTheme.textGrey,
+          tabs: _tabs
+              .map((t) => Tab(text: '${t.$1} (${_byStatus(t.$2).length})'))
+              .toList(),
+        ),
+      ),
+      body: _loading
+          ? const Center(
+              child: CircularProgressIndicator(color: AppTheme.primaryGold))
+          : TabBarView(
+              controller: _tab,
+              children: _tabs.map((t) => _list(_byStatus(t.$2))).toList(),
+            ),
+    );
+  }
+
+  Widget _list(List<AppointmentModel> items) {
+    if (items.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.event_busy,
+                size: 80, color: AppTheme.primaryGold.withOpacity(0.5)),
+            const SizedBox(height: 20),
+            const Text('لا توجد طلبات في هذه الفئة',
+                style: TextStyle(color: AppTheme.textGrey, fontSize: 16)),
+          ],
+        ),
+      );
+    }
+    return RefreshIndicator(
+      color: AppTheme.primaryGold,
+      onRefresh: _load,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(12),
+        itemCount: items.length,
+        itemBuilder: (_, i) => _card(items[i]),
+      ),
+    );
+  }
+
+  Widget _card(AppointmentModel a) {
+    final offer = _offers[a.offId];
+    final owner = _owners[a.ownId];
+    final status = _statusInfo(a.sts);
+    final isPending = a.sts == 0;
+    final isAccepted = a.sts == 1;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceBlack,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: status.$2.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // شريط الحالة
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: status.$2.withOpacity(0.15),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(13)),
+            ),
+            child: Row(
+              children: [
+                Icon(status.$3, color: status.$2, size: 16),
+                const SizedBox(width: 6),
+                Text(status.$1,
+                    style: TextStyle(
+                        color: status.$2,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12)),
+                const Spacer(),
+                Text(
+                  '${a.dt.day}/${a.dt.month}/${a.dt.year} - ${a.dt.hour.toString().padLeft(2, '0')}:${a.dt.minute.toString().padLeft(2, '0')}',
+                  style: const TextStyle(
+                      color: AppTheme.textGrey, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // العرض
+                Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: SizedBox(
+                        width: 60,
+                        height: 60,
+                        child: (offer?.imgs.isNotEmpty == true)
+                            ? Image.network(offer!.imgs.first.toString(),
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) =>
+                                    _imgPlaceholder())
+                            : _imgPlaceholder(),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            offer?.ttl ?? 'عرض #${a.offId.substring(0, 6)}',
+                            style: const TextStyle(
+                                color: AppTheme.textWhite,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (offer != null)
+                            Text(
+                              '${offer.prc.toStringAsFixed(0)} ${offer.cur == 0 ? '\$' : 'ل.س'} • ${(offer.loc['d'] ?? '').toString()}',
+                              style: const TextStyle(
+                                  color: AppTheme.textGrey, fontSize: 11),
+                            ),
+                        ],
+                      ),
+                    ),
+                    if (offer != null)
+                      IconButton(
+                        icon: const Icon(Icons.open_in_new,
+                            color: AppTheme.primaryGold, size: 18),
+                        onPressed: () => context.push('/offer/${offer.id}'),
+                      ),
+                  ],
+                ),
+
+                const Divider(color: AppTheme.textGrey, height: 18),
+
+                // صاحب العرض
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 16,
+                      backgroundColor: AppTheme.primaryGold,
+                      child: Text(
+                        (owner?.nm.isNotEmpty == true ? owner!.nm[0] : '؟')
+                            .toUpperCase(),
+                        style: const TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            owner?.nm.isNotEmpty == true
+                                ? owner!.nm
+                                : 'صاحب العرض',
+                            style: const TextStyle(
+                                color: AppTheme.textWhite,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13),
+                          ),
+                          Text(
+                            owner?.ph ?? '—',
+                            style: const TextStyle(
+                                color: AppTheme.textGrey, fontSize: 11),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // أزرار الاتصال (فقط إذا مقبول)
+                    if (isAccepted && owner != null) ...[
+                      IconButton(
+                        icon: const Icon(Icons.phone, color: Colors.green),
+                        tooltip: 'اتصال',
+                        onPressed: () => _call(owner.ph),
+                      ),
+                      IconButton(
+                        icon:
+                            const Icon(Icons.chat, color: AppTheme.primaryGold),
+                        tooltip: 'واتساب',
+                        onPressed: () => _whatsapp(owner.ph),
+                      ),
+                    ],
+                  ],
+                ),
+
+                // ملاحظة الإلغاء
+                if (a.cnlRsn != null && a.cnlRsn!.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.info_outline,
+                            color: Colors.red, size: 14),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'سبب الإلغاء: ${a.cnlRsn}',
+                            style: const TextStyle(
+                                color: Colors.red, fontSize: 11),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          // أزرار الإجراءات
+          if (isPending)
+            _actionRow([
+              _actionBtn('رفض', Icons.close, Colors.red, () => _reject(a)),
+              _actionBtn(
+                  'قبول', Icons.check, Colors.green, () => _accept(a)),
+            ])
+          else if (isAccepted)
+            _actionRow([
+              _actionBtn('إكمال المعاينة', Icons.done_all, Colors.teal,
+                  () => _complete(a)),
+            ]),
+        ],
+      ),
+    );
+  }
+
+  Widget _actionRow(List<Widget> children) {
+    return Container(
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: AppTheme.deepBlack)),
+      ),
+      child: Row(
+        children: children
+            .expand((w) => [
+                  Expanded(child: w),
+                  if (w != children.last)
+                    Container(
+                        width: 1, height: 36, color: AppTheme.deepBlack),
+                ])
+            .toList(),
+      ),
+    );
+  }
+
+  Widget _actionBtn(
+      String label, IconData icon, Color color, VoidCallback onTap) {
+    return TextButton.icon(
+      onPressed: onTap,
+      icon: Icon(icon, color: color),
+      label: Text(label,
+          style: TextStyle(color: color, fontWeight: FontWeight.bold)),
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+      ),
+    );
+  }
+
+  Widget _imgPlaceholder() => Container(
+        color: AppTheme.deepBlack,
+        child: const Icon(Icons.image, color: AppTheme.textGrey, size: 24),
+      );
+
+  (String, Color, IconData) _statusInfo(int s) {
+    switch (s) {
+      case 0:
+        return ('قيد الانتظار', Colors.orange, Icons.hourglass_empty);
+      case 1:
+        return ('مقبول', Colors.green, Icons.check_circle);
+      case 2:
+        return ('مرفوض', Colors.red, Icons.cancel);
+      case 3:
+        return ('مكتمل', Colors.teal, Icons.done_all);
+      case 4:
+        return ('ملغي', Colors.grey, Icons.block);
+      default:
+        return ('غير معروف', Colors.grey, Icons.help);
+    }
   }
 }

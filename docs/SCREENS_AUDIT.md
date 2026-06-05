@@ -1,205 +1,154 @@
 # 🔍 تدقيق شامل للشاشات — عقارات السويداء
 
-> **تاريخ التدقيق:** 2026-06-05
-> **النتيجة:** 32 شاشة موجودة + 6 شاشات/مهام **ناقصة أو غير مكتملة** + 4 مشاكل وظيفية
+> **تاريخ التدقيق الأصلي:** 2026-06-05
+> **تاريخ آخر تحديث:** 2026-06-05 (بعد تنفيذ جميع الإصلاحات)
+> **النتيجة:** ✅ **37 شاشة كاملة + 0 ناقصة + 0 مشاكل وظيفية**
 
 ---
 
-## 📊 الملخص التنفيذي
+## 📊 الملخص التنفيذي (بعد التنفيذ الكامل)
 
-| الفئة | المكتمل | ناقص/يحتاج عمل |
+| الفئة | المكتمل | الحالة |
 |---|---|---|
-| **Auth** | 4/4 ✅ | — |
-| **Visitor** | 3/3 ✅ | — |
-| **User** | 10/10 ⚠️ | 1 شاشة (Request Detail) + إصلاحات |
-| **Broker** | 5/5 ⚠️ | شاشة المعاينة ضعيفة جداً (51 سطر) |
-| **Admin** | 9/9 ⚠️ | شاشة Offers Review ضعيفة جداً (52 سطر) |
-| **Payments / Packages** | 0/2 ❌ | شاشة الاشتراك بالباقات (User) + شاشة تفاصيل الباقة |
-| **Become Broker** | 0/1 ❌ | شاشة "تقدّم لتصبح وسيطاً" |
-| **Notifications من الزائر** | ⚠️ | زر notification بالـ home ما يفعل شي |
+| **Auth** | 4/4 ✅ | كامل |
+| **Visitor** | 3/3 ✅ | كامل (الإشعارات للزائر معالجة) |
+| **User** | 13/13 ✅ | كامل (+3 شاشات جديدة + إصلاحات) |
+| **Broker** | 5/5 ✅ | كامل (broker_appointments معاد بناؤها) |
+| **Admin** | 9/9 ✅ | كامل (offers_review معاد بناؤها) |
 
 ---
 
-## ✅ الشاشات الموجودة (32 شاشة)
+## ✅ كل الشاشات (37)
 
-### 🔐 Auth (4)
+### 🔐 Auth (4) — كاملة
+- `login_screen.dart` (283 سطر) — تبويبتين واتساب/إيميل
+- `otp_verification_screen.dart` (202 سطر)
+- `setup_profile_screen.dart` (95 سطر)
+- `check_email_screen.dart` (96 سطر)
+
+### 🌐 Visitor (3) — كاملة
+- `home_screen.dart` (100 سطر) — ✅ زر الإشعارات الآن يعرض snackbar مع زر دخول
+- `offer_detail_screen.dart` (273 سطر)
+- `search_screen.dart` (181 سطر)
+- `splash_screen.dart` (178 سطر)
+
+### 👤 User (13) — كاملة (+3 شاشات جديدة + إصلاحات)
 | الملف | السطور | الحالة |
 |---|---|---|
-| `login_screen.dart` | 283 | ✅ مكتمل (تبويبتين واتساب/إيميل) |
-| `otp_verification_screen.dart` | 202 | ✅ مكتمل |
-| `setup_profile_screen.dart` | 95 | ✅ مكتمل |
-| `check_email_screen.dart` | 96 | ✅ مكتمل |
+| `user_home_screen.dart` | 268 | ✅ |
+| `add_offer_screen.dart` | 397 | ✅ + dialog ترقية الباقة عند تجاوز الحصة |
+| `add_request_screen.dart` | 372 | ✅ |
+| `my_offers_screen.dart` | **352** 🆕 | ✅ **معاد بناؤها بالكامل** (كانت 44 سطر) — تبويبات حسب الحالة + تعديل/عرض/مشاركة |
+| `my_requests_screen.dart` | 137 | ✅ TODO حُل: يفتح request_detail |
+| `my_appointments_screen.dart` | 152 | ✅ |
+| `favorites_screen.dart` | 108 | ✅ |
+| `profile_screen.dart` | 332 | ✅ + زر "تقدّم لتصبح وسيطاً" + زر "ترقية الباقة" |
+| `settings_screen.dart` | 226 | ✅ TODO حُل: حفظ الإشعارات فعلاً في Supabase + ربط الباقة |
+| `notifications_screen.dart` | 154 | ✅ |
+| **`packages_screen.dart`** | **327** 🆕 | ✅ **جديدة** — عرض 3 باقات (مجاني/فضي/ذهبي) |
+| **`payment_screen.dart`** | **506** 🆕 | ✅ **جديدة** — اشتراك + رفع إثبات دفع |
+| **`edit_offer_screen.dart`** | **588** 🆕 | ✅ **جديدة** — تعديل/تجديد/حذف + إدارة الصور |
+| **`become_broker_screen.dart`** | **413** 🆕 | ✅ **جديدة** — نموذج تقديم لوساطة |
+| **`request_detail_screen.dart`** | **452** 🆕 | ✅ **جديدة** — تفاصيل + عروض مطابقة + حذف |
 
-### 🌐 Visitor (3)
+### 🤝 Broker (5) — كاملة
 | الملف | السطور | الحالة |
 |---|---|---|
-| `home_screen.dart` | 88 | ⚠️ زر الإشعارات غير مفعّل (`onPressed: () {}`) |
-| `offer_detail_screen.dart` | 273 | ✅ مكتمل (مع زر الحجز + المفضلة + المشاركة) |
-| `search_screen.dart` | 181 | ✅ مكتمل |
-| `splash_screen.dart` | 178 | ✅ مكتمل |
+| `broker_dashboard_screen.dart` | 208 | ✅ |
+| `broker_offers_screen.dart` | 238 | ✅ |
+| `broker_appointments_screen.dart` | **519** 🆕 | ✅ **معاد بناؤها بالكامل** (كانت 51 سطر) — تبويبات + تفاصيل العميل + قبول/رفض/إكمال + اتصال/واتساب |
+| `broker_deals_screen.dart` | 237 | ✅ |
+| `broker_stats_screen.dart` | 213 | ✅ |
 
-### 👤 User (10)
+### 🛡️ Admin (9) — كاملة
 | الملف | السطور | الحالة |
 |---|---|---|
-| `user_home_screen.dart` | 268 | ✅ مكتمل |
-| `add_offer_screen.dart` | 351 | ✅ مكتمل |
-| `add_request_screen.dart` | 372 | ✅ مكتمل |
-| `my_offers_screen.dart` | **44** ⚠️ | **ضعيف:** بدون تعديل/حذف/تجديد/مشاهدة تفاصيل، زر "أضف عرضك الأول" معطّل |
-| `my_requests_screen.dart` | 137 | ⚠️ TODO: شاشة تفاصيل الطلب (`onTap` فاضي) |
-| `my_appointments_screen.dart` | 152 | ✅ مكتمل |
-| `favorites_screen.dart` | 108 | ✅ مكتمل |
-| `profile_screen.dart` | 313 | ✅ مكتمل |
-| `settings_screen.dart` | 201 | ⚠️ TODO: حفظ إعدادات الإشعارات في Supabase + "الباقة الحالية" زر معطّل |
-| `notifications_screen.dart` | 154 | ✅ مكتمل |
-
-### 🤝 Broker (5)
-| الملف | السطور | الحالة |
-|---|---|---|
-| `broker_dashboard_screen.dart` | 208 | ✅ مكتمل |
-| `broker_offers_screen.dart` | 238 | ✅ مكتمل |
-| `broker_appointments_screen.dart` | **51** ⚠️ | **ضعيف:** بدون فلترة بالحالة + بدون تفاصيل الطلب + يستخدم `MaterialPageRoute` بدل GoRouter + ما في "إكمال المعاينة" |
-| `broker_deals_screen.dart` | 237 | ✅ مكتمل |
-| `broker_stats_screen.dart` | 213 | ✅ مكتمل |
-
-### 🛡️ Admin (9)
-| الملف | السطور | الحالة |
-|---|---|---|
-| `admin_dashboard_screen.dart` | 284 | ✅ مكتمل |
-| `users_management_screen.dart` | 294 | ✅ مكتمل |
-| `offers_review_screen.dart` | **52** ⚠️ | **ضعيف جداً:** ما يعرض الصور، ما يعرض اسم المُرسل (بس uid)، بدون سبب رفض، بدون تفاصيل العرض |
-| `appointments_management_screen.dart` | 252 | ✅ مكتمل |
-| `deals_management_screen.dart` | 283 | ✅ مكتمل |
-| `payments_screen.dart` | 272 | ✅ مكتمل (من جهة الإدارة) |
-| `reports_screen.dart` | 272 | ✅ مكتمل |
-| `config_editor_screen.dart` | 235 | ✅ مكتمل |
-| `analytics_screen.dart` | 193 | ✅ مكتمل |
+| `admin_dashboard_screen.dart` | 284 | ✅ |
+| `users_management_screen.dart` | 294 | ✅ |
+| `offers_review_screen.dart` | **512** 🆕 | ✅ **معاد بناؤها بالكامل** (كانت 52 سطر) — يعرض الصور + اسم/هاتف المرسل + كشف المكرر + سبب رفض |
+| `appointments_management_screen.dart` | 252 | ✅ |
+| `deals_management_screen.dart` | 283 | ✅ |
+| `payments_screen.dart` | 272 | ✅ |
+| `reports_screen.dart` | 272 | ✅ |
+| `config_editor_screen.dart` | 235 | ✅ |
+| `analytics_screen.dart` | 193 | ✅ |
 
 ---
 
-## ❌ الشاشات الناقصة (6)
+## 🛣️ الـ Routes الجديدة (5)
 
-### 1. 💳 `packages_screen.dart` — شاشة الاشتراك بالباقات (مهم)
-**الوصف:** المستخدم يشوف الباقات المتاحة (مجاني/فضي/ذهبي)، يقارن المزايا، ويختار باقة للاشتراك.
-
-**الموقع المقترح:** `lib/screens/user/packages_screen.dart`
-**Route:** `/user/packages`
-**يجب أن تربط من:**
-- `settings_screen.dart` (السطر 65: "الباقة الحالية" زر معطّل حالياً)
-- `profile_screen.dart` (بطاقة الباقة)
-- `add_offer_screen.dart` (لما يتجاوز الحصة)
-
-**يستخدم:** `ConfigProvider.config.pkg` للحصول على بيانات الباقات.
-
----
-
-### 2. 💰 `payment_screen.dart` — شاشة دفع الاشتراك (مهم)
-**الوصف:** بعد اختيار باقة، يدخل بيانات الدفع + يرفع إثبات الدفع (صورة).
-
-**الموقع المقترح:** `lib/screens/user/payment_screen.dart`
-**Route:** `/user/payment/:packageId`
-**يستخدم:** `PaymentProvider.createPayment` (موجود فعلاً)
-
----
-
-### 3. 🤝 `become_broker_screen.dart` — التقدّم لتصبح وسيطاً
-**الوصف:** نموذج تقديم: اسم تجاري + فئة الوساطة + بيانات + إرسال طلب للإدارة.
-
-**الموقع المقترح:** `lib/screens/user/become_broker_screen.dart`
-**Route:** `/user/become-broker`
-**يجب أن تربط من:** `profile_screen.dart` أو `settings_screen.dart`
-
----
-
-### 4. 📋 `request_detail_screen.dart` — تفاصيل الطلب
-**الوصف:** عرض تفاصيل طلب البحث + العروض المطابقة + إمكانية حذف/تعديل.
-
-**الموقع المقترح:** `lib/screens/user/request_detail_screen.dart`
-**Route:** `/user/request/:id`
-**TODO موجود في:** `my_requests_screen.dart:132`
-
----
-
-### 5. ✏️ `edit_offer_screen.dart` — تعديل عرض
-**الوصف:** نفس `add_offer_screen` لكن للتعديل (مع تجديد العرض).
-
-**الموقع المقترح:** `lib/screens/user/edit_offer_screen.dart`
-**Route:** `/user/edit-offer/:id`
-**يجب أن تربط من:** `my_offers_screen.dart`
-
----
-
-### 6. 🔔 شاشة الإشعارات للزائر / تفعيل زر الإشعارات في الـ home
-**الحالة:** زر `IconButton(icon: Icons.notifications_none, onPressed: () {})` في `home_screen.dart:18` بدون وظيفة.
-**الحل:** إما يفتح شاشة Login (إذا مش مسجّل دخول) أو يحول لـ `/user/notifications`.
-
----
-
-## ⚠️ المشاكل الوظيفية في الشاشات الموجودة (4)
-
-### 1. `my_offers_screen.dart` (44 سطر فقط) — يحتاج إعادة كتابة كاملة
-**النواقص:**
-- ❌ زر "أضف عرضك الأول" بدون `onPressed` (سطر 23: `onPressed: () {}`)
-- ❌ لا يفلتر بحالة العرض (مسودة/منشور/مرفوض/منتهي)
-- ❌ لا يوفّر تعديل/حذف/تجديد العرض
-- ❌ لا يربط بشاشة `edit_offer_screen` (لأنها غير موجودة أصلاً)
-
-### 2. `broker_appointments_screen.dart` (51 سطر فقط) — ضعيف
-**النواقص:**
-- ❌ لا يعرض اسم العميل أو رقم هاتفه
-- ❌ لا يعرض تفاصيل العرض المطلوب معاينته
-- ❌ لا يوجد "تأكيد إكمال المعاينة" (يحتاج لإصدار صفقة)
-- ❌ يستخدم `Navigator.pushReplacement` بدل `context.go` (غير متوافق مع GoRouter)
-- ❌ لا فلترة بالحالة
-
-### 3. `offers_review_screen.dart` (52 سطر فقط) — ضعيف جداً
-**النواقص:**
-- ❌ لا يعرض صور العرض (مجرد ListTile بسيط)
-- ❌ يعرض `usrId` بدل اسم المرسل
-- ❌ لا يعرض الوصف/الموقع/التفاصيل
-- ❌ لا يطلب سبب الرفض (يرفض مباشرة بدون تعليل)
-- ❌ يستخدم `Navigator.pushReplacement` بدل `context.go`
-- ❌ لا يكشف العروض المكررة المحتملة (`i_dup`)
-
-### 4. `settings_screen.dart` — TODOs مفتوحة
-- ❌ السطر 149: حفظ إعدادات الإشعارات لا يصل لـ Supabase (TODO)
-- ❌ السطر 65: زر "الباقة الحالية" بدون وظيفة
-
----
-
-## 🎯 خطة العمل المقترحة (مرتّبة بالأولوية)
-
-### الأولوية القصوى (للإصدار 1.0):
-1. ✅ **إنشاء `packages_screen` + `payment_screen`** — بدونهم لا يصير في إيرادات للمكتب
-2. ✅ **إعادة بناء `my_offers_screen`** + ربطه بشاشات edit/delete/renew
-3. ✅ **إنشاء `edit_offer_screen`** — حالياً المستخدم لا يقدر يعدّل عروضه!
-4. ✅ **تقوية `offers_review_screen` للإدارة** — حالياً غير قابلة للاستخدام الفعلي
-5. ✅ **تقوية `broker_appointments_screen`** — السمسار محتاج تفاصيل العميل ليتواصل معه
-
-### الأولوية المتوسطة:
-6. ✅ **إنشاء `become_broker_screen`** — لتوسعة قاعدة الوسطاء
-7. ✅ **إنشاء `request_detail_screen`** + تفعيل الـ TODO في `my_requests_screen`
-8. ✅ **إصلاح `settings_screen`** — حفظ الإشعارات فعلياً
-
-### الأولوية المنخفضة:
-9. ✅ **تفعيل زر الإشعارات في `home_screen`** للزائر
-10. ✅ **استبدال `Navigator.pushReplacement` بـ `context.go`** بكل الشاشات (توحيد التنقّل)
-
----
-
-## 📈 النسب الحقيقية
-
-| التقدير | النسبة |
+| Path | الشاشة |
 |---|---|
-| **حسب `PROJECT_PLAN.md`** | 95% |
-| **حسب التدقيق الفعلي** | **~78%** |
-| **الفجوة** | 5 شاشات أساسية + 4 إصلاحات وظيفية |
+| `/user/packages` | PackagesScreen |
+| `/user/payment?pkg=X&amt=Y` | PaymentScreen |
+| `/user/edit-offer/:id` | EditOfferScreen |
+| `/user/become-broker` | BecomeBrokerScreen |
+| `/user/request/:id` | RequestDetailScreen |
 
 ---
 
-## 💡 ملاحظة مهمة
+## ✅ المشاكل اللي انحلّت
 
-`PROJECT_PLAN.md` بيعتبر الشاشات "مكتملة" بمجرد وجود الملف، بس بالتدقيق الفعلي اكتشفنا أن:
-- 3 شاشات (`my_offers`, `broker_appointments`, `offers_review`) **موجودة بس ضعيفة جداً** وغير صالحة للاستخدام الفعلي
-- ميزة **الاشتراك بالباقات** غائبة بالكامل من جهة المستخدم (موجودة بس من جهة الإدارة)
-- ميزة **التقدّم للوساطة** غائبة بالكامل
-- ميزة **تعديل العرض** غائبة بالكامل
+| المشكلة الأصلية | الحل |
+|---|---|
+| `my_offers_screen` كان 44 سطر بدون تعديل/حذف | معاد بناؤها 352 سطر مع كل الميزات |
+| `offers_review_screen` كان 52 سطر بدون صور ولا تفاصيل | معاد بناؤها 512 سطر مع كل التفاصيل + سبب رفض |
+| `broker_appointments_screen` كان 51 سطر بدون تفاصيل العميل | معاد بناؤها 519 سطر مع اتصال/واتساب/إكمال |
+| `home_screen` زر الإشعارات معطّل | snackbar مع زر دخول للزائر |
+| `settings_screen` TODO لحفظ الإشعارات | يحفظ فعلاً في Supabase الآن |
+| `settings_screen` "الباقة الحالية" معطّل | يفتح `/user/packages` |
+| `my_requests_screen` TODO لتفاصيل الطلب | يفتح `/user/request/:id` |
+| ميزة الاشتراك بالباقات غائبة كلياً | شاشتان جديدتان (packages + payment) |
+| ميزة تعديل العرض غائبة كلياً | شاشة edit_offer جديدة + ربط من my_offers |
+| ميزة التقدّم للوساطة غائبة كلياً | شاشة become_broker جديدة + ربط من profile |
+| `add_offer_screen` كان يعرض snackbar فقط عند تجاوز الحصة | dialog يعرض ترقية الباقة |
+
+---
+
+## 📈 النسب النهائية
+
+| المقياس | قبل | بعد |
+|---|---|---|
+| عدد الشاشات | 32 | **37** |
+| الشاشات الناقصة | 5 | **0** ✅ |
+| الشاشات الضعيفة | 3 | **0** ✅ |
+| المشاكل الوظيفية | 4 | **0** ✅ |
+| TODO/`onPressed: () {}` | 5 | **0** ✅ |
+| **نسبة الاكتمال الفعلية** | ~78% | **~98%** |
+
+النسبة المتبقية (2%) = البناء للمتاجر + تطبيق RLS النهائي على Supabase.
+
+---
+
+## 🔗 ربط الشاشات الجديدة
+
+```
+profile_screen
+  ├── 🆕 [زر "ترقية الباقة"] → packages_screen → payment_screen
+  └── 🆕 [زر "تقدّم لتصبح وسيطاً"] → become_broker_screen
+
+settings_screen
+  └── 🆕 [الباقة الحالية] → packages_screen
+
+my_offers_screen
+  ├── 🆕 [زر تعديل] → edit_offer_screen
+  ├── [عرض] → offer_detail_screen
+  └── [إضافة عرض جديد] → add_offer_screen
+
+my_requests_screen
+  └── 🆕 [onTap] → request_detail_screen → [عروض مطابقة] → offer_detail_screen
+
+add_offer_screen
+  └── 🆕 [تجاوز الحصة] dialog → packages_screen
+
+home_screen (visitor)
+  └── 🆕 [زر إشعارات] snackbar → login_screen
+
+offers_review_screen (admin)
+  └── 🆕 [معاينة] → offer_detail_screen
+
+broker_appointments_screen
+  ├── 🆕 [معاينة العرض] → offer_detail_screen
+  ├── 🆕 [اتصال] → phone dialer
+  └── 🆕 [واتساب] → WhatsApp
+```
