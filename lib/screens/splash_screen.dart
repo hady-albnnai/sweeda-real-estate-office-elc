@@ -47,7 +47,9 @@ class _SplashScreenState extends State<SplashScreen>
     );
 
     _controller.forward();
-    _bootstrap();
+    // نؤجّل التحميل لبعد اكتمال أول frame لتفادي
+    // setState()/notifyListeners() أثناء البناء.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _bootstrap());
   }
 
   /// تحميل الإعدادات ثم الانتقال (بحد أدنى زمني لإظهار الشعار)
