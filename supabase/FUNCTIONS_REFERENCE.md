@@ -1,27 +1,125 @@
-# 📚 مرجع دوال Supabase (RPC Functions)
+# 📚 مرجع دوال Supabase (RPC + Edge Functions)
 
 > **مشروع:** عقارات السويداء  
-> **آخر تحديث:** 2026-06-04  
-> **المصدر:** `supabase/setup.sql` (مطابق 100% مع السيرفر الفعلي)
+> **آخر تحديث:** 2026-06-05  
+> **المصدر:** `supabase/setup.sql` + `supabase/migrations/2026_06_05_whatsapp_email_auth.sql`
 
 ---
 
-## 📋 قائمة الدوال (12 دالة)
+## 📋 قائمة الدوال (16 دالة RPC + 2 Edge Functions)
+
+### دوال RPC (PostgreSQL):
 
 | # | اسم الدالة | المدخلات | المخرج | SECURITY DEFINER |
 |---|---|---|---|---|
-| 1 | `generate_otp` | `p_phone TEXT` | `TEXT` | ✅ |
-| 2 | `verify_otp` | `p_phone TEXT, p_code TEXT` | `BOOLEAN` | ✅ |
-| 3 | `get_user_by_phone` | `p_phone TEXT` | `SETOF users` | ✅ |
-| 4 | `check_offer_duplicate` | `ttl, prc, loc, usr_id` | `BOOLEAN` | ✅ |
-| 5 | `calculate_commission` | `prc, pct` | `NUMERIC` | ❌ |
-| 6 | `update_user_badge` | `p_uid UUID` | `VOID` | ❌ |
-| 7 | `get_pending_offers_count` | — | `INTEGER` | ❌ |
-| 8 | `add_points` | `p_uid, p_pts` | `VOID` | ❌ |
-| 9 | `soft_delete` | `p_table, p_id` | `VOID` | ✅ |
-| 10 | `expire_offers` | — | `VOID` | ❌ |
-| 11 | `send_appointment_reminders` | — | `VOID` | ❌ |
-| 12 | `create_user_from_phone` | `p_phone, p_nm` | `UUID` | ✅ |
+| 1 | `generate_otp` ⚠️ Legacy | `p_phone TEXT` | `TEXT` | ✅ |
+| 2 | `verify_otp` ⚠️ Legacy | `p_phone TEXT, p_code TEXT` | `BOOLEAN` | ✅ |
+| 3 | **`generate_otp_v2`** 🆕 | `p_identifier TEXT, p_channel TEXT` | `TEXT` | ✅ |
+| 4 | **`verify_otp_v2`** 🆕 | `p_identifier TEXT, p_code TEXT` | `BOOLEAN` | ✅ |
+| 5 | **`upsert_user_after_otp`** 🆕 | `p_identifier TEXT, p_channel TEXT` | `TABLE(user_id UUID, is_new BOOLEAN)` | ✅ |
+| 6 | **`get_user_by_email`** 🆕 | `p_email TEXT` | `SETOF users` | ✅ |
+| 7 | `get_user_by_phone` | `p_phone TEXT` | `SETOF users` | ✅ |
+| 8 | `check_offer_duplicate` | `ttl, prc, loc, usr_id` | `BOOLEAN` | ✅ |
+| 9 | `calculate_commission` | `prc, pct` | `NUMERIC` | ❌ |
+| 10 | `update_user_badge` | `p_uid UUID` | `VOID` | ❌ |
+| 11 | `get_pending_offers_count` | — | `INTEGER` | ❌ |
+| 12 | `add_points` | `p_uid, p_pts` | `VOID` | ❌ |
+| 13 | `soft_delete` | `p_table, p_id` | `VOID` | ✅ |
+| 14 | `expire_offers` | — | `VOID` | ❌ |
+| 15 | `send_appointment_reminders` | — | `VOID` | ❌ |
+| 16 | `create_user_from_phone` | `p_phone, p_nm` | `UUID` | ✅ |
+
+### Edge Functions (Deno):
+
+| # | الاسم | الغرض | المدخل JSON | المخرج JSON |
+|---|---|---|---|---|
+| 1 | **`send-whatsapp-otp`** 🆕 | يولّد OTP ويرسله عبر Meta WhatsApp Cloud API | `{ phone: "+963..." }` | `{ success, messageId? , devMode?, otp? }` |
+| 2 | **`verify-whatsapp-otp`** 🆕 | يتحقق + ينشئ user + يصدر session | `{ phone, code }` | `{ success, userId, isNew, session: { token_hash, ... } }` |
+
+> ⚠️ **`generate_otp` / `verify_otp` القديمة** ما زالت موجودة للتوافق الخلفي فقط — استخدم النسخة V2 في الكود الجديد.  
+> 📖 لخطوات تفعيل WhatsApp + Email Magic Link: راجع `docs/AUTH_SETUP.md`
+
+---
+
+## 🆕 دوال المصادقة V2 (واتساب + إيميل)
+
+### `generate_otp_v2(p_identifier TEXT, p_channel TEXT)` → `TEXT`
+
+تولّد OTP موحّد لأي قناة (`whatsapp` / `email` / `sms`). تتضمّن **حد معدّل**: 5 طلبات/10 دقائق لنفس identifier.
+
+```sql
+SELECT generate_otp_v2('+963999123456', 'whatsapp');
+SELECT generate_otp_v2('user@example.com', 'email');
+```
+
+```dart
+// عادةً لا تُستدعى مباشرة من Flutter — تُستدعى من داخل Edge Function
+final code = await client.rpc('generate_otp_v2',
+  params: {'p_identifier': '+963$phone', 'p_channel': 'whatsapp'});
+```
+
+**الجدول:** `otp_codes` (INSERT) — يكتب `identifier` و `channel`  
+**استثناء:** يرمي `Too many OTP requests` لو تجاوز الحد
+
+---
+
+### `verify_otp_v2(p_identifier TEXT, p_code TEXT)` → `BOOLEAN`
+
+تتحقق من الكود، تعلّمه `used=1`، وتحذف الأكواد القديمة (>1 يوم).
+
+```dart
+final ok = await client.rpc('verify_otp_v2',
+  params: {'p_identifier': '+963$phone', 'p_code': code});
+```
+
+---
+
+### `upsert_user_after_otp(p_identifier TEXT, p_channel TEXT)` → `TABLE(user_id UUID, is_new BOOLEAN)`
+
+تُستخدم بعد تأكيد OTP الواتساب. تبحث عن user بـ `ph` (للواتساب) أو `eml` (للإيميل)، وتنشئه لو غير موجود.
+
+```dart
+final rows = await client.rpc('upsert_user_after_otp',
+  params: {'p_identifier': '+963$phone', 'p_channel': 'whatsapp'});
+final row = (rows as List).first;
+print('userId: ${row['user_id']}, isNew: ${row['is_new']}');
+```
+
+---
+
+### `get_user_by_email(p_email TEXT)` → `SETOF users`
+
+مقابل `get_user_by_phone` لكن للإيميل (العمود `eml`).
+
+---
+
+## 🌐 Edge Functions
+
+### `send-whatsapp-otp`
+
+```bash
+curl -X POST 'https://<project>.supabase.co/functions/v1/send-whatsapp-otp' \
+  -H "apikey: <anon_key>" -H "Content-Type: application/json" \
+  -d '{"phone":"+963912345678"}'
+```
+
+**Secrets المطلوبة** (Supabase Dashboard → Edge Functions → Secrets):
+- `META_WHATSAPP_TOKEN`
+- `META_PHONE_NUMBER_ID`
+- `META_OTP_TEMPLATE_NAME` (افتراضي: `otp_login`)
+- `META_OTP_TEMPLATE_LANG` (افتراضي: `ar`)
+
+**وضع التطوير:** لو ما كانت الـ secrets موجودة، الدالة ترجع `{ devMode: true, otp: "123456" }` بدل إرسال فعلي.
+
+### `verify-whatsapp-otp`
+
+```bash
+curl -X POST 'https://<project>.supabase.co/functions/v1/verify-whatsapp-otp' \
+  -H "apikey: <anon_key>" -H "Content-Type: application/json" \
+  -d '{"phone":"+963912345678","code":"123456"}'
+```
+
+ترجع `session.token_hash` يستخدمه Flutter مع `auth.verifyOTP(type: OtpType.magiclink, tokenHash: ...)` لاستلام session.
 
 ---
 
@@ -353,10 +451,10 @@ await client.rpc('send_appointment_reminders');
 
 | الجدول | دوال القراءة | دوال الكتابة |
 |---|---|---|
-| `users` | `get_user_by_phone` | `create_user_from_phone`, `update_user_badge`, `add_points` |
+| `users` | `get_user_by_phone`, `get_user_by_email` 🆕 | `create_user_from_phone`, `upsert_user_after_otp` 🆕, `update_user_badge`, `add_points` |
 | `offers` | `check_offer_duplicate`, `get_pending_offers_count` | `expire_offers` |
 | `appointments` | — | `send_appointment_reminders` |
-| `otp_codes` | `verify_otp` | `generate_otp`, `verify_otp` |
+| `otp_codes` | `verify_otp`, `verify_otp_v2` 🆕 | `generate_otp`, `verify_otp`, `generate_otp_v2` 🆕, `verify_otp_v2` 🆕 |
 
 ---
 
@@ -366,6 +464,10 @@ await client.rpc('send_appointment_reminders');
 |---|---|---|
 | `generate_otp` | ✅ | ✅ |
 | `verify_otp` | ✅ | ✅ |
+| `generate_otp_v2` 🆕 | ✅ | ✅ |
+| `verify_otp_v2` 🆕 | ✅ | ✅ |
+| `upsert_user_after_otp` 🆕 | ✅ | ✅ |
+| `get_user_by_email` 🆕 | ✅ | ✅ |
 | `get_user_by_phone` | ✅ | ✅ |
 | `check_offer_duplicate` | ✅ | ✅ |
 | `soft_delete` | ✅ | ✅ |
@@ -384,7 +486,12 @@ await client.rpc('send_appointment_reminders');
 | الملف | المحتوى |
 |---|---|
 | `supabase/setup.sql` | الكود الكامل (مصدر الحقيقة) |
+| `supabase/migrations/2026_06_05_whatsapp_email_auth.sql` 🆕 | Migration: V2 RPCs + `eml` + `otp_codes` channel |
+| `supabase/functions/send-whatsapp-otp/index.ts` 🆕 | Edge Function لإرسال OTP عبر Meta WhatsApp |
+| `supabase/functions/verify-whatsapp-otp/index.ts` 🆕 | Edge Function للتحقق وإصدار session |
 | `supabase/SERVER_DOCS.md` | توثيق الجداول + RLS + Realtime |
 | `lib/core/constants/db_constants.dart` | أسماء الدوال كـ constants |
-| `lib/services/auth_service.dart` | استخدام `generate_otp` + `verify_otp` |
+| `lib/services/auth_service.dart` | استخدام WhatsApp OTP + Email Magic Link (الـ V2) |
+| `lib/screens/auth/login_screen.dart` | شاشة تسجيل الدخول بتبويبتين (واتساب/إيميل) |
+| `docs/AUTH_SETUP.md` 🆕 | **دليل تفعيل المصادقة الكامل** (Meta + Supabase Email + Deploy) |
 | `DEVELOPMENT_GUIDE.md` | دليل التطوير الشامل |

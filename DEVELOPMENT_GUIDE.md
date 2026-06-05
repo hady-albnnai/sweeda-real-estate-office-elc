@@ -190,6 +190,11 @@ flutter analyze                # فحص أخطاء
 - [x] flutter pub get بدون أخطاء
 - [x] التطبيق بقلع وشاشة Splash بتظهر
 - [x] OTP fallback بيشتغل
+- [x] **WhatsApp OTP عبر Edge Function (Meta Cloud API)** — `feature/whatsapp-email-auth`
+- [x] **Email Magic Link** بديل (Supabase Auth + Deep Link) — `feature/whatsapp-email-auth`
+- [x] شاشة Login بتبويبتين (واتساب/إيميل) — `feature/whatsapp-email-auth`
+- [x] RPCs الجديدة: `generate_otp_v2`, `verify_otp_v2`, `upsert_user_after_otp`, `get_user_by_email`
+- [x] راجع `docs/AUTH_SETUP.md` لخطوات التفعيل الكاملة
 - [x] شاشات المرحلة 1 كاملة
 - [x] BottomNavigationBar يعمل
 - [x] كل المسارات بالـ Router محددة
