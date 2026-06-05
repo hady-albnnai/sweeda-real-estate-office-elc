@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import '../core/theme/app_theme.dart';
 
-/// ويدجت الحالة الفارغة — تظهر عندما لا يوجد بيانات
+/// ويدجت الحالة الفارغة — تظهر عندما لا يوجد بيانات (بثيم التطبيق الذهبي الداكن)
 class EmptyState extends StatelessWidget {
   final String message;
+  final IconData icon;
   final String? actionText;
   final VoidCallback? onAction;
 
   const EmptyState({
     super.key,
     this.message = 'لا توجد بيانات',
+    this.icon = Icons.inbox_outlined,
     this.actionText,
     this.onAction,
   });
@@ -16,23 +19,27 @@ class EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.inbox_outlined, size: 64, color: Colors.grey[400]),
-          const SizedBox(height: 16),
-          Text(
-            message,
-            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-          ),
-          if (actionText != null && onAction != null) ...[
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: onAction,
-              child: Text(actionText!),
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 80, color: AppTheme.textGrey.withOpacity(0.3)),
+            const SizedBox(height: 20),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 16, color: AppTheme.textGrey),
             ),
+            if (actionText != null && onAction != null) ...[
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: onAction,
+                child: Text(actionText!),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

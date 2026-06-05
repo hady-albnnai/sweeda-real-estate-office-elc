@@ -47,15 +47,18 @@ class _SplashScreenState extends State<SplashScreen>
     );
 
     _controller.forward();
+    _bootstrap();
+  }
 
-    // تحميل إعدادات التطبيق مبكراً (كاش Hive ثم تحديث من السيرفر)
-    Provider.of<ConfigProvider>(context, listen: false).loadConfig();
-
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        context.go('/home');
-      }
-    });
+  /// تحميل الإعدادات ثم الانتقال (بحد أدنى زمني لإظهار الشعار)
+  Future<void> _bootstrap() async {
+    final config = Provider.of<ConfigProvider>(context, listen: false);
+    // نشغّل التحميل والحد الأدنى للعرض بالتوازي
+    await Future.wait([
+      config.loadConfig(),
+      Future.delayed(const Duration(milliseconds: 1800)),
+    ]);
+    if (mounted) context.go('/home');
   }
 
   @override
@@ -129,15 +132,36 @@ class _SplashScreenState extends State<SplashScreen>
                         fontWeight: FontWeight.w300,
                       ),
                     ),
-                    const SizedBox(height: 50),
+                    const SizedBox(height: 16),
+                    Text(
+                      'عقارات • سيارات • مواعيد معاينة',
+                      style: TextStyle(
+                        color: AppTheme.textGrey.withOpacity(0.7),
+                        fontSize: 11,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    const SizedBox(height: 45),
+                    // شريط تقدّم بسيط بعرض ثابت
                     SizedBox(
-                      width: 28,
-                      height: 28,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          AppTheme.primaryGold.withOpacity(0.8),
+                      width: 160,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          minHeight: 4,
+                          backgroundColor: AppTheme.surfaceBlack,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            AppTheme.primaryGold.withOpacity(0.85),
+                          ),
                         ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      'جارٍ التحميل...',
+                      style: TextStyle(
+                        color: AppTheme.textGrey.withOpacity(0.6),
+                        fontSize: 11,
                       ),
                     ),
                   ],

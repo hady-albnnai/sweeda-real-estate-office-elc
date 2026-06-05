@@ -4,10 +4,12 @@ import 'package:go_router/go_router.dart';
 import '../../providers/offer_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/config_provider.dart';
+import '../../providers/notification_provider.dart';
 import '../../widgets/offer_card.dart';
 import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/shimmer_loading.dart';
+import '../../widgets/error_widget.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/utils/app_utils.dart';
 
 /// الشاشة الرئيسية للمستخدم بعد تسجيل الدخول
 /// تحتوي على: بحث + فلتر + عروض + BottomNavigationBar
@@ -28,10 +30,18 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       final config = Provider.of<ConfigProvider>(context, listen: false);
       await config.loadConfig();
       if (!mounted) return;
-      Provider.of<OfferProvider>(context, listen: false).fetchOffers();
-      // تسجيل سلسلة الدخول اليومي (Streak) + منح النقاط
+      final offerProv = Provider.of<OfferProvider>(context, listen: false);
+      offerProv.fetchOffers();
+      offerProv.subscribeRealtime(); // تحديث فوري للعروض
+
+      // تسجيل سلسلة الدخول اليومي (Streak) + منح النقاط + جلب الإشعارات
       final auth = Provider.of<AuthProvider>(context, listen: false);
       if (auth.isLoggedIn) {
+        final uid = auth.userModel?.uid ?? '';
+        if (uid.isNotEmpty) {
+          Provider.of<NotificationProvider>(context, listen: false)
+              .fetchNotifications(uid);
+        }
         final res = await auth.registerStreak(config.config);
         if (mounted && res['awarded'] == true) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -43,6 +53,13 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
         }
       }
     });
+  }
+
+  @override
+  void dispose() {
+    // إيقاف اشتراك Realtime عند مغادرة الشاشة
+    Provider.of<OfferProvider>(context, listen: false).unsubscribeRealtime();
+    super.dispose();
   }
 
   @override
@@ -77,9 +94,43 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none, color: AppTheme.primaryGold),
-            onPressed: () {}, // TODO: شاشة الإشعارات
+          // أيقونة الإشعارات مع badge لعدد غير المقروء
+          Consumer<NotificationProvider>(
+            builder: (context, notif, _) {
+              final count = notif.unreadCount;
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.notifications_none,
+                        color: AppTheme.primaryGold),
+                    onPressed: () => context.push('/user/notifications'),
+                  ),
+                  if (count > 0)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        constraints:
+                            const BoxConstraints(minWidth: 18, minHeight: 18),
+                        decoration: const BoxDecoration(
+                          color: AppTheme.errorRed,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          count > 9 ? '9+' : '$count',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
           IconButton(
             icon: const Icon(Icons.add_circle, color: AppTheme.primaryGold, size: 28),
@@ -129,41 +180,63 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
           const SizedBox(height: 10),
 
           // قائمة العروض
+          // مؤشّر العمل دون اتصال
+          if (offerProv.fromCache && offerProv.offers.isNotEmpty)
+            Container(
+              width: double.infinity,
+              color: Colors.orange.withOpacity(0.15),
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: const Text('📡 وضع دون اتصال — عرض بيانات محفوظة',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.orange, fontSize: 11)),
+            ),
           Expanded(
-            child: offerProv.isLoading
-                ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryGold))
-                : offerProv.offers.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.home_work, size: 80, color: AppTheme.textGrey.withOpacity(0.3)),
-                            const SizedBox(height: 20),
-                            const Text(
-                              'لا توجد عروض متاحة حالياً',
-                              style: TextStyle(color: AppTheme.textGrey, fontSize: 16),
-                            ),
-                            const SizedBox(height: 20),
-                            ElevatedButton.icon(
-                              onPressed: () => context.push('/user/add-offer'),
-                              icon: const Icon(Icons.add),
-                              label: const Text('أضف عرضك الأول'),
-                            ),
-                          ],
-                        ),
+            child: offerProv.isLoading && offerProv.offers.isEmpty
+                ? ShimmerLoading.offerList()
+                : (offerProv.error != null && offerProv.offers.isEmpty)
+                    ? AppErrorWidget(
+                        message: offerProv.error!,
+                        onRetry: () => offerProv.fetchOffers(),
                       )
-                    : RefreshIndicator(
-                        onRefresh: () => offerProv.fetchOffers(),
-                        color: AppTheme.primaryGold,
-                        child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 15),
-                          itemCount: _filteredOffers(offerProv.offers).length,
-                          itemBuilder: (context, index) {
-                            final offer = _filteredOffers(offerProv.offers)[index];
-                            return OfferCard(offer: offer);
-                          },
-                        ),
-                      ),
+                    : offerProv.offers.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.home_work,
+                                    size: 80,
+                                    color: AppTheme.textGrey.withOpacity(0.3)),
+                                const SizedBox(height: 20),
+                                const Text(
+                                  'لا توجد عروض متاحة حالياً',
+                                  style: TextStyle(
+                                      color: AppTheme.textGrey, fontSize: 16),
+                                ),
+                                const SizedBox(height: 20),
+                                ElevatedButton.icon(
+                                  onPressed: () =>
+                                      context.push('/user/add-offer'),
+                                  icon: const Icon(Icons.add),
+                                  label: const Text('أضف عرضك الأول'),
+                                ),
+                              ],
+                            ),
+                          )
+                        : RefreshIndicator(
+                            onRefresh: () => offerProv.fetchOffers(),
+                            color: AppTheme.primaryGold,
+                            child: ListView.builder(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 15),
+                              itemCount:
+                                  _filteredOffers(offerProv.offers).length,
+                              itemBuilder: (context, index) {
+                                final offer =
+                                    _filteredOffers(offerProv.offers)[index];
+                                return OfferCard(offer: offer);
+                              },
+                            ),
+                          ),
           ),
         ],
       ),
