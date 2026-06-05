@@ -1,4 +1,4 @@
-package com.example.sweeda_real_estate
+package com.sweeda.realestate
 
 import io.flutter.embedding.android.FlutterActivity
 

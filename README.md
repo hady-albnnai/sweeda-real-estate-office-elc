@@ -69,8 +69,11 @@ sweeda-real-estate-office-elc/
 
 ```bash
 flutter pub get
+flutter analyze
 flutter run
 ```
+
+للبناء للإنتاج (APK / App Bundle / iOS) راجع الدليل الكامل: [`BUILD_GUIDE.md`](BUILD_GUIDE.md)
 
 ---
 
@@ -88,7 +91,10 @@ flutter run
 | ✅ المرحلة 3: لوحة الإدارة (9 شاشات) | مكتملة |
 | ✅ المرحلة 4: المنطق الخلفي (نقاط/باقات/مطابقة/streak/سوشال/صور) | مكتملة |
 | ✅ المرحلة 5: التحسينات (Realtime/إشعارات/Offline/Shimmer/Splash) | مكتملة |
-| ⏳ المرحلة 6: البناء والنشر | التالية |
+| ✅ المرحلة 6: إعداد البناء والأمان (Gradle/توقيع/iOS/دليل) | مُجهّزة |
+| ⏳ تنفيذ البناء والنشر للمتاجر | محلياً |
+
+> **للبناء والنشر:** راجع [`BUILD_GUIDE.md`](BUILD_GUIDE.md) · **للأمان:** [`docs/SECURITY_REVIEW.md`](docs/SECURITY_REVIEW.md)
 
 ---
 

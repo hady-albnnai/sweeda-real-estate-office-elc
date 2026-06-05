@@ -49,16 +49,10 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
-        <!-- FCM default notification channel -->
-        <meta-data
-            android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="sweeda_default_channel" />
-
-        <!-- FCM default notification icon (uses launcher icon for now;
-             replace with a dedicated white-silhouette icon later) -->
-        <meta-data
-            android:name="com.google.firebase.messaging.default_notification_icon"
-            android:resource="@mipmap/ic_launcher" />
+        <!-- ملاحظة: تمت إزالة إعدادات FCM لأن المشروع يعتمد Supabase + الإشعارات المحلية
+             (flutter_local_notifications). عند إضافة Push عبر FCM لاحقاً، أعد:
+             - google-services plugin + google-services.json
+             - meta-data: default_notification_channel_id / default_notification_icon -->
 
     </application>
 
