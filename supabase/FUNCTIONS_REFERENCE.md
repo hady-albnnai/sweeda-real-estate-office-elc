@@ -16,7 +16,7 @@
 | ✅ **مُطبّق على السيرفر** | Migration ترقيات العروض (`2026_06_05_offer_boosts.sql`) — 2 دالة + 8 أعمدة (`i_pin`, `i_bst`, `i_fms`, `pin_end`, `bst_end`, `fms_end`, `dsc_pct`, `dsc_end`) |
 | ✅ **مُطبّق على السيرفر** | Migration الجدولة التلقائية (`2026_06_05_cron_jobs.sql`) — extension `pg_cron` مفعّل + 3 cron jobs نشطة |
 | ✅ **مُطبّق على السيرفر** | Migration FCM (`2026_06_05_fcm_setup.sql`) — UNIQUE على device_token + `get_user_device_tokens` + `notify_user` |
-| ⏳ **بحاجة تطبيق** | Migration Notification Triggers (`2026_06_06_notification_triggers.sql`) — 7 دوال + 6 triggers + إعداد `app_config.fcm` |
+| ✅ **مُطبّق على السيرفر** | Migration Notification Triggers (`2026_06_06_notification_triggers.sql`) — 7 دوال + 6 triggers + إعداد `app_config.fcm` |
 | ⚠️ **مكتوب لكن لم يُنشر بعد** | Edge Functions: `send-whatsapp-otp`, `verify-whatsapp-otp` (يحتاج `supabase functions deploy` + secrets META) |
 | ⚠️ **معلّق** | تفعيل Email SMTP (Resend) — تم في Dashboard ✅ بس Meta WhatsApp credentials لسا (يستخدم وضع التطوير) |
 
@@ -768,7 +768,7 @@ await client.rpc('send_appointment_reminders');
 | `supabase/migrations/2026_06_05_offer_boosts.sql` 🆕🆕🆕 | Migration #3: `purchase_offer_boost` + `expire_offer_boosts` + 8 أعمدة ترقيات — **مطبّق ✅** |
 | `supabase/migrations/2026_06_05_cron_jobs.sql` 🆕🆕🆕🆕 | Migration #4: جدولة 3 cron jobs (expire_offers + expire_boosts + reminders) — **مطبّق ✅** |
 | `supabase/migrations/2026_06_05_fcm_setup.sql` 🆕🆕🆕🆕🆕 | Migration #5: UNIQUE token + `get_user_device_tokens` + `notify_user` — **مطبّق ✅** |
-| `supabase/migrations/2026_06_06_notification_triggers.sql` 🔔 | Migration #6: 7 دوال + 6 triggers لربط الإشعارات بالأحداث — **بحاجة تطبيق ⏳** |
+| `supabase/migrations/2026_06_06_notification_triggers.sql` 🔔 | Migration #6: 7 دوال + 6 triggers لربط الإشعارات بالأحداث — **مطبّق ✅** |
 | `supabase/functions/send-push-notification/index.ts` 🆕🆕🆕🆕🆕 | Edge Function لإرسال FCM Push عبر Service Account |
 | `lib/services/fcm_service.dart` 🆕🆕🆕🆕🆕 | خدمة FCM Flutter (تهيئة + token + معالجات الإشعارات) |
 | `lib/screens/user/boost_offer_screen.dart` 🆕🆕🆕 | شاشة شراء ترقيات العروض (5 خيارات: ren/pin/bst/dsc5/fms) |
