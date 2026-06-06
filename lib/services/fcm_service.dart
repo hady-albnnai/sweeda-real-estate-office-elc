@@ -262,6 +262,7 @@ class FCMService {
   }
 
   /// تسجيل التوكن في جدول user_devices
+  /// + تشطيب كل التوكنز القديمة لنفس المستخدم (يضمن جهاز واحد نشط لكل user)
   Future<void> _registerDeviceToken(String token) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -278,7 +279,21 @@ class FCMService {
               ? 'android'
               : 'web';
 
-      await SupabaseService().client.from(DbTables.userDevices).upsert(
+      final sb = SupabaseService().client;
+
+      // 1) إلغاء أي توكن نشط آخر لنفس المستخدم (غير التوكن الحالي)
+      try {
+        await sb
+            .from(DbTables.userDevices)
+            .update({'is_active': false})
+            .eq('uid', uid)
+            .neq('device_token', token);
+      } catch (e) {
+        debugPrint('⚠️ deactivate old tokens: $e');
+      }
+
+      // 2) Upsert التوكن الحالي
+      await sb.from(DbTables.userDevices).upsert(
         {
           'uid': uid,
           'device_token': token,
@@ -288,7 +303,7 @@ class FCMService {
         },
         onConflict: 'device_token',
       );
-      debugPrint('✅ FCM token registered for $uid');
+      debugPrint('✅ FCM token registered for $uid (deactivated old tokens)');
     } catch (e) {
       debugPrint('❌ register FCM token: $e');
     }
