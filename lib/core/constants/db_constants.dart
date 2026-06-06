@@ -29,6 +29,8 @@ class DbFunctions {
   static const String updateUserBadge = 'update_user_badge';
   static const String getPendingOffersCount = 'get_pending_offers_count';
   static const String addPoints = 'add_points';
+  static const String awardPointsSafe = 'award_points_safe';
+  static const String approvePaymentFinal = 'approve_payment_final';
   static const String expireOffers = 'expire_offers';
   static const String sendAppointmentReminders = 'send_appointment_reminders';
   static const String createUserFromPhone = 'create_user_from_phone';

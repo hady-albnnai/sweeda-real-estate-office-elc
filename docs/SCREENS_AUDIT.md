@@ -68,7 +68,7 @@
 | `offers_review_screen.dart` | **512** 🆕 | ✅ **معاد بناؤها بالكامل** (كانت 52 سطر) — يعرض الصور + اسم/هاتف المرسل + كشف المكرر + سبب رفض |
 | `appointments_management_screen.dart` | 252 | ✅ |
 | `deals_management_screen.dart` | 283 | ✅ |
-| `payments_screen.dart` | 272 | ✅ |
+| `payments_screen.dart` | 272 | ✅ + عرض إيصالات الدفع عبر Signed URL 🆕 |
 | `reports_screen.dart` | 272 | ✅ |
 | `config_editor_screen.dart` | ~260 | ✅ (+زر فتح محرر قنوات الدفع) |
 | `payment_channels_editor_screen.dart` 🆕 | ~330 | ✅ **جديدة (المرحلة 11)** — تفعيل/تعطيل + تعديل بيانات 4 قنوات + رفع QR شام كاش |

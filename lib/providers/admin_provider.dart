@@ -349,24 +349,22 @@ class AdminProvider with ChangeNotifier {
     }
   }
 
-  /// الموافقة على دفعة + تفعيل الباقة للمستخدم
-  Future<bool> approvePayment(String paymentId, String uid, int packageType,
-      String adminId) async {
+  Future<bool> approvePayment(String paymentId, String adminId) async {
     try {
-      final pkgDurations = {0: 30, 1: 45, 2: 60};
-      await SupabaseService().client.from(DbTables.payments).update({
-        'sts': 1,
-        'appr_by': adminId,
-      }).eq('id', paymentId);
-      final pkgEnd =
-          DateTime.now().add(Duration(days: pkgDurations[packageType] ?? 30));
-      await SupabaseService().client.from(DbTables.users).update({
-        'b_pkg': packageType,
-        'pkg_end': pkgEnd.toIso8601String(),
-        'ts_upd': DateTime.now().toIso8601String(),
-      }).eq('id', uid);
-      notifyListeners();
-      return true;
+      final res = await SupabaseService().client.rpc(
+        DbConstants.approvePaymentFinal,
+        params: {
+          'p_payment_id': paymentId,
+          'p_admin_id': adminId,
+        },
+      );
+
+      if (res['success'] == true) {
+        notifyListeners();
+        return true;
+      }
+      debugPrint('❌ approvePayment RPC error: ${res['error']}');
+      return false;
     } catch (e) {
       debugPrint('❌ approvePayment error: $e');
       return false;

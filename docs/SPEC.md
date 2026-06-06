@@ -294,7 +294,7 @@ supabase/
 - `offer_images` (Public) — صور العروض
 - `config_assets` (Public, 5MB) — صور أصول الإعدادات (مثل QR شام كاش)
 - `payment_proofs` (Private, 10MB, +RLS) — إيصالات دفع المستخدمين (المسار: `{uid}/{filename}`)
-  - INSERT: المستخدم لمجلده فقط
+  - INSERT: المستخدم يرفع في مجلده الخاص فقط
   - SELECT: صاحب الإيصال + admin/owner (rl ∈ {4,5})
   - DELETE: admin/owner فقط
 

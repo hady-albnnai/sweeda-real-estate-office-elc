@@ -26,7 +26,7 @@ class BusinessService {
   Future<bool> addPoints(String uid, int points) async {
     if (uid.isEmpty || points == 0) return false;
     try {
-      await _sb.client.rpc('add_points', params: {
+      await _sb.client.rpc(DbConstants.addPoints, params: {
         'p_uid': uid,
         'p_pts': points,
       });
@@ -35,6 +35,24 @@ class BusinessService {
       debugPrint('❌ addPoints error: $e');
       // fallback: تحديث مباشر إن فشلت RPC
       return _addPointsFallback(uid, points);
+    }
+  }
+
+  /// منح نقاط آمنة (تتحقق من الحدود اليومية لمنع التلاعب)
+  Future<bool> awardPointsSafe(String uid, String eventType, int points) async {
+    if (uid.isEmpty || points == 0) return false;
+    try {
+      final res = await _sb.client.rpc(DbConstants.awardPointsSafe, params: {
+        'p_uid': uid,
+        'p_event_type': eventType,
+        'p_points': points,
+      });
+      if (res['success'] == true) return true;
+      debugPrint('⚠️ awardPointsSafe: ${res['error']}');
+      return false;
+    } catch (e) {
+      debugPrint('❌ awardPointsSafe error: $e');
+      return false;
     }
   }
 
@@ -61,7 +79,7 @@ class BusinessService {
       {int fallback = 0}) async {
     final pts = _ptsFromConfig(config, eventKey, fallback);
     if (pts == 0) return false;
-    return addPoints(uid, pts);
+    return awardPointsSafe(uid, eventKey, pts);
   }
 
   int _ptsFromConfig(ConfigModel? config, String key, int fallback) {
@@ -84,7 +102,7 @@ class BusinessService {
       }
     }
     if (pts == 0) return false;
-    return addPoints(uid, pts); // القيمة سالبة فتُخصم
+    return addPoints(uid, pts); // القيمة سالبة فتُخصم، لا نحتاج لسقف يومي للخصم
   }
 
   // ═══════════════════════════════════════

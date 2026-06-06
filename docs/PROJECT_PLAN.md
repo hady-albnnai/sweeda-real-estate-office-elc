@@ -27,6 +27,7 @@
 | ✅ **المرحلة 10 (E2): Firebase FCM** | **مكتملة** | Push Notifications تعمل 100% — Edge Function منشورة + Firebase project مفعّل + Service Account + أيقونة ذهبية + navigation + حفظ تلقائي في DB | — |
 | ✅ **المرحلة 10 (E2+): ربط الإشعارات بالأحداث** | **مكتملة** | 6 Triggers + 7 دوال — موافقة/رفض عرض، حجز موعد، إكمال صفقة، موافقة دفعة، مطابقة عرض-طلب | — |
 | ✅ **المرحلة 11: نظام قنوات الدفع** | **مكتملة** | 4 قنوات (الهرم + شام كاش + رصيد + بنك) Config-driven + شاشة إدارة + Migration #8 (channel + Storage buckets) + payment_screen ديناميكية + admin proof viewer | راجع `docs/PAYMENT_CHANNELS_PLAN.md` |
+| ⏳ **المرحلة 12: أتمتة قبول الدفعات** | **قيد التخطيط** | دورة الاعتماد (Approval Workflow) → تحديث حالة الطلب → تحديث رصيد المستخدم تلقائياً → إشعار FCM | المرحلة القادمة |
 | ⏳ **المرحلة 10 (E3): نشر سوشيال تلقائي** | **مؤجّلة** | Edge Function لنشر العروض المعتمدة على Facebook | يحتاج صفحة FB خارج سوريا |
 | ⏸️ **WhatsApp Production (Meta 555)** | **مؤجّلة** | الكود جاهز 100% — مؤجّلة لحين إنشاء صفحة FB خارج سوريا للاستفادة من ميزات الإعلان والربح | راجع `docs/WHATSAPP_ACTIVATION_PLAN.md` |
 
