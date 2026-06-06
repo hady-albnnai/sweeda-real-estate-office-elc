@@ -4,6 +4,7 @@ import '../models/offer_model.dart';
 import '../core/network/supabase_service.dart';
 import '../core/constants/db_constants.dart';
 import '../core/services/local_cache_service.dart';
+import '../core/services/business_service.dart';
 
 class OfferProvider with ChangeNotifier {
   List<OfferModel> _offers = [];
