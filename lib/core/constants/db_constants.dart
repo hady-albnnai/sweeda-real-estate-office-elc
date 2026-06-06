@@ -41,7 +41,10 @@ class DbFunctions {
   // === المرحلة E2: Firebase FCM ===
   static const String getUserDeviceTokens = 'get_user_device_tokens';
   static const String notifyUser = 'notify_user';
-  // ملاحظة: triggers (update_user_stats_on_*) لا تُستدعى يدوياً من Flutter
+  // === المرحلة E2+: ربط الإشعارات بالأحداث ===
+  static const String sendPushNotification = 'send_push_notification';
+  // ملاحظة: trg_* triggers تعمل تلقائياً من السيرفر — لا تُستدعى من Flutter
+  // تفعّل عند: تغيير offer.sts/i_pub, INSERT/UPDATE appointment, UPDATE deal.sts, UPDATE payment.sts
 }
 
 /// مفاتيح Config
