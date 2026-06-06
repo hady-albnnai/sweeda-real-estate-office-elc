@@ -336,7 +336,10 @@
 | ✅ تحديث أسماء الرتب (جديد/نشط/موثوق/خبير/نخبة) | كامل | `user_model.dart#badgeName` |
 | ✅ عرض التسمية في `OfferCard` (القوائم) | كامل (Phase 2) | `widgets/offer_card.dart` + `_enrichOwnerLabels` |
 | ✅ حقل `vrf` صريح + migration | كامل (Phase 2) | `users.vrf` SMALLINT (0/1/2) |
-| ⚠️ شاشة إدارية لاعتماد التوثيق (تغيير vrf 1→2) | غير منفذ بعد | للمرحلة 3 |
+| ✅ شاشة إدارية لاعتماد التوثيق | كامل (Phase 3) | `admin/verifications_review_screen.dart` + `/admin/review-verifications` |
+| ✅ زر "طلب التوثيق" للمستخدم | كامل (Phase 3) | `user/profile_screen.dart#_requestVerification` |
+| ✅ توضيح "الحجز عبر المكتب" | كامل (Phase 3) | `widgets/book_appointment_sheet.dart` |
+| ✅ عدّاد طلبات التوثيق في لوحة الأدمن | كامل (Phase 3) | `admin_dashboard_screen.dart` |
 
 ---
 

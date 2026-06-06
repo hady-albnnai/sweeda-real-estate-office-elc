@@ -27,7 +27,32 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
           Center(child: Container(width: 50, height: 5, decoration: BoxDecoration(color: AppTheme.primaryGold, borderRadius: BorderRadius.circular(10)))),
           const SizedBox(height: 20),
           const Text('حجز موعد معاينة', style: TextStyle(color: AppTheme.textWhite, fontSize: 20, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
+          // 🏢 توضيح أن الحجز يمر عبر المكتب (LOGIC_SPEC §1)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppTheme.primaryGold.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                  color: AppTheme.primaryGold.withValues(alpha: 0.4)),
+            ),
+            child: const Row(children: [
+              Icon(Icons.business_center,
+                  color: AppTheme.primaryGold, size: 18),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'الحجز يتم عبر إدارة المكتب لضمان جدية الطرفين وحماية خصوصية المالك.',
+                  style: TextStyle(
+                      color: AppTheme.primaryGold,
+                      fontSize: 12,
+                      height: 1.4),
+                ),
+              ),
+            ]),
+          ),
+          const SizedBox(height: 12),
           const Text('اختر يوماً ووقتاً مناسباً من المواعيد المتاحة', style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
           const SizedBox(height: 20),
           widget.offer.avl.isEmpty
@@ -51,9 +76,11 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
               onPressed: () async {
                 bool s = await provider.bookAppointment(userId: auth.userModel?.uid ?? '', offerId: widget.offer.id, ownerId: widget.offer.usrId);
                 if (!mounted) return; // الحل هنا: التأكد من أن الوجت لا يزال موجوداً
-                if (s) { 
-                  Navigator.pop(context); 
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم طلب الموعد بنجاح، بانتظار موافقة المالك'))); 
+                if (s) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text(
+                          '✅ تم إرسال طلب الموعد إلى المكتب، سيتم التواصل معك للتأكيد')));
                 }
               },
               child: Text(time),

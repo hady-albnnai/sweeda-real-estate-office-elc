@@ -511,14 +511,81 @@ class AdminProvider with ChangeNotifier {
           .from(DbTables.reports)
           .select('id')
           .eq('sts', 0);
+      // 🛡️ طلبات التوثيق قيد المراجعة (vrf = 1)
+      // مرجع: docs/LOGIC_SPEC.md §2.1
+      final pendingVerifications = await SupabaseService()
+          .client
+          .from(DbTables.users)
+          .select('id')
+          .eq('vrf', 1)
+          .eq('i_del', 0);
       return {
         'pendingOffers': (pendingOffers as List).length,
         'pendingPayments': (pendingPayments as List).length,
         'openReports': (openReports as List).length,
+        'pendingVerifications': (pendingVerifications as List).length,
       };
     } catch (e) {
       debugPrint('❌ getActionCounts error: $e');
       return {};
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // 🛡️ إدارة طلبات التوثيق (Verification Management)
+  // مرجع: docs/LOGIC_SPEC.md §2.1
+  // ═══════════════════════════════════════════════════════════════
+
+  /// جلب المستخدمين الذين قدّموا طلب توثيق (vrf=1) لمراجعتهم.
+  Future<List<Map<String, dynamic>>> getPendingVerifications() async {
+    try {
+      final res = await SupabaseService()
+          .client
+          .from(DbTables.users)
+          .select()
+          .eq('vrf', 1)
+          .eq('i_del', 0)
+          .order('ts_upd', ascending: true); // الأقدم أولاً (FIFO)
+      return (res as List)
+          .map((r) => Map<String, dynamic>.from(r))
+          .toList();
+    } catch (e) {
+      debugPrint('❌ getPendingVerifications error: $e');
+      return [];
+    }
+  }
+
+  /// اعتماد توثيق مستخدم: vrf 1 → 2 (موثق رسمياً).
+  Future<bool> approveVerification(String userId) async {
+    try {
+      await SupabaseService().client
+          .from(DbTables.users)
+          .update({
+            'vrf': 2,
+            'ts_upd': DateTime.now().toIso8601String(),
+          })
+          .eq('id', userId);
+      return true;
+    } catch (e) {
+      debugPrint('❌ approveVerification error: $e');
+      return false;
+    }
+  }
+
+  /// رفض توثيق مستخدم: vrf 1 → 0 (يحتاج إعادة رفع).
+  Future<bool> rejectVerification(String userId, {String reason = ''}) async {
+    try {
+      await SupabaseService().client
+          .from(DbTables.users)
+          .update({
+            'vrf': 0,
+            'ts_upd': DateTime.now().toIso8601String(),
+          })
+          .eq('id', userId);
+      return true;
+    } catch (e) {
+      debugPrint('❌ rejectVerification error: $e');
+      return false;
     }
   }
 }
