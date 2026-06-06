@@ -63,13 +63,8 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
   }
 
   Future<void> _submit() async {
-    if (_nameController.text.trim().isEmpty ||
-        _sidController.text.trim().isEmpty) {
-      _snack('يرجى إكمال الاسم ورقم الهوية');
-      return;
-    }
-    if (_idImage == null) {
-      _snack('يرجى رفع صورة الهوية');
+    if (_nameController.text.trim().isEmpty) {
+      _snack('يرجى إكمال الاسم');
       return;
     }
     if (!_agreePledge) {
@@ -86,21 +81,24 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
       return;
     }
 
-    // 1) رفع صورة الهوية
-    final idUrl = await _uploadId(user.uid);
-    if (idUrl == null) {
-      setState(() => _loading = false);
-      _snack('فشل رفع صورة الهوية، حاول مرة أخرى');
-      return;
+    // 1) رفع صورة الهوية (إذا كانت موجودة)
+    String? idUrl;
+    if (_idImage != null) {
+      idUrl = await _uploadId(user.uid);
+      if (idUrl == null) {
+        setState(() => _loading = false);
+        _snack('فشل رفع صورة الهوية، حاول مرة أخرى');
+        return;
+      }
     }
 
-    // 2) تحديث بيانات المستخدم (مع img + ad)
+    // 2) تحديث بيانات المستخدم
     try {
       await SupabaseService().client.from(DbTables.users).update({
         'nm': _nameController.text.trim(),
         'sid': _sidController.text.trim(),
         'ad': _addressController.text.trim(),
-        'img': idUrl,
+        'img': idUrl ?? user.img,
         'ts_upd': DateTime.now().toIso8601String(),
       }).eq('id', user.uid);
 
@@ -208,19 +206,19 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
               ),
               const SizedBox(height: 14),
 
-              // رقم الهوية
-              _label('رقم الهوية الوطنية *'),
+              // رقم الهوية (اختياري حالياً)
+              _label('الرقم الوطني (اختياري)'),
               TextField(
                 controller: _sidController,
                 keyboardType: TextInputType.number,
                 style: const TextStyle(color: AppTheme.textWhite),
                 decoration: const InputDecoration(
-                  hintText: 'أدخل رقم الهوية',
+                  hintText: 'أدخل رقم الهوية إن رغبت',
                   prefixIcon: Icon(Icons.badge, color: AppTheme.primaryGold),
                 ),
               ),
               const SizedBox(height: 14),
-
+              
               // العنوان
               _label('العنوان (اختياري)'),
               TextField(
@@ -234,10 +232,10 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
               ),
               const SizedBox(height: 16),
 
-              // صورة الهوية
-              _label('صورة بطاقة الهوية *'),
+              // صورة الهوية (اختيارية للمستخدم العادي)
+              _label('صورة بطاقة الهوية (اختياري)'),
               const Text(
-                'لتوثيق حسابك (وجه البطاقة فقط، صورة واضحة)',
+                'يمكنك رفعها لزيادة موثوقية حسابك',
                 style: TextStyle(color: AppTheme.textGrey, fontSize: 11),
               ),
               const SizedBox(height: 6),
