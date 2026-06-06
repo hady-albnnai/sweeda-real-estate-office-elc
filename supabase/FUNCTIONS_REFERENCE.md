@@ -15,13 +15,13 @@
 | ✅ **مُطبّق على السيرفر** | Migration الإحصائيات والإحالة (`2026_06_05_stats_triggers_and_wkLogin.sql`) — 6 دوال + 4 triggers + عمودي `ref_by`/`ref_cnt` |
 | ✅ **مُطبّق على السيرفر** | Migration ترقيات العروض (`2026_06_05_offer_boosts.sql`) — 2 دالة + 8 أعمدة (`i_pin`, `i_bst`, `i_fms`, `pin_end`, `bst_end`, `fms_end`, `dsc_pct`, `dsc_end`) |
 | ✅ **مُطبّق على السيرفر** | Migration الجدولة التلقائية (`2026_06_05_cron_jobs.sql`) — extension `pg_cron` مفعّل + 3 cron jobs نشطة |
-| ⏳ **بحاجة تطبيق** | Migration FCM (`2026_06_05_fcm_setup.sql`) — UNIQUE على device_token + `get_user_device_tokens` + `notify_user` |
+| ✅ **مُطبّق على السيرفر** | Migration FCM (`2026_06_05_fcm_setup.sql`) — UNIQUE على device_token + `get_user_device_tokens` + `notify_user` |
 | ⚠️ **مكتوب لكن لم يُنشر بعد** | Edge Functions: `send-whatsapp-otp`, `verify-whatsapp-otp` (يحتاج `supabase functions deploy` + secrets META) |
 | ⚠️ **معلّق** | تفعيل Email SMTP (Resend) — تم في Dashboard ✅ بس Meta WhatsApp credentials لسا (يستخدم وضع التطوير) |
 
 ---
 
-## 📋 قائمة الدوال (24 دالة RPC + 2 Edge Functions)
+## 📋 قائمة الدوال (26 دالة RPC + 3 Edge Functions)
 
 ### دوال RPC (PostgreSQL):
 
@@ -49,18 +49,18 @@
 | 16 | `purchase_offer_boost` 🆕🆕🆕 | `p_uid UUID, p_offer_id UUID, p_boost_type TEXT, p_cost INT` | `JSONB` | ✅ |
 | 17 | `expire_offer_boosts` 🆕🆕🆕 | — | `INTEGER` | ✅ |
 | **— إشعارات FCM (E2) —** | | | | |
-| 17.1 | `get_user_device_tokens` 🆕🆕🆕🆕 | `p_uid UUID` | `TABLE(device_token, platform)` | ✅ |
-| 17.2 | `notify_user` 🆕🆕🆕🆕 | `p_uid, p_type, p_title, p_body, p_ref_id?, p_action?` | `UUID` | ✅ |
+| 18 | `get_user_device_tokens` 🆕🆕🆕🆕 | `p_uid UUID` | `TABLE(device_token, platform)` | ✅ |
+| 19 | `notify_user` 🆕🆕🆕🆕 | `p_uid, p_type, p_title, p_body, p_ref_id?, p_action?` | `UUID` | ✅ |
 | **— صفقات ومواعيد —** | | | | |
-| 18 | `calculate_commission` | `prc, pct` | `NUMERIC` | ❌ |
-| 19 | `send_appointment_reminders` | — | `VOID` | ❌ |
+| 20 | `calculate_commission` | `prc, pct` | `NUMERIC` | ❌ |
+| 21 | `send_appointment_reminders` | — | `VOID` | ❌ |
 | **— عام —** | | | | |
-| 20 | `soft_delete` | `p_table, p_id` | `VOID` | ✅ |
+| 22 | `soft_delete` | `p_table, p_id` | `VOID` | ✅ |
 | **— Triggers Functions (تُستدعى تلقائياً) —** | | | | |
-| 21 | `update_user_stats_on_offer` 🆕🆕 | TRIGGER | `TRIGGER` | ✅ |
-| 22 | `update_user_stats_on_request` 🆕🆕 | TRIGGER | `TRIGGER` | ✅ |
-| 23 | `update_user_stats_on_appointment` 🆕🆕 | TRIGGER | `TRIGGER` | ✅ |
-| 24 | `update_user_stats_on_deal` 🆕🆕 | TRIGGER | `TRIGGER` | ✅ |
+| 23 | `update_user_stats_on_offer` 🆕🆕 | TRIGGER | `TRIGGER` | ✅ |
+| 24 | `update_user_stats_on_request` 🆕🆕 | TRIGGER | `TRIGGER` | ✅ |
+| 25 | `update_user_stats_on_appointment` 🆕🆕 | TRIGGER | `TRIGGER` | ✅ |
+| 26 | `update_user_stats_on_deal` 🆕🆕 | TRIGGER | `TRIGGER` | ✅ |
 
 ### 🔗 Triggers Active على الجداول:
 
@@ -93,6 +93,7 @@ SELECT * FROM cron.job_run_details ORDER BY start_time DESC LIMIT 10;
 |---|---|---|---|---|---|
 | 1 | `send-whatsapp-otp` 🆕 | يولّد OTP ويرسله عبر Meta WhatsApp Cloud API | `{ phone: "+963..." }` | `{ success, messageId?, devMode?, otp? }` | ⚠️ مكتوب — لم يُنشر |
 | 2 | `verify-whatsapp-otp` 🆕 | يتحقق + ينشئ user + يصدر session | `{ phone, code }` | `{ success, userId, isNew, session: { token_hash, ... } }` | ⚠️ مكتوب — لم يُنشر |
+| 3 | `send-push-notification` 🆕🆕🆕🆕🆕 | يرسل FCM push لكل أجهزة المستخدم (HTTP v1 API) | `{ uid, title, body, data? }` | `{ success, sent, failed, total }` | ⚠️ مكتوب — لم يُنشر |
 
 > ⚠️ **`generate_otp` / `verify_otp` القديمة** ما زالت موجودة للتوافق الخلفي فقط — استخدم النسخة V2 في الكود الجديد.  
 > 📖 لخطوات تفعيل WhatsApp + Email Magic Link: راجع `docs/AUTH_SETUP.md`
@@ -222,6 +223,61 @@ SELECT expire_offer_boosts();  -- يرجع: 5 (مثلاً)
 ```dart
 final count = await client.rpc('expire_offer_boosts');
 ```
+
+---
+
+## 🆕🆕🆕🆕🆕 دوال FCM (المرحلة E2) — مفصّلة
+
+### `get_user_device_tokens(p_uid UUID)` → `TABLE(device_token TEXT, platform TEXT)`
+
+تُرجع كل الـ FCM tokens النشطة (`is_active = TRUE`) لمستخدم معيّن.
+**تُستخدم من Edge Function `send-push-notification`** لتحديد الأجهزة المرسل إليها.
+
+```sql
+SELECT * FROM get_user_device_tokens('uuid-...');
+-- النتيجة:
+--   device_token                | platform
+--   fNT8z...long-fcm-token      | android
+--   eX2P...another-token        | ios
+```
+
+**الجدول المتأثر:** `user_devices` (SELECT)
+
+---
+
+### `notify_user(p_uid, p_type, p_title, p_body, p_ref_id?, p_action?)` → `UUID`
+
+تُنشئ سجل إشعار في جدول `notifications` (يظهر داخل التطبيق + يُرسَل عبر Realtime).
+
+**الأنواع (`p_type`):**
+| القيمة | الوصف |
+|---|---|
+| 0 | عروض (offers) |
+| 1 | طلبات (requests) |
+| 2 | مواعيد (appointments) |
+| 3 | مالية (finance) |
+| 4 | حساب (account) |
+| 5 | تقييم (rating) |
+
+```dart
+// مثال: إشعار للمستخدم بقبول عرضه
+await client.rpc('notify_user', params: {
+  'p_uid': ownerUid,
+  'p_type': 0,
+  'p_title': 'تمت الموافقة على عرضك ✅',
+  'p_body': 'عرض "${offer.ttl}" متاح الآن للجمهور',
+  'p_ref_id': offer.id,
+  'p_action': 'view_offer',
+});
+```
+
+**الجدول المتأثر:** `notifications` (INSERT)
+
+**ملاحظة:** لإرسال إشعار **داخل التطبيق + Push notification** معاً، استدعِ:
+1. `notify_user(...)` لإنشاء السجل الداخلي
+2. `send-push-notification` Edge Function لإرسال الـ Push
+
+(لاحقاً نضيف trigger يستدعيها تلقائياً معاً)
 
 ---
 
@@ -638,6 +694,8 @@ await client.rpc('send_appointment_reminders');
 | `users` | `get_user_by_phone`, `get_user_by_email` 🆕 | `create_user_from_phone`, `upsert_user_after_otp` 🆕, `update_user_badge`, `add_points`, `register_weekly_login` 🆕🆕, `apply_referral` 🆕🆕, `purchase_offer_boost` 🆕🆕🆕 (يخصم pt) | — (يُحدَّث `stats` عبر triggers على جداول أخرى) |
 | `offers` | `check_offer_duplicate`, `get_pending_offers_count` | `expire_offers`, `purchase_offer_boost` 🆕🆕🆕, `expire_offer_boosts` 🆕🆕🆕 | `trg_offers_stats` 🆕🆕 → `users.stats.off` |
 | `activity_log` | — | `purchase_offer_boost` 🆕🆕🆕 (يسجّل كل عملية شراء) | — |
+| `user_devices` | `get_user_device_tokens` 🆕🆕🆕🆕 | (يُكتب من Flutter `FCMService.setup()`) | — |
+| `notifications` | — | `notify_user` 🆕🆕🆕🆕 (INSERT) | — |
 | `requests` | — | — | `trg_requests_stats` 🆕🆕 → `users.stats.req` |
 | `appointments` | — | `send_appointment_reminders` | `trg_appointments_stats` 🆕🆕 → `users.stats.app` |
 | `deals` | — | — | `trg_deals_stats` 🆕🆕 → `users.stats.dl` |
@@ -687,7 +745,7 @@ await client.rpc('send_appointment_reminders');
 | `supabase/migrations/2026_06_05_stats_triggers_and_wkLogin.sql` 🆕🆕 | Migration #2: 4 triggers + `register_weekly_login` + `apply_referral` + `ref_by`/`ref_cnt` — **مطبّق ✅** |
 | `supabase/migrations/2026_06_05_offer_boosts.sql` 🆕🆕🆕 | Migration #3: `purchase_offer_boost` + `expire_offer_boosts` + 8 أعمدة ترقيات — **مطبّق ✅** |
 | `supabase/migrations/2026_06_05_cron_jobs.sql` 🆕🆕🆕🆕 | Migration #4: جدولة 3 cron jobs (expire_offers + expire_boosts + reminders) — **مطبّق ✅** |
-| `supabase/migrations/2026_06_05_fcm_setup.sql` 🆕🆕🆕🆕🆕 | Migration #5: UNIQUE token + `get_user_device_tokens` + `notify_user` — **بحاجة تطبيق ⏳** |
+| `supabase/migrations/2026_06_05_fcm_setup.sql` 🆕🆕🆕🆕🆕 | Migration #5: UNIQUE token + `get_user_device_tokens` + `notify_user` — **مطبّق ✅** |
 | `supabase/functions/send-push-notification/index.ts` 🆕🆕🆕🆕🆕 | Edge Function لإرسال FCM Push عبر Service Account |
 | `lib/services/fcm_service.dart` 🆕🆕🆕🆕🆕 | خدمة FCM Flutter (تهيئة + token + معالجات الإشعارات) |
 | `lib/screens/user/boost_offer_screen.dart` 🆕🆕🆕 | شاشة شراء ترقيات العروض (5 خيارات: ren/pin/bst/dsc5/fms) |
