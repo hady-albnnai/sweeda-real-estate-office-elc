@@ -3,6 +3,7 @@ import '../network/supabase_service.dart';
 import '../constants/db_constants.dart';
 import '../../models/config_model.dart';
 import '../../models/offer_model.dart';
+import '../../models/user_model.dart';
 
 /// خدمة المنطق الخلفي المركزية (Business Logic)
 ///
@@ -449,5 +450,43 @@ class BusinessService {
     } catch (e) {
       debugPrint('❌ updateUserStat error: $e');
     }
+  }
+
+  // ═══════════════════════════════════════
+  // 4.8 هوية المكتب (Office Identity)
+  // مرجع: docs/LOGIC_SPEC.md — القسم الأول
+  // ═══════════════════════════════════════
+
+  /// تحويل بيانات المستخدم إلى تسمية مهنية تُعرض للعامة.
+  /// تُخفي اسم المالك الحقيقي لحماية الخصوصية وتعزيز هوية "المكتب".
+  ///
+  /// قواعد التسمية:
+  /// - وسيط + بدأ التوثيق → "وسيط معتمد ✓"
+  /// - وسيط + لم يبدأ      → "وسيط شريك"
+  /// - مستخدم + بدأ التوثيق → "عميل موثق ✓"
+  /// - مستخدم + رتبة ≥ خبير → "عميل مميز ⭐"
+  /// - مستخدم + رتبة ≥ نشط → "عميل نشط"
+  /// - مستخدم عادي         → "عميل"
+  String getUserPublicLabel(UserModel user) {
+    final isBroker = user.isBroker; // يعتمد على حقل brk == 1
+    final hasVerification = user.hasStartedVerification;
+    final badge = user.bg;
+
+    String label;
+    if (isBroker) {
+      label = hasVerification ? 'وسيط معتمد ✓' : 'وسيط شريك';
+    } else {
+      if (hasVerification) {
+        label = 'عميل موثق ✓';
+      } else if (badge >= 3) {
+        label = 'عميل مميز ⭐';
+      } else if (badge >= 1) {
+        label = 'عميل نشط';
+      } else {
+        label = 'عميل';
+      }
+    }
+
+    return 'منشور بواسطة المكتب • $label';
   }
 }

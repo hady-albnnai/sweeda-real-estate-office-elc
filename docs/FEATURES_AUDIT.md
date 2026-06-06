@@ -326,6 +326,19 @@
 
 ---
 
+## 🆕 تحديثات منطقية (Logic Spec)
+
+| الميزة | الحالة | الموقع |
+|---|---|---|
+| ✅ ميثاق المنطق `LOGIC_SPEC.md` | كامل | `docs/LOGIC_SPEC.md` |
+| ✅ تسمية مهنية بدل اسم المالك (هوية المكتب) | كامل | `business_service.dart#getUserPublicLabel` |
+| ✅ عرض التسمية في تفاصيل العرض | كامل | `visitor/offer_detail_screen.dart` |
+| ✅ تحديث أسماء الرتب (جديد/نشط/موثوق/خبير/نخبة) | كامل | `user_model.dart#badgeName` |
+| ⚠️ عرض التسمية في `OfferCard` (القوائم) | مؤجل للمرحلة 2 | يتطلب join في `OfferProvider` |
+| ⚠️ حقل `isVerified` صريح بعد مراجعة الإدارة | مؤجل | حالياً يُستخدم `img.isNotEmpty` كمؤشر |
+
+---
+
 ## 📌 خلاصة
 
 التطبيق فيه **بنية صلبة جداً 95%** (Backend + Models + Auth + Routing + UI الأساسي) — كل شي شغّال صح.

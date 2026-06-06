@@ -128,14 +128,20 @@ class UserModel {
     }
   }
 
+  /// الرتبة السلوكية (Trust) — مكتسبة بالنشاط والنقاط.
+  /// ملاحظة: المعادن (برونزي/فضي/ذهبي) محجوزة للباقات المدفوعة فقط.
+  /// مرجع: docs/LOGIC_SPEC.md — القسم الثاني.
   String get badgeName {
     switch (bg) {
-      case 0: return '🔰 جديد';
-      case 1: return '🥉 برونزي';
-      case 2: return '🥈 فضي';
-      case 3: return '🥇 ذهبي';
-      case 4: return '💎 ماسي';
+      case 1: return '📈 نشط';
+      case 2: return '🤝 موثوق';
+      case 3: return '🎓 خبير';
+      case 4: return '⭐ نخبة';
       default: return '🔰 جديد';
     }
   }
+
+  /// هل بدأ المستخدم مسار التوثيق (رفع صورة هوية)؟
+  /// مؤقتاً نعتمد على وجود img؛ لاحقاً سيُضاف حقل isVerified بعد مراجعة الإدارة.
+  bool get hasStartedVerification => img.isNotEmpty;
 }
