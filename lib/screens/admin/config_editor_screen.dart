@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/config_provider.dart';
 import '../../core/theme/app_theme.dart';
+import 'payment_channels_editor_screen.dart';
 
 /// ⚙️ محرّر إعدادات التطبيق الديناميكية (app_config / key=main)
 /// يعرض القيم الحالية ويسمح بتعديل النقاط/العمولة/الحصص بسرعة.
@@ -104,6 +105,20 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
                       _section('📊 الحصص (عدد العروض)'),
                       _numField('حصة المستخدم', _userOffersQuota),
                       _numField('حصة الوسيط', _brokerOffersQuota),
+                      const SizedBox(height: 20),
+                      _section('💳 قنوات الدفع'),
+                      _navTile(
+                        icon: Icons.payments,
+                        title: 'إدارة قنوات الدفع',
+                        subtitle: 'الهرم • شام كاش • تحويل رصيد • بنكي',
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                const PaymentChannelsEditorScreen(),
+                          ),
+                        ),
+                      ),
                       const SizedBox(height: 28),
                       SizedBox(
                         width: double.infinity,
@@ -174,6 +189,33 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
                 fontSize: 16,
                 fontWeight: FontWeight.bold)),
       );
+
+  Widget _navTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceBlack,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3)),
+      ),
+      child: ListTile(
+        leading: Icon(icon, color: AppTheme.primaryGold),
+        title: Text(title,
+            style: const TextStyle(
+                color: AppTheme.textWhite, fontWeight: FontWeight.bold)),
+        subtitle: Text(subtitle,
+            style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+        trailing: const Icon(Icons.arrow_forward_ios,
+            color: AppTheme.primaryGold, size: 16),
+        onTap: onTap,
+      ),
+    );
+  }
 
   Widget _numField(String label, TextEditingController ctrl) {
     return Padding(

@@ -28,6 +28,23 @@ class ConfigModel {
   Map<String, dynamic> get packages => _getNestedMap('pkg', {});
   Map<String, dynamic> get texts => _getNestedMap('txts', {});
 
+  /// قنوات الدفع اليدوية (المرحلة 11)
+  /// المفاتيح: haram | sham_cash | balance | bank
+  /// كل قناة تحوي: enabled, name, icon, instructions + حقول خاصة بها
+  Map<String, dynamic> get payChannels => _getNestedMap('payChannels', {});
+
+  /// قائمة القنوات المفعّلة فقط (للعرض في شاشة الدفع)
+  List<MapEntry<String, Map<String, dynamic>>> get enabledPayChannels {
+    final all = payChannels;
+    final result = <MapEntry<String, Map<String, dynamic>>>[];
+    all.forEach((key, value) {
+      if (value is Map && value['enabled'] == true) {
+        result.add(MapEntry(key, Map<String, dynamic>.from(value)));
+      }
+    });
+    return result;
+  }
+
   int _getNested(String path, int defaultValue) {
     dynamic value = data;
     for (final key in path.split('.')) {

@@ -157,7 +157,7 @@ firebase.json ❌ | functions/ ❌ | firebase_options.dart ❌ | firestore_servi
 | # | الشاشة | الوصف | الحالة |
 |---|---|---|---|
 | 8.1 | `packages_screen.dart` (327س) | عرض 3 باقات (مجاني/فضي/ذهبي) + مقارنة مزايا + بطاقة الباقة الحالية | ✅ |
-| 8.2 | `payment_screen.dart` (506س) | دفع اشتراك: 3 طرق + إثبات صورة + معلومات بنكية + تأكيد للإدارة | ✅ |
+| 8.2 | `payment_screen.dart` (~530س) | دفع اشتراك — **معاد بناؤها في المرحلة 11** Config-Driven (4 قنوات ديناميكية) | ✅ |
 | 8.3 | `edit_offer_screen.dart` (588س) | تعديل/تجديد/حذف العرض + إدارة الصور (موجودة+جديدة) + شريط حالة | ✅ |
 | 8.4 | `become_broker_screen.dart` (413س) | نموذج تقديم لوساطة + 3 حالات (مفعّل/قيد المراجعة/تقديم) | ✅ |
 | 8.5 | `request_detail_screen.dart` (452س) | تفاصيل الطلب + عروض مطابقة تلقائياً (`matchOffersForRequest`) + حذف | ✅ |
@@ -167,6 +167,22 @@ firebase.json ❌ | functions/ ❌ | firebase_options.dart ❌ | firestore_servi
 | 8.9 | إصلاح TODOs و الأزرار المعطلة | settings (حفظ في Supabase) · home (snackbar) · my_requests (route) · add_offer (dialog ترقية) · profile (زر become_broker + ترقية) | ✅ |
 
 > **التفاصيل الكاملة:** `docs/SCREENS_AUDIT.md`
+
+---
+
+### ✅ المرحلة 11: نظام قنوات الدفع اليدوي (مكتملة — 2026-06-06)
+| # | البند | الوصف | الحالة |
+|---|---|---|---|
+| 11.1 | Migration #7 (`payment_channels.sql`) | إضافة `payChannels` (4 قنوات) لـ `app_config.main` | ✅ مطبّق |
+| 11.2 | Migration #8 (`payment_channel_and_storage.sql`) | `payments.channel` TEXT + bucket `config_assets` (عام) + bucket `payment_proofs` (خاص + RLS) | 📄 جاهز |
+| 11.3 | `ConfigModel.payChannels` + `enabledPayChannels` | getters لقراءة + فلترة القنوات المفعّلة | ✅ |
+| 11.4 | `PaymentModel.channel` + `channelDisplayName()` | حقل جديد + اسم عربي + توافق خلفي | ✅ |
+| 11.5 | `payment_screen.dart` Config-Driven | بطاقة لكل قناة + تفاصيل ديناميكية + QR + رفع لـ `payment_proofs/{uid}/` | ✅ |
+| 11.6 | `payment_channels_editor_screen.dart` (جديدة) | شاشة admin لتفعيل/تعطيل + تعديل + رفع QR | ✅ |
+| 11.7 | زر فتح المحرّر من `config_editor_screen` | navTile مخصص | ✅ |
+| 11.8 | `admin/payments_screen.dart` — channel + signed URL | عرض اسم القناة + signed URL للإيصال + InteractiveViewer | ✅ |
+
+> **التفاصيل:** `docs/PAYMENT_CHANNELS_PLAN.md`
 
 ---
 

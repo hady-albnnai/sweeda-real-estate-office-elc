@@ -46,7 +46,7 @@
 | `settings_screen.dart` | 226 | ✅ TODO حُل: حفظ الإشعارات فعلاً في Supabase + ربط الباقة |
 | `notifications_screen.dart` | 154 | ✅ |
 | **`packages_screen.dart`** | **327** 🆕 | ✅ **جديدة** — عرض 3 باقات (مجاني/فضي/ذهبي) |
-| **`payment_screen.dart`** | **506** 🆕 | ✅ **جديدة** — اشتراك + رفع إثبات دفع |
+| **`payment_screen.dart`** | **~530** 🔁 | ✅ **معاد بناؤها (المرحلة 11)** — Config-Driven: 4 قنوات ديناميكية + QR + تعليمات + رفع لـ payment_proofs bucket |
 | **`edit_offer_screen.dart`** | **588** 🆕 | ✅ **جديدة** — تعديل/تجديد/حذف + إدارة الصور |
 | **`become_broker_screen.dart`** | **413** 🆕 | ✅ **جديدة** — نموذج تقديم لوساطة |
 | **`request_detail_screen.dart`** | **452** 🆕 | ✅ **جديدة** — تفاصيل + عروض مطابقة + حذف |
@@ -70,7 +70,8 @@
 | `deals_management_screen.dart` | 283 | ✅ |
 | `payments_screen.dart` | 272 | ✅ |
 | `reports_screen.dart` | 272 | ✅ |
-| `config_editor_screen.dart` | 235 | ✅ |
+| `config_editor_screen.dart` | ~260 | ✅ (+زر فتح محرر قنوات الدفع) |
+| `payment_channels_editor_screen.dart` 🆕 | ~330 | ✅ **جديدة (المرحلة 11)** — تفعيل/تعطيل + تعديل بيانات 4 قنوات + رفع QR شام كاش |
 | `analytics_screen.dart` | 193 | ✅ |
 
 ---

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../core/network/supabase_service.dart';
 import '../../providers/admin_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/payment_model.dart';
 import '../../core/theme/app_theme.dart';
+import '../../services/storage_service.dart';
 
 /// 💰 إدارة المدفوعات — موافقة/رفض + تفعيل الباقات
 class PaymentsScreen extends StatefulWidget {
@@ -159,6 +161,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
           const SizedBox(height: 8),
           _row('المستخدم', _short(p.uid)),
           _row('الباقة', _pkgNames[p.pkg] ?? '—'),
+          _row('قناة الدفع', p.channelDisplayName()),
           if (p.ref.isNotEmpty) _row('المرجع', p.ref),
           _row('التاريخ', p.tsCrt.toString().split(' ').first),
           if (p.proof.isNotEmpty)
@@ -204,22 +207,64 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     );
   }
 
-  void _showProof(String url) {
+  /// عرض إثبات الدفع — يدعم الحالتين:
+  ///   1. URL كامل (سجلات قديمة من offer_images bucket عام)
+  ///   2. path داخل bucket payment_proofs (خاص) → نولّد signed URL
+  Future<void> _showProof(String proof) async {
+    String? finalUrl;
+    if (proof.startsWith('http')) {
+      finalUrl = proof;
+    } else {
+      // path داخل payment_proofs → نولّد signed URL (صالح لساعة)
+      try {
+        finalUrl = await SupabaseService()
+            .storage
+            .from(StorageService.paymentProofsBucket)
+            .createSignedUrl(proof, 3600);
+      } catch (e) {
+        debugPrint('❌ signed URL error: $e');
+        _snack('فشل تحميل الإيصال');
+        return;
+      }
+    }
+
+    if (!mounted) return;
     showDialog(
       context: context,
       builder: (_) => Dialog(
         backgroundColor: AppTheme.surfaceBlack,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        insetPadding: const EdgeInsets.all(16),
+        child: Stack(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(8),
-              child: Image.network(url,
+            InteractiveViewer(
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Image.network(
+                  finalUrl!,
                   errorBuilder: (_, __, ___) => const Padding(
-                        padding: EdgeInsets.all(24),
-                        child: Text('تعذّر تحميل الصورة',
-                            style: TextStyle(color: AppTheme.textGrey)),
-                      )),
+                    padding: EdgeInsets.all(24),
+                    child: Text('تعذّر تحميل الصورة',
+                        style: TextStyle(color: AppTheme.textGrey)),
+                  ),
+                  loadingBuilder: (_, child, p) => p == null
+                      ? child
+                      : const Padding(
+                          padding: EdgeInsets.all(40),
+                          child: CircularProgressIndicator(
+                              color: AppTheme.primaryGold),
+                        ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 4,
+              right: 4,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white),
+                onPressed: () => Navigator.pop(context),
+                style: IconButton.styleFrom(
+                    backgroundColor: Colors.black54),
+              ),
             ),
           ],
         ),

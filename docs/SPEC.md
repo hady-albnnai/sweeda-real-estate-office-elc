@@ -125,6 +125,10 @@ supabase/
 ├── 📅 appointments/{appId}
 ├── 🔔 notifications/{ntfId}
 ├── 💰 payments/{payId}
+│   ├── tp ← نوع الدفع (0=باقة, 1=ترقية...)
+│   ├── pkg, amt, cur, ref, proof, sts, appr_by
+│   ├── mtd ← legacy (للتوافق فقط)
+│   └── channel ← المرحلة 11: 'haram'|'sham_cash'|'balance'|'bank'
 ├── 📢 reports/{rptId}
 ├── 📊 deals/{dlId}
 ├── 📊 activity_log/{logId}
@@ -174,6 +178,13 @@ supabase/
   "ads": {"mx":5,"dd":7,"pr":null},
   // —— أسباب التبليغ ——
   "rptRsn": ["إعلان وهمي","احتيال","معلومات مضللة","مضايقة","عرض مكرر","آخر"],
+  // —— 💳 قنوات الدفع اليدوية (المرحلة 11) ——
+  "payChannels": {
+    "haram":     {"enabled":true,"name":"الهرم للحوالات","icon":"🏛️","recipient_name":"","recipient_phone":"","instructions":"…"},
+    "sham_cash": {"enabled":true,"name":"شام كاش","icon":"💚","qr_image_url":"","account_number":"","instructions":"…"},
+    "balance":   {"enabled":true,"name":"تحويل رصيد","icon":"📱","syriatel_number":"","mtn_number":"","instructions":"…"},
+    "bank":      {"enabled":true,"name":"تحويل بنكي","icon":"🏦","bank_name":"","account_holder":"","account_number":"","iban":"","branch":"","instructions":"…"}
+  },
   // —— نصوص التطبيق ——
   "txts": {
     "plg": "إقرار وتعهد إلكتروني...",
@@ -279,4 +290,12 @@ supabase/
 `offers` · `notifications` · `appointments` · `deals` · `requests`
 
 ### Storage
-`offer_images` (Public bucket) — يُستخدم أيضاً لإثباتات الدفع تحت مسار `payments/{userId}/` (راجع `payment_screen.dart`). يمكن إنشاء bucket `payment_proofs` منفصل لاحقاً للأمان.
+**Storage Buckets الفعلية (بعد Migration #8):**
+- `offer_images` (Public) — صور العروض
+- `config_assets` (Public, 5MB) — صور أصول الإعدادات (مثل QR شام كاش)
+- `payment_proofs` (Private, 10MB, +RLS) — إيصالات دفع المستخدمين (المسار: `{uid}/{filename}`)
+  - INSERT: المستخدم لمجلده فقط
+  - SELECT: صاحب الإيصال + admin/owner (rl ∈ {4,5})
+  - DELETE: admin/owner فقط
+
+**ملاحظة legacy:** قد توجد إيصالات قديمة في `offer_images` تحت `payments/{uid}/` — يدعمها `admin/payments_screen` تلقائياً (إذا `proof.startsWith('http')` يعرضها مباشرة).
