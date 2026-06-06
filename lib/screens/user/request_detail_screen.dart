@@ -62,6 +62,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
       final matches = await _biz.matchOffersForRequest(
         type: req.typ,
         targetPrice: req.prc,
+        currency: req.cur,
       );
 
       if (!mounted) return;

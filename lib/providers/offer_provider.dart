@@ -20,11 +20,6 @@ class OfferProvider with ChangeNotifier {
   String? get error => _error;
   bool get fromCache => _fromCache;
 
-  List<OfferModel> get offers => _offers;
-  bool get isLoading => _isLoading;
-  String? get error => _error;
-  bool get fromCache => _fromCache;
-
   Future<void> fetchOffers() async {
     _isLoading = true;
     _error = null;
