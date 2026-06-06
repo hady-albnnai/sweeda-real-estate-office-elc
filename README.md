@@ -15,7 +15,7 @@
 | **الأدوار** | زائر · مستخدم · سمسار · إدارة |
 | **الـ Backend** | Supabase (PostgreSQL + Auth + Realtime + Storage + RPC Functions) |
 | **التحقق** | طريقتان: **WhatsApp OTP** (Meta Cloud API عبر Edge Function) + **Email Magic Link** (Supabase Auth) — مع dev fallback |
-| **الإشعارات** | Realtime listener + Push Notifications |
+| **الإشعارات** | داخلية (Realtime) + خارجية (Firebase FCM — للتطبيق المغلق) |
 | **التقنية** | Flutter + Supabase + Provider + GoRouter |
 | **الإصدار المستهدف** | Android (API 24+) · iOS (15+) |
 
