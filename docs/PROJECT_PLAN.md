@@ -23,6 +23,9 @@
 | ✅ **المرحلة 10 (A+B): المزايا الناقصة Critical** | **مكتملة** | إقرار + صورة هوية + صورة سند + تبليغ + ربط pen + stats triggers + wk_lgn + referral | — |
 | ✅ **المرحلة 10 (C): ترقيات العروض spd** | **مكتملة** | shaشة boost + 5 ترقيات (ren/pin/bst/dsc5/fms) + شارات + ترتيب تلقائي | — |
 | ✅ **المرحلة 10 (D): فيديو + خريطة + admin user details** | **مكتملة** | video_player+chewie + flutter_map+geolocator + شاشة UserDetails بـ 4 tabs | — |
+| ✅ **المرحلة 10 (E1): Cron Jobs (pg_cron)** | **مكتملة** | 3 jobs نشطة: expire_offers + expire_boosts (يومياً) + reminders (كل ساعة) | — |
+| ⏳ **المرحلة 10 (E2): Firebase FCM** | **التالية** | Push Notifications للتطبيق المغلق | يحتاج إعداد Firebase Project |
+| ⏳ **المرحلة 10 (E3): نشر سوشيال تلقائي** | **مؤجّلة** | Edge Function لنشر العروض المعتمدة على Facebook | يحتاج صفحة FB خارج سوريا |
 | ⏳ **المرحلة 10 (E): Cron + FCM + Auto Social** | **لاحقة** | pg_cron jobs + FCM Push + نشر سوشيال تلقائي | — |
 | ⏸️ **WhatsApp Production (Meta 555)** | **مؤجّلة** | الكود جاهز 100% — مؤجّلة لحين إنشاء صفحة FB خارج سوريا للاستفادة من ميزات الإعلان والربح | راجع `docs/WHATSAPP_ACTIVATION_PLAN.md` |
 
