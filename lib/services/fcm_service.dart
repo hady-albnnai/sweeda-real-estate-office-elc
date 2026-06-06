@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../core/network/supabase_service.dart';
 import '../core/constants/db_constants.dart';
 
@@ -143,10 +144,11 @@ class FCMService {
   /// تسجيل التوكن في جدول user_devices (مرتبط بالمستخدم الحالي)
   Future<void> _registerDeviceToken(String token) async {
     try {
-      final user = SupabaseService().currentUser;
-      // ملاحظة: لو المستخدم ليس مسجّل دخول (جلسة Supabase Auth حقيقية)،
-      // نتخطّى التسجيل — سيُسجَّل بعد تسجيل الدخول.
-      if (user == null) {
+      // نستخدم uid من SharedPreferences (لأن WhatsApp/Email OTP لا تنشئ Supabase Auth session)
+      final prefs = await SharedPreferences.getInstance();
+      final uid = prefs.getString('user_id');
+
+      if (uid == null) {
         debugPrint('⏸️ FCM token will register after login');
         return;
       }
@@ -159,7 +161,7 @@ class FCMService {
 
       await SupabaseService().client.from(DbTables.userDevices).upsert(
         {
-          'uid': user.id,
+          'uid': uid,
           'device_token': token,
           'platform': platform,
           'is_active': true,
@@ -167,7 +169,7 @@ class FCMService {
         },
         onConflict: 'device_token',
       );
-      debugPrint('✅ FCM token registered for ${user.id}');
+      debugPrint('✅ FCM token registered for $uid');
     } catch (e) {
       debugPrint('❌ register FCM token: $e');
     }
