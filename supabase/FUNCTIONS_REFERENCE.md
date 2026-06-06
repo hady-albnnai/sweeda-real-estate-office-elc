@@ -15,6 +15,7 @@
 | ✅ **مُطبّق على السيرفر** | Migration الإحصائيات والإحالة (`2026_06_05_stats_triggers_and_wkLogin.sql`) — 6 دوال + 4 triggers + عمودي `ref_by`/`ref_cnt` |
 | ✅ **مُطبّق على السيرفر** | Migration ترقيات العروض (`2026_06_05_offer_boosts.sql`) — 2 دالة + 8 أعمدة (`i_pin`, `i_bst`, `i_fms`, `pin_end`, `bst_end`, `fms_end`, `dsc_pct`, `dsc_end`) |
 | ✅ **مُطبّق على السيرفر** | Migration الجدولة التلقائية (`2026_06_05_cron_jobs.sql`) — extension `pg_cron` مفعّل + 3 cron jobs نشطة |
+| ⏳ **بحاجة تطبيق** | Migration FCM (`2026_06_05_fcm_setup.sql`) — UNIQUE على device_token + `get_user_device_tokens` + `notify_user` |
 | ⚠️ **مكتوب لكن لم يُنشر بعد** | Edge Functions: `send-whatsapp-otp`, `verify-whatsapp-otp` (يحتاج `supabase functions deploy` + secrets META) |
 | ⚠️ **معلّق** | تفعيل Email SMTP (Resend) — تم في Dashboard ✅ بس Meta WhatsApp credentials لسا (يستخدم وضع التطوير) |
 
@@ -47,6 +48,9 @@
 | **— ترقيات العروض (spd) —** | | | | |
 | 16 | `purchase_offer_boost` 🆕🆕🆕 | `p_uid UUID, p_offer_id UUID, p_boost_type TEXT, p_cost INT` | `JSONB` | ✅ |
 | 17 | `expire_offer_boosts` 🆕🆕🆕 | — | `INTEGER` | ✅ |
+| **— إشعارات FCM (E2) —** | | | | |
+| 17.1 | `get_user_device_tokens` 🆕🆕🆕🆕 | `p_uid UUID` | `TABLE(device_token, platform)` | ✅ |
+| 17.2 | `notify_user` 🆕🆕🆕🆕 | `p_uid, p_type, p_title, p_body, p_ref_id?, p_action?` | `UUID` | ✅ |
 | **— صفقات ومواعيد —** | | | | |
 | 18 | `calculate_commission` | `prc, pct` | `NUMERIC` | ❌ |
 | 19 | `send_appointment_reminders` | — | `VOID` | ❌ |
@@ -659,6 +663,8 @@ await client.rpc('send_appointment_reminders');
 | `apply_referral` 🆕🆕 | ✅ | ✅ |
 | `purchase_offer_boost` 🆕🆕🆕 | ✅ | ✅ |
 | `expire_offer_boosts` 🆕🆕🆕 | ✅ | ✅ |
+| `get_user_device_tokens` 🆕🆕🆕🆕 | ✅ | ✅ |
+| `notify_user` 🆕🆕🆕🆕 | ✅ | ✅ |
 | `update_user_stats_on_offer` 🆕🆕 | ✅ | ✅ |
 | `update_user_stats_on_request` 🆕🆕 | ✅ | ✅ |
 | `update_user_stats_on_appointment` 🆕🆕 | ✅ | ✅ |
@@ -681,6 +687,9 @@ await client.rpc('send_appointment_reminders');
 | `supabase/migrations/2026_06_05_stats_triggers_and_wkLogin.sql` 🆕🆕 | Migration #2: 4 triggers + `register_weekly_login` + `apply_referral` + `ref_by`/`ref_cnt` — **مطبّق ✅** |
 | `supabase/migrations/2026_06_05_offer_boosts.sql` 🆕🆕🆕 | Migration #3: `purchase_offer_boost` + `expire_offer_boosts` + 8 أعمدة ترقيات — **مطبّق ✅** |
 | `supabase/migrations/2026_06_05_cron_jobs.sql` 🆕🆕🆕🆕 | Migration #4: جدولة 3 cron jobs (expire_offers + expire_boosts + reminders) — **مطبّق ✅** |
+| `supabase/migrations/2026_06_05_fcm_setup.sql` 🆕🆕🆕🆕🆕 | Migration #5: UNIQUE token + `get_user_device_tokens` + `notify_user` — **بحاجة تطبيق ⏳** |
+| `supabase/functions/send-push-notification/index.ts` 🆕🆕🆕🆕🆕 | Edge Function لإرسال FCM Push عبر Service Account |
+| `lib/services/fcm_service.dart` 🆕🆕🆕🆕🆕 | خدمة FCM Flutter (تهيئة + token + معالجات الإشعارات) |
 | `lib/screens/user/boost_offer_screen.dart` 🆕🆕🆕 | شاشة شراء ترقيات العروض (5 خيارات: ren/pin/bst/dsc5/fms) |
 | `supabase/functions/send-whatsapp-otp/index.ts` 🆕 | Edge Function لإرسال OTP عبر Meta WhatsApp — **لم يُنشر ⚠️** |
 | `supabase/functions/verify-whatsapp-otp/index.ts` 🆕 | Edge Function للتحقق وإصدار session — **لم يُنشر ⚠️** |

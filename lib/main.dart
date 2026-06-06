@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'app.dart';
 import 'core/services/local_cache_service.dart';
+import 'services/fcm_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,6 +14,15 @@ void main() async {
 
   // تهيئة التخزين المحلي (Hive) — للكاش ودعم العمل دون اتصال
   await LocalCacheService.initialize();
+
+  // تهيئة Firebase (للـ FCM Push Notifications)
+  try {
+    await FCMService.initializeFirebase();
+    // تسجيل معالج الإشعارات بالخلفية
+    FirebaseMessaging.onBackgroundMessage(firebaseBackgroundHandler);
+  } catch (e) {
+    debugPrint('⚠️ Firebase init skipped: $e');
+  }
 
   try {
     await Supabase.initialize(
@@ -25,4 +36,3 @@ void main() async {
 
   runApp(const MyApp());
 }
-

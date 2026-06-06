@@ -5,6 +5,8 @@ plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android Gradle plugin.
     id("dev.flutter.flutter-gradle-plugin")
+    // Firebase (FCM)
+    id("com.google.gms.google-services")
 }
 
 // ── تحميل إعدادات التوقيع من key.properties (إن وُجد) ──
