@@ -311,6 +311,15 @@ class AdminProvider with ChangeNotifier {
   Future<bool> completeDeal(String dealId, String adminId,
       {double? commission, String? note}) async {
     try {
+      final deal = await SupabaseService().client
+          .from(DbTables.deals)
+          .select()
+          .eq('id', dealId)
+          .single();
+      
+      final sellUid = deal['sell_uid'] as String;
+      final buyUid = deal['buy_uid'] as String;
+
       final data = <String, dynamic>{
         'sts': 1,
         'cmpl_by': adminId,
@@ -323,6 +332,11 @@ class AdminProvider with ChangeNotifier {
           .from(DbTables.deals)
           .update(data)
           .eq('id', dealId);
+      
+      // تحديث إحصائيات الطرفين (عدد الصفقات)
+      await BusinessService().updateUserStat(sellUid, 'dl');
+      await BusinessService().updateUserStat(buyUid, 'dl');
+      
       notifyListeners();
       return true;
     } catch (e) {

@@ -11,6 +11,14 @@ class OfferProvider with ChangeNotifier {
   String? _error;
   bool _fromCache = false;
   StreamSubscription? _realtimeSub;
+  
+  // تتبع ما إذا كانت القائمة الحالية ناتجة عن بحث
+  bool _isSearching = false;
+
+  List<OfferModel> get offers => _offers;
+  bool get isLoading => _isLoading;
+  String? get error => _error;
+  bool get fromCache => _fromCache;
 
   List<OfferModel> get offers => _offers;
   bool get isLoading => _isLoading;
@@ -83,12 +91,18 @@ class OfferProvider with ChangeNotifier {
             .map((row) =>
                 OfferModel.fromSupabase(Map<String, dynamic>.from(row), row['id'] as String))
             .toList();
+        
         if (published.isNotEmpty) {
-          _offers = published;
-          _fromCache = false;
-          LocalCacheService()
-              .saveOffers(_offers.map((o) => {'id': o.id, ...o.toMap()}).toList());
-          notifyListeners();
+          // تحديث القائمة فقط إذا لم يكن المستخدم في وضع البحث
+          if (!_isSearching) {
+            _offers = published;
+            _fromCache = false;
+            LocalCacheService()
+                .saveOffers(_offers.map((o) => {'id': o.id, ...o.toMap()}).toList());
+            notifyListeners();
+          } else {
+            debugPrint('ℹ️ Realtime update ignored: Search is active');
+          }
         }
       });
       debugPrint('✅ OfferProvider: Realtime active');
@@ -137,6 +151,10 @@ class OfferProvider with ChangeNotifier {
           Map<String, dynamic>.from(response), response['id'] as String);
       _offers.insert(0, created);
       notifyListeners();
+      
+      // تحديث إحصائيات المستخدم (عدد العروض)
+      await BusinessService().updateUserStat(offer.usrId, 'off');
+      
       return created;
     } catch (e) {
       debugPrint('❌ addOffer error: $e');
@@ -148,6 +166,17 @@ class OfferProvider with ChangeNotifier {
     try {
       await SupabaseService().client.from(DbTables.offers)
           .update({...data, 'ts_upd': DateTime.now().toIso8601String()}).eq('id', offerId);
+      
+      // منع تجديد العروض المرفوضة (sts == 3) إلا إذا تغيرت الحالة
+      // يتم التحقق في السيرفر عادة، ولكن هنا نمنع التحديث إذا كان الغرض التجديد فقط والعرض مرفوض
+      if (data.containsKey('ts_ren') && data['sts'] == null) {
+         final offer = await fetchOfferById(offerId);
+         if (offer != null && offer.sts == 3) {
+            debugPrint('⚠️ Cannot renew a rejected offer');
+            return false;
+         }
+      }
+
       final index = _offers.indexWhere((o) => o.id == offerId);
       if (index != -1) {
         final updated = await fetchOfferById(offerId);
@@ -172,6 +201,7 @@ class OfferProvider with ChangeNotifier {
   Future<List<OfferModel>> searchOffers({
     String? query, int? type, int? transaction, int? category,
   }) async {
+    _isSearching = true; // تفعيل حالة البحث
     try {
       var q = SupabaseService().client.from(DbTables.offers)
           .select().eq('i_del', 0).eq('i_pub', 1);
@@ -180,8 +210,12 @@ class OfferProvider with ChangeNotifier {
       if (transaction != null) q = q.eq('trx', transaction);
       if (category != null) q = q.eq('cat', category);
       final response = await q.order('ts_crt', ascending: false);
-      return (response as List).map((d) =>
+      final results = (response as List).map((d) =>
           OfferModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String)).toList();
+      
+      _offers = results;
+      notifyListeners();
+      return results;
     } catch (e) { debugPrint('❌ searchOffers error: $e'); return []; }
   }
 

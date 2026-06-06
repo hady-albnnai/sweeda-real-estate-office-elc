@@ -14,7 +14,12 @@ class RequestProvider with ChangeNotifier {
     try {
       await SupabaseService().client.from(DbTables.requests).insert(request.toMap());
       await fetchMyRequests(request.usrId);
-      notifyListeners(); return true;
+      notifyListeners(); 
+      
+      // تحديث إحصائيات المستخدم (عدد الطلبات)
+      await BusinessService().updateUserStat(request.usrId, 'req');
+      
+      return true;
     } catch (e) { debugPrint('❌ addRequest error: $e'); return false; }
   }
 
