@@ -206,10 +206,11 @@ class BusinessService {
   // 4.2 المطابقة التلقائية (Requests ↔ Offers)
   // ═══════════════════════════════════════
 
-  /// إيجاد العروض المنشورة المطابقة لطلب (حسب النوع + نطاق السعر ±20%).
+  /// إيجاد العروض المنشورة المطابقة لطلب (حسب النوع + العملة + نطاق السعر ±20%).
   Future<List<OfferModel>> matchOffersForRequest({
     required int type,
     required double targetPrice,
+    required int currency,
     double tolerance = 0.20,
   }) async {
     try {
@@ -218,7 +219,8 @@ class BusinessService {
           .select()
           .eq('i_del', 0)
           .eq('i_pub', 1)
-          .eq('typ', type);
+          .eq('typ', type)
+          .eq('cur', currency); // شرط تطابق العملة
 
       if (targetPrice > 0) {
         final min = targetPrice * (1 - tolerance);
@@ -241,6 +243,7 @@ class BusinessService {
   Future<List<Map<String, dynamic>>> matchRequestsForOffer({
     required int type,
     required double price,
+    required int currency,
     double tolerance = 0.20,
   }) async {
     try {
@@ -248,7 +251,8 @@ class BusinessService {
           .from(DbTables.requests)
           .select()
           .eq('i_del', 0)
-          .eq('typ', type);
+          .eq('typ', type)
+          .eq('cur', currency); // شرط تطابق العملة
       if (price > 0) {
         final min = price * (1 - tolerance);
         final max = price * (1 + tolerance);
@@ -271,6 +275,7 @@ class BusinessService {
   Future<Map<String, dynamic>> registerDailyStreak(
       String uid, ConfigModel? config) async {
     try {
+      // 1. جلب البيانات الحالية
       final row = await _sb.client
           .from(DbTables.users)
           .select('strk, strk_dt')
@@ -278,48 +283,62 @@ class BusinessService {
           .single();
 
       final int currentStreak = (row['strk'] as int?) ?? 0;
-      final DateTime? lastDate =
-          row['strk_dt'] != null ? DateTime.tryParse(row['strk_dt'] as String) : null;
-
+      final String? strkDtStr = row['strk_dt'] as String?;
+      
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
 
-      int newStreak;
-      bool awarded = false;
+      if (strkDtStr == null) {
+        // أول مرة يسجل دخول
+        await _sb.client.from(DbTables.users).update({
+          'strk': 1,
+          'strk_dt': today.toIso8601String(),
+          'ts_upd': now.toIso8601String(),
+        }).eq('id', uid);
 
-      if (lastDate == null) {
-        newStreak = 1;
-      } else {
-        final last = DateTime(lastDate.year, lastDate.month, lastDate.day);
-        final diff = today.difference(last).inDays;
-        if (diff == 0) {
-          // سُجّل اليوم مسبقاً — لا تغيير
-          return {
-            'streak': currentStreak,
-            'changed': false,
-            'awarded': false,
-          };
-        } else if (diff == 1) {
-          newStreak = currentStreak + 1; // يوم متتالٍ
-        } else {
-          newStreak = 1; // انقطعت السلسلة
-        }
-      }
-
-      await _sb.client.from(DbTables.users).update({
-        'strk': newStreak,
-        'strk_dt': today.toIso8601String(),
-        'ts_upd': now.toIso8601String(),
-      }).eq('id', uid);
-
-      // منح نقاط Streak (pts.strk)
-      final strkPts = _ptsFromConfig(config, 'strk', 200);
-      if (strkPts != 0) {
+        final strkPts = _ptsFromConfig(config, 'strk', 50);
         await addPoints(uid, strkPts);
-        awarded = true;
+
+        return {'streak': 1, 'changed': true, 'awarded': true};
       }
 
-      return {'streak': newStreak, 'changed': true, 'awarded': awarded};
+      final lastDate = DateTime.parse(strkDtStr);
+      final lastDay = DateTime(lastDate.year, lastDate.month, lastDate.day);
+      final diff = today.difference(lastDay).inDays;
+
+      if (diff == 0) {
+        // سُجّل اليوم مسبقاً — لا نقاط ولا تغيير
+        return {
+          'streak': currentStreak,
+          'changed': false,
+          'awarded': false,
+        };
+      } else if (diff == 1) {
+        // يوم متتالٍ — زيادة السلسلة ومنح نقاط
+        final newStreak = currentStreak + 1;
+        await _sb.client.from(DbTables.users).update({
+          'strk': newStreak,
+          'strk_dt': today.toIso8601String(),
+          'ts_upd': now.toIso8601String(),
+        }).eq('id', uid);
+
+        final strkPts = _ptsFromConfig(config, 'strk', 50);
+        await addPoints(uid, strkPts);
+
+        return {'streak': newStreak, 'changed': true, 'awarded': true};
+      } else {
+        // انقطعت السلسلة — إعادة التعيين إلى 1 ومنح نقاط البداية
+        await _sb.client.from(DbTables.users).update({
+          'strk': 1,
+          'strk_dt': today.toIso8601String(),
+          'ts_upd': now.toIso8601String(),
+        }).eq('id', uid);
+
+        final strkPts = _ptsFromConfig(config, 'strk', 50);
+        await addPoints(uid, strkPts);
+
+        return {'streak': 1, 'changed': true, 'awarded': true};
+      }
     } catch (e) {
       debugPrint('❌ registerDailyStreak error: $e');
       return {'streak': 0, 'changed': false, 'awarded': false};
@@ -405,6 +424,30 @@ class BusinessService {
     } catch (e) {
       debugPrint('⚠️ isDuplicateOffer error: $e');
       return false;
+    }
+  }
+
+  // ═══════════════════════════════════════
+  // 4.7 إدارة إحصائيات المستخدم (Stats)
+  // ═══════════════════════════════════════
+
+  /// تحديث إحصائيات المستخدم (off, req, app, dl)
+  Future<void> updateUserStat(String uid, String statKey) async {
+    try {
+      // جلب القيمة الحالية
+      final row = await _sb.client.from(DbTables.users).select('stats').eq('id', uid).single();
+      Map<String, dynamic> stats = Map<String, dynamic>.from(row['stats'] ?? {});
+      
+      // زيادة العداد بمقدار 1
+      final currentVal = (stats[statKey] ?? 0) as int;
+      stats[statKey] = currentVal + 1;
+
+      await _sb.client.from(DbTables.users).update({
+        'stats': stats,
+        'ts_upd': DateTime.now().toIso8601String(),
+      }).eq('id', uid);
+    } catch (e) {
+      debugPrint('❌ updateUserStat error: $e');
     }
   }
 }

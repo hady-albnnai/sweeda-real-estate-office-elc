@@ -136,7 +136,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       uid: user.uid,
       tp: 0, // 0 = اشتراك باقة
       pkg: widget.packageId,
-      amt: widget.amount,
+      amt: _currency == 0 ? widget.amount : (widget.amount * 15000.0),
       cur: _currency,
       mtd: 0, // legacy
       channel: _channel,
@@ -322,7 +322,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               const Text('المبلغ المطلوب:',
                   style: TextStyle(color: Colors.black87)),
               Text(
-                '\$${widget.amount.toStringAsFixed(0)}',
+                _getDisplayAmount(),
                 style: const TextStyle(
                     color: Colors.black,
                     fontSize: 22,
@@ -334,6 +334,18 @@ class _PaymentScreenState extends State<PaymentScreen> {
       ),
     );
   }
+
+  String _getDisplayAmount() {
+    if (_currency == 0) {
+      return '\$${widget.amount.toStringAsFixed(0)}';
+    } else {
+      // تحويل تقريبي لليرة السورية (مثلاً 1$ = 15,000 ل.س)
+      // في الواقع يجب جلب هذا الرقم من config
+      final rate = 15000.0; 
+      return '${(widget.amount * rate).toStringAsFixed(0)} ل.س';
+    }
+  }
+
 
   Widget _sectionTitle(String text) => Padding(
         padding: const EdgeInsets.only(bottom: 8, top: 4),
