@@ -5,11 +5,6 @@
 // يستقبل: { uid: "...", title: "...", body: "...", data?: {...} }
 // يستخدم FCM HTTP v1 API + Google Service Account
 // ════════════════════════════════════════════════════════════════════════════
-// متغيرات البيئة المطلوبة (تُضبط في Supabase secrets):
-//   FIREBASE_PROJECT_ID         — معرّف Firebase project
-//   FIREBASE_CLIENT_EMAIL       — من Service Account JSON
-//   FIREBASE_PRIVATE_KEY        — من Service Account JSON (مع \n مكان السطور الجديدة)
-// ════════════════════════════════════════════════════════════════════════════
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -34,7 +29,6 @@ async function getAccessToken(): Promise<string> {
   const clientEmail = Deno.env.get("FIREBASE_CLIENT_EMAIL")!;
   const privateKey = Deno.env.get("FIREBASE_PRIVATE_KEY")!.replace(/\\n/g, "\n");
 
-  // استخراج المفتاح
   const pemContents = privateKey
     .replace("-----BEGIN PRIVATE KEY-----", "")
     .replace("-----END PRIVATE KEY-----", "")
@@ -80,7 +74,7 @@ async function sendFCM(
   title: string,
   body: string,
   data?: Record<string, string>
-): Promise<boolean> {
+): Promise<{ ok: boolean; error?: string }> {
   const url = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
   const payload = {
     message: {
@@ -110,7 +104,16 @@ async function sendFCM(
     },
     body: JSON.stringify(payload),
   });
-  return res.ok;
+
+  if (!res.ok) {
+    const errBody = await res.text();
+    console.error(`❌ FCM HTTP ${res.status}: ${errBody}`);
+    console.error(`Token prefix: ${token.substring(0, 25)}...`);
+    return { ok: false, error: `${res.status}: ${errBody.substring(0, 300)}` };
+  }
+  const successBody = await res.text();
+  console.log(`✅ FCM sent: ${successBody.substring(0, 150)}`);
+  return { ok: true };
 }
 
 serve(async (req) => {
@@ -124,6 +127,8 @@ serve(async (req) => {
       return json({ success: false, error: "MISSING_FIELDS" }, 400);
     }
 
+    console.log(`📨 Sending to uid=${uid}, title="${title}"`);
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -135,24 +140,39 @@ serve(async (req) => {
       { p_uid: uid }
     );
     if (tErr) {
+      console.error("❌ get_user_device_tokens error:", tErr);
       return json({ success: false, error: "FETCH_TOKENS_FAILED" }, 500);
     }
     if (!tokens || tokens.length === 0) {
+      console.log("⚠️ No active devices for user");
       return json({ success: true, sent: 0, message: "no active devices" });
     }
+
+    console.log(`📱 Found ${tokens.length} active device(s)`);
 
     // 2) الحصول على access token
     const projectId = Deno.env.get("FIREBASE_PROJECT_ID");
     if (!projectId) {
-      // Dev mode — رد نجاح بدون إرسال فعلي
       return json({
         success: true,
         devMode: true,
-        message: "FIREBASE_* secrets not set — skipping actual send",
+        message: "FIREBASE_PROJECT_ID not set",
         wouldSendTo: tokens.length,
       });
     }
-    const accessToken = await getAccessToken();
+
+    let accessToken: string;
+    try {
+      accessToken = await getAccessToken();
+      console.log("🔑 Got Google access token");
+    } catch (e) {
+      console.error("❌ getAccessToken failed:", e);
+      return json({
+        success: false,
+        error: "GOOGLE_AUTH_FAILED",
+        details: String(e).substring(0, 300),
+      }, 500);
+    }
 
     // 3) الإرسال لكل توكن
     let sent = 0;
@@ -173,7 +193,6 @@ serve(async (req) => {
       else {
         failed++;
         if (res.error) errors.push(res.error);
-        // اكتشاف التوكنز الفاسدة (FCM يعيد 404 NOT_FOUND أو 400 INVALID_ARGUMENT)
         if (res.error && (
           res.error.includes("404") ||
           res.error.includes("NOT_FOUND") ||
@@ -207,7 +226,7 @@ serve(async (req) => {
       ...(invalidTokens.length > 0 && { cleanedUp: invalidTokens.length }),
     });
   } catch (e) {
-    console.error(e);
+    console.error("❌ INTERNAL:", e);
     return json({ success: false, error: "INTERNAL", details: String(e) }, 500);
   }
 });
