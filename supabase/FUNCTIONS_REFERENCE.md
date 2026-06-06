@@ -14,6 +14,7 @@
 | ✅ **مُطبّق على السيرفر** | Migration المصادقة (`2026_06_05_whatsapp_email_auth.sql`) — 4 دوال + عمود `eml` + توسعة `otp_codes` |
 | ✅ **مُطبّق على السيرفر** | Migration الإحصائيات والإحالة (`2026_06_05_stats_triggers_and_wkLogin.sql`) — 6 دوال + 4 triggers + عمودي `ref_by`/`ref_cnt` |
 | ✅ **مُطبّق على السيرفر** | Migration ترقيات العروض (`2026_06_05_offer_boosts.sql`) — 2 دالة + 8 أعمدة (`i_pin`, `i_bst`, `i_fms`, `pin_end`, `bst_end`, `fms_end`, `dsc_pct`, `dsc_end`) |
+| ✅ **مُطبّق على السيرفر** | Migration الجدولة التلقائية (`2026_06_05_cron_jobs.sql`) — extension `pg_cron` مفعّل + 3 cron jobs نشطة |
 | ⚠️ **مكتوب لكن لم يُنشر بعد** | Edge Functions: `send-whatsapp-otp`, `verify-whatsapp-otp` (يحتاج `supabase functions deploy` + secrets META) |
 | ⚠️ **معلّق** | تفعيل Email SMTP (Resend) — تم في Dashboard ✅ بس Meta WhatsApp credentials لسا (يستخدم وضع التطوير) |
 
@@ -65,6 +66,22 @@
 | `trg_requests_stats` | `requests` | INSERT/UPDATE/DELETE | `update_user_stats_on_request` |
 | `trg_appointments_stats` | `appointments` | INSERT/UPDATE/DELETE | `update_user_stats_on_appointment` |
 | `trg_deals_stats` | `deals` | INSERT/UPDATE/DELETE | `update_user_stats_on_deal` |
+
+### ⏰ Cron Jobs (pg_cron) النشطة على السيرفر:
+
+| jobid | jobname | schedule | الوصف |
+|---|---|---|---|
+| 1 | `daily-expire-offers` | `0 3 * * *` (3:00 UTC يومياً) | يستدعي `expire_offers()` لإنهاء العروض المنتهية |
+| 2 | `daily-expire-boosts` | `5 3 * * *` (3:05 UTC يومياً) | يستدعي `expire_offer_boosts()` لإلغاء الترقيات المنتهية |
+| 3 | `hourly-appointment-reminders` | `0 * * * *` (بداية كل ساعة) | يستدعي `send_appointment_reminders()` للتذكير قبل المواعيد |
+
+**التحقق من حالة الجدولة:**
+```sql
+SELECT jobname, schedule, active FROM cron.job;
+SELECT * FROM cron.job_run_details ORDER BY start_time DESC LIMIT 10;
+```
+
+**ملاحظة التوقيت:** السيرفر يستخدم UTC. للتحويل لتوقيت دمشق (UTC+3)، أضف 3 ساعات. مثلاً `0 3 * * *` UTC = 6:00 صباحاً بتوقيت السويداء.
 
 ### Edge Functions (Deno):
 
@@ -663,6 +680,7 @@ await client.rpc('send_appointment_reminders');
 | `supabase/migrations/2026_06_05_whatsapp_email_auth.sql` 🆕 | Migration #1: V2 RPCs + `eml` + `otp_codes` channel — **مطبّق ✅** |
 | `supabase/migrations/2026_06_05_stats_triggers_and_wkLogin.sql` 🆕🆕 | Migration #2: 4 triggers + `register_weekly_login` + `apply_referral` + `ref_by`/`ref_cnt` — **مطبّق ✅** |
 | `supabase/migrations/2026_06_05_offer_boosts.sql` 🆕🆕🆕 | Migration #3: `purchase_offer_boost` + `expire_offer_boosts` + 8 أعمدة ترقيات — **مطبّق ✅** |
+| `supabase/migrations/2026_06_05_cron_jobs.sql` 🆕🆕🆕🆕 | Migration #4: جدولة 3 cron jobs (expire_offers + expire_boosts + reminders) — **مطبّق ✅** |
 | `lib/screens/user/boost_offer_screen.dart` 🆕🆕🆕 | شاشة شراء ترقيات العروض (5 خيارات: ren/pin/bst/dsc5/fms) |
 | `supabase/functions/send-whatsapp-otp/index.ts` 🆕 | Edge Function لإرسال OTP عبر Meta WhatsApp — **لم يُنشر ⚠️** |
 | `supabase/functions/verify-whatsapp-otp/index.ts` 🆕 | Edge Function للتحقق وإصدار session — **لم يُنشر ⚠️** |
