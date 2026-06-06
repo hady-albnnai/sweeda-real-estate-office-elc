@@ -61,10 +61,21 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
-        <!-- ملاحظة: تمت إزالة إعدادات FCM لأن المشروع يعتمد Supabase + الإشعارات المحلية
-             (flutter_local_notifications). عند إضافة Push عبر FCM لاحقاً، أعد:
-             - google-services plugin + google-services.json
-             - meta-data: default_notification_channel_id / default_notification_icon -->
+        <!-- ═══════════ FCM Configuration ═══════════ -->
+        <!-- أيقونة الإشعار الافتراضية (يجب أن تكون شفافة — أبيض على شفاف) -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_notification" />
+
+        <!-- اللون الافتراضي (الخلفية الذهبية حول الأيقونة) -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/notification_color" />
+
+        <!-- القناة الافتراضية للإشعارات (Android 8+) -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="sweeda_default" />
 
     </application>
 

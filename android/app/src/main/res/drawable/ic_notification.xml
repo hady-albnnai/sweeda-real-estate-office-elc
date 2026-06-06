@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- أيقونة الإشعار (Status Bar) — يجب أن تكون شفافة (أبيض على شفاف) لأن Android يفرض هذا -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- شكل عقار بسيط -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,3L2,12h3v8h6v-6h2v6h6v-8h3L12,3zM12,5.7l5,4.5V18h-2v-6H9v6H7v-7.8L12,5.7z"/>
+    <!-- نقطة ذهبية صغيرة (تختفي على status bar لكن تظهر بالـ pop-up) -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M10,7h4v2h-4z"/>
+</vector>

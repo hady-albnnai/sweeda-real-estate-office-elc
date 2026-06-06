@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="splash_bg">#121212</color>
+    <!-- لون أيقونة الإشعار (الذهبي الأساسي) -->
+    <color name="notification_color">#D4AF37</color>
 </resources>
