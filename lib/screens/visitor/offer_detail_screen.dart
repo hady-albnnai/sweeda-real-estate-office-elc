@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:go_router/go_router.dart';
 import '../../models/offer_model.dart';
+import '../../models/user_model.dart';
 import '../../providers/offer_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/config_provider.dart';
@@ -25,6 +26,7 @@ class OfferDetailScreen extends StatefulWidget {
 
 class _OfferDetailScreenState extends State<OfferDetailScreen> {
   OfferModel? _offer;
+  UserModel? _owner; // مالك العرض — يُستخدم لتوليد التسمية المهنية (هوية المكتب)
   bool _loading = true;
   bool _isFav = false;
 
@@ -42,6 +44,24 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
     offer ??= await provider.fetchOfferById(widget.offerId);
     if (offer != null) {
       provider.incrementViews(widget.offerId);
+
+      // جلب بيانات المالك لتوليد التسمية المهنية (لا يُعرض اسمه أبداً)
+      try {
+        final row = await SupabaseService()
+            .client
+            .from(DbTables.users)
+            .select()
+            .eq('id', offer.usrId)
+            .maybeSingle();
+        if (row != null) {
+          _owner = UserModel.fromSupabase(
+            Map<String, dynamic>.from(row),
+            row['id'] as String,
+          );
+        }
+      } catch (e) {
+        debugPrint('⚠️ load owner failed: $e');
+      }
     }
     if (mounted) {
       setState(() {
@@ -295,6 +315,41 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold)),
                       ]),
+
+                  // 🏢 هوية المكتب — تسمية مهنية بدل اسم المالك (LOGIC_SPEC §1)
+                  if (_owner != null) ...[
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryGold.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                            color:
+                                AppTheme.primaryGold.withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.business_center,
+                              color: AppTheme.primaryGold, size: 16),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              BusinessService()
+                                  .getUserPublicLabel(_owner!),
+                              style: const TextStyle(
+                                  color: AppTheme.primaryGold,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
                   const SizedBox(height: 10),
                   Row(children: [
                     const Icon(Icons.location_on,
