@@ -5,10 +5,15 @@ import '../providers/auth_provider.dart';
 import '../models/offer_model.dart';
 import '../core/theme/app_theme.dart';
 
-class BookAppointmentSheet extends StatelessWidget {
+class BookAppointmentSheet extends StatefulWidget {
   final OfferModel offer;
   const BookAppointmentSheet({super.key, required this.offer});
 
+  @override
+  State<BookAppointmentSheet> createState() => _BookAppointmentSheetState();
+}
+
+class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
   @override
   Widget build(BuildContext context) {
     final apptProvider = Provider.of<AppointmentProvider>(context, listen: false);
@@ -25,7 +30,7 @@ class BookAppointmentSheet extends StatelessWidget {
           const SizedBox(height: 10),
           const Text('اختر يوماً ووقتاً مناسباً من المواعيد المتاحة', style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
           const SizedBox(height: 20),
-          offer.avl.isEmpty
+          widget.offer.avl.isEmpty
               ? const Center(child: Text('لا توجد مواعيد متاحة حالياً', style: TextStyle(color: AppTheme.textGrey)))
               : _buildGrid(context, apptProvider, authProvider),
           const SizedBox(height: 30),
@@ -36,7 +41,7 @@ class BookAppointmentSheet extends StatelessWidget {
 
   Widget _buildGrid(BuildContext context, AppointmentProvider provider, AuthProvider auth) {
     return ListView(shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
-      children: offer.avl.entries.map((entry) {
+      children: widget.offer.avl.entries.map((entry) {
         return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(_dayName(entry.key), style: const TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 16)),
           const SizedBox(height: 10),
@@ -44,8 +49,12 @@ class BookAppointmentSheet extends StatelessWidget {
             children: entry.value.map((time) => ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: AppTheme.surfaceBlack, foregroundColor: AppTheme.primaryGold, side: const BorderSide(color: AppTheme.primaryGold)),
               onPressed: () async {
-                bool s = await provider.bookAppointment(userId: auth.userModel?.uid ?? '', offerId: offer.id, ownerId: offer.usrId);
-                if (s) { Navigator.pop(context); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم طلب الموعد بنجاح، بانتظار موافقة المالك'))); }
+                bool s = await provider.bookAppointment(userId: auth.userModel?.uid ?? '', offerId: widget.offer.id, ownerId: widget.offer.usrId);
+                if (!mounted) return; // الحل هنا: التأكد من أن الوجت لا يزال موجوداً
+                if (s) { 
+                  Navigator.pop(context); 
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم طلب الموعد بنجاح، بانتظار موافقة المالك'))); 
+                }
               },
               child: Text(time),
             )).toList(),
