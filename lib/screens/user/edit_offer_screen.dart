@@ -404,7 +404,7 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
           ),
           if (_saving)
             Container(
-              color: Colors.black.withOpacity(0.7),
+              color: Colors.black.withValues(alpha: 0.7),
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -428,9 +428,9 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: statusInfo.$2.withOpacity(0.1),
+        color: statusInfo.$2.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: statusInfo.$2.withOpacity(0.5)),
+        border: Border.all(color: statusInfo.$2.withValues(alpha: 0.5)),
       ),
       child: Row(
         children: [

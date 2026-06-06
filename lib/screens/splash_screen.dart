@@ -112,12 +112,12 @@ class _SplashScreenState extends State<SplashScreen>
                         border: Border.all(color: AppTheme.primaryGold, width: 2.5),
                         boxShadow: [
                           BoxShadow(
-                            color: AppTheme.primaryGold.withOpacity(0.25),
+                            color: AppTheme.primaryGold.withValues(alpha: 0.25),
                             blurRadius: 25,
                             spreadRadius: 5,
                           ),
                           BoxShadow(
-                            color: AppTheme.primaryGold.withOpacity(0.1),
+                            color: AppTheme.primaryGold.withValues(alpha: 0.1),
                             blurRadius: 50,
                             spreadRadius: 10,
                           ),
@@ -153,7 +153,7 @@ class _SplashScreenState extends State<SplashScreen>
                     Text(
                       'المكتب العقاري الالكتروني',
                       style: TextStyle(
-                        color: AppTheme.primaryGold.withOpacity(0.6),
+                        color: AppTheme.primaryGold.withValues(alpha: 0.6),
                         fontSize: 13,
                         letterSpacing: 3,
                         fontWeight: FontWeight.w300,
@@ -163,7 +163,7 @@ class _SplashScreenState extends State<SplashScreen>
                     Text(
                       'عقارات • سيارات • مواعيد معاينة',
                       style: TextStyle(
-                        color: AppTheme.textGrey.withOpacity(0.7),
+                        color: AppTheme.textGrey.withValues(alpha: 0.7),
                         fontSize: 11,
                         letterSpacing: 1,
                       ),
@@ -178,7 +178,7 @@ class _SplashScreenState extends State<SplashScreen>
                           minHeight: 4,
                           backgroundColor: AppTheme.surfaceBlack,
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            AppTheme.primaryGold.withOpacity(0.85),
+                            AppTheme.primaryGold.withValues(alpha: 0.85),
                           ),
                         ),
                       ),
@@ -187,7 +187,7 @@ class _SplashScreenState extends State<SplashScreen>
                     Text(
                       'جارٍ التحميل...',
                       style: TextStyle(
-                        color: AppTheme.textGrey.withOpacity(0.6),
+                        color: AppTheme.textGrey.withValues(alpha: 0.6),
                         fontSize: 11,
                       ),
                     ),

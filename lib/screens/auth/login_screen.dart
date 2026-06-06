@@ -86,13 +86,13 @@ class _LoginScreenState extends State<LoginScreen>
             right: -100,
             child: CircleAvatar(
                 radius: 150,
-                backgroundColor: AppTheme.primaryGold.withOpacity(0.1))),
+                backgroundColor: AppTheme.primaryGold.withValues(alpha: 0.1))),
         Positioned(
             bottom: -80,
             left: -80,
             child: CircleAvatar(
                 radius: 120,
-                backgroundColor: AppTheme.primaryGold.withOpacity(0.05))),
+                backgroundColor: AppTheme.primaryGold.withValues(alpha: 0.05))),
         SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
@@ -109,7 +109,7 @@ class _LoginScreenState extends State<LoginScreen>
                         borderRadius: BorderRadius.circular(28),
                         boxShadow: [
                           BoxShadow(
-                              color: AppTheme.primaryGold.withOpacity(0.25),
+                              color: AppTheme.primaryGold.withValues(alpha: 0.25),
                               blurRadius: 30,
                               spreadRadius: 4)
                         ]),

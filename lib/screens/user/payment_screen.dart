@@ -263,7 +263,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
           ),
           if (_uploading)
             Container(
-              color: Colors.black.withOpacity(0.7),
+              color: Colors.black.withValues(alpha: 0.7),
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -348,9 +348,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.orange.withOpacity(0.1),
+        color: Colors.orange.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.orange.withOpacity(0.5)),
+        border: Border.all(color: Colors.orange.withValues(alpha: 0.5)),
       ),
       child: const Row(
         children: [
@@ -378,13 +378,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: selected
-              ? AppTheme.primaryGold.withOpacity(0.15)
+              ? AppTheme.primaryGold.withValues(alpha: 0.15)
               : AppTheme.surfaceBlack,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: selected
                 ? AppTheme.primaryGold
-                : Colors.white.withOpacity(0.08),
+                : Colors.white.withValues(alpha: 0.08),
             width: selected ? 2 : 1,
           ),
         ),
@@ -478,7 +478,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
+        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -507,9 +507,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.08),
+                color: Colors.blue.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -603,7 +603,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               border: Border.all(
                 color: _proofImage != null
                     ? Colors.green
-                    : AppTheme.primaryGold.withOpacity(0.4),
+                    : AppTheme.primaryGold.withValues(alpha: 0.4),
                 width: 1.5,
               ),
             ),

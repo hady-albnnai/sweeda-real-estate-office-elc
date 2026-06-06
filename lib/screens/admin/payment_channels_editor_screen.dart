@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/network/supabase_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/config_provider.dart';
@@ -231,7 +232,7 @@ class _PaymentChannelsEditorScreenState
                 ),
                 if (_saving)
                   Container(
-                    color: Colors.black.withOpacity(0.4),
+                    color: Colors.black.withValues(alpha: 0.4),
                     child: const Center(
                       child: CircularProgressIndicator(
                           color: AppTheme.primaryGold),
@@ -245,9 +246,9 @@ class _PaymentChannelsEditorScreenState
   Widget _infoBanner() => Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.blue.withOpacity(0.1),
+          color: Colors.blue.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.blue.withOpacity(0.4)),
+          border: Border.all(color: Colors.blue.withValues(alpha: 0.4)),
         ),
         child: const Row(
           children: [
@@ -278,8 +279,8 @@ class _PaymentChannelsEditorScreenState
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: enabled
-              ? AppTheme.primaryGold.withOpacity(0.4)
-              : Colors.grey.withOpacity(0.2),
+              ? AppTheme.primaryGold.withValues(alpha: 0.4)
+              : Colors.grey.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -298,7 +299,7 @@ class _PaymentChannelsEditorScreenState
               ),
               Switch(
                 value: enabled,
-                activeColor: AppTheme.primaryGold,
+                activeThumbColor: AppTheme.primaryGold,
                 onChanged: (v) => setState(() => _enabled[key] = v),
               ),
             ],
@@ -337,7 +338,7 @@ class _PaymentChannelsEditorScreenState
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                        color: AppTheme.primaryGold.withOpacity(0.5)),
+                        color: AppTheme.primaryGold.withValues(alpha: 0.5)),
                   ),
                   padding: const EdgeInsets.all(6),
                   child: Image.network(

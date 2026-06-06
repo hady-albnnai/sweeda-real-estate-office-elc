@@ -110,7 +110,7 @@ class _MyOffersScreenState extends State<MyOffersScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.folder_open,
-                size: 80, color: AppTheme.primaryGold.withOpacity(0.5)),
+                size: 80, color: AppTheme.primaryGold.withValues(alpha: 0.5)),
             const SizedBox(height: 20),
             const Text('لا توجد عروض في هذه الحالة',
                 style: TextStyle(color: AppTheme.textGrey, fontSize: 16)),
@@ -140,7 +140,7 @@ class _MyOffersScreenState extends State<MyOffersScreen>
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: status.$2.withOpacity(0.3)),
+        border: Border.all(color: status.$2.withValues(alpha: 0.3)),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
@@ -152,7 +152,7 @@ class _MyOffersScreenState extends State<MyOffersScreen>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: status.$2.withOpacity(0.15),
+                color: status.$2.withValues(alpha: 0.15),
                 borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(13)),
               ),

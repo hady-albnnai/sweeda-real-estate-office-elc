@@ -66,7 +66,9 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
     if (_offer == null) return;
     final config = context.read<ConfigProvider>().config;
     final text = BusinessService().generateSocialPost(_offer!, config: config);
-    await Share.share(text, subject: _offer!.ttl);
+    await SharePlus.instance.share(
+      ShareParams(text: text, subject: _offer!.ttl),
+    );
   }
 
   Future<void> _reportOffer() async {
@@ -117,17 +119,21 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                 const Text('اختر سبب التبليغ:',
                     style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
                 const SizedBox(height: 6),
-                ...reasons.map((r) => RadioListTile<String>(
-                      value: r,
-                      groupValue: selected,
-                      onChanged: (v) => setS(() => selected = v),
-                      title: Text(r,
-                          style:
-                              const TextStyle(color: AppTheme.textWhite)),
-                      activeColor: AppTheme.primaryGold,
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                    )),
+                RadioGroup<String>(
+                  groupValue: selected,
+                  onChanged: (value) => setS(() => selected = value),
+                  child: Column(
+                    children: reasons.map((r) => RadioListTile<String>(
+                          value: r,
+                          title: Text(r,
+                              style:
+                                  const TextStyle(color: AppTheme.textWhite)),
+                          activeColor: AppTheme.primaryGold,
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                        )).toList(),
+                  ),
+                ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: notesCtrl,
@@ -409,18 +415,21 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
 
   Future<void> _shareAndMark() async {
     if (_offer == null) return;
+    final messenger = ScaffoldMessenger.of(context);
     final config = context.read<ConfigProvider>().config;
+    final auth = context.read<AuthProvider>();
     final text = BusinessService().generateSocialPost(_offer!, config: config);
-    await Share.share(text, subject: _offer!.ttl);
+    await SharePlus.instance.share(
+      ShareParams(text: text, subject: _offer!.ttl),
+    );
     await BusinessService().markSocialPublished(_offer!.id, text);
     // منح نقاط النشر على السوشال (pts.soc)
-    final auth = context.read<AuthProvider>();
     if (auth.userModel != null) {
       await BusinessService()
           .awardEvent(auth.userModel!.uid, config, 'soc', fallback: 100);
     }
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
           const SnackBar(content: Text('تم تجهيز المنشور ✅ (+نقاط)')));
     }
   }
@@ -431,7 +440,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
       decoration: BoxDecoration(
           color: AppTheme.surfaceBlack,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppTheme.primaryGold.withOpacity(0.2))),
+          border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.2))),
       child: Row(children: [
         Icon(icon, color: AppTheme.primaryGold, size: 18),
         const SizedBox(width: 8),

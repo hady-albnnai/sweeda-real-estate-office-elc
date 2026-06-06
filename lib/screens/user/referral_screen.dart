@@ -68,11 +68,13 @@ class _ReferralScreenState extends State<ReferralScreen> {
 
   Future<void> _share(String code) async {
     final link = _refLink(code);
-    await Share.share(
-      'انضم لتطبيق "عقارات السويداء" المكتب العقاري الإلكتروني واحصل على نقاط ترحيب! 🎁\n\n'
-      'استخدم كود الدعوة: $code\n'
-      'أو اضغط الرابط: $link',
-      subject: 'دعوة إلى عقارات السويداء',
+    await SharePlus.instance.share(
+      ShareParams(
+        text: 'انضم لتطبيق "عقارات السويداء" المكتب العقاري الإلكتروني واحصل على نقاط ترحيب! 🎁\n\n'
+            'استخدم كود الدعوة: $code\n'
+            'أو اضغط الرابط: $link',
+        subject: 'دعوة إلى عقارات السويداء',
+      ),
     );
   }
 
@@ -157,7 +159,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
+        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.4)),
       ),
       child: Column(
         children: [
@@ -230,7 +232,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
           Expanded(
             child: Column(
               children: [
-                Icon(Icons.people, color: AppTheme.primaryGold, size: 28),
+                const Icon(Icons.people, color: AppTheme.primaryGold, size: 28),
                 const SizedBox(height: 6),
                 _loading
                     ? const SizedBox(

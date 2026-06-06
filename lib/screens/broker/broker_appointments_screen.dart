@@ -246,8 +246,8 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.event_busy,
-                size: 80, color: AppTheme.primaryGold.withOpacity(0.5)),
+            const Icon(Icons.event_busy,
+                size: 80, color: Color.fromRGBO(212, 175, 55, 0.5)),
             const SizedBox(height: 20),
             const Text('لا توجد طلبات في هذه الفئة',
                 style: TextStyle(color: AppTheme.textGrey, fontSize: 16)),
@@ -278,7 +278,7 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: status.$2.withOpacity(0.3)),
+        border: Border.all(color: status.$2.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -287,7 +287,7 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: status.$2.withOpacity(0.15),
+              color: status.$2.withValues(alpha: 0.15),
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(13)),
             ),
@@ -424,7 +424,7 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.1),
+                      color: const Color.fromRGBO(255, 0, 0, 0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Row(

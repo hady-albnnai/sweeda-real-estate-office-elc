@@ -13,13 +13,13 @@ class SupabaseService {
   /// تهيئة Supabase — تُستدعى مرة واحدة في main()
   static Future<void> initialize({
     required String url,
-    required String anonKey,
+    required String publishableKey,
   }) async {
     if (_initialized) return;
     try {
       await Supabase.initialize(
         url: url,
-        anonKey: anonKey,
+        publishableKey: publishableKey,
         debug: kDebugMode,
       );
       _initialized = true;

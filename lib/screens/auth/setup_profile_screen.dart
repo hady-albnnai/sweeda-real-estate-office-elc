@@ -251,7 +251,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                     border: Border.all(
                       color: _idImage != null
                           ? Colors.green
-                          : AppTheme.primaryGold.withOpacity(0.4),
+                          : AppTheme.primaryGold.withValues(alpha: 0.4),
                       width: 1.5,
                     ),
                   ),
@@ -301,7 +301,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                   border: Border.all(
                       color: _agreePledge
                           ? Colors.green
-                          : AppTheme.primaryGold.withOpacity(0.3)),
+                          : AppTheme.primaryGold.withValues(alpha: 0.3)),
                 ),
                 child: Column(
                   children: [

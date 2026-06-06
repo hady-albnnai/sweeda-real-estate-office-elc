@@ -59,7 +59,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.calendar_today_outlined, size: 80, color: AppTheme.textGrey.withOpacity(0.3)),
+          Icon(Icons.calendar_today_outlined, size: 80, color: AppTheme.textGrey.withValues(alpha: 0.3)),
           const SizedBox(height: 20),
           const Text('ما عندك مواعيد حالياً', style: TextStyle(color: AppTheme.textGrey, fontSize: 16)),
         ],
@@ -93,7 +93,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: (statusColors[sts] ?? Colors.grey).withOpacity(0.2),
+                    color: (statusColors[sts] ?? Colors.grey).withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(

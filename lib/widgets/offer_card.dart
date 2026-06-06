@@ -31,8 +31,8 @@ class OfferCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 5),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3), width: 1),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.5), blurRadius: 10, offset: const Offset(0, 5))],
+        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.3), width: 1),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.5), blurRadius: 10, offset: const Offset(0, 5))],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
@@ -78,7 +78,7 @@ class OfferCard extends StatelessWidget {
                   bottom: 15, left: 15,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(color: Colors.black.withOpacity(0.6), borderRadius: BorderRadius.circular(8),
+                    decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.6), borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: AppTheme.primaryGold, width: 0.5)),
                     child: Text(offer.typ == 0 ? 'عقار' : 'سيارة', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 12)),
                   ),

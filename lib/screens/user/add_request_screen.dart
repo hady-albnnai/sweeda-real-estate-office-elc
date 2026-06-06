@@ -160,7 +160,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
                       color: AppTheme.deepBlack,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                          color: AppTheme.primaryGold.withOpacity(0.2)),
+                          color: AppTheme.primaryGold.withValues(alpha: 0.2)),
                     ),
                     child: ListTile(
                       leading: ClipRRect(
@@ -351,7 +351,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
 
   Widget _dropdown(String label, List<String> items, Function(String) onSelected) {
     return DropdownButtonFormField<String>(
-      value: null,
+      initialValue: null,
       items: items.map((i) => DropdownMenuItem(value: i, child: Text(i))).toList(),
       onChanged: (v) => onSelected(v!),
       decoration: InputDecoration(

@@ -145,9 +145,9 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
   Widget _warning() => Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.orange.withOpacity(0.12),
+          color: Colors.orange.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.orange.withOpacity(0.5)),
+          border: Border.all(color: Colors.orange.withValues(alpha: 0.5)),
         ),
         child: const Row(
           children: [
@@ -201,7 +201,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3)),
+        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.3)),
       ),
       child: ListTile(
         leading: Icon(icon, color: AppTheme.primaryGold),
