@@ -18,7 +18,9 @@
 | ✅ **مُطبّق على السيرفر** | Migration FCM (`2026_06_05_fcm_setup.sql`) — UNIQUE على device_token + `get_user_device_tokens` + `notify_user` |
 | ✅ **مُطبّق على السيرفر** | Migration Notification Triggers (`2026_06_06_notification_triggers.sql`) — 7 دوال + 6 triggers + إعداد `app_config.fcm` |
 | ✅ **مُطبّق على السيرفر** | Migration Payment Channels Config (`2026_06_06_payment_channels.sql`) — `payChannels` (4 قنوات) داخل `app_config.main` |
-| 📄 **جاهز للتطبيق** | Migration Payment Channel + Storage (`2026_06_06_payment_channel_and_storage.sql`) — `payments.channel` TEXT + bucket `config_assets` (عام) + bucket `payment_proofs` (خاص + RLS) |
+| ✅ **مُطبّق على السيرفر** | Migration Payment Channel + Storage (`2026_06_06_payment_channel_and_storage.sql`) — `payments.channel` TEXT + bucket `config_assets` (عام) + bucket `payment_proofs` (خاص + RLS) |
+| ✅ **مُطبّق على السيرفر** | Migration Points Refinement (`2026_06_06_points_refinement.sql`) — `user_daily_limits` table + `award_points_safe` RPC + Pin duration (2 days) + Rating bonus trigger |
+| ✅ **مُطبّق على السيرفر** | Migration Payment Approval (`2026_06_06_payment_approval_logic.sql`) — `approve_payment_final` RPC (auto-upgrade package + set end date) |
 | ⚠️ **مكتوب لكن لم يُنشر بعد** | Edge Functions: `send-whatsapp-otp`, `verify-whatsapp-otp` (يحتاج `supabase functions deploy` + secrets META) |
 | ⚠️ **معلّق** | تفعيل Email SMTP (Resend) — تم في Dashboard ✅ بس Meta WhatsApp credentials لسا (يستخدم وضع التطوير) |
 
@@ -42,6 +44,7 @@
 | **— مستخدمون ونقاط —** | | | | |
 | 9 | `update_user_badge` | `p_uid UUID` | `VOID` | ❌ |
 | 10 | `add_points` | `p_uid, p_pts` | `VOID` | ❌ |
+| 10.1 | `award_points_safe` 🆕🔔 | `p_uid, p_event_type, p_points` | `JSONB` | ✅ |
 | 11 | `register_weekly_login` 🆕🆕 | `p_uid UUID, p_pts INT=500` | `BOOLEAN` | ✅ |
 | 12 | `apply_referral` 🆕🆕 | `p_new_uid UUID, p_referrer_code TEXT, p_pts INT=1500` | `BOOLEAN` | ✅ |
 | **— عروض —** | | | | |
@@ -59,8 +62,9 @@
 | 21 | `send_appointment_reminders` | — | `VOID` | ❌ |
 | **— عام —** | | | | |
 | 22 | `soft_delete` | `p_table, p_id` | `VOID` | ✅ |
+| 23 | `approve_payment_final` 🆕🔔 | `p_payment_id, p_admin_id` | `JSONB` | ✅ |
 | **— Triggers Functions (تُستدعى تلقائياً) —** | | | | |
-| 23 | `update_user_stats_on_offer` 🆕🆕 | TRIGGER | `TRIGGER` | ✅ |
+| 24 | `update_user_stats_on_offer` 🆕🆕 | TRIGGER | `TRIGGER` | ✅ |
 | 24 | `update_user_stats_on_request` 🆕🆕 | TRIGGER | `TRIGGER` | ✅ |
 | 25 | `update_user_stats_on_appointment` 🆕🆕 | TRIGGER | `TRIGGER` | ✅ |
 | 26 | `update_user_stats_on_deal` 🆕🆕 | TRIGGER | `TRIGGER` | ✅ |

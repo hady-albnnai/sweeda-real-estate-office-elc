@@ -24,6 +24,8 @@
 | **📦 المرحلة 6: البناء** | ✅ مُجهّزة | إعداد Gradle/توقيع + إزالة Firebase + ProGuard + دليل + مراجعة أمنية |
 | **🔐 المرحلة 7: المصادقة الجديدة** | ✅ مكتملة | WhatsApp OTP (Meta Cloud API) + Email Magic Link — راجع `docs/AUTH_SETUP.md` |
 | **🆕 المرحلة 8: الشاشات المتبقية** | ✅ مكتملة | packages + payment + edit_offer + become_broker + request_detail + إعادة بناء 3 شاشات ضعيفة — راجع `docs/SCREENS_AUDIT.md` |
+| **💳 المرحلة 11: نظام قنوات الدفع** | ✅ مكتملة | 4 قنوات ديناميكية Config-driven + شاشة إدارة + Migration #8 (channel + Storage) + payment_screen ديناميكية + admin proof viewer |
+| **⏳ المرحلة 12: أتمتة قبول الدفعات** | 🔄 قيد التخطيط | دورة الاعتماد (Approval Workflow) → تحديث حالة الطلب → تحديث رصيد المستخدم تلقائياً → إشعار FCM |
 
 ---
 

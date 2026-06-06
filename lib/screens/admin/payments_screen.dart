@@ -276,7 +276,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     final adminId = context.read<AuthProvider>().userModel?.uid ?? '';
     if (await context
         .read<AdminProvider>()
-        .approvePayment(p.id, p.uid, p.pkg, adminId)) {
+        .approvePayment(p.id, adminId)) {
       _snack('تمت الموافقة وتفعيل الباقة');
       _load();
     }
