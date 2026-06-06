@@ -19,7 +19,7 @@ CREATE OR REPLACE FUNCTION purchase_offer_boost(
   p_offer_id UUID, 
   p_boost_type TEXT, 
   p_cost INT
-) RETURNS JSONB AS \$\$
+) RETURNS JSONB AS $$
 DECLARE
   v_offer_owner UUID;
   v_user_points INT;
@@ -71,14 +71,14 @@ BEGIN
 
   RETURN jsonb_build_object('success', true, 'duration_days', v_duration, 'new_balance', v_user_points - p_cost);
 END;
-\$\$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- 3️⃣ دالة منح النقاط "الآمنة" (Safe Award) مع فحص الحدود اليومية
 CREATE OR REPLACE FUNCTION award_points_safe(
   p_uid UUID,
   p_event_type TEXT,
   p_points INT
-) RETURNS JSONB AS \$\$
+) RETURNS JSONB AS $$
 DECLARE
   v_max_daily INT;
   v_current_count INT;
@@ -112,11 +112,9 @@ BEGIN
 
   RETURN jsonb_build_object('success', true, 'points_added', p_points);
 END;
-\$\$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- 4️⃣ مكافأة التقييم 5 نجوم
--- نفترض وجود جدول ratings (uid, target_uid, stars, comment)
--- إذا لم يكن موجوداً، سننشئه لضمان عمل الميزة
 CREATE TABLE IF NOT EXISTS ratings (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     reviewer_uid UUID REFERENCES users(id),
@@ -127,21 +125,16 @@ CREATE TABLE IF NOT EXISTS ratings (
 );
 
 CREATE OR REPLACE FUNCTION trg_rating_bonus()
-RETURNS TRIGGER AS \$\$
+RETURNS TRIGGER AS $$
 BEGIN
-  -- إذا كان التقييم 5 نجوم، امنح المستخدم المستهدف مكافأة تميز
   IF NEW.stars = 5 THEN
     PERFORM award_points_safe(NEW.target_uid, 'top_rating', 200);
   END IF;
   RETURN NEW;
 END;
-\$\$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 DROP TRIGGER IF EXISTS trg_rating_bonus_notify ON ratings;
 CREATE TRIGGER trg_rating_bonus_notify
 AFTER INSERT ON ratings
 FOR EACH ROW EXECUTE FUNCTION trg_rating_bonus();
-
--- ============================================
--- ✅ Migration Completed: Points Refinement
--- ============================================

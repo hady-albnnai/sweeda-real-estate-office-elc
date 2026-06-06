@@ -3,18 +3,10 @@
 -- Date: 2026-06-06
 -- ============================================
 
--- الدالة: approve_payment_final
--- الغرض: تحويل عملية موافقة الأدمن من "تغيير حالة" إلى "تفعيل اشتراك"
--- المنطق: 
--- 1. تحديث حالة الدفعة لـ 'مقبول'
--- 2. جلب مدة الباقة من app_config
--- 3. تحديث باقة المستخدم وتاريخ انتهائها في جدول users
--- ============================================
-
 CREATE OR REPLACE FUNCTION approve_payment_final(
   p_payment_id UUID,
   p_admin_id UUID
-) RETURNS JSONB AS \$\$
+) RETURNS JSONB AS $$
 DECLARE
   v_user_id UUID;
   v_pkg_id INT;
@@ -33,8 +25,6 @@ BEGIN
   -- 2. جلب مدة الباقة من app_config/main (مفتاح pkg)
   SELECT value INTO v_config FROM app_config WHERE key = 'main';
   
-  -- استخراج المدة (d) بناءً على رقم الباقة
-  -- مثال: v_config->'pkg'->'1'->>'d' تعطي '45'
   v_pkg_duration := (v_config->'pkg'->(v_pkg_id::text)->>'d')::INT;
 
   IF v_pkg_duration IS NULL THEN
@@ -42,12 +32,10 @@ BEGIN
   END IF;
 
   -- 3. تنفيذ التحديثات في Transaction واحد
-  -- أ) تحديث حالة الدفعة
   UPDATE payments 
   SET sts = 1, appr_by = p_admin_id, ts_upd = NOW() 
   WHERE id = p_payment_id;
 
-  -- ب) ترقية باقة المستخدم وتحديد تاريخ الانتهاء
   UPDATE users 
   SET b_pkg = v_pkg_id, 
       pkg_end = NOW() + (v_pkg_duration || ' days')::interval,
@@ -63,6 +51,6 @@ BEGIN
 EXCEPTION WHEN OTHERS THEN
   RETURN jsonb_build_object('success', false, 'error', SQLERRM);
 END;
-\$\$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 GRANT EXECUTE ON FUNCTION approve_payment_final TO authenticated;
