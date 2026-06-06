@@ -158,6 +158,8 @@ serve(async (req) => {
     let sent = 0;
     let failed = 0;
     const errors: string[] = [];
+    const invalidTokens: string[] = [];
+
     for (const t of tokens as Array<{ device_token: string; platform: string }>) {
       const res = await sendFCM(
         accessToken,
@@ -171,6 +173,28 @@ serve(async (req) => {
       else {
         failed++;
         if (res.error) errors.push(res.error);
+        // اكتشاف التوكنز الفاسدة (FCM يعيد 404 NOT_FOUND أو 400 INVALID_ARGUMENT)
+        if (res.error && (
+          res.error.includes("404") ||
+          res.error.includes("NOT_FOUND") ||
+          res.error.includes("UNREGISTERED") ||
+          res.error.includes("INVALID_ARGUMENT")
+        )) {
+          invalidTokens.push(t.device_token);
+        }
+      }
+    }
+
+    // 4) إلغاء التوكنز الفاسدة تلقائياً
+    if (invalidTokens.length > 0) {
+      try {
+        await supabase
+          .from("user_devices")
+          .update({ is_active: false })
+          .in("device_token", invalidTokens);
+        console.log(`🧹 Deactivated ${invalidTokens.length} invalid tokens`);
+      } catch (e) {
+        console.error("Failed to deactivate invalid tokens:", e);
       }
     }
 
@@ -180,6 +204,7 @@ serve(async (req) => {
       failed,
       total: tokens.length,
       ...(errors.length > 0 && { errors }),
+      ...(invalidTokens.length > 0 && { cleanedUp: invalidTokens.length }),
     });
   } catch (e) {
     console.error(e);
