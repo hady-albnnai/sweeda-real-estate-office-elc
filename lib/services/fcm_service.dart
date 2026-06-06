@@ -55,7 +55,10 @@ class FCMService {
 
       // 3) الحصول على الـ token
       _currentToken = await _messaging.getToken();
-      debugPrint('🔑 FCM Token: ${_currentToken?.substring(0, 30)}...');
+      debugPrint('🔑 FCM Token (للنسخ والاختبار):');
+      debugPrint('=' * 60);
+      debugPrint(_currentToken ?? 'NULL');
+      debugPrint('=' * 60);
 
       // 4) تسجيل التوكن في user_devices
       if (_currentToken != null) {
