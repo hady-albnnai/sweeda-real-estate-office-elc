@@ -133,6 +133,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       _navCard(Icons.fact_check_outlined, 'مراجعة العروض',
                           '/admin/review-offers',
                           badge: _counts['pendingOffers'] ?? 0),
+                      _navCard(Icons.verified_user_outlined, 'طلبات التوثيق',
+                          '/admin/review-verifications',
+                          badge: _counts['pendingVerifications'] ?? 0),
                       _navCard(Icons.people_outline, 'المستخدمون',
                           '/admin/users'),
                       _navCard(Icons.calendar_month_outlined, 'المواعيد',
@@ -161,7 +164,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   int _totalActions() =>
       (_counts['pendingOffers'] ?? 0) +
       (_counts['pendingPayments'] ?? 0) +
-      (_counts['openReports'] ?? 0);
+      (_counts['openReports'] ?? 0) +
+      (_counts['pendingVerifications'] ?? 0);
 
   Widget _actionsBanner() {
     return Container(
@@ -181,7 +185,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               'لديك ${_totalActions()} عنصر بانتظار الإجراء '
               '(${_counts['pendingOffers'] ?? 0} عرض · '
               '${_counts['pendingPayments'] ?? 0} دفعة · '
-              '${_counts['openReports'] ?? 0} تبليغ)',
+              '${_counts['openReports'] ?? 0} تبليغ · '
+              '${_counts['pendingVerifications'] ?? 0} توثيق)',
               style: const TextStyle(color: AppTheme.textWhite, fontSize: 13),
             ),
           ),

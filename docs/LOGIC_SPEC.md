@@ -110,6 +110,10 @@
 | حالة بدء التوثيق | `lib/models/user_model.dart` → `hasStartedVerification` |
 | التوثيق الرسمي المعتمد | `lib/models/user_model.dart` → `isVerifiedOfficial` (vrf=2) |
 | Migration التوثيق | `supabase/migrations/2026_06_06_user_verification_status.sql` |
+| طلب التوثيق من المستخدم | `lib/screens/user/profile_screen.dart` → `_requestVerification()` |
+| مراجعة الإدارة لطلبات التوثيق | `lib/screens/admin/verifications_review_screen.dart` |
+| اعتماد/رفض التوثيق | `lib/providers/admin_provider.dart` → `approveVerification` / `rejectVerification` |
+| توضيح الحجز عبر المكتب | `lib/widgets/book_appointment_sheet.dart` |
 
 ---
 

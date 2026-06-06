@@ -3,12 +3,94 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/network/supabase_service.dart';
+import '../../core/constants/db_constants.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import '../../core/utils/app_utils.dart';
 
-/// شاشة الملف الشخصي — عرض البيانات + البادج + النقاط
+/// شاشة الملف الشخصي — عرض البيانات + البادج + النقاط + حالة التوثيق
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
+
+  /// 🛡️ تقديم طلب توثيق رسمي للإدارة (vrf: 0 → 1).
+  /// مرجع: docs/LOGIC_SPEC.md §2.1
+  Future<void> _requestVerification(BuildContext context) async {
+    final auth = context.read<AuthProvider>();
+    final user = auth.userModel;
+    if (user == null) return;
+
+    // التحقق من توفر صورة الهوية
+    if (user.img.isEmpty || user.sid.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+              'يجب رفع صورة الهوية + الرقم الوطني قبل طلب التوثيق'),
+          backgroundColor: AppTheme.errorRed,
+          action: SnackBarAction(
+            label: 'إكمال',
+            textColor: Colors.white,
+            onPressed: () => context.push('/auth/setup-profile'),
+          ),
+        ),
+      );
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surfaceBlack,
+        title: const Text('طلب التوثيق الرسمي',
+            style: TextStyle(color: AppTheme.textWhite)),
+        content: const Text(
+          'سيتم إرسال بياناتك للإدارة لمراجعتها واعتمادها. '
+          'بعد الاعتماد ستحصل على شارة "موثق ✓" في كل عروضك.\n\nهل تريد المتابعة؟',
+          style: TextStyle(color: AppTheme.textGrey, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('إلغاء',
+                style: TextStyle(color: AppTheme.textGrey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryGold),
+            child: const Text('إرسال الطلب',
+                style: TextStyle(color: AppTheme.deepBlack)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+
+    try {
+      await SupabaseService().client.from(DbTables.users).update({
+        'vrf': 1,
+        'ts_upd': DateTime.now().toIso8601String(),
+      }).eq('id', user.uid);
+
+      // تحديث الكاش المحلي
+      await auth.refreshUser();
+
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('✅ تم إرسال طلب التوثيق، بانتظار مراجعة الإدارة'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('❌ فشل إرسال الطلب: $e'),
+          backgroundColor: AppTheme.errorRed,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,6 +131,10 @@ class ProfileScreen extends StatelessWidget {
 
             // معلومات الحساب
           _infoCard(user, context),
+            const SizedBox(height: 20),
+
+            // 🛡️ حالة التوثيق (LOGIC_SPEC §2.1)
+            _verificationCard(user, context),
             const SizedBox(height: 20),
 
             // إحصائيات النشاط
@@ -224,6 +310,89 @@ class ProfileScreen extends StatelessWidget {
       case 2: return 'ذهبي';
       default: return 'غير محدد';
     }
+  }
+
+  /// 🛡️ بطاقة حالة التوثيق الرسمي + زر الطلب/إعادة الطلب.
+  /// مرجع: docs/LOGIC_SPEC.md §2.1
+  Widget _verificationCard(user, BuildContext context) {
+    final vrf = user.vrf as int;
+
+    late final Color color;
+    late final IconData icon;
+    late final String title;
+    late final String subtitle;
+    late final Widget? action;
+
+    switch (vrf) {
+      case 2:
+        color = Colors.green;
+        icon = Icons.verified;
+        title = 'حسابك موثق رسمياً ✓';
+        subtitle = 'تظهر شارة "موثق" في جميع عروضك أمام العملاء.';
+        action = null;
+        break;
+      case 1:
+        color = Colors.orange;
+        icon = Icons.hourglass_top;
+        title = 'طلب التوثيق قيد المراجعة';
+        subtitle = 'الإدارة تراجع وثائقك حالياً. ستصلك إشعار بالنتيجة.';
+        action = null;
+        break;
+      default:
+        color = AppTheme.textGrey;
+        icon = Icons.verified_user_outlined;
+        title = 'حسابك غير موثق';
+        subtitle =
+            'الحسابات الموثقة تحظى بثقة أكبر من العملاء. ارفع هويتك واطلب التوثيق.';
+        action = SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () => _requestVerification(context),
+            icon: const Icon(Icons.verified_outlined,
+                color: AppTheme.deepBlack),
+            label: const Text('طلب التوثيق الرسمي',
+                style: TextStyle(
+                    color: AppTheme.deepBlack, fontWeight: FontWeight.bold)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryGold,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+            ),
+          ),
+        );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceBlack,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: color.withValues(alpha: 0.5), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            Icon(icon, color: color, size: 22),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(title,
+                  style: TextStyle(
+                      color: color,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold)),
+            ),
+          ]),
+          const SizedBox(height: 8),
+          Text(subtitle,
+              style: const TextStyle(
+                  color: AppTheme.textGrey, fontSize: 13, height: 1.4)),
+          if (action != null) ...[
+            const SizedBox(height: 12),
+            action,
+          ],
+        ],
+      ),
+    );
   }
 
   Widget _activityStats(user) {
