@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../core/theme/app_theme.dart';
 import '../providers/config_provider.dart';
 import '../providers/auth_provider.dart';
+import '../services/fcm_service.dart';
 
 // ============================================================
 // ملاحظة للرجوع لها لاحقا:
@@ -64,6 +65,9 @@ class _SplashScreenState extends State<SplashScreen>
       Future.delayed(const Duration(milliseconds: 1800)),
     ]);
     if (!mounted) return;
+
+    // تهيئة FCM بعد التحقق من المستخدم (لتسجيل التوكن مع uid لو مسجّل دخول)
+    FCMService().setup();
 
     // التوجّه حسب حالة المستخدم
     if (auth.isLoggedIn) {

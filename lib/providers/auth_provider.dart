@@ -4,6 +4,7 @@ import '../core/network/supabase_service.dart';
 import '../core/constants/db_constants.dart';
 import '../core/services/business_service.dart';
 import '../services/auth_service.dart';
+import '../services/fcm_service.dart';
 
 class AuthProvider with ChangeNotifier {
   UserModel? _userModel;
@@ -55,6 +56,8 @@ class AuthProvider with ChangeNotifier {
       if (result['success'] == true) {
         _isNewUser = result['isNewUser'] as bool? ?? false;
         await _loadUserData(result['userId'] as String);
+        // تسجيل FCM token للمستخدم الجديد
+        await FCMService().registerCurrentTokenForUser();
         return true;
       }
       return false;
@@ -178,6 +181,8 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> logout() async {
+    // إلغاء FCM token قبل تسجيل الخروج
+    await FCMService().unregisterDevice();
     await AuthService().signOut();
     _userModel = null;
     _currentPhone = null;

@@ -38,6 +38,9 @@ class DbFunctions {
   // === المرحلة C: ترقيات العروض (spd) ===
   static const String purchaseOfferBoost = 'purchase_offer_boost';
   static const String expireOfferBoosts = 'expire_offer_boosts';
+  // === المرحلة E2: Firebase FCM ===
+  static const String getUserDeviceTokens = 'get_user_device_tokens';
+  static const String notifyUser = 'notify_user';
   // ملاحظة: triggers (update_user_stats_on_*) لا تُستدعى يدوياً من Flutter
 }
 
