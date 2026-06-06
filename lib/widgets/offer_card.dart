@@ -91,7 +91,30 @@ class OfferCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(offer.ttl, style: const TextStyle(color: AppTheme.textWhite, fontSize: 18, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
+                  // 🏢 هوية المكتب — تسمية مهنية بدل اسم المالك (LOGIC_SPEC §1)
+                  if (offer.ownerLabel != null && offer.ownerLabel!.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.business_center,
+                              color: AppTheme.primaryGold, size: 12),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              offer.ownerLabel!,
+                              style: const TextStyle(
+                                  color: AppTheme.primaryGold,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   Row(children: [
                     const Icon(Icons.location_on, color: AppTheme.primaryGold, size: 16), const SizedBox(width: 4),
                     Text(offer.loc['d'] ?? '', style: const TextStyle(color: AppTheme.textGrey, fontSize: 14)),

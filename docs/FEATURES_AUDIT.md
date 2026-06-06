@@ -334,8 +334,9 @@
 | ✅ تسمية مهنية بدل اسم المالك (هوية المكتب) | كامل | `business_service.dart#getUserPublicLabel` |
 | ✅ عرض التسمية في تفاصيل العرض | كامل | `visitor/offer_detail_screen.dart` |
 | ✅ تحديث أسماء الرتب (جديد/نشط/موثوق/خبير/نخبة) | كامل | `user_model.dart#badgeName` |
-| ⚠️ عرض التسمية في `OfferCard` (القوائم) | مؤجل للمرحلة 2 | يتطلب join في `OfferProvider` |
-| ⚠️ حقل `isVerified` صريح بعد مراجعة الإدارة | مؤجل | حالياً يُستخدم `img.isNotEmpty` كمؤشر |
+| ✅ عرض التسمية في `OfferCard` (القوائم) | كامل (Phase 2) | `widgets/offer_card.dart` + `_enrichOwnerLabels` |
+| ✅ حقل `vrf` صريح + migration | كامل (Phase 2) | `users.vrf` SMALLINT (0/1/2) |
+| ⚠️ شاشة إدارية لاعتماد التوثيق (تغيير vrf 1→2) | غير منفذ بعد | للمرحلة 3 |
 
 ---
 
