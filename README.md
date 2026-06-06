@@ -96,9 +96,12 @@ flutter run
 | ✅ المرحلة 6: إعداد البناء والأمان (Gradle/توقيع/iOS/دليل) | مُجهّزة |
 | ✅ **المرحلة 7: المصادقة (WhatsApp OTP + Email Magic Link)** | مكتملة |
 | ✅ **المرحلة 8: استكمال الشاشات المتبقية (packages/payment/edit/broker/request)** | مكتملة |
+| ✅ **المرحلة 9: إصلاحات ما بعد الاختبار + إضافات** | مكتملة |
+| ✅ **المرحلة 10 (A→E2+): مزايا متقدّمة (إقرار/spd/فيديو/خريطة/cron/FCM/triggers)** | مكتملة |
+| ✅ **المرحلة 11: نظام قنوات الدفع اليدوي (Config-driven)** | مكتملة |
 | ⏳ تنفيذ البناء والنشر للمتاجر | محلياً |
 
-> **الإجمالي:** 37 شاشة · ~98% اكتمال · يتبقّى البناء فقط
+> **الإجمالي:** 38 شاشة · ~98% اكتمال · يتبقّى البناء فقط
 > **التفاصيل:** [`docs/SCREENS_AUDIT.md`](docs/SCREENS_AUDIT.md) · [`docs/AUTH_SETUP.md`](docs/AUTH_SETUP.md)
 
 > **للبناء والنشر:** راجع [`BUILD_GUIDE.md`](BUILD_GUIDE.md) · **للأمان:** [`docs/SECURITY_REVIEW.md`](docs/SECURITY_REVIEW.md)

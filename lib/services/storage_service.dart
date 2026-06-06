@@ -13,6 +13,8 @@ class StorageService {
   final ImagePicker _picker = ImagePicker();
 
   static const String offerBucket = 'offer_images';
+  static const String configAssetsBucket = 'config_assets';
+  static const String paymentProofsBucket = 'payment_proofs';
   static const int maxImages = 6;
 
   // ═══════════════════════════════════════

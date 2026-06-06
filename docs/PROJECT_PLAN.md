@@ -1,6 +1,6 @@
 # 📋 خطة المشروع — عقارات السويداء
 
-> **آخر تحديث:** 2026-06-05  
+> **آخر تحديث:** 2026-06-06  
 > **Backend:** Supabase (PostgreSQL + Auth + Realtime + Storage + RPC)  
 > **Frontend:** Flutter
 
@@ -26,7 +26,7 @@
 | ✅ **المرحلة 10 (E1): Cron Jobs (pg_cron)** | **مكتملة** | 3 jobs نشطة: expire_offers + expire_boosts (يومياً) + reminders (كل ساعة) | — |
 | ✅ **المرحلة 10 (E2): Firebase FCM** | **مكتملة** | Push Notifications تعمل 100% — Edge Function منشورة + Firebase project مفعّل + Service Account + أيقونة ذهبية + navigation + حفظ تلقائي في DB | — |
 | ✅ **المرحلة 10 (E2+): ربط الإشعارات بالأحداث** | **مكتملة** | 6 Triggers + 7 دوال — موافقة/رفض عرض، حجز موعد، إكمال صفقة، موافقة دفعة، مطابقة عرض-طلب | — |
-| 📋 **المرحلة 11: نظام قنوات الدفع** | **قيد التنفيذ** | 4 قنوات (الهرم + شام كاش + رصيد + بنك) — Config-driven + إدارة يدوية | راجع `docs/PAYMENT_CHANNELS_PLAN.md` |
+| ✅ **المرحلة 11: نظام قنوات الدفع** | **مكتملة** | 4 قنوات (الهرم + شام كاش + رصيد + بنك) Config-driven + شاشة إدارة + Migration #8 (channel + Storage buckets) + payment_screen ديناميكية + admin proof viewer | راجع `docs/PAYMENT_CHANNELS_PLAN.md` |
 | ⏳ **المرحلة 10 (E3): نشر سوشيال تلقائي** | **مؤجّلة** | Edge Function لنشر العروض المعتمدة على Facebook | يحتاج صفحة FB خارج سوريا |
 | ⏸️ **WhatsApp Production (Meta 555)** | **مؤجّلة** | الكود جاهز 100% — مؤجّلة لحين إنشاء صفحة FB خارج سوريا للاستفادة من ميزات الإعلان والربح | راجع `docs/WHATSAPP_ACTIVATION_PLAN.md` |
 
@@ -133,6 +133,42 @@
 - لا يفشل الـ trigger لو الإشعار فشل (مغلّف بـ `EXCEPTION WHEN OTHERS`)
 
 > Migration: `supabase/migrations/2026_06_06_notification_triggers.sql`
+
+---
+
+## 💳 المرحلة 11: نظام قنوات الدفع اليدوي (✅ مكتملة — 2026-06-06)
+
+> راجع `docs/PAYMENT_CHANNELS_PLAN.md` للخطة الكاملة.
+
+### الفلسفة
+**التطبيق يستقبل الطلبات — الإدارة تتحقق وتُفعّل يدوياً.**
+السبب: لا توجد بوابة دفع تدعم سوريا (Stripe/PayPal محظورة).
+
+### 4 قنوات معتمدة
+| # | القناة | المفتاح | الأيقونة |
+|---|---|---|---|
+| 1 | الهرم للحوالات | `haram` | 🏛️ |
+| 2 | شام كاش (مع QR) | `sham_cash` | 💚 |
+| 3 | تحويل رصيد (سيرياتل/MTN) | `balance` | 📱 |
+| 4 | تحويل بنكي | `bank` | 🏦 |
+
+### ما تم تنفيذه
+| # | الملف/الميزة | التنفيذ |
+|---|---|---|
+| 11.1 | `Migration #7` — `payChannels` في `app_config.main` | ✅ مطبّق على السيرفر — 4 قنوات بقيم افتراضية |
+| 11.2 | `Migration #8` — `payments.channel` TEXT + buckets | ✅ عمود channel + bucket `config_assets` (عام) + `payment_proofs` (خاص + RLS) |
+| 11.3 | `ConfigModel.payChannels` + `enabledPayChannels` | ✅ getter للقنوات + فلتر للمفعّلة فقط |
+| 11.4 | `PaymentModel.channel` + `channelDisplayName()` | ✅ حقل جديد + دالة عرض عربي + توافق خلفي مع mtd |
+| 11.5 | `payment_screen.dart` Config-Driven | ✅ يقرأ القنوات من config، يعرض بطاقة لكل قناة، تفاصيل ديناميكية، رفع QR، نصوص تعليمات |
+| 11.6 | `payment_channels_editor_screen.dart` (شاشة admin جديدة) | ✅ تفعيل/تعطيل + تعديل كل الحقول + رفع QR لشام كاش |
+| 11.7 | زر في `config_editor_screen` يفتح الشاشة | ✅ navTile مخصص |
+| 11.8 | `payments_screen.dart` admin: عرض القناة + signed URL للإيصال | ✅ `channelDisplayName()` + `InteractiveViewer` للصور + signed URL لـ bucket خاص |
+| 11.9 | تكامل مع notification trigger (`trg_payment_notify`) | ✅ موجود من E2+ — يُطلق إشعار تلقائي عند `approvePayment` |
+
+### Storage Buckets
+- `config_assets` (عام، 5MB، images) — QR شام كاش + أي أصل إداري
+- `payment_proofs` (خاص، 10MB، images+pdf) — إيصالات المستخدمين
+  - **RLS:** المستخدم يرفع داخل `{uid}/...` فقط، admin يقرأ الكل
 
 ---
 
