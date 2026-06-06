@@ -68,14 +68,14 @@ class _BrokerDealsScreenState extends State<BrokerDealsScreen> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppTheme.primaryGold.withOpacity(0.25),
+                  AppTheme.primaryGold.withValues(alpha: 0.25),
                   AppTheme.surfaceBlack,
                 ],
                 begin: Alignment.topRight,
                 end: Alignment.bottomLeft,
               ),
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
+              border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.4)),
             ),
             child: Row(
               children: [
@@ -141,7 +141,7 @@ class _BrokerDealsScreenState extends State<BrokerDealsScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.handshake,
-                size: 72, color: AppTheme.textGrey.withOpacity(0.3)),
+                size: 72, color: AppTheme.textGrey.withValues(alpha: 0.3)),
             const SizedBox(height: 16),
             const Text('لا توجد صفقات',
                 style: TextStyle(color: AppTheme.textGrey, fontSize: 15)),
@@ -161,7 +161,7 @@ class _BrokerDealsScreenState extends State<BrokerDealsScreen> {
       selectedColor: AppTheme.primaryGold,
       backgroundColor: AppTheme.surfaceBlack,
       checkmarkColor: AppTheme.deepBlack,
-      side: BorderSide(color: AppTheme.primaryGold.withOpacity(0.3)),
+      side: BorderSide(color: AppTheme.primaryGold.withValues(alpha: 0.3)),
       onSelected: (_) => setState(() => _tab = value),
     );
   }
@@ -174,7 +174,7 @@ class _BrokerDealsScreenState extends State<BrokerDealsScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.15)),
+        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,11 +190,11 @@ class _BrokerDealsScreenState extends State<BrokerDealsScreen> {
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                 decoration: BoxDecoration(
                   color: (isDone ? Colors.green : Colors.orange)
-                      .withOpacity(0.15),
+                      .withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                       color: (isDone ? Colors.green : Colors.orange)
-                          .withOpacity(0.5)),
+                          .withValues(alpha: 0.5)),
                 ),
                 child: Text(isDone ? 'مكتملة' : 'نشطة',
                     style: TextStyle(

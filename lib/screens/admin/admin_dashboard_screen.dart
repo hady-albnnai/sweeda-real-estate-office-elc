@@ -59,7 +59,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     fontWeight: FontWeight.bold)),
             Text('أهلاً، $name 🛡️',
                 style: TextStyle(
-                    color: AppTheme.primaryGold.withOpacity(0.8), fontSize: 12)),
+                    color: AppTheme.primaryGold.withValues(alpha: 0.8), fontSize: 12)),
           ],
         ),
         actions: [
@@ -168,9 +168,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.errorRed.withOpacity(0.12),
+        color: AppTheme.errorRed.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.errorRed.withOpacity(0.5)),
+        border: Border.all(color: AppTheme.errorRed.withValues(alpha: 0.5)),
       ),
       child: Row(
         children: [
@@ -203,7 +203,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.25)),
+        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.25)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -240,7 +240,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         decoration: BoxDecoration(
           color: AppTheme.surfaceBlack,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppTheme.primaryGold.withOpacity(0.15)),
+          border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.15)),
         ),
         child: Stack(
           children: [

@@ -97,7 +97,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           // إصدار التطبيق
           Center(
-            child: Text('الإصدار 1.0.0', style: TextStyle(color: AppTheme.textGrey.withOpacity(0.5), fontSize: 12)),
+            child: Text('الإصدار 1.0.0', style: TextStyle(color: AppTheme.textGrey.withValues(alpha: 0.5), fontSize: 12)),
           ),
         ],
       ),
@@ -122,7 +122,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         value: value,
         onChanged: onChanged,
         activeColor: AppTheme.primaryGold,
-        activeTrackColor: AppTheme.primaryGold.withOpacity(0.3),
+        activeTrackColor: AppTheme.primaryGold.withValues(alpha: 0.3),
       ),
     );
   }

@@ -129,14 +129,19 @@ class OfferProvider with ChangeNotifier {
     } catch (e) { debugPrint('❌ fetchOfferById error: $e'); return null; }
   }
 
-  Future<bool> addOffer(OfferModel offer) async {
+  Future<OfferModel?> addOffer(OfferModel offer) async {
     try {
       final response = await SupabaseService().client
           .from(DbTables.offers).insert(offer.toMap()).select().single();
-      _offers.insert(0, OfferModel.fromSupabase(
-          Map<String, dynamic>.from(response), response['id'] as String));
-      notifyListeners(); return true;
-    } catch (e) { debugPrint('❌ addOffer error: $e'); return false; }
+      final created = OfferModel.fromSupabase(
+          Map<String, dynamic>.from(response), response['id'] as String);
+      _offers.insert(0, created);
+      notifyListeners();
+      return created;
+    } catch (e) {
+      debugPrint('❌ addOffer error: $e');
+      return null;
+    }
   }
 
   Future<bool> updateOffer(String offerId, Map<String, dynamic> data) async {

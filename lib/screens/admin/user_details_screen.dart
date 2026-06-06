@@ -130,6 +130,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
   }
 
   Future<void> _changeStatus(int status) async {
+    final admin = context.read<AdminProvider>();
     String? reason;
     if (status != 0) {
       final ctrl = TextEditingController();
@@ -138,8 +139,9 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
         builder: (_) => AlertDialog(
           backgroundColor: AppTheme.surfaceBlack,
           title: Text(
-              status == 1 ? 'تجميد الحساب' : 'حظر الحساب',
-              style: const TextStyle(color: AppTheme.textWhite)),
+            status == 1 ? 'تجميد الحساب' : 'حظر الحساب',
+            style: const TextStyle(color: AppTheme.textWhite),
+          ),
           content: TextField(
             controller: ctrl,
             style: const TextStyle(color: AppTheme.textWhite),
@@ -147,20 +149,25 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
           ),
           actions: [
             TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('إلغاء',
-                    style: TextStyle(color: AppTheme.textGrey))),
+              onPressed: () => Navigator.pop(context),
+              child: const Text('إلغاء',
+                  style: TextStyle(color: AppTheme.textGrey)),
+            ),
             ElevatedButton(
-                onPressed: () => Navigator.pop(context, ctrl.text),
-                child: const Text('تأكيد')),
+              onPressed: () => Navigator.pop(context, ctrl.text),
+              child: const Text('تأكيد'),
+            ),
           ],
         ),
       );
       if (reason == null) return;
     }
 
-    final admin = context.read<AdminProvider>();
-    final ok = await admin.setUserStatus(widget.userId, status, reason: reason ?? '');
+    final ok = await admin.setUserStatus(
+      widget.userId,
+      status,
+      reason: reason ?? '',
+    );
     if (ok && mounted) {
       _snack('✅ تم تحديث الحالة');
       _load();
@@ -390,7 +397,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
           children: List.generate(5, (i) {
             const names = ['مستخدم', 'وسيط', 'مشرف', 'نائب', 'مدير'];
             return ListTile(
-              leading: Icon(Icons.person, color: AppTheme.primaryGold),
+              leading: const Icon(Icons.person, color: AppTheme.primaryGold),
               title: Text(names[i],
                   style: const TextStyle(color: AppTheme.textWhite)),
               selected: _user!.role == i,
@@ -489,7 +496,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
       itemBuilder: (_, i) {
         final r = _reports[i];
         return Card(
-          color: Colors.red.withOpacity(0.1),
+          color: Colors.red.withValues(alpha: 0.1),
           margin: const EdgeInsets.only(bottom: 8),
           child: ListTile(
             leading: const Icon(Icons.flag, color: Colors.red),
@@ -543,9 +550,9 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.4)),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Text(text,
           style: TextStyle(

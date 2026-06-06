@@ -26,7 +26,7 @@ class BusinessService {
   Future<bool> addPoints(String uid, int points) async {
     if (uid.isEmpty || points == 0) return false;
     try {
-      await _sb.client.rpc(DbConstants.addPoints, params: {
+      await _sb.client.rpc(DbFunctions.addPoints, params: {
         'p_uid': uid,
         'p_pts': points,
       });
@@ -42,7 +42,7 @@ class BusinessService {
   Future<bool> awardPointsSafe(String uid, String eventType, int points) async {
     if (uid.isEmpty || points == 0) return false;
     try {
-      final res = await _sb.client.rpc(DbConstants.awardPointsSafe, params: {
+      final res = await _sb.client.rpc(DbFunctions.awardPointsSafe, params: {
         'p_uid': uid,
         'p_event_type': eventType,
         'p_points': points,

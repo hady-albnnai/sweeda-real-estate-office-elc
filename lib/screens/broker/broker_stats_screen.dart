@@ -133,7 +133,7 @@ class _BrokerStatsScreenState extends State<BrokerStatsScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.2)),
+        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.2)),
       ),
       child: Column(
         children: [
@@ -193,7 +193,7 @@ class _BrokerStatsScreenState extends State<BrokerStatsScreen> {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
             color: (gold ? AppTheme.primaryGold : Colors.white12)
-                .withOpacity(gold ? 0.5 : 1)),
+                .withValues(alpha: gold ? 0.5 : 1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

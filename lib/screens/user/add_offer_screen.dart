@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../providers/offer_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/config_provider.dart';
+import '../../core/constants/db_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/services/business_service.dart';
 import '../../core/network/supabase_service.dart';
@@ -25,7 +27,9 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   int _currentStep = 0;
   int? _selectedType;
   int? _selectedTrans;
-  String? _selectedCat;
+  int? _selectedMainCat;
+  int? _selectedCat;
+  int _cur = Currency.lbp;
   final _priceCtrl = TextEditingController();
   final _locCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
@@ -33,7 +37,6 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
 
   final List<XFile> _pickedImages = [];
   XFile? _docImage; // صورة سند الملكية
-  XFile? _pickedVideo; // فيديو العرض (اختياري)
   LatLng? _pickedLocation; // الموقع الدقيق على الخريطة (اختياري)
   int? _selectedDocType; // نوع السند من config.docTp
   bool _agreePledge = false; // الإقرار والتعهد
@@ -139,11 +142,19 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     }
   }
 
-  Future<void> _pickVideo() async {
-    final file = await _storage.pickVideo();
-    if (file != null) {
-      setState(() => _pickedVideo = file);
-      _snack('تم اختيار الفيديو ✅');
+  Future<void> _openWhatsAppVideoGroup() async {
+    final config = context.read<ConfigProvider>().config;
+    final groupUrl = config?.texts['videoWhatsAppGroup']?.toString();
+    final defaultMessage = Uri.encodeComponent(
+        'مرحباً، أريد مشاركة فيديو لعرض جديد بعد إنشائه.');
+    final uri = groupUrl != null && groupUrl.isNotEmpty
+        ? Uri.parse(groupUrl)
+        : Uri.parse('https://wa.me/?text=$defaultMessage');
+
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      _snack('لا يمكن فتح واتساب حالياً');
     }
   }
 
@@ -157,16 +168,13 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       _snack('يجب تسجيل الدخول أولاً');
       return;
     }
-    if (_selectedType == null || _priceCtrl.text.isEmpty) {
+    if (_selectedType == null || _selectedTrans == null || _selectedMainCat == null || _selectedCat == null) {
       _snack('يرجى إكمال البيانات الأساسية');
       return;
     }
-    if (_selectedDocType == null) {
-      _snack('يرجى اختيار نوع سند الملكية');
-      return;
-    }
-    if (_docImage == null) {
-      _snack('يرجى رفع صورة سند الملكية');
+    final price = double.tryParse(_priceCtrl.text) ?? 0.0;
+    if (price <= 0) {
+      _snack('يرجى إدخال سعر صالح');
       return;
     }
     if (!_agreePledge) {
@@ -207,15 +215,8 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       );
     }
 
-    // 2.5) رفع الفيديو (اختياري)
-    String videoUrl = '';
-    if (_pickedVideo != null) {
-      setState(() => _progressMsg = 'جارٍ رفع الفيديو...');
-      videoUrl = await _storage.uploadOfferVideo(
-        xfile: _pickedVideo!,
-        userId: user.uid,
-      ) ?? '';
-    }
+    // 2.5) الفيديو لن يُرفع للسيرفر حالياً. يتم مشاركة رابط واتساب لاحقاً.
+    const String videoUrl = '';
 
     // 3) رفع صورة سند الملكية
     setState(() => _progressMsg = 'جارٍ رفع سند الملكية...');
@@ -223,17 +224,17 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
 
     // 4) إنشاء العرض
     setState(() => _progressMsg = 'جارٍ إنشاء العرض...');
-    final price = double.tryParse(_priceCtrl.text) ?? 0.0;
     final loc = {'r': 0, 'd': _locCtrl.text};
 
     final offer = OfferModel(
       id: '',
       usrId: user.uid,
-      ttl: '${_selectedCat ?? 'عرض'} في ${_locCtrl.text}',
+      ttl: '${_selectedCat != null ? _catLabel() : 'عرض'} في ${_locCtrl.text}',
       typ: _selectedType!,
-      trx: _selectedTrans ?? 0,
-      cat: 0,
+      trx: _selectedTrans!,
+      cat: _selectedCat!,
       prc: price,
+      cur: _cur,
       loc: loc,
       descript: _descCtrl.text,
       specs: {'details': _specCtrl.text},
@@ -242,16 +243,16 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       exactLoc: _pickedLocation != null
           ? '${_pickedLocation!.latitude},${_pickedLocation!.longitude}'
           : '',
-      docTp: _selectedDocType!,
+      docTp: _selectedDocType ?? 0,
       docImg: docUrl,
       sts: 0,
       iPub: 0,
       tsCrt: DateTime.now(),
     );
 
-    final ok = await offerProv.addOffer(offer);
+    final createdOffer = await offerProv.addOffer(offer);
 
-    if (ok) {
+    if (createdOffer != null) {
       // 4) منح نقاط إضافة عرض (pts.addO)
       await _biz.awardEvent(user.uid, configProv.config, 'addO', fallback: 500);
       await auth.refreshUser();
@@ -260,7 +261,9 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     if (!mounted) return;
     setState(() => _submitting = false);
 
-    if (ok) {
+    if (createdOffer != null) {
+      await _triggerWhatsAppVideoShare(createdOffer, user);
+      if (!mounted) return;
       Navigator.pop(context);
       _snack('تم إرسال عرضك للمراجعة بنجاح ✅ (+نقاط)');
     } else {
@@ -358,7 +361,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           ),
           if (_submitting)
             Container(
-              color: Colors.black.withOpacity(0.7),
+              color: const Color.fromRGBO(0, 0, 0, 0.7),
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -376,37 +379,109 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     );
   }
 
-  Step _step1() => Step(
-        title: const Text('الأساسيات',
-            style: TextStyle(
-                color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
-        content: Column(children: [
-          _dd('نوع العرض', ['عقار', 'سيارة'],
-              (v) => setState(() => _selectedType = v == 'عقار' ? 0 : 1)),
-          const SizedBox(height: 20),
-          _dd('نوع المعاملة', ['بيع', 'إيجار'],
-              (v) => setState(() => _selectedTrans = v == 'بيع' ? 0 : 1)),
-          const SizedBox(height: 20),
-          _dd('التصنيف', ['شقة', 'فيلا', 'أرض', 'سيدان', 'SUV', 'دفع رباعي'],
-              (v) => setState(() => _selectedCat = v)),
-        ]),
-        isActive: _currentStep >= 0,
-      );
+  Step _step1() {
+    final mainCategories = _categoryGroupMap();
+    final subCategories = _selectedMainCat != null
+        ? _subCategoryMap(_selectedMainCat!)
+        : <int, String>{};
+
+    final mainCatItems = mainCategories.entries
+        .map((e) => DropdownMenuItem(value: e.key, child: Text(e.value)))
+        .toList();
+    final subCatItems = subCategories.entries
+        .map((e) => DropdownMenuItem(value: e.key, child: Text(e.value)))
+        .toList();
+
+    return Step(
+      title: const Text('الأساسيات',
+          style: TextStyle(
+              color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
+      content: Column(children: [
+        _dd('نوع العرض', ['عقار', 'سيارة'], (v) => setState(() {
+          _selectedType = v == 'عقار' ? 0 : 1;
+          _selectedMainCat = null;
+          _selectedCat = null;
+        })),
+        const SizedBox(height: 20),
+        _dd('نوع المعاملة', ['بيع', 'إيجار'],
+            (v) => setState(() => _selectedTrans = v == 'بيع' ? 0 : 1)),
+        const SizedBox(height: 20),
+        DropdownButtonFormField<int>(
+          initialValue: _selectedMainCat,
+          dropdownColor: AppTheme.surfaceBlack,
+          style: const TextStyle(color: AppTheme.textWhite),
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            labelText: 'التصنيف الرئيسي',
+          ),
+          items: mainCatItems,
+          onChanged: (v) => setState(() {
+            _selectedMainCat = v;
+            _selectedCat = null;
+            if (v != null) {
+              final subs = _subCategoryMap(v);
+              if (subs.length == 1) {
+                _selectedCat = subs.keys.first;
+              }
+            }
+          }),
+          hint: const Text('اختر التصنيف الرئيسي',
+              style: TextStyle(color: AppTheme.textGrey)),
+        ),
+        const SizedBox(height: 20),
+        if (subCatItems.isNotEmpty)
+          DropdownButtonFormField<int>(
+            initialValue: _selectedCat,
+            dropdownColor: AppTheme.surfaceBlack,
+            style: const TextStyle(color: AppTheme.textWhite),
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: 'التصنيف الفرعي',
+            ),
+            items: subCatItems,
+            onChanged: (v) => setState(() => _selectedCat = v),
+            hint: const Text('اختر التصنيف الفرعي',
+                style: TextStyle(color: AppTheme.textGrey)),
+          ),
+      ]),
+      isActive: _currentStep >= 0,
+    );
+  }
 
   Step _step2() => Step(
         title: const Text('التفاصيل',
             style: TextStyle(
                 color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
         content: Column(children: [
-          TextField(
-              controller: _priceCtrl,
-              keyboardType: TextInputType.number,
-              decoration:
-                  const InputDecoration(labelText: 'السعر المتوقع (ل.س)')),
+          Row(children: [
+            Expanded(
+              flex: 3,
+              child: TextField(
+                controller: _priceCtrl,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'السعر المتوقع (${_cur == Currency.dollar ? '\$' : 'ل.س'})',
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              flex: 2,
+              child: DropdownButtonFormField<int>(
+                initialValue: _cur,
+                dropdownColor: AppTheme.surfaceBlack,
+                style: const TextStyle(color: AppTheme.textWhite),
+                decoration: const InputDecoration(border: OutlineInputBorder()),
+                items: const [
+                  DropdownMenuItem(value: Currency.dollar, child: Text('دولار')),
+                  DropdownMenuItem(value: Currency.lbp, child: Text('ل.س')),
+                ],
+                onChanged: (v) => setState(() => _cur = v ?? Currency.lbp),
+              ),
+            ),
+          ]),
           const SizedBox(height: 15),
-          TextField(
-              controller: _locCtrl,
-              decoration: const InputDecoration(labelText: 'الموقع / المنطقة')),
+          _buildLocationAutocomplete(),
           const SizedBox(height: 15),
           TextField(
               controller: _descCtrl,
@@ -443,7 +518,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
               padding: const EdgeInsets.symmetric(
                   horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.15),
+                color: const Color.fromRGBO(76, 175, 80, 0.15),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Row(children: [
@@ -509,51 +584,24 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           const Divider(color: AppTheme.textGrey),
           const SizedBox(height: 10),
           // الفيديو (اختياري)
-          const Text('🎬 فيديو للعرض (اختياري)',
+          const Text('🎬 فيديو العرض (اختياري)',
               style: TextStyle(
                   color: AppTheme.primaryGold,
                   fontWeight: FontWeight.bold,
                   fontSize: 13)),
           const SizedBox(height: 4),
-          const Text('فيديو قصير (حد أقصى 60 ثانية، 50 MB) — يزيد فرص البيع',
+          const Text('لن يُرفع الفيديو للسيرفر حالياً. اضغط الزر لفتح واتساب ومشاركة الرابط لاحقاً.',
               style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
           const SizedBox(height: 8),
-          if (_pickedVideo == null)
-            OutlinedButton.icon(
-              onPressed: _pickVideo,
-              icon: const Icon(Icons.video_library, color: AppTheme.primaryGold),
-              label: const Text('اختر فيديو',
-                  style: TextStyle(color: AppTheme.primaryGold)),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppTheme.primaryGold),
-              ),
-            )
-          else
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.green),
-              ),
-              child: Row(children: [
-                const Icon(Icons.check_circle, color: Colors.green, size: 18),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'تم اختيار: ${_pickedVideo!.name}',
-                    style: const TextStyle(
-                        color: AppTheme.textWhite, fontSize: 12),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.red, size: 18),
-                  onPressed: () => setState(() => _pickedVideo = null),
-                ),
-              ]),
+          OutlinedButton.icon(
+            onPressed: _openWhatsAppVideoGroup,
+            icon: const Icon(Icons.message, color: AppTheme.primaryGold),
+            label: const Text('مشاركة فيديو عبر واتساب',
+                style: TextStyle(color: AppTheme.primaryGold)),
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: AppTheme.primaryGold),
             ),
+          ),
         ]),
         isActive: _currentStep >= 2,
       );
@@ -569,12 +617,12 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // نوع سند الملكية
-          const Text('نوع سند الملكية *',
+          const Text('نوع سند الملكية (اختياري)',
               style: TextStyle(
                   color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
           DropdownButtonFormField<int>(
-            value: _selectedDocType,
+            initialValue: _selectedDocType,
             dropdownColor: AppTheme.surfaceBlack,
             style: const TextStyle(color: AppTheme.textWhite),
             decoration: const InputDecoration(border: OutlineInputBorder()),
@@ -591,7 +639,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           const SizedBox(height: 14),
 
           // صورة سند الملكية
-          const Text('صورة سند الملكية *',
+          const Text('صورة سند الملكية (اختياري)',
               style: TextStyle(
                   color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
@@ -604,8 +652,8 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
                     color: _docImage != null
-                        ? Colors.green
-                        : AppTheme.primaryGold.withOpacity(0.4)),
+                        ? const Color.fromRGBO(76, 175, 80, 0.4)
+                        : const Color.fromRGBO(212, 175, 55, 0.4)),
               ),
               child: _docImage == null
                   ? const Center(
@@ -631,6 +679,9 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
                     ),
             ),
           ),
+          const SizedBox(height: 6),
+          const Text('رفع سند الملكية اختياري عند النشر؛ يمكنك إضافته لاحقاً من صفحة العرض.',
+              style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
           const SizedBox(height: 16),
 
           // الإقرار والتعهد
@@ -641,8 +692,8 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
                   color: _agreePledge
-                      ? Colors.green
-                      : AppTheme.primaryGold.withOpacity(0.3)),
+                      ? const Color.fromRGBO(76, 175, 80, 0.3)
+                      : const Color.fromRGBO(212, 175, 55, 0.3)),
             ),
             child: Column(
               children: [
@@ -663,6 +714,12 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
                     ],
                   ),
                 ),
+                const SizedBox(height: 8),
+                const Text(
+                  'يمكنك قراءة نص الإقرار الكامل قبل الموافقة. الموافقة مطلوبة للنشر.',
+                  style: TextStyle(color: AppTheme.textGrey, fontSize: 11),
+                ),
+                const SizedBox(height: 8),
                 CheckboxListTile(
                   value: _agreePledge,
                   onChanged: (v) =>
@@ -680,7 +737,6 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
             ),
           ),
           const SizedBox(height: 16),
-
           SizedBox(
             width: double.infinity,
             height: 52,
@@ -694,6 +750,129 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       ),
       isActive: _currentStep >= 3,
     );
+  }
+
+  String _catLabel() {
+    final config = context.read<ConfigProvider>().config;
+    final source = _selectedType == 1
+        ? config?.vehicleCategories
+        : config?.propertyCategories;
+    if (source != null && source.isNotEmpty && _selectedCat != null) {
+      return source[_selectedCat.toString()]?.toString() ?? 'عرض';
+    }
+    final fallback = _selectedType == 1
+        ? {1: 'سيدان', 2: 'SUV', 3: 'دفع رباعي'}
+        : {1: 'شقة', 2: 'فيلا', 3: 'أرض'};
+    return fallback[_selectedCat] ?? 'عرض';
+  }
+
+  Map<int, String> _mapFromDynamic(dynamic data) {
+    final result = <int, String>{};
+    if (data is Map) {
+      data.forEach((key, value) {
+        final id = int.tryParse(key);
+        if (id == null) return;
+        if (value is String) {
+          result[id] = value;
+        } else if (value is Map) {
+          result[id] = value['nm']?.toString() ??
+              value['name']?.toString() ??
+              value.toString();
+        } else {
+          result[id] = value.toString();
+        }
+      });
+    }
+    return result;
+  }
+
+  Map<int, String> _categoryGroupMap() {
+    final config = context.read<ConfigProvider>().config;
+    final categories = _selectedType == 1
+        ? config?.vehicleCategories
+        : config?.propertyCategories;
+    if (categories != null && categories.isNotEmpty) {
+      return _mapFromDynamic(categories);
+    }
+    return _selectedType == 1
+        ? {
+            1: 'سيدان',
+            2: 'SUV',
+            3: 'دفع رباعي',
+          }
+        : {
+            1: 'شقة',
+            2: 'فيلا',
+            3: 'أرض',
+          };
+  }
+
+  Map<int, String> _subCategoryMap(int mainId) {
+    final config = context.read<ConfigProvider>().config;
+    final categories = _selectedType == 1
+        ? config?.vehicleCategories
+        : config?.propertyCategories;
+    final mainItem = categories?['$mainId'];
+    if (mainItem is Map) {
+      final subSource = mainItem['sub'] ?? mainItem['children'] ?? mainItem;
+      final subMap = _mapFromDynamic(subSource);
+      if (subMap.isNotEmpty) {
+        return subMap;
+      }
+    }
+    final label = _categoryGroupMap()[mainId] ?? 'غير معروف';
+    return {mainId: label};
+  }
+
+  Widget _buildLocationAutocomplete() {
+    final config = context.watch<ConfigProvider>().config;
+    final locations = (config?.locations ?? [])
+        .map((item) {
+      if (item is String) return item;
+      if (item is Map) {
+        return item['name']?.toString() ??
+            item['d']?.toString() ??
+            item.toString();
+      }
+      return item.toString();
+    }).where((item) => item.isNotEmpty).cast<String>().toList();
+
+    return Autocomplete<String>(
+      initialValue: TextEditingValue(text: _locCtrl.text),
+      optionsBuilder: (textEditingValue) {
+        if (textEditingValue.text.isEmpty) return locations;
+        final query = textEditingValue.text.toLowerCase();
+        return locations.where(
+            (option) => option.toLowerCase().contains(query));
+      },
+      fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+        controller.text = _locCtrl.text;
+        controller.selection = _locCtrl.selection;
+        return TextField(
+          controller: controller,
+          focusNode: focusNode,
+          decoration: const InputDecoration(labelText: 'الموقع / المنطقة'),
+          onChanged: (value) => _locCtrl.text = value,
+        );
+      },
+      onSelected: (selection) {
+        setState(() => _locCtrl.text = selection);
+      },
+    );
+  }
+
+  Future<void> _triggerWhatsAppVideoShare(OfferModel offer, dynamic user) async {
+    final config = context.read<ConfigProvider>().config;
+    final groupUrl = config?.texts['videoWhatsAppGroup']?.toString();
+    final ownerName = (user?.nm ?? user?.uid ?? '');
+    final message = 'عرض رقم ${offer.id} للمستخدم $ownerName';
+    final uri = groupUrl != null && groupUrl.isNotEmpty
+        ? Uri.parse(groupUrl)
+        : Uri.parse('https://wa.me/?text=${Uri.encodeComponent(message)}');
+
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   Widget _thumb(XFile file) {
@@ -723,7 +902,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         Text(label, style: const TextStyle(color: AppTheme.textGrey)),
         const SizedBox(height: 5),
         DropdownButtonFormField<String>(
-            value: null,
+            initialValue: null,
             items: items
                 .map((i) => DropdownMenuItem(value: i, child: Text(i)))
                 .toList(),

@@ -352,7 +352,7 @@ class AdminProvider with ChangeNotifier {
   Future<bool> approvePayment(String paymentId, String adminId) async {
     try {
       final res = await SupabaseService().client.rpc(
-        DbConstants.approvePaymentFinal,
+        DbFunctions.approvePaymentFinal,
         params: {
           'p_payment_id': paymentId,
           'p_admin_id': adminId,

@@ -18,7 +18,7 @@ import 'services/notification_service.dart';
 
 /// Supabase Configuration
 const String supabaseUrl = 'https://vsgkgnjtebjxyqwpuopz.supabase.co';
-const String supabaseAnonKey =
+const String supabasePublishableKey =
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzZ2tnbmp0ZWJqeHlxd3B1b3B6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NzA1MzYsImV4cCI6MjA5NjE0NjUzNn0.1i81x_ne8_AciPMWaRxc-8Z-no-lXudLATKcE0A4tUw';
 
 class MyApp extends StatefulWidget {
@@ -46,18 +46,19 @@ class _MyAppState extends State<MyApp> {
 
   /// يستمع لتغيرات auth — ينفّذ تلقائياً تسجيل دخول الإيميل
   /// بعد ما يفتح المستخدم الـ Magic Link.
-  void _listenAuthChanges(BuildContext ctx) {
+  void _listenAuthChanges() {
     _authSub?.cancel();
-    _authSub = SupabaseService().auth.onAuthStateChange.listen((data) async {
+    _authSub = SupabaseService().auth.onAuthStateChange.listen((data) {
       final event = data.event;
       if (event == AuthChangeEvent.signedIn) {
         final session = data.session;
         if (session?.user.email != null &&
             !session!.user.email!.endsWith('@whatsapp.local')) {
+          if (!mounted) return;
           // إيميل حقيقي → magic link
-          final auth = ctx.read<AuthProvider>();
-          final ok = await auth.handleEmailSession();
-          if (ok && mounted) {
+          final auth = context.read<AuthProvider>();
+          auth.handleEmailSession().then((ok) {
+            if (!mounted || !ok) return;
             final go = AppRouter.router;
             if (auth.isNewUser) {
               go.go('/setup-profile');
@@ -68,7 +69,7 @@ class _MyAppState extends State<MyApp> {
             } else {
               go.go('/user/home');
             }
-          }
+          });
         }
       }
     });
@@ -76,7 +77,8 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> _initializeApp() async {
     try {
-      await SupabaseService.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
+      await SupabaseService.initialize(
+          url: supabaseUrl, publishableKey: supabasePublishableKey);
       await NotificationService.initialize();
       if (mounted) setState(() => _initialized = true);
       // ملاحظة: الـ listener يُربط بأول build (له context)
@@ -103,7 +105,7 @@ class _MyAppState extends State<MyApp> {
         // ربط الـ listener مرة واحدة بعد ما يتوفر context الموجود فيه AuthProvider
         if (_initialized && _authSub == null) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) _listenAuthChanges(ctx);
+            if (mounted) _listenAuthChanges();
           });
         }
         return MaterialApp.router(

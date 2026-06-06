@@ -19,12 +19,10 @@ class AppTheme {
         primary: primaryGold,
         secondary: primaryGold,
         surface: surfaceBlack,
-        background: deepBlack,
         error: errorRed,
         onPrimary: deepBlack,
         onSecondary: deepBlack,
         onSurface: textWhite,
-        onBackground: textWhite,
       ),
       textTheme: GoogleFonts.cairoTextTheme(
         ThemeData.dark().textTheme.apply(

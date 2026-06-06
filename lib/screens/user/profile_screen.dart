@@ -76,7 +76,7 @@ class ProfileScreen extends StatelessWidget {
             border: Border.all(color: AppTheme.primaryGold, width: 3),
             boxShadow: [
               BoxShadow(
-                color: AppTheme.primaryGold.withOpacity(0.3),
+                color: AppTheme.primaryGold.withValues(alpha: 0.3),
                 blurRadius: 15,
                 spreadRadius: 3,
               ),
@@ -107,9 +107,9 @@ class ProfileScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 6),
           decoration: BoxDecoration(
-            color: AppTheme.primaryGold.withOpacity(0.15),
+            color: AppTheme.primaryGold.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3)),
+            border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.3)),
           ),
           child: Text(
             user.badgeName,
@@ -145,7 +145,7 @@ class ProfileScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.2)),
+        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.2)),
       ),
       child: Column(
         children: [
@@ -166,7 +166,7 @@ class ProfileScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.2)),
+        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -233,7 +233,7 @@ class ProfileScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.2)),
+        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -335,7 +335,7 @@ class ProfileScreen extends StatelessWidget {
               icon: const Icon(Icons.shield),
               label: const Text('لوحة الإدارة'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryGold.withOpacity(0.85),
+                backgroundColor: AppTheme.primaryGold.withValues(alpha: 0.85),
                 foregroundColor: AppTheme.deepBlack,
                 padding: const EdgeInsets.symmetric(vertical: 15),
               ),
@@ -354,7 +354,7 @@ class ProfileScreen extends StatelessWidget {
             icon: const Icon(Icons.logout),
             label: const Text('تسجيل الخروج'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red.withOpacity(0.2),
+              backgroundColor: Colors.red.withValues(alpha: 0.2),
               foregroundColor: Colors.red,
               padding: const EdgeInsets.symmetric(vertical: 15),
             ),

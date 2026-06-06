@@ -81,7 +81,7 @@ class PackagesScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
+        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.4)),
       ),
       child: Row(
         children: [
@@ -134,7 +134,7 @@ class PackagesScreen extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: gradient[0].withOpacity(0.3),
+            color: gradient[0].withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -170,7 +170,7 @@ class PackagesScreen extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: Colors.green.withOpacity(0.2),
+                            color: Colors.green.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Text(
@@ -265,7 +265,7 @@ class PackagesScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.textGrey.withOpacity(0.3)),
+        border: Border.all(color: AppTheme.textGrey.withValues(alpha: 0.3)),
       ),
       child: const Row(
         children: [

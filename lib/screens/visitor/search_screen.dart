@@ -153,7 +153,7 @@ class _SearchScreenState extends State<SearchScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 72, color: AppTheme.textGrey.withOpacity(0.3)),
+          Icon(icon, size: 72, color: AppTheme.textGrey.withValues(alpha: 0.3)),
           const SizedBox(height: 16),
           Text(text,
               textAlign: TextAlign.center,
@@ -174,7 +174,7 @@ class _SearchScreenState extends State<SearchScreen> {
       selectedColor: AppTheme.primaryGold,
       backgroundColor: AppTheme.surfaceBlack,
       checkmarkColor: AppTheme.deepBlack,
-      side: BorderSide(color: AppTheme.primaryGold.withOpacity(0.3)),
+      side: BorderSide(color: AppTheme.primaryGold.withValues(alpha: 0.3)),
       onSelected: (_) => onTap(),
     );
   }

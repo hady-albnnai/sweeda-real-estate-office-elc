@@ -111,13 +111,13 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.15)),
+        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.15)),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         onTap: () => context.push('/admin/user/${u.uid}'),
         leading: CircleAvatar(
-          backgroundColor: AppTheme.primaryGold.withOpacity(0.15),
+          backgroundColor: AppTheme.primaryGold.withValues(alpha: 0.15),
           child: Text(u.nm.isNotEmpty ? u.nm[0] : '؟',
               style: const TextStyle(color: AppTheme.primaryGold)),
         ),
@@ -184,7 +184,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
       decoration: BoxDecoration(
-        color: c.withOpacity(0.15),
+        color: c.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(t, style: TextStyle(color: c, fontSize: 10)),
@@ -236,30 +236,33 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
       3: 'نائب',
       4: 'مدير',
     };
+    final admin = context.read<AdminProvider>();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
         title: const Text('تغيير الدور', style: TextStyle(color: AppTheme.primaryGold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: roles.entries
-              .map((e) => RadioListTile<int>(
-                    value: e.key,
-                    groupValue: u.role,
-                    activeColor: AppTheme.primaryGold,
-                    title: Text(e.value,
-                        style: const TextStyle(color: AppTheme.textWhite)),
-                    onChanged: (val) async {
-                      Navigator.pop(ctx);
-                      if (val != null &&
-                          await context.read<AdminProvider>().updateUserRole(u.uid, val)) {
-                        _snack('تم تغيير دور ${u.nm} إلى ${roles[val]}');
-                        _load();
-                      }
-                    },
-                  ))
-              .toList(),
+        content: RadioGroup<int>(
+          groupValue: u.role,
+          onChanged: (val) async {
+            if (val == null) return;
+            Navigator.pop(ctx);
+            if (await admin.updateUserRole(u.uid, val)) {
+              _snack('تم تغيير دور ${u.nm} إلى ${roles[val]}');
+              _load();
+            }
+          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: roles.entries
+                .map((e) => RadioListTile<int>(
+                      value: e.key,
+                      activeColor: AppTheme.primaryGold,
+                      title: Text(e.value,
+                          style: const TextStyle(color: AppTheme.textWhite)),
+                    ))
+                .toList(),
+          ),
         ),
       ),
     );

@@ -73,7 +73,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.assignment_outlined, size: 80, color: AppTheme.textGrey.withOpacity(0.3)),
+          Icon(Icons.assignment_outlined, size: 80, color: AppTheme.textGrey.withValues(alpha: 0.3)),
           const SizedBox(height: 20),
           const Text('ما عندك طلبات حالياً', style: TextStyle(color: AppTheme.textGrey, fontSize: 16)),
           const SizedBox(height: 20),
@@ -100,7 +100,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
       child: ListTile(
         contentPadding: const EdgeInsets.all(15),
         leading: CircleAvatar(
-          backgroundColor: AppTheme.primaryGold.withOpacity(0.2),
+          backgroundColor: AppTheme.primaryGold.withValues(alpha: 0.2),
           child: Icon(req.elm == 0 ? Icons.home : Icons.directions_car, color: AppTheme.primaryGold),
         ),
         title: Text(
@@ -120,7 +120,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
         trailing: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
-            color: (statusColors[req.sts] ?? Colors.grey).withOpacity(0.2),
+            color: (statusColors[req.sts] ?? Colors.grey).withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
