@@ -93,6 +93,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
     final matches = await BusinessService().matchOffersForRequest(
       type: element,
       targetPrice: budget,
+      currency: request.cur,
     );
 
     if (!mounted) return;

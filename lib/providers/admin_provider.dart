@@ -7,6 +7,7 @@ import '../models/payment_model.dart';
 import '../models/report_model.dart';
 import '../core/network/supabase_service.dart';
 import '../core/constants/db_constants.dart';
+import '../core/services/business_service.dart';
 
 /// Provider لوحة الإدارة (role >= 2)
 /// يجمع كل عمليات الإدارة: العروض، المستخدمون، المواعيد، الصفقات،
