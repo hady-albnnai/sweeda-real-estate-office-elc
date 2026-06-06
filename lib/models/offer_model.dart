@@ -46,6 +46,11 @@ class OfferModel {
   final DateTime? tsEnd;
   final DateTime? tsRen;
 
+  /// 🏢 تسمية مهنية لمالك العرض (هوية المكتب) — حقل عابر لا يُحفظ في DB.
+  /// يُحقن من Provider بعد جلب بيانات المالك. مرجع: docs/LOGIC_SPEC.md §1.
+  /// إذا كان null لا تُعرض، إذا كان غير null يُعرض بدل أي إشارة لاسم المالك.
+  String? ownerLabel;
+
   OfferModel({
     required this.id,
     required this.usrId,

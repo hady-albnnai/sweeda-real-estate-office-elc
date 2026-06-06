@@ -28,6 +28,9 @@ class UserModel {
   final int iDel;
   final DateTime tsCrt;
   final DateTime? tsUpd;
+  /// ✓ التوثيق الرسمي: 0=غير موثق، 1=قيد المراجعة، 2=موثق بعد مراجعة الإدارة.
+  /// مرجع: docs/LOGIC_SPEC.md §2.1
+  final int vrf;
 
   UserModel({
     required this.uid,
@@ -56,6 +59,7 @@ class UserModel {
     this.iDel = 0,
     required this.tsCrt,
     this.tsUpd,
+    this.vrf = 0,
   })  : ntf = ntf ?? {'off': 0, 'app': 0, 'fin': 0, 'rat': 0},
         stats = stats ?? {'off': 0, 'req': 0, 'app': 0, 'dl': 0},
         wkLgn = wkLgn ?? [];
@@ -92,6 +96,7 @@ class UserModel {
       iDel: data['i_del'] ?? 0,
       tsCrt: DateTime.parse(data['ts_crt']),
       tsUpd: data['ts_upd'] != null ? DateTime.parse(data['ts_upd']) : null,
+      vrf: data['vrf'] ?? 0,
     );
   }
 
@@ -107,6 +112,7 @@ class UserModel {
       'strk_dt': strkDt?.toIso8601String(), 'i_del': iDel,
       'ts_crt': tsCrt.toIso8601String(),
       'ts_upd': tsUpd?.toIso8601String(),
+      'vrf': vrf,
     };
   }
 
@@ -141,7 +147,10 @@ class UserModel {
     }
   }
 
-  /// هل بدأ المستخدم مسار التوثيق (رفع صورة هوية)؟
-  /// مؤقتاً نعتمد على وجود img؛ لاحقاً سيُضاف حقل isVerified بعد مراجعة الإدارة.
-  bool get hasStartedVerification => img.isNotEmpty;
+  /// هل بدأ المستخدم مسار التوثيق (رفع صورة هوية أو قيد المراجعة)؟
+  bool get hasStartedVerification => img.isNotEmpty || vrf == 1;
+
+  /// هل المستخدم موثق رسمياً بعد مراجعة الإدارة؟
+  /// مرجع: docs/LOGIC_SPEC.md §2.1
+  bool get isVerifiedOfficial => vrf == 2;
 }

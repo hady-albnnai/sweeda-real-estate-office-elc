@@ -461,22 +461,22 @@ class BusinessService {
   /// تُخفي اسم المالك الحقيقي لحماية الخصوصية وتعزيز هوية "المكتب".
   ///
   /// قواعد التسمية:
-  /// - وسيط + بدأ التوثيق → "وسيط معتمد ✓"
-  /// - وسيط + لم يبدأ      → "وسيط شريك"
-  /// - مستخدم + بدأ التوثيق → "عميل موثق ✓"
-  /// - مستخدم + رتبة ≥ خبير → "عميل مميز ⭐"
-  /// - مستخدم + رتبة ≥ نشط → "عميل نشط"
-  /// - مستخدم عادي         → "عميل"
+  /// - وسيط + موثق رسمياً (vrf=2)        → "وسيط معتمد ✓"
+  /// - وسيط + قيد التوثيق أو غير موثق   → "وسيط شريك"
+  /// - مستخدم + موثق رسمياً              → "عميل موثق ✓"
+  /// - مستخدم + رتبة ≥ خبير              → "عميل مميز ⭐"
+  /// - مستخدم + رتبة ≥ نشط               → "عميل نشط"
+  /// - مستخدم عادي                       → "عميل"
   String getUserPublicLabel(UserModel user) {
     final isBroker = user.isBroker; // يعتمد على حقل brk == 1
-    final hasVerification = user.hasStartedVerification;
+    final isOfficial = user.isVerifiedOfficial;
     final badge = user.bg;
 
     String label;
     if (isBroker) {
-      label = hasVerification ? 'وسيط معتمد ✓' : 'وسيط شريك';
+      label = isOfficial ? 'وسيط معتمد ✓' : 'وسيط شريك';
     } else {
-      if (hasVerification) {
+      if (isOfficial) {
         label = 'عميل موثق ✓';
       } else if (badge >= 3) {
         label = 'عميل مميز ⭐';

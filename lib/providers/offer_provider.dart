@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../models/offer_model.dart';
+import '../models/user_model.dart';
 import '../core/network/supabase_service.dart';
 import '../core/constants/db_constants.dart';
 import '../core/services/local_cache_service.dart';
@@ -20,6 +21,43 @@ class OfferProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get fromCache => _fromCache;
+
+  /// 🏢 إثراء قائمة العروض بتسميات الملاك المهنية (هوية المكتب).
+  /// يجلب الملاك في استعلام واحد batch، ثم يحقن ownerLabel في كل عرض.
+  /// مرجع: docs/LOGIC_SPEC.md §1
+  Future<void> _enrichOwnerLabels(List<OfferModel> offers) async {
+    if (offers.isEmpty) return;
+    try {
+      final ownerIds = offers
+          .map((o) => o.usrId)
+          .where((id) => id.isNotEmpty)
+          .toSet()
+          .toList();
+      if (ownerIds.isEmpty) return;
+
+      final res = await SupabaseService()
+          .client
+          .from(DbTables.users)
+          .select('id, nm, ph, role, brk, bg, img, ts_crt')
+          .inFilter('id', ownerIds);
+
+      final Map<String, UserModel> ownersMap = {};
+      for (final row in (res as List)) {
+        final m = Map<String, dynamic>.from(row);
+        ownersMap[m['id'] as String] = UserModel.fromSupabase(m, m['id'] as String);
+      }
+
+      final bs = BusinessService();
+      for (final o in offers) {
+        final owner = ownersMap[o.usrId];
+        if (owner != null) {
+          o.ownerLabel = bs.getUserPublicLabel(owner);
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ enrichOwnerLabels failed (non-fatal): $e');
+    }
+  }
 
   Future<void> fetchOffers() async {
     _isLoading = true;
@@ -54,6 +92,8 @@ class OfferProvider with ChangeNotifier {
               OfferModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String))
           .toList();
       _fromCache = false;
+      // 🏢 إثراء بهوية المكتب
+      await _enrichOwnerLabels(_offers);
       // حفظ في الكاش
       await LocalCacheService()
           .saveOffers(_offers.map((o) => {'id': o.id, ...o.toMap()}).toList());
@@ -93,6 +133,8 @@ class OfferProvider with ChangeNotifier {
           if (!_isSearching) {
             _offers = published;
             _fromCache = false;
+            // 🏢 إثراء بهوية المكتب (fire-and-forget لا يعطل التدفق)
+            _enrichOwnerLabels(_offers).then((_) => notifyListeners());
             LocalCacheService()
                 .saveOffers(_offers.map((o) => {'id': o.id, ...o.toMap()}).toList());
             notifyListeners();
@@ -124,8 +166,10 @@ class OfferProvider with ChangeNotifier {
           .from(DbTables.offers).select()
           .eq('usr_id', userId).eq('i_del', 0)
           .order('ts_crt', ascending: false);
-      return (response as List).map((d) =>
+      final list = (response as List).map((d) =>
           OfferModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String)).toList();
+      await _enrichOwnerLabels(list);
+      return list;
     } catch (e) { debugPrint('❌ fetchUserOffers error: $e'); return []; }
   }
 
@@ -134,8 +178,11 @@ class OfferProvider with ChangeNotifier {
       final response = await SupabaseService().client
           .from(DbTables.offers).select()
           .eq('id', offerId).eq('i_del', 0).single();
-      return OfferModel.fromSupabase(
+      final offer = OfferModel.fromSupabase(
           Map<String, dynamic>.from(response), response['id'] as String);
+      // 🏢 إثراء بهوية المكتب
+      await _enrichOwnerLabels([offer]);
+      return offer;
     } catch (e) { debugPrint('❌ fetchOfferById error: $e'); return null; }
   }
 
@@ -208,7 +255,8 @@ class OfferProvider with ChangeNotifier {
       final response = await q.order('ts_crt', ascending: false);
       final results = (response as List).map((d) =>
           OfferModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String)).toList();
-      
+
+      await _enrichOwnerLabels(results);
       _offers = results;
       notifyListeners();
       return results;

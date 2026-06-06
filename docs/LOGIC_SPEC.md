@@ -40,8 +40,17 @@
 - **الوسيط:** رفع الهوية والوثائق التجارية **إلزامي**.
   لا يمكن تفعيل حساب الوسيط دون مراجعة إدارية.
 - شارة "موثق" تظهر فقط بعد مراجعة إدارية رسمية.
-- **مؤقتاً:** يُعتبر المستخدم "بدأ التوثيق" إذا رفع `img`
-  (لاحقاً سيُضاف حقل `isVerified` صريح بعد مراجعة الإدارة).
+
+#### حقل `users.vrf` (تم تنفيذه)
+| القيمة | المعنى |
+|--------|--------|
+| `0` | غير موثق (افتراضي) |
+| `1` | قيد المراجعة (المستخدم رفع وثائقه) |
+| `2` | موثق رسمياً (الإدارة وافقت) |
+
+- ملف الـ migration: `supabase/migrations/2026_06_06_user_verification_status.sql`
+- الحقل في الكود: `UserModel.vrf` + المساعدات
+  `hasStartedVerification` و `isVerifiedOfficial`.
 
 ### 2. الموثوقية السلوكية (Trust — ⭐)
 سلم المراتب بناءً على النقاط (يحل محل سلم المعادن السابق):
@@ -95,8 +104,12 @@
 |---------|------------------|
 | توليد التسمية المهنية | `lib/core/services/business_service.dart` → `getUserPublicLabel()` |
 | اسم الرتبة السلوكية | `lib/models/user_model.dart` → `badgeName` |
+| إثراء قوائم العروض بالتسمية | `lib/providers/offer_provider.dart` → `_enrichOwnerLabels()` |
 | عرض التسمية في تفاصيل العرض | `lib/screens/visitor/offer_detail_screen.dart` |
+| عرض التسمية في بطاقات العروض | `lib/widgets/offer_card.dart` |
 | حالة بدء التوثيق | `lib/models/user_model.dart` → `hasStartedVerification` |
+| التوثيق الرسمي المعتمد | `lib/models/user_model.dart` → `isVerifiedOfficial` (vrf=2) |
+| Migration التوثيق | `supabase/migrations/2026_06_06_user_verification_status.sql` |
 
 ---
 
