@@ -24,9 +24,8 @@
 | ✅ **المرحلة 10 (C): ترقيات العروض spd** | **مكتملة** | shaشة boost + 5 ترقيات (ren/pin/bst/dsc5/fms) + شارات + ترتيب تلقائي | — |
 | ✅ **المرحلة 10 (D): فيديو + خريطة + admin user details** | **مكتملة** | video_player+chewie + flutter_map+geolocator + شاشة UserDetails بـ 4 tabs | — |
 | ✅ **المرحلة 10 (E1): Cron Jobs (pg_cron)** | **مكتملة** | 3 jobs نشطة: expire_offers + expire_boosts (يومياً) + reminders (كل ساعة) | — |
-| ⏳ **المرحلة 10 (E2): Firebase FCM** | **التالية** | Push Notifications للتطبيق المغلق | يحتاج إعداد Firebase Project |
+| ✅ **المرحلة 10 (E2): Firebase FCM** | **مكتملة** | Push Notifications تعمل 100% — Edge Function منشورة + Firebase project مفعّل + Service Account + أيقونة ذهبية + navigation + حفظ تلقائي في DB | — |
 | ⏳ **المرحلة 10 (E3): نشر سوشيال تلقائي** | **مؤجّلة** | Edge Function لنشر العروض المعتمدة على Facebook | يحتاج صفحة FB خارج سوريا |
-| ⏳ **المرحلة 10 (E): Cron + FCM + Auto Social** | **لاحقة** | pg_cron jobs + FCM Push + نشر سوشيال تلقائي | — |
 | ⏸️ **WhatsApp Production (Meta 555)** | **مؤجّلة** | الكود جاهز 100% — مؤجّلة لحين إنشاء صفحة FB خارج سوريا للاستفادة من ميزات الإعلان والربح | راجع `docs/WHATSAPP_ACTIVATION_PLAN.md` |
 
 **النسبة الإجمالية: ~98% مكتمل** (يتبقّى تنفيذ البناء/النشر على الجهاز المحلي + ترقيات RLS)
@@ -54,6 +53,59 @@
 | 10.8 | **نظام الإحالة** (`referral`) | عمود `ref_by`+`ref_cnt` + RPC `apply_referral` + شاشة `referral_screen` كاملة |
 
 > Migration SQL جديد: `supabase/migrations/2026_06_05_stats_triggers_and_wkLogin.sql`
+
+### الجزء C: ترقيات العروض (spd)
+| # | الميزة | التنفيذ |
+|---|---|---|
+| 10.9 | **ترقيات العروض (spd)** | شاشة `boost_offer_screen` + 5 ترقيات (ren/pin/bst/dsc5/fms) + شارات على البطاقة + ترتيب تلقائي |
+| 10.10 | RPC `purchase_offer_boost` | يخصم النقاط + يفعّل الترقية + يسجّل في activity_log |
+| 10.11 | RPC `expire_offer_boosts` | تُلغي الترقيات المنتهية تلقائياً (cron) |
+
+> Migration: `supabase/migrations/2026_06_05_offer_boosts.sql`
+
+### الجزء D: فيديو + خريطة + admin user details
+| # | الميزة | التنفيذ |
+|---|---|---|
+| 10.12 | **فيديو للعرض** (`vdo`) | `video_player + chewie` + رفع في add_offer Step 3 + عرض في offer_detail |
+| 10.13 | **خريطة + موقع دقيق** (`exact_loc`) | `flutter_map + latlong2 + geolocator` + LocationPicker + LocationViewer (OpenStreetMap مجاني) |
+| 10.14 | **شاشة تفاصيل المستخدم للإدارة** | `user_details_screen` بـ 4 tabs (عروض/مواعيد/تبليغات/نشاط) + chips للحالة + اتصال/واتساب |
+
+### الجزء E1: Cron Jobs (pg_cron)
+| # | الميزة | التنفيذ |
+|---|---|---|
+| 10.15 | **pg_cron extension** | مفعّل على السيرفر |
+| 10.16 | `daily-expire-offers` | يومياً 03:00 UTC → `expire_offers()` |
+| 10.17 | `daily-expire-boosts` | يومياً 03:05 UTC → `expire_offer_boosts()` |
+| 10.18 | `hourly-appointment-reminders` | كل ساعة → `send_appointment_reminders()` |
+
+> Migration: `supabase/migrations/2026_06_05_cron_jobs.sql`
+
+### الجزء E2: Firebase FCM Push Notifications
+| # | الميزة | التنفيذ |
+|---|---|---|
+| 10.19 | **Firebase Project مفعّل** | sweeda-real-estate-elc — package `com.sweeda.realestate` |
+| 10.20 | **google-services.json** | مرفوع في `android/app/google-services.json` |
+| 10.21 | **Gradle plugin** | `com.google.gms.google-services 4.4.2` في settings + app |
+| 10.22 | **Flutter packages** | `firebase_core ^3.6.0` + `firebase_messaging ^15.1.3` |
+| 10.23 | **FCMService** | تهيئة + token + تسجيل في user_devices + معالج foreground/background/terminated |
+| 10.24 | **Service Account credentials** | 3 secrets في Supabase: `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` |
+| 10.25 | **Edge Function** `send-push-notification` | منشورة + تستخدم FCM HTTP v1 API + تنظيف تلقائي للتوكنز الفاسدة |
+| 10.26 | **RPC جديدة** | `get_user_device_tokens(uid)` + `notify_user(uid, type, title, body, ref_id, action)` |
+| 10.27 | **أيقونة الإشعار** | `drawable/ic_notification.xml` (شفافة-أبيض) + لون ذهبي #D4AF37 |
+| 10.28 | **Navigation handler** | الضغط على الإشعار يفتح الشاشة المناسبة حسب `data.type` |
+| 10.29 | **حفظ تلقائي في DB** | كل إشعار يصل → يُحفظ في `notifications` ليظهر داخل التطبيق |
+| 10.30 | **تنظيف التوكنز** | تشطيب القديمة عند تسجيل جديد + إلغاء الفاسدة من Edge Function |
+
+> Migration: `supabase/migrations/2026_06_05_fcm_setup.sql`  
+> Edge Function: `supabase/functions/send-push-notification/index.ts`  
+> Flutter Service: `lib/services/fcm_service.dart`
+
+**اختبار النجاح:**
+```bash
+# PowerShell:
+{ "success": true, "sent": 1, "failed": 0, "total": 1 }
+# الإشعار وصل، الأيقونة الذهبية ظاهرة، الضغط ينقل لشاشة العرض، يُحفظ داخل التطبيق ✅
+```
 
 ---
 

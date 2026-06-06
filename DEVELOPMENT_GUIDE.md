@@ -109,13 +109,20 @@ firebase.json ❌ | functions/ ❌ | firebase_options.dart ❌ | firestore_servi
 | # | العنصر | التنفيذ | الحالة |
 |---|---|---|---|
 | 5.1 | Realtime Updates | `OfferProvider.subscribeRealtime()` (stream + فلترة يدوية) — مفعّل بالـ HomeScreen مع إلغاء بالـ dispose | ✅ |
-| 5.2 | الإشعارات | `notifications_screen.dart` + badge على أيقونة الجرس + الـ Realtime listener موجود بـ NotificationService (محلي). ملاحظة: Push عبر FCM يحتاج Edge Function لاحقاً | ✅ |
+| 5.2 | الإشعارات | `notifications_screen.dart` + badge على أيقونة الجرس + Realtime listener + **FCM Push كامل (المرحلة E2)** — راجع `lib/services/fcm_service.dart` و `supabase/functions/send-push-notification/` | ✅ |
 | 5.3 | Offline Support | `OfferProvider` كاش-أولاً عبر Hive + لافتة "وضع دون اتصال" + `ConfigProvider` كاش | ✅ |
 | 5.4 | Error Handling | `AppErrorWidget`/`EmptyState` محدّثان بالثيم + استخدامهما مع زر إعادة محاولة | ✅ |
 | 5.5 | Loading States | `widgets/shimmer_loading.dart` (بطاقات/عناصر/شبكات وهمية) مستخدمة بالشاشات | ✅ |
 | 5.6 | Splash Polish | شريط تقدّم + slogan + الانتقال بعد تحميل Config فعلياً (لا تأخير ثابت) | ✅ |
 
-> **ملاحظة Push:** الإشعارات داخل التطبيق + Realtime + المحلية تعمل. إشعارات FCM الخارجية (والتطبيق مغلق) تتطلب Edge Function + مفتاح FCM — تُؤجَّل لمرحلة لاحقة عند الحاجة.
+> **✅ تحديث 2026-06-06:** Firebase FCM Push Notifications **مفعّلة بالكامل** للتطبيق المغلق.
+> - Firebase Project: `sweeda-real-estate-elc`
+> - Edge Function: `send-push-notification` (FCM HTTP v1 API + Service Account)
+> - FCMService Flutter يسجّل token تلقائياً عند تسجيل الدخول
+> - Navigation handler: الضغط على الإشعار يفتح الشاشة المناسبة حسب `data.type`
+> - حفظ تلقائي في `notifications` table ليظهر داخل التطبيق
+> - تنظيف تلقائي للتوكنز الفاسدة
+> - راجع `docs/PROJECT_PLAN.md` بنود 10.19-10.30 للتفاصيل الكاملة
 
 ### ✅ المرحلة 6: البناء والنشر (مُجهّزة)
 | # | العنصر | التنفيذ | الحالة |
