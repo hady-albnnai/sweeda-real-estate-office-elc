@@ -157,8 +157,9 @@ serve(async (req) => {
     // 3) الإرسال لكل توكن
     let sent = 0;
     let failed = 0;
+    const errors: string[] = [];
     for (const t of tokens as Array<{ device_token: string; platform: string }>) {
-      const ok = await sendFCM(
+      const res = await sendFCM(
         accessToken,
         projectId,
         t.device_token,
@@ -166,11 +167,20 @@ serve(async (req) => {
         body,
         data
       );
-      if (ok) sent++;
-      else failed++;
+      if (res.ok) sent++;
+      else {
+        failed++;
+        if (res.error) errors.push(res.error);
+      }
     }
 
-    return json({ success: true, sent, failed, total: tokens.length });
+    return json({
+      success: true,
+      sent,
+      failed,
+      total: tokens.length,
+      ...(errors.length > 0 && { errors }),
+    });
   } catch (e) {
     console.error(e);
     return json({ success: false, error: "INTERNAL", details: String(e) }, 500);
