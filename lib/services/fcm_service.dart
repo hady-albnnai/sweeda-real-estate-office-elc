@@ -172,8 +172,22 @@ class FCMService {
   void _handleNotificationTap(String? payload) {
     if (payload == null) return;
     debugPrint('👆 Local notification tapped: $payload');
-    // payload هو data.toString() — نعيد parse بسيط
-    // لكن أسهل: نعتمد على FCM data مباشرة
+    // parse الـ payload (format: {key: value, key2: value2})
+    try {
+      // إزالة الأقواس والـ spaces
+      final cleaned = payload.replaceAll('{', '').replaceAll('}', '').trim();
+      if (cleaned.isEmpty) return;
+      final data = <String, dynamic>{};
+      for (final pair in cleaned.split(',')) {
+        final parts = pair.split(':');
+        if (parts.length >= 2) {
+          data[parts[0].trim()] = parts.sublist(1).join(':').trim();
+        }
+      }
+      _navigateFromData(data);
+    } catch (e) {
+      debugPrint('⚠️ parse payload: $e');
+    }
   }
 
   /// التنقل حسب نوع الإشعار
@@ -331,8 +345,11 @@ class FCMService {
 }
 
 /// معالج الإشعارات بالخلفية
+/// مهم: Firebase Messaging SDK يعرض الإشعار تلقائياً عند background/terminated
+/// فلا نحتاج local notification هنا — يكفي init الـ engine.
 @pragma('vm:entry-point')
 Future<void> firebaseBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
-  debugPrint('📨 FCM background: ${message.notification?.title}');
+  debugPrint('📨 FCM background (auto-displayed): ${message.notification?.title}');
+  // ملاحظة: لا تستدعِ flutter_local_notifications هنا — Firebase يعرضها تلقائياً
 }
