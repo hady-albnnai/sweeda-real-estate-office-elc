@@ -25,6 +25,7 @@
 | ✅ **المرحلة 10 (D): فيديو + خريطة + admin user details** | **مكتملة** | video_player+chewie + flutter_map+geolocator + شاشة UserDetails بـ 4 tabs | — |
 | ✅ **المرحلة 10 (E1): Cron Jobs (pg_cron)** | **مكتملة** | 3 jobs نشطة: expire_offers + expire_boosts (يومياً) + reminders (كل ساعة) | — |
 | ✅ **المرحلة 10 (E2): Firebase FCM** | **مكتملة** | Push Notifications تعمل 100% — Edge Function منشورة + Firebase project مفعّل + Service Account + أيقونة ذهبية + navigation + حفظ تلقائي في DB | — |
+| ✅ **المرحلة 10 (E2+): ربط الإشعارات بالأحداث** | **مكتملة** | 6 Triggers + 7 دوال — موافقة/رفض عرض، حجز موعد، إكمال صفقة، موافقة دفعة، مطابقة عرض-طلب | — |
 | ⏳ **المرحلة 10 (E3): نشر سوشيال تلقائي** | **مؤجّلة** | Edge Function لنشر العروض المعتمدة على Facebook | يحتاج صفحة FB خارج سوريا |
 | ⏸️ **WhatsApp Production (Meta 555)** | **مؤجّلة** | الكود جاهز 100% — مؤجّلة لحين إنشاء صفحة FB خارج سوريا للاستفادة من ميزات الإعلان والربح | راجع `docs/WHATSAPP_ACTIVATION_PLAN.md` |
 
@@ -106,6 +107,31 @@
 { "success": true, "sent": 1, "failed": 0, "total": 1 }
 # الإشعار وصل، الأيقونة الذهبية ظاهرة، الضغط ينقل لشاشة العرض، يُحفظ داخل التطبيق ✅
 ```
+
+### الجزء E2+: ربط الإشعارات بالأحداث التلقائية (2026-06-06)
+| # | الحدث | الـ Trigger | المستلم | الإشعار |
+|---|---|---|---|---|
+| 10.31 | موافقة عرض (`sts: 1→2`) | `trg_offer_status_changed` | صاحب العرض | "✅ تم نشر عرضك" |
+| 10.32 | رفض عرض (`sts: 1→3`) | `trg_offer_status_changed` | صاحب العرض | "❌ تم رفض عرضك: [السبب]" |
+| 10.33 | انتهاء عرض (`sts: 2→4`) | `trg_offer_status_changed` | صاحب العرض | "⏰ انتهت صلاحية عرضك" |
+| 10.34 | حجز عرض (`sts: 2→5`) | `trg_offer_status_changed` | صاحب العرض | "🔒 عرضك محجوز" |
+| 10.35 | حجز موعد جديد (INSERT) | `trg_appointment_created` | المالك + السمسار | "📅 طلب معاينة جديد" |
+| 10.36 | قبول الموعد (`sts: 0→1`) | `trg_appointment_status_changed` | طالب الموعد | "✅ تم تأكيد موعدك" |
+| 10.37 | رفض الموعد (`sts: 0→2`) | `trg_appointment_status_changed` | طالب الموعد | "❌ تم رفض موعدك" |
+| 10.38 | إكمال موعد (`sts: 0→3`) | `trg_appointment_status_changed` | طالب الموعد | "🎉 تمت المعاينة" |
+| 10.39 | إلغاء موعد (`sts: 0→4`) | `trg_appointment_status_changed` | طالب الموعد | "⚠️ تم إلغاء الموعد" |
+| 10.40 | عدم حضور (`sts: 1→5`) | `trg_appointment_status_changed` | طالب الموعد | "😞 سُجّل عدم حضور" |
+| 10.41 | إكمال صفقة (`sts: 0→1`) | `trg_deal_completed` | البائع + المشتري + السمسار | "🎉 تمت الصفقة بنجاح" |
+| 10.42 | موافقة دفعة (`sts: 0→1`) | `trg_payment_approved` | المستخدم | "✅ تم تفعيل اشتراكك" |
+| 10.43 | رفض دفعة (`sts: 0→2`) | `trg_payment_approved` | المستخدم | "❌ تم رفض الدفعة" |
+| 10.44 | عرض جديد منشور | `trg_offer_published_match_requests` | أصحاب الطلبات المطابقة (max 20) | "🎯 عرض جديد يطابق بحثك" |
+
+**Helper function: `send_push_notification(uid, title, body, data)`**
+- يقرأ URL + anon_key من `app_config.fcm`
+- يستدعي Edge Function `send-push-notification` عبر `net.http_post`
+- لا يفشل الـ trigger لو الإشعار فشل (مغلّف بـ `EXCEPTION WHEN OTHERS`)
+
+> Migration: `supabase/migrations/2026_06_06_notification_triggers.sql`
 
 ---
 

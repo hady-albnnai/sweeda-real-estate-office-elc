@@ -16,12 +16,13 @@
 | ✅ **مُطبّق على السيرفر** | Migration ترقيات العروض (`2026_06_05_offer_boosts.sql`) — 2 دالة + 8 أعمدة (`i_pin`, `i_bst`, `i_fms`, `pin_end`, `bst_end`, `fms_end`, `dsc_pct`, `dsc_end`) |
 | ✅ **مُطبّق على السيرفر** | Migration الجدولة التلقائية (`2026_06_05_cron_jobs.sql`) — extension `pg_cron` مفعّل + 3 cron jobs نشطة |
 | ✅ **مُطبّق على السيرفر** | Migration FCM (`2026_06_05_fcm_setup.sql`) — UNIQUE على device_token + `get_user_device_tokens` + `notify_user` |
+| ⏳ **بحاجة تطبيق** | Migration Notification Triggers (`2026_06_06_notification_triggers.sql`) — 7 دوال + 6 triggers + إعداد `app_config.fcm` |
 | ⚠️ **مكتوب لكن لم يُنشر بعد** | Edge Functions: `send-whatsapp-otp`, `verify-whatsapp-otp` (يحتاج `supabase functions deploy` + secrets META) |
 | ⚠️ **معلّق** | تفعيل Email SMTP (Resend) — تم في Dashboard ✅ بس Meta WhatsApp credentials لسا (يستخدم وضع التطوير) |
 
 ---
 
-## 📋 قائمة الدوال (26 دالة RPC + 3 Edge Functions)
+## 📋 قائمة الدوال (33 دالة RPC + 3 Edge Functions)
 
 ### دوال RPC (PostgreSQL):
 
@@ -61,6 +62,14 @@
 | 24 | `update_user_stats_on_request` 🆕🆕 | TRIGGER | `TRIGGER` | ✅ |
 | 25 | `update_user_stats_on_appointment` 🆕🆕 | TRIGGER | `TRIGGER` | ✅ |
 | 26 | `update_user_stats_on_deal` 🆕🆕 | TRIGGER | `TRIGGER` | ✅ |
+| **— إشعارات تلقائية (Notification Triggers — E2+) —** | | | | |
+| 27 | `send_push_notification` 🆕🔔 | `p_uid, p_title, p_body, p_data?` | `BIGINT` (request_id) | ✅ |
+| 28 | `trg_offer_status_changed` 🆕🔔 | TRIGGER على `offers.sts` | `TRIGGER` | ✅ |
+| 29 | `trg_appointment_created` 🆕🔔 | TRIGGER INSERT على `appointments` | `TRIGGER` | ✅ |
+| 30 | `trg_appointment_status_changed` 🆕🔔 | TRIGGER على `appointments.sts` | `TRIGGER` | ✅ |
+| 31 | `trg_deal_completed` 🆕🔔 | TRIGGER على `deals.sts` | `TRIGGER` | ✅ |
+| 32 | `trg_payment_approved` 🆕🔔 | TRIGGER على `payments.sts` | `TRIGGER` | ✅ |
+| 33 | `trg_offer_published_match_requests` 🆕🔔 | TRIGGER على `offers.i_pub` (1→0) | `TRIGGER` | ✅ |
 
 ### 🔗 Triggers Active على الجداول:
 
@@ -70,6 +79,12 @@
 | `trg_requests_stats` | `requests` | INSERT/UPDATE/DELETE | `update_user_stats_on_request` |
 | `trg_appointments_stats` | `appointments` | INSERT/UPDATE/DELETE | `update_user_stats_on_appointment` |
 | `trg_deals_stats` | `deals` | INSERT/UPDATE/DELETE | `update_user_stats_on_deal` |
+| `trg_offer_status_notify` 🔔 | `offers` | UPDATE `sts` | `trg_offer_status_changed` |
+| `trg_offer_match_notify` 🔔 | `offers` | UPDATE `i_pub` | `trg_offer_published_match_requests` |
+| `trg_appointment_notify` 🔔 | `appointments` | INSERT | `trg_appointment_created` |
+| `trg_appointment_status_notify` 🔔 | `appointments` | UPDATE `sts` | `trg_appointment_status_changed` |
+| `trg_deal_notify` 🔔 | `deals` | INSERT/UPDATE `sts` | `trg_deal_completed` |
+| `trg_payment_notify` 🔔 | `payments` | UPDATE `sts` | `trg_payment_approved` |
 
 ### ⏰ Cron Jobs (pg_cron) النشطة على السيرفر:
 
@@ -727,6 +742,13 @@ await client.rpc('send_appointment_reminders');
 | `update_user_stats_on_request` 🆕🆕 | ✅ | ✅ |
 | `update_user_stats_on_appointment` 🆕🆕 | ✅ | ✅ |
 | `update_user_stats_on_deal` 🆕🆕 | ✅ | ✅ |
+| `send_push_notification` 🆕🔔 | ✅ | ✅ |
+| `trg_offer_status_changed` 🆕🔔 | ✅ | ✅ |
+| `trg_appointment_created` 🆕🔔 | ✅ | ✅ |
+| `trg_appointment_status_changed` 🆕🔔 | ✅ | ✅ |
+| `trg_deal_completed` 🆕🔔 | ✅ | ✅ |
+| `trg_payment_approved` 🆕🔔 | ✅ | ✅ |
+| `trg_offer_published_match_requests` 🆕🔔 | ✅ | ✅ |
 | `calculate_commission` | ❌ | ❌ |
 | `update_user_badge` | ❌ | ❌ |
 | `get_pending_offers_count` | ❌ | ❌ |
@@ -746,6 +768,7 @@ await client.rpc('send_appointment_reminders');
 | `supabase/migrations/2026_06_05_offer_boosts.sql` 🆕🆕🆕 | Migration #3: `purchase_offer_boost` + `expire_offer_boosts` + 8 أعمدة ترقيات — **مطبّق ✅** |
 | `supabase/migrations/2026_06_05_cron_jobs.sql` 🆕🆕🆕🆕 | Migration #4: جدولة 3 cron jobs (expire_offers + expire_boosts + reminders) — **مطبّق ✅** |
 | `supabase/migrations/2026_06_05_fcm_setup.sql` 🆕🆕🆕🆕🆕 | Migration #5: UNIQUE token + `get_user_device_tokens` + `notify_user` — **مطبّق ✅** |
+| `supabase/migrations/2026_06_06_notification_triggers.sql` 🔔 | Migration #6: 7 دوال + 6 triggers لربط الإشعارات بالأحداث — **بحاجة تطبيق ⏳** |
 | `supabase/functions/send-push-notification/index.ts` 🆕🆕🆕🆕🆕 | Edge Function لإرسال FCM Push عبر Service Account |
 | `lib/services/fcm_service.dart` 🆕🆕🆕🆕🆕 | خدمة FCM Flutter (تهيئة + token + معالجات الإشعارات) |
 | `lib/screens/user/boost_offer_screen.dart` 🆕🆕🆕 | شاشة شراء ترقيات العروض (5 خيارات: ren/pin/bst/dsc5/fms) |
