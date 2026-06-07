@@ -15,6 +15,7 @@ import '../../core/constants/db_constants.dart';
 import '../../widgets/book_appointment_sheet.dart';
 import '../../widgets/video_player_widget.dart';
 import '../../widgets/location_picker.dart';
+import '../../widgets/rating_dialog.dart';
 
 class OfferDetailScreen extends StatefulWidget {
   final String offerId;
@@ -27,6 +28,8 @@ class OfferDetailScreen extends StatefulWidget {
 class _OfferDetailScreenState extends State<OfferDetailScreen> {
   OfferModel? _offer;
   UserModel? _owner; // مالك العرض — يُستخدم لتوليد التسمية المهنية (هوية المكتب)
+  double? _ownerAvgRating; // ⭐ متوسط تقييم المالك
+  int _ownerRatingCount = 0;
   bool _loading = true;
   bool _isFav = false;
 
@@ -61,6 +64,26 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
         }
       } catch (e) {
         debugPrint('⚠️ load owner failed: $e');
+      }
+
+      // ⭐ جلب متوسط تقييم المالك (LOGIC_SPEC §3.3)
+      try {
+        final ratings = await SupabaseService()
+            .client
+            .from('ratings')
+            .select('stars')
+            .eq('target_uid', offer.usrId);
+        final list = (ratings as List);
+        if (list.isNotEmpty) {
+          double sum = 0;
+          for (final r in list) {
+            sum += ((r['stars'] as num?) ?? 0).toDouble();
+          }
+          _ownerRatingCount = list.length;
+          _ownerAvgRating = sum / list.length;
+        }
+      } catch (e) {
+        debugPrint('⚠️ load owner ratings failed: $e');
       }
     }
     if (mounted) {
@@ -350,6 +373,23 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                     ),
                   ],
 
+                  // ⭐ متوسط تقييم المالك (إن وُجد)
+                  if (_ownerAvgRating != null) ...[
+                    const SizedBox(height: 6),
+                    Row(children: [
+                      const Icon(Icons.star,
+                          color: AppTheme.primaryGold, size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${_ownerAvgRating!.toStringAsFixed(1)} ($_ownerRatingCount تقييم)',
+                        style: const TextStyle(
+                            color: AppTheme.textWhite,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500),
+                      ),
+                    ]),
+                  ],
+
                   const SizedBox(height: 10),
                   Row(children: [
                     const Icon(Icons.location_on,
@@ -479,6 +519,29 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                       child: const Text('حجز موعد للمعاينة'),
                     ),
                   ),
+                  // ⭐ تقييم المالك (لغير المالك المسجّل) — LOGIC_SPEC §3.3
+                  if (auth.isLoggedIn && !isOwner) ...[
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => RatingDialog.show(
+                          context: context,
+                          targetUid: offer.usrId,
+                          targetName: offer.ownerLabel ?? 'مالك العرض',
+                          refLabel: 'تجربتك مع هذا العرض',
+                        ),
+                        icon: const Icon(Icons.star_border,
+                            color: AppTheme.primaryGold),
+                        label: const Text('تقييم تجربتك مع هذا العرض',
+                            style: TextStyle(color: AppTheme.primaryGold)),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: AppTheme.primaryGold),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 30),
                 ],
               ),

@@ -148,6 +148,9 @@
 | الإقرار والتعهد قبل النشر | `lib/screens/user/add_offer_screen.dart` → `_showPledgeDialog` |
 | Dialog التقييم المشترك | `lib/widgets/rating_dialog.dart` → `RatingDialog.show()` |
 | زر التقييم بعد موعد منتهٍ | `lib/screens/user/my_appointments_screen.dart` (sts=2) |
+| زر التقييم في تفاصيل العرض | `lib/screens/visitor/offer_detail_screen.dart` (للمسجلين غير المالك) |
+| متوسط تقييم المالك في تفاصيل العرض | `lib/screens/visitor/offer_detail_screen.dart` → `_ownerAvgRating` |
+| شاشة تقييماتي المستلمة | `lib/screens/user/my_ratings_screen.dart` → `/user/my-ratings` |
 | Pagination للعروض | `lib/providers/offer_provider.dart` → `loadMoreOffers()` |
 | Infinite scroll | `lib/screens/visitor/home_screen.dart` → `NotificationListener` |
 
