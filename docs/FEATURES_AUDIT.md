@@ -358,6 +358,15 @@
 | ✅ زر التقييم في تفاصيل العرض | كامل (Phase 7) | `offer_detail_screen.dart` (مسجل وغير المالك) |
 | ✅ متوسط تقييم المالك في تفاصيل العرض | كامل (Phase 7) | `offer_detail_screen.dart#_ownerAvgRating` |
 | ✅ زر "تقييماتي" في profile | كامل (Phase 7) | `profile_screen.dart` |
+| 🔒 منع self-promotion (role/vrf/pt/brk/b_pkg) | كامل (Phase 8) | `trg_user_safe_update` |
+| 🔒 إخفاء بيانات users الحساسة + view عامة | كامل (Phase 8) | `users_public` |
+| 🔒 منع التقييم الذاتي/المتكرر + شرط معاملة | كامل (Phase 8) | `ratings` RLS + triggers |
+| 🔒 حماية apply_referral (rate-limit + auth) | كامل (Phase 8) | `apply_referral` v2 |
+| 🔒 RPCs آمنة للتوثيق (request/approve/reject) | كامل (Phase 8) | 3 SECURITY DEFINER |
+| 🔒 منع phishing notifications | كامل (Phase 8) | `notifications_no_user_insert` |
+| 🔒 OTP مع قفل بعد محاولات فاشلة | كامل (Phase 8) | `verify_otp_safe` |
+| 🔒 حماية canPublishOffer (anti-delete-spam) | كامل (Phase 8) | `business_service.dart` |
+| 🔒 حظر انتحال "المكتب/الإدارة" في الاسم | كامل (Phase 8) | triggers users |
 
 ---
 

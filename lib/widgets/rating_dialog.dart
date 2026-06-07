@@ -98,8 +98,18 @@ class _RatingDialogState extends State<RatingDialog> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _sending = false);
+      final raw = e.toString();
+      String userMsg = '❌ فشل الإرسال';
+      if (raw.contains('completed a deal/appointment')) {
+        userMsg = 'لا يمكن التقييم قبل إتمام موعد أو صفقة مع هذا الطرف.';
+      } else if (raw.contains('ratings_unique_reviewer_target') ||
+          raw.contains('duplicate key')) {
+        userMsg = 'لقد قيّمت هذا الطرف مسبقاً (تقييم واحد فقط مسموح).';
+      } else if (raw.contains('ratings_no_self')) {
+        userMsg = 'لا يمكنك تقييم نفسك.';
+      }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ فشل الإرسال: $e')),
+        SnackBar(content: Text(userMsg)),
       );
     }
   }

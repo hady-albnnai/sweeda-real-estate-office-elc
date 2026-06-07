@@ -66,10 +66,9 @@ class ProfileScreen extends StatelessWidget {
     if (confirmed != true || !context.mounted) return;
 
     try {
-      await SupabaseService().client.from(DbTables.users).update({
-        'vrf': 1,
-        'ts_upd': DateTime.now().toIso8601String(),
-      }).eq('id', user.uid);
+      // 🔒 Phase 8: نستخدم RPC request_verification بدل UPDATE مباشر
+      // (UPDATE للـvrf محظور الآن في DB عبر trg_user_safe_update)
+      await SupabaseService().client.rpc('request_verification');
 
       // تحديث الكاش المحلي
       await auth.refreshUser();
@@ -83,11 +82,17 @@ class ProfileScreen extends StatelessWidget {
       );
     } catch (e) {
       if (!context.mounted) return;
+      final msg = e.toString();
+      String userMsg = '❌ فشل إرسال الطلب';
+      if (msg.contains('ALREADY_VERIFIED')) {
+        userMsg = 'حسابك موثق بالفعل';
+      } else if (msg.contains('ALREADY_PENDING')) {
+        userMsg = 'طلبك السابق قيد المراجعة';
+      } else if (msg.contains('MISSING_DOCUMENTS')) {
+        userMsg = 'يجب رفع صورة الهوية + الرقم الوطني أولاً';
+      }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('❌ فشل إرسال الطلب: $e'),
-          backgroundColor: AppTheme.errorRed,
-        ),
+        SnackBar(content: Text(userMsg), backgroundColor: AppTheme.errorRed),
       );
     }
   }
