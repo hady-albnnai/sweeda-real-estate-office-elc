@@ -4,6 +4,7 @@ import '../../providers/appointment_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/rating_dialog.dart';
 import '../../core/utils/app_utils.dart';
 
 /// شاشة مواعيد المستخدم (المعاينات)
@@ -121,6 +122,30 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> {
                   ),
                 ),
               ]),
+            ],
+            // ⭐ زر التقييم للموعد المنتهي (sts=2) — LOGIC_SPEC §3.3
+            if (sts == 2) ...[
+              const SizedBox(height: 15),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => RatingDialog.show(
+                    context: context,
+                    targetUid: appt.ownId,
+                    targetName: 'مالك العرض',
+                    refLabel: 'بعد موعد المعاينة',
+                  ),
+                  icon: const Icon(Icons.star_rate,
+                      color: AppTheme.deepBlack),
+                  label: const Text('تقييم تجربتك ⭐',
+                      style: TextStyle(
+                          color: AppTheme.deepBlack,
+                          fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryGold,
+                      padding: const EdgeInsets.symmetric(vertical: 10)),
+                ),
+              ),
             ],
           ],
         ),

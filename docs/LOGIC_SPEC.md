@@ -91,6 +91,23 @@
 - الطرفان يحصلان على نقاط الإحالة (`pts.ref` ≈ 1500).
 - يُحدّث `users.ref_cnt` للمحيل تلقائياً.
 
+### 3.3 نظام التقييم (Rating)
+- جدول `ratings(reviewer_uid, target_uid, stars 1-5, comment)`.
+- يُعرض زر التقييم في `my_appointments_screen` للمواعيد المنتهية (sts=2).
+- Widget `RatingDialog.show()` مشترك للاستخدام في أي مكان.
+- Trigger `trg_rating_bonus` يمنح المستهدف 200 نقطة تلقائياً عند تقييم 5 نجوم.
+- لا يمكن تقييم النفس + يجب تسجيل الدخول.
+
+## 📄 §4 الأداء والقابلية للتوسع
+
+### 4.2 Pagination
+- `OfferProvider.pageSize = 20`.
+- `loadMoreOffers()` تستخدم Supabase `.range(from, to)`.
+- في `home_screen` يُربط عبر `NotificationListener<ScrollNotification>`
+  يطلق تحميل صفحة جديدة قبل 200 بكسل من النهاية.
+- منع التكرار: استبعاد العروض الموجودة مسبقاً قبل الإضافة.
+- معطّل تلقائياً أثناء البحث (`_isSearching`).
+
 ---
 
 ## 🚫 رابعاً: الأمان والسيطرة
@@ -129,6 +146,10 @@
 | ترقية العرض بالنقاط (Boost) | `lib/screens/user/boost_offer_screen.dart` → `purchase_offer_boost` RPC |
 | زر "ترقية بالنقاط" في تفاصيل العرض | `lib/screens/visitor/offer_detail_screen.dart` (للمالك) |
 | الإقرار والتعهد قبل النشر | `lib/screens/user/add_offer_screen.dart` → `_showPledgeDialog` |
+| Dialog التقييم المشترك | `lib/widgets/rating_dialog.dart` → `RatingDialog.show()` |
+| زر التقييم بعد موعد منتهٍ | `lib/screens/user/my_appointments_screen.dart` (sts=2) |
+| Pagination للعروض | `lib/providers/offer_provider.dart` → `loadMoreOffers()` |
+| Infinite scroll | `lib/screens/visitor/home_screen.dart` → `NotificationListener` |
 
 ---
 
