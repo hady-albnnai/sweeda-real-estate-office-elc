@@ -114,6 +114,9 @@
 | مراجعة الإدارة لطلبات التوثيق | `lib/screens/admin/verifications_review_screen.dart` |
 | اعتماد/رفض التوثيق | `lib/providers/admin_provider.dart` → `approveVerification` / `rejectVerification` |
 | توضيح الحجز عبر المكتب | `lib/widgets/book_appointment_sheet.dart` |
+| إشعار نتيجة التوثيق | `lib/providers/admin_provider.dart` → `_notifyVerificationResult()` |
+| شارة التوثيق في تفاصيل المستخدم (إدارة) | `lib/screens/admin/user_details_screen.dart` |
+| إلزام الوسيط الجديد بالتوثيق | `lib/screens/user/become_broker_screen.dart` |
 
 ---
 

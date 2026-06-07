@@ -340,6 +340,10 @@
 | ✅ زر "طلب التوثيق" للمستخدم | كامل (Phase 3) | `user/profile_screen.dart#_requestVerification` |
 | ✅ توضيح "الحجز عبر المكتب" | كامل (Phase 3) | `widgets/book_appointment_sheet.dart` |
 | ✅ عدّاد طلبات التوثيق في لوحة الأدمن | كامل (Phase 3) | `admin_dashboard_screen.dart` |
+| ✅ شارة "موثق ✓" في شاشة الإدارة | كامل (Phase 4) | `admin/user_details_screen.dart` |
+| ✅ إشعارات FCM/DB عند اعتماد/رفض التوثيق | كامل (Phase 4) | `admin_provider.dart#_notifyVerificationResult` |
+| ✅ سبب رفض التوثيق (نصي اختياري) | كامل (Phase 4) | `verifications_review_screen.dart` |
+| ✅ التوثيق إلزامي للوسطاء عند طلب الوساطة | كامل (Phase 4) | `become_broker_screen.dart` (vrf=1 تلقائياً) |
 
 ---
 

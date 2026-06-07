@@ -49,8 +49,13 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
       _snack('يرجى إدخال الاسم التجاري');
       return;
     }
-    if (user.sid.isEmpty) {
-      _snack('يرجى إكمال بياناتك الشخصية أولاً (رقم الهوية)');
+    // 🛡️ التوثيق إلزامي للوسطاء (LOGIC_SPEC §2.1)
+    if (user.sid.isEmpty || user.img.isEmpty) {
+      _snack(
+          'التوثيق إلزامي للوسطاء: يجب رفع صورة الهوية + الرقم الوطني أولاً');
+      Future.delayed(const Duration(milliseconds: 800), () {
+        if (mounted) context.push('/auth/setup-profile');
+      });
       return;
     }
     if (!_agreeTerms) {
@@ -63,13 +68,21 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
     try {
       // نسجّل الطلب في users بحقول brk_nm + brk_cls
       // ولكن brk = 0 (غير مفعّل) — الإدارة تفعّله من users management
-      // ونضيف ملاحظة في activity_log للإدارة
-      await SupabaseService().client.from(DbTables.users).update({
+      // 🛡️ نرفع vrf إلى 1 تلقائياً لأن الوسيط يحتاج توثيقاً إلزامياً
+      // (إن لم يكن موثقاً بالفعل) — مرجع: docs/LOGIC_SPEC.md §2.1
+      final updateMap = <String, dynamic>{
         'brk_nm': _businessNameCtrl.text.trim(),
         'brk_cls': _category,
-        // ملاحظة: brk تبقى 0 حتى توافق الإدارة
         'ts_upd': DateTime.now().toIso8601String(),
-      }).eq('id', user.uid);
+      };
+      if (user.vrf == 0) {
+        updateMap['vrf'] = 1; // طلب التوثيق تلقائياً
+      }
+      await SupabaseService()
+          .client
+          .from(DbTables.users)
+          .update(updateMap)
+          .eq('id', user.uid);
 
       // سجل في activity_log كطلب وساطة جديد
       await SupabaseService().client.from(DbTables.activityLog).insert({
@@ -101,7 +114,9 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
             ],
           ),
           content: const Text(
-            'تم إرسال طلبك للإدارة بنجاح ✅\n\nستراجعه الإدارة وسيصلك إشعار عند الموافقة. عادة خلال 48 ساعة.',
+            'تم إرسال طلبك للإدارة بنجاح ✅\n\n'
+            'ستراجع الإدارة طلب الوساطة + توثيق هويتك معاً، وسيصلك إشعار بالنتيجة. '
+            'عادة خلال 48 ساعة.',
             style: TextStyle(color: AppTheme.textGrey),
           ),
           actions: [
