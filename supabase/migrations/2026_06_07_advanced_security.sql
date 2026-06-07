@@ -305,21 +305,6 @@ SELECT
   MAX(ts_crt) AS last_signup
 FROM users
 WHERE device_id IS NOT NULL AND i_del = 0
-GRO_PLACEHOLDER device_id
-HAVING COUNT(*) > 1;
-
--- نُصلح TYPO أعلاه (GROUP BY)
-DROP VIEW IF EXISTS fraud_suspects CASCADE;
-CREATE VIEW fraud_suspects AS
-SELECT
-  device_id,
-  COUNT(*) AS account_count,
-  ARRAY_AGG(id) AS user_ids,
-  ARRAY_AGG(nm) AS names,
-  MIN(ts_crt) AS first_signup,
-  MAX(ts_crt) AS last_signup
-FROM users
-WHERE device_id IS NOT NULL AND i_del = 0
 GROUP BY device_id
 HAVING COUNT(*) > 1;
 
