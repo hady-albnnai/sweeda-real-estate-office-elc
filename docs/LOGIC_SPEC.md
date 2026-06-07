@@ -199,6 +199,29 @@
 ### 5.9 منع انتحال "المكتب"
 - الاسم لا يقبل: `مكتب، إدارة، admin، مدير، إداري، official`.
 
+### 5.10 OTP cryptographic (Phase 9)
+- `generate_otp` يستخدم `pgcrypto.gen_random_bytes(3)` بدل `RANDOM()`.
+- 24-bit entropy → مقاوم للتنبؤ بـseed.
+
+### 5.11 Device Fingerprinting (Phase 9)
+- `users.device_id` + `signup_ip` + `last_ip` + `device_history JSONB`.
+- `DeviceService` في الـclient يولّد UUID محلي ويُسجّله عبر `register_device` RPC.
+- `apply_referral` ترفض إذا كان المُحال + المحيل من نفس الجهاز أو IP.
+- VIEW `fraud_suspects` + RPC `admin_fraud_suspects()` لكشف الحسابات المشبوهة.
+- شاشة إدارية: `/admin/fraud-suspects`.
+
+### 5.12 Storage Policies لصور الهوية (Phase 9)
+- Bucket جديد **خاص** `ids_private` (public=false).
+- المسار: `<userId>/id_<ts>.jpg` — RLS تشترط `auth.uid()::text = folder[1]`.
+- المالك + الأدمن (role>=2) فقط يقرؤون.
+- الـclient يحفظ المسار النسبي (لا public URL).
+- الأدمن يعرض الصورة عبر `createSignedUrl(path, 60)` — رابط 60 ثانية.
+
+### 5.13 Network Security (Phase 9)
+- `android:usesCleartextTraffic="false"` + `networkSecurityConfig`.
+- `android:allowBackup="false"` (يمنع نسخ بيانات التطبيق).
+- ملف `network_security_config.xml` جاهز لـCertificate Pinning مستقبلاً.
+
 | المرجع | الموقع |
 |---|---|
 | Migration الأمان | `supabase/migrations/2026_06_07_security_hardening.sql` |

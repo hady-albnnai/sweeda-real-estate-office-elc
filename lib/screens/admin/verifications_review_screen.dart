@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/admin_provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/network/supabase_service.dart';
+import '../../services/storage_service.dart';
 
 /// 🛡️ شاشة مراجعة طلبات التوثيق الرسمي للمستخدمين (vrf=1).
 ///
@@ -106,14 +108,36 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
     if (ok) _load();
   }
 
-  void _showIdImage(String imgUrl) {
+  /// 🔒 Phase 9: عرض صورة هوية من bucket الخاص عبر signed URL مؤقت (60 ثانية).
+  /// الـpath قد يكون: (أ) URL كامل قديم، (ب) مسار جديد داخل ids_private.
+  Future<void> _showIdImage(String imgPathOrUrl) async {
+    String? displayUrl;
+    if (imgPathOrUrl.startsWith('http')) {
+      // مسار قديم (URL كامل) — للتوافق الخلفي
+      displayUrl = imgPathOrUrl;
+    } else {
+      // مسار جديد داخل ids_private — نجلب signed URL
+      try {
+        displayUrl = await SupabaseService()
+            .storage
+            .from(StorageService.idsPrivateBucket)
+            .createSignedUrl(imgPathOrUrl, 60);
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('❌ تعذّر فتح الصورة: $e')),
+        );
+        return;
+      }
+    }
+    if (!mounted || displayUrl == null) return;
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
         backgroundColor: Colors.black,
         child: InteractiveViewer(
           child: Image.network(
-            imgUrl,
+            displayUrl!,
             fit: BoxFit.contain,
             errorBuilder: (_, __, ___) => const Padding(
               padding: EdgeInsets.all(40),
@@ -248,41 +272,34 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
           const SizedBox(height: 10),
           // ── صورة الهوية ──
           if (img.isNotEmpty) ...[
-            GestureDetector(
+            // 🔒 Phase 9: للأمان، لا نُحمّل صورة الهوية تلقائياً.
+            // الأدمن يضغط زراً يفتح signed URL مؤقت (60s).
+            InkWell(
               onTap: () => _showIdImage(img),
               child: Container(
-                height: 160,
+                height: 90,
                 width: double.infinity,
                 decoration: BoxDecoration(
+                  color: AppTheme.deepBlack,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: AppTheme.primaryGold),
-                  image: DecorationImage(
-                    image: NetworkImage(img),
-                    fit: BoxFit.cover,
-                    onError: (_, __) {},
-                  ),
                 ),
-                child: Stack(children: [
-                  Positioned(
-                    top: 6,
-                    right: 6,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.6),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: const Row(mainAxisSize: MainAxisSize.min, children: [
-                        Icon(Icons.zoom_in, color: Colors.white, size: 14),
-                        SizedBox(width: 3),
-                        Text('تكبير',
-                            style: TextStyle(
-                                color: Colors.white, fontSize: 11)),
-                      ]),
-                    ),
-                  ),
-                ]),
+                child: const Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.badge_outlined,
+                        color: AppTheme.primaryGold, size: 32),
+                    SizedBox(height: 4),
+                    Text('اضغط لعرض صورة الهوية',
+                        style: TextStyle(
+                            color: AppTheme.primaryGold,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600)),
+                    Text('(رابط مؤقت 60 ثانية)',
+                        style: TextStyle(
+                            color: AppTheme.textGrey, fontSize: 10)),
+                  ],
+                ),
               ),
             ),
           ] else

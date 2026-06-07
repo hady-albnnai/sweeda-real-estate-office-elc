@@ -48,6 +48,7 @@ import '../../screens/admin/users_management_screen.dart';
 import '../../screens/admin/user_details_screen.dart';
 import '../../screens/admin/offers_review_screen.dart';
 import '../../screens/admin/verifications_review_screen.dart';
+import '../../screens/admin/fraud_suspects_screen.dart';
 import '../../screens/admin/appointments_management_screen.dart';
 import '../../screens/admin/deals_management_screen.dart';
 import '../../screens/admin/payments_screen.dart';
@@ -245,6 +246,10 @@ class AppRouter {
       GoRoute(
         path: '/admin/review-verifications',
         builder: (context, state) => const VerificationsReviewScreen(),
+      ),
+      GoRoute(
+        path: '/admin/fraud-suspects',
+        builder: (context, state) => const FraudSuspectsScreen(),
       ),
       GoRoute(
         path: '/admin/appointments',
