@@ -556,6 +556,7 @@ class AdminProvider with ChangeNotifier {
   }
 
   /// اعتماد توثيق مستخدم: vrf 1 → 2 (موثق رسمياً).
+  /// يُرسل إشعار للمستخدم بالنتيجة.
   Future<bool> approveVerification(String userId) async {
     try {
       await SupabaseService().client
@@ -565,6 +566,13 @@ class AdminProvider with ChangeNotifier {
             'ts_upd': DateTime.now().toIso8601String(),
           })
           .eq('id', userId);
+      // 🔔 إشعار للمستخدم (tp=4 → account/admin)
+      await _notifyVerificationResult(
+        userId: userId,
+        title: '✅ تم اعتماد توثيق حسابك',
+        body:
+            'تهانينا! حسابك أصبح موثقاً رسمياً وستظهر شارة "موثق ✓" في عروضك.',
+      );
       return true;
     } catch (e) {
       debugPrint('❌ approveVerification error: $e');
@@ -573,6 +581,7 @@ class AdminProvider with ChangeNotifier {
   }
 
   /// رفض توثيق مستخدم: vrf 1 → 0 (يحتاج إعادة رفع).
+  /// يُرسل إشعار للمستخدم بالنتيجة + السبب إن وُجد.
   Future<bool> rejectVerification(String userId, {String reason = ''}) async {
     try {
       await SupabaseService().client
@@ -582,10 +591,40 @@ class AdminProvider with ChangeNotifier {
             'ts_upd': DateTime.now().toIso8601String(),
           })
           .eq('id', userId);
+      // 🔔 إشعار للمستخدم
+      final bodyText = reason.isNotEmpty
+          ? 'تم رفض طلب التوثيق. السبب: $reason\nيمكنك إعادة رفع وثائق صحيحة وطلب التوثيق مجدداً.'
+          : 'تم رفض طلب التوثيق. يرجى التأكد من وضوح صورة الهوية وإعادة المحاولة.';
+      await _notifyVerificationResult(
+        userId: userId,
+        title: '🚫 رفض طلب التوثيق',
+        body: bodyText,
+      );
       return true;
     } catch (e) {
       debugPrint('❌ rejectVerification error: $e');
       return false;
+    }
+  }
+
+  /// مساعد داخلي: إرسال إشعار حول نتيجة طلب التوثيق.
+  /// يستخدم tp=4 (account/admin) — لا يفشل في حال خطأ الإشعار (non-fatal).
+  Future<void> _notifyVerificationResult({
+    required String userId,
+    required String title,
+    required String body,
+  }) async {
+    try {
+      await SupabaseService().client.from(DbTables.notifications).insert({
+        'uid': userId,
+        'tp': 4, // account/admin
+        'ttl': title,
+        'bdy': body,
+        'act': 'verification',
+        'ref_id': '',
+      });
+    } catch (e) {
+      debugPrint('⚠️ verification notify failed (non-fatal): $e');
     }
   }
 }

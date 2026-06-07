@@ -51,15 +51,33 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
   }
 
   Future<void> _reject(String userId, String name) async {
+    final reasonCtrl = TextEditingController();
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
         title: const Text('رفض التوثيق',
             style: TextStyle(color: AppTheme.textWhite)),
-        content: Text(
-          'سيُعاد $name إلى حالة "غير موثق" وعليه إعادة رفع وثائقه. متابعة؟',
-          style: const TextStyle(color: AppTheme.textGrey),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'سيُعاد $name إلى حالة "غير موثق" وسيصله إشعار. اذكر سبب الرفض (اختياري):',
+              style: const TextStyle(color: AppTheme.textGrey),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: reasonCtrl,
+              maxLines: 2,
+              style: const TextStyle(color: AppTheme.textWhite),
+              decoration: const InputDecoration(
+                hintText: 'مثال: صورة الهوية غير واضحة',
+                hintStyle: TextStyle(color: AppTheme.textGrey),
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -77,7 +95,9 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
     );
     if (confirmed != true || !mounted) return;
 
-    final ok = await context.read<AdminProvider>().rejectVerification(userId);
+    final ok = await context
+        .read<AdminProvider>()
+        .rejectVerification(userId, reason: reasonCtrl.text.trim());
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(ok ? '🚫 تم رفض توثيق $name' : '❌ فشل الرفض'),

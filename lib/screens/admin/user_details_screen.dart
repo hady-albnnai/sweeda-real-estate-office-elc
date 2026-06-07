@@ -318,6 +318,13 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
             _chip(statusInfo.$1, statusInfo.$2),
             _chip('${u.pt} نقطة', Colors.purple),
             if (u.isBroker) _chip('وسيط مفعّل', Colors.green),
+            // 🛡️ حالة التوثيق الرسمي (LOGIC_SPEC §2.1)
+            if (u.isVerifiedOfficial)
+              _chip('✓ موثق رسمياً', Colors.green)
+            else if (u.vrf == 1)
+              _chip('⏳ توثيق قيد المراجعة', Colors.orange)
+            else
+              _chip('غير موثق', Colors.grey),
           ]),
           const SizedBox(height: 10),
           _quickActions(),
