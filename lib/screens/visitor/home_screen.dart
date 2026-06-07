@@ -60,10 +60,35 @@ class HomeScreen extends StatelessWidget {
           Expanded(
             child: offerProvider.offers.isEmpty
                 ? const Center(child: Text('لا توجد عروض متاحة حالياً', style: TextStyle(color: AppTheme.textGrey, fontSize: 16)))
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 15),
-                    itemCount: offerProvider.offers.length,
-                    itemBuilder: (context, index) => OfferCard(offer: offerProvider.offers[index]),
+                // 📄 Infinite scroll — يطلب صفحة جديدة عند الاقتراب من النهاية
+                : NotificationListener<ScrollNotification>(
+                    onNotification: (sn) {
+                      if (sn.metrics.pixels >=
+                              sn.metrics.maxScrollExtent - 200 &&
+                          offerProvider.hasMore &&
+                          !offerProvider.loadingMore) {
+                        offerProvider.loadMoreOffers();
+                      }
+                      return false;
+                    },
+                    child: ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      itemCount: offerProvider.offers.length +
+                          (offerProvider.hasMore ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index >= offerProvider.offers.length) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 20),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                  color: AppTheme.primaryGold),
+                            ),
+                          );
+                        }
+                        return OfferCard(
+                            offer: offerProvider.offers[index]);
+                      },
+                    ),
                   ),
           ),
         ],

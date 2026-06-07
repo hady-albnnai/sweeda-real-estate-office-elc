@@ -349,6 +349,11 @@
 | ✅ الإقرار والتعهد قبل النشر | موجود مسبقاً | `add_offer_screen.dart` + `setup_profile_screen.dart` |
 | ✅ نظام الإحالة الكامل (UI + RPC) | كامل (Phase 5) | `referral_screen.dart` + `apply_referral` RPC |
 | ✅ Boost/Pin/Featured بالنقاط | موجود مسبقاً | `boost_offer_screen.dart` → `purchase_offer_boost` RPC |
+| ✅ Dialog التقييم المشترك | كامل (Phase 6) | `widgets/rating_dialog.dart` |
+| ✅ زر التقييم بعد الموعد المنتهي | كامل (Phase 6) | `my_appointments_screen.dart` (sts=2) |
+| ✅ مكافأة 200 نقطة للتقييم 5 نجوم | موجود مسبقاً (Trigger) | `trg_rating_bonus` |
+| ✅ Pagination + Infinite scroll للعروض | كامل (Phase 6) | `OfferProvider.loadMoreOffers` + `home_screen` |
+| ✅ Cron Jobs (expire offers/boosts + reminders) | موجود مسبقاً | `2026_06_05_cron_jobs.sql` |
 
 ---
 

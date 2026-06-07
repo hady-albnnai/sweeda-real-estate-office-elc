@@ -13,9 +13,18 @@ class OfferProvider with ChangeNotifier {
   String? _error;
   bool _fromCache = false;
   StreamSubscription? _realtimeSub;
-  
+
   // تتبع ما إذا كانت القائمة الحالية ناتجة عن بحث
   bool _isSearching = false;
+
+  // 📄 Pagination — مرجع: docs/LOGIC_SPEC.md §4.2
+  static const int pageSize = 20;
+  int _currentPage = 0;
+  bool _hasMore = true;
+  bool _loadingMore = false;
+
+  bool get hasMore => _hasMore;
+  bool get loadingMore => _loadingMore;
 
   List<OfferModel> get offers => _offers;
   bool get isLoading => _isLoading;
@@ -107,7 +116,56 @@ class OfferProvider with ChangeNotifier {
       }
       debugPrint('❌ fetchOffers error: $e');
     }
+    // 📄 إعادة ضبط حالة pagination بعد fetch جديد
+    _currentPage = (_offers.length / pageSize).ceil();
+    _hasMore = _offers.length >= pageSize;
     _isLoading = false;
+    notifyListeners();
+  }
+
+  /// 📄 تحميل صفحة تالية من العروض (Pagination).
+  /// تُستدعى عند وصول المستخدم لأسفل القائمة (Infinite scroll).
+  /// مرجع: docs/LOGIC_SPEC.md §4.2
+  Future<void> loadMoreOffers() async {
+    if (_loadingMore || !_hasMore || _isSearching) return;
+    _loadingMore = true;
+    notifyListeners();
+
+    try {
+      final from = _currentPage * pageSize;
+      final to = from + pageSize - 1;
+      final response = await SupabaseService().client
+          .from(DbTables.offers)
+          .select()
+          .eq('i_del', 0)
+          .eq('i_pub', 1)
+          .order('i_pin', ascending: false)
+          .order('i_fms', ascending: false)
+          .order('i_bst', ascending: false)
+          .order('ts_crt', ascending: false)
+          .range(from, to);
+
+      final newOffers = (response as List)
+          .map((d) => OfferModel.fromSupabase(
+              Map<String, dynamic>.from(d), d['id'] as String))
+          .toList();
+
+      if (newOffers.isEmpty || newOffers.length < pageSize) {
+        _hasMore = false;
+      }
+      if (newOffers.isNotEmpty) {
+        // تجنب التكرار: استبعاد العروض الموجودة مسبقاً
+        final existingIds = _offers.map((o) => o.id).toSet();
+        final unique =
+            newOffers.where((o) => !existingIds.contains(o.id)).toList();
+        await _enrichOwnerLabels(unique);
+        _offers.addAll(unique);
+        _currentPage++;
+      }
+    } catch (e) {
+      debugPrint('❌ loadMoreOffers error: $e');
+    }
+    _loadingMore = false;
     notifyListeners();
   }
 
