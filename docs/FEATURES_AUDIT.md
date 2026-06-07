@@ -354,6 +354,10 @@
 | ✅ مكافأة 200 نقطة للتقييم 5 نجوم | موجود مسبقاً (Trigger) | `trg_rating_bonus` |
 | ✅ Pagination + Infinite scroll للعروض | كامل (Phase 6) | `OfferProvider.loadMoreOffers` + `home_screen` |
 | ✅ Cron Jobs (expire offers/boosts + reminders) | موجود مسبقاً | `2026_06_05_cron_jobs.sql` |
+| ✅ شاشة "تقييماتي المستلمة" | كامل (Phase 7) | `user/my_ratings_screen.dart` → `/user/my-ratings` |
+| ✅ زر التقييم في تفاصيل العرض | كامل (Phase 7) | `offer_detail_screen.dart` (مسجل وغير المالك) |
+| ✅ متوسط تقييم المالك في تفاصيل العرض | كامل (Phase 7) | `offer_detail_screen.dart#_ownerAvgRating` |
+| ✅ زر "تقييماتي" في profile | كامل (Phase 7) | `profile_screen.dart` |
 
 ---
 

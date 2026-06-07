@@ -476,6 +476,25 @@ class ProfileScreen extends StatelessWidget {
           const SizedBox(height: 12),
         ],
 
+        // ⭐ تقييماتي المستلمة — LOGIC_SPEC §3.3
+        if (user != null) ...[
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => context.push('/user/my-ratings'),
+              icon: const Icon(Icons.star_rate,
+                  color: AppTheme.primaryGold),
+              label: const Text('تقييماتي المستلمة',
+                  style: TextStyle(color: AppTheme.primaryGold)),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: AppTheme.primaryGold),
+                padding: const EdgeInsets.symmetric(vertical: 15),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+
         // تقدّم لتصبح وسيطاً — للمستخدم العادي فقط
         if (user != null && !user.isBroker && !user.isAdmin) ...[
           SizedBox(
