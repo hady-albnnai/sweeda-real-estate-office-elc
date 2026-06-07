@@ -156,5 +156,58 @@
 
 ---
 
+## 🔒 §5 الأمان (Security Hardening — Phase 8)
+
+### 5.1 منع self-promotion
+- Trigger `check_user_safe_update` يمنع المستخدم من تعديل:
+  `role, vrf (>1), pt, bg, brk, b_pkg, pkg_end, ref_by, ref_cnt, sts, ban_rsn`.
+- Trigger `check_user_safe_insert` يمنع تسجيل بحقول مرفّعة من البداية.
+- استثناء وحيد: `vrf: 0 → 1` مسموح (تقديم طلب توثيق).
+
+### 5.2 إخفاء البيانات الشخصية
+- `users` لا يقرأها إلا مالكها (policy `Users can read own row only`).
+- VIEW `users_public` تكشف فقط: `id, nm, role, brk, brk_cls, brk_nm, bg, vrf, img, pt, ref_cnt, ts_crt`.
+- الـclient يجب أن يستعمل `users_public` لجلب بيانات الملاك.
+
+### 5.3 منع التقييم الذاتي والمتكرر
+- `ratings_no_self`: `CHECK (reviewer_uid <> target_uid)`.
+- `UNIQUE(reviewer_uid, target_uid)`: تقييم واحد لكل ثنائي.
+- Trigger `check_rating_valid` يشترط موعد منتهٍ أو صفقة مكتملة بين الطرفين.
+
+### 5.4 حماية apply_referral
+- محصورة لـ `auth.uid() = p_new_uid` (لا يستطيع طرف ثالث استدعاؤها).
+- Rate-limit: 5 إحالات/ساعة لكل محيل.
+- مرفوعة من `anon` (لا تعمل بدون تسجيل دخول).
+
+### 5.5 RPCs آمنة للأدمن
+- `request_verification()` — المسار الوحيد لرفع vrf للمستخدم.
+- `admin_approve_verification(uid)` — يفحص role>=2 ويرسل إشعار.
+- `admin_reject_verification(uid, reason)` — مثلها مع السبب.
+
+### 5.6 منع phishing notifications
+- INSERT في `notifications` محظور من client (`WITH CHECK (false)`).
+- الإدراج فقط عبر triggers أو دوال SECURITY DEFINER.
+- UPDATE مسموح لـ `i_rd` فقط للمالك.
+
+### 5.7 OTP مع قفل بعد المحاولات
+- `verify_otp_safe` يعدّ المحاولات (`attempts`)، يُقفل الكود بعد 5 محاولات فاشلة.
+
+### 5.8 حماية صلاحية النشر (anti-abuse)
+- `canPublishOffer` يحسب المحذوف خلال 24 ساعة (منع "احذف وانشر").
+- `fail-closed`: عند فشل التحقق، يُمنع النشر بدل السماح.
+
+### 5.9 منع انتحال "المكتب"
+- الاسم لا يقبل: `مكتب، إدارة، admin، مدير، إداري، official`.
+
+| المرجع | الموقع |
+|---|---|
+| Migration الأمان | `supabase/migrations/2026_06_07_security_hardening.sql` |
+| RPC طلب التوثيق | `lib/screens/user/profile_screen.dart` → `request_verification` |
+| RPC اعتماد/رفض | `lib/providers/admin_provider.dart` → `admin_approve_verification` / `admin_reject_verification` |
+| فحص canPublishOffer | `lib/core/services/business_service.dart` |
+| رسائل خطأ التقييم | `lib/widgets/rating_dialog.dart` |
+
+---
+
 **توقيع:** هذا المنطق هو المرجع الأعلى لكل تعديل برمجي في التطبيق.
 عند أي تعارض بين كود وميثاق، يُقدَّم الميثاق ويُعدَّل الكود.

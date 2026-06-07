@@ -120,14 +120,24 @@ class BusinessService {
     ConfigModel? config,
   }) async {
     try {
-      // عدد العروض الفعّالة الحالية للمستخدم
-      final existing = await _sb.client
+      // 🔒 Phase 8: نحسب الفعّالة + المحذوفة حديثاً (آخر 24 ساعة)
+      // لمنع ثغرة "احذف لتنشر" — Scam #4 في التقرير الأمني
+      final since24h =
+          DateTime.now().subtract(const Duration(hours: 24)).toIso8601String();
+      final active = await _sb.client
           .from(DbTables.offers)
           .select('id')
           .eq('usr_id', uid)
           .eq('i_del', 0)
-          .inFilter('sts', [0, 1, 2, 5]); // مسودة/مراجعة/منشور/محجوز
-      final used = (existing as List).length;
+          .inFilter('sts', [0, 1, 2, 5]);
+      final recentlyDeleted = await _sb.client
+          .from(DbTables.offers)
+          .select('id')
+          .eq('usr_id', uid)
+          .eq('i_del', 1)
+          .gte('ts_upd', since24h);
+      final used =
+          (active as List).length + (recentlyDeleted as List).length;
 
       final limit = offerQuota(config, role: role, packageType: packageType);
 
@@ -138,12 +148,18 @@ class BusinessService {
         'limit': limit,
         'reason': allowed
             ? ''
-            : 'وصلت للحد الأقصى ($limit عرض). رقّ باقتك لنشر المزيد.',
+            : 'وصلت للحد الأقصى ($limit عرض خلال 24 ساعة، شامل المحذوف). '
+                'رقّ باقتك لنشر المزيد.',
       };
     } catch (e) {
       debugPrint('❌ canPublishOffer error: $e');
-      // عند الفشل نسمح بدل ما نمنع المستخدم خطأً
-      return {'allowed': true, 'used': 0, 'limit': 0, 'reason': ''};
+      // 🔒 Phase 8: عند الفشل نمنع (fail-closed) بدل السماح للأمان
+      return {
+        'allowed': false,
+        'used': 0,
+        'limit': 0,
+        'reason': 'تعذّر التحقق من حصتك، حاول لاحقاً.',
+      };
     }
   }
 
