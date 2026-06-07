@@ -12,22 +12,33 @@
         </trust-anchors>
     </base-config>
 
-    <!-- نطاقات Supabase + FCM -->
+    <!-- نطاقات Supabase + FCM مع Certificate Pinning على مستوى الجذر -->
     <domain-config cleartextTrafficPermitted="false">
         <domain includeSubdomains="true">supabase.co</domain>
         <domain includeSubdomains="true">supabase.in</domain>
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+        <!--
+          🔒 Pinning على مستوى جذور Let's Encrypt:
+          - يقبل أي شهادة Supabase طالما صادرة من Let's Encrypt
+          - لا يحتاج صيانة مع تجديد الشهادات كل 90 يوم
+          - ISRG Root X1: صالح حتى 2030-09-30
+          - ISRG Root X2: احتياطي (ECDSA modern root)
+        -->
+        <pin-set expiration="2030-09-30">
+            <pin digest="SHA-256">C5+lpZ7tcVwmwQIMcRtPbsQtWLABXhQzejna0wHFr8M=</pin>
+            <pin digest="SHA-256">diGVwiVYbubAI3RW4hB9xU8e/CH2GnkuvVFZE8zmgzI=</pin>
+        </pin-set>
+    </domain-config>
+
+    <!-- نطاقات Firebase/FCM بدون pinning (Google يدير شهاداتها ذاتياً) -->
+    <domain-config cleartextTrafficPermitted="false">
         <domain includeSubdomains="true">firebaseapp.com</domain>
         <domain includeSubdomains="true">googleapis.com</domain>
         <trust-anchors>
             <certificates src="system" />
         </trust-anchors>
-        <!--
-          📌 لتفعيل Certificate Pinning مستقبلاً:
-          <pin-set expiration="2027-01-01">
-              <pin digest="SHA-256">BASE64_HASH_HERE</pin>
-              <pin digest="SHA-256">BACKUP_HASH_HERE</pin>
-          </pin-set>
-        -->
     </domain-config>
 
     <!-- debug overrides — للاختبار المحلي فقط -->
