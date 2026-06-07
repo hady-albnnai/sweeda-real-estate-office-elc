@@ -152,6 +152,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           '/admin/config'),
                       _navCard(Icons.analytics_outlined, 'التحليلات',
                           '/admin/analytics'),
+                      _navCard(Icons.security, 'كشف الاحتيال',
+                          '/admin/fraud-suspects'),
                     ],
                   ),
                   const SizedBox(height: 20),

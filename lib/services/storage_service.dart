@@ -15,6 +15,8 @@ class StorageService {
   static const String offerBucket = 'offer_images';
   static const String configAssetsBucket = 'config_assets';
   static const String paymentProofsBucket = 'payment_proofs';
+  // 🔒 Phase 9: bucket خاص لصور الهوية (private bucket — RLS صارمة)
+  static const String idsPrivateBucket = 'ids_private';
   static const int maxImages = 6;
 
   // ═══════════════════════════════════════

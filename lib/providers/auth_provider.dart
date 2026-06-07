@@ -3,6 +3,7 @@ import '../models/user_model.dart';
 import '../core/network/supabase_service.dart';
 import '../core/constants/db_constants.dart';
 import '../core/services/business_service.dart';
+import '../core/services/device_service.dart';
 import '../services/auth_service.dart';
 import '../services/fcm_service.dart';
 
@@ -124,6 +125,9 @@ class AuthProvider with ChangeNotifier {
           .single();
       _userModel = UserModel.fromSupabase(response, userId);
       notifyListeners();
+      // 🔒 Phase 9: تسجيل بصمة الجهاز (fire-and-forget — لا يعطّل الجلسة)
+      // يساعد في كشف مزارع الإحالة والحسابات المتعددة من نفس الجهاز.
+      DeviceService().registerWithServer();
     } catch (e) {
       debugPrint('❌ _loadUserData error: $e');
     }

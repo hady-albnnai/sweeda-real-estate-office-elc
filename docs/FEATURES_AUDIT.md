@@ -367,6 +367,13 @@
 | 🔒 OTP مع قفل بعد محاولات فاشلة | كامل (Phase 8) | `verify_otp_safe` |
 | 🔒 حماية canPublishOffer (anti-delete-spam) | كامل (Phase 8) | `business_service.dart` |
 | 🔒 حظر انتحال "المكتب/الإدارة" في الاسم | كامل (Phase 8) | triggers users |
+| 🔐 OTP cryptographic (pgcrypto) | كامل (Phase 9) | `generate_otp` v2 |
+| 🔐 Device fingerprinting | كامل (Phase 9) | `DeviceService` + `register_device` RPC |
+| 🔐 apply_referral يرفض نفس الجهاز/IP | كامل (Phase 9) | `apply_referral` v3 |
+| 🔐 Storage bucket خاص لصور الهوية | كامل (Phase 9) | `ids_private` + 4 policies |
+| 🔐 Signed URLs مؤقتة (60s) للأدمن | كامل (Phase 9) | `verifications_review_screen` |
+| 🔐 شاشة كشف الاحتيال | كامل (Phase 9) | `fraud_suspects_screen.dart` + `/admin/fraud-suspects` |
+| 🔐 Network security config (Android) | كامل (Phase 9) | `network_security_config.xml` + `allowBackup=false` |
 
 ---
 

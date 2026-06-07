@@ -43,21 +43,26 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
     if (file != null) setState(() => _idImage = file);
   }
 
+  /// 🔒 Phase 9: رفع صورة الهوية في bucket خاص (ids_private).
+  /// المسار: <userId>/id_<timestamp>.jpg — RLS تشترط أن المسار = auth.uid().
+  /// نُرجع المسار (path) فقط، لا getPublicUrl (الـbucket غير عام).
+  /// الإدارة تقرأها عبر admin_get_id_signed_path RPC.
   Future<String?> _uploadId(String userId) async {
     if (_idImage == null) return null;
     try {
       final storage = SupabaseService().storage;
-      final path = 'ids/$userId/id_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final path = '$userId/id_${DateTime.now().millisecondsSinceEpoch}.jpg';
       final bytes = kIsWeb
           ? await _idImage!.readAsBytes()
           : await (await _storage.compressImage(File(_idImage!.path)) ??
                   File(_idImage!.path))
               .readAsBytes();
-      await storage.from(StorageService.offerBucket).uploadBinary(
+      await storage.from(StorageService.idsPrivateBucket).uploadBinary(
             path, bytes,
             fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
           );
-      return storage.from(StorageService.offerBucket).getPublicUrl(path);
+      // نُرجع المسار النسبي (لا URL عام لمنع التسرب)
+      return path;
     } catch (e) {
       debugPrint('❌ uploadId: $e');
       return null;
