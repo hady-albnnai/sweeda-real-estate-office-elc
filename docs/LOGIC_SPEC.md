@@ -79,9 +79,17 @@
   - تسجيل دخول يومي (50 نقطة، مفتاح `strk`).
   - إضافة عرض (`addO`).
   - إتمام صفقة (`dlD`).
-  - دعوة صديق (`ref`).
+  - دعوة صديق (`ref`) — كود إحالة في setup_profile.
   - النشر على السوشال (`soc`).
-- تُستخدم لـ: ترقية العروض (Boost/Pin)، رفع الرتبة السلوكية.
+- تُستخدم لـ: ترقية العروض (Boost/Pin/Featured) عبر `purchase_offer_boost`،
+  رفع الرتبة السلوكية تلقائياً.
+
+### 3.2 نظام الإحالة (Referral)
+- كل مستخدم له كود فريد = أول 8 أحرف من uid (uppercase).
+- يُدخل المستخدم الجديد كود محيله في setup_profile.
+- يُستدعى RPC `apply_referral(p_new_uid, p_referrer_code)` تلقائياً.
+- الطرفان يحصلان على نقاط الإحالة (`pts.ref` ≈ 1500).
+- يُحدّث `users.ref_cnt` للمحيل تلقائياً.
 
 ---
 
@@ -117,6 +125,10 @@
 | إشعار نتيجة التوثيق | `lib/providers/admin_provider.dart` → `_notifyVerificationResult()` |
 | شارة التوثيق في تفاصيل المستخدم (إدارة) | `lib/screens/admin/user_details_screen.dart` |
 | إلزام الوسيط الجديد بالتوثيق | `lib/screens/user/become_broker_screen.dart` |
+| تطبيق كود الإحالة عند التسجيل | `lib/screens/auth/setup_profile_screen.dart` → `apply_referral` RPC |
+| ترقية العرض بالنقاط (Boost) | `lib/screens/user/boost_offer_screen.dart` → `purchase_offer_boost` RPC |
+| زر "ترقية بالنقاط" في تفاصيل العرض | `lib/screens/visitor/offer_detail_screen.dart` (للمالك) |
+| الإقرار والتعهد قبل النشر | `lib/screens/user/add_offer_screen.dart` → `_showPledgeDialog` |
 
 ---
 

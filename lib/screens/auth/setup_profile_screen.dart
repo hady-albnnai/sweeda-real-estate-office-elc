@@ -23,6 +23,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
   final _nameController = TextEditingController();
   final _sidController = TextEditingController();
   final _addressController = TextEditingController();
+  final _referralCodeController = TextEditingController(); // 🎁 كود إحالة اختياري
   XFile? _idImage;
   bool _agreePledge = false;
   bool _loading = false;
@@ -33,6 +34,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
     _nameController.dispose();
     _sidController.dispose();
     _addressController.dispose();
+    _referralCodeController.dispose();
     super.dispose();
   }
 
@@ -101,6 +103,33 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
         'img': idUrl ?? user.img,
         'ts_upd': DateTime.now().toIso8601String(),
       }).eq('id', user.uid);
+
+      // 3) 🎁 تطبيق كود الإحالة (إن وُجد) — RPC apply_referral
+      // مرجع: docs/LOGIC_SPEC.md §3.2 + supabase/FUNCTIONS_REFERENCE.md
+      final refCode = _referralCodeController.text.trim();
+      if (refCode.isNotEmpty) {
+        try {
+          final ok = await SupabaseService().client.rpc(
+            DbFunctions.applyReferral,
+            params: {
+              'p_new_uid': user.uid,
+              'p_referrer_code': refCode.toUpperCase(),
+            },
+          );
+          if (ok == true && mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('🎁 تم تطبيق كود الإحالة، حصلت أنت والمحيل على نقاط ترحيب!'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 3),
+              ),
+            );
+          }
+        } catch (e) {
+          debugPrint('⚠️ apply_referral failed (non-fatal): $e');
+          // لا نُفشل عملية التسجيل بسبب كود إحالة خاطئ
+        }
+      }
 
       await authProvider.refreshUser();
 
@@ -228,6 +257,21 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                   hintText: 'مثلاً: السويداء — الجادة الرئيسية',
                   prefixIcon: Icon(Icons.location_on,
                       color: AppTheme.primaryGold),
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              // 🎁 كود الإحالة (اختياري) — LOGIC_SPEC §3.2
+              _label('كود إحالة (اختياري — احصل على نقاط ترحيب 🎁)'),
+              TextField(
+                controller: _referralCodeController,
+                textCapitalization: TextCapitalization.characters,
+                style: const TextStyle(
+                    color: AppTheme.textWhite, letterSpacing: 2),
+                decoration: const InputDecoration(
+                  hintText: 'مثلاً: ABCD1234',
+                  prefixIcon:
+                      Icon(Icons.card_giftcard, color: AppTheme.primaryGold),
                 ),
               ),
               const SizedBox(height: 16),

@@ -344,6 +344,11 @@
 | ✅ إشعارات FCM/DB عند اعتماد/رفض التوثيق | كامل (Phase 4) | `admin_provider.dart#_notifyVerificationResult` |
 | ✅ سبب رفض التوثيق (نصي اختياري) | كامل (Phase 4) | `verifications_review_screen.dart` |
 | ✅ التوثيق إلزامي للوسطاء عند طلب الوساطة | كامل (Phase 4) | `become_broker_screen.dart` (vrf=1 تلقائياً) |
+| ✅ تطبيق كود الإحالة في setup_profile | كامل (Phase 5) | `setup_profile_screen.dart` → `apply_referral` RPC |
+| ✅ زر "ترقية بالنقاط" في تفاصيل العرض | كامل (Phase 5) | `offer_detail_screen.dart` للمالك → `/user/boost-offer/:id` |
+| ✅ الإقرار والتعهد قبل النشر | موجود مسبقاً | `add_offer_screen.dart` + `setup_profile_screen.dart` |
+| ✅ نظام الإحالة الكامل (UI + RPC) | كامل (Phase 5) | `referral_screen.dart` + `apply_referral` RPC |
+| ✅ Boost/Pin/Featured بالنقاط | موجود مسبقاً | `boost_offer_screen.dart` → `purchase_offer_boost` RPC |
 
 ---
 

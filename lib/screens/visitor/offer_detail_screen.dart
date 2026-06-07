@@ -443,6 +443,27 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                         ),
                       ),
                     ),
+                  if (isOwner) const SizedBox(height: 10),
+
+                  // 🚀 زر ترقية بالنقاط للمالك
+                  if (isOwner)
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () =>
+                            context.push('/user/boost-offer/${offer.id}'),
+                        icon: const Icon(Icons.rocket_launch,
+                            color: AppTheme.deepBlack),
+                        label: const Text('ترقية العرض بالنقاط 🚀',
+                            style: TextStyle(
+                                color: AppTheme.deepBlack,
+                                fontWeight: FontWeight.bold)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryGold,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                      ),
+                    ),
                   if (isOwner) const SizedBox(height: 14),
 
                   SizedBox(
