@@ -548,7 +548,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
                 controller: _customCityCtrl,
                 decoration: const InputDecoration(
                   labelText: 'اكتب المنطقة الرئيسية يدوياً',
-                  hintText: 'مثال: حي الوادي أو منطقة جديدة',
+                  hintText: 'مثال: حي الوادي',
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -821,7 +821,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
               style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
           const SizedBox(height: 16),
 
-          // الإقرار والتعهد - النص متاح مباشرة للقراءة (ExpansionTile)
+          // الإقرار والتعهد - زر يفتح dialog مع النص الكامل (كما طلبت) + checkbox دائماً ظاهر
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
@@ -833,28 +833,21 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
                       : const Color.fromRGBO(212, 175, 55, 0.3)),
             ),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ExpansionTile(
-                  title: const Text('الإقرار والتعهد (اضغط لقراءة النص الكامل)',
-                      style: TextStyle(
-                          color: AppTheme.textWhite, fontSize: 12)),
-                  collapsedIconColor: AppTheme.primaryGold,
-                  iconColor: AppTheme.primaryGold,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        pledgeText,
-                        style: const TextStyle(
-                            color: AppTheme.textGrey, fontSize: 12),
-                      ),
-                    ),
-                  ],
+                OutlinedButton.icon(
+                  onPressed: _showPledgeDialog,
+                  icon: const Icon(Icons.gavel, color: AppTheme.primaryGold),
+                  label: const Text('عرض نص الإقرار والتعهد الكامل',
+                      style: TextStyle(color: AppTheme.primaryGold, fontSize: 14)),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppTheme.primaryGold),
+                  ),
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'الموافقة على الإقرار إلزامية للنشر.',
-                  style: TextStyle(color: AppTheme.textGrey, fontSize: 11),
+                  'الموافقة على الإقرار والتعهد إلزامية للنشر.',
+                  style: TextStyle(color: AppTheme.textGrey, fontSize: 14),
                 ),
                 const SizedBox(height: 8),
                 // إصلاح تحذير ListTile: wrap بـ Material لتجنب الـ ink splash invisible
