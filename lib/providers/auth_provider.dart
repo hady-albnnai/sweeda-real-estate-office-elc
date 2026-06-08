@@ -117,16 +117,18 @@ class AuthProvider with ChangeNotifier {
 
   Future<void> _loadUserData(String userId) async {
     try {
+      // 🔒 Phase 8 fix: نستخدم RPC SECURITY DEFINER لتجاوز RLS
+      // (تطبيقنا يستخدم OTP محلي لا يمر بـSupabase Auth → auth.uid()=NULL)
       final response = await SupabaseService()
           .client
-          .from(DbTables.users)
-          .select()
-          .eq('id', userId)
-          .single();
-      _userModel = UserModel.fromSupabase(response, userId);
+          .rpc('get_user_full_by_id', params: {'p_uid': userId});
+      if (response == null || (response as List).isEmpty) {
+        debugPrint('⚠️ _loadUserData: no row for $userId');
+        return;
+      }
+      final row = Map<String, dynamic>.from(response.first);
+      _userModel = UserModel.fromSupabase(row, userId);
       notifyListeners();
-      // 🔒 Phase 9: تسجيل بصمة الجهاز (fire-and-forget — لا يعطّل الجلسة)
-      // يساعد في كشف مزارع الإحالة والحسابات المتعددة من نفس الجهاز.
       DeviceService().registerWithServer();
     } catch (e) {
       debugPrint('❌ _loadUserData error: $e');
