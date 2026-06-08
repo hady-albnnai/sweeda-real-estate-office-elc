@@ -22,6 +22,9 @@ class UserHomeScreen extends StatefulWidget {
 
 class _UserHomeScreenState extends State<UserHomeScreen> {
   int _selectedCategory = 0; // 0=الكل, 1=عقارات, 2=سيارات
+  // 🔒 Fix: نحتفظ بمرجع OfferProvider لاستخدامه في dispose بأمان
+  // (لا يمكن استدعاء Provider.of في dispose بعد deactivation)
+  OfferProvider? _offerProvRef;
 
   @override
   void initState() {
@@ -31,6 +34,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       await config.loadConfig();
       if (!mounted) return;
       final offerProv = Provider.of<OfferProvider>(context, listen: false);
+      _offerProvRef = offerProv; // حفظ المرجع
       offerProv.fetchOffers();
       offerProv.subscribeRealtime(); // تحديث فوري للعروض
 
@@ -57,8 +61,8 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
   @override
   void dispose() {
-    // إيقاف اشتراك Realtime عند مغادرة الشاشة
-    Provider.of<OfferProvider>(context, listen: false).unsubscribeRealtime();
+    // 🔒 Fix: نستخدم المرجع المحفوظ بدل Provider.of (الذي يفشل في dispose)
+    _offerProvRef?.unsubscribeRealtime();
     super.dispose();
   }
 
