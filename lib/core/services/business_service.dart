@@ -203,7 +203,7 @@ class BusinessService {
         'limit': limit,
         'reason': allowed ? '' : 'وصلت للحد الأقصى ($limit طلب).',
       };
-    } catch (e) {return {'allowed': true, 'used': 0, 'limit': 0, 'reason': ''};
+    } catch (e) {return {'allowed': false, 'used': 0, 'limit': 0, 'reason': 'تعذّر التحقق من حصتك، حاول لاحقاً.'};
     }
   }
 
