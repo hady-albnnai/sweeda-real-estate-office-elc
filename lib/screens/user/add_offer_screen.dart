@@ -120,8 +120,8 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
               style: TextStyle(color: AppTheme.textWhite)),
         ]),
         content: SingleChildScrollView(
-          child: Text(pledgeText,
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+          child: Text(pledgeText.isNotEmpty && pledgeText.length > 50 ? pledgeText : 'إقرار وتعهد إلكتروني — عقارات السويداء\n\nأقر أنا الموقع أدناه بموجب هذا الإقرار والتعهد بما يلي:\n1. أن جميع البيانات والصور والمعلومات المقدمة في هذا العرض صحيحة ودقيقة وغير مضللة.\n2. أنني المالك الشرعي للعقار/السيارة أو وكيل مفوض قانوناً عن المالك.\n3. أن أي سند ملكية مرفق (إن وجد) صحيح وصادر عن الجهة المختصة وغير مزوّر.\n4. أتعهد بإزالة هذا العرض فور بيع العقار/السيارة أو إلغاء الصفقة.\n5. أن تقديم أي بيانات كاذبة أو مضللة يعرضني للمسؤولية القانونية الكاملة، بما في ذلك حظر الحساب وخصم النقاط.\n6. أن جميع المعلومات المقدمة تقع تحت مسؤوليتي الكاملة والحصرية.',
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: 14)),
         ),
         actions: [
           TextButton(
