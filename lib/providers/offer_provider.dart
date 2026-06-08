@@ -244,8 +244,6 @@ class OfferProvider with ChangeNotifier {
       
       return created;
     } catch (e, stack) {
-      print('DEBUG_PROVIDER_ADD_OFFER_ERROR: $e');
-      print('DEBUG_PROVIDER_ADD_OFFER_STACK: $stack');
       return null;
     }
   }

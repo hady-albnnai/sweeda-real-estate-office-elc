@@ -385,7 +385,7 @@
 | ✅ إصلاح Streak على فتح/إغلاق التطبيق (open/close awards) | 2026-06-08 | `auth_provider.dart` + `user_home_screen.dart` + `business_service.dart` - guard مزدوج بـ userModel.strkDt + in-memory + DB + resilient quota |
 | ✅ إضافة حقل حر للتصنيف الفرعي (مدموج داخل القائمة الفرعية كخيار 'آخر') + قائمة كاملة للقرى + وصف موقع + سند إلزامي + نص عمولة + إخفاء Continue/Cancel + pledge responsibility + سعر واضح | 2026-06-08 | `add_offer_screen.dart` - 'آخر' كـ DropdownMenuItem قيمة -1 داخل sub list لكل main + conditional textfield + validation لـ -1 + customSubCtrl + locations fallback + ... |
 | ✅ إصلاح شامل لـ custom city handling + menuMaxHeight لمنع الـ overflow + إزالة كل الـ debug prints + إكمال دعم المنطقة الحرة (customCityCtrl) في add_offer_screen | 2026-06-09 | `add_offer_screen.dart` + `offer_provider.dart` - validation للـ custom city + cityName safe calculation + menuMaxHeight: 300 + حذف جميع الـ prints (مطابقة لـ DEVELOPMENT_GUIDELINES) |
-| 🔧 إصلاح مؤقت للـ overflow (حذف العبارة التوضيحية الطويلة في hint التصنيف الفرعي) + إضافة prints مؤقتة للتشخيص (بناءً على طلب المستخدم) | 2026-06-09 | `add_offer_screen.dart` - shortened hint text + temporary debug prints in _submit() |
+| ✅ إصلاح RLS policy على جدول offers (تغيير INSERT policy إلى `auth.uid() = usr_id`) — حل مشكلة "violates row-level security policy" | 2026-06-09 | `supabase/setup.sql` + `add_offer_screen.dart` + `offer_provider.dart` - إصلاح السياسة + إزالة كل الـ prints المؤقتة (مطابقة لـ DEVELOPMENT_GUIDELINES) |
 
 ---
 
