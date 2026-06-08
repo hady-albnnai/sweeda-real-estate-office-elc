@@ -28,7 +28,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   int? _selectedType;
   int? _selectedTrans;
   int? _selectedMainCat;
-  int? _selectedCat;
+  int? _selectedSubCat; // التصنيف الفرعي (index داخل sub array للمجموعة الرئيسية)
   int _cur = Currency.lbp;
   final _priceCtrl = TextEditingController();
   final _locCtrl = TextEditingController();
@@ -166,7 +166,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       _snack('يجب تسجيل الدخول أولاً');
       return;
     }
-    if (_selectedType == null || _selectedTrans == null || _selectedMainCat == null || _selectedCat == null) {
+    if (_selectedType == null || _selectedTrans == null || _selectedMainCat == null || _selectedSubCat == null) {
       _snack('يرجى إكمال البيانات الأساسية');
       return;
     }
@@ -227,10 +227,11 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     final offer = OfferModel(
       id: '',
       usrId: user.uid,
-      ttl: '${_selectedCat != null ? _catLabel() : 'عرض'} في ${_locCtrl.text}',
+      ttl: '${_selectedSubCat != null ? _catLabel() : 'عرض'} في ${_locCtrl.text}',
       typ: _selectedType!,
       trx: _selectedTrans!,
-      cat: _selectedCat!,
+      cat: _selectedMainCat!,
+      sub: _selectedSubCat!,
       prc: price,
       cur: _cur,
       loc: loc,
@@ -398,7 +399,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         _dd('نوع العرض', ['عقار', 'سيارة'], (v) => setState(() {
           _selectedType = v == 'عقار' ? 0 : 1;
           _selectedMainCat = null;
-          _selectedCat = null;
+          _selectedSubCat = null;
         })),
         const SizedBox(height: 20),
         _dd('نوع المعاملة', ['بيع', 'إيجار'],
@@ -415,11 +416,11 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           items: mainCatItems,
           onChanged: (v) => setState(() {
             _selectedMainCat = v;
-            _selectedCat = null;
+            _selectedSubCat = null;
             if (v != null) {
               final subs = _subCategoryMap(v);
               if (subs.length == 1) {
-                _selectedCat = subs.keys.first;
+                _selectedSubCat = subs.keys.first;
               }
             }
           }),
@@ -429,7 +430,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         const SizedBox(height: 20),
         if (subCatItems.isNotEmpty)
           DropdownButtonFormField<int>(
-            initialValue: _selectedCat,
+            initialValue: _selectedSubCat,
             dropdownColor: AppTheme.surfaceBlack,
             style: const TextStyle(color: AppTheme.textWhite),
             decoration: const InputDecoration(
@@ -437,7 +438,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
               labelText: 'التصنيف الفرعي',
             ),
             items: subCatItems,
-            onChanged: (v) => setState(() => _selectedCat = v),
+            onChanged: (v) => setState(() => _selectedSubCat = v),
             hint: const Text('اختر التصنيف الفرعي',
                 style: TextStyle(color: AppTheme.textGrey)),
           ),
@@ -751,24 +752,38 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   }
 
   String _catLabel() {
+    if (_selectedMainCat == null) return 'عرض';
     final config = context.read<ConfigProvider>().config;
     final source = _selectedType == 1
         ? config?.vehicleCategories
         : config?.propertyCategories;
-    if (source != null && source.isNotEmpty && _selectedCat != null) {
-      return source[_selectedCat.toString()]?.toString() ?? 'عرض';
+    if (source != null && source.isNotEmpty) {
+      final mainItem = source['${_selectedMainCat}'];
+      if (mainItem is Map) {
+        final subsList = mainItem['sub'] ?? mainItem['children'];
+        if (subsList is List && _selectedSubCat != null && _selectedSubCat! >= 0 && _selectedSubCat! < subsList.length) {
+          return subsList[_selectedSubCat!].toString();
+        }
+        return mainItem['nm']?.toString() ?? mainItem.toString();
+      }
     }
+    // fallback بسيط (يجب تحديثه إذا تغيرت الـ ids في config)
     final fallback = _selectedType == 1
-        ? {1: 'سيدان', 2: 'SUV', 3: 'دفع رباعي'}
-        : {1: 'شقة', 2: 'فيلا', 3: 'أرض'};
-    return fallback[_selectedCat] ?? 'عرض';
+        ? {0: 'سيارة', 1: 'شاحنة', 2: 'دراجة نارية', 3: 'معدات ثقيلة', 4: 'باصات/نقل'}
+        : {0: 'سكني', 1: 'تجاري', 2: 'زراعي', 3: 'صناعي'};
+    final mainLabel = fallback[_selectedMainCat] ?? 'عرض';
+    if (_selectedSubCat != null) {
+      // إذا أردنا عرض الفرعي في الـ fallback (لكن عادة يجب أن يكون من config)
+      return mainLabel;
+    }
+    return mainLabel;
   }
 
   Map<int, String> _mapFromDynamic(dynamic data) {
     final result = <int, String>{};
     if (data is Map) {
       data.forEach((key, value) {
-        final id = int.tryParse(key);
+        final id = int.tryParse(key.toString());
         if (id == null) return;
         if (value is String) {
           result[id] = value;
@@ -780,6 +795,21 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           result[id] = value.toString();
         }
       });
+    } else if (data is List) {
+      // دعم مصفوفات التصنيفات الفرعية في config (sub: ["اسم1", "اسم2", ...])
+      // نستخدم الـ index كـ id للحقل sub في offers (cat = main group id, sub = index داخل المجموعة)
+      for (int i = 0; i < data.length; i++) {
+        final value = data[i];
+        if (value is String) {
+          result[i] = value;
+        } else if (value is Map) {
+          result[i] = value['nm']?.toString() ??
+              value['name']?.toString() ??
+              value.toString();
+        } else {
+          result[i] = value.toString();
+        }
+      }
     }
     return result;
   }
