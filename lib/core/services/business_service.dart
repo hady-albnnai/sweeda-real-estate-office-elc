@@ -273,6 +273,7 @@ class BusinessService {
 
   /// تسجيل دخول اليوم وتحديث سلسلة الأيام المتتالية.
   /// يمنح نقاط Streak عند الاستمرار، ويعيد الحالة الجديدة.
+  /// يستخدم توقيت سوريا (UTC+3) لتحديد بداية اليوم (بعد 12 ليلاً بدمشق).
   Future<Map<String, dynamic>> registerDailyStreak(
       String uid, ConfigModel? config) async {
     try {
@@ -286,68 +287,59 @@ class BusinessService {
       final int currentStreak = (row['strk'] as int?) ?? 0;
       final String? strkDtStr = row['strk_dt'] as String?;
       
-      // استخدام توقيت سوريا (UTC+3) لتحديد "اليوم" — تجديد بعد 12 ليلاً بتوقيت دمشق
       final now = DateTime.now();
-      final syriaNow = now.toUtc().add(const Duration(hours: 3));
-      final today = DateTime(syriaNow.year, syriaNow.month, syriaNow.day);
 
-      DateTime? lastDay;
-      if (strkDtStr != null) {
-        final lastDate = DateTime.parse(strkDtStr);
-        final lastSyria = lastDate.toUtc().add(const Duration(hours: 3));
-        lastDay = DateTime(lastSyria.year, lastSyria.month, lastSyria.day);
+      // دالة مساعدة لاستخراج تاريخ اليوم بتوقيت سوريا كـ string (YYYY-MM-DD)
+      // هذا أكثر أماناً ويمنع مشاكل الـ timezone مع DateTime
+      String syriaDateStr(DateTime dt) {
+        final syria = dt.toUtc().add(const Duration(hours: 3));
+        return '${syria.year.toString().padLeft(4, '0')}-'
+            '${syria.month.toString().padLeft(2, '0')}-'
+            '${syria.day.toString().padLeft(2, '0')}';
       }
 
-      if (lastDay == null) {
-        // أول مرة يسجل دخول
+      final todayStr = syriaDateStr(now);
+
+      String? lastStr;
+      if (strkDtStr != null) {
+        try {
+          final lastDate = DateTime.parse(strkDtStr);
+          lastStr = syriaDateStr(lastDate);
+        } catch (_) {
+          lastStr = null;
+        }
+      }
+
+      if (lastStr == null || lastStr != todayStr) {
+        // يوم جديد (أو أول مرة) — منح نقاط + تحديث
+        final isNew = lastStr == null;
+        final newStreak = isNew ? 1 : currentStreak + 1;
+
         await _sb.client.from(DbTables.users).update({
-          'strk': 1,
-          'strk_dt': today.toIso8601String(),
+          'strk': newStreak,
+          'strk_dt': now.toIso8601String(),  // نخزن الوقت الحالي للـ reference
           'ts_upd': now.toIso8601String(),
         }).eq('id', uid);
 
-        final strkPts = _ptsFromConfig(config, 'strk', 50);
+        final strkPts = _ptsFromConfig(config, 'strk', 200);  // يطابق قيمتك الحالية
         await addPoints(uid, strkPts);
 
-        return {'streak': 1, 'changed': true, 'awarded': true};
-      }
-
-      final diff = today.difference(lastDay).inDays;
-
-      if (diff == 0) {
-        // سُجّل اليوم مسبقاً (بعد 12 ليلاً سوريا) — لا نقاط ولا تغيير
+        return {
+          'streak': newStreak,
+          'changed': true,
+          'awarded': true,
+          'isNew': isNew
+        };
+      } else {
+        // نفس اليوم بتوقيت سوريا — لا نقاط
         return {
           'streak': currentStreak,
           'changed': false,
           'awarded': false,
         };
-      } else if (diff == 1) {
-        // يوم متتالٍ — زيادة السلسلة ومنح نقاط
-        final newStreak = currentStreak + 1;
-        await _sb.client.from(DbTables.users).update({
-          'strk': newStreak,
-          'strk_dt': today.toIso8601String(),
-          'ts_upd': now.toIso8601String(),
-        }).eq('id', uid);
-
-        final strkPts = _ptsFromConfig(config, 'strk', 50);
-        await addPoints(uid, strkPts);
-
-        return {'streak': newStreak, 'changed': true, 'awarded': true};
-      } else {
-        // انقطعت السلسلة — إعادة التعيين إلى 1 ومنح نقاط البداية
-        await _sb.client.from(DbTables.users).update({
-          'strk': 1,
-          'strk_dt': today.toIso8601String(),
-          'ts_upd': now.toIso8601String(),
-        }).eq('id', uid);
-
-        final strkPts = _ptsFromConfig(config, 'strk', 50);
-        await addPoints(uid, strkPts);
-
-        return {'streak': 1, 'changed': true, 'awarded': true};
       }
-    } catch (e) {return {'streak': 0, 'changed': false, 'awarded': false};
+    } catch (e) {
+      return {'streak': 0, 'changed': false, 'awarded': false};
     }
   }
 
