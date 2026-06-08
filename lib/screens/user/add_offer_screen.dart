@@ -170,6 +170,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     }
     if (_selectedType == null || _selectedTrans == null || _selectedMainCat == null ||
         (_selectedSubCat == null && _customSubCtrl.text.trim().isEmpty) ||
+        (_selectedSubCat == -1 && _customSubCtrl.text.trim().isEmpty) ||
         _selectedDocType == null) {
       _snack('يرجى إكمال البيانات الأساسية (التصنيف الرئيسي + فرعي أو إدخال حر + نوع السند)');
       return;
@@ -240,7 +241,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       typ: _selectedType!,
       trx: _selectedTrans!,
       cat: _selectedMainCat!,
-      sub: _selectedSubCat ?? 0,
+      sub: (_selectedSubCat == -1 || _selectedSubCat == null) ? 0 : _selectedSubCat!,
       prc: price,
       cur: _cur,
       loc: loc,
@@ -403,6 +404,15 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         .map((e) => DropdownMenuItem(value: e.key, child: Text(e.value)))
         .toList();
 
+    // إضافة خيار "آخر" داخل قائمة التصنيفات الفرعية (كما طلبت: بداخل كل نوع فرعي، حقل حر إذا ما وجد)
+    final allSubItems = List<DropdownMenuItem<int>>.from(subCatItems);
+    allSubItems.add(
+      const DropdownMenuItem<int>(
+        value: -1,
+        child: Text('آخر (إدخال يدوي)'),
+      ),
+    );
+
     return Step(
       title: const Text('الأساسيات',
           style: TextStyle(
@@ -412,6 +422,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           _selectedType = v == 'عقار' ? 0 : 1;
           _selectedMainCat = null;
           _selectedSubCat = null;
+          _customSubCtrl.clear();
         })),
         const SizedBox(height: 20),
         _dd('نوع المعاملة', ['بيع', 'إيجار'],
@@ -429,6 +440,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           onChanged: (v) => setState(() {
             _selectedMainCat = v;
             _selectedSubCat = null;
+            _customSubCtrl.clear();
             if (v != null) {
               final subs = _subCategoryMap(v);
               if (subs.length == 1) {
@@ -440,7 +452,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
               style: TextStyle(color: AppTheme.textGrey)),
         ),
         const SizedBox(height: 20),
-        if (subCatItems.isNotEmpty)
+        if (_selectedMainCat != null)
           DropdownButtonFormField<int>(
             initialValue: _selectedSubCat,
             dropdownColor: AppTheme.surfaceBlack,
@@ -449,20 +461,26 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
               border: OutlineInputBorder(),
               labelText: 'التصنيف الفرعي',
             ),
-            items: subCatItems,
-            onChanged: (v) => setState(() => _selectedSubCat = v),
-            hint: const Text('اختر التصنيف الفرعي',
+            items: allSubItems,
+            onChanged: (v) => setState(() {
+              _selectedSubCat = v;
+              if (v != -1) _customSubCtrl.clear();
+            }),
+            hint: const Text('اختر التصنيف الفرعي (أو آخر للإدخال اليدوي)',
                 style: TextStyle(color: AppTheme.textGrey)),
           ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: _customSubCtrl,
-          decoration: const InputDecoration(
-            labelText: 'تصنيف فرعي آخر (إذا غير موجود في القائمة - اختياري)',
-            hintText: 'اكتب الاسم يدوياً (سيُستخدم في العنوان)',
-            border: OutlineInputBorder(),
+        if (_selectedSubCat == -1)
+          Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: TextField(
+              controller: _customSubCtrl,
+              decoration: const InputDecoration(
+                labelText: 'اكتب التصنيف الفرعي يدوياً',
+                hintText: 'مثال: فيلا فاخرة أو سيارة كهربائية مخصصة',
+                border: OutlineInputBorder(),
+              ),
+            ),
           ),
-        ),
         const SizedBox(height: 8),
         Text(
           'ملاحظة: عند إتمام الصفقة (بيع أو إيجار) يتقاضى المكتب عمولة 3%.',
