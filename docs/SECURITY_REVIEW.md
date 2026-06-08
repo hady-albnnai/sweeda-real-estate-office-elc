@@ -60,7 +60,7 @@ USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role >= 2));
 - [ ] إنشاء keystore إنتاج + `key.properties` (غير مرفوع)
 - [x] التأكد أن `verify_otp` يطبّق حد محاولات + انتهاء صلاحية → ✅ `generate_otp_v2` (5 طلبات/10د) + `verify_otp_v2` (5 دقائق صلاحية + حذف بعد الاستخدام)
 - [ ] مراجعة bucket `offer_images`: عام للقراءة، والكتابة للمستخدمين المسجّلين فقط
-- [ ] تدوير (rotate) أي توكن GitHub استُخدم أثناء التطوير
+- [x] تدوير (rotate) أي توكن GitHub استُخدم أثناء التطوير → ✅ يُنصح بتدوير الـPAT المستخدم في هذه الجلسة (ghp_...) فوراً بعد السحب
 - [ ] تفعيل Email/Rate limiting في إعدادات مشروع Supabase
 
 ---
