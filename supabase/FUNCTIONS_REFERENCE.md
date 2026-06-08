@@ -319,7 +319,11 @@ final code = await client.rpc('generate_otp_v2',
   params: {'p_identifier': '+963$phone', 'p_channel': 'whatsapp'});
 ```
 
-**الجدول:** `otp_codes` (INSERT) — يكتب `identifier` و `channel`  
+**الجدول:** `otp_codes` (INSERT) — يكتب `identifier` و `channel`
+
+> ⚠️ **مهم (إصلاح 2026-06-08):** كان عمود `phone` لا يزال `NOT NULL`، مما يفشل INSERT.
+> الحل: شغّل migration `2026_06_08_fix_otp_phone_nullable.sql` الذي يجعل `phone` nullable
+> ويُضيف CHECK constraint أن `phone OR identifier` على الأقل موجود.  
 **استثناء:** يرمي `Too many OTP requests` لو تجاوز الحد
 
 ---
