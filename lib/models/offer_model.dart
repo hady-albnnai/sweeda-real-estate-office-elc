@@ -7,6 +7,7 @@ class OfferModel {
   final int trx;
   final int cat;
   final int sub;
+  final String contactPh;
   final String ttl;
   final double prc;
   final int cur;
@@ -60,6 +61,7 @@ class OfferModel {
     required this.trx,
     required this.cat,
     this.sub = 0,
+    this.contactPh = '',
     required this.ttl,
     required this.prc,
     this.cur = 1,
@@ -111,6 +113,7 @@ class OfferModel {
       trx: data['trx'] ?? 0,
       cat: data['cat'] ?? 0,
       sub: data['sub'] ?? 0,
+      contactPh: data['contact_ph'] ?? '',
       ttl: data['ttl'] ?? '',
       prc: (data['prc'] ?? 0).toDouble(),
       cur: data['cur'] ?? 1,
@@ -163,6 +166,7 @@ class OfferModel {
     return {
       'usr_id': usrId, 'brk_id': brkId, 'brk_pct': brkPct,
       'typ': typ, 'trx': trx, 'cat': cat, 'sub': sub,
+      'contact_ph': contactPh,
       'ttl': ttl, 'prc': prc, 'cur': cur, 'loc': loc,
       'descript': descript, 'imgs': imgs, 'vdo': vdo,
       'doc_tp': docTp, 'doc_img': docImg, 'exact_loc': exactLoc,
