@@ -164,7 +164,9 @@ class OfferModel {
 
   Map<String, dynamic> toMap() {
     return {
-      'usr_id': usrId, 'brk_id': brkId, 'brk_pct': brkPct,
+      'usr_id': usrId,
+      'brk_id': brkId.isEmpty ? null : brkId,
+      'brk_pct': brkPct,
       'typ': typ, 'trx': trx, 'cat': cat, 'sub': sub,
       'contact_ph': contactPh,
       'ttl': ttl, 'prc': prc, 'cur': cur, 'loc': loc,

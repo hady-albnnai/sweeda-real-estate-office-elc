@@ -445,7 +445,9 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           style: TextStyle(
               color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
       content: SingleChildScrollView(
-        child: Column(children: [
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
           _dd('نوع العرض', ['عقار', 'سيارة'], (v) => setState(() {
             _selectedType = v == 'عقار' ? 0 : 1;
             _selectedMainCat = null;
@@ -490,6 +492,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: 'التصنيف الفرعي',
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
               items: allSubItems,
               onChanged: (v) => setState(() {
@@ -497,7 +500,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
                 if (v != -1) _customSubCtrl.clear();
               }),
               hint: const Text('اختر التصنيف الفرعي (أو آخر للإدخال اليدوي)',
-                  style: TextStyle(color: AppTheme.textGrey)),
+                  style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
             ),
           if (_selectedSubCat == -1)
             Padding(
@@ -532,6 +535,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
             decoration: const InputDecoration(
               border: OutlineInputBorder(),
               labelText: 'المنطقة الرئيسية',
+              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
             items: cityItems,
             onChanged: (v) => setState(() {
@@ -539,7 +543,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
               if (v != -1) _customCityCtrl.clear();
             }),
             hint: const Text('اختر المنطقة الرئيسية أو آخر للإدخال الحر',
-                style: TextStyle(color: AppTheme.textGrey)),
+                style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
           ),
           if (_selectedCityArea == -1)
             Padding(
