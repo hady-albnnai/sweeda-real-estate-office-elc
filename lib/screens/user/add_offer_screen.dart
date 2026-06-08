@@ -36,6 +36,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   final _descCtrl = TextEditingController();
   final _specCtrl = TextEditingController();
   final _customSubCtrl = TextEditingController(); // للتصنيف الفرعي الحر (غير موجود في القائمة)
+  final _contactPhoneCtrl = TextEditingController(); // رقم التواصل مع العارض
 
   final List<XFile> _pickedImages = [];
   XFile? _docImage; // صورة سند الملكية
@@ -63,6 +64,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     _descCtrl.dispose();
     _specCtrl.dispose();
     _customSubCtrl.dispose();
+    _contactPhoneCtrl.dispose();
     super.dispose();
   }
 
@@ -248,6 +250,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       trx: _selectedTrans!,
       cat: _selectedMainCat!,
       sub: (_selectedSubCat == -1 || _selectedSubCat == null) ? 0 : _selectedSubCat!,
+      contactPh: _contactPhoneCtrl.text.isNotEmpty ? _contactPhoneCtrl.text : (user?.ph ?? ''),
       prc: price,
       cur: _cur,
       loc: loc,
@@ -549,6 +552,16 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
               ),
             ),
           ]),
+          const SizedBox(height: 15),
+          TextField(
+            controller: _contactPhoneCtrl,
+            keyboardType: TextInputType.phone,
+            decoration: const InputDecoration(
+              labelText: 'رقم الهاتف للتواصل (اختياري - سيُستخدم رقم حسابك إذا تركته فارغاً)',
+              filled: true,
+              fillColor: AppTheme.surfaceBlack,
+            ),
+          ),
           const SizedBox(height: 15),
           // قائمة منسدلة للمناطق الرئيسية (السويداء المدينة، صلخد، شهبا)
           DropdownButtonFormField<int>(

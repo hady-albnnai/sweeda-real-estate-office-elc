@@ -78,13 +78,23 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
       tsCrt: DateTime.now(),
     );
 
-    final ok = await reqProv.addRequest(request);
+    bool ok = false;
+    try {
+      ok = await reqProv.addRequest(request);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _submitting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('فشل إرسال الطلب: $e')));
+      }
+      return;
+    }
 
     if (!ok) {
       if (mounted) {
         setState(() => _submitting = false);
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('فشل إرسال الطلب، حاول مجدداً')));
+            const SnackBar(content: Text('فشل إرسان الطلب، حاول مجدداً')));
       }
       return;
     }
@@ -163,7 +173,8 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
                       border: Border.all(
                           color: AppTheme.primaryGold.withValues(alpha: 0.2)),
                     ),
-                    child: ListTile(
+                      child: ListTile(
+                      tileColor: AppTheme.surfaceBlack,
                       leading: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: o.imgs.isNotEmpty
@@ -330,6 +341,22 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
             fillColor: AppTheme.surfaceBlack,
           ),
         ),
+        const SizedBox(height: 15),
+        if (_selectedType != null)
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceBlack,
+              border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              _selectedType == 0
+                  ? 'المكتب يتقاضى عمولة 3% عند إتمام عملية الشراء.'
+                  : 'المكتب يتقاضى أجرة نصف شهر عند إتمام عملية الاستئجار.',
+              style: const TextStyle(color: AppTheme.textWhite, fontSize: 12),
+            ),
+          ),
         const SizedBox(height: 15),
         SizedBox(
           width: double.infinity,
