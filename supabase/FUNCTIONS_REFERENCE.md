@@ -1,7 +1,7 @@
 # 📚 مرجع دوال Supabase (RPC + Edge Functions)
 
 > **مشروع:** عقارات السويداء  
-> **آخر تحديث:** 2026-06-05 (المرحلة 10)  
+> **آخر تحديث:** 2026-06-09 (إصلاح RLS policy على offers INSERT)  
 > **المصدر:** `supabase/setup.sql` + Migrations + Edge Functions
 
 ---
@@ -21,6 +21,7 @@
 | ✅ **مُطبّق على السيرفر** | Migration Payment Channel + Storage (`2026_06_06_payment_channel_and_storage.sql`) — `payments.channel` TEXT + bucket `config_assets` (عام) + bucket `payment_proofs` (خاص + RLS) |
 | ✅ **مُطبّق على السيرفر** | Migration Points Refinement (`2026_06_06_points_refinement.sql`) — `user_daily_limits` table + `award_points_safe` RPC + Pin duration (2 days) + Rating bonus trigger |
 | ✅ **مُطبّق على السيرفر** | Migration Payment Approval (`2026_06_06_payment_approval_logic.sql`) — `approve_payment_final` RPC (auto-upgrade package + set end date) |
+| ✅ **مُطبّق على السيرفر** | إصلاح RLS policy على جدول offers (INSERT) — `auth.uid() = usr_id` (2026-06-09) |
 | ⚠️ **مكتوب لكن لم يُنشر بعد** | Edge Functions: `send-whatsapp-otp`, `verify-whatsapp-otp` (يحتاج `supabase functions deploy` + secrets META) |
 | ⚠️ **معلّق** | تفعيل Email SMTP (Resend) — تم في Dashboard ✅ بس Meta WhatsApp credentials لسا (يستخدم وضع التطوير) |
 
