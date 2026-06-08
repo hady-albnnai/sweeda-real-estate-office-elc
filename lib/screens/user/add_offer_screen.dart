@@ -488,11 +488,12 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
             DropdownButtonFormField<int>(
               initialValue: _selectedSubCat,
               dropdownColor: AppTheme.surfaceBlack,
-              style: const TextStyle(color: AppTheme.textWhite),
+              style: const TextStyle(color: AppTheme.textWhite, fontSize: 14),
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: 'التصنيف الفرعي',
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                isDense: true,
               ),
               items: allSubItems,
               onChanged: (v) => setState(() {
