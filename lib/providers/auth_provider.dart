@@ -156,7 +156,7 @@ class AuthProvider with ChangeNotifier {
   Future<void> _checkWeeklyLogin(dynamic config) async {
     if (_userModel == null) return;
     try {
-      final pts = config?.weeklyLoginPoints ?? 50;
+      final pts = config?.weeklyLoginPoints ?? 100;
       final granted = await SupabaseService().client.rpc(
         'register_weekly_login',
         params: {'p_uid': _userModel!.uid, 'p_pts': pts},

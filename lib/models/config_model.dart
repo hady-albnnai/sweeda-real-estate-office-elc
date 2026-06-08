@@ -11,7 +11,7 @@ class ConfigModel {
   }
 
   int get signupPoints => _getNested('pts.sgn', 1000);
-  int get weeklyLoginPoints => _getNested('pts.wkL', 50);
+  int get weeklyLoginPoints => _getNested('pts.wkL', 100);
   int get addOfferPoints => _getNested('pts.addO', 500);
   int get dealDonePoints => _getNested('pts.dlD', 2000);
   int get sellCommission => _getNested('com.sl', 3);
