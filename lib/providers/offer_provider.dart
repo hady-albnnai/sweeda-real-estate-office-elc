@@ -232,7 +232,6 @@ class OfferProvider with ChangeNotifier {
 
   Future<OfferModel?> addOffer(OfferModel offer) async {
     try {
-      print('DEBUG [provider] addOffer start: inserting with contactPh=${offer.contactPh}, cat=${offer.cat}, sub=${offer.sub}, loc=${offer.loc}');
       final response = await SupabaseService().client
           .from(DbTables.offers).insert(offer.toMap()).select().single();
       final created = OfferModel.fromSupabase(
@@ -243,10 +242,8 @@ class OfferProvider with ChangeNotifier {
       // تحديث إحصائيات المستخدم (عدد العروض)
       await BusinessService().updateUserStat(offer.usrId, 'off');
       
-      print('DEBUG [provider] addOffer success: id=${created.id}');
       return created;
     } catch (e, stack) {
-      print('DEBUG [provider] addOffer ERROR: $e\nSTACK: $stack');
       return null;
     }
   }

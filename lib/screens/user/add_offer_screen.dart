@@ -177,6 +177,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         (_selectedSubCat == -1 && _customSubCtrl.text.trim().isEmpty) ||
         _selectedDocType == null ||
         _selectedCityArea == null ||
+        (_selectedCityArea == -1 && _customCityCtrl.text.trim().isEmpty) ||
         _locCtrl.text.trim().isEmpty) {
       _snack('يرجى إكمال البيانات الأساسية (التصنيف الرئيسي + فرعي أو إدخال حر + نوع السند + المنطقة الرئيسية + وصف دقيق للموقع إلزامي)');
       return;
@@ -233,9 +234,14 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
 
     // 4) إنشاء العرض
     setState(() => _progressMsg = 'جارٍ إنشاء العرض...');
-    final cityName = _selectedCityArea != null 
-        ? ['السويداء المدينة', 'صلخد', 'شهبا'][_selectedCityArea!] 
-        : '';
+    String cityName;
+    if (_selectedCityArea == -1) {
+      cityName = _customCityCtrl.text.trim();
+    } else if (_selectedCityArea != null && _selectedCityArea! >= 0 && _selectedCityArea! < 3) {
+      cityName = ['السويداء المدينة', 'صلخد', 'شهبا'][_selectedCityArea!];
+    } else {
+      cityName = '';
+    }
     final loc = {'r': 0, 'd': _locCtrl.text, 'city': cityName};
 
     final customSub = _customSubCtrl.text.trim();
@@ -284,7 +290,6 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _submitting = false);
-      print('DEBUG _submit catch error after uploads: $e');
       _snack('فشل في النشر بعد تحميل الصور: $e');
       return;
     }
@@ -502,6 +507,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
               }),
               hint: const Text('اختر التصنيف الفرعي (أو آخر للإدخال اليدوي)',
                   style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
+              menuMaxHeight: 300,
             ),
           if (_selectedSubCat == -1)
             Padding(

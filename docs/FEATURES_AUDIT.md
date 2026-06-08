@@ -1,6 +1,6 @@
 # 🎯 تدقيق المزايا — مقارنة المواصفات الأصلية مع التطبيق الفعلي
 
-> **تاريخ التدقيق:** 2026-06-05 (محدث 2026-06-08: إصلاح نقاط الـ Streak على فتح/إغلاق التطبيق + قوائم فرعية + حقل حر + موقع + وصف + سند إلزامي + عمولة + Stepper + حصة + pledge + تحديث المراجع)
+> **تاريخ التدقيق:** 2026-06-05 (محدث 2026-06-08: إصلاح نقاط الـ Streak... | محدث 2026-06-09: إصلاح custom city handling + menuMaxHeight للـ overflow + إزالة كل الـ prints + إكمال دعم المنطقة الحرة في add_offer_screen)
 > **المرجع:** `docs/SPEC.md` + المواصفات الأصلية (12 نقطة)  
 > **الهدف:** كشف ما تم تنفيذه بشكل صحيح، وما هو ناقص أو مُعطّل من المزايا الأساسية.
 
@@ -384,6 +384,7 @@
 | ✅ إصلاح شامل AddOffer + AddRequest (phone في step1 إلزامي + حقل حر للمنطقة + overflow fix + font unified + debug prints + ListTile warnings + free city + mandatory phone) | 2026-06-08 | `add_offer_screen.dart`, `add_request_screen.dart`, `db_constants.dart` (removed v2 refs) - SingleChildScrollView in steps, moved phone to step1 with validation, custom city support, consistent fontSize 14, debug prints in submit/provider, Material wrap for ListTile/CheckboxListTile |
 | ✅ إصلاح Streak على فتح/إغلاق التطبيق (open/close awards) | 2026-06-08 | `auth_provider.dart` + `user_home_screen.dart` + `business_service.dart` - guard مزدوج بـ userModel.strkDt + in-memory + DB + resilient quota |
 | ✅ إضافة حقل حر للتصنيف الفرعي (مدموج داخل القائمة الفرعية كخيار 'آخر') + قائمة كاملة للقرى + وصف موقع + سند إلزامي + نص عمولة + إخفاء Continue/Cancel + pledge responsibility + سعر واضح | 2026-06-08 | `add_offer_screen.dart` - 'آخر' كـ DropdownMenuItem قيمة -1 داخل sub list لكل main + conditional textfield + validation لـ -1 + customSubCtrl + locations fallback + ... |
+| ✅ إصلاح شامل لـ custom city handling + menuMaxHeight لمنع الـ overflow + إزالة كل الـ debug prints + إكمال دعم المنطقة الحرة (customCityCtrl) في add_offer_screen | 2026-06-09 | `add_offer_screen.dart` + `offer_provider.dart` - validation للـ custom city + cityName safe calculation + menuMaxHeight: 300 + حذف جميع الـ prints (مطابقة لـ DEVELOPMENT_GUIDELINES) |
 
 ---
 
