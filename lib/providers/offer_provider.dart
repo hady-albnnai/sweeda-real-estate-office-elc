@@ -63,9 +63,7 @@ class OfferProvider with ChangeNotifier {
           o.ownerLabel = bs.getUserPublicLabel(owner);
         }
       }
-    } catch (e) {
-      debugPrint('⚠️ enrichOwnerLabels failed (non-fatal): $e');
-    }
+    } catch (e) {}
   }
 
   Future<void> fetchOffers() async {
@@ -111,11 +109,7 @@ class OfferProvider with ChangeNotifier {
       if (_offers.isEmpty) {
         _error = 'فشل في جلب العروض. تحقق من الاتصال.';
       } else {
-        _fromCache = true;
-        debugPrint('⚠️ offers: استخدام الكاش (تعذّر الاتصال): $e');
-      }
-      debugPrint('❌ fetchOffers error: $e');
-    }
+        _fromCache = true;}}
     // 📄 إعادة ضبط حالة pagination بعد fetch جديد
     _currentPage = (_offers.length / pageSize).ceil();
     _hasMore = _offers.length >= pageSize;
@@ -162,9 +156,7 @@ class OfferProvider with ChangeNotifier {
         _offers.addAll(unique);
         _currentPage++;
       }
-    } catch (e) {
-      debugPrint('❌ loadMoreOffers error: $e');
-    }
+    } catch (e) {}
     _loadingMore = false;
     notifyListeners();
   }
@@ -196,15 +188,9 @@ class OfferProvider with ChangeNotifier {
             LocalCacheService()
                 .saveOffers(_offers.map((o) => {'id': o.id, ...o.toMap()}).toList());
             notifyListeners();
-          } else {
-            debugPrint('ℹ️ Realtime update ignored: Search is active');
-          }
+          } else {}
         }
-      });
-      debugPrint('✅ OfferProvider: Realtime active');
-    } catch (e) {
-      debugPrint('⚠️ subscribeRealtime error: $e');
-    }
+      });} catch (e) {}
   }
 
   void unsubscribeRealtime() {
@@ -228,7 +214,7 @@ class OfferProvider with ChangeNotifier {
           OfferModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String)).toList();
       await _enrichOwnerLabels(list);
       return list;
-    } catch (e) { debugPrint('❌ fetchUserOffers error: $e'); return []; }
+    } catch (e) {return []; }
   }
 
   Future<OfferModel?> fetchOfferById(String offerId) async {
@@ -241,7 +227,7 @@ class OfferProvider with ChangeNotifier {
       // 🏢 إثراء بهوية المكتب
       await _enrichOwnerLabels([offer]);
       return offer;
-    } catch (e) { debugPrint('❌ fetchOfferById error: $e'); return null; }
+    } catch (e) {return null; }
   }
 
   Future<OfferModel?> addOffer(OfferModel offer) async {
@@ -257,9 +243,7 @@ class OfferProvider with ChangeNotifier {
       await BusinessService().updateUserStat(offer.usrId, 'off');
       
       return created;
-    } catch (e) {
-      debugPrint('❌ addOffer error: $e');
-      return null;
+    } catch (e) {return null;
     }
   }
 
@@ -272,9 +256,7 @@ class OfferProvider with ChangeNotifier {
       // يتم التحقق في السيرفر عادة، ولكن هنا نمنع التحديث إذا كان الغرض التجديد فقط والعرض مرفوض
       if (data.containsKey('ts_ren') && data['sts'] == null) {
          final offer = await fetchOfferById(offerId);
-         if (offer != null && offer.sts == 3) {
-            debugPrint('⚠️ Cannot renew a rejected offer');
-            return false;
+         if (offer != null && offer.sts == 3) {return false;
          }
       }
 
@@ -284,7 +266,7 @@ class OfferProvider with ChangeNotifier {
         if (updated != null) _offers[index] = updated;
       }
       notifyListeners(); return true;
-    } catch (e) { debugPrint('❌ updateOffer error: $e'); return false; }
+    } catch (e) {return false; }
   }
 
   Future<bool> softDeleteOffer(String offerId) => updateOffer(offerId, {'i_del': 1});
@@ -296,7 +278,7 @@ class OfferProvider with ChangeNotifier {
       final v = (current['vws'] as int? ?? 0) + 1;
       await SupabaseService().client.from(DbTables.offers)
           .update({'vws': v}).eq('id', offerId);
-    } catch (e) { debugPrint('⚠️ incrementViews error: $e'); }
+    } catch (e) {}
   }
 
   Future<List<OfferModel>> searchOffers({
@@ -318,7 +300,7 @@ class OfferProvider with ChangeNotifier {
       _offers = results;
       notifyListeners();
       return results;
-    } catch (e) { debugPrint('❌ searchOffers error: $e'); return []; }
+    } catch (e) {return []; }
   }
 
   void listenToNewOffers(Function(OfferModel) onNewOffer) {

@@ -23,7 +23,7 @@ class AppointmentProvider with ChangeNotifier {
       await SupabaseService().client.from(DbTables.appointments).insert(appointment.toMap());
       await fetchMyAppointments(userId);
       notifyListeners(); return true;
-    } catch (e) { debugPrint('❌ bookAppointment error: $e'); return false; }
+    } catch (e) {return false; }
   }
 
   Future<void> fetchMyAppointments(String userId) async {
@@ -34,7 +34,7 @@ class AppointmentProvider with ChangeNotifier {
           .eq('own_id', userId).order('dt', ascending: true);
       _myAppointments = (response as List).map((d) =>
           AppointmentModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String)).toList();
-    } catch (e) { debugPrint('❌ fetchMyAppointments error: $e'); }
+    } catch (e) {}
     _isLoading = false; notifyListeners();
   }
 
@@ -50,7 +50,7 @@ class AppointmentProvider with ChangeNotifier {
           .inFilter('off_id', offerIds).order('dt', ascending: true);
       return (response as List).map((d) =>
           AppointmentModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String)).toList();
-    } catch (e) { debugPrint('❌ fetchAppointmentsForMyOffers error: $e'); return []; }
+    } catch (e) {return []; }
   }
 
   Future<bool> cancelAppointment(String appointmentId, String userId, String reason) async {
@@ -62,7 +62,7 @@ class AppointmentProvider with ChangeNotifier {
       }).eq('id', appointmentId);
       await fetchMyAppointments(userId);
       notifyListeners(); return true;
-    } catch (e) { debugPrint('❌ cancelAppointment error: $e'); return false; }
+    } catch (e) {return false; }
   }
 
   Future<bool> updateStatus(String appointmentId, int newStatus, {int? feedback}) async {
@@ -74,6 +74,6 @@ class AppointmentProvider with ChangeNotifier {
       }
       await SupabaseService().client.from(DbTables.appointments).update(data).eq('id', appointmentId);
       notifyListeners(); return true;
-    } catch (e) { debugPrint('❌ updateStatus error: $e'); return false; }
+    } catch (e) {return false; }
   }
 }

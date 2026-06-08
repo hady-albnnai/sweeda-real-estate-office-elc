@@ -29,11 +29,7 @@ class LocalCacheService {
       await Hive.initFlutter();
       final box = await Hive.openBox(_boxName);
       _instance._box = box;
-      _instance._ready = true;
-      debugPrint('✅ LocalCacheService: initialized');
-    } catch (e) {
-      debugPrint('❌ LocalCacheService init error: $e');
-    }
+      _instance._ready = true;} catch (e) {}
   }
 
   bool get isReady => _ready && _box != null;
@@ -46,9 +42,7 @@ class LocalCacheService {
     try {
       await _box!.put(_kConfig, jsonEncode(config));
       await _box!.put(_kConfigTs, DateTime.now().toIso8601String());
-    } catch (e) {
-      debugPrint('⚠️ saveConfig cache error: $e');
-    }
+    } catch (e) {}
   }
 
   Map<String, dynamic>? getConfig() {
@@ -58,9 +52,7 @@ class LocalCacheService {
       if (raw is String && raw.isNotEmpty) {
         return Map<String, dynamic>.from(jsonDecode(raw) as Map);
       }
-    } catch (e) {
-      debugPrint('⚠️ getConfig cache error: $e');
-    }
+    } catch (e) {}
     return null;
   }
 
@@ -78,9 +70,7 @@ class LocalCacheService {
     if (!isReady) return;
     try {
       await _box!.put(_kOffers, jsonEncode(offers));
-    } catch (e) {
-      debugPrint('⚠️ saveOffers cache error: $e');
-    }
+    } catch (e) {}
   }
 
   List<Map<String, dynamic>> getOffers() {
@@ -92,9 +82,7 @@ class LocalCacheService {
             .map((e) => Map<String, dynamic>.from(e as Map))
             .toList();
       }
-    } catch (e) {
-      debugPrint('⚠️ getOffers cache error: $e');
-    }
+    } catch (e) {}
     return [];
   }
 

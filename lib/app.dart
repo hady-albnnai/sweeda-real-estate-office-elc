@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
 import 'core/network/supabase_service.dart';
+import 'core/constants/supabase_constants.dart';
 import 'providers/auth_provider.dart';
 import 'providers/config_provider.dart';
 import 'providers/offer_provider.dart';
@@ -15,11 +16,6 @@ import 'providers/payment_provider.dart';
 import 'providers/admin_provider.dart';
 import 'providers/broker_provider.dart';
 import 'services/notification_service.dart';
-
-/// Supabase Configuration
-const String supabaseUrl = 'https://vsgkgnjtebjxyqwpuopz.supabase.co';
-const String supabasePublishableKey =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzZ2tnbmp0ZWJqeHlxd3B1b3B6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NzA1MzYsImV4cCI6MjA5NjE0NjUzNn0.1i81x_ne8_AciPMWaRxc-8Z-no-lXudLATKcE0A4tUw';
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});

@@ -72,9 +72,7 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
           _offers[m['id'] as String] =
               OfferModel.fromSupabase(m, m['id'] as String);
         }
-      } catch (e) {
-        debugPrint('❌ load offers: $e');
-      }
+      } catch (e) {}
     }
 
     final ownIds = list.map((a) => a.ownId).where((e) => e.isNotEmpty).toSet();
@@ -90,9 +88,7 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
           _owners[m['id'] as String] =
               UserModel.fromSupabase(m, m['id'] as String);
         }
-      } catch (e) {
-        debugPrint('❌ load owners: $e');
-      }
+      } catch (e) {}
     }
 
     if (!mounted) return;

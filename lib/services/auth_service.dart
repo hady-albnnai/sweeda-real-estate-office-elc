@@ -33,9 +33,7 @@ class AuthService {
       if (data['success'] == true) {
         // وضع التطوير: يرجّع الـ OTP لو ما إعدّاد Meta
         final devOtp = data['otp']?.toString();
-        if (devOtp != null) {
-          debugPrint('🔑 [DEV] WhatsApp OTP: $devOtp');
-        }
+        if (devOtp != null) {}
         return {
           'success': true,
           'channel': 'whatsapp',
@@ -44,9 +42,7 @@ class AuthService {
       }
 
       return {'success': false, 'error': data['error'] ?? 'UNKNOWN'};
-    } catch (e) {
-      debugPrint('❌ sendWhatsAppOTP error: $e');
-      // Fallback: استخدم RPC المحلية مباشرة (للتطوير فقط)
+    } catch (e) {// Fallback: استخدم RPC المحلية مباشرة (للتطوير فقط)
       return _devFallbackOtp(fullPhone);
     }
   }
@@ -77,9 +73,7 @@ class AuthService {
             type: OtpType.magiclink,
             tokenHash: session['token_hash'] as String,
           );
-        } catch (e) {
-          debugPrint('⚠️ session verifyOTP error: $e');
-        }
+        } catch (e) {}
       }
 
       final userId = data['userId'] as String;
@@ -88,9 +82,7 @@ class AuthService {
       await _persistSession(userId, phone: fullPhone);
 
       return {'success': true, 'userId': userId, 'isNewUser': isNew};
-    } catch (e) {
-      debugPrint('❌ verifyWhatsAppOTP error: $e');
-      // Fallback: التحقق المحلي مباشرة (للتطوير)
+    } catch (e) {// Fallback: التحقق المحلي مباشرة (للتطوير)
       return _devFallbackVerify(fullPhone, code);
     }
   }
@@ -106,12 +98,8 @@ class AuthService {
       await _auth.signInWithOtp(
         email: email,
         emailRedirectTo: 'io.supabase.sweeda://login-callback',
-      );
-      debugPrint('✅ Magic link sent to $email');
-      return {'success': true, 'channel': 'email'};
-    } catch (e) {
-      debugPrint('❌ sendEmailMagicLink error: $e');
-      return {'success': false, 'error': e.toString()};
+      );return {'success': true, 'channel': 'email'};
+    } catch (e) {return {'success': false, 'error': e.toString()};
     }
   }
 
@@ -158,9 +146,7 @@ class AuthService {
 
       await _persistSession(userId, email: email);
       return {'success': true, 'userId': userId, 'isNewUser': isNew};
-    } catch (e) {
-      debugPrint('❌ handleEmailSession error: $e');
-      return {'success': false, 'error': e.toString()};
+    } catch (e) {return {'success': false, 'error': e.toString()};
     }
   }
 
@@ -190,9 +176,7 @@ class AuthService {
       await prefs.remove('user_phone');
       await prefs.remove('user_email');
       await prefs.remove('auth_channel');
-    } catch (e) {
-      debugPrint('❌ Sign out error: $e');
-    }
+    } catch (e) {}
   }
 
   Future<String?> getSavedUserId() async {
@@ -238,9 +222,7 @@ class AuthService {
       final code = await _client.rpc(
         'generate_otp_v2',
         params: {'p_identifier': fullPhone, 'p_channel': 'whatsapp'},
-      );
-      debugPrint('🔑 [DEV-RPC] WhatsApp OTP: $code');
-      return {'success': true, 'fallbackOtp': code, 'channel': 'whatsapp'};
+      );return {'success': true, 'fallbackOtp': code, 'channel': 'whatsapp'};
     } catch (e) {
       return {'success': false, 'error': e.toString()};
     }

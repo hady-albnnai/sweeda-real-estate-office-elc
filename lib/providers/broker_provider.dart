@@ -38,9 +38,7 @@ class BrokerProvider with ChangeNotifier {
     try {
       _appointments = await getBrokerAppointments(brokerId);
     } catch (e) {
-      _error = 'فشل جلب المواعيد: $e';
-      debugPrint('❌ fetchBrokerAppointments error: $e');
-    }
+      _error = 'فشل جلب المواعيد: $e';}
     _isLoading = false;
     notifyListeners();
   }
@@ -88,9 +86,7 @@ class BrokerProvider with ChangeNotifier {
       }
       unique.sort((a, b) => a.dt.compareTo(b.dt));
       return unique;
-    } catch (e) {
-      debugPrint('❌ getBrokerAppointments error: $e');
-      return [];
+    } catch (e) {return [];
     }
   }
 
@@ -122,9 +118,7 @@ class BrokerProvider with ChangeNotifier {
       }
       notifyListeners();
       return true;
-    } catch (e) {
-      debugPrint('❌ handleAppointment error: $e');
-      return false;
+    } catch (e) {return false;
     }
   }
 
@@ -144,9 +138,7 @@ class BrokerProvider with ChangeNotifier {
       }
       notifyListeners();
       return true;
-    } catch (e) {
-      debugPrint('❌ completeAppointment error: $e');
-      return false;
+    } catch (e) {return false;
     }
   }
 
@@ -184,9 +176,7 @@ class BrokerProvider with ChangeNotifier {
       }
       _offers = list;
     } catch (e) {
-      _error = 'فشل جلب العروض: $e';
-      debugPrint('❌ fetchBrokerOffers error: $e');
-    }
+      _error = 'فشل جلب العروض: $e';}
     _isLoading = false;
     notifyListeners();
   }
@@ -212,9 +202,7 @@ class BrokerProvider with ChangeNotifier {
               DealModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String))
           .toList();
     } catch (e) {
-      _error = 'فشل جلب الصفقات: $e';
-      debugPrint('❌ fetchBrokerDeals error: $e');
-    }
+      _error = 'فشل جلب الصفقات: $e';}
     _isLoading = false;
     notifyListeners();
   }
@@ -291,9 +279,7 @@ class BrokerProvider with ChangeNotifier {
         'totalDealsValue': totalDealsValue,
       };
     } catch (e) {
-      _error = 'فشل جلب الإحصائيات: $e';
-      debugPrint('❌ fetchBrokerStats error: $e');
-    }
+      _error = 'فشل جلب الإحصائيات: $e';}
     _isLoading = false;
     notifyListeners();
   }

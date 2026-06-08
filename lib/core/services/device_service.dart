@@ -42,9 +42,7 @@ class DeviceService {
         params: {'p_device_id': id, 'p_ip_hint': ipHint},
       );
       return true;
-    } catch (e) {
-      debugPrint('⚠️ DeviceService.registerWithServer: $e');
-      return false;
+    } catch (e) {return false;
     }
   }
 

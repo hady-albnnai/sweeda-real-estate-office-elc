@@ -62,9 +62,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
             row['id'] as String,
           );
         }
-      } catch (e) {
-        debugPrint('⚠️ load owner failed: $e');
-      }
+      } catch (e) {}
 
       // ⭐ جلب متوسط تقييم المالك (LOGIC_SPEC §3.3)
       try {
@@ -82,9 +80,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
           _ownerRatingCount = list.length;
           _ownerAvgRating = sum / list.length;
         }
-      } catch (e) {
-        debugPrint('⚠️ load owner ratings failed: $e');
-      }
+      } catch (e) {}
     }
     if (mounted) {
       setState(() {
@@ -232,9 +228,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
           backgroundColor: Colors.green,
         ),
       );
-    } catch (e) {
-      debugPrint('❌ report: $e');
-      if (!mounted) return;
+    } catch (e) {if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('فشل إرسال التبليغ، حاول مرة أخرى')),
       );

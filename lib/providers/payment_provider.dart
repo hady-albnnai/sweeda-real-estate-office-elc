@@ -15,7 +15,7 @@ class PaymentProvider with ChangeNotifier {
       await SupabaseService().client.from(DbTables.payments).insert(payment.toMap());
       await fetchPayments(payment.uid);
       notifyListeners(); return true;
-    } catch (e) { debugPrint('❌ makePayment error: $e'); return false; }
+    } catch (e) {return false; }
   }
 
   Future<void> fetchPayments(String userId) async {
@@ -26,7 +26,7 @@ class PaymentProvider with ChangeNotifier {
           .eq('uid', userId).order('ts_crt', ascending: false);
       _payments = (response as List).map((d) =>
           PaymentModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String)).toList();
-    } catch (e) { debugPrint('❌ fetchPayments error: $e'); }
+    } catch (e) {}
     _isLoading = false; notifyListeners();
   }
 
@@ -36,6 +36,6 @@ class PaymentProvider with ChangeNotifier {
       if (approvedBy != null) data['appr_by'] = approvedBy;
       await SupabaseService().client.from(DbTables.payments).update(data).eq('id', paymentId);
       notifyListeners(); return true;
-    } catch (e) { debugPrint('❌ updatePaymentStatus error: $e'); return false; }
+    } catch (e) {return false; }
   }
 }

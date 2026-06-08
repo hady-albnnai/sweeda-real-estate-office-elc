@@ -50,9 +50,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
           final user = UserModel.fromSupabase(m, m['id'] as String);
           _ownersCache[user.uid] = user;
         }
-      } catch (e) {
-        debugPrint('❌ load owners: $e');
-      }
+      } catch (e) {}
     }
 
     if (!mounted) return;

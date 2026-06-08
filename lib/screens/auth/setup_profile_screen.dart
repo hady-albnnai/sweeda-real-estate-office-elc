@@ -63,9 +63,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
           );
       // نُرجع المسار النسبي (لا URL عام لمنع التسرب)
       return path;
-    } catch (e) {
-      debugPrint('❌ uploadId: $e');
-      return null;
+    } catch (e) {return null;
     }
   }
 
@@ -130,9 +128,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
               ),
             );
           }
-        } catch (e) {
-          debugPrint('⚠️ apply_referral failed (non-fatal): $e');
-          // لا نُفشل عملية التسجيل بسبب كود إحالة خاطئ
+        } catch (e) {// لا نُفشل عملية التسجيل بسبب كود إحالة خاطئ
         }
       }
 
