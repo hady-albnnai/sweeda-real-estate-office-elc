@@ -224,7 +224,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
         }
         break;
     }
-    // منع تحذير عدم استخدام adminId}
+  }
 
   void _showRoleDialog(UserModel u) {
     final roles = {
