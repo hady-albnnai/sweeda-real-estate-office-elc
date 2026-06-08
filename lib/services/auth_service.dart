@@ -217,12 +217,15 @@ class AuthService {
 
   // ───────── Dev fallback (لما تكون Edge Function ما تشتغل بعد) ─────────
 
+  // Dev fallback — معدل ليتطابق مع الدوال الموجودة فعلياً على السيرفر
+  // (generate_otp و verify_otp الأساسيين موجودين، الـ v2 غير موجودة)
   Future<Map<String, dynamic>> _devFallbackOtp(String fullPhone) async {
     try {
       final code = await _client.rpc(
-        'generate_otp_v2',
-        params: {'p_identifier': fullPhone, 'p_channel': 'whatsapp'},
-      );return {'success': true, 'fallbackOtp': code, 'channel': 'whatsapp'};
+        'generate_otp',
+        params: {'p_phone': fullPhone},
+      );
+      return {'success': true, 'fallbackOtp': code, 'channel': 'whatsapp'};
     } catch (e) {
       return {'success': false, 'error': e.toString()};
     }
@@ -232,12 +235,13 @@ class AuthService {
       String fullPhone, String code) async {
     try {
       final ok = await _client.rpc(
-        'verify_otp_v2',
-        params: {'p_identifier': fullPhone, 'p_code': code},
+        'verify_otp',
+        params: {'p_phone': fullPhone, 'p_code': code},
       );
       if (ok != true) {
         return {'success': false, 'error': 'INVALID_CODE'};
       }
+      // استخدام upsert_user_after_otp (موجود على السيرفر)
       final rows = await _client.rpc(
         'upsert_user_after_otp',
         params: {'p_identifier': fullPhone, 'p_channel': 'whatsapp'},
