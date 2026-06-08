@@ -1090,15 +1090,4 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
             decoration: const InputDecoration(border: OutlineInputBorder()))
       ]);
 }
-ren: [
-        Text(label, style: const TextStyle(color: AppTheme.textGrey)),
-        const SizedBox(height: 5),
-        DropdownButtonFormField<String>(
-            initialValue: null,
-            items: items
-                .map((i) => DropdownMenuItem(value: i, child: Text(i)))
-                .toList(),
-            onChanged: (v) => on(v!),
-            decoration: const InputDecoration(border: OutlineInputBorder()))
-      ]);
-}
+
