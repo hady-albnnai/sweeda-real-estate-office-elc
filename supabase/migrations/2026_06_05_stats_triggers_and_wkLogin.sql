@@ -116,9 +116,9 @@ AFTER INSERT OR UPDATE OR DELETE ON deals
 FOR EACH ROW EXECUTE FUNCTION update_user_stats_on_deal();
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 5) RPC: register_weekly_login — يفحص ويمنح pts.wkL لو مر أسبوع
+-- 5) RPC: register_weekly_login — يفحص ويمنح pts.wkL لو مر أسبوع (القيمة الافتراضية 50 الآن)
 -- ─────────────────────────────────────────────────────────────────────────────
-CREATE OR REPLACE FUNCTION register_weekly_login(p_uid UUID, p_pts INT DEFAULT 500)
+CREATE OR REPLACE FUNCTION register_weekly_login(p_uid UUID, p_pts INT DEFAULT 50)
 RETURNS BOOLEAN AS $$
 DECLARE
   v_last TIMESTAMPTZ;
