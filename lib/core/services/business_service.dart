@@ -286,10 +286,19 @@ class BusinessService {
       final int currentStreak = (row['strk'] as int?) ?? 0;
       final String? strkDtStr = row['strk_dt'] as String?;
       
+      // استخدام توقيت سوريا (UTC+3) لتحديد "اليوم" — تجديد بعد 12 ليلاً بتوقيت دمشق
       final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
+      final syriaNow = now.toUtc().add(const Duration(hours: 3));
+      final today = DateTime(syriaNow.year, syriaNow.month, syriaNow.day);
 
-      if (strkDtStr == null) {
+      DateTime? lastDay;
+      if (strkDtStr != null) {
+        final lastDate = DateTime.parse(strkDtStr);
+        final lastSyria = lastDate.toUtc().add(const Duration(hours: 3));
+        lastDay = DateTime(lastSyria.year, lastSyria.month, lastSyria.day);
+      }
+
+      if (lastDay == null) {
         // أول مرة يسجل دخول
         await _sb.client.from(DbTables.users).update({
           'strk': 1,
@@ -303,12 +312,10 @@ class BusinessService {
         return {'streak': 1, 'changed': true, 'awarded': true};
       }
 
-      final lastDate = DateTime.parse(strkDtStr);
-      final lastDay = DateTime(lastDate.year, lastDate.month, lastDate.day);
       final diff = today.difference(lastDay).inDays;
 
       if (diff == 0) {
-        // سُجّل اليوم مسبقاً — لا نقاط ولا تغيير
+        // سُجّل اليوم مسبقاً (بعد 12 ليلاً سوريا) — لا نقاط ولا تغيير
         return {
           'streak': currentStreak,
           'changed': false,
