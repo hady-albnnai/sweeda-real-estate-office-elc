@@ -29,6 +29,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   int? _selectedTrans;
   int? _selectedMainCat;
   int? _selectedSubCat; // التصنيف الفرعي (index داخل sub array للمجموعة الرئيسية)
+  int? _selectedCityArea; // 0=السويداء المدينة, 1=صلخد, 2=شهبا
   int _cur = Currency.lbp;
   final _priceCtrl = TextEditingController();
   final _locCtrl = TextEditingController();
@@ -171,8 +172,10 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     if (_selectedType == null || _selectedTrans == null || _selectedMainCat == null ||
         (_selectedSubCat == null && _customSubCtrl.text.trim().isEmpty) ||
         (_selectedSubCat == -1 && _customSubCtrl.text.trim().isEmpty) ||
-        _selectedDocType == null) {
-      _snack('يرجى إكمال البيانات الأساسية (التصنيف الرئيسي + فرعي أو إدخال حر + نوع السند)');
+        _selectedDocType == null ||
+        _selectedCityArea == null ||
+        _locCtrl.text.trim().isEmpty) {
+      _snack('يرجى إكمال البيانات الأساسية (التصنيف الرئيسي + فرعي أو إدخال حر + نوع السند + المنطقة الرئيسية + وصف دقيق للموقع إلزامي)');
       return;
     }
     final price = double.tryParse(_priceCtrl.text) ?? 0.0;
@@ -227,7 +230,10 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
 
     // 4) إنشاء العرض
     setState(() => _progressMsg = 'جارٍ إنشاء العرض...');
-    final loc = {'r': 0, 'd': _locCtrl.text};
+    final cityName = _selectedCityArea != null 
+        ? ['السويداء المدينة', 'صلخد', 'شهبا'][_selectedCityArea!] 
+        : '';
+    final loc = {'r': 0, 'd': _locCtrl.text, 'city': cityName};
 
     final customSub = _customSubCtrl.text.trim();
     final catForTitle = customSub.isNotEmpty
@@ -245,7 +251,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       prc: price,
       cur: _cur,
       loc: loc,
-      descript: _descCtrl.text,
+      descript: _locCtrl.text,  // الوصف الدقيق للموقع (الإلزامي)
       specs: {
         'details': _specCtrl.text,
         if (customSub.isNotEmpty) 'custom_sub': customSub,
@@ -262,12 +268,20 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       tsCrt: DateTime.now(),
     );
 
-    final createdOffer = await offerProv.addOffer(offer);
+    OfferModel? createdOffer;
+    try {
+      createdOffer = await offerProv.addOffer(offer);
 
-    if (createdOffer != null) {
-      // 4) منح نقاط إضافة عرض (pts.addO)
-      await _biz.awardEvent(user.uid, configProv.config, 'addO', fallback: 500);
-      await auth.refreshUser();
+      if (createdOffer != null) {
+        // 4) منح نقاط إضافة عرض (pts.addO)
+        await _biz.awardEvent(user.uid, configProv.config, 'addO', fallback: 500);
+        await auth.refreshUser();
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _submitting = false);
+      _snack('فشل في النشر بعد تحميل الصور: $e');
+      return;
     }
 
     if (!mounted) return;
@@ -422,6 +436,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           _selectedType = v == 'عقار' ? 0 : 1;
           _selectedMainCat = null;
           _selectedSubCat = null;
+          _selectedCityArea = null;
           _customSubCtrl.clear();
         })),
         const SizedBox(height: 20),
@@ -482,10 +497,21 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
             ),
           ),
         const SizedBox(height: 8),
-        Text(
-          'ملاحظة: عند إتمام الصفقة (بيع أو إيجار) يتقاضى المكتب عمولة 3%.',
-          style: TextStyle(color: AppTheme.textGrey, fontSize: 11),
-        ),
+        if (_selectedTrans != null)
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceBlack,
+              border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              _selectedTrans == 0
+                  ? 'المكتب يتقاضى عمولة 3% عند إتمام عملية البيع.'
+                  : 'المكتب يتقاضى أجرة نصف شهر عند إتمام عملية الإيجار أو الاستئجار.',
+              style: const TextStyle(color: AppTheme.textWhite, fontSize: 12),
+            ),
+          ),
       ]),
       isActive: _currentStep >= 0,
     );
@@ -524,12 +550,30 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
             ),
           ]),
           const SizedBox(height: 15),
-          _buildLocationAutocomplete(),
+          // قائمة منسدلة للمناطق الرئيسية (السويداء المدينة، صلخد، شهبا)
+          DropdownButtonFormField<int>(
+            initialValue: _selectedCityArea,
+            dropdownColor: AppTheme.surfaceBlack,
+            style: const TextStyle(color: AppTheme.textWhite),
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: 'المنطقة الرئيسية',
+            ),
+            items: const [
+              DropdownMenuItem(value: 0, child: Text('السويداء المدينة')),
+              DropdownMenuItem(value: 1, child: Text('صلخد')),
+              DropdownMenuItem(value: 2, child: Text('شهبا')),
+            ],
+            onChanged: (v) => setState(() => _selectedCityArea = v),
+            hint: const Text('اختر المنطقة الرئيسية',
+                style: TextStyle(color: AppTheme.textGrey)),
+          ),
           const SizedBox(height: 15),
           TextField(
-              controller: _descCtrl,
-              maxLines: 3,
-              decoration: const InputDecoration(labelText: 'وصف دقيق للموقع (اختياري)')),
+              controller: _locCtrl,
+              maxLines: 2,
+              decoration: const InputDecoration(labelText: 'وصف دقيق للموقع (إلزامي)')),
+
           const SizedBox(height: 15),
           TextField(
               controller: _specCtrl,
@@ -652,6 +696,15 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   Step _step4() {
     final config = context.watch<ConfigProvider>().config;
     final docTypes = config?.documentTypes ?? {};
+    final pledgeText = (config?.texts['plg']?.toString().isNotEmpty == true)
+        ? config!.texts['plg'].toString()
+        : 'إقرار وتعهد إلكتروني — عقارات السويداء\n\n'
+            '• أُقرّ بأن البيانات والصور المُرفقة بهذا العرض صحيحة وحقيقية.\n'
+            '• أتعهّد بأنني المالك الفعلي للعقار/السيارة أو وكيل قانوني عنه.\n'
+            '• أُقرّ بأن سند الملكية المرفق صحيح وغير مزوّر.\n'
+            '• أتعهّد بإزالة العرض فور بيعه أو إلغائه.\n'
+            '• أُقرّ بأن أي بيانات كاذبة قد تؤدي لحظر حسابي وخصم نقاطي.\n'
+            '• أُقرّ بأن جميع المعلومات المقدمة في هذا العرض تقع على مسؤوليتي الكاملة.';
     return Step(
       title: const Text('السند والإقرار',
           style: TextStyle(
@@ -727,7 +780,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
               style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
           const SizedBox(height: 16),
 
-          // الإقرار والتعهد
+          // الإقرار والتعهد - النص متاح مباشرة للقراءة (ExpansionTile)
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
@@ -740,26 +793,26 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
             ),
             child: Column(
               children: [
-                InkWell(
-                  onTap: _showPledgeDialog,
-                  child: const Row(
-                    children: [
-                      Icon(Icons.gavel,
-                          color: AppTheme.primaryGold, size: 16),
-                      SizedBox(width: 6),
-                      Expanded(
-                        child: Text('اقرأ نص الإقرار والتعهد',
-                            style: TextStyle(
-                                color: AppTheme.textWhite, fontSize: 12)),
+                ExpansionTile(
+                  title: const Text('الإقرار والتعهد (اضغط لقراءة النص الكامل)',
+                      style: TextStyle(
+                          color: AppTheme.textWhite, fontSize: 12)),
+                  collapsedIconColor: AppTheme.primaryGold,
+                  iconColor: AppTheme.primaryGold,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        pledgeText,
+                        style: const TextStyle(
+                            color: AppTheme.textGrey, fontSize: 12),
                       ),
-                      Icon(Icons.arrow_forward_ios,
-                          color: AppTheme.primaryGold, size: 10),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'يمكنك قراءة نص الإقرار الكامل قبل الموافقة. الموافقة مطلوبة للنشر.',
+                  'الموافقة على الإقرار إلزامية للنشر.',
                   style: TextStyle(color: AppTheme.textGrey, fontSize: 11),
                 ),
                 const SizedBox(height: 8),
@@ -775,6 +828,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
                   contentPadding: EdgeInsets.zero,
                   controlAffinity: ListTileControlAffinity.leading,
                   dense: true,
+                  tileColor: AppTheme.surfaceBlack,
                 ),
               ],
             ),
