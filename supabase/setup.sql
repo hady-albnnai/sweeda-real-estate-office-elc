@@ -205,7 +205,7 @@ CREATE POLICY "Users can read active users" ON users FOR SELECT USING (i_del = 0
 CREATE POLICY "Users can update own profile" ON users FOR UPDATE USING (auth.uid() = id);
 CREATE POLICY "Users can insert own profile" ON users FOR INSERT WITH CHECK (auth.uid() = id);
 CREATE POLICY "Anyone can read published offers" ON offers FOR SELECT USING (i_del = 0 AND (i_pub = 1 OR auth.uid() = usr_id OR EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role >= 2)));
-CREATE POLICY "Authenticated can create offers" ON offers FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+CREATE POLICY "Authenticated can create offers" ON offers FOR INSERT WITH CHECK (auth.uid() = usr_id);
 CREATE POLICY "Owner can update own offer" ON offers FOR UPDATE USING (auth.uid() = usr_id);
 CREATE POLICY "Users read own notifications" ON notifications FOR SELECT USING (auth.uid() = uid);
 CREATE POLICY "Authenticated can create appointments" ON appointments FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);

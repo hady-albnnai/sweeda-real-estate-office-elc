@@ -163,14 +163,12 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   }
 
   Future<void> _submit() async {
-    print('DEBUG_SUBMIT: _submit started');
     final auth = context.read<AuthProvider>();
     final offerProv = context.read<OfferProvider>();
     final configProv = context.read<ConfigProvider>();
     final user = auth.userModel;
 
     if (user == null) {
-      print('DEBUG_SUBMIT: user is null');
       _snack('يجب تسجيل الدخول أولاً');
       return;
     }
@@ -181,29 +179,23 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         _selectedCityArea == null ||
         (_selectedCityArea == -1 && _customCityCtrl.text.trim().isEmpty) ||
         _locCtrl.text.trim().isEmpty) {
-      print('DEBUG_SUBMIT: validation failed - selectedType=$_selectedType, trans=$_selectedTrans, mainCat=$_selectedMainCat, subCat=$_selectedSubCat, docType=$_selectedDocType, cityArea=$_selectedCityArea, loc=${_locCtrl.text}');
       _snack('يرجى إكمال البيانات الأساسية (التصنيف الرئيسي + فرعي أو إدخال حر + نوع السند + المنطقة الرئيسية + وصف دقيق للموقع إلزامي)');
       return;
     }
-    print('DEBUG_SUBMIT: validation passed');
     final price = double.tryParse(_priceCtrl.text) ?? 0.0;
     if (price <= 0) {
-      print('DEBUG_SUBMIT: invalid price');
       _snack('يرجى إدخال سعر صالح');
       return;
     }
     if (!_agreePledge) {
-      print('DEBUG_SUBMIT: pledge not agreed');
       _snack('يجب الموافقة على الإقرار والتعهد قبل النشر');
       return;
     }
-    print('DEBUG_SUBMIT: price and pledge OK');
 
     setState(() {
       _submitting = true;
       _progressMsg = 'جارٍ التحقق من الحصة...';
     });
-    print('DEBUG_SUBMIT: checking quota');
 
     // 1) فحص الحصة/الباقة
     final quota = await _biz.canPublishOffer(
@@ -213,17 +205,14 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       config: configProv.config,
     );
     if (quota['allowed'] != true) {
-      print('DEBUG_SUBMIT: quota not allowed - reason: ${quota['reason']}');
       setState(() => _submitting = false);
       _showQuotaDialog(quota['reason'] as String);
       return;
     }
-    print('DEBUG_SUBMIT: quota OK');
 
     // 2) رفع الصور (مع ضغط)
     List<String> imageUrls = [];
     if (_pickedImages.isNotEmpty) {
-      print('DEBUG_SUBMIT: starting image upload (${_pickedImages.length} images)');
       setState(() => _progressMsg = 'جارٍ رفع الصور (0/${_pickedImages.length})...');
       imageUrls = await _storage.uploadOfferImages(
         files: _pickedImages,
@@ -240,12 +229,10 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     const String videoUrl = '';
 
     // 3) رفع صورة سند الملكية
-    print('DEBUG_SUBMIT: uploading doc image');
     setState(() => _progressMsg = 'جارٍ رفع سند الملكية...');
     final docUrl = await _uploadDocImage(user.uid) ?? '';
 
     // 4) إنشاء العرض
-    print('DEBUG_SUBMIT: creating offer object');
     setState(() => _progressMsg = 'جارٍ إنشاء العرض...');
     String cityName;
     if (_selectedCityArea == -1) {
@@ -293,7 +280,6 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
 
     OfferModel? createdOffer;
     try {
-      print('DEBUG_SUBMIT: calling addOffer with cat=${offer.cat}, sub=${offer.sub}, contactPh=${offer.contactPh}, loc=${offer.loc}, docTp=${offer.docTp}');
       createdOffer = await offerProv.addOffer(offer);
 
       if (createdOffer != null) {
@@ -304,7 +290,6 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _submitting = false);
-      print('DEBUG_SUBMIT: ERROR in addOffer catch: $e');
       _snack('فشل في النشر بعد تحميل الصور: $e');
       return;
     }
