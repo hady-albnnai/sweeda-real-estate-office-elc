@@ -36,7 +36,8 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   final _descCtrl = TextEditingController();
   final _specCtrl = TextEditingController();
   final _customSubCtrl = TextEditingController(); // للتصنيف الفرعي الحر (غير موجود في القائمة)
-  final _contactPhoneCtrl = TextEditingController(); // رقم التواصل مع العارض
+  final _contactPhoneCtrl = TextEditingController(); // رقم التواصل مع العارض (إلزامي في الأساسيات)
+  final _customCityCtrl = TextEditingController(); // حقل حر للمنطقة الرئيسية (آخر)
 
   final List<XFile> _pickedImages = [];
   XFile? _docImage; // صورة سند الملكية
@@ -283,6 +284,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _submitting = false);
+      print('DEBUG _submit catch error after uploads: $e');
       _snack('فشل في النشر بعد تحميل الصور: $e');
       return;
     }
@@ -421,7 +423,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         .map((e) => DropdownMenuItem(value: e.key, child: Text(e.value)))
         .toList();
 
-    // إضافة خيار "آخر" داخل قائمة التصنيفات الفرعية (كما طلبت: بداخل كل نوع فرعي، حقل حر إذا ما وجد)
+    // إضافة خيار "آخر" داخل قائمة التصنيفات الفرعية
     final allSubItems = List<DropdownMenuItem<int>>.from(subCatItems);
     allSubItems.add(
       const DropdownMenuItem<int>(
@@ -430,140 +432,99 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       ),
     );
 
+    // قائمة المناطق الرئيسية + دعم حقل حر
+    final cityItems = [
+      const DropdownMenuItem(value: 0, child: Text('السويداء المدينة')),
+      const DropdownMenuItem(value: 1, child: Text('صلخد')),
+      const DropdownMenuItem(value: 2, child: Text('شهبا')),
+      const DropdownMenuItem(value: -1, child: Text('آخر (إدخال حر)')),
+    ];
+
     return Step(
       title: const Text('الأساسيات',
           style: TextStyle(
               color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
-      content: Column(children: [
-        _dd('نوع العرض', ['عقار', 'سيارة'], (v) => setState(() {
-          _selectedType = v == 'عقار' ? 0 : 1;
-          _selectedMainCat = null;
-          _selectedSubCat = null;
-          _selectedCityArea = null;
-          _customSubCtrl.clear();
-        })),
-        const SizedBox(height: 20),
-        _dd('نوع المعاملة', ['بيع', 'إيجار'],
-            (v) => setState(() => _selectedTrans = v == 'بيع' ? 0 : 1)),
-        const SizedBox(height: 20),
-        DropdownButtonFormField<int>(
-          initialValue: _selectedMainCat,
-          dropdownColor: AppTheme.surfaceBlack,
-          style: const TextStyle(color: AppTheme.textWhite),
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(),
-            labelText: 'التصنيف الرئيسي',
-          ),
-          items: mainCatItems,
-          onChanged: (v) => setState(() {
-            _selectedMainCat = v;
+      content: SingleChildScrollView(
+        child: Column(children: [
+          _dd('نوع العرض', ['عقار', 'سيارة'], (v) => setState(() {
+            _selectedType = v == 'عقار' ? 0 : 1;
+            _selectedMainCat = null;
             _selectedSubCat = null;
+            _selectedCityArea = null;
             _customSubCtrl.clear();
-            if (v != null) {
-              final subs = _subCategoryMap(v);
-              if (subs.length == 1) {
-                _selectedSubCat = subs.keys.first;
-              }
-            }
-          }),
-          hint: const Text('اختر التصنيف الرئيسي',
-              style: TextStyle(color: AppTheme.textGrey)),
-        ),
-        const SizedBox(height: 20),
-        if (_selectedMainCat != null)
+            _customCityCtrl.clear();
+          })),
+          const SizedBox(height: 20),
+          _dd('نوع المعاملة', ['بيع', 'إيجار'],
+              (v) => setState(() => _selectedTrans = v == 'بيع' ? 0 : 1)),
+          const SizedBox(height: 20),
           DropdownButtonFormField<int>(
-            initialValue: _selectedSubCat,
+            initialValue: _selectedMainCat,
             dropdownColor: AppTheme.surfaceBlack,
             style: const TextStyle(color: AppTheme.textWhite),
             decoration: const InputDecoration(
               border: OutlineInputBorder(),
-              labelText: 'التصنيف الفرعي',
+              labelText: 'التصنيف الرئيسي',
             ),
-            items: allSubItems,
+            items: mainCatItems,
             onChanged: (v) => setState(() {
-              _selectedSubCat = v;
-              if (v != -1) _customSubCtrl.clear();
+              _selectedMainCat = v;
+              _selectedSubCat = null;
+              _customSubCtrl.clear();
+              if (v != null) {
+                final subs = _subCategoryMap(v);
+                if (subs.length == 1) {
+                  _selectedSubCat = subs.keys.first;
+                }
+              }
             }),
-            hint: const Text('اختر التصنيف الفرعي (أو آخر للإدخال اليدوي)',
+            hint: const Text('اختر التصنيف الرئيسي',
                 style: TextStyle(color: AppTheme.textGrey)),
           ),
-        if (_selectedSubCat == -1)
-          Padding(
-            padding: const EdgeInsets.only(top: 12),
-            child: TextField(
-              controller: _customSubCtrl,
+          const SizedBox(height: 20),
+          if (_selectedMainCat != null)
+            DropdownButtonFormField<int>(
+              initialValue: _selectedSubCat,
+              dropdownColor: AppTheme.surfaceBlack,
+              style: const TextStyle(color: AppTheme.textWhite),
               decoration: const InputDecoration(
-                labelText: 'اكتب التصنيف الفرعي يدوياً',
-                hintText: 'مثال: فيلا فاخرة أو سيارة كهربائية مخصصة',
                 border: OutlineInputBorder(),
+                labelText: 'التصنيف الفرعي',
               ),
+              items: allSubItems,
+              onChanged: (v) => setState(() {
+                _selectedSubCat = v;
+                if (v != -1) _customSubCtrl.clear();
+              }),
+              hint: const Text('اختر التصنيف الفرعي (أو آخر للإدخال اليدوي)',
+                  style: TextStyle(color: AppTheme.textGrey)),
             ),
-          ),
-        const SizedBox(height: 8),
-        if (_selectedTrans != null)
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppTheme.surfaceBlack,
-              border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text(
-              _selectedTrans == 0
-                  ? 'المكتب يتقاضى عمولة 3% عند إتمام عملية البيع.'
-                  : 'المكتب يتقاضى أجرة نصف شهر عند إتمام عملية الإيجار أو الاستئجار.',
-              style: const TextStyle(color: AppTheme.textWhite, fontSize: 12),
-            ),
-          ),
-      ]),
-      isActive: _currentStep >= 0,
-    );
-  }
-
-  Step _step2() => Step(
-        title: const Text('التفاصيل',
-            style: TextStyle(
-                color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
-        content: Column(children: [
-          Row(children: [
-            Expanded(
-              flex: 3,
+          if (_selectedSubCat == -1)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
               child: TextField(
-                controller: _priceCtrl,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: 'السعر المتوقع',
+                controller: _customSubCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'اكتب التصنيف الفرعي يدوياً',
+                  hintText: 'مثال: فيلا فاخرة أو سيارة كهربائية مخصصة',
+                  border: OutlineInputBorder(),
                 ),
               ),
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              flex: 2,
-              child: DropdownButtonFormField<int>(
-                initialValue: _cur,
-                dropdownColor: AppTheme.surfaceBlack,
-                style: const TextStyle(color: AppTheme.textWhite),
-                decoration: const InputDecoration(border: OutlineInputBorder()),
-                items: const [
-                  DropdownMenuItem(value: Currency.dollar, child: Text('دولار')),
-                  DropdownMenuItem(value: Currency.lbp, child: Text('ل.س')),
-                ],
-                onChanged: (v) => setState(() => _cur = v ?? Currency.lbp),
-              ),
-            ),
-          ]),
-          const SizedBox(height: 15),
+          const SizedBox(height: 20),
+          // رقم الهاتف الآن في الأساسيات + إلزامي + نص واضح
           TextField(
             controller: _contactPhoneCtrl,
             keyboardType: TextInputType.phone,
             decoration: const InputDecoration(
-              labelText: 'رقم الهاتف للتواصل (اختياري - سيُستخدم رقم حسابك إذا تركته فارغاً)',
+              labelText: 'رقم الهاتف للتواصل (إلزامي)',
+              hintText: 'مثال: 0938862469 أو +963938862469',
               filled: true,
               fillColor: AppTheme.surfaceBlack,
             ),
           ),
-          const SizedBox(height: 15),
-          // قائمة منسدلة للمناطق الرئيسية (السويداء المدينة، صلخد، شهبا)
+          const SizedBox(height: 20),
+          // المنطقة الرئيسية + حقل حر
           DropdownButtonFormField<int>(
             initialValue: _selectedCityArea,
             dropdownColor: AppTheme.surfaceBlack,
@@ -572,75 +533,142 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
               border: OutlineInputBorder(),
               labelText: 'المنطقة الرئيسية',
             ),
-            items: const [
-              DropdownMenuItem(value: 0, child: Text('السويداء المدينة')),
-              DropdownMenuItem(value: 1, child: Text('صلخد')),
-              DropdownMenuItem(value: 2, child: Text('شهبا')),
-            ],
-            onChanged: (v) => setState(() => _selectedCityArea = v),
-            hint: const Text('اختر المنطقة الرئيسية',
+            items: cityItems,
+            onChanged: (v) => setState(() {
+              _selectedCityArea = v;
+              if (v != -1) _customCityCtrl.clear();
+            }),
+            hint: const Text('اختر المنطقة الرئيسية أو آخر للإدخال الحر',
                 style: TextStyle(color: AppTheme.textGrey)),
           ),
-          const SizedBox(height: 15),
-          TextField(
-              controller: _locCtrl,
-              maxLines: 2,
-              decoration: const InputDecoration(labelText: 'وصف دقيق للموقع (إلزامي)')),
-
-          const SizedBox(height: 15),
-          TextField(
-              controller: _specCtrl,
-              maxLines: 3,
-              decoration: const InputDecoration(labelText: 'المواصفات')),
-          const SizedBox(height: 20),
-          // الموقع الدقيق على الخريطة
-          const Row(children: [
-            Icon(Icons.map, color: AppTheme.primaryGold, size: 18),
-            SizedBox(width: 6),
-            Text('الموقع الدقيق على الخريطة (اختياري)',
-                style: TextStyle(
-                    color: AppTheme.primaryGold,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13)),
-          ]),
-          const SizedBox(height: 4),
-          const Text('اضغط على الخريطة لتحديد موقع العقار بدقة',
-              style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+          if (_selectedCityArea == -1)
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: TextField(
+                controller: _customCityCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'اكتب المنطقة الرئيسية يدوياً',
+                  hintText: 'مثال: حي الوادي أو منطقة جديدة',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ),
           const SizedBox(height: 8),
-          LocationPicker(
-            initial: _pickedLocation,
-            onPicked: (loc) => setState(() => _pickedLocation = loc),
-            height: 250,
-          ),
-          if (_pickedLocation != null) ...[
-            const SizedBox(height: 6),
+          if (_selectedTrans != null)
             Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color.fromRGBO(76, 175, 80, 0.15),
+                color: AppTheme.surfaceBlack,
+                border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: Row(children: [
-                const Icon(Icons.check_circle, color: Colors.green, size: 14),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    'تم تحديد الموقع: ${_pickedLocation!.latitude.toStringAsFixed(4)}, ${_pickedLocation!.longitude.toStringAsFixed(4)}',
-                    style: const TextStyle(
-                        color: Colors.green, fontSize: 11),
+              child: Text(
+                _selectedTrans == 0
+                    ? 'المكتب يتقاضى عمولة 3% عند إتمام عملية البيع.'
+                    : 'المكتب يتقاضى أجرة نصف شهر عند إتمام عملية الإيجار أو الاستئجار.',
+                style: const TextStyle(color: AppTheme.textWhite, fontSize: 14),
+              ),
+            ),
+        ]),
+      ),
+      isActive: _currentStep >= 0,
+    );
+  }
+
+  Step _step2() => Step(
+        title: const Text('التفاصيل',
+            style: TextStyle(
+                color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
+        content: SingleChildScrollView(
+          child: Column(children: [
+            Row(children: [
+              Expanded(
+                flex: 3,
+                child: TextField(
+                  controller: _priceCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'السعر المتوقع',
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.red, size: 16),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  onPressed: () => setState(() => _pickedLocation = null),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                flex: 2,
+                child: DropdownButtonFormField<int>(
+                  initialValue: _cur,
+                  dropdownColor: AppTheme.surfaceBlack,
+                  style: const TextStyle(color: AppTheme.textWhite),
+                  decoration: const InputDecoration(border: OutlineInputBorder()),
+                  items: const [
+                    DropdownMenuItem(value: Currency.dollar, child: Text('دولار')),
+                    DropdownMenuItem(value: Currency.lbp, child: Text('ل.س')),
+                  ],
+                  onChanged: (v) => setState(() => _cur = v ?? Currency.lbp),
                 ),
-              ]),
+              ),
+            ]),
+            const SizedBox(height: 15),
+            TextField(
+                controller: _locCtrl,
+                maxLines: 2,
+                decoration: const InputDecoration(labelText: 'وصف دقيق للموقع (إلزامي)')),
+
+            const SizedBox(height: 15),
+            TextField(
+                controller: _specCtrl,
+                maxLines: 3,
+                decoration: const InputDecoration(labelText: 'المواصفات')),
+            const SizedBox(height: 20),
+            // الموقع الدقيق على الخريطة
+            const Row(children: [
+              Icon(Icons.map, color: AppTheme.primaryGold, size: 18),
+              SizedBox(width: 6),
+              Text('الموقع الدقيق على الخريطة (اختياري)',
+                  style: TextStyle(
+                      color: AppTheme.primaryGold,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14)),
+            ]),
+            const SizedBox(height: 4),
+            const Text('اضغط على الخريطة لتحديد موقع العقار بدقة',
+                style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
+            const SizedBox(height: 8),
+            LocationPicker(
+              initial: _pickedLocation,
+              onPicked: (loc) => setState(() => _pickedLocation = loc),
+              height: 250,
             ),
-          ],
-        ]),
+            if (_pickedLocation != null) ...[
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color.fromRGBO(76, 175, 80, 0.15),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(children: [
+                  const Icon(Icons.check_circle, color: Colors.green, size: 14),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      'تم تحديد الموقع: ${_pickedLocation!.latitude.toStringAsFixed(4)}, ${_pickedLocation!.longitude.toStringAsFixed(4)}',
+                      style: const TextStyle(
+                          color: Colors.green, fontSize: 14),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.red, size: 16),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () => setState(() => _pickedLocation = null),
+                  ),
+                ]),
+              ),
+            ],
+          ]),
+        ),
         isActive: _currentStep >= 1,
       );
 
@@ -829,19 +857,22 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
                   style: TextStyle(color: AppTheme.textGrey, fontSize: 11),
                 ),
                 const SizedBox(height: 8),
-                CheckboxListTile(
-                  value: _agreePledge,
-                  onChanged: (v) =>
-                      setState(() => _agreePledge = v ?? false),
-                  title: const Text('أوافق على الإقرار والتعهد',
-                      style: TextStyle(
-                          color: AppTheme.textWhite, fontSize: 12)),
-                  activeColor: AppTheme.primaryGold,
-                  checkColor: Colors.black,
-                  contentPadding: EdgeInsets.zero,
-                  controlAffinity: ListTileControlAffinity.leading,
-                  dense: true,
-                  tileColor: AppTheme.surfaceBlack,
+                // إصلاح تحذير ListTile: wrap بـ Material لتجنب الـ ink splash invisible
+                Material(
+                  color: Colors.transparent,
+                  child: CheckboxListTile(
+                    value: _agreePledge,
+                    onChanged: (v) =>
+                        setState(() => _agreePledge = v ?? false),
+                    title: const Text('أوافق على الإقرار والتعهد',
+                        style: TextStyle(
+                            color: AppTheme.textWhite, fontSize: 14)),
+                    activeColor: AppTheme.primaryGold,
+                    checkColor: Colors.black,
+                    contentPadding: EdgeInsets.zero,
+                    controlAffinity: ListTileControlAffinity.leading,
+                    dense: true,
+                  ),
                 ),
               ],
             ),
@@ -1048,6 +1079,18 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   Widget _dd(String label, List<String> items, Function(String) on) => Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Text(label, style: const TextStyle(color: AppTheme.textGrey)),
+        const SizedBox(height: 5),
+        DropdownButtonFormField<String>(
+            initialValue: null,
+            items: items
+                .map((i) => DropdownMenuItem(value: i, child: Text(i)))
+                .toList(),
+            onChanged: (v) => on(v!),
+            decoration: const InputDecoration(border: OutlineInputBorder()))
+      ]);
+}
+ren: [
         Text(label, style: const TextStyle(color: AppTheme.textGrey)),
         const SizedBox(height: 5),
         DropdownButtonFormField<String>(

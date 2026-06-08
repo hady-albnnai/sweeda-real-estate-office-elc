@@ -308,7 +308,8 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
           controller: _clientPhoneCtrl,
           keyboardType: TextInputType.phone,
           decoration: const InputDecoration(
-            labelText: 'هاتف العميل',
+            labelText: 'هاتف العميل (إلزامي)',
+            hintText: 'مثال: 0938862469',
             filled: true,
             fillColor: AppTheme.surfaceBlack,
           ),

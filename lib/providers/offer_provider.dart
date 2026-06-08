@@ -232,6 +232,7 @@ class OfferProvider with ChangeNotifier {
 
   Future<OfferModel?> addOffer(OfferModel offer) async {
     try {
+      print('DEBUG offer_provider.addOffer start: inserting offer with contactPh=${offer.contactPh}, cat=${offer.cat}, sub=${offer.sub}');
       final response = await SupabaseService().client
           .from(DbTables.offers).insert(offer.toMap()).select().single();
       final created = OfferModel.fromSupabase(
@@ -242,8 +243,11 @@ class OfferProvider with ChangeNotifier {
       // تحديث إحصائيات المستخدم (عدد العروض)
       await BusinessService().updateUserStat(offer.usrId, 'off');
       
+      print('DEBUG offer_provider.addOffer success: id=${created.id}');
       return created;
-    } catch (e) {return null;
+    } catch (e) {
+      print('DEBUG offer_provider.addOffer ERROR: $e (likely DB/RLS/column issue)');
+      return null;
     }
   }
 
