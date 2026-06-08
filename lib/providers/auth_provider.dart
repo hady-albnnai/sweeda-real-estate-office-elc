@@ -140,13 +140,39 @@ class AuthProvider with ChangeNotifier {
     if (userId != null) await _loadUserData(userId);
   }
 
+  String? _lastDailyStreakCheckDate;
+
+  String _getSyriaDateString(DateTime dt) {
+    final syria = dt.toUtc().add(const Duration(hours: 3));
+    return '${syria.year.toString().padLeft(4, '0')}-'
+        '${syria.month.toString().padLeft(2, '0')}-'
+        '${syria.day.toString().padLeft(2, '0')}';
+  }
+
   Future<Map<String, dynamic>> registerStreak(dynamic config) async {
     if (_userModel == null) return {'streak': 0, 'changed': false};
+
+    final todayStr = _getSyriaDateString(DateTime.now());
+
+    // In-memory guard: prevent multiple calls to the service on the same Syria day
+    // (e.g. from navigation, tab switches, rebuilds). The DB guard in the service is the safety net.
+    if (_lastDailyStreakCheckDate == todayStr) {
+      return {
+        'streak': _userModel!.strk,
+        'changed': false,
+        'awarded': false,
+      };
+    }
+
     final result =
         await BusinessService().registerDailyStreak(_userModel!.uid, config);
+
+    _lastDailyStreakCheckDate = todayStr;
+
     if (result['changed'] == true) {
       await _loadUserData(_userModel!.uid);
     }
+
     // فحص تسجيل الدخول الأسبوعي
     await _checkWeeklyLogin(config);
     return result;
@@ -175,6 +201,7 @@ class AuthProvider with ChangeNotifier {
     _currentEmail = null;
     _currentOtp = null;
     _isNewUser = false;
+    _lastDailyStreakCheckDate = null;
     notifyListeners();
   }
 
