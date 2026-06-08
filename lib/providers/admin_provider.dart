@@ -39,9 +39,7 @@ class AdminProvider with ChangeNotifier {
           .map((d) =>
               OfferModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String))
           .toList();
-    } catch (e) {
-      debugPrint('❌ getPendingOffers error: $e');
-      return [];
+    } catch (e) {return [];
     }
   }
 
@@ -86,20 +84,13 @@ class AdminProvider with ChangeNotifier {
           // كل 3 رفضات متتالية → عقوبة
           if (count > 0 && count % 3 == 0) {
             await sb.rpc('add_points',
-                params: {'p_uid': ownerUid, 'p_pts': -1000});
-            debugPrint(
-                '⚠️ pen.rej3 applied to $ownerUid (count=$count)');
-          }
-        } catch (e) {
-          debugPrint('⚠️ pen.rej3 failed: $e');
-        }
+                params: {'p_uid': ownerUid, 'p_pts': -1000});}
+        } catch (e) {}
       }
 
       notifyListeners();
       return true;
-    } catch (e) {
-      debugPrint('❌ reviewOffer error: $e');
-      return false;
+    } catch (e) {return false;
     }
   }
 
@@ -120,9 +111,7 @@ class AdminProvider with ChangeNotifier {
           .map((d) =>
               UserModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String))
           .toList();
-    } catch (e) {
-      debugPrint('❌ getAllUsers error: $e');
-      return [];
+    } catch (e) {return [];
     }
   }
 
@@ -135,9 +124,7 @@ class AdminProvider with ChangeNotifier {
       }).eq('id', uid);
       notifyListeners();
       return true;
-    } catch (e) {
-      debugPrint('❌ updateUserRole error: $e');
-      return false;
+    } catch (e) {return false;
     }
   }
 
@@ -151,9 +138,7 @@ class AdminProvider with ChangeNotifier {
       }).eq('id', uid);
       notifyListeners();
       return true;
-    } catch (e) {
-      debugPrint('❌ setUserStatus error: $e');
-      return false;
+    } catch (e) {return false;
     }
   }
 
@@ -169,9 +154,7 @@ class AdminProvider with ChangeNotifier {
       }).eq('id', uid);
       notifyListeners();
       return true;
-    } catch (e) {
-      debugPrint('❌ softDeleteUser error: $e');
-      return false;
+    } catch (e) {return false;
     }
   }
 
@@ -188,9 +171,7 @@ class AdminProvider with ChangeNotifier {
           .map((d) => AppointmentModel.fromSupabase(
               Map<String, dynamic>.from(d), d['id'] as String))
           .toList();
-    } catch (e) {
-      debugPrint('❌ getAllAppointments error: $e');
-      return [];
+    } catch (e) {return [];
     }
   }
 
@@ -222,11 +203,7 @@ class AdminProvider with ChangeNotifier {
       if (status == 5 && reqUid != null) {
         try {
           await sb.rpc('add_points',
-              params: {'p_uid': reqUid, 'p_pts': -500});
-          debugPrint('⚠️ pen.noSh applied to $reqUid');
-        } catch (e) {
-          debugPrint('⚠️ pen.noSh failed: $e');
-        }
+              params: {'p_uid': reqUid, 'p_pts': -500});} catch (e) {}
       }
 
       // ─── pen.cnl3 (-300): بعد ثالث إلغاء متتالي ───
@@ -244,19 +221,13 @@ class AdminProvider with ChangeNotifier {
           final count = (canceled as List).length;
           if (count > 0 && count % 3 == 0) {
             await sb.rpc('add_points',
-                params: {'p_uid': reqUid, 'p_pts': -300});
-            debugPrint('⚠️ pen.cnl3 applied to $reqUid (count=$count)');
-          }
-        } catch (e) {
-          debugPrint('⚠️ pen.cnl3 failed: $e');
-        }
+                params: {'p_uid': reqUid, 'p_pts': -300});}
+        } catch (e) {}
       }
 
       notifyListeners();
       return true;
-    } catch (e) {
-      debugPrint('❌ updateAppointmentStatus error: $e');
-      return false;
+    } catch (e) {return false;
     }
   }
 
@@ -270,9 +241,7 @@ class AdminProvider with ChangeNotifier {
       }).eq('id', apptId);
       notifyListeners();
       return true;
-    } catch (e) {
-      debugPrint('❌ forceAppointment error: $e');
-      return false;
+    } catch (e) {return false;
     }
   }
 
@@ -290,9 +259,7 @@ class AdminProvider with ChangeNotifier {
           .map((d) =>
               DealModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String))
           .toList();
-    } catch (e) {
-      debugPrint('❌ getAllDeals error: $e');
-      return [];
+    } catch (e) {return [];
     }
   }
 
@@ -302,9 +269,7 @@ class AdminProvider with ChangeNotifier {
       await SupabaseService().client.from(DbTables.deals).insert(deal.toMap());
       notifyListeners();
       return true;
-    } catch (e) {
-      debugPrint('❌ createDeal error: $e');
-      return false;
+    } catch (e) {return false;
     }
   }
 
@@ -340,9 +305,7 @@ class AdminProvider with ChangeNotifier {
       
       notifyListeners();
       return true;
-    } catch (e) {
-      debugPrint('❌ completeDeal error: $e');
-      return false;
+    } catch (e) {return false;
     }
   }
 
@@ -358,9 +321,7 @@ class AdminProvider with ChangeNotifier {
           .map((d) =>
               PaymentModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String))
           .toList();
-    } catch (e) {
-      debugPrint('❌ getAllPayments error: $e');
-      return [];
+    } catch (e) {return [];
     }
   }
 
@@ -377,12 +338,8 @@ class AdminProvider with ChangeNotifier {
       if (res['success'] == true) {
         notifyListeners();
         return true;
-      }
-      debugPrint('❌ approvePayment RPC error: ${res['error']}');
-      return false;
-    } catch (e) {
-      debugPrint('❌ approvePayment error: $e');
-      return false;
+      }return false;
+    } catch (e) {return false;
     }
   }
 
@@ -394,9 +351,7 @@ class AdminProvider with ChangeNotifier {
       }).eq('id', paymentId);
       notifyListeners();
       return true;
-    } catch (e) {
-      debugPrint('❌ rejectPayment error: $e');
-      return false;
+    } catch (e) {return false;
     }
   }
 
@@ -412,9 +367,7 @@ class AdminProvider with ChangeNotifier {
           .map((d) =>
               ReportModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String))
           .toList();
-    } catch (e) {
-      debugPrint('❌ getAllReports error: $e');
-      return [];
+    } catch (e) {return [];
     }
   }
 
@@ -432,9 +385,7 @@ class AdminProvider with ChangeNotifier {
       }).eq('id', reportId);
       notifyListeners();
       return true;
-    } catch (e) {
-      debugPrint('❌ handleReport error: $e');
-      return false;
+    } catch (e) {return false;
     }
   }
 
@@ -486,9 +437,7 @@ class AdminProvider with ChangeNotifier {
         'completedAppointments':
             apptsList.where((a) => (a['sts'] ?? 0) == 2).length,
       };
-    } catch (e) {
-      debugPrint('❌ getStats error: $e');
-      return {};
+    } catch (e) {return {};
     }
   }
 
@@ -525,9 +474,7 @@ class AdminProvider with ChangeNotifier {
         'openReports': (openReports as List).length,
         'pendingVerifications': (pendingVerifications as List).length,
       };
-    } catch (e) {
-      debugPrint('❌ getActionCounts error: $e');
-      return {};
+    } catch (e) {return {};
     }
   }
 
@@ -549,9 +496,7 @@ class AdminProvider with ChangeNotifier {
       return (res as List)
           .map((r) => Map<String, dynamic>.from(r))
           .toList();
-    } catch (e) {
-      debugPrint('❌ getPendingVerifications error: $e');
-      return [];
+    } catch (e) {return [];
     }
   }
 
@@ -565,9 +510,7 @@ class AdminProvider with ChangeNotifier {
         params: {'p_target_uid': userId},
       );
       return true;
-    } catch (e) {
-      debugPrint('❌ approveVerification error: $e');
-      return false;
+    } catch (e) {return false;
     }
   }
 
@@ -580,9 +523,7 @@ class AdminProvider with ChangeNotifier {
         params: {'p_target_uid': userId, 'p_reason': reason},
       );
       return true;
-    } catch (e) {
-      debugPrint('❌ rejectVerification error: $e');
-      return false;
+    } catch (e) {return false;
     }
   }
 }

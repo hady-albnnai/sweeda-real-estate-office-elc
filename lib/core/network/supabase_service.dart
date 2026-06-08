@@ -22,11 +22,7 @@ class SupabaseService {
         publishableKey: publishableKey,
         debug: kDebugMode,
       );
-      _initialized = true;
-      debugPrint('✅ SupabaseService: initialized');
-    } catch (e) {
-      debugPrint('❌ SupabaseService init error: $e');
-      rethrow;
+      _initialized = true;} catch (e) {rethrow;
     }
   }
 

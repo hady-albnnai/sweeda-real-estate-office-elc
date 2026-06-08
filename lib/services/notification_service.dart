@@ -10,9 +10,7 @@ class NotificationService {
   static Future<void> initialize() async {
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
     const initSettings = InitializationSettings(android: android);
-    await _localNotif.initialize(initSettings);
-    debugPrint('✅ NotificationService: initialized');
-    _listenToNotifications();
+    await _localNotif.initialize(initSettings);_listenToNotifications();
   }
 
   static void _listenToNotifications() {
@@ -29,11 +27,7 @@ class NotificationService {
                 _showLocalNotif(row['ttl'] ?? '', row['bdy'] ?? '');
               }
             }
-          });
-      debugPrint('✅ NotificationService: Realtime listener active');
-    } catch (e) {
-      debugPrint('⚠️ NotificationService: Realtime error: $e');
-    }
+          });} catch (e) {}
   }
 
   static Future<void> _showLocalNotif(String title, String body) async {
@@ -48,9 +42,7 @@ class NotificationService {
         title, body,
         const NotificationDetails(android: androidDetails),
       );
-    } catch (e) {
-      debugPrint('⚠️ Local notif error: $e');
-    }
+    } catch (e) {}
   }
 
   static Future<void> showNotification({
@@ -78,8 +70,6 @@ class NotificationService {
         'platform': 'android', 'is_active': true,
         'ts_upd': DateTime.now().toIso8601String(),
       });
-    } catch (e) {
-      debugPrint('⚠️ Device token error: $e');
-    }
+    } catch (e) {}
   }
 }

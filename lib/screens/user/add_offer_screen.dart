@@ -90,9 +90,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
             fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
           );
       return storage.from(StorageService.offerBucket).getPublicUrl(path);
-    } catch (e) {
-      debugPrint('❌ uploadDocImage: $e');
-      return null;
+    } catch (e) {return null;
     }
   }
 

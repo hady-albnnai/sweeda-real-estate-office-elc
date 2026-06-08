@@ -25,11 +25,7 @@ class FCMService {
   /// تهيئة Firebase + FCM — تُستدعى مرّة واحدة في main()
   static Future<void> initializeFirebase() async {
     try {
-      await Firebase.initializeApp();
-      debugPrint('✅ Firebase initialized');
-    } catch (e) {
-      debugPrint('❌ Firebase init error: $e');
-      rethrow;
+      await Firebase.initializeApp();} catch (e) {rethrow;
     }
   }
 
@@ -45,39 +41,24 @@ class FCMService {
         alert: true,
         badge: true,
         sound: true,
-      );
-      debugPrint('🔔 FCM permission: ${settings.authorizationStatus}');
-
-      // 2) إعدادات local notifications
+      );// 2) إعدادات local notifications
       await _initLocalNotifications();
 
       // 3) الحصول على الـ token
-      _currentToken = await _messaging.getToken();
-      debugPrint('🔑 FCM Token (للنسخ والاختبار):');
-      debugPrint('=' * 60);
-      debugPrint(_currentToken ?? 'NULL');
-      debugPrint('=' * 60);
-
-      // 4) تسجيل التوكن
+      _currentToken = await _messaging.getToken();// 4) تسجيل التوكن
       if (_currentToken != null) {
         await _registerDeviceToken(_currentToken!);
       }
 
       // 5) الاستماع لتغيير التوكن
-      _messaging.onTokenRefresh.listen((newToken) async {
-        debugPrint('🔄 FCM Token refreshed');
-        _currentToken = newToken;
+      _messaging.onTokenRefresh.listen((newToken) async {_currentToken = newToken;
         await _registerDeviceToken(newToken);
       });
 
       // 6) معالجة الإشعارات الواردة
       _setupMessageHandlers();
 
-      _initialized = true;
-      debugPrint('✅ FCMService setup complete');
-    } catch (e) {
-      debugPrint('❌ FCMService setup error: $e');
-    }
+      _initialized = true;} catch (e) {}
   }
 
   Future<void> _initLocalNotifications() async {
@@ -124,9 +105,7 @@ class FCMService {
   }
 
   /// إشعار وصل والتطبيق مفتوح → نعرضه + نحفظه في DB
-  void _handleForegroundMessage(RemoteMessage message) async {
-    debugPrint('📨 FCM foreground: ${message.notification?.title}');
-    final notification = message.notification;
+  void _handleForegroundMessage(RemoteMessage message) async {final notification = message.notification;
     final data = message.data;
 
     if (notification != null) {
@@ -164,15 +143,11 @@ class FCMService {
   }
 
   /// المستخدم ضغط على إشعار → نتنقل للشاشة المناسبة
-  void _handleMessageOpenedApp(RemoteMessage message) {
-    debugPrint('👆 FCM opened app: ${message.data}');
-    _navigateFromData(message.data);
+  void _handleMessageOpenedApp(RemoteMessage message) {_navigateFromData(message.data);
   }
 
   void _handleNotificationTap(String? payload) {
-    if (payload == null) return;
-    debugPrint('👆 Local notification tapped: $payload');
-    // parse الـ payload (format: {key: value, key2: value2})
+    if (payload == null) return;// parse الـ payload (format: {key: value, key2: value2})
     try {
       // إزالة الأقواس والـ spaces
       final cleaned = payload.replaceAll('{', '').replaceAll('}', '').trim();
@@ -185,9 +160,7 @@ class FCMService {
         }
       }
       _navigateFromData(data);
-    } catch (e) {
-      debugPrint('⚠️ parse payload: $e');
-    }
+    } catch (e) {}
   }
 
   /// التنقل حسب نوع الإشعار
@@ -220,9 +193,7 @@ class FCMService {
           // افتراضي: شاشة الإشعارات
           router.push('/user/notifications');
       }
-    } catch (e) {
-      debugPrint('⚠️ navigation from notification: $e');
-    }
+    } catch (e) {}
   }
 
   /// حفظ الإشعار في DB ليظهر داخل التطبيق
@@ -247,11 +218,7 @@ class FCMService {
         'p_body': body,
         'p_ref_id': data?['id']?.toString() ?? '',
         'p_action': typeStr,
-      });
-      debugPrint('✅ notification saved to DB');
-    } catch (e) {
-      debugPrint('⚠️ save notification to DB: $e');
-    }
+      });} catch (e) {}
   }
 
   int _typeStringToInt(String t) {
@@ -282,9 +249,7 @@ class FCMService {
       final prefs = await SharedPreferences.getInstance();
       final uid = prefs.getString('user_id');
 
-      if (uid == null) {
-        debugPrint('⏸️ FCM token will register after login');
-        return;
+      if (uid == null) {return;
       }
 
       final platform = defaultTargetPlatform == TargetPlatform.iOS
@@ -302,9 +267,7 @@ class FCMService {
             .update({'is_active': false})
             .eq('uid', uid)
             .neq('device_token', token);
-      } catch (e) {
-        debugPrint('⚠️ deactivate old tokens: $e');
-      }
+      } catch (e) {}
 
       // 2) Upsert التوكن الحالي
       await sb.from(DbTables.userDevices).upsert(
@@ -316,11 +279,7 @@ class FCMService {
           'ts_upd': DateTime.now().toIso8601String(),
         },
         onConflict: 'device_token',
-      );
-      debugPrint('✅ FCM token registered for $uid (deactivated old tokens)');
-    } catch (e) {
-      debugPrint('❌ register FCM token: $e');
-    }
+      );} catch (e) {}
   }
 
   Future<void> registerCurrentTokenForUser() async {
@@ -336,11 +295,7 @@ class FCMService {
           .client
           .from(DbTables.userDevices)
           .update({'is_active': false})
-          .eq('device_token', _currentToken!);
-      debugPrint('✅ FCM token unregistered');
-    } catch (e) {
-      debugPrint('❌ unregister FCM token: $e');
-    }
+          .eq('device_token', _currentToken!);} catch (e) {}
   }
 }
 
@@ -349,7 +304,5 @@ class FCMService {
 /// فلا نحتاج local notification هنا — يكفي init الـ engine.
 @pragma('vm:entry-point')
 Future<void> firebaseBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
-  debugPrint('📨 FCM background (auto-displayed): ${message.notification?.title}');
-  // ملاحظة: لا تستدعِ flutter_local_notifications هنا — Firebase يعرضها تلقائياً
+  await Firebase.initializeApp();// ملاحظة: لا تستدعِ flutter_local_notifications هنا — Firebase يعرضها تلقائياً
 }

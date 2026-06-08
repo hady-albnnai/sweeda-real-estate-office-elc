@@ -21,7 +21,7 @@ class RequestProvider with ChangeNotifier {
       await BusinessService().updateUserStat(request.usrId, 'req');
       
       return true;
-    } catch (e) { debugPrint('❌ addRequest error: $e'); return false; }
+    } catch (e) {return false; }
   }
 
   Future<void> fetchMyRequests(String userId) async {
@@ -33,7 +33,7 @@ class RequestProvider with ChangeNotifier {
           .order('ts_crt', ascending: false);
       _myRequests = (response as List).map((d) =>
           RequestModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String)).toList();
-    } catch (e) { debugPrint('❌ fetchMyRequests error: $e'); }
+    } catch (e) {}
     _isLoading = false; notifyListeners();
   }
 
@@ -41,7 +41,7 @@ class RequestProvider with ChangeNotifier {
     try {
       await SupabaseService().client.from(DbTables.requests).update(data).eq('id', reqId);
       notifyListeners(); return true;
-    } catch (e) { debugPrint('❌ updateRequest error: $e'); return false; }
+    } catch (e) {return false; }
   }
 
   Future<bool> softDeleteRequest(String reqId) => updateRequest(reqId, {'i_del': 1});

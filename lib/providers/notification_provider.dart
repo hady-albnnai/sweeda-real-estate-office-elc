@@ -26,9 +26,7 @@ class NotificationProvider with ChangeNotifier {
           NotificationModel.fromSupabase(
               Map<String, dynamic>.from(d), d['id'] as String)).toList();
       _unreadCount = _notifications.where((n) => !n.isRead).length;
-    } catch (e) {
-      debugPrint('❌ fetchNotifications error: $e');
-    }
+    } catch (e) {}
     _isLoading = false;
     notifyListeners();
   }
@@ -40,9 +38,7 @@ class NotificationProvider with ChangeNotifier {
           .update({'i_rd': 1})
           .eq('id', notificationId);
       notifyListeners();
-    } catch (e) {
-      debugPrint('❌ markAsRead error: $e');
-    }
+    } catch (e) {}
   }
 
   Future<void> markAllAsRead(String userId) async {
@@ -54,9 +50,7 @@ class NotificationProvider with ChangeNotifier {
           .eq('i_rd', 0);
       _unreadCount = 0;
       notifyListeners();
-    } catch (e) {
-      debugPrint('❌ markAllAsRead error: $e');
-    }
+    } catch (e) {}
   }
 
   Future<bool> sendNotification({
@@ -73,9 +67,7 @@ class NotificationProvider with ChangeNotifier {
         'act': action, 'ref_id': refId,
       });
       return true;
-    } catch (e) {
-      debugPrint('❌ sendNotification error: $e');
-      return false;
+    } catch (e) {return false;
     }
   }
 

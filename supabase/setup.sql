@@ -200,11 +200,11 @@ ALTER TABLE otp_codes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_devices ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Anyone can read config" ON app_config FOR SELECT USING (true);
-CREATE POLICY "Admin can write config" ON app_config FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Admin can write config" ON app_config FOR ALL USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role >= 2));
 CREATE POLICY "Users can read active users" ON users FOR SELECT USING (i_del = 0);
 CREATE POLICY "Users can update own profile" ON users FOR UPDATE USING (auth.uid() = id);
 CREATE POLICY "Users can insert own profile" ON users FOR INSERT WITH CHECK (auth.uid() = id);
-CREATE POLICY "Anyone can read published offers" ON offers FOR SELECT USING (i_del = 0);
+CREATE POLICY "Anyone can read published offers" ON offers FOR SELECT USING (i_del = 0 AND (i_pub = 1 OR auth.uid() = usr_id OR EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role >= 2)));
 CREATE POLICY "Authenticated can create offers" ON offers FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
 CREATE POLICY "Owner can update own offer" ON offers FOR UPDATE USING (auth.uid() = usr_id);
 CREATE POLICY "Users read own notifications" ON notifications FOR SELECT USING (auth.uid() = uid);
@@ -217,9 +217,16 @@ CREATE POLICY "Authenticated can create payments" ON payments FOR INSERT WITH CH
 CREATE POLICY "Users read own reports" ON reports FOR SELECT USING (auth.uid() = rep_uid);
 CREATE POLICY "Authenticated can create reports" ON reports FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
 CREATE POLICY "Related users can read deals" ON deals FOR SELECT USING (auth.uid() = sell_uid OR auth.uid() = buy_uid);
-CREATE POLICY "Admin can read activity log" ON activity_log FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "Admin can read activity log" ON activity_log FOR SELECT USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role >= 2));
 CREATE POLICY "Authenticated can generate OTP" ON otp_codes FOR INSERT WITH CHECK (true);
 CREATE POLICY "Users manage own devices" ON user_devices FOR ALL USING (auth.uid() = uid);
+
+-- Admin UPDATE policies (for payments, reports, deals, offers review etc.)
+CREATE POLICY "Admin can update payments" ON payments FOR UPDATE USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role >= 2));
+CREATE POLICY "Admin can update reports" ON reports FOR UPDATE USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role >= 2));
+CREATE POLICY "Admin can update deals" ON deals FOR UPDATE USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role >= 2));
+CREATE POLICY "Admin can update appointments" ON appointments FOR UPDATE USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role >= 2));
+CREATE POLICY "Admin can update offers" ON offers FOR UPDATE USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role >= 2) OR auth.uid() = usr_id);
 
 -- Functions
 CREATE OR REPLACE FUNCTION generate_otp(p_phone TEXT)

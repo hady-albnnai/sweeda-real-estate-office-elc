@@ -178,9 +178,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('تم الحفظ ✅'), duration: Duration(seconds: 1)),
       );
-    } catch (e) {
-      debugPrint('❌ toggle notif: $e');
-      if (mounted) {
+    } catch (e) {if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('فشل الحفظ')),
         );

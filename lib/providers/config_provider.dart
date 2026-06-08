@@ -57,9 +57,7 @@ class ConfigProvider extends ChangeNotifier {
       // لو فشل السيرفر والكاش موجود، نكمل بالكاش
       if (_config == null) {
         _error = 'فشل تحميل Config: $e';
-      } else {
-        debugPrint('⚠️ Config: استخدام الكاش (تعذّر الاتصال): $e');
-      }
+      } else {}
     }
     _isLoading = false;
     notifyListeners();
@@ -76,9 +74,7 @@ class ConfigProvider extends ChangeNotifier {
       await LocalCacheService().saveConfig(newConfig);
       notifyListeners();
       return true;
-    } catch (e) {
-      debugPrint('❌ updateConfig error: $e');
-      return false;
+    } catch (e) {return false;
     }
   }
 

@@ -36,16 +36,12 @@ class AuthProvider with ChangeNotifier {
       final result = await AuthService().sendWhatsAppOTP(phone);
       if (result['success'] == true) {
         _currentOtp = result['fallbackOtp'] as String?;
-        if (_currentOtp != null) {
-          debugPrint('🔑 OTP for development: $_currentOtp');
-        }
+        if (_currentOtp != null) {}
         notifyListeners();
         return true;
       }
       return false;
-    } catch (e) {
-      debugPrint('❌ sendWhatsAppOTP error: $e');
-      return false;
+    } catch (e) {return false;
     }
   }
 
@@ -62,9 +58,7 @@ class AuthProvider with ChangeNotifier {
         return true;
       }
       return false;
-    } catch (e) {
-      debugPrint('❌ verifyWhatsAppOTP error: $e');
-      return false;
+    } catch (e) {return false;
     }
   }
 
@@ -79,9 +73,7 @@ class AuthProvider with ChangeNotifier {
       final result = await AuthService().sendEmailMagicLink(email);
       notifyListeners();
       return result['success'] == true;
-    } catch (e) {
-      debugPrint('❌ sendEmailMagicLink error: $e');
-      return false;
+    } catch (e) {return false;
     }
   }
 
@@ -95,9 +87,7 @@ class AuthProvider with ChangeNotifier {
         return true;
       }
       return false;
-    } catch (e) {
-      debugPrint('❌ handleEmailSession error: $e');
-      return false;
+    } catch (e) {return false;
     }
   }
 
@@ -122,17 +112,13 @@ class AuthProvider with ChangeNotifier {
       final response = await SupabaseService()
           .client
           .rpc('get_user_full_by_id', params: {'p_uid': userId});
-      if (response == null || (response as List).isEmpty) {
-        debugPrint('⚠️ _loadUserData: no row for $userId');
-        return;
+      if (response == null || (response as List).isEmpty) {return;
       }
       final row = Map<String, dynamic>.from(response.first);
       _userModel = UserModel.fromSupabase(row, userId);
       notifyListeners();
       DeviceService().registerWithServer();
-    } catch (e) {
-      debugPrint('❌ _loadUserData error: $e');
-    }
+    } catch (e) {}
   }
 
   Future<bool> completeProfile({required String name, required String sid}) async {
@@ -145,9 +131,7 @@ class AuthProvider with ChangeNotifier {
       }).eq('id', _userModel!.uid);
       await _loadUserData(_userModel!.uid);
       return true;
-    } catch (e) {
-      debugPrint('❌ completeProfile error: $e');
-      return false;
+    } catch (e) {return false;
     }
   }
 
@@ -177,13 +161,9 @@ class AuthProvider with ChangeNotifier {
         'register_weekly_login',
         params: {'p_uid': _userModel!.uid, 'p_pts': pts},
       );
-      if (granted == true) {
-        debugPrint('✅ wk_lgn granted +$pts to ${_userModel!.uid}');
-        await _loadUserData(_userModel!.uid);
+      if (granted == true) {await _loadUserData(_userModel!.uid);
       }
-    } catch (e) {
-      debugPrint('⚠️ register_weekly_login failed: $e');
-    }
+    } catch (e) {}
   }
 
   Future<void> logout() async {
@@ -202,8 +182,6 @@ class AuthProvider with ChangeNotifier {
     try {
       final userId = await AuthService().getSavedUserId();
       if (userId != null) await _loadUserData(userId);
-    } catch (e) {
-      debugPrint('⚠️ checkAuthStatus error: $e');
-    }
+    } catch (e) {}
   }
 }

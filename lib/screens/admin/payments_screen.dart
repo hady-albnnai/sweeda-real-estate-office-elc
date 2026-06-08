@@ -221,9 +221,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
             .storage
             .from(StorageService.paymentProofsBucket)
             .createSignedUrl(proof, 3600);
-      } catch (e) {
-        debugPrint('❌ signed URL error: $e');
-        _snack('فشل تحميل الإيصال');
+      } catch (e) {_snack('فشل تحميل الإيصال');
         return;
       }
     }

@@ -32,9 +32,7 @@ class BusinessService {
         'p_pts': points,
       });
       return true;
-    } catch (e) {
-      debugPrint('❌ addPoints error: $e');
-      // fallback: تحديث مباشر إن فشلت RPC
+    } catch (e) {// fallback: تحديث مباشر إن فشلت RPC
       return _addPointsFallback(uid, points);
     }
   }
@@ -48,12 +46,8 @@ class BusinessService {
         'p_event_type': eventType,
         'p_points': points,
       });
-      if (res['success'] == true) return true;
-      debugPrint('⚠️ awardPointsSafe: ${res['error']}');
-      return false;
-    } catch (e) {
-      debugPrint('❌ awardPointsSafe error: $e');
-      return false;
+      if (res['success'] == true) return true;return false;
+    } catch (e) {return false;
     }
   }
 
@@ -68,9 +62,7 @@ class BusinessService {
       }).eq('id', uid);
       await _sb.client.rpc('update_user_badge', params: {'p_uid': uid});
       return true;
-    } catch (e) {
-      debugPrint('❌ addPoints fallback error: $e');
-      return false;
+    } catch (e) {return false;
     }
   }
 
@@ -151,9 +143,7 @@ class BusinessService {
             : 'وصلت للحد الأقصى ($limit عرض خلال 24 ساعة، شامل المحذوف). '
                 'رقّ باقتك لنشر المزيد.',
       };
-    } catch (e) {
-      debugPrint('❌ canPublishOffer error: $e');
-      // 🔒 Phase 8: عند الفشل نمنع (fail-closed) بدل السماح للأمان
+    } catch (e) {// 🔒 Phase 8: عند الفشل نمنع (fail-closed) بدل السماح للأمان
       return {
         'allowed': false,
         'used': 0,
@@ -213,9 +203,7 @@ class BusinessService {
         'limit': limit,
         'reason': allowed ? '' : 'وصلت للحد الأقصى ($limit طلب).',
       };
-    } catch (e) {
-      debugPrint('❌ canPublishRequest error: $e');
-      return {'allowed': true, 'used': 0, 'limit': 0, 'reason': ''};
+    } catch (e) {return {'allowed': true, 'used': 0, 'limit': 0, 'reason': ''};
     }
   }
 
@@ -250,9 +238,7 @@ class BusinessService {
           .map((d) =>
               OfferModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String))
           .toList();
-    } catch (e) {
-      debugPrint('❌ matchOffersForRequest error: $e');
-      return [];
+    } catch (e) {return [];
     }
   }
 
@@ -277,9 +263,7 @@ class BusinessService {
       }
       final res = await q.limit(20);
       return (res as List).map((e) => Map<String, dynamic>.from(e)).toList();
-    } catch (e) {
-      debugPrint('❌ matchRequestsForOffer error: $e');
-      return [];
+    } catch (e) {return [];
     }
   }
 
@@ -356,9 +340,7 @@ class BusinessService {
 
         return {'streak': 1, 'changed': true, 'awarded': true};
       }
-    } catch (e) {
-      debugPrint('❌ registerDailyStreak error: $e');
-      return {'streak': 0, 'changed': false, 'awarded': false};
+    } catch (e) {return {'streak': 0, 'changed': false, 'awarded': false};
     }
   }
 
@@ -415,9 +397,7 @@ class BusinessService {
         'ts_upd': DateTime.now().toIso8601String(),
       }).eq('id', offerId);
       return true;
-    } catch (e) {
-      debugPrint('❌ markSocialPublished error: $e');
-      return false;
+    } catch (e) {return false;
     }
   }
 
@@ -438,9 +418,7 @@ class BusinessService {
         'p_usr_id': uid,
       });
       return res == true;
-    } catch (e) {
-      debugPrint('⚠️ isDuplicateOffer error: $e');
-      return false;
+    } catch (e) {return false;
     }
   }
 
@@ -463,9 +441,7 @@ class BusinessService {
         'stats': stats,
         'ts_upd': DateTime.now().toIso8601String(),
       }).eq('id', uid);
-    } catch (e) {
-      debugPrint('❌ updateUserStat error: $e');
-    }
+    } catch (e) {}
   }
 
   // ═══════════════════════════════════════

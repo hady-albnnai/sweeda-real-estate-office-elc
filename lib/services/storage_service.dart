@@ -31,9 +31,7 @@ class StorageService {
         imageQuality: 90,
         maxWidth: 1920,
       );
-    } catch (e) {
-      debugPrint('❌ pickImage error: $e');
-      return null;
+    } catch (e) {return null;
     }
   }
 
@@ -43,9 +41,7 @@ class StorageService {
       final files = await _picker.pickMultiImage(imageQuality: 90, maxWidth: 1920);
       if (files.length > limit) return files.sublist(0, limit);
       return files;
-    } catch (e) {
-      debugPrint('❌ pickMultiImages error: $e');
-      return [];
+    } catch (e) {return [];
     }
   }
 
@@ -69,9 +65,7 @@ class StorageService {
       );
       if (result == null) return file;
       return File(result.path);
-    } catch (e) {
-      debugPrint('⚠️ compressImage error: $e');
-      return file; // عند الفشل نرفع الأصلي
+    } catch (e) {return file; // عند الفشل نرفع الأصلي
     }
   }
 
@@ -105,9 +99,7 @@ class StorageService {
                 const FileOptions(cacheControl: '3600', upsert: true),
           );
       return _storage.from(offerBucket).getPublicUrl(fullPath);
-    } catch (e) {
-      debugPrint('❌ uploadOfferImage error: $e');
-      return null;
+    } catch (e) {return null;
     }
   }
 
@@ -173,9 +165,7 @@ class StorageService {
         source: ImageSource.gallery,
         maxDuration: maxDuration,
       );
-    } catch (e) {
-      debugPrint('❌ pickVideo error: $e');
-      return null;
+    } catch (e) {return null;
     }
   }
 
@@ -195,9 +185,7 @@ class StorageService {
           : await File(xfile.path).readAsBytes();
 
       // فحص الحجم (حد أقصى 50 MB)
-      if (bytes.length > 50 * 1024 * 1024) {
-        debugPrint('❌ Video too large: ${bytes.length} bytes');
-        return null;
+      if (bytes.length > 50 * 1024 * 1024) {return null;
       }
 
       await _storage.from(offerBucket).uploadBinary(
@@ -207,9 +195,7 @@ class StorageService {
                 cacheControl: '3600', upsert: true, contentType: 'video/mp4'),
           );
       return _storage.from(offerBucket).getPublicUrl(fullPath);
-    } catch (e) {
-      debugPrint('❌ uploadOfferVideo error: $e');
-      return null;
+    } catch (e) {return null;
     }
   }
 

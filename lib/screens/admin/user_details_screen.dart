@@ -108,9 +108,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
 
       if (!mounted) return;
       setState(() => _loading = false);
-    } catch (e) {
-      debugPrint('❌ load user details: $e');
-      if (mounted) setState(() => _loading = false);
+    } catch (e) {if (mounted) setState(() => _loading = false);
     }
   }
 

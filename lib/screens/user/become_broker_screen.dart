@@ -131,9 +131,7 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
           ],
         ),
       );
-    } catch (e) {
-      debugPrint('❌ become broker: $e');
-      _snack('حدث خطأ، حاول مرة أخرى');
+    } catch (e) {_snack('حدث خطأ، حاول مرة أخرى');
     } finally {
       if (mounted) setState(() => _submitting = false);
     }

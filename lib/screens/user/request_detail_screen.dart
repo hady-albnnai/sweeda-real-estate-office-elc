@@ -71,9 +71,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
         _matches = matches;
         _loading = false;
       });
-    } catch (e) {
-      debugPrint('❌ load request: $e');
-      if (mounted) setState(() => _loading = false);
+    } catch (e) {if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -120,9 +118,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
         await reqProv.fetchMyRequests(auth.userModel!.uid);
       }
       if (mounted) Navigator.pop(context, true);
-    } catch (e) {
-      debugPrint('❌ delete request: $e');
-      if (mounted) {
+    } catch (e) {if (mounted) {
         setState(() => _deleting = false);
         _snack('فشل الحذف');
       }

@@ -1,7 +1,7 @@
 # 🚀 دليل التطوير — عقارات السويداء
 
-> **آخر تحديث:** 2026-06-05  
-> **Commit الحالي:** المرحلة 6 ✅ مُجهّزة (بناء + أمان + توثيق)  
+> **آخر تحديث:** 2026-06-08  
+> **Commit الحالي:** إصلاحات أمنية + تنظيف debugPrint + إصلاح double Supabase init + تحديث RLS reference + تدقيق شامل للشاشات  
 > **المستودع:** https://github.com/hady-albnnai/sweeda-real-estate-office-elc
 
 ---

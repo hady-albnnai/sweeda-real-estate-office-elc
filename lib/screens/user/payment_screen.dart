@@ -87,9 +87,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
           );
       // bucket خاص → نُرجع المسار فقط (admin يستخدم signed URL أو direct access)
       return path;
-    } catch (e) {
-      debugPrint('❌ uploadProof error: $e');
-      return null;
+    } catch (e) {return null;
     }
   }
 
