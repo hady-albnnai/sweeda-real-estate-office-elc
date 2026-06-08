@@ -46,14 +46,39 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
           Provider.of<NotificationProvider>(context, listen: false)
               .fetchNotifications(uid);
         }
-        final res = await auth.registerStreak(config.config);
-        if (mounted && res['awarded'] == true) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('🔥 سلسلة دخولك: ${res['streak']} يوم — حصلت على نقاط!'),
-              duration: const Duration(seconds: 2),
-            ),
-          );
+
+        // Guard: لا نستدعي registerStreak إلا إذا كان اليوم مختلف (بتوقيت سوريا)
+        // هذا يمنع التكرار عند التنقل بين الشاشات
+        bool shouldRegisterStreak = true;
+        final user = auth.userModel;
+        if (user != null && user.strkDt != null) {
+          final now = DateTime.now();
+          final syriaNow = now.toUtc().add(const Duration(hours: 3));
+          final todayStr = '${syriaNow.year.toString().padLeft(4, '0')}-'
+              '${syriaNow.month.toString().padLeft(2, '0')}-'
+              '${syriaNow.day.toString().padLeft(2, '0')}';
+
+          final last = user.strkDt!;
+          final lastSyria = last.toUtc().add(const Duration(hours: 3));
+          final lastStr = '${lastSyria.year.toString().padLeft(4, '0')}-'
+              '${lastSyria.month.toString().padLeft(2, '0')}-'
+              '${lastSyria.day.toString().padLeft(2, '0')}';
+
+          if (lastStr == todayStr) {
+            shouldRegisterStreak = false;
+          }
+        }
+
+        if (shouldRegisterStreak) {
+          final res = await auth.registerStreak(config.config);
+          if (mounted && res['awarded'] == true) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('🔥 سلسلة دخولك: ${res['streak']} يوم — حصلت على نقاط!'),
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
         }
       }
     });
