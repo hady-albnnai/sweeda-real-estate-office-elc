@@ -321,7 +321,7 @@ class BusinessService {
           'ts_upd': now.toIso8601String(),
         }).eq('id', uid);
 
-        final strkPts = _ptsFromConfig(config, 'strk', 200);  // يطابق قيمتك الحالية
+        final strkPts = _ptsFromConfig(config, 'strk', 50);  // يطابق الطلب الجديد (يومي 50)
         await addPoints(uid, strkPts);
 
         return {
