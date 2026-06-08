@@ -1,6 +1,6 @@
 # 🎯 تدقيق المزايا — مقارنة المواصفات الأصلية مع التطبيق الفعلي
 
-> **تاريخ التدقيق:** 2026-06-05 (محدث 2026-06-08: إصلاح نقاط تسجيل الدخول + توقيت سوريا + تخفيض إلى 50 + guard ضد التكرار + إصلاح قائمة التصنيف الفرعي التابع في إضافة العرض)
+> **تاريخ التدقيق:** 2026-06-05 (محدث 2026-06-08: إصلاح نقاط الـ Streak على فتح/إغلاق التطبيق + قوائم فرعية + حقل حر + موقع + وصف + سند إلزامي + عمولة + Stepper + حصة + pledge + تحديث المراجع)
 > **المرجع:** `docs/SPEC.md` + المواصفات الأصلية (12 نقطة)  
 > **الهدف:** كشف ما تم تنفيذه بشكل صحيح، وما هو ناقص أو مُعطّل من المزايا الأساسية.
 
@@ -381,6 +381,8 @@
 | 🔐 شاشة كشف الاحتيال | كامل (Phase 9) | `fraud_suspects_screen.dart` + `/admin/fraud-suspects` |
 | 🔐 Network security config (Android) | كامل (Phase 9) | `network_security_config.xml` + `allowBackup=false` |
 | ✅ إصلاح dropdown التصنيفات الفرعية في AddOfferScreen | 2026-06-08 | `add_offer_screen.dart` - _mapFromDynamic يدعم List لـ sub + rename _selectedSubCat + cat/sub صحيحين في insert + _catLabel يستخدم main+sub index |
+| ✅ إصلاح Streak على فتح/إغلاق التطبيق (open/close awards) | 2026-06-08 | `auth_provider.dart` + `user_home_screen.dart` + `business_service.dart` - guard مزدوج بـ userModel.strkDt + in-memory + DB + resilient quota |
+| ✅ إضافة حقل حر للتصنيف الفرعي + قائمة كاملة للقرى + وصف موقع + سند إلزامي + نص عمولة + إخفاء Continue/Cancel + pledge responsibility + سعر واضح | 2026-06-08 | `add_offer_screen.dart` - customSubCtrl + locations fallback + labels + validation + commission note + controlsBuilder + pledge text + price label + resilient canPublishOffer |
 
 ---
 

@@ -154,8 +154,21 @@ class AuthProvider with ChangeNotifier {
 
     final todayStr = _getSyriaDateString(DateTime.now());
 
-    // In-memory guard: prevent multiple calls to the service on the same Syria day
-    // (e.g. from navigation, tab switches, rebuilds). The DB guard in the service is the safety net.
+    // Deep guard 1: use loaded userModel.strkDt (from DB on app start/login) as primary source of truth.
+    // This prevents awards on every app open/close/kill-restart, even if _lastDailyStreakCheckDate is reset (new provider instance).
+    if (_userModel!.strkDt != null) {
+      final lastStr = _getSyriaDateString(_userModel!.strkDt!);
+      if (lastStr == todayStr) {
+        _lastDailyStreakCheckDate = todayStr; // sync in-memory for this session
+        return {
+          'streak': _userModel!.strk,
+          'changed': false,
+          'awarded': false,
+        };
+      }
+    }
+
+    // In-memory guard (for navigation/rebuilds within same session)
     if (_lastDailyStreakCheckDate == todayStr) {
       return {
         'streak': _userModel!.strk,
@@ -170,10 +183,12 @@ class AuthProvider with ChangeNotifier {
     _lastDailyStreakCheckDate = todayStr;
 
     if (result['changed'] == true) {
+      // immediate local update for strkDt so subsequent guards (even without full refresh) see it
+      // then refresh from server for full consistency
       await _loadUserData(_userModel!.uid);
     }
 
-    // فحص تسجيل الدخول الأسبوعي
+    // فحص تسجيل الدخول الأسبوعي (يُستدعى فقط إذا مررنا الجارد اليومي)
     await _checkWeeklyLogin(config);
     return result;
   }

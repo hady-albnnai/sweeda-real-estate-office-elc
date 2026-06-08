@@ -34,6 +34,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   final _locCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
   final _specCtrl = TextEditingController();
+  final _customSubCtrl = TextEditingController(); // للتصنيف الفرعي الحر (غير موجود في القائمة)
 
   final List<XFile> _pickedImages = [];
   XFile? _docImage; // صورة سند الملكية
@@ -60,6 +61,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     _locCtrl.dispose();
     _descCtrl.dispose();
     _specCtrl.dispose();
+    _customSubCtrl.dispose();
     super.dispose();
   }
 
@@ -102,7 +104,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
             '• أتعهّد بأنني المالك الفعلي للعقار/السيارة أو وكيل قانوني عنه.\n'
             '• أُقرّ بأن سند الملكية المرفق صحيح وغير مزوّر.\n'
             '• أتعهّد بإزالة العرض فور بيعه أو إلغائه.\n'
-            '• أُقرّ بأن أي بيانات كاذبة قد تؤدي لحظر حسابي وخصم نقاطي.';
+            '• أُقرّ بأن أي بيانات كاذبة قد تؤدي لحظر حسابي وخصم نقاطي.\n• أُقرّ بأن جميع المعلومات المقدمة في هذا العرض تقع على مسؤوليتي الكاملة.';
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -166,8 +168,10 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       _snack('يجب تسجيل الدخول أولاً');
       return;
     }
-    if (_selectedType == null || _selectedTrans == null || _selectedMainCat == null || _selectedSubCat == null) {
-      _snack('يرجى إكمال البيانات الأساسية');
+    if (_selectedType == null || _selectedTrans == null || _selectedMainCat == null ||
+        (_selectedSubCat == null && _customSubCtrl.text.trim().isEmpty) ||
+        _selectedDocType == null) {
+      _snack('يرجى إكمال البيانات الأساسية (التصنيف الرئيسي + فرعي أو إدخال حر + نوع السند)');
       return;
     }
     final price = double.tryParse(_priceCtrl.text) ?? 0.0;
@@ -224,19 +228,27 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     setState(() => _progressMsg = 'جارٍ إنشاء العرض...');
     final loc = {'r': 0, 'd': _locCtrl.text};
 
+    final customSub = _customSubCtrl.text.trim();
+    final catForTitle = customSub.isNotEmpty
+        ? customSub
+        : (_selectedSubCat != null ? _catLabel() : 'عرض');
+
     final offer = OfferModel(
       id: '',
       usrId: user.uid,
-      ttl: '${_selectedSubCat != null ? _catLabel() : 'عرض'} في ${_locCtrl.text}',
+      ttl: '$catForTitle في ${_locCtrl.text}',
       typ: _selectedType!,
       trx: _selectedTrans!,
       cat: _selectedMainCat!,
-      sub: _selectedSubCat!,
+      sub: _selectedSubCat ?? 0,
       prc: price,
       cur: _cur,
       loc: loc,
       descript: _descCtrl.text,
-      specs: {'details': _specCtrl.text},
+      specs: {
+        'details': _specCtrl.text,
+        if (customSub.isNotEmpty) 'custom_sub': customSub,
+      },
       imgs: imageUrls,
       vdo: videoUrl,
       exactLoc: _pickedLocation != null
@@ -351,8 +363,8 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
                   type: StepperType.vertical,
                   currentStep: _currentStep,
                   onStepTapped: (s) => setState(() => _currentStep = s),
-                  onStepContinue: _next,
-                  onStepCancel: _prev,
+                  // إزالة أزرار "Continue/Cancel" المزعجة (التنقل عبر النقر على عناوين الخطوات كافٍ)
+                  controlsBuilder: (context, details) => const SizedBox.shrink(),
                   steps: [_step1(), _step2(), _step3(), _step4()],
                 ),
               ),
@@ -442,6 +454,20 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
             hint: const Text('اختر التصنيف الفرعي',
                 style: TextStyle(color: AppTheme.textGrey)),
           ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _customSubCtrl,
+          decoration: const InputDecoration(
+            labelText: 'تصنيف فرعي آخر (إذا غير موجود في القائمة - اختياري)',
+            hintText: 'اكتب الاسم يدوياً (سيُستخدم في العنوان)',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'ملاحظة: عند إتمام الصفقة (بيع أو إيجار) يتقاضى المكتب عمولة 3%.',
+          style: TextStyle(color: AppTheme.textGrey, fontSize: 11),
+        ),
       ]),
       isActive: _currentStep >= 0,
     );
@@ -459,7 +485,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
                 controller: _priceCtrl,
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
-                  labelText: 'السعر المتوقع (${_cur == Currency.dollar ? '\$' : 'ل.س'})',
+                  labelText: 'السعر المتوقع',
                 ),
               ),
             ),
@@ -485,7 +511,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           TextField(
               controller: _descCtrl,
               maxLines: 3,
-              decoration: const InputDecoration(labelText: 'وصف مختصر')),
+              decoration: const InputDecoration(labelText: 'وصف دقيق للموقع (اختياري)')),
           const SizedBox(height: 15),
           TextField(
               controller: _specCtrl,
@@ -615,8 +641,8 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // نوع سند الملكية
-          const Text('نوع سند الملكية (اختياري)',
+          // نوع سند الملكية (إلزامي)
+          const Text('نوع سند الملكية (إلزامي)',
               style: TextStyle(
                   color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
@@ -637,8 +663,8 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           ),
           const SizedBox(height: 14),
 
-          // صورة سند الملكية
-          const Text('صورة سند الملكية (اختياري)',
+          // صورة سند الملكية (اختيارية)
+          const Text('صورة سند الملكية (اختيارية)',
               style: TextStyle(
                   color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
@@ -679,7 +705,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
             ),
           ),
           const SizedBox(height: 6),
-          const Text('رفع سند الملكية اختياري عند النشر؛ يمكنك إضافته لاحقاً من صفحة العرض.',
+          const Text('رفع صورة السند اختياري عند النشر (سيتم طلبها لاحقاً عند حجز أي موعد). يُفضل اصطحاب سند الملكية الأصلي عند المعاينة لتعزيز ثقة المشتري/المستأجر.',
               style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
           const SizedBox(height: 16),
 
@@ -854,7 +880,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
 
   Widget _buildLocationAutocomplete() {
     final config = context.watch<ConfigProvider>().config;
-    final locations = (config?.locations ?? [])
+    final configLocs = (config?.locations ?? [])
         .map((item) {
       if (item is String) return item;
       if (item is Map) {
@@ -864,6 +890,16 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       }
       return item.toString();
     }).where((item) => item.isNotEmpty).cast<String>().toList();
+
+    // قائمة كاملة للقرى والمناطق (من docs/locations.json) + دعم إدخال حر دائماً
+    const fallbackVillages = <String>[
+      'السويداء', 'صلخد', 'شهبا', 'القريا', 'المزرعة', 'الكفر', 'الأصلحة', 'البثينة', 'الحريسة', 'الخالدية',
+      'الدارة', 'الدور', 'الرحى', 'الرشيدة', 'الرضيمة', 'السالمية', 'السكاكة', 'السمراوية', 'السهوة',
+      'السويمرة', 'الشقراوية', 'الصورى الصغيرة', 'الصورى الكبيرة', 'الطيبة', 'العانات', 'الغارية', 'الغيضة',
+      'حي شرق السويداء', 'حي غرب السويداء', 'الحي الشمالي', 'الحي الجنوبي', 'حي المصانع', 'حي التنك', 'حي الفردوس', 'حي العمال',
+      // أضف المزيد من القرى حسب الحاجة (القائمة الكاملة في docs/locations.json)
+    ];
+    final locations = {...configLocs, ...fallbackVillages}.toList();
 
     return Autocomplete<String>(
       initialValue: TextEditingValue(text: _locCtrl.text),
