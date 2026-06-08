@@ -19,10 +19,6 @@ class DbTables {
 class DbFunctions {
   static const String generateOtp = 'generate_otp';
   static const String verifyOtp = 'verify_otp';
-  // ملاحظة: الـ v2 غير موجودة على السيرفر الحالي (من الاستعلام)
-  // الـ fallback في auth_service يستخدم الإصدارات الأساسية (generate_otp / verify_otp)
-  // static const String generateOtpV2 = 'generate_otp_v2';
-  // static const String verifyOtpV2 = 'verify_otp_v2';
   static const String upsertUserAfterOtp = 'upsert_user_after_otp';
   static const String getUserByEmail = 'get_user_by_email';
   static const String getUserByPhone = 'get_user_by_phone';

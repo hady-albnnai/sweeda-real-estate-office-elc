@@ -381,6 +381,7 @@
 | 🔐 شاشة كشف الاحتيال | كامل (Phase 9) | `fraud_suspects_screen.dart` + `/admin/fraud-suspects` |
 | 🔐 Network security config (Android) | كامل (Phase 9) | `network_security_config.xml` + `allowBackup=false` |
 | ✅ إصلاح dropdown التصنيفات الفرعية في AddOfferScreen | 2026-06-08 | `add_offer_screen.dart` - _mapFromDynamic يدعم List لـ sub + rename _selectedSubCat + cat/sub صحيحين في insert + _catLabel يستخدم main+sub index |
+| ✅ إصلاح شامل AddOffer + AddRequest (phone في step1 إلزامي + حقل حر للمنطقة + overflow fix + font unified + debug prints + ListTile warnings + free city + mandatory phone) | 2026-06-08 | `add_offer_screen.dart`, `add_request_screen.dart`, `db_constants.dart` (removed v2 refs) - SingleChildScrollView in steps, moved phone to step1 with validation, custom city support, consistent fontSize 14, debug prints in submit/provider, Material wrap for ListTile/CheckboxListTile |
 | ✅ إصلاح Streak على فتح/إغلاق التطبيق (open/close awards) | 2026-06-08 | `auth_provider.dart` + `user_home_screen.dart` + `business_service.dart` - guard مزدوج بـ userModel.strkDt + in-memory + DB + resilient quota |
 | ✅ إضافة حقل حر للتصنيف الفرعي (مدموج داخل القائمة الفرعية كخيار 'آخر') + قائمة كاملة للقرى + وصف موقع + سند إلزامي + نص عمولة + إخفاء Continue/Cancel + pledge responsibility + سعر واضح | 2026-06-08 | `add_offer_screen.dart` - 'آخر' كـ DropdownMenuItem قيمة -1 داخل sub list لكل main + conditional textfield + validation لـ -1 + customSubCtrl + locations fallback + ... |
 
