@@ -4,6 +4,7 @@ import '../../core/services/permission_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/user_model.dart';
 import '../../providers/admin_provider.dart';
+import '../../providers/auth_provider.dart';
 
 class PermissionsManagementScreen extends StatefulWidget {
   const PermissionsManagementScreen({super.key});
@@ -62,6 +63,7 @@ class _PermissionsManagementScreenState extends State<PermissionsManagementScree
     if (user == null) return;
     setState(() => _saving = true);
     final ok = await context.read<AdminProvider>().updateUserPermissions(
+          context.read<AuthProvider>().userModel?.uid ?? '',
           user.uid,
           _selectedPermissions.toList()..sort(),
         );
@@ -77,7 +79,7 @@ class _PermissionsManagementScreenState extends State<PermissionsManagementScree
     final user = _selectedUser;
     if (user == null) return;
     setState(() => _saving = true);
-    final ok = await context.read<AdminProvider>().updateUserPermissions(user.uid, const []);
+    final ok = await context.read<AdminProvider>().updateUserPermissions(context.read<AuthProvider>().userModel?.uid ?? '', user.uid, const []);
     if (!mounted) return;
     setState(() => _saving = false);
     ScaffoldMessenger.of(context).showSnackBar(

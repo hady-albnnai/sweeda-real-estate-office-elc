@@ -348,6 +348,18 @@ WITH checks AS (
     EXISTS(SELECT 1 FROM pg_proc WHERE proname='admin_update_user_permissions'),
     'internal_permissions'
   UNION ALL
+  SELECT 137, 'FN', 'admin_update_user_role',
+    EXISTS(SELECT 1 FROM pg_proc WHERE proname='admin_update_user_role'),
+    'admin_user_management'
+  UNION ALL
+  SELECT 138, 'FN', 'admin_set_user_status',
+    EXISTS(SELECT 1 FROM pg_proc WHERE proname='admin_set_user_status'),
+    'admin_user_management'
+  UNION ALL
+  SELECT 139, 'IDX', 'ux_users_normalized_phone_active',
+    EXISTS(SELECT 1 FROM pg_indexes WHERE schemaname='public' AND indexname='ux_users_normalized_phone_active'),
+    'phone_uniqueness'
+  UNION ALL
 
   -- ═══════════════════════════════════════════════════
   -- 13) RLS policies على الجداول الرئيسية

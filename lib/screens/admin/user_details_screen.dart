@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../providers/admin_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../models/user_model.dart';
 import '../../models/offer_model.dart';
 import '../../models/appointment_model.dart';
@@ -129,6 +130,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
 
   Future<void> _changeStatus(int status) async {
     final admin = context.read<AdminProvider>();
+    final adminId = context.read<AuthProvider>().userModel?.uid ?? '';
     String? reason;
     if (status != 0) {
       final ctrl = TextEditingController();
@@ -162,6 +164,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
     }
 
     final ok = await admin.setUserStatus(
+      adminId,
       widget.userId,
       status,
       reason: reason ?? '',
@@ -174,7 +177,8 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
 
   Future<void> _changeRole(int newRole) async {
     final admin = context.read<AdminProvider>();
-    final ok = await admin.updateUserRole(widget.userId, newRole);
+    final adminId = context.read<AuthProvider>().userModel?.uid ?? '';
+    final ok = await admin.updateUserRole(adminId, widget.userId, newRole);
     if (ok && mounted) {
       _snack('✅ تم تحديث الدور');
       _load();

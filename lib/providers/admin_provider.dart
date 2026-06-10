@@ -132,13 +132,16 @@ class AdminProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> updateUserRole(String uid, int newRole) async {
+  Future<bool> updateUserRole(String adminUid, String uid, int newRole) async {
     try {
-      await SupabaseService().client.from(DbTables.users).update({
-        'role': newRole,
-        'brk': newRole == 1 ? 1 : 0,
-        'ts_upd': DateTime.now().toIso8601String(),
-      }).eq('id', uid);
+      await SupabaseService().client.rpc(
+        'admin_update_user_role',
+        params: {
+          'p_admin_uid': adminUid,
+          'p_target_uid': uid,
+          'p_role': newRole,
+        },
+      );
       notifyListeners();
       return true;
     } catch (e) {return false;
@@ -146,22 +149,26 @@ class AdminProvider with ChangeNotifier {
   }
 
   /// تغيير حالة المستخدم: 0=نشط, 1=مجمّد, 2=محظور
-  Future<bool> setUserStatus(String uid, int status, {String reason = ''}) async {
+  Future<bool> setUserStatus(String adminUid, String uid, int status, {String reason = ''}) async {
     try {
-      await SupabaseService().client.from(DbTables.users).update({
-        'sts': status,
-        'ban_rsn': status == 0 ? '' : reason,
-        'ts_upd': DateTime.now().toIso8601String(),
-      }).eq('id', uid);
+      await SupabaseService().client.rpc(
+        'admin_set_user_status',
+        params: {
+          'p_admin_uid': adminUid,
+          'p_target_uid': uid,
+          'p_status': status,
+          'p_reason': reason,
+        },
+      );
       notifyListeners();
       return true;
     } catch (e) {return false;
     }
   }
 
-  Future<bool> banUser(String uid, String reason) => setUserStatus(uid, 2, reason: reason);
-  Future<bool> freezeUser(String uid, String reason) => setUserStatus(uid, 1, reason: reason);
-  Future<bool> activateUser(String uid) => setUserStatus(uid, 0);
+  Future<bool> banUser(String adminUid, String uid, String reason) => setUserStatus(adminUid, uid, 2, reason: reason);
+  Future<bool> freezeUser(String adminUid, String uid, String reason) => setUserStatus(adminUid, uid, 1, reason: reason);
+  Future<bool> activateUser(String adminUid, String uid) => setUserStatus(adminUid, uid, 0);
 
   Future<bool> softDeleteUser(String uid) async {
     try {
@@ -176,11 +183,12 @@ class AdminProvider with ChangeNotifier {
   }
 
 
-  Future<bool> updateUserPermissions(String uid, List<String> permissions) async {
+  Future<bool> updateUserPermissions(String adminUid, String uid, List<String> permissions) async {
     try {
       await SupabaseService().client.rpc(
-        'admin_update_user_permissions',
+        'admin_update_user_permissions_by_admin',
         params: {
+          'p_admin_uid': adminUid,
           'p_target_uid': uid,
           'p_perm': permissions,
         },

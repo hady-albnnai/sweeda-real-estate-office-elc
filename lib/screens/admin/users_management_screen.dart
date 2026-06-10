@@ -200,7 +200,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
         _showRoleDialog(u);
         break;
       case 'activate':
-        if (await admin.activateUser(u.uid)) {
+        if (await admin.activateUser(adminId, u.uid)) {
           _snack('تم تفعيل ${u.nm}');
           _load();
         }
@@ -208,7 +208,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
       case 'freeze':
         final reason = await _askReason('سبب التجميد');
         if (reason != null) {
-          if (await admin.freezeUser(u.uid, reason)) {
+          if (await admin.freezeUser(adminId, u.uid, reason)) {
             _snack('تم تجميد ${u.nm}');
             _load();
           }
@@ -217,7 +217,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
       case 'ban':
         final reason = await _askReason('سبب الحظر');
         if (reason != null) {
-          if (await admin.banUser(u.uid, reason)) {
+          if (await admin.banUser(adminId, u.uid, reason)) {
             _snack('تم حظر ${u.nm}');
             _load();
           }
@@ -245,7 +245,8 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
           onChanged: (val) async {
             if (val == null) return;
             Navigator.pop(ctx);
-            if (await admin.updateUserRole(u.uid, val)) {
+            final adminId = context.read<AuthProvider>().userModel?.uid ?? '';
+            if (await admin.updateUserRole(adminId, u.uid, val)) {
               _snack('تم تغيير دور ${u.nm} إلى ${roles[val]}');
               _load();
             }

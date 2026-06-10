@@ -624,3 +624,28 @@
 
 - `android/app/src/main/AndroidManifest.xml`
 - `web/manifest.json`
+
+---
+
+## 🛠️ تحديث 2026-06-10 — إصلاح تغيير أدوار الإدارة ومنع تكرار الهاتف
+
+تم إصلاح مشكلتين:
+
+1. تغيير دور المستخدم كان يعطي رسالة نجاح لكن لا يتغير فعلياً بسبب RLS/Triggers في وضع المصادقة الحالي. تمت إضافة RPC:
+   - `admin_update_user_role(p_admin_uid, p_target_uid, p_role)`
+   - `admin_set_user_status(p_admin_uid, p_target_uid, p_status, p_reason)`
+
+2. منع تسجيل أكثر من حساب لنفس رقم الهاتف بصيغ مختلفة عبر:
+   - `normalize_sy_phone(p_phone)`
+   - فهرس فريد `ux_users_normalized_phone_active`
+   - تحديث `create_user_from_phone` لاستخدام الرقم الموحّد.
+   - تحسين تطبيع رقم الهاتف في `AuthService._normalizePhone`.
+
+الملفات:
+
+- `supabase/migrations/2026_06_10_admin_user_role_and_phone_uniqueness.sql`
+- `lib/providers/admin_provider.dart`
+- `lib/screens/admin/users_management_screen.dart`
+- `lib/screens/admin/user_details_screen.dart`
+- `lib/screens/admin/reports_screen.dart`
+- `lib/services/auth_service.dart`
