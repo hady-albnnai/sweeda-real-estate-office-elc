@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/services/permission_service.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/admin_provider.dart';
 
 /// مركز عمليات المكتب — شاشة تشغيلية مركزة لموظف المكتب/الإدارة.
@@ -47,6 +49,7 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
     return Scaffold(
       backgroundColor: AppTheme.deepBlack,
       appBar: AppBar(
@@ -70,28 +73,32 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
                   _headerCard(),
                   const SizedBox(height: 16),
                   _sectionTitle('الأولويات'),
-                  _priorityTile(
+                  if (PermissionService.has(auth.userModel, PermissionKeys.reviewOffers))
+                    _priorityTile(
                     icon: Icons.fact_check_outlined,
                     title: 'عروض بانتظار المراجعة',
                     count: _counts['pendingOffers'] ?? 0,
                     route: '/admin/review-offers',
                     color: Colors.orange,
                   ),
-                  _priorityTile(
+                  if (PermissionService.has(auth.userModel, PermissionKeys.managePayments))
+                    _priorityTile(
                     icon: Icons.payments_outlined,
                     title: 'مدفوعات بانتظار الموافقة',
                     count: _counts['pendingPayments'] ?? 0,
                     route: '/admin/payments',
                     color: Colors.green,
                   ),
-                  _priorityTile(
+                  if (PermissionService.has(auth.userModel, PermissionKeys.manageReports))
+                    _priorityTile(
                     icon: Icons.flag_outlined,
                     title: 'تبليغات مفتوحة',
                     count: _counts['openReports'] ?? 0,
                     route: '/admin/reports',
                     color: AppTheme.errorRed,
                   ),
-                  _priorityTile(
+                  if (PermissionService.has(auth.userModel, PermissionKeys.reviewVerifications))
+                    _priorityTile(
                     icon: Icons.verified_user_outlined,
                     title: 'طلبات توثيق',
                     count: _counts['pendingVerifications'] ?? 0,
@@ -108,10 +115,14 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
                     mainAxisSpacing: 12,
                     childAspectRatio: 1.35,
                     children: [
-                      _shortcut(Icons.calendar_month_outlined, 'المواعيد', '/admin/appointments'),
-                      _shortcut(Icons.handshake_outlined, 'الصفقات', '/admin/deals'),
-                      _shortcut(Icons.people_outline, 'المستخدمون', '/admin/users'),
-                      _shortcut(Icons.analytics_outlined, 'التحليلات', '/admin/analytics'),
+                      if (PermissionService.has(auth.userModel, PermissionKeys.manageAppointments))
+                        _shortcut(Icons.calendar_month_outlined, 'المواعيد', '/admin/appointments'),
+                      if (PermissionService.has(auth.userModel, PermissionKeys.manageDeals))
+                        _shortcut(Icons.handshake_outlined, 'الصفقات', '/admin/deals'),
+                      if (PermissionService.has(auth.userModel, PermissionKeys.manageUsers))
+                        _shortcut(Icons.people_outline, 'المستخدمون', '/admin/users'),
+                      if (PermissionService.has(auth.userModel, PermissionKeys.viewAnalytics))
+                        _shortcut(Icons.analytics_outlined, 'التحليلات', '/admin/analytics'),
                     ],
                   ),
                   const SizedBox(height: 20),
