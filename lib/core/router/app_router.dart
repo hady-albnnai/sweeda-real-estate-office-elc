@@ -52,6 +52,7 @@ import '../../screens/admin/users_management_screen.dart';
 import '../../screens/admin/user_details_screen.dart';
 import '../../screens/admin/offers_review_screen.dart';
 import '../../screens/admin/media_review_screen.dart';
+import '../../screens/admin/photography_management_screen.dart';
 import '../../screens/admin/verifications_review_screen.dart';
 import '../../screens/admin/fraud_suspects_screen.dart';
 import '../../screens/admin/appointments_management_screen.dart';
@@ -72,6 +73,7 @@ class AppRouter {
     if (path == '/admin/review-offers') return PermissionKeys.reviewOffers;
     if (path == '/admin/review-verifications') return PermissionKeys.reviewVerifications;
     if (path == '/admin/media-review') return PermissionKeys.mediaReview;
+    if (path == '/admin/photography-management') return PermissionKeys.photographyManagement;
     if (path == '/admin/fraud-suspects') return PermissionKeys.fraudSuspects;
     if (path == '/admin/appointments') return PermissionKeys.manageAppointments;
     if (path == '/admin/deals') return PermissionKeys.manageDeals;
@@ -380,6 +382,10 @@ class AppRouter {
       GoRoute(
         path: '/admin/review-offers',
         builder: (context, state) => const OffersReviewScreen(),
+      ),
+      GoRoute(
+        path: '/admin/photography-management',
+        builder: (context, state) => const PhotographyManagementScreen(),
       ),
       GoRoute(
         path: '/admin/media-review',
