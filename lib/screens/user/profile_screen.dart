@@ -29,7 +29,7 @@ class ProfileScreen extends StatelessWidget {
           action: SnackBarAction(
             label: 'إكمال',
             textColor: Colors.white,
-            onPressed: () => context.push('/auth/setup-profile'),
+            onPressed: () => context.push('/setup-profile'),
           ),
         ),
       );
