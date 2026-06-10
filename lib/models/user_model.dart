@@ -26,6 +26,7 @@ class UserModel {
   final int strk;
   final DateTime? strkDt;
   final int iDel;
+  final List<String> perm;
   final DateTime tsCrt;
   final DateTime? tsUpd;
   /// ✓ التوثيق الرسمي: 0=غير موثق، 1=قيد المراجعة، 2=موثق بعد مراجعة الإدارة.
@@ -57,12 +58,26 @@ class UserModel {
     this.strk = 0,
     this.strkDt,
     this.iDel = 0,
+    List<String>? perm,
     required this.tsCrt,
     this.tsUpd,
     this.vrf = 0,
   })  : ntf = ntf ?? {'off': 0, 'app': 0, 'fin': 0, 'rat': 0},
+        perm = perm ?? const [],
         stats = stats ?? {'off': 0, 'req': 0, 'app': 0, 'dl': 0},
         wkLgn = wkLgn ?? [];
+
+
+  static List<String> _parsePermissions(dynamic value) {
+    if (value == null) return const [];
+    if (value is List) {
+      return value
+          .map((item) => item.toString())
+          .where((item) => item.isNotEmpty)
+          .toList();
+    }
+    return const [];
+  }
 
   factory UserModel.fromSupabase(Map<String, dynamic> data, String id) {
     return UserModel(
@@ -94,6 +109,7 @@ class UserModel {
       strk: data['strk'] ?? 0,
       strkDt: data['strk_dt'] != null ? DateTime.parse(data['strk_dt']) : null,
       iDel: data['i_del'] ?? 0,
+      perm: _parsePermissions(data['perm']),
       tsCrt: DateTime.parse(data['ts_crt']),
       tsUpd: data['ts_upd'] != null ? DateTime.parse(data['ts_upd']) : null,
       vrf: data['vrf'] ?? 0,
@@ -110,6 +126,7 @@ class UserModel {
       'ban_rsn': banRsn, 'ntf': ntf, 'stats': stats,
       'wk_lgn': wkLgn, 'strk': strk,
       'strk_dt': strkDt?.toIso8601String(), 'i_del': iDel,
+      'perm': perm,
       'ts_crt': tsCrt.toIso8601String(),
       'ts_upd': tsUpd?.toIso8601String(),
       'vrf': vrf,

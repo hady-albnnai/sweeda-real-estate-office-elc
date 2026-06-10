@@ -337,7 +337,20 @@ WITH checks AS (
   UNION ALL
 
   -- ═══════════════════════════════════════════════════
-  -- 12) RLS policies على الجداول الرئيسية
+  -- 12) Internal permissions
+  -- ═══════════════════════════════════════════════════
+  SELECT 135, 'COL', 'users.perm',
+    EXISTS(SELECT 1 FROM information_schema.columns
+           WHERE table_schema='public' AND table_name='users' AND column_name='perm'),
+    'internal_permissions'
+  UNION ALL
+  SELECT 136, 'FN', 'admin_update_user_permissions',
+    EXISTS(SELECT 1 FROM pg_proc WHERE proname='admin_update_user_permissions'),
+    'internal_permissions'
+  UNION ALL
+
+  -- ═══════════════════════════════════════════════════
+  -- 13) RLS policies على الجداول الرئيسية
   -- ═══════════════════════════════════════════════════
   SELECT 140, 'POL', 'users: Users can read own row only',
     EXISTS(SELECT 1 FROM pg_policies
@@ -356,7 +369,7 @@ WITH checks AS (
   UNION ALL
 
   -- ═══════════════════════════════════════════════════
-  -- 13) Cron jobs (يتطلب pg_cron مفعّل)
+  -- 14) Cron jobs (يتطلب pg_cron مفعّل)
   -- ═══════════════════════════════════════════════════
   SELECT 150, 'CRON', 'daily-expire-offers',
     EXISTS(SELECT 1 FROM cron.job WHERE jobname='daily-expire-offers'),

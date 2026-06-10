@@ -46,6 +46,7 @@ import '../../screens/broker/broker_stats_screen.dart';
 // === Admin ===
 import '../../screens/admin/admin_dashboard_screen.dart';
 import '../../screens/admin/office_operations_screen.dart';
+import '../../screens/admin/permissions_management_screen.dart';
 import '../../screens/admin/users_management_screen.dart';
 import '../../screens/admin/user_details_screen.dart';
 import '../../screens/admin/offers_review_screen.dart';
@@ -58,8 +59,35 @@ import '../../screens/admin/reports_screen.dart';
 import '../../screens/admin/config_editor_screen.dart';
 import '../../screens/admin/analytics_screen.dart';
 import '../../providers/auth_provider.dart';
+import '../services/permission_service.dart';
 
 class AppRouter {
+  static String? _adminRoutePermission(String path) {
+    if (path == '/admin/dashboard') return PermissionKeys.adminDashboard;
+    if (path == '/admin/office-operations') return PermissionKeys.officeOperations;
+    if (path == '/admin/permissions') return PermissionKeys.managePermissions;
+    if (path.startsWith('/admin/users') || path.startsWith('/admin/user/')) return PermissionKeys.manageUsers;
+    if (path == '/admin/review-offers') return PermissionKeys.reviewOffers;
+    if (path == '/admin/review-verifications') return PermissionKeys.reviewVerifications;
+    if (path == '/admin/fraud-suspects') return PermissionKeys.fraudSuspects;
+    if (path == '/admin/appointments') return PermissionKeys.manageAppointments;
+    if (path == '/admin/deals') return PermissionKeys.manageDeals;
+    if (path == '/admin/payments') return PermissionKeys.managePayments;
+    if (path == '/admin/reports') return PermissionKeys.manageReports;
+    if (path == '/admin/config') return PermissionKeys.manageConfig;
+    if (path == '/admin/analytics') return PermissionKeys.viewAnalytics;
+    return null;
+  }
+
+  static String? _brokerRoutePermission(String path) {
+    if (path == '/broker/dashboard') return PermissionKeys.brokerDashboard;
+    if (path == '/broker/offers') return PermissionKeys.brokerOffers;
+    if (path == '/broker/appointments') return PermissionKeys.brokerAppointments;
+    if (path == '/broker/deals') return PermissionKeys.brokerDeals;
+    if (path == '/broker/stats') return PermissionKeys.brokerStats;
+    return null;
+  }
+
   static final GoRouter router = GoRouter(
     initialLocation: '/splash',
     redirect: (context, state) {
@@ -85,12 +113,24 @@ class AppRouter {
       // إكمال الملف الشخصي مسموح للمستخدم الجديد فقط بعد تسجيل الدخول.
       if (path == '/setup-profile') return null;
 
-      if (path.startsWith('/admin') && !auth.isAdmin) {
-        return auth.isBroker ? '/broker/dashboard' : '/user/home';
+      if (path.startsWith('/admin')) {
+        if (!auth.isAdmin) {
+          return auth.isBroker ? '/broker/dashboard' : '/user/home';
+        }
+        final requiredPermission = _adminRoutePermission(path);
+        if (requiredPermission != null &&
+            !PermissionService.has(auth.userModel, requiredPermission)) {
+          return '/admin/dashboard';
+        }
       }
 
-      if (path.startsWith('/broker') && !(auth.isBroker || auth.isAdmin)) {
-        return '/user/home';
+      if (path.startsWith('/broker')) {
+        final requiredPermission = _brokerRoutePermission(path);
+        if (!(auth.isBroker || auth.isAdmin) ||
+            (requiredPermission != null &&
+                !PermissionService.has(auth.userModel, requiredPermission))) {
+          return '/user/home';
+        }
       }
 
       if (path.startsWith('/user') && auth.isAdmin) {
@@ -272,6 +312,10 @@ class AppRouter {
       GoRoute(
         path: '/admin/office-operations',
         builder: (context, state) => const OfficeOperationsScreen(),
+      ),
+      GoRoute(
+        path: '/admin/permissions',
+        builder: (context, state) => const PermissionsManagementScreen(),
       ),
       GoRoute(
         path: '/admin/users',

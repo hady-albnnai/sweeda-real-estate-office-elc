@@ -158,6 +158,22 @@ class AdminProvider with ChangeNotifier {
     }
   }
 
+
+  Future<bool> updateUserPermissions(String uid, List<String> permissions) async {
+    try {
+      await SupabaseService().client.rpc(
+        'admin_update_user_permissions',
+        params: {
+          'p_target_uid': uid,
+          'p_perm': permissions,
+        },
+      );
+      notifyListeners();
+      return true;
+    } catch (e) {return false;
+    }
+  }
+
   // ═══════════════════════════════════════
   // 3) المواعيد (إدارة)
   // ═══════════════════════════════════════
