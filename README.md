@@ -39,6 +39,7 @@ docs/CURRENT_STATUS.md
 | `docs/LOGIC_SPEC.md` | ميثاق المنطق |
 | `DEVELOPMENT_GUIDELINES.md` | قواعد التطوير الإلزامية |
 | `supabase/FUNCTIONS_REFERENCE.md` | مرجع دوال السيرفر |
+| `docs/SERVER_CHANGES_2026_06_10.md` | توثيق تغييرات السيرفر الأخيرة وخطة التراجع |
 | `supabase/CHECK_ALL_MIGRATIONS.sql` | فحص حالة السيرفر |
 | `docs/AUTH_SETUP.md` | إعداد المصادقة |
 | `docs/WHATSAPP_ACTIVATION_PLAN.md` | تفعيل واتساب الإنتاجي |
