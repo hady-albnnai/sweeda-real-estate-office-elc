@@ -237,9 +237,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
       // 2) تطبيق الإجراء على المستخدم المستهدف إن لزم
       if (ok && r.tgtUid.isNotEmpty) {
         if (selectedAction == 2) {
-          await admin.freezeUser(r.tgtUid, 'إجراء على بلاغ');
+          await admin.freezeUser(adminId, r.tgtUid, 'إجراء على بلاغ');
         } else if (selectedAction == 3) {
-          await admin.banUser(r.tgtUid, 'إجراء على بلاغ');
+          await admin.banUser(adminId, r.tgtUid, 'إجراء على بلاغ');
         }
       }
       if (ok) {

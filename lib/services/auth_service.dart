@@ -199,10 +199,14 @@ class AuthService {
   // ════════════════════════════════════════════════════════════════════════
 
   String _normalizePhone(String phone) {
-    if (phone.startsWith('+')) return phone;
-    // أرقام سوريا المحلية: 09XXXXXXXX → +9639XXXXXXXX
-    if (phone.startsWith('0')) return '+963${phone.substring(1)}';
-    return '+963$phone';
+    var value = phone.trim().replaceAll(RegExp(r'[^0-9+]'), '');
+    if (value.startsWith('+963')) return value;
+    if (value.startsWith('00963')) return '+963${value.substring(5)}';
+    if (value.startsWith('963')) return '+$value';
+    if (value.startsWith('0')) return '+963${value.substring(1)}';
+    if (value.startsWith('9')) return '+963$value';
+    if (value.startsWith('+')) return value;
+    return '+963$value';
   }
 
   Future<void> _persistSession(String userId,
