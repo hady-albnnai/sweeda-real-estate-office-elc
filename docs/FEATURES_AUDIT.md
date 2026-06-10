@@ -670,3 +670,21 @@
 - `lib/screens/user/profile_screen.dart`
 - `lib/screens/visitor/home_screen.dart`
 - `lib/screens/admin/admin_dashboard_screen.dart`
+
+---
+
+## 🛠️ تحديث 2026-06-10 — إعفاء الإدارة من حصة العروض وإصلاح إنشاء العرض
+
+تم إصلاح مشكلتين ظهرتا عند اختبار حساب المدير:
+
+1. حسابات الإدارة (`role >= 2`) لم تعد تُعامل كباقة مجانية محدودة عند إضافة عرض.
+   - تم إعفاء الإدارة من قيود `offerQuota` و `canPublishOffer`.
+2. إضافة العرض لم تعد تعتمد على INSERT مباشر قد يفشل بسبب RLS في وضع WhatsApp dev fallback.
+   - تمت إضافة RPC: `create_offer_internal(p_user_uid, p_offer)`.
+   - `OfferProvider.addOffer` يستخدم RPC الجديدة.
+
+الملفات:
+
+- `supabase/migrations/2026_06_10_offer_create_rpc_and_admin_quota.sql`
+- `lib/core/services/business_service.dart`
+- `lib/providers/offer_provider.dart`
