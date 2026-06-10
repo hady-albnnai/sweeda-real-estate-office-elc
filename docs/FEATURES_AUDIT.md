@@ -109,3 +109,14 @@ docs/NEXT_DEVELOPMENT_ITEMS.md
 `حساب إداري — إضافة العروض غير محدودة`
 
 بدلاً من إظهار حد رقمي كبير مع عبارة باقة مجانية.
+
+## 🛠️ تحديث 2026-06-10 — RPCs مهام التصوير لوضع التطوير
+
+تم تحويل إنشاء/إرسال/اعتماد مهام التصوير إلى RPCs متوافقة مع وضع المصادقة التطويري، بدل الاعتماد على INSERT/UPDATE مباشر قد يفشل بسبب RLS عندما لا تكون `auth.uid()` متاحة.
+
+الدوال:
+
+- `create_photography_task_internal`
+- `submit_photography_task_internal`
+- `update_photography_task_status_internal`
+- `attach_photography_media_to_offer_internal`

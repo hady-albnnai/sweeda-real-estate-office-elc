@@ -63,21 +63,16 @@ class PhotographyProvider with ChangeNotifier {
   }) async {
     _setLoading(true);
     try {
-      final task = PhotographyTaskModel(
-        id: '',
-        offId: offer.id,
-        photographerId: photographerId,
-        requestedBy: requestedBy,
-        ttl: offer.ttl,
-        notes: notes,
-        loc: offer.loc,
-        sts: 0,
-        tsScheduled: scheduledAt,
-        tsCrt: DateTime.now(),
+      await SupabaseService().client.rpc(
+        'create_photography_task_internal',
+        params: {
+          'p_admin_uid': requestedBy,
+          'p_offer_id': offer.id,
+          'p_photographer_id': photographerId,
+          'p_notes': notes,
+          'p_ts_scheduled': scheduledAt?.toIso8601String(),
+        },
       );
-      await SupabaseService().client
-          .from(DbTables.photographyTasks)
-          .insert(task.toMap());
       _setLoading(false);
       return true;
     } catch (e) {
@@ -87,18 +82,17 @@ class PhotographyProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> updateStatus(String taskId, int status, {String officeNote = ''}) async {
+  Future<bool> updateStatus(String adminUid, String taskId, int status, {String officeNote = ''}) async {
     try {
-      final data = <String, dynamic>{
-        'sts': status,
-        'ts_upd': DateTime.now().toIso8601String(),
-      };
-      if (officeNote.isNotEmpty) data['office_note'] = officeNote;
-      if (status == 3 || status == 4) data['ts_done'] = DateTime.now().toIso8601String();
-      await SupabaseService().client
-          .from(DbTables.photographyTasks)
-          .update(data)
-          .eq('id', taskId);
+      await SupabaseService().client.rpc(
+        'update_photography_task_status_internal',
+        params: {
+          'p_admin_uid': adminUid,
+          'p_task_id': taskId,
+          'p_status': status,
+          'p_office_note': officeNote,
+        },
+      );
       notifyListeners();
       return true;
     } catch (e) {
@@ -108,21 +102,21 @@ class PhotographyProvider with ChangeNotifier {
   }
 
   Future<bool> submitTask({
+    required String photographerUid,
     required String taskId,
     required List<String> media,
     String photographerNote = '',
   }) async {
     try {
-      await SupabaseService().client
-          .from(DbTables.photographyTasks)
-          .update({
-            'media': media,
-            'photographer_note': photographerNote,
-            'sts': 2,
-            'ts_submit': DateTime.now().toIso8601String(),
-            'ts_upd': DateTime.now().toIso8601String(),
-          })
-          .eq('id', taskId);
+      await SupabaseService().client.rpc(
+        'submit_photography_task_internal',
+        params: {
+          'p_photographer_uid': photographerUid,
+          'p_task_id': taskId,
+          'p_media': media,
+          'p_photographer_note': photographerNote,
+        },
+      );
       notifyListeners();
       return true;
     } catch (e) {
@@ -131,23 +125,16 @@ class PhotographyProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> attachMediaToOffer(PhotographyTaskModel task) async {
+  Future<bool> attachMediaToOffer(String adminUid, PhotographyTaskModel task) async {
     if (task.media.isEmpty) return false;
     try {
-      final current = await SupabaseService().client
-          .from(DbTables.offers)
-          .select('imgs')
-          .eq('id', task.offId)
-          .maybeSingle();
-      final existing = current != null && current['imgs'] != null
-          ? List<String>.from(current['imgs'] as List)
-          : <String>[];
-      final merged = <String>{...existing, ...task.media}.toList();
-      await SupabaseService().client
-          .from(DbTables.offers)
-          .update({'imgs': merged})
-          .eq('id', task.offId);
-      await updateStatus(task.id, 3, officeNote: 'تم اعتماد التصوير وربط الوسائط بالعرض');
+      await SupabaseService().client.rpc(
+        'attach_photography_media_to_offer_internal',
+        params: {
+          'p_admin_uid': adminUid,
+          'p_task_id': task.id,
+        },
+      );
       return true;
     } catch (e) {
       _error = e.toString();

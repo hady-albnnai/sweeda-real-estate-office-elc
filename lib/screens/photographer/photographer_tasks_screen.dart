@@ -244,6 +244,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen> {
                           );
                           final media = <String>{...task.media, ...urls}.toList();
                           final ok = await context.read<PhotographyProvider>().submitTask(
+                                photographerUid: userId,
                                 taskId: task.id,
                                 media: media,
                                 photographerNote: noteCtrl.text.trim(),
