@@ -2,20 +2,15 @@
 
 > هذا الملف هو المرجع الوحيد للمهام غير المنفذة حالياً.
 
-## 0. قبل الاختبار: تفعيل شاشة فحص النظام
 
 نفذ migration:
 
 ```txt
-supabase/migrations/2026_06_10_qa_system_check.sql
-supabase/migrations/2026_06_10_extend_qa_system_check.sql
-supabase/migrations/2026_06_10_qa_system_check_v3.sql
 ```
 
 ثم افتح داخل التطبيق:
 
 ```txt
-/admin/qa
 ```
 
 وشغّل الفحص.
@@ -36,7 +31,6 @@ flutter run
 ثم الاختبار حسب:
 
 ```txt
-docs/INTERNAL_MANAGEMENT_TEST_CHECKLIST.md
 ```
 
 ## 2. تفعيل WhatsApp OTP الإنتاجي

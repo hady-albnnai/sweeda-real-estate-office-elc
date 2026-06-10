@@ -32,9 +32,6 @@ docs/CURRENT_STATUS.md
 |---|---|
 | `docs/CURRENT_STATUS.md` | الوضع الحالي المختصر |
 | `docs/NEXT_DEVELOPMENT_ITEMS.md` | المتبقي فقط |
-| `docs/INTERNAL_MANAGEMENT_TEST_CHECKLIST.md` | اختبارات الإدارة والصلاحيات والمصور |
-| `docs/QA_LOGIC_AUDIT.md` | آخر فحص منطقي وبرمجي قبل الاختبار |
-| `docs/QA_SYSTEM_SCREEN.md` | شاشة فحص النظام من داخل التطبيق |
 | `docs/SPEC.md` | المواصفات التقنية |
 | `docs/LOGIC_SPEC.md` | ميثاق المنطق |
 | `DEVELOPMENT_GUIDELINES.md` | قواعد التطوير الإلزامية |

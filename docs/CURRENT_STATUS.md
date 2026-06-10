@@ -59,7 +59,6 @@ users.perm JSONB DEFAULT '[]'
 | إدارة الصلاحيات | `/admin/permissions` | `manage_permissions` |
 | إدارة الوسائط | `/admin/media-review` | `media_review` |
 | إدارة مهام التصوير | `/admin/photography-management` | `photography_management` |
-| فحص النظام | `/admin/qa` | role >= 2 |
 | مهام المصور | `/photographer/tasks` | `photographer_tasks` |
 
 ## الإدارة الداخلية
@@ -111,7 +110,6 @@ users.perm JSONB DEFAULT '[]'
 | `README.md` | نقطة الدخول للمشروع |
 | `docs/CURRENT_STATUS.md` | الوضع الحالي المختصر |
 | `docs/NEXT_DEVELOPMENT_ITEMS.md` | المتبقي فقط |
-| `docs/INTERNAL_MANAGEMENT_TEST_CHECKLIST.md` | اختبار الإدارة والصلاحيات والمصور |
 | `docs/SPEC.md` | مواصفات النظام والبيانات |
 | `docs/LOGIC_SPEC.md` | ميثاق المنطق الأعلى |
 | `DEVELOPMENT_GUIDELINES.md` | قواعد التطوير الإلزامية |
@@ -140,4 +138,13 @@ users.perm JSONB DEFAULT '[]'
 ```txt
 docs/SERVER_CHANGES_2026_06_10.md
 supabase/ROLLBACK_2026_06_10_INTERNAL_MANAGEMENT.sql
+```
+
+## تنظيف اختبارات QA
+
+تم حذف شاشة فحص النظام وملفات الاختبار الآلي من التطبيق والمستودع للحصول على نسخة إنتاجية أنظف.
+لحذف دالة الفحص من السيرفر نفّذ:
+
+```txt
+supabase/migrations/2026_06_10_remove_qa_system_check.sql
 ```
