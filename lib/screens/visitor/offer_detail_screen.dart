@@ -337,38 +337,39 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                       ]),
 
                   // 🏢 هوية المكتب — تسمية مهنية بدل اسم المالك (LOGIC_SPEC §1)
-                  if (_owner != null) ...[
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primaryGold.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                            color:
-                                AppTheme.primaryGold.withValues(alpha: 0.3)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.business_center,
-                              color: AppTheme.primaryGold, size: 16),
-                          const SizedBox(width: 6),
-                          Flexible(
-                            child: Text(
-                              BusinessService()
-                                  .getUserPublicLabel(_owner!),
-                              style: const TextStyle(
-                                  color: AppTheme.primaryGold,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600),
-                            ),
-                          ),
-                        ],
-                      ),
+                  // تظهر دائماً: إذا لم يُجلب المالك تظهر "منشور بواسطة المكتب" كـ fallback
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryGold.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                          color: AppTheme.primaryGold.withValues(alpha: 0.3)),
                     ),
-                  ],
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.business_center,
+                            color: AppTheme.primaryGold, size: 16),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            _owner != null
+                                ? BusinessService().getUserPublicLabel(_owner!)
+                                : (_offer?.ownerLabel?.isNotEmpty == true
+                                    ? _offer!.ownerLabel!
+                                    : 'منشور بواسطة المكتب العقاري الالكتروني'),
+                            style: const TextStyle(
+                                color: AppTheme.primaryGold,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
 
                   // ⭐ متوسط تقييم المالك (إن وُجد)
                   if (_ownerAvgRating != null) ...[

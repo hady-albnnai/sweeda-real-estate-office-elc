@@ -34,9 +34,10 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   String? _selectedCityArea; // تُقرأ من config.locations مع دعم إدخال حر
   int _cur = Currency.lbp;
   final _priceCtrl = TextEditingController();
-  final _locCtrl = TextEditingController();
-  final _descCtrl = TextEditingController();
-  final _specCtrl = TextEditingController();
+  final _locCtrl = TextEditingController();   // الوصف الدقيق للموقع (step1)
+  final _descCtrl = TextEditingController();  // الوصف التفصيلي للعرض (step2)
+  final _specCtrl = TextEditingController();  // المواصفات (step2)
+  final _ttlCtrl  = TextEditingController();  // عنوان حر اختياري (step1)
   final _customSubCtrl = TextEditingController(); // للتصنيف الفرعي الحر (غير موجود في القائمة)
   final _contactPhoneCtrl = TextEditingController(); // رقم التواصل مع العارض (إلزامي في الأساسيات)
   final _customCityCtrl = TextEditingController(); // حقل حر للمنطقة الرئيسية (آخر)
@@ -66,6 +67,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     _locCtrl.dispose();
     _descCtrl.dispose();
     _specCtrl.dispose();
+    _ttlCtrl.dispose();
     _customSubCtrl.dispose();
     _contactPhoneCtrl.dispose();
     _customCityCtrl.dispose();
@@ -105,13 +107,21 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
 
   void _showPledgeDialog() {
     final config = context.read<ConfigProvider>().config;
-    final pledgeText = config?.texts['plg'] ??
-        'إقرار وتعهد إلكتروني — عقارات السويداء\n\n'
-            '• أُقرّ بأن البيانات والصور المُرفقة بهذا العرض صحيحة وحقيقية.\n'
-            '• أتعهّد بأنني المالك الفعلي للعقار/السيارة أو وكيل قانوني عنه.\n'
-            '• أُقرّ بأن سند الملكية المرفق صحيح وغير مزوّر.\n'
-            '• أتعهّد بإزالة العرض فور بيعه أو إلغائه.\n'
-            '• أُقرّ بأن أي بيانات كاذبة قد تؤدي لحظر حسابي وخصم نقاطي.\n• أُقرّ بأن جميع المعلومات المقدمة في هذا العرض تقع على مسؤوليتي الكاملة.';
+    // النص الافتراضي باسم المكتب العقاري الالكتروني (يُستبدل بالنص من config إذا وُجد)
+    const _defaultPledge =
+        'إقرار وتعهد إلكتروني — المكتب العقاري الالكتروني\n\n'
+        'أقر أنا الموقع أدناه بموجب هذا الإقرار والتعهد بما يلي:\n'
+        '1. أن جميع البيانات والصور والمعلومات المقدمة في هذا العرض صحيحة ودقيقة وغير مضللة.\n'
+        '2. أنني المالك الشرعي للعقار/السيارة أو وكيل مفوض قانوناً عن المالك.\n'
+        '3. أن أي سند ملكية مرفق (إن وجد) صحيح وصادر عن الجهة المختصة وغير مزوّر.\n'
+        '4. أتعهد بإزالة هذا العرض فور بيع العقار/السيارة أو إلغاء الصفقة.\n'
+        '5. أن تقديم أي بيانات كاذبة أو مضللة يعرضني للمسؤولية القانونية الكاملة،\n'
+        '   بما في ذلك حظر الحساب وخصم النقاط.\n'
+        '6. أن جميع المعلومات المقدمة تقع تحت مسؤوليتي الكاملة والحصرية.';
+
+    final rawText = config?.texts['plg']?.toString() ?? '';
+    final pledgeText = rawText.length > 50 ? rawText : _defaultPledge;
+
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -123,8 +133,10 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
               style: TextStyle(color: AppTheme.textWhite)),
         ]),
         content: SingleChildScrollView(
-          child: Text(pledgeText.isNotEmpty && pledgeText.length > 50 ? pledgeText : 'إقرار وتعهد إلكتروني — عقارات السويداء\n\nأقر أنا الموقع أدناه بموجب هذا الإقرار والتعهد بما يلي:\n1. أن جميع البيانات والصور والمعلومات المقدمة في هذا العرض صحيحة ودقيقة وغير مضللة.\n2. أنني المالك الشرعي للعقار/السيارة أو وكيل مفوض قانوناً عن المالك.\n3. أن أي سند ملكية مرفق (إن وجد) صحيح وصادر عن الجهة المختصة وغير مزوّر.\n4. أتعهد بإزالة هذا العرض فور بيع العقار/السيارة أو إلغاء الصفقة.\n5. أن تقديم أي بيانات كاذبة أو مضللة يعرضني للمسؤولية القانونية الكاملة، بما في ذلك حظر الحساب وخصم النقاط.\n6. أن جميع المعلومات المقدمة تقع تحت مسؤوليتي الكاملة والحصرية.',
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 14)),
+          child: Text(
+            pledgeText,
+            style: const TextStyle(color: AppTheme.textGrey, fontSize: 14, height: 1.6),
+          ),
         ),
         actions: [
           TextButton(
@@ -257,10 +269,16 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         ? customSub
         : (_selectedSubCat != null ? _catLabel() : 'عرض');
 
+    // العنوان: يُستخدم ما كتبه المستخدم إن وُجد، وإلا يُبنى آلياً
+    final autoTitle = '$catForTitle في $cityName';
+    final finalTitle = _ttlCtrl.text.trim().isNotEmpty
+        ? _ttlCtrl.text.trim()
+        : autoTitle;
+
     final offer = OfferModel(
       id: '',
       usrId: user.uid,
-      ttl: '$catForTitle في ${_locCtrl.text}',
+      ttl: finalTitle,
       typ: _selectedType!,
       trx: _selectedTrans!,
       cat: _selectedMainCat!,
@@ -269,7 +287,11 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       prc: price,
       cur: _cur,
       loc: loc,
-      descript: _locCtrl.text,  // الوصف الدقيق للموقع (الإلزامي)
+      // الوصف التفصيلي: ما كتبه المستخدم في حقل الوصف (step2)
+      // يختلف عن الوصف الدقيق للموقع (_locCtrl) الذي يُحفظ في loc['d']
+      descript: _descCtrl.text.trim().isNotEmpty
+          ? _descCtrl.text.trim()
+          : _locCtrl.text.trim(),
       specs: {
         'details': _specCtrl.text,
         if (customSub.isNotEmpty) 'custom_sub': customSub,
@@ -582,6 +604,9 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
                 ),
               ),
             ),
+          const SizedBox(height: 20),
+          // الوصف الدقيق للموقع (إلزامي) — يُحفظ في loc['d'] وليس في descript
+          _buildLocationAutocomplete(),
           const SizedBox(height: 8),
           if (_selectedTrans != null)
             Container(
@@ -610,14 +635,31 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
                 color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
         content: SingleChildScrollView(
           child: Column(children: [
+            // عنوان حر (اختياري — يُكمّل العنوان الآلي إذا تُرك فارغاً)
+            TextField(
+              controller: _ttlCtrl,
+              maxLength: 80,
+              decoration: InputDecoration(
+                labelText: 'عنوان مخصص (اختياري)',
+                hintText: _selectedSubCat != null
+                    ? 'مثال: ${_catLabel()} فاخرة مع حديقة — إذا تُرك فارغاً يُبنى تلقائياً'
+                    : 'مثال: شقة فاخرة مع حديقة — إذا تُرك فارغاً يُبنى تلقائياً',
+                helperText: 'العنوان الآلي: ${_catLabel()} في ${_locCtrl.text.isNotEmpty ? _locCtrl.text : "الموقع"}',
+                helperStyle: const TextStyle(color: AppTheme.primaryGold, fontSize: 11),
+                border: const OutlineInputBorder(),
+                counterStyle: const TextStyle(color: AppTheme.textGrey),
+              ),
+            ),
+            const SizedBox(height: 15),
             Row(children: [
               Expanded(
                 flex: 3,
                 child: TextField(
                   controller: _priceCtrl,
                   keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: 'السعر المتوقع',
+                  decoration: const InputDecoration(
+                    labelText: 'السعر المتوقع (إلزامي)',
+                    border: OutlineInputBorder(),
                   ),
                 ),
               ),
@@ -638,13 +680,25 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
               ),
             ]),
             const SizedBox(height: 15),
-            _buildLocationAutocomplete(),
-
+            // الوصف التفصيلي للعرض (يختلف عن وصف الموقع الذي أُدخل في step1)
+            TextField(
+              controller: _descCtrl,
+              maxLines: 4,
+              decoration: const InputDecoration(
+                labelText: 'وصف تفصيلي للعرض (اختياري)',
+                hintText: 'اذكر مميزات العرض، حالته، الطابق، المساحة، أي تفاصيل مهمة...',
+                border: OutlineInputBorder(),
+              ),
+            ),
             const SizedBox(height: 15),
             TextField(
                 controller: _specCtrl,
                 maxLines: 3,
-                decoration: const InputDecoration(labelText: 'المواصفات')),
+                decoration: const InputDecoration(
+                  labelText: 'المواصفات التقنية (اختيارية)',
+                  hintText: 'مثال: 3 غرف، 2 حمام، مساحة 150م²',
+                  border: OutlineInputBorder(),
+                )),
             const SizedBox(height: 20),
             // الموقع الدقيق على الخريطة
             const Row(children: [
@@ -763,15 +817,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   Step _step4() {
     final config = context.watch<ConfigProvider>().config;
     final docTypes = config?.documentTypes ?? {};
-    final pledgeText = (config?.texts['plg']?.toString().isNotEmpty == true)
-        ? config!.texts['plg'].toString()
-        : 'إقرار وتعهد إلكتروني — عقارات السويداء\n\n'
-            '• أُقرّ بأن البيانات والصور المُرفقة بهذا العرض صحيحة وحقيقية.\n'
-            '• أتعهّد بأنني المالك الفعلي للعقار/السيارة أو وكيل قانوني عنه.\n'
-            '• أُقرّ بأن سند الملكية المرفق صحيح وغير مزوّر.\n'
-            '• أتعهّد بإزالة العرض فور بيعه أو إلغائه.\n'
-            '• أُقرّ بأن أي بيانات كاذبة قد تؤدي لحظر حسابي وخصم نقاطي.\n'
-            '• أُقرّ بأن جميع المعلومات المقدمة في هذا العرض تقع على مسؤوليتي الكاملة.';
+    // pledgeText غير مستخدم هنا — النص يُعرض في _showPledgeDialog فقط
     return Step(
       title: const Text('السند والإقرار',
           style: TextStyle(
