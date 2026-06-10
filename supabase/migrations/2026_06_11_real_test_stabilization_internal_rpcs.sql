@@ -5,6 +5,14 @@
 --   Replace remaining fragile direct client writes/reads in core flows with
 --   SECURITY DEFINER RPCs compatible with the current auth model.
 -- ════════════════════════════════════════════════════════════════════════════
+--
+-- FIXES vs original draft (verified against live schema 2026-06-11):
+--   1. offers has NO ts_upd column → removed from all offer UPDATEs
+--   2. offers.brk_id is UUID → NULLIF(brk_id,'') is invalid; use brk_id directly
+--   3. activity_log columns: act(INT) not action(TEXT), det(TEXT) not details
+--      → broker_request mapped to act=10, det = text summary
+--   4. payments has NO ts_upd column → removed from payment UPDATE
+-- ════════════════════════════════════════════════════════════════════════════
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- 1) Appointments read policy aligned with requester field
@@ -19,7 +27,7 @@ CREATE POLICY "Related users can read appointments" ON appointments
   );
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 2) Generic role helpers via inline checks inside RPCs
+-- 2) READ RPCs (SECURITY DEFINER — bypass RLS safely)
 -- ─────────────────────────────────────────────────────────────────────────────
 
 CREATE OR REPLACE FUNCTION get_offer_by_id_internal(
@@ -298,8 +306,10 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 3) Core write RPCs for stable real testing
+-- 3) WRITE RPCs
 -- ─────────────────────────────────────────────────────────────────────────────
+
+-- FIX #1: offers has no ts_upd → removed from SET clause
 CREATE OR REPLACE FUNCTION admin_review_offer_internal(
   p_admin_uid UUID,
   p_offer_id UUID,
@@ -326,12 +336,12 @@ BEGIN
     RAISE EXCEPTION 'OFFER_NOT_FOUND';
   END IF;
 
+  -- FIX: offers has no ts_upd column
   UPDATE offers
-  SET sts = CASE WHEN p_approve THEN 2 ELSE 3 END,
-      i_pub = CASE WHEN p_approve THEN 1 ELSE 0 END,
-      rsn = CASE WHEN p_approve THEN '' ELSE COALESCE(p_reason, '') END,
-      ts_pub = CASE WHEN p_approve THEN v_now ELSE NULL END,
-      ts_upd = v_now
+  SET sts    = CASE WHEN p_approve THEN 2 ELSE 3 END,
+      i_pub  = CASE WHEN p_approve THEN 1 ELSE 0 END,
+      rsn    = CASE WHEN p_approve THEN '' ELSE COALESCE(p_reason, '') END,
+      ts_pub = CASE WHEN p_approve THEN v_now ELSE NULL END
   WHERE id = p_offer_id;
 
   IF NOT p_approve THEN
@@ -339,7 +349,7 @@ BEGIN
     FROM offers
     WHERE usr_id = v_owner_uid
       AND sts = 3
-      AND ts_upd >= NOW() - INTERVAL '30 days';
+      AND ts_crt >= NOW() - INTERVAL '30 days';
     IF v_rejected_count > 0 AND MOD(v_rejected_count, 3) = 0 THEN
       PERFORM add_points(v_owner_uid, -1000);
     END IF;
@@ -422,18 +432,19 @@ BEGIN
     RAISE EXCEPTION 'AUTH_UID_MISMATCH';
   END IF;
 
+  -- requests has no ts_upd column, not needed
   UPDATE requests
-  SET typ = COALESCE((p_patch->>'typ')::INT, typ),
-      elm = COALESCE((p_patch->>'elm')::INT, elm),
+  SET typ   = COALESCE((p_patch->>'typ')::INT, typ),
+      elm   = COALESCE((p_patch->>'elm')::INT, elm),
       cl_nm = COALESCE(NULLIF(p_patch->>'cl_nm', ''), cl_nm),
       cl_ph = COALESCE(NULLIF(p_patch->>'cl_ph', ''), cl_ph),
-      prc = COALESCE((p_patch->>'prc')::NUMERIC, prc),
-      cur = COALESCE((p_patch->>'cur')::INT, cur),
+      prc   = COALESCE((p_patch->>'prc')::NUMERIC, prc),
+      cur   = COALESCE((p_patch->>'cur')::INT, cur),
       notes = COALESCE(p_patch->>'notes', notes),
       specs = COALESCE(p_patch->'specs', specs)
-  WHERE id = p_request_id
+  WHERE id     = p_request_id
     AND usr_id = p_user_uid
-    AND i_del = 0;
+    AND i_del  = 0;
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'REQUEST_NOT_FOUND_OR_NOT_ALLOWED';
@@ -454,9 +465,9 @@ BEGIN
 
   UPDATE requests
   SET i_del = 1
-  WHERE id = p_request_id
+  WHERE id     = p_request_id
     AND usr_id = p_user_uid
-    AND i_del = 0;
+    AND i_del  = 0;
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'REQUEST_NOT_FOUND_OR_NOT_ALLOWED';
@@ -465,6 +476,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- FIX #4: payments has no ts_upd → removed from SET clause
 CREATE OR REPLACE FUNCTION create_payment_internal(
   p_user_uid UUID,
   p_payment JSONB
@@ -506,6 +518,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- FIX #4: payments has no ts_upd → removed from SET clause
 CREATE OR REPLACE FUNCTION admin_reject_payment_internal(
   p_admin_uid UUID,
   p_payment_id UUID
@@ -522,11 +535,11 @@ BEGIN
     RAISE EXCEPTION 'FORBIDDEN';
   END IF;
 
+  -- FIX: payments has no ts_upd column
   UPDATE payments
-  SET sts = 2,
-      appr_by = p_admin_uid,
-      ts_upd = NOW()
-  WHERE id = p_payment_id
+  SET sts     = 2,
+      appr_by = p_admin_uid
+  WHERE id  = p_payment_id
     AND sts = 0;
 
   IF NOT FOUND THEN
@@ -586,11 +599,11 @@ BEGIN
   END IF;
 
   UPDATE reports
-  SET sts = 1,
-      act = COALESCE(p_action, 0),
+  SET sts     = 1,
+      act     = COALESCE(p_action, 0),
       act_dur = COALESCE(p_duration, 0),
-      note = COALESCE(p_note, ''),
-      act_by = p_admin_uid
+      note    = COALESCE(p_note, ''),
+      act_by  = p_admin_uid
   WHERE id = p_report_id;
 
   IF NOT FOUND THEN
@@ -600,6 +613,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- FIX #2: offers.brk_id is UUID → NULLIF(brk_id,'') is invalid type; use brk_id directly
 CREATE OR REPLACE FUNCTION book_appointment_internal(
   p_user_uid UUID,
   p_offer_id UUID,
@@ -627,9 +641,9 @@ BEGIN
   END IF;
   IF EXISTS (
     SELECT 1 FROM appointments
-    WHERE off_id = p_offer_id
+    WHERE off_id  = p_offer_id
       AND req_uid = p_user_uid
-      AND dt = p_dt
+      AND dt      = p_dt
       AND sts IN (0, 1)
   ) THEN
     RAISE EXCEPTION 'DUPLICATE_APPOINTMENT';
@@ -644,7 +658,8 @@ BEGIN
     p_request_id,
     p_user_uid,
     v_offer.usr_id,
-    COALESCE(p_broker_id, NULLIF(v_offer.brk_id, '')),
+    -- FIX: brk_id is UUID, use COALESCE directly without NULLIF text trick
+    COALESCE(p_broker_id, v_offer.brk_id),
     p_dt,
     0,
     0,
@@ -671,11 +686,11 @@ BEGIN
   END IF;
 
   UPDATE appointments
-  SET sts = 3,
-      cnl_by = p_requester_uid,
+  SET sts     = 3,
+      cnl_by  = p_requester_uid,
       cnl_rsn = COALESCE(p_reason, ''),
-      dt_end = NOW()
-  WHERE id = p_appointment_id
+      dt_end  = NOW()
+  WHERE id      = p_appointment_id
     AND req_uid = p_requester_uid
     AND sts IN (0, 1);
 
@@ -713,20 +728,20 @@ BEGIN
 
   IF p_action = 'confirm' THEN
     UPDATE appointments
-    SET sts = 1,
-        fbk_own = 1,
+    SET sts        = 1,
+        fbk_own    = 1,
         fbk_own_dt = v_now
     WHERE id = p_appointment_id;
   ELSIF p_action = 'reject' THEN
     UPDATE appointments
-    SET sts = 4,
-        fbk_own = 2,
+    SET sts        = 4,
+        fbk_own    = 2,
         fbk_own_dt = v_now,
-        dt_end = v_now
+        dt_end     = v_now
     WHERE id = p_appointment_id;
   ELSIF p_action = 'complete' THEN
     UPDATE appointments
-    SET sts = 2,
+    SET sts    = 2,
         dt_end = v_now
     WHERE id = p_appointment_id;
   ELSE
@@ -760,9 +775,9 @@ BEGIN
   SELECT req_uid INTO v_requester_uid FROM appointments WHERE id = p_appointment_id;
 
   UPDATE appointments
-  SET sts = p_status,
+  SET sts      = p_status,
       admin_nt = CASE WHEN COALESCE(trim(p_admin_note), '') = '' THEN admin_nt ELSE p_admin_note END,
-      dt_end = CASE WHEN p_status >= 2 THEN NOW() ELSE dt_end END
+      dt_end   = CASE WHEN p_status >= 2 THEN NOW() ELSE dt_end END
   WHERE id = p_appointment_id;
 
   IF NOT FOUND THEN
@@ -775,7 +790,7 @@ BEGIN
     SELECT COUNT(*) INTO v_cancel_count
     FROM appointments
     WHERE req_uid = v_requester_uid
-      AND sts = 3
+      AND sts     = 3
       AND ts_crt >= NOW() - INTERVAL '30 days';
     IF v_cancel_count > 0 AND MOD(v_cancel_count, 3) = 0 THEN
       PERFORM add_points(v_requester_uid, -300);
@@ -803,9 +818,9 @@ BEGIN
   END IF;
 
   UPDATE appointments
-  SET i_force = 1,
+  SET i_force  = 1,
       force_by = p_admin_uid,
-      sts = 1
+      sts      = 1
   WHERE id = p_appointment_id;
 
   IF NOT FOUND THEN
@@ -836,11 +851,11 @@ BEGIN
     off_id, app_id, sell_uid, buy_uid, brk_uid, fin_prc, cur,
     com_pct, com_val, com_note, form, sts, cmpl_by, i_del, ts_crt, ts_cmpl
   ) VALUES (
-    NULLIF(p_deal->>'off_id', '')::UUID,
-    NULLIF(p_deal->>'app_id', '')::UUID,
+    NULLIF(p_deal->>'off_id',   '')::UUID,
+    NULLIF(p_deal->>'app_id',   '')::UUID,
     NULLIF(p_deal->>'sell_uid', '')::UUID,
-    NULLIF(p_deal->>'buy_uid', '')::UUID,
-    NULLIF(p_deal->>'brk_uid', '')::UUID,
+    NULLIF(p_deal->>'buy_uid',  '')::UUID,
+    NULLIF(p_deal->>'brk_uid',  '')::UUID,
     COALESCE((p_deal->>'fin_prc')::NUMERIC, 0),
     COALESCE((p_deal->>'cur')::INT, 1),
     COALESCE((p_deal->>'com_pct')::NUMERIC, 0),
@@ -875,12 +890,12 @@ BEGIN
   END IF;
 
   UPDATE deals
-  SET sts = 1,
-      cmpl_by = p_admin_uid,
-      ts_cmpl = NOW(),
-      com_val = COALESCE(p_commission, com_val),
+  SET sts      = 1,
+      cmpl_by  = p_admin_uid,
+      ts_cmpl  = NOW(),
+      com_val  = COALESCE(p_commission, com_val),
       com_note = COALESCE(p_note, com_note)
-  WHERE id = p_deal_id
+  WHERE id    = p_deal_id
     AND i_del = 0;
 
   IF NOT FOUND THEN
@@ -902,7 +917,7 @@ BEGIN
 
   UPDATE notifications
   SET i_rd = 1
-  WHERE id = p_notification_id
+  WHERE id  = p_notification_id
     AND uid = p_user_uid;
 
   IF NOT FOUND THEN
@@ -921,7 +936,8 @@ BEGIN
 
   UPDATE notifications
   SET i_rd = 1
-  WHERE uid = p_user_uid AND i_rd = 0;
+  WHERE uid  = p_user_uid
+    AND i_rd = 0;
   RETURN TRUE;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -963,7 +979,7 @@ BEGIN
 
   SELECT COALESCE(strk, 0), strk_dt INTO v_current_streak, v_last_ts
   FROM users
-  WHERE id = p_user_uid
+  WHERE id    = p_user_uid
     AND i_del = 0;
 
   IF NOT FOUND THEN
@@ -982,9 +998,9 @@ BEGIN
   v_new_streak := CASE WHEN v_last_day IS NULL THEN 1 ELSE v_current_streak + 1 END;
 
   UPDATE users
-  SET strk = v_new_streak,
+  SET strk    = v_new_streak,
       strk_dt = v_now,
-      ts_upd = v_now
+      ts_upd  = v_now
   WHERE id = p_user_uid;
 
   PERFORM add_points(p_user_uid, p_points);
@@ -1004,12 +1020,12 @@ BEGIN
   END IF;
 
   UPDATE users
-  SET nm = COALESCE(p_payload->>'nm', nm),
-      sid = COALESCE(p_payload->>'sid', sid),
-      ad = COALESCE(p_payload->>'ad', ad),
-      img = COALESCE(p_payload->>'img', img),
+  SET nm     = COALESCE(p_payload->>'nm',  nm),
+      sid    = COALESCE(p_payload->>'sid', sid),
+      ad     = COALESCE(p_payload->>'ad',  ad),
+      img    = COALESCE(p_payload->>'img', img),
       ts_upd = NOW()
-  WHERE id = p_user_uid
+  WHERE id    = p_user_uid
     AND i_del = 0;
 
   IF NOT FOUND THEN
@@ -1034,9 +1050,9 @@ BEGIN
   END IF;
 
   UPDATE users
-  SET ntf = p_ntf,
+  SET ntf    = p_ntf,
       ts_upd = NOW()
-  WHERE id = p_user_uid
+  WHERE id    = p_user_uid
     AND i_del = 0;
 
   IF NOT FOUND THEN
@@ -1046,6 +1062,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- FIX #3: activity_log uses act(INT) and det(TEXT), not action(TEXT) and details(JSONB)
+--         broker_request mapped to act = 10 (reserved code for broker requests)
 CREATE OR REPLACE FUNCTION submit_broker_request_internal(
   p_user_uid UUID,
   p_business_name TEXT,
@@ -1062,25 +1080,25 @@ BEGIN
   UPDATE users
   SET brk_nm = COALESCE(p_business_name, ''),
       brk_cls = COALESCE(p_category, 0),
-      vrf = CASE WHEN vrf = 0 THEN 1 ELSE vrf END,
-      ts_upd = NOW()
-  WHERE id = p_user_uid
+      vrf     = CASE WHEN vrf = 0 THEN 1 ELSE vrf END,
+      ts_upd  = NOW()
+  WHERE id    = p_user_uid
     AND i_del = 0;
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'USER_NOT_FOUND';
   END IF;
 
-  INSERT INTO activity_log (uid, action, details, ts_crt)
+  -- FIX: activity_log schema → act INT, det TEXT (not action TEXT / details JSONB)
+  -- act = 10 reserved for broker_request events
+  INSERT INTO activity_log (uid, act, det, ts_crt)
   VALUES (
     p_user_uid,
-    'broker_request',
-    jsonb_build_object(
-      'business_name', COALESCE(p_business_name, ''),
-      'category', COALESCE(p_category, 0),
-      'experience', COALESCE(p_experience, ''),
-      'about', COALESCE(p_about, '')
-    ),
+    10,
+    'broker_request: ' || COALESCE(p_business_name, '') ||
+      ' cat=' || COALESCE(p_category::TEXT, '0') ||
+      CASE WHEN COALESCE(trim(p_experience), '') <> ''
+           THEN ' exp=' || p_experience ELSE '' END,
     NOW()
   );
 
@@ -1088,6 +1106,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- FIX #1: offers has no ts_upd column → removed from SET clause
 CREATE OR REPLACE FUNCTION mark_social_published_internal(
   p_user_uid UUID,
   p_offer_id UUID,
@@ -1099,13 +1118,13 @@ BEGIN
     RAISE EXCEPTION 'AUTH_UID_MISMATCH';
   END IF;
 
+  -- FIX: offers has no ts_upd column
   UPDATE offers
   SET soc_pub = 1,
-      soc_txt = COALESCE(p_text, ''),
-      ts_upd = NOW()
-  WHERE id = p_offer_id
+      soc_txt = COALESCE(p_text, '')
+  WHERE id     = p_offer_id
     AND usr_id = p_user_uid
-    AND i_del = 0;
+    AND i_del  = 0;
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'OFFER_NOT_FOUND_OR_NOT_ALLOWED';
@@ -1119,50 +1138,53 @@ RETURNS BOOLEAN AS $$
 BEGIN
   UPDATE offers
   SET vws = COALESCE(vws, 0) + 1
-  WHERE id = p_offer_id
+  WHERE id    = p_offer_id
     AND i_del = 0
     AND i_pub = 1;
   RETURN TRUE;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-GRANT EXECUTE ON FUNCTION get_offer_by_id_internal(UUID, UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION get_user_offers_internal(UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION get_user_requests_internal(UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION get_user_payments_internal(UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION get_user_notifications_internal(UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION get_user_appointments_internal(UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION get_owner_appointments_internal(UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION get_broker_offers_internal(UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION get_broker_appointments_internal(UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION get_broker_deals_internal(UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION get_admin_pending_offers_internal(UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION get_admin_offers_internal(UUID, INT) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION get_admin_appointments_internal(UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION get_admin_deals_internal(UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION get_admin_payments_internal(UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION get_admin_reports_internal(UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION admin_review_offer_internal(UUID, UUID, BOOLEAN, TEXT) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION create_request_internal(UUID, JSONB) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION update_request_internal(UUID, UUID, JSONB) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION soft_delete_request_internal(UUID, UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION create_payment_internal(UUID, JSONB) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION admin_reject_payment_internal(UUID, UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION create_report_internal(UUID, JSONB) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION admin_handle_report_internal(UUID, UUID, INT, TEXT, INT) TO anon, authenticated;
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 4) GRANTS
+-- ─────────────────────────────────────────────────────────────────────────────
+GRANT EXECUTE ON FUNCTION get_offer_by_id_internal(UUID, UUID)                          TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION get_user_offers_internal(UUID)                                 TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION get_user_requests_internal(UUID)                               TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION get_user_payments_internal(UUID)                               TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION get_user_notifications_internal(UUID)                          TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION get_user_appointments_internal(UUID)                           TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION get_owner_appointments_internal(UUID)                          TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION get_broker_offers_internal(UUID)                               TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION get_broker_appointments_internal(UUID)                         TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION get_broker_deals_internal(UUID)                                TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION get_admin_pending_offers_internal(UUID)                        TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION get_admin_offers_internal(UUID, INT)                           TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION get_admin_appointments_internal(UUID)                          TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION get_admin_deals_internal(UUID)                                 TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION get_admin_payments_internal(UUID)                              TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION get_admin_reports_internal(UUID)                               TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION admin_review_offer_internal(UUID, UUID, BOOLEAN, TEXT)         TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION create_request_internal(UUID, JSONB)                           TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION update_request_internal(UUID, UUID, JSONB)                     TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION soft_delete_request_internal(UUID, UUID)                       TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION create_payment_internal(UUID, JSONB)                           TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION admin_reject_payment_internal(UUID, UUID)                      TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION create_report_internal(UUID, JSONB)                            TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION admin_handle_report_internal(UUID, UUID, INT, TEXT, INT)       TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION book_appointment_internal(UUID, UUID, TIMESTAMPTZ, UUID, UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION cancel_appointment_internal(UUID, UUID, TEXT) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION broker_handle_appointment_internal(UUID, UUID, TEXT) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION cancel_appointment_internal(UUID, UUID, TEXT)                  TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION broker_handle_appointment_internal(UUID, UUID, TEXT)           TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION admin_update_appointment_status_internal(UUID, UUID, INT, TEXT) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION admin_force_appointment_internal(UUID, UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION create_deal_internal(UUID, JSONB) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION complete_deal_internal(UUID, UUID, NUMERIC, TEXT) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION mark_notification_read_internal(UUID, UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION mark_all_notifications_read_internal(UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION create_rating_internal(UUID, UUID, INT, TEXT) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION register_daily_streak_internal(UUID, INT) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION update_user_profile_internal(UUID, JSONB) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION update_user_notification_settings_internal(UUID, JSONB) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION submit_broker_request_internal(UUID, TEXT, INT, TEXT, TEXT) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION mark_social_published_internal(UUID, UUID, TEXT) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION increment_offer_views_internal(UUID) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION admin_force_appointment_internal(UUID, UUID)                   TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION create_deal_internal(UUID, JSONB)                              TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION complete_deal_internal(UUID, UUID, NUMERIC, TEXT)              TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION mark_notification_read_internal(UUID, UUID)                    TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION mark_all_notifications_read_internal(UUID)                     TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION create_rating_internal(UUID, UUID, INT, TEXT)                  TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION register_daily_streak_internal(UUID, INT)                      TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION update_user_profile_internal(UUID, JSONB)                      TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION update_user_notification_settings_internal(UUID, JSONB)        TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION submit_broker_request_internal(UUID, TEXT, INT, TEXT, TEXT)    TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION mark_social_published_internal(UUID, UUID, TEXT)               TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION increment_offer_views_internal(UUID)                           TO anon, authenticated;
