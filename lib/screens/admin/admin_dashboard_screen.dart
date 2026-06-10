@@ -29,8 +29,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Future<void> _load() async {
     setState(() => _loading = true);
     final admin = context.read<AdminProvider>();
-    final stats = await admin.getStats();
-    final counts = await admin.getActionCounts();
+    final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
+    final stats = await admin.getStats(adminUid);
+    final counts = await admin.getActionCounts(adminUid);
     if (mounted) {
       setState(() {
         _stats = stats;

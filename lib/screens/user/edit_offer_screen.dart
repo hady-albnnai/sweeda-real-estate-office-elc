@@ -59,8 +59,9 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
 
   Future<void> _loadOffer() async {
     final provider = context.read<OfferProvider>();
+    final userId = context.read<AuthProvider>().userModel?.uid;
     var offer = provider.getOfferById(widget.offerId);
-    offer ??= await provider.fetchOfferById(widget.offerId);
+    offer ??= await provider.fetchOfferById(widget.offerId, userId: userId);
 
     if (offer == null) {
       if (mounted) {

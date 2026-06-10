@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/offer_model.dart';
 import '../../providers/admin_provider.dart';
+import '../../providers/auth_provider.dart';
 
 /// إدارة وسائط العروض — بديل متوافق مع نموذج المشروع الحالي لفكرة إدارة التصوير.
 /// لا ينشئ جدول تصوير جديد، بل يراجع حالة الصور/الفيديو/السند ضمن offers.
@@ -27,7 +28,8 @@ class _MediaReviewScreenState extends State<MediaReviewScreen> {
 
   Future<void> _load() async {
     setState(() => _loading = true);
-    final offers = await context.read<AdminProvider>().getOffersForMediaReview();
+    final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
+    final offers = await context.read<AdminProvider>().getOffersForMediaReview(adminUid);
     if (!mounted) return;
     setState(() {
       _offers = offers;

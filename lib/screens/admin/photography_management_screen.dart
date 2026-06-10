@@ -36,7 +36,7 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
     final admin = context.read<AdminProvider>();
     final results = await Future.wait([
       photo.getAllTasks(status: _filter),
-      admin.getOffersForMediaReview(),
+      admin.getOffersForMediaReview(context.read<AuthProvider>().userModel?.uid ?? ''),
       admin.getAllUsers(),
     ]);
     if (!mounted) return;

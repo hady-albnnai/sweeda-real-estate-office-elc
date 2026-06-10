@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/admin_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../models/offer_model.dart';
 import '../../models/user_model.dart';
 import '../../core/network/supabase_service.dart';
@@ -34,7 +35,8 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
   Future<void> _load() async {
     setState(() => _loading = true);
     final admin = context.read<AdminProvider>();
-    final offers = await admin.getPendingOffers();
+    final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
+    final offers = await admin.getPendingOffers(adminUid);
 
     // اجلب بيانات المرسلين دفعة واحدة
     final uids = offers.map((o) => o.usrId).toSet().toList();
@@ -88,7 +90,8 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
     if (confirm != true || !mounted) return;
 
     final admin = context.read<AdminProvider>();
-    final ok = await admin.reviewOffer(o.id, true);
+    final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
+    final ok = await admin.reviewOffer(adminUid, o.id, true);
     if (!mounted) return;
     if (ok) {
       _snack('✅ تم نشر العرض');
@@ -103,7 +106,8 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
     if (reason == null || !mounted) return;
 
     final admin = context.read<AdminProvider>();
-    final ok = await admin.reviewOffer(o.id, false, reason: reason);
+    final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
+    final ok = await admin.reviewOffer(adminUid, o.id, false, reason: reason);
     if (!mounted) return;
     if (ok) {
       _snack('تم رفض العرض');

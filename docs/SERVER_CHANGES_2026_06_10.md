@@ -27,6 +27,8 @@
 | `supabase/migrations/2026_06_10_verification_dev_auth_rpcs.sql` | RPCs توثيق متوافقة مع وضع التطوير الحالي |
 | `supabase/migrations/2026_06_11_drop_obsolete_verification_rpcs.sql` | حذف RPCs التوثيق القديمة غير المستخدمة |
 | `supabase/migrations/2026_06_11_drop_obsolete_unused_rpcs.sql` | حذف RPCs قديمة غير مستخدمة بعد التحقق من عدم اعتماد التطبيق والسيرفر عليها |
+| `supabase/migrations/2026_06_11_real_test_stabilization_internal_rpcs.sql` | تحويل دفعة إضافية من المسارات الحساسة إلى RPCs وتجهيز التطبيق للاختبار الحقيقي |
+| `supabase/migrations/2026_06_11_real_test_stabilization_internal_rpcs.sql` | دفعة تثبيت إضافية قبل الاختبار الحقيقي لتحويل المسارات الحساسة إلى RPCs وتحسين بعض السياسات |
 
 ## تحديث لاحق — إصلاحات منطقية
 
@@ -43,6 +45,7 @@
 - إضافة RPCs متوافقة مع وضع التطوير لتقديم/اعتماد/رفض التوثيق دون كسر التدفق الحالي.
 - إضافة تنظيف لاحق لحذف RPCs التوثيق القديمة بعد التأكد من اعتماد المسارات الجديدة على التطبيق والسيرفر.
 - إضافة تنظيف إضافي لحذف `admin_update_user_permissions` و `verify_otp_safe` بعد فحص عدم وجود تبعيات داخلية وعدم وجود استخدام من التطبيق الحالي.
+- تجهيز دفعة تثبيت إضافية قبل الاختبار الحقيقي لتحويل مسارات حساسة واسعة من direct DB operations إلى RPCs متوافقة مع نموذج المصادقة الحالي.
 
 ## التغييرات حسب النوع
 

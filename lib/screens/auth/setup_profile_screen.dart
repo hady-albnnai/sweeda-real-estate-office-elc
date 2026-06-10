@@ -99,13 +99,18 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
 
     // 2) تحديث بيانات المستخدم
     try {
-      await SupabaseService().client.from(DbTables.users).update({
-        'nm': _nameController.text.trim(),
-        'sid': _sidController.text.trim(),
-        'ad': _addressController.text.trim(),
-        'img': idUrl ?? user.img,
-        'ts_upd': DateTime.now().toIso8601String(),
-      }).eq('id', user.uid);
+      await SupabaseService().client.rpc(
+        'update_user_profile_internal',
+        params: {
+          'p_user_uid': user.uid,
+          'p_payload': {
+            'nm': _nameController.text.trim(),
+            'sid': _sidController.text.trim(),
+            'ad': _addressController.text.trim(),
+            'img': idUrl ?? user.img,
+          },
+        },
+      );
 
       // 3) 🎁 تطبيق كود الإحالة (إن وُجد) — RPC apply_referral
       // مرجع: docs/LOGIC_SPEC.md §3.2 + supabase/FUNCTIONS_REFERENCE.md

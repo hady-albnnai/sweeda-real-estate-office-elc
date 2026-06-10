@@ -90,8 +90,8 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
   Widget _requestCard(dynamic req) {
     final typeText = req.typ == 0 ? 'شراء' : 'استئجار';
     final elementText = req.elm == 0 ? 'عقار' : 'سيارة';
-    final statusColors = {0: Colors.orange, 1: Colors.green, 2: Colors.blue, 3: Colors.red};
-    final statusTexts = {0: 'قيد المراجعة', 1: 'نشط', 2: 'مكتمل', 3: 'ملغي'};
+    final statusColors = {0: Colors.green, 1: Colors.orange, 2: Colors.blue, 3: Colors.red};
+    final statusTexts = {0: 'نشط', 1: 'قيد المعالجة', 2: 'مغلق/تمت المطابقة', 3: 'ملغي'};
 
     return Card(
       color: AppTheme.surfaceBlack,

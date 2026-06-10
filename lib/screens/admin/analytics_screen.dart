@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/admin_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
 
 /// 📊 التحليلات الشاملة — أرقام + أشرطة نسب (بدون مكتبات خارجية)
@@ -23,7 +24,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   Future<void> _load() async {
     setState(() => _loading = true);
-    final stats = await context.read<AdminProvider>().getStats();
+    final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
+    final stats = await context.read<AdminProvider>().getStats(adminUid);
     if (mounted) {
       setState(() {
         _s = stats;

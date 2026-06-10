@@ -103,6 +103,7 @@
 | UX-01 | Low | حقول معلنة كإلزامية لكنها غير مفروضة برمجياً بالكامل | نفس المرجع | `lib/screens/user/add_offer_screen.dart`, `lib/screens/user/add_request_screen.dart` | `FIXED_VERIFIED` | تم فرض هاتف التواصل/هاتف العميل فعلياً |
 | CFG-02 | Low | ما زالت هناك قيم fallback/مدن hardcoded في بعض الواجهات | نفس المرجع | `lib/screens/user/add_offer_screen.dart` وغيرها | `FIXED_VERIFIED` | تم تحويل قوائم المناطق إلى قراءة من Config وإزالة fallbackات المحلية الأثقل |
 | U-01 | Medium | شاشة "عروضي" كانت تعتمد قائمة العروض المنشورة العامة بدلاً من جلب عروض المستخدم كاملة | مشكلة مكتشفة أثناء الإصلاح | `lib/screens/user/my_offers_screen.dart` | `FIXED_VERIFIED` | تم تحويلها إلى جلب مباشر لكل عروض المستخدم عبر `fetchUserOffers` |
+| RT-01 | Critical | مسارات الكتابة/القراءة الحساسة ما تزال تعتمد direct client DB operations وغير مستقرة للاختبار الحقيقي | تحليل المحادثة الحالية | `lib/providers/*`, `lib/screens/*`, `supabase/migrations/2026_06_11_real_test_stabilization_internal_rpcs.sql`, `supabase/setup.sql` | `FIXED_CODE` | تم تحويل دفعة كبيرة من العمليات الحرجة إلى RPCs وتجهيز تغييرات السيرفر، بانتظار تطبيقها والتحقق العملي |
 
 ---
 
@@ -159,6 +160,9 @@
   - `supabase/migrations/2026_06_11_drop_obsolete_verification_rpcs.sql`
 - تم إنشاء migration تنظيف إضافية لحذف RPCs قديمة غير مستخدمة بعد التحقق من عدم وجود تبعيات:
   - `supabase/migrations/2026_06_11_drop_obsolete_unused_rpcs.sql`
+- تم تجهيز دفعة تثبيت جديدة قبل الاختبار الحقيقي:
+  - migration: `supabase/migrations/2026_06_11_real_test_stabilization_internal_rpcs.sql`
+  - وتشمل تحويل مسارات حساسة كثيرة إلى RPCs (العروض، الطلبات، المدفوعات، التبليغات، المواعيد، الإشعارات، التقييمات، بعض تحديثات المستخدم).
 - تم تحديث الملفات المرجعية التالية:
   - `docs/SPEC.md`
   - `docs/LOGIC_SPEC.md`

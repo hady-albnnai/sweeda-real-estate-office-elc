@@ -26,7 +26,8 @@ class _DealsManagementScreenState extends State<DealsManagementScreen> {
 
   Future<void> _load() async {
     setState(() => _loading = true);
-    final list = await context.read<AdminProvider>().getAllDeals();
+    final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
+    final list = await context.read<AdminProvider>().getAllDeals(adminUid);
     if (mounted) {
       setState(() {
         _all = list;

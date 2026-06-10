@@ -34,7 +34,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
   Future<void> _load() async {
     setState(() => _loading = true);
-    final list = await context.read<AdminProvider>().getAllReports();
+    final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
+    final list = await context.read<AdminProvider>().getAllReports(adminUid);
     if (mounted) {
       setState(() {
         _all = list;

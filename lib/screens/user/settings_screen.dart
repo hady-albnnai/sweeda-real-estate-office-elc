@@ -151,10 +151,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ntf[key] = value ? 0 : 1;
 
     try {
-      await SupabaseService().client.from(DbTables.users).update({
-        'ntf': ntf,
-        'ts_upd': DateTime.now().toIso8601String(),
-      }).eq('id', user.uid);
+      await SupabaseService().client.rpc(
+        'update_user_notification_settings_internal',
+        params: {
+          'p_user_uid': user.uid,
+          'p_ntf': ntf,
+        },
+      );
 
       await auth.refreshUser();
 

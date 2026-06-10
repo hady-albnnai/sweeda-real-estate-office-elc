@@ -29,9 +29,10 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
   Future<void> _load() async {
     setState(() => _loading = true);
     final admin = context.read<AdminProvider>();
+    final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
     final results = await Future.wait([
-      admin.getActionCounts(),
-      admin.getStats(),
+      admin.getActionCounts(adminUid),
+      admin.getStats(adminUid),
     ]);
     if (!mounted) return;
     setState(() {

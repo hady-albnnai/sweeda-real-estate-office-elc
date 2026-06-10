@@ -112,7 +112,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     color: AppTheme.primaryGold, shape: BoxShape.circle),
               ),
         onTap: () {
-          if (!n.isRead) prov.markAsRead(n.id).then((_) => _load());
+          final uid = context.read<AuthProvider>().userModel?.uid ?? '';
+          if (!n.isRead && uid.isNotEmpty) {
+            prov.markAsRead(uid, n.id).then((_) => _load());
+          }
           _navigateForNotification(n);
         },
       ),

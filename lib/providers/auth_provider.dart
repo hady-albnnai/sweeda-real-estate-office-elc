@@ -124,11 +124,16 @@ class AuthProvider with ChangeNotifier {
   Future<bool> completeProfile({required String name, required String sid}) async {
     try {
       if (_userModel == null) return false;
-      await SupabaseService().client.from(DbTables.users).update({
-        'nm': name,
-        'sid': sid,
-        'ts_upd': DateTime.now().toIso8601String(),
-      }).eq('id', _userModel!.uid);
+      await SupabaseService().client.rpc(
+        'update_user_profile_internal',
+        params: {
+          'p_user_uid': _userModel!.uid,
+          'p_payload': {
+            'nm': name,
+            'sid': sid,
+          },
+        },
+      );
       await _loadUserData(_userModel!.uid);
       return true;
     } catch (e) {return false;
