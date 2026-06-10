@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 // === Splash ===
 import '../../screens/splash_screen.dart';
@@ -55,10 +56,49 @@ import '../../screens/admin/payments_screen.dart';
 import '../../screens/admin/reports_screen.dart';
 import '../../screens/admin/config_editor_screen.dart';
 import '../../screens/admin/analytics_screen.dart';
+import '../../providers/auth_provider.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: '/splash',
+    redirect: (context, state) {
+      final path = state.uri.path;
+
+      // السبلاش والصفحات العامة تبقى متاحة دائماً.
+      final isPublicPath = path == '/splash' ||
+          path == '/home' ||
+          path == '/search' ||
+          path.startsWith('/offer/') ||
+          path == '/login' ||
+          path == '/otp' ||
+          path == '/check-email';
+      if (isPublicPath) return null;
+
+      final auth = context.read<AuthProvider>();
+      final isLoggedIn = auth.isLoggedIn;
+
+      if (!isLoggedIn) {
+        return '/login';
+      }
+
+      // إكمال الملف الشخصي مسموح للمستخدم الجديد فقط بعد تسجيل الدخول.
+      if (path == '/setup-profile') return null;
+
+      if (path.startsWith('/admin') && !auth.isAdmin) {
+        return auth.isBroker ? '/broker/dashboard' : '/user/home';
+      }
+
+      if (path.startsWith('/broker') && !(auth.isBroker || auth.isAdmin)) {
+        return '/user/home';
+      }
+
+      if (path.startsWith('/user') && auth.isAdmin) {
+        // المدير يستطيع تصفح واجهة المستخدم عبر زر الصفحة الرئيسية إن احتاج.
+        return null;
+      }
+
+      return null;
+    },
     routes: [
       // ═══════════════════════════════════════
       // 🎬 SPLASH
