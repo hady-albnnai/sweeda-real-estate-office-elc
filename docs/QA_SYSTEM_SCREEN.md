@@ -92,3 +92,29 @@ supabase/migrations/2026_06_10_qa_system_check.sql
 - تم تصحيح فحص فهرس `idx_offers_iPub` إلى الاسم الفعلي في PostgreSQL: `idx_offers_ipub`.
 - تمت إضافة migration لضمان وجود مفتاح `locs` في `app_config.main` إذا كان مفقوداً:
   `supabase/migrations/2026_06_10_ensure_config_locs.sql`.
+
+
+## QA v3 — فحص شامل جداً
+
+تمت إضافة نسخة v3 من `qa_system_check`:
+
+- تصنيف النتائج إلى `critical`, `warning`, `info`.
+- الفشل العام يعتمد فقط على `critical`.
+- التحذيرات تظهر لمشاكل جودة بيانات أو إعدادات يفضّل مراجعتها.
+- تمت إضافة فحوصات أعمق:
+  - صلاحيات المستخدم الحالي.
+  - دوال OTP و FCM والإحالة والترقيات.
+  - محتوى الدوال المهمة.
+  - RLS وسياسات أكثر.
+  - فهارس أكثر.
+  - visibility للـ Storage buckets.
+  - Config deep checks.
+  - حالات غير صالحة للمستخدمين/العروض/المواعيد/الدفعات/التصوير.
+  - روابط صور/فيديو غير صالحة.
+  - طوابير التشغيل كـ info.
+
+الملف:
+
+```txt
+supabase/migrations/2026_06_10_qa_system_check_v3.sql
+```
