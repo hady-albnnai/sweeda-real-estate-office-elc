@@ -52,7 +52,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
       try {
         final row = await SupabaseService()
             .client
-            .from(DbTables.users)
+            .from(DbTables.usersPublic)
             .select()
             .eq('id', offer.usrId)
             .maybeSingle();

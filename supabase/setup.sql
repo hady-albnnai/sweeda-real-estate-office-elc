@@ -69,10 +69,11 @@ CREATE TABLE IF NOT EXISTS appointments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   off_id UUID REFERENCES offers(id) ON DELETE SET NULL,
   req_id UUID REFERENCES requests(id) ON DELETE SET NULL,
+  req_uid UUID REFERENCES users(id) ON DELETE SET NULL,
   own_id UUID REFERENCES users(id) ON DELETE SET NULL,
   bkr_id UUID REFERENCES users(id) ON DELETE SET NULL,
   dt TIMESTAMPTZ NOT NULL, dt_end TIMESTAMPTZ,
-  sts INTEGER DEFAULT 0 CHECK (sts BETWEEN 0 AND 3),
+  sts INTEGER DEFAULT 0 CHECK (sts BETWEEN 0 AND 5),
   cnl_by UUID, cnl_rsn TEXT,
   fbk_own INTEGER DEFAULT 0 CHECK (fbk_own BETWEEN 0 AND 3),
   fbk_req INTEGER DEFAULT 0 CHECK (fbk_req BETWEEN 0 AND 3),
@@ -86,6 +87,7 @@ CREATE TABLE IF NOT EXISTS appointments (
   ts_crt TIMESTAMPTZ DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_appointments_own ON appointments(own_id, sts);
+CREATE INDEX IF NOT EXISTS idx_appointments_req_uid ON appointments(req_uid, sts);
 CREATE INDEX IF NOT EXISTS idx_appointments_off ON appointments(off_id, sts);
 CREATE INDEX IF NOT EXISTS idx_appointments_dt ON appointments(dt, sts);
 
@@ -284,7 +286,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION get_pending_offers_count()
-RETURNS INTEGER AS $$ DECLARE v_cnt INTEGER; BEGIN SELECT COUNT(*) INTO v_cnt FROM offers WHERE sts = 0 AND i_del = 0; RETURN v_cnt; END; $$ LANGUAGE plpgsql;
+RETURNS INTEGER AS $$ DECLARE v_cnt INTEGER; BEGIN SELECT COUNT(*) INTO v_cnt FROM offers WHERE sts = 1 AND i_del = 0; RETURN v_cnt; END; $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION add_points(p_uid UUID, p_pts INTEGER)
 RETURNS VOID AS $$ BEGIN UPDATE users SET pt = pt + p_pts, ts_upd = NOW() WHERE id = p_uid; PERFORM update_user_badge(p_uid); END; $$ LANGUAGE plpgsql;
@@ -313,7 +315,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Config Data
-INSERT INTO app_config (key, value, description) VALUES ('main', '{"pts":{"sgn":1000,"wkL":100,"addO":500,"att":300,"dlD":2000,"ref":1500,"strk":50,"soc":100,"like":{"p":5,"l":10},"shr":{"p":10,"l":5},"cmt":{"p":20,"l":3},"gft":{"max":500,"pw":1}},"pen":{"noSh":-500,"cnl3":-300,"rej3":-1000,"fRp":-2000,"ban":-40000},"spd":{"ren":500,"pin":2000,"bst":4000,"dsc5":3000,"fms":8000},"bdg":{"0":{"nm":"🔰 جديد","p":0,"d":0},"1":{"nm":"🥉 برونزي","p":10000,"d":10},"2":{"nm":"🥈 فضي","p":20000,"d":15},"3":{"nm":"🥇 ذهبي","p":30000,"d":20,"eS":1},"4":{"nm":"💎 ماسي","p":40000,"d":20,"eS":1,"fA":1}},"pkg":{"0":{"nm":"مجاني","o":5,"d":30},"1":{"nm":"فضي","o":15,"d":45},"2":{"nm":"ذهبي","o":40,"d":60}},"com":{"sl":3,"rn":"hm","ml":2},"qta":{"u":{"o":1,"r":3,"a":3},"b":{"o":5,"r":5,"a":3}},"soc":{"fb":"","ig":"","tk":"","wa":""},"ads":{"mx":5,"dd":7,"pr":null},"rptRsn":["إعلان وهمي / غير موجود","احتيال / نصب","معلومات مضللة","مضايقة / سلوك غير لائق","عرض مكرر","آخر"],"txts":{"plg":"إقرار وتعهد إلكتروني — عقارات السويداء","warnApp":"تحذير: هذا العرض عليه مواعيد سابقة","visBlk":"تسجيل دخول مطلوب","bnRsn":"تم حظر حسابك نهائياً","frzRsn":"تم تجميد حسابك"},"catProp":{"0":{"nm":"سكني","sub":["شقة سكنية","دار عربي","فيلا","مزرعة","بناء كامل","سطح"]},"1":{"nm":"تجاري","sub":["محل تجاري","معرض","مركز تجاري","مكتب","مستودع"]},"2":{"nm":"زراعي","sub":["أرض زراعية","مزرعة دواجن","مزرعة مواشي","مشتل"]},"3":{"nm":"صناعي","sub":["منشأة صناعية","ورشة","مصنع","أرض صناعية"]}},"catVeh":{"0":{"nm":"سيارة","sub":["سيدان","دفع رباعي","هاتشباك","كوبيه","مكشوفة"]},"1":{"nm":"شاحنة","sub":["شاحنة صغيرة","شاحنة كبيرة","نقل عام"]},"2":{"nm":"دراجة نارية","sub":["دراجة عادية","دراجة رياضية","دراجة كهربائية"]},"3":{"nm":"معدات ثقيلة","sub":["جرّار","حفّارة","حصّادة","درّاسة"]},"4":{"nm":"باصات/نقل","sub":["باص سكانيا","باص 24 راكب","ميكروباص","فان"]}},"docTp":{"0":"طابو أخضر","1":"حصة سهمية-حكم محكمة","2":"حصة سهمية-كاتب بالعدل","3":"مستملك","4":"تسلسل عقود","5":"جمعيات سكنية","6":"نمرة قديمة","7":"نمرة جديدة","8":"وارد"},"brnds":["تويوتا","هوندا","نيسان","هيونداي","كيا","مرسيدس","بي إم دبليو","فولكس فاجن","رينو","فورد","شيفروليه","أخرى"],"clrs":["أبيض","أسود","فضي","رمادي","أحمر","أزرق","أخضر","أصفر","بيج","بني","ذهبي","أخرى"],"roles":{"0":{"nm":"مستخدم"},"1":{"nm":"وسيط"},"2":{"nm":"مشرف"},"3":{"nm":"نائب"},"4":{"nm":"مدير"}}}'::jsonb, 'إعدادات التطبيق الرئيسية');
+INSERT INTO app_config (key, value, description) VALUES ('main', '{"pts":{"sgn":1000,"wkL":100,"addO":500,"att":300,"dlD":2000,"ref":1500,"strk":50,"soc":100,"like":{"p":5,"l":10},"shr":{"p":10,"l":5},"cmt":{"p":20,"l":3},"gft":{"max":500,"pw":1}},"pen":{"noSh":-500,"cnl3":-300,"rej3":-1000,"fRp":-2000,"ban":-40000},"spd":{"ren":500,"pin":2000,"bst":4000,"dsc5":3000,"fms":8000},"bdg":{"0":{"nm":"🔰 جديد","p":0,"d":0},"1":{"nm":"🥉 برونزي","p":10000,"d":10},"2":{"nm":"🥈 فضي","p":20000,"d":15},"3":{"nm":"🥇 ذهبي","p":30000,"d":20,"eS":1},"4":{"nm":"💎 ماسي","p":40000,"d":20,"eS":1,"fA":1}},"pkg":{"0":{"nm":"مجاني","o":5,"d":30,"pr":0},"1":{"nm":"فضي","o":15,"d":45,"pr":10},"2":{"nm":"ذهبي","o":40,"d":60,"pr":25}},"fx":{"usd_syp":15000},"com":{"sl":3,"rn":"hm","ml":2},"qta":{"u":{"o":1,"r":3,"a":3},"b":{"o":5,"r":5,"a":3}},"soc":{"fb":"","ig":"","tk":"","wa":""},"ads":{"mx":5,"dd":7,"pr":null},"rptRsn":["إعلان وهمي / غير موجود","احتيال / نصب","معلومات مضللة","مضايقة / سلوك غير لائق","عرض مكرر","آخر"],"txts":{"plg":"إقرار وتعهد إلكتروني — عقارات السويداء","warnApp":"تحذير: هذا العرض عليه مواعيد سابقة","visBlk":"تسجيل دخول مطلوب","bnRsn":"تم حظر حسابك نهائياً","frzRsn":"تم تجميد حسابك"},"catProp":{"0":{"nm":"سكني","sub":["شقة سكنية","دار عربي","فيلا","مزرعة","بناء كامل","سطح"]},"1":{"nm":"تجاري","sub":["محل تجاري","معرض","مركز تجاري","مكتب","مستودع"]},"2":{"nm":"زراعي","sub":["أرض زراعية","مزرعة دواجن","مزرعة مواشي","مشتل"]},"3":{"nm":"صناعي","sub":["منشأة صناعية","ورشة","مصنع","أرض صناعية"]}},"catVeh":{"0":{"nm":"سيارة","sub":["سيدان","دفع رباعي","هاتشباك","كوبيه","مكشوفة"]},"1":{"nm":"شاحنة","sub":["شاحنة صغيرة","شاحنة كبيرة","نقل عام"]},"2":{"nm":"دراجة نارية","sub":["دراجة عادية","دراجة رياضية","دراجة كهربائية"]},"3":{"nm":"معدات ثقيلة","sub":["جرّار","حفّارة","حصّادة","درّاسة"]},"4":{"nm":"باصات/نقل","sub":["باص سكانيا","باص 24 راكب","ميكروباص","فان"]}},"docTp":{"0":"طابو أخضر","1":"حصة سهمية-حكم محكمة","2":"حصة سهمية-كاتب بالعدل","3":"مستملك","4":"تسلسل عقود","5":"جمعيات سكنية","6":"نمرة قديمة","7":"نمرة جديدة","8":"وارد"},"brnds":["تويوتا","هوندا","نيسان","هيونداي","كيا","مرسيدس","بي إم دبليو","فولكس فاجن","رينو","فورد","شيفروليه","أخرى"],"clrs":["أبيض","أسود","فضي","رمادي","أحمر","أزرق","أخضر","أصفر","بيج","بني","ذهبي","أخرى"],"roles":{"0":{"nm":"مستخدم"},"1":{"nm":"وسيط"},"2":{"nm":"مشرف"},"3":{"nm":"نائب"},"4":{"nm":"مدير"}}}'::jsonb, 'إعدادات التطبيق الرئيسية');
 
 -- ============================================================================
 -- Internal permissions management (2026-06-10)
@@ -524,6 +526,10 @@ RETURNS BOOLEAN AS $$
 DECLARE
   v_admin_role INT;
 BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
   SELECT role INTO v_admin_role FROM users WHERE id = p_admin_uid AND i_del = 0;
 
   IF v_admin_role IS NULL OR v_admin_role < 3 THEN
@@ -559,6 +565,10 @@ RETURNS BOOLEAN AS $$
 DECLARE
   v_admin_role INT;
 BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
   SELECT role INTO v_admin_role FROM users WHERE id = p_admin_uid AND i_del = 0;
 
   IF v_admin_role IS NULL OR v_admin_role < 2 THEN
@@ -653,6 +663,10 @@ DECLARE
     'user_profile'
   ];
 BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
   SELECT role INTO v_admin_role FROM users WHERE id = p_admin_uid AND i_del = 0;
 
   IF v_admin_role IS NULL OR v_admin_role < 3 THEN
@@ -709,7 +723,16 @@ CREATE OR REPLACE FUNCTION create_offer_internal(
 RETURNS SETOF offers AS $$
 DECLARE
   v_user users%ROWTYPE;
+  v_config JSONB;
+  v_limit INT;
+  v_used INT;
+  v_recent_deleted INT;
+  v_duplicate BOOLEAN;
 BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
   SELECT * INTO v_user
   FROM users
   WHERE id = p_user_uid
@@ -718,6 +741,56 @@ BEGIN
 
   IF v_user.id IS NULL THEN
     RAISE EXCEPTION 'USER_NOT_ACTIVE_OR_NOT_FOUND';
+  END IF;
+
+  IF COALESCE(trim(p_offer->>'ttl'), '') = '' THEN
+    RAISE EXCEPTION 'TITLE_REQUIRED';
+  END IF;
+
+  IF COALESCE(trim(p_offer->>'contact_ph'), '') = '' THEN
+    RAISE EXCEPTION 'CONTACT_PHONE_REQUIRED';
+  END IF;
+
+  IF COALESCE((p_offer->>'prc')::NUMERIC, 0) <= 0 THEN
+    RAISE EXCEPTION 'INVALID_PRICE';
+  END IF;
+
+  IF COALESCE(v_user.role, 0) < 2 THEN
+    SELECT value INTO v_config
+    FROM app_config
+    WHERE key = 'main';
+
+    v_limit := COALESCE((v_config->'pkg'->(COALESCE(v_user.b_pkg, 0)::TEXT)->>'o')::INT,
+      CASE WHEN COALESCE(v_user.role, 0) = 1 THEN 5 ELSE 1 END);
+
+    SELECT COUNT(*) INTO v_used
+    FROM offers
+    WHERE usr_id = p_user_uid
+      AND i_del = 0
+      AND sts IN (0, 1, 2, 5);
+
+    SELECT COUNT(*) INTO v_recent_deleted
+    FROM offers
+    WHERE usr_id = p_user_uid
+      AND i_del = 1
+      AND ts_upd >= NOW() - INTERVAL '24 hours';
+
+    v_used := COALESCE(v_used, 0) + COALESCE(v_recent_deleted, 0);
+
+    IF v_used >= v_limit THEN
+      RAISE EXCEPTION 'QUOTA_EXCEEDED';
+    END IF;
+  END IF;
+
+  SELECT check_offer_duplicate(
+    COALESCE(p_offer->>'ttl', ''),
+    COALESCE((p_offer->>'prc')::NUMERIC, 0),
+    COALESCE(p_offer->'loc', '{"r":0,"d":""}'::jsonb),
+    p_user_uid
+  ) INTO v_duplicate;
+
+  IF v_duplicate THEN
+    RAISE EXCEPTION 'DUPLICATE_OFFER';
   END IF;
 
   RETURN QUERY
@@ -779,18 +852,18 @@ BEGIN
     COALESCE(p_offer->>'exact_loc', ''),
     COALESCE(p_offer->'specs', '{}'::jsonb),
     COALESCE((p_offer->>'com')::NUMERIC, 0),
-    COALESCE((p_offer->>'sts')::INT, 0),
-    COALESCE(p_offer->>'rsn', ''),
-    COALESCE((p_offer->>'vws')::INT, 0),
-    COALESCE((p_offer->>'fvs')::INT, 0),
-    COALESCE((p_offer->>'i_pub')::INT, 0),
+    1,
+    '',
+    0,
+    0,
+    0,
     COALESCE((p_offer->>'i_soc')::INT, 0),
-    COALESCE((p_offer->>'soc_pub')::INT, 0),
+    0,
     COALESCE(p_offer->>'soc_txt', ''),
-    COALESCE((p_offer->>'i_dup')::INT, 0),
+    0,
     NULLIF(p_offer->>'dup_of', '')::UUID,
     COALESCE(p_offer->'avl', '{}'::jsonb),
-    COALESCE((p_offer->>'i_del')::INT, 0),
+    0,
     NOW(),
     NULL,
     NULL,
@@ -883,6 +956,10 @@ DECLARE
   v_admin_role INT;
   v_offer offers%ROWTYPE;
 BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
   SELECT role INTO v_admin_role FROM users WHERE id = p_admin_uid AND i_del = 0;
   IF v_admin_role IS NULL OR v_admin_role < 2 THEN
     RAISE EXCEPTION 'FORBIDDEN: Admin role required.';
@@ -929,6 +1006,10 @@ CREATE OR REPLACE FUNCTION submit_photography_task_internal(
 )
 RETURNS BOOLEAN AS $$
 BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_photographer_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
   IF jsonb_typeof(COALESCE(p_media, '[]'::jsonb)) <> 'array' THEN
     RAISE EXCEPTION 'INVALID_MEDIA_ARRAY';
   END IF;
@@ -961,6 +1042,10 @@ RETURNS BOOLEAN AS $$
 DECLARE
   v_admin_role INT;
 BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
   SELECT role INTO v_admin_role FROM users WHERE id = p_admin_uid AND i_del = 0;
   IF v_admin_role IS NULL OR v_admin_role < 2 THEN
     RAISE EXCEPTION 'FORBIDDEN: Admin role required.';
@@ -995,6 +1080,10 @@ DECLARE
   v_task photography_tasks%ROWTYPE;
   v_existing JSONB;
 BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
   SELECT role INTO v_admin_role FROM users WHERE id = p_admin_uid AND i_del = 0;
   IF v_admin_role IS NULL OR v_admin_role < 2 THEN
     RAISE EXCEPTION 'FORBIDDEN: Admin role required.';

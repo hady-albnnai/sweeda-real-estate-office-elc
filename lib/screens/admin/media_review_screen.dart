@@ -46,7 +46,7 @@ class _MediaReviewScreenState extends State<MediaReviewScreen> {
       case 'published':
         return _offers.where((offer) => offer.iPub == 1).toList();
       case 'pending':
-        return _offers.where((offer) => offer.sts == 0).toList();
+        return _offers.where((offer) => offer.sts == 1).toList();
       default:
         return _offers;
     }
@@ -254,9 +254,9 @@ class _MediaReviewScreenState extends State<MediaReviewScreen> {
   String _statusLabel(int status) {
     switch (status) {
       case 0:
-        return 'قيد المراجعة';
+        return 'مسودة';
       case 1:
-        return 'مقبول';
+        return 'قيد المراجعة';
       case 2:
         return 'منشور';
       case 3:

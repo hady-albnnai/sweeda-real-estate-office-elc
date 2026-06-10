@@ -33,7 +33,7 @@ class _BrokerOffersScreenState extends State<BrokerOffersScreen> {
       case 1:
         return offers.where((o) => o.sts == 2).toList();
       case 2:
-        return offers.where((o) => o.sts == 0 || o.sts == 1).toList();
+        return offers.where((o) => o.sts == 1).toList();
       default:
         return offers;
     }

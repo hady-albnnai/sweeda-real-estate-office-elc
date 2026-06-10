@@ -19,6 +19,28 @@
 | `supabase/migrations/2026_06_10_fix_upsert_user_phone_normalization.sql` | تطبيع الهاتف داخل `upsert_user_after_otp` |
 | `supabase/migrations/2026_06_10_photography_dev_auth_rpcs.sql` | دوال التصوير المتوافقة مع وضع التطوير |
 | `supabase/migrations/2026_06_10_ensure_config_locs.sql` | ضمان وجود `locs` داخل `app_config.main` |
+| `supabase/migrations/2026_06_10_logic_fixes_appointments_offers.sql` | إصلاح منطق المواعيد + توحيد pending offers + تشديد إنشاء العرض |
+| `supabase/migrations/2026_06_10_logic_fixes_boosts_payments.sql` | إصلاح منطق boosts والمدفوعات |
+| `supabase/migrations/2026_06_10_config_package_prices_and_fx.sql` | نقل أسعار الباقات وسعر الصرف إلى Config |
+| `supabase/migrations/2026_06_10_auth_uid_alignment_guards.sql` | حراسة جزئية تربط uid المُرسل بـ `auth.uid()` متى كانت الجلسة الحقيقية متاحة |
+| `supabase/migrations/2026_06_10_users_public_no_private_img.sql` | إزالة مسار صورة الهوية الخاصة من `users_public` |
+| `supabase/migrations/2026_06_10_verification_dev_auth_rpcs.sql` | RPCs توثيق متوافقة مع وضع التطوير الحالي |
+| `supabase/migrations/2026_06_11_drop_obsolete_verification_rpcs.sql` | حذف RPCs التوثيق القديمة غير المستخدمة |
+
+## تحديث لاحق — إصلاحات منطقية
+
+تمت إضافة دفعة إصلاحات منطقية جديدة تركّز على:
+
+- توحيد حالات المواعيد واعتماد `appointments.req_uid` لطالب الموعد.
+- نقل منطق الحصة وكشف التكرار إلى `create_offer_internal`.
+- جعل العرض الجديد يعود إلى `sts=1` (قيد المراجعة) بدل الالتباس السابق بين المسودة والمراجعة.
+- جعل `purchase_offer_boost` يحسب الكلفة من `app_config.spd` على السيرفر بدلاً من قبولها من العميل.
+- تشديد `approve_payment_final` ليتحقق من دور الإداري وحالة الدفعة وتمديد الباقة بشكل تراكمي.
+- نقل أسعار الباقات (`pkg.*.pr`) وسعر الصرف (`fx.usd_syp`) إلى Config.
+- إضافة حراسات جزئية تربط `auth.uid()` بالـuid المُرسل حين تكون جلسة Supabase Auth الحقيقية متاحة، مع الحفاظ على توافق وضع التطوير الحالي.
+- إزالة مسار صورة الهوية الخاصة من `users_public` بعد فصل الهوية الخاصة عن أي avatar عام.
+- إضافة RPCs متوافقة مع وضع التطوير لتقديم/اعتماد/رفض التوثيق دون كسر التدفق الحالي.
+- إضافة تنظيف لاحق لحذف RPCs التوثيق القديمة بعد التأكد من اعتماد المسارات الجديدة على التطبيق والسيرفر.
 
 ## التغييرات حسب النوع
 

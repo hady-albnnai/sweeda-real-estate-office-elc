@@ -46,8 +46,8 @@ class OfferProvider with ChangeNotifier {
 
       final res = await SupabaseService()
           .client
-          .from(DbTables.users)
-          .select('id, nm, ph, role, brk, bg, img, ts_crt')
+          .from(DbTables.usersPublic)
+          .select('id, nm, role, brk, bg, vrf, ts_crt')
           .inFilter('id', ownerIds);
 
       final Map<String, UserModel> ownersMap = {};
@@ -244,10 +244,6 @@ class OfferProvider with ChangeNotifier {
       final created = OfferModel.fromSupabase(row, row['id'] as String);
       _offers.insert(0, created);
       notifyListeners();
-
-      // تحديث إحصائيات المستخدم (عدد العروض)
-      await BusinessService().updateUserStat(offer.usrId, 'off');
-
       return created;
     } catch (e) {
       return null;

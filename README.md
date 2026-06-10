@@ -34,6 +34,9 @@ docs/CURRENT_STATUS.md
 | `docs/NEXT_DEVELOPMENT_ITEMS.md` | المتبقي فقط |
 | `docs/SPEC.md` | المواصفات التقنية |
 | `docs/LOGIC_SPEC.md` | ميثاق المنطق |
+| `docs/LOGIC_AUDIT_2026_06_10.md` | تقرير التدقيق المنطقي |
+| `docs/LOGIC_REPAIR_TRACKER.md` | تتبّع إصلاحات المنطق بين المحادثات |
+| `docs/POST_FIX_EXECUTION_AND_TEST_PLAN.md` | خطة التنفيذ والاختبار بعد الإصلاحات |
 | `DEVELOPMENT_GUIDELINES.md` | قواعد التطوير الإلزامية |
 | `supabase/FUNCTIONS_REFERENCE.md` | مرجع دوال السيرفر |
 | `docs/SERVER_CHANGES_2026_06_10.md` | توثيق تغييرات السيرفر الأخيرة وخطة التراجع |

@@ -1,6 +1,6 @@
 # الحالة الحالية للمشروع — المكتب العقاري الالكتروني
 
-> آخر تحديث: 2026-06-10
+> آخر تحديث: 2026-06-11
 > المستودع الصحيح: `hady-albnnai/sweeda-real-estate-office-elc`
 
 ## ملخص تنفيذي
@@ -16,6 +16,8 @@
 - إدارة الوسائط.
 - حماية مسارات حسب الدور والصلاحية.
 - دعم وضع التطوير الحالي لتسجيل WhatsApp OTP fallback.
+- تنفيذ دفعة إصلاحات منطقية كبيرة موثقة في `docs/LOGIC_REPAIR_TRACKER.md`.
+- المتبقي المنطقي الأهم حالياً هو تشديد نموذج المصادقة بالكامل عند الانتقال من dev fallback إلى Auth إنتاجي حقيقي.
 
 ## اسم التطبيق المثبت
 
@@ -112,6 +114,9 @@ users.perm JSONB DEFAULT '[]'
 | `docs/NEXT_DEVELOPMENT_ITEMS.md` | المتبقي فقط |
 | `docs/SPEC.md` | مواصفات النظام والبيانات |
 | `docs/LOGIC_SPEC.md` | ميثاق المنطق الأعلى |
+| `docs/LOGIC_AUDIT_2026_06_10.md` | تقرير التدقيق المنطقي المرجعي |
+| `docs/LOGIC_REPAIR_TRACKER.md` | متتبع إصلاح المنطق بين المحادثات |
+| `docs/POST_FIX_EXECUTION_AND_TEST_PLAN.md` | خطة التنفيذ والاختبار بعد الإصلاحات |
 | `DEVELOPMENT_GUIDELINES.md` | قواعد التطوير الإلزامية |
 | `supabase/FUNCTIONS_REFERENCE.md` | مرجع دوال السيرفر |
 | `supabase/CHECK_ALL_MIGRATIONS.sql` | فحص حالة السيرفر |

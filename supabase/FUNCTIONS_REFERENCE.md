@@ -1,7 +1,7 @@
 # 📚 مرجع دوال Supabase (RPC + Edge Functions)
 
 > **مشروع:** عقارات السويداء  
-> **آخر تحديث:** 2026-06-09 (إصلاح RLS policy على offers INSERT)  
+> **آخر تحديث:** 2026-06-11 (محدّث ليتطابق مع حالة السيرفر بعد تنفيذ إصلاحات المنطق الأساسية)  
 > **المصدر:** `supabase/setup.sql` + Migrations + Edge Functions
 
 ---
@@ -24,10 +24,17 @@
 | ✅ **مُطبّق على السيرفر** | إصلاح RLS policy على جدول offers (INSERT) — `auth.uid() = usr_id` (2026-06-09) |
 | ⚠️ **مكتوب لكن لم يُنشر بعد** | Edge Functions: `send-whatsapp-otp`, `verify-whatsapp-otp` (يحتاج `supabase functions deploy` + secrets META) |
 | ⚠️ **معلّق** | تفعيل Email SMTP (Resend) — تم في Dashboard ✅ بس Meta WhatsApp credentials لسا (يستخدم وضع التطوير) |
+| ✅ **مُطبّق على السيرفر** | `2026_06_10_logic_fixes_appointments_offers.sql` — إصلاح منطق المواعيد + pending offers + create_offer_internal |
+| ✅ **مُطبّق على السيرفر** | `2026_06_10_logic_fixes_boosts_payments.sql` — إصلاح boosts والمدفوعات |
+| ✅ **مُطبّق على السيرفر** | `2026_06_10_config_package_prices_and_fx.sql` — أسعار الباقات وسعر الصرف من Config |
+| ✅ **مُطبّق على السيرفر** | `2026_06_10_auth_uid_alignment_guards.sql` — حراسات جزئية تربط uid المرسل بـ `auth.uid()` عند توفر الجلسة |
+| ✅ **مُطبّق على السيرفر** | `2026_06_10_users_public_no_private_img.sql` — إزالة `img` من `users_public` |
+| ✅ **مُطبّق على السيرفر** | `2026_06_10_verification_dev_auth_rpcs.sql` — RPCs توثيق متوافقة مع وضع التطوير الحالي |
+| ✅ **مُطبّق على السيرفر** | `2026_06_11_drop_obsolete_verification_rpcs.sql` — حذف RPCs التوثيق القديمة غير المستخدمة |
 
 ---
 
-## 📋 قائمة الدوال (33 دالة RPC + 3 Edge Functions)
+## 📋 قائمة الدوال (مرجع حي — راجع الأقسام التفصيلية أدناه)
 
 ### دوال RPC (PostgreSQL):
 
@@ -53,7 +60,7 @@
 | 14 | `get_pending_offers_count` | — | `INTEGER` | ❌ |
 | 15 | `expire_offers` | — | `VOID` | ❌ |
 | **— ترقيات العروض (spd) —** | | | | |
-| 16 | `purchase_offer_boost` 🆕🆕🆕 | `p_uid UUID, p_offer_id UUID, p_boost_type TEXT, p_cost INT` | `JSONB` | ✅ |
+| 16 | `purchase_offer_boost` 🆕🆕🆕 | `p_uid UUID, p_offer_id UUID, p_boost_type TEXT` | `JSONB` | ✅ |
 | 17 | `expire_offer_boosts` 🆕🆕🆕 | — | `INTEGER` | ✅ |
 | **— إشعارات FCM (E2) —** | | | | |
 | 18 | `get_user_device_tokens` 🆕🆕🆕🆕 | `p_uid UUID` | `TABLE(device_token, platform)` | ✅ |
@@ -181,9 +188,9 @@ final ok = await client.rpc('apply_referral', params: {
 
 ## 🆕🆕🆕 دوال ترقيات العروض (المرحلة C — spd) — مفصّلة
 
-### `purchase_offer_boost(p_uid UUID, p_offer_id UUID, p_boost_type TEXT, p_cost INTEGER)` → `JSONB`
+### `purchase_offer_boost(p_uid UUID, p_offer_id UUID, p_boost_type TEXT)` → `JSONB`
 
-شراء ترقية لعرض موجود باستخدام نقاط المستخدم. تتحقق من الملكية + رصيد النقاط ثم تطبّق الترقية وتخصم النقاط وتسجّل في `activity_log`.
+شراء ترقية لعرض موجود باستخدام نقاط المستخدم. تتحقق من الملكية + رصيد النقاط، ثم **تحسب الكلفة من `app_config.spd` على السيرفر** وتطبّق الترقية وتخصم النقاط وتسجّل في `activity_log`.
 
 **الأنواع المدعومة (`p_boost_type`):**
 
@@ -214,12 +221,16 @@ final res = await client.rpc('purchase_offer_boost', params: {
   'p_uid': uid,
   'p_offer_id': offerId,
   'p_boost_type': 'pin',
-  'p_cost': 2000,
 });
 if (res['success'] == true) {
   print('New balance: ${res['new_balance']}');
 }
 ```
+
+**ملاحظات منطقية:**
+- الكلفة لا تُقبل من العميل؛ السيرفر يحسبها من `app_config.spd`.
+- إذا كانت `auth.uid()` متاحة، يجب أن تطابق `p_uid`.
+- تجديد عرض مرفوض (`sts=3`) مرفوض من السيرفر.
 
 **الجداول المتأثرة:**
 - `offers` (UPDATE: حسب نوع الترقية)
@@ -575,7 +586,7 @@ await client.rpc('expire_offers');
 
 ### 8. `get_pending_offers_count()` → `INTEGER`
 
-ترجع عدد العروض اللي لسه **قيد المراجعة** (sts = 0) — مفيدة للوحة الإدارة.
+ترجع عدد العروض اللي لسه **قيد المراجعة** (sts = 1) — مفيدة للوحة الإدارة.
 
 ```sql
 -- SQL
@@ -589,7 +600,7 @@ final count = await client.rpc('get_pending_offers_count');
 print('عروض بانتظار المراجعة: $count');
 ```
 
-**الجدول:** `offers` (COUNT WHERE sts = 0 AND i_del = 0)
+**الجدول:** `offers` (COUNT WHERE sts = 1 AND i_del = 0)
 
 ---
 
@@ -781,7 +792,14 @@ await client.rpc('send_appointment_reminders');
 | `supabase/migrations/2026_06_05_fcm_setup.sql` 🆕🆕🆕🆕🆕 | Migration #5: UNIQUE token + `get_user_device_tokens` + `notify_user` — **مطبّق ✅** |
 | `supabase/migrations/2026_06_06_notification_triggers.sql` 🔔 | Migration #6: 7 دوال + 6 triggers لربط الإشعارات بالأحداث — **مطبّق ✅** |
 | `supabase/migrations/2026_06_06_payment_channels.sql` 💳 | Migration #7: `payChannels` (4 قنوات) داخل `app_config.main` — **مطبّق ✅** |
-| `supabase/migrations/2026_06_06_payment_channel_and_storage.sql` 💳📁 | Migration #8: `payments.channel` TEXT + bucket `config_assets` + bucket `payment_proofs` + RLS — **جاهز للتطبيق** |
+| `supabase/migrations/2026_06_06_payment_channel_and_storage.sql` 💳📁 | Migration #8: `payments.channel` TEXT + bucket `config_assets` + bucket `payment_proofs` + RLS — **مطبّق ✅** |
+| `supabase/migrations/2026_06_10_logic_fixes_appointments_offers.sql` 🛠️ | إصلاح منطق المواعيد + pending offers + `create_offer_internal` — **مطبّق ✅** |
+| `supabase/migrations/2026_06_10_logic_fixes_boosts_payments.sql` 🛠️ | إصلاح `purchase_offer_boost` و `approve_payment_final` — **مطبّق ✅** |
+| `supabase/migrations/2026_06_10_config_package_prices_and_fx.sql` 🛠️ | نقل أسعار الباقات وسعر الصرف إلى Config — **مطبّق ✅** |
+| `supabase/migrations/2026_06_10_auth_uid_alignment_guards.sql` 🛠️ | حراسات جزئية لربط uid المرسل بـ `auth.uid()` عندما تتوفر الجلسة الحقيقية — **مطبّق ✅** |
+| `supabase/migrations/2026_06_10_users_public_no_private_img.sql` 🛠️ | إزالة `img` من `users_public` بعد نقل الهوية إلى bucket خاص — **مطبّق ✅** |
+| `supabase/migrations/2026_06_10_verification_dev_auth_rpcs.sql` 🛠️ | RPCs توثيق متوافقة مع وضع التطوير الحالي — **مطبّق ✅** |
+| `supabase/migrations/2026_06_11_drop_obsolete_verification_rpcs.sql` 🧹 | حذف RPCs التوثيق القديمة غير المستخدمة — **جاهز للتنفيذ / أو مطبّق حسب حالة السيرفر** |
 | `supabase/functions/send-push-notification/index.ts` 🆕🆕🆕🆕🆕 | Edge Function لإرسال FCM Push عبر Service Account |
 | `lib/services/fcm_service.dart` 🆕🆕🆕🆕🆕 | خدمة FCM Flutter (تهيئة + token + معالجات الإشعارات) |
 | `lib/screens/user/boost_offer_screen.dart` 🆕🆕🆕 | شاشة شراء ترقيات العروض (5 خيارات: ren/pin/bst/dsc5/fms) |
@@ -872,6 +890,32 @@ normalize_sy_phone(ph)
 
 ---
 
+### دوال التوثيق المتوافقة مع وضع التطوير
+
+#### `request_verification_by_uid(p_user_uid UUID)` → `BOOLEAN`
+
+- بديل متوافق مع وضع التطوير الحالي عندما لا تكون `auth.uid()` متاحة.
+- ينفذ نفس منطق RPC التوثيق القديم الذي تم الاستغناء عنه (`request_verification`) مع توافق أفضل مع وضع التطوير الحالي:
+  - يتحقق من وجود المستخدم.
+  - يرفض إذا كان موثقاً أو طلبه قيد المراجعة.
+  - يشترط وجود `sid` + `img`.
+  - يرفع `vrf` إلى `1`.
+- إذا كانت `auth.uid()` متاحة، يجب أن تطابق `p_user_uid`.
+
+#### `admin_approve_verification_by_admin(p_admin_uid UUID, p_target_uid UUID)` → `BOOLEAN`
+
+- اعتماد توثيق مستخدم عبر نسخة متوافقة مع وضع التطوير الحالي.
+- تفحص دور `p_admin_uid` من جدول `users` (`role >= 2`).
+- إذا كانت `auth.uid()` متاحة، يجب أن تطابق `p_admin_uid`.
+- ترسل إشعاراً داخلياً للمستخدم بعد الاعتماد.
+
+#### `admin_reject_verification_by_admin(p_admin_uid UUID, p_target_uid UUID, p_reason TEXT)` → `BOOLEAN`
+
+- رفض توثيق مستخدم مع سبب اختياري.
+- تتبع نفس سياسة النسخة السابقة لكن بصيغة متوافقة مع الوضع التطويري الحالي.
+
+---
+
 ### إنشاء العرض في وضع التطوير
 
 #### `create_offer_internal(p_user_uid UUID, p_offer JSONB)` → `SETOF offers`
@@ -880,6 +924,9 @@ normalize_sy_phone(ph)
 - يحل مشاكل RLS عندما لا تكون `auth.uid()` متاحة في WhatsApp dev fallback.
 - يستخدمها `OfferProvider.addOffer`.
 - تتحقق أن المستخدم موجود ونشط (`sts=0`, `i_del=0`).
+- تُرجع العرض بحالة `sts=1` (قيد المراجعة) وتمنع النشر المباشر من العميل.
+- تفرض على السيرفر: الهاتف الإلزامي، السعر الصالح، الحصة، وكشف التكرار.
+- إذا كانت `auth.uid()` متاحة، يجب أن تطابق `p_user_uid`.
 
 ---
 

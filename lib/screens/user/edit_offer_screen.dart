@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../providers/offer_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/constants/db_constants.dart';
 import '../../models/offer_model.dart';
 import '../../services/storage_service.dart';
 
@@ -158,8 +159,10 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
       'cur': _cur,
       'imgs': allImages,
       'ts_upd': DateTime.now().toIso8601String(),
-      // إعادة للمراجعة بعد التعديل (اختياري)
-      'sts': 0,
+      // أي تعديل يعيد العرض إلى مسار مراجعة المكتب.
+      'sts': OfferStatus.review,
+      'i_pub': 0,
+      'ts_pub': null,
     };
 
     final ok = await offerProv.updateOffer(_offer!.id, updateData);
@@ -177,28 +180,31 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
 
   Future<void> _renew() async {
     if (_offer == null) return;
-    final offerProv = context.read<OfferProvider>();
-    setState(() {
-      _saving = true;
-      _progress = 'جارٍ تجديد العرض...';
-    });
-
-    final renewDays = 30;
-    final newEnd = DateTime.now().add(Duration(days: renewDays));
-
-    final ok = await offerProv.updateOffer(_offer!.id, {
-      'ts_ren': DateTime.now().toIso8601String(),
-      'ts_end': newEnd.toIso8601String(),
-      'sts': 2, // منشور
-    });
-
-    if (!mounted) return;
-    setState(() => _saving = false);
-    if (ok) {
-      _snack('تم تجديد العرض لمدة $renewDays يوم ✅');
-      Navigator.pop(context, true);
-    } else {
-      _snack('فشل التجديد');
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppTheme.surfaceBlack,
+        title: const Text('تجديد العرض',
+            style: TextStyle(color: AppTheme.textWhite)),
+        content: const Text(
+          'تجديد العرض يتم عبر نظام الترقيات بالنقاط حتى يبقى تحت منطق المكتب والسيرفر.\n\nهل تريد فتح شاشة الترقية الآن؟',
+          style: TextStyle(color: AppTheme.textGrey),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('إلغاء',
+                style: TextStyle(color: AppTheme.textGrey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('فتح الترقية'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) {
+      context.push('/user/boost-offer/${_offer!.id}');
     }
   }
 

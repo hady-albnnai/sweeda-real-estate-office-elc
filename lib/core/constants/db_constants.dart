@@ -1,6 +1,7 @@
 /// أسماء الجداول في Supabase
 class DbTables {
   static const String users = 'users';
+  static const String usersPublic = 'users_public';
   static const String offers = 'offers';
   static const String requests = 'requests';
   static const String appointments = 'appointments';
@@ -80,6 +81,16 @@ class OfferStatus {
   static const int expired = 4;
   static const int reserved = 5;
   static const int completed = 6;
+}
+
+/// حالات الموعد
+class AppointmentStatus {
+  static const int pending = 0;
+  static const int confirmed = 1;
+  static const int completed = 2;
+  static const int cancelled = 3;
+  static const int rejected = 4;
+  static const int noShow = 5;
 }
 
 /// حالات المستخدم

@@ -183,17 +183,17 @@ WITH checks AS (
     EXISTS(SELECT 1 FROM pg_proc WHERE proname='send_push_notification'),
     'notification_triggers'
   UNION ALL
-  SELECT 71, 'FN', 'request_verification',
-    EXISTS(SELECT 1 FROM pg_proc WHERE proname='request_verification'),
-    'Phase 8'
+  SELECT 71, 'FN', 'legacy request_verification removed',
+    NOT EXISTS(SELECT 1 FROM pg_proc WHERE proname='request_verification'),
+    'cleanup_2026_06_11'
   UNION ALL
-  SELECT 72, 'FN', 'admin_approve_verification',
-    EXISTS(SELECT 1 FROM pg_proc WHERE proname='admin_approve_verification'),
-    'Phase 8'
+  SELECT 72, 'FN', 'legacy admin_approve_verification removed',
+    NOT EXISTS(SELECT 1 FROM pg_proc WHERE proname='admin_approve_verification'),
+    'cleanup_2026_06_11'
   UNION ALL
-  SELECT 73, 'FN', 'admin_reject_verification',
-    EXISTS(SELECT 1 FROM pg_proc WHERE proname='admin_reject_verification'),
-    'Phase 8'
+  SELECT 73, 'FN', 'legacy admin_reject_verification removed',
+    NOT EXISTS(SELECT 1 FROM pg_proc WHERE proname='admin_reject_verification'),
+    'cleanup_2026_06_11'
   UNION ALL
   SELECT 74, 'FN', 'check_user_safe_update',
     EXISTS(SELECT 1 FROM pg_proc WHERE proname='check_user_safe_update'),
@@ -378,6 +378,50 @@ WITH checks AS (
     EXISTS(SELECT 1 FROM pg_policies
            WHERE tablename='notifications' AND policyname='notifications_no_user_insert'),
     'Phase 8 (منع phishing)'
+  UNION ALL
+  SELECT 143, 'COL', 'appointments.req_uid',
+    EXISTS(SELECT 1 FROM information_schema.columns
+           WHERE table_schema='public' AND table_name='appointments' AND column_name='req_uid'),
+    'logic_fixes_appointments_offers'
+  UNION ALL
+  SELECT 144, 'FN', 'request_verification_by_uid',
+    EXISTS(SELECT 1 FROM pg_proc WHERE proname='request_verification_by_uid'),
+    'verification_dev_auth_rpcs'
+  UNION ALL
+  SELECT 145, 'FN', 'admin_approve_verification_by_admin',
+    EXISTS(SELECT 1 FROM pg_proc WHERE proname='admin_approve_verification_by_admin'),
+    'verification_dev_auth_rpcs'
+  UNION ALL
+  SELECT 146, 'FN', 'admin_reject_verification_by_admin',
+    EXISTS(SELECT 1 FROM pg_proc WHERE proname='admin_reject_verification_by_admin'),
+    'verification_dev_auth_rpcs'
+  UNION ALL
+  SELECT 147, 'CFG', 'app_config.pkg prices',
+    EXISTS(
+      SELECT 1 FROM app_config
+      WHERE key='main'
+        AND value ? 'pkg'
+        AND value->'pkg'->'1' ? 'pr'
+        AND value->'pkg'->'2' ? 'pr'
+    ),
+    'config_package_prices_and_fx'
+  UNION ALL
+  SELECT 148, 'CFG', 'app_config.fx.usd_syp',
+    EXISTS(
+      SELECT 1 FROM app_config
+      WHERE key='main'
+        AND value ? 'fx'
+        AND value->'fx' ? 'usd_syp'
+    ),
+    'config_package_prices_and_fx'
+  UNION ALL
+  SELECT 149, 'VW', 'users_public بدون img خاص',
+    EXISTS(
+      SELECT 1
+      FROM information_schema.columns
+      WHERE table_schema='public' AND table_name='users_public' AND column_name='img'
+    ) = false,
+    'users_public_no_private_img'
   UNION ALL
 
   -- ═══════════════════════════════════════════════════

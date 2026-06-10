@@ -60,7 +60,8 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
 
       // جلب العروض المطابقة
       final matches = await _biz.matchOffersForRequest(
-        type: req.typ,
+        elementType: req.elm,
+        transactionType: req.typ,
         targetPrice: req.prc,
         currency: req.cur,
       );

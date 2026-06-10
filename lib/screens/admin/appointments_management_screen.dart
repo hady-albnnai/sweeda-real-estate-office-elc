@@ -25,6 +25,8 @@ class _AppointmentsManagementScreenState
     1: 'مؤكّد',
     2: 'مكتمل',
     3: 'ملغى',
+    4: 'مرفوض',
+    5: 'لم يحضر',
   };
 
   @override
@@ -129,7 +131,11 @@ class _AppointmentsManagementScreenState
       case 2:
         return AppTheme.primaryGold;
       case 3:
+        return Colors.grey;
+      case 4:
         return AppTheme.errorRed;
+      case 5:
+        return Colors.deepOrange;
       default:
         return Colors.orange;
     }
@@ -216,7 +222,14 @@ class _AppointmentsManagementScreenState
                   onPressed: () => _setStatus(a, 3),
                   icon: const Icon(Icons.close, size: 16),
                   label: const Text('إلغاء'),
-                  style: TextButton.styleFrom(foregroundColor: AppTheme.errorRed),
+                  style: TextButton.styleFrom(foregroundColor: Colors.grey),
+                ),
+              if (a.sts != 5)
+                TextButton.icon(
+                  onPressed: () => _setStatus(a, 5),
+                  icon: const Icon(Icons.person_off, size: 16),
+                  label: const Text('عدم حضور'),
+                  style: TextButton.styleFrom(foregroundColor: Colors.deepOrange),
                 ),
             ],
           ),

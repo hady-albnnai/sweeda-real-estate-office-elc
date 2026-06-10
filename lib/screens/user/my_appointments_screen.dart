@@ -69,8 +69,22 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen> {
   }
 
   Widget _appointmentCard(dynamic appt, AppointmentProvider provider) {
-    final statusColors = {0: Colors.orange, 1: Colors.blue, 2: Colors.green, 3: Colors.red};
-    final statusTexts = {0: 'قيد الانتظار', 1: 'مؤكد', 2: 'منتهي', 3: 'ملغي'};
+    final statusColors = {
+      0: Colors.orange,
+      1: Colors.blue,
+      2: Colors.green,
+      3: Colors.red,
+      4: Colors.redAccent,
+      5: Colors.deepOrange,
+    };
+    final statusTexts = {
+      0: 'قيد الانتظار',
+      1: 'مؤكد',
+      2: 'منتهي',
+      3: 'ملغي',
+      4: 'مرفوض',
+      5: 'لم يتم الحضور',
+    };
     final sts = appt.sts ?? 0;
     final apptDate = appt.dt != null ? AppUtils.formatTimestamp(appt.dt) : 'غير محدد';
 

@@ -129,12 +129,15 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
     setState(() => _progress = 'جارٍ تسجيل الدفعة...');
 
+    final config = context.read<ConfigProvider>().config;
+    final usdToSypRate = (config?.usdToSypRate ?? 15000).toDouble();
+
     final payment = PaymentModel(
       id: '',
       uid: user.uid,
       tp: 0, // 0 = اشتراك باقة
       pkg: widget.packageId,
-      amt: _currency == 0 ? widget.amount : (widget.amount * 15000.0),
+      amt: _currency == 0 ? widget.amount : (widget.amount * usdToSypRate),
       cur: _currency,
       mtd: 0, // legacy
       channel: _channel,
@@ -337,9 +340,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
     if (_currency == 0) {
       return '\$${widget.amount.toStringAsFixed(0)}';
     } else {
-      // تحويل تقريبي لليرة السورية (مثلاً 1$ = 15,000 ل.س)
-      // في الواقع يجب جلب هذا الرقم من config
-      final rate = 15000.0; 
+      final config = context.read<ConfigProvider>().config;
+      final rate = (config?.usdToSypRate ?? 15000).toDouble();
       return '${(widget.amount * rate).toStringAsFixed(0)} ل.س';
     }
   }

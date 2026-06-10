@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import '../models/request_model.dart';
 import '../core/network/supabase_service.dart';
 import '../core/constants/db_constants.dart';
-import '../core/services/business_service.dart';
 
 class RequestProvider with ChangeNotifier {
   List<RequestModel> _myRequests = [];
@@ -15,11 +14,7 @@ class RequestProvider with ChangeNotifier {
     try {
       await SupabaseService().client.from(DbTables.requests).insert(request.toMap());
       await fetchMyRequests(request.usrId);
-      notifyListeners(); 
-      
-      // تحديث إحصائيات المستخدم (عدد الطلبات)
-      await BusinessService().updateUserStat(request.usrId, 'req');
-      
+      notifyListeners();
       return true;
     } catch (e) {return false; }
   }

@@ -65,9 +65,12 @@ class ProfileScreen extends StatelessWidget {
     if (confirmed != true || !context.mounted) return;
 
     try {
-      // 🔒 Phase 8: نستخدم RPC request_verification بدل UPDATE مباشر
-      // (UPDATE للـvrf محظور الآن في DB عبر trg_user_safe_update)
-      await SupabaseService().client.rpc('request_verification');
+      // نستخدم RPC متوافقة مع وضع التطوير الحالي وتتحقق من الهوية
+      // عبر auth.uid() متى كانت الجلسة الحقيقية متاحة.
+      await SupabaseService().client.rpc(
+        'request_verification_by_uid',
+        params: {'p_user_uid': user.uid},
+      );
 
       // تحديث الكاش المحلي
       await auth.refreshUser();
@@ -172,15 +175,13 @@ class ProfileScreen extends StatelessWidget {
               ),
             ],
           ),
-          child: user.img.isNotEmpty
-              ? ClipOval(child: Image.network(user.img, fit: BoxFit.cover))
-              : CircleAvatar(
-                  backgroundColor: AppTheme.surfaceBlack,
-                  child: Text(
-                    user.nm.isNotEmpty ? user.nm[0] : '👤',
-                    style: const TextStyle(color: AppTheme.primaryGold, fontSize: 40),
-                  ),
-                ),
+          child: CircleAvatar(
+            backgroundColor: AppTheme.surfaceBlack,
+            child: Text(
+              user.nm.isNotEmpty ? user.nm[0] : '👤',
+              style: const TextStyle(color: AppTheme.primaryGold, fontSize: 40),
+            ),
+          ),
         ),
         const SizedBox(height: 15),
         // الاسم
@@ -267,6 +268,7 @@ class ProfileScreen extends StatelessWidget {
           _infoRow('📱 الهاتف', user.ph),
           _infoRow('📍 العنوان', user.ad.isEmpty ? 'غير محدد' : user.ad),
           _infoRow('🆔 الهوية', user.sid.isEmpty ? 'غير مكتمل' : user.sid),
+          _infoRow('🪪 صورة الهوية', user.img.isEmpty ? 'غير مرفوعة' : 'مرفوعة بشكل خاص'),
           _infoRow('📅 تاريخ التسجيل',
               user.tsCrt != null ? AppUtils.formatTimestamp(user.tsCrt) : 'غير معروف'),
           _infoRow('🏷️ الباقة', _packageText(user.bPkg)),

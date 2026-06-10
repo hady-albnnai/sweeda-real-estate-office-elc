@@ -90,7 +90,7 @@ class BrokerProvider with ChangeNotifier {
     }
   }
 
-  /// معالجة موعد: 1=قبول, 2=رفض, 0=معلّق
+  /// معالجة موعد: 1=قبول, 2=رفض, 0=إرجاع لمعلّق
   Future<bool> handleAppointment(String apptId, int feedback) async {
     try {
       final now = DateTime.now().toIso8601String();
@@ -98,7 +98,7 @@ class BrokerProvider with ChangeNotifier {
       if (feedback == 1) {
         data['sts'] = 1; // مؤكّد
       } else if (feedback == 2) {
-        data['sts'] = 3; // ملغى/مرفوض
+        data['sts'] = 4; // مرفوض من المالك/الوسيط
       } else {
         data['sts'] = 0; // معلّق
       }

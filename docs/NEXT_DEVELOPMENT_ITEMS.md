@@ -2,18 +2,37 @@
 
 > هذا الملف هو المرجع الوحيد للمهام غير المنفذة حالياً.
 
-
-نفذ migration:
-
-```txt
-```
-
-ثم افتح داخل التطبيق:
+**مهم:** حالة إصلاحات المنطق نفسها تُتابَع في:
 
 ```txt
+docs/LOGIC_REPAIR_TRACKER.md
 ```
 
-وشغّل الفحص.
+وخطة التنفيذ العملي بعد هذه الإصلاحات موجودة في:
+
+```txt
+docs/POST_FIX_EXECUTION_AND_TEST_PLAN.md
+```
+
+> حالياً: معظم إصلاحات المنطق داخل المستودع أصبحت منفذة وموثقة، والمتبقي الأهم هو تشديد المصادقة/الصلاحيات بالكامل عند الانتقال من وضع التطوير إلى Auth إنتاجي حقيقي.
+
+وأحدث دفعة migrations منطقية الجاهزة للتنفيذ هي:
+
+```txt
+supabase/migrations/2026_06_10_logic_fixes_appointments_offers.sql
+supabase/migrations/2026_06_10_logic_fixes_boosts_payments.sql
+supabase/migrations/2026_06_10_config_package_prices_and_fx.sql
+supabase/migrations/2026_06_10_auth_uid_alignment_guards.sql
+supabase/migrations/2026_06_10_users_public_no_private_img.sql
+supabase/migrations/2026_06_10_verification_dev_auth_rpcs.sql
+supabase/migrations/2026_06_11_drop_obsolete_verification_rpcs.sql
+```
+
+وللتنفيذ السريع يوجد ملف مجمّع جاهز:
+
+```txt
+supabase/RUN_ME_LOGIC_FIXES_2026_06_11.sql
+```
 
 ## 1. الاختبار الفعلي بعد السحب
 
@@ -52,11 +71,11 @@ docs/AUTH_SETUP.md
 - نشر Edge Functions.
 - اختبار أن `auth.uid()` يعمل في الجلسات الإنتاجية.
 
-## 3. مراجعة RLS بعد الانتقال من وضع التطوير للإنتاج
+## 3. مراجعة RLS / Auth بعد الانتقال من وضع التطوير للإنتاج
 
-الحالة: بعض RPC أضيفت لتناسب وضع التطوير الحالي.
+الحالة: تم تشديد عدد كبير من RPCs داخل المستودع، لكن بقي جزء من الحماية **جزئياً** بسبب استمرار وضع التطوير الحالي.
 
-عند تفعيل Auth إنتاجي حقيقي، يمكن لاحقاً تشديد الدوال لتعود للاعتماد على `auth.uid()` فقط.
+عند تفعيل Auth إنتاجي حقيقي، يمكن لاحقاً تشديد الدوال لتعود للاعتماد على `auth.uid()` فقط وإلغاء الاعتماد على الـUID القادم من العميل بالكامل.
 
 المرجع:
 

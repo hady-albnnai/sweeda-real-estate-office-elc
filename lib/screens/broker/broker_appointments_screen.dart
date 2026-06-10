@@ -28,13 +28,13 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
   bool _loading = true;
 
   final Map<String, OfferModel> _offers = {};
-  final Map<String, UserModel> _owners = {};
+  final Map<String, UserModel> _requesters = {};
 
-  // فلاتر: -1=الكل, 0=قيد الانتظار, 1=مقبول, 2=مرفوض, 3=مكتمل
+  // فلاتر: -1=الكل, 0=قيد الانتظار, 1=مؤكد, 2=مكتمل, 4=مرفوض, 3=ملغي, 5=لم يحضر
   static const _tabs = [
     ('قيد الانتظار', 0),
-    ('مقبول', 1),
-    ('مكتمل', 3),
+    ('مؤكد', 1),
+    ('مكتمل', 2),
     ('الكل', -1),
   ];
 
@@ -75,17 +75,18 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
       } catch (e) {}
     }
 
-    final ownIds = list.map((a) => a.ownId).where((e) => e.isNotEmpty).toSet();
-    if (ownIds.isNotEmpty) {
+    final requesterIds =
+        list.map((a) => a.reqUid).where((e) => e.isNotEmpty).toSet();
+    if (requesterIds.isNotEmpty) {
       try {
-        final ownData = await SupabaseService()
+        final requesterData = await SupabaseService()
             .client
             .from(DbTables.users)
             .select()
-            .inFilter('id', ownIds.toList());
-        for (final u in ownData as List) {
+            .inFilter('id', requesterIds.toList());
+        for (final u in requesterData as List) {
           final m = Map<String, dynamic>.from(u as Map);
-          _owners[m['id'] as String] =
+          _requesters[m['id'] as String] =
               UserModel.fromSupabase(m, m['id'] as String);
         }
       } catch (e) {}
@@ -264,7 +265,7 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
 
   Widget _card(AppointmentModel a) {
     final offer = _offers[a.offId];
-    final owner = _owners[a.ownId];
+    final requester = _requesters[a.reqUid];
     final status = _statusInfo(a.sts);
     final isPending = a.sts == 0;
     final isAccepted = a.sts == 1;
@@ -361,14 +362,16 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
 
                 const Divider(color: AppTheme.textGrey, height: 18),
 
-                // صاحب العرض
+                // طالب الموعد
                 Row(
                   children: [
                     CircleAvatar(
                       radius: 16,
                       backgroundColor: AppTheme.primaryGold,
                       child: Text(
-                        (owner?.nm.isNotEmpty == true ? owner!.nm[0] : '؟')
+                        (requester?.nm.isNotEmpty == true
+                                ? requester!.nm[0]
+                                : '؟')
                             .toUpperCase(),
                         style: const TextStyle(
                             color: Colors.black,
@@ -381,34 +384,34 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            owner?.nm.isNotEmpty == true
-                                ? owner!.nm
-                                : 'صاحب العرض',
+                            requester?.nm.isNotEmpty == true
+                                ? requester!.nm
+                                : 'طالب الموعد',
                             style: const TextStyle(
                                 color: AppTheme.textWhite,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13),
                           ),
                           Text(
-                            owner?.ph ?? '—',
+                            requester?.ph ?? '—',
                             style: const TextStyle(
                                 color: AppTheme.textGrey, fontSize: 11),
                           ),
                         ],
                       ),
                     ),
-                    // أزرار الاتصال (فقط إذا مقبول)
-                    if (isAccepted && owner != null) ...[
+                    // أزرار الاتصال (فقط إذا تأكد الموعد)
+                    if (isAccepted && requester != null && requester.ph.isNotEmpty) ...[
                       IconButton(
                         icon: const Icon(Icons.phone, color: Colors.green),
                         tooltip: 'اتصال',
-                        onPressed: () => _call(owner.ph),
+                        onPressed: () => _call(requester.ph),
                       ),
                       IconButton(
                         icon:
                             const Icon(Icons.chat, color: AppTheme.primaryGold),
                         tooltip: 'واتساب',
-                        onPressed: () => _whatsapp(owner.ph),
+                        onPressed: () => _whatsapp(requester.ph),
                       ),
                     ],
                   ],
@@ -501,13 +504,15 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
       case 0:
         return ('قيد الانتظار', Colors.orange, Icons.hourglass_empty);
       case 1:
-        return ('مقبول', Colors.green, Icons.check_circle);
+        return ('مؤكد', Colors.green, Icons.check_circle);
       case 2:
-        return ('مرفوض', Colors.red, Icons.cancel);
-      case 3:
         return ('مكتمل', Colors.teal, Icons.done_all);
-      case 4:
+      case 3:
         return ('ملغي', Colors.grey, Icons.block);
+      case 4:
+        return ('مرفوض', Colors.red, Icons.cancel);
+      case 5:
+        return ('لم يتم الحضور', Colors.deepOrange, Icons.person_off);
       default:
         return ('غير معروف', Colors.grey, Icons.help);
     }
