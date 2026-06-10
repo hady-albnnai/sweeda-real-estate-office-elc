@@ -1,11 +1,11 @@
 {
-    "name": "عقارات السويداء",
-    "short_name": "عقارات السويداء",
+    "name": "المكتب العقاري الالكتروني",
+    "short_name": "المكتب العقاري",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0B0B0B",
     "theme_color": "#D4AF37",
-    "description": "مكتب عقاري إلكتروني لعقارات وسيارات السويداء",
+    "description": "المكتب العقاري الالكتروني لإدارة عروض العقارات والسيارات",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
