@@ -474,3 +474,35 @@
 - `lib/screens/admin/permissions_management_screen.dart`
 - `lib/core/router/app_router.dart`
 - `lib/screens/admin/admin_dashboard_screen.dart`
+
+---
+
+## 🆕 تحديث 2026-06-10 — إدارة الوسائط والتصوير
+
+تمت إضافة شاشة إدارية لمراجعة وسائط العروض ضمن نموذج البيانات الحالي `offers`:
+
+- فلترة كل العروض.
+- عروض قيد المراجعة.
+- عروض منشورة.
+- عروض بلا صور.
+- عروض بلا صورة سند.
+- عروض تحتوي فيديو.
+- عرض عدد الصور وحالة السند والفيديو لكل عرض.
+
+المسار:
+
+- `/admin/media-review`
+
+الصلاحية:
+
+- `media_review`
+
+الملفات:
+
+- `lib/screens/admin/media_review_screen.dart`
+- `lib/core/router/app_router.dart`
+- `lib/core/services/permission_service.dart`
+- `lib/providers/admin_provider.dart`
+- `lib/screens/admin/admin_dashboard_screen.dart`
+
+ملاحظة: لم يتم إنشاء جدول تصوير جديد. إذا احتجنا لاحقاً إلى مهام تصوير مستقلة للمصورين، يجب تصميم جدول مخصص بعد فحص قاعدة البيانات.

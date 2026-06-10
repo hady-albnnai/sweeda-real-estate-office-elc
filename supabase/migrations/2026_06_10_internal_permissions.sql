@@ -27,6 +27,7 @@ DECLARE
     'manage_permissions',
     'review_offers',
     'review_verifications',
+    'media_review',
     'fraud_suspects',
     'manage_appointments',
     'manage_deals',

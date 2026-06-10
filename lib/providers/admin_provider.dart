@@ -94,6 +94,23 @@ class AdminProvider with ChangeNotifier {
     }
   }
 
+
+  Future<List<OfferModel>> getOffersForMediaReview() async {
+    try {
+      final response = await SupabaseService().client
+          .from(DbTables.offers)
+          .select()
+          .eq('i_del', 0)
+          .order('ts_crt', ascending: false)
+          .limit(100);
+      return (response as List)
+          .map((d) => OfferModel.fromSupabase(
+              Map<String, dynamic>.from(d), d['id'] as String))
+          .toList();
+    } catch (e) {return [];
+    }
+  }
+
   // ═══════════════════════════════════════
   // 2) المستخدمون (إدارة)
   // ═══════════════════════════════════════
