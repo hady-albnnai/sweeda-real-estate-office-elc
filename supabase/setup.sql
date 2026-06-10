@@ -1972,13 +1972,13 @@ BEGIN
   ]
   LOOP
     IF v_name = 'catProp' THEN
-      v_ok := jsonb_typeof(v_config->'catProp') = 'object' AND jsonb_object_length(v_config->'catProp') > 0;
+      v_ok := jsonb_typeof(v_config->'catProp') = 'object' AND (SELECT COUNT(*) FROM jsonb_object_keys(v_config->'catProp')) > 0;
     ELSIF v_name = 'catVeh' THEN
-      v_ok := jsonb_typeof(v_config->'catVeh') = 'object' AND jsonb_object_length(v_config->'catVeh') > 0;
+      v_ok := jsonb_typeof(v_config->'catVeh') = 'object' AND (SELECT COUNT(*) FROM jsonb_object_keys(v_config->'catVeh')) > 0;
     ELSIF v_name = 'docTp' THEN
-      v_ok := jsonb_typeof(v_config->'docTp') = 'object' AND jsonb_object_length(v_config->'docTp') > 0;
+      v_ok := jsonb_typeof(v_config->'docTp') = 'object' AND (SELECT COUNT(*) FROM jsonb_object_keys(v_config->'docTp')) > 0;
     ELSIF v_name = 'payChannels' THEN
-      v_ok := jsonb_typeof(v_config->'payChannels') = 'object' AND jsonb_object_length(v_config->'payChannels') > 0;
+      v_ok := jsonb_typeof(v_config->'payChannels') = 'object' AND (SELECT COUNT(*) FROM jsonb_object_keys(v_config->'payChannels')) > 0;
     ELSE
       v_ok := v_config #> string_to_array(v_name, '.') IS NOT NULL;
     END IF;
