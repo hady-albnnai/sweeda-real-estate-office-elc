@@ -10,6 +10,7 @@ import '../../widgets/bottom_nav_bar.dart';
 import '../../widgets/shimmer_loading.dart';
 import '../../widgets/error_widget.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/services/permission_service.dart';
 
 /// الشاشة الرئيسية للمستخدم بعد تسجيل الدخول
 /// تحتوي على: بحث + فلتر + عروض + BottomNavigationBar
@@ -123,6 +124,12 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
           ],
         ),
         actions: [
+          if (_roleShortcutRoute(auth) != null)
+            IconButton(
+              icon: Icon(_roleShortcutIcon(auth), color: AppTheme.primaryGold),
+              tooltip: _roleShortcutTooltip(auth),
+              onPressed: () => context.push(_roleShortcutRoute(auth)!),
+            ),
           // أيقونة الإشعارات مع badge لعدد غير المقروء
           Consumer<NotificationProvider>(
             builder: (context, notif, _) {
@@ -273,6 +280,34 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     );
   }
 
+
+  String? _roleShortcutRoute(AuthProvider auth) {
+    final user = auth.userModel;
+    if (user == null) return null;
+    if (user.isAdmin) return '/admin/dashboard';
+    if (PermissionService.has(user, PermissionKeys.photographerTasks)) {
+      return '/photographer/tasks';
+    }
+    if (user.isBroker || user.role == 1) return '/broker/dashboard';
+    return null;
+  }
+
+  IconData _roleShortcutIcon(AuthProvider auth) {
+    final route = _roleShortcutRoute(auth);
+    if (route == '/admin/dashboard') return Icons.admin_panel_settings_outlined;
+    if (route == '/photographer/tasks') return Icons.camera_alt_outlined;
+    if (route == '/broker/dashboard') return Icons.handshake_outlined;
+    return Icons.dashboard_outlined;
+  }
+
+  String _roleShortcutTooltip(AuthProvider auth) {
+    final route = _roleShortcutRoute(auth);
+    if (route == '/admin/dashboard') return 'لوحة الإدارة';
+    if (route == '/photographer/tasks') return 'مهام المصور';
+    if (route == '/broker/dashboard') return 'لوحة الوسيط';
+    return 'لوحتي';
+  }
+
   List<dynamic> _filteredOffers(List<dynamic> offers) {
     if (_selectedCategory == 0) return offers;
     return offers.where((o) => o.typ == (_selectedCategory - 1)).toList();
@@ -280,16 +315,23 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
   Widget _buildChip(String label, bool isSelected) {
     return FilterChip(
-      label: Text(label, style: TextStyle(
-        color: isSelected ? AppTheme.deepBlack : AppTheme.textWhite,
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-      )),
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      visualDensity: VisualDensity.compact,
+      labelPadding: const EdgeInsets.symmetric(horizontal: 6),
+      label: Text(
+        label,
+        style: TextStyle(
+          color: isSelected ? AppTheme.deepBlack : AppTheme.textWhite,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+          fontSize: 12,
+        ),
+      ),
       selected: isSelected,
       selectedColor: AppTheme.primaryGold,
       backgroundColor: AppTheme.surfaceBlack,
       checkmarkColor: AppTheme.deepBlack,
-      side: BorderSide(color: AppTheme.primaryGold.withValues(alpha: 0.3)),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      side: BorderSide(color: AppTheme.primaryGold.withValues(alpha: 0.45)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       onSelected: (_) => setState(() => _selectedCategory =
           label == 'الكل' ? 0 : label.contains('عقار') ? 1 : 2),
     );

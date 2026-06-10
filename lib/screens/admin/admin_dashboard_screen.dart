@@ -95,14 +95,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           fontSize: 16,
                           fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
-                  GridView.count(
-                    crossAxisCount: 2,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 1.5,
-                    children: [
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final wide = constraints.maxWidth >= 520;
+                      return GridView.count(
+                        crossAxisCount: 2,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        mainAxisSpacing: 10,
+                        crossAxisSpacing: 10,
+                        childAspectRatio: wide ? 2.15 : 1.85,
+                        children: [
                       _statCard('👥', 'المستخدمون',
                           '${_stats['totalUsers'] ?? 0}', 'نشط: ${_stats['activeUsers'] ?? 0}'),
                       _statCard('🏠', 'العروض',
@@ -111,7 +114,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           '${_stats['totalDeals'] ?? 0}', 'مكتمل: ${_stats['completedDeals'] ?? 0}'),
                       _statCard('💰', 'العمولات',
                           _fmt(_stats['totalCommission']), 'إجمالي محقّق'),
-                    ],
+                        ],
+                      );
+                    },
                   ),
 
                   const SizedBox(height: 24),
@@ -229,7 +234,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Widget _statCard(String emoji, String label, String value, String sub) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(16),
@@ -238,24 +243,42 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
-              Text(emoji, style: const TextStyle(fontSize: 20)),
-              const SizedBox(width: 8),
-              Text(label,
-                  style: const TextStyle(
-                      color: AppTheme.textGrey, fontSize: 13)),
+              Text(emoji, style: const TextStyle(fontSize: 17)),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: AppTheme.textGrey, fontSize: 12),
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(value,
+          const SizedBox(height: 5),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerRight,
+            child: Text(
+              value,
+              maxLines: 1,
               style: const TextStyle(
-                  color: AppTheme.primaryGold,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold)),
-          Text(sub,
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+                color: AppTheme.primaryGold,
+                fontSize: 21,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          Text(
+            sub,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: AppTheme.textGrey, fontSize: 10),
+          ),
         ],
       ),
     );

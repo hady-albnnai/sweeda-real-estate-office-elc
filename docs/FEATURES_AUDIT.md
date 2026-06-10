@@ -649,3 +649,24 @@
 - `lib/screens/admin/user_details_screen.dart`
 - `lib/screens/admin/reports_screen.dart`
 - `lib/services/auth_service.dart`
+
+---
+
+## 🎨 تحديث 2026-06-10 — تحسينات تنقل وواجهة
+
+تمت معالجة ملاحظات الواجهة:
+
+1. نقل اختصار لوحات الأدوار إلى أعلى الصفحة الرئيسية بجانب الإشعارات:
+   - لوحة الإدارة للمدراء/المشرفين.
+   - لوحة الوسيط للوسطاء.
+   - مهام المصور للمصورين.
+2. إزالة أزرار لوحة الإدارة/الوسيط من صفحة "حسابي" لتسهيل التنقل من الأعلى.
+3. تحسين وضوح شرائح الفلترة في شاشة الزائر وشاشة المستخدم بتصغير الخط والـ padding.
+4. إصلاح overflow كروت "نظرة عامة" في لوحة الإدارة عبر Grid adaptive و FittedBox.
+
+الملفات:
+
+- `lib/screens/user/user_home_screen.dart`
+- `lib/screens/user/profile_screen.dart`
+- `lib/screens/visitor/home_screen.dart`
+- `lib/screens/admin/admin_dashboard_screen.dart`
