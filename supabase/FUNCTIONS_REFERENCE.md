@@ -787,7 +787,6 @@ await client.rpc('send_appointment_reminders');
 | `lib/screens/user/boost_offer_screen.dart` 🆕🆕🆕 | شاشة شراء ترقيات العروض (5 خيارات: ren/pin/bst/dsc5/fms) |
 | `supabase/functions/send-whatsapp-otp/index.ts` 🆕 | Edge Function لإرسال OTP عبر Meta WhatsApp — **لم يُنشر ⚠️** |
 | `supabase/functions/verify-whatsapp-otp/index.ts` 🆕 | Edge Function للتحقق وإصدار session — **لم يُنشر ⚠️** |
-| `supabase/SERVER_DOCS.md` | توثيق الجداول + RLS + Realtime |
 | `lib/core/constants/db_constants.dart` | أسماء الدوال كـ constants |
 | `lib/services/auth_service.dart` | استخدام WhatsApp OTP + Email Magic Link (الـ V2) |
 | `lib/screens/auth/login_screen.dart` | شاشة تسجيل الدخول بتبويبتين (واتساب/إيميل) |
@@ -801,6 +800,7 @@ await client.rpc('send_appointment_reminders');
 | `lib/screens/user/referral_screen.dart` 🆕🆕 | شاشة الإحالة + كود + رابط + مشاركة |
 | `lib/screens/visitor/offer_detail_screen.dart` 🆕🆕 | تفاصيل العرض + زر التبليغ (`_reportOffer`) |
 | `docs/AUTH_SETUP.md` 🆕 | **دليل تفعيل المصادقة الكامل** (Meta + Supabase Email + Deploy) |
-| `docs/SCREENS_AUDIT.md` 🆕 | تدقيق شامل لحالة جميع الشاشات (37 شاشة) |
-| `docs/FEATURES_AUDIT.md` 🆕🆕 | تدقيق مزايا المواصفات الأصلية + خطة التنفيذ |
-| `DEVELOPMENT_GUIDE.md` | دليل التطوير الشامل |
+| `docs/CURRENT_STATUS.md` | الحالة الحالية المختصرة للمشروع |
+| `docs/FEATURES_AUDIT.md` | تدقيق الميزات الحالي بعد إعادة الهيكلة |
+| `docs/NEXT_DEVELOPMENT_ITEMS.md` | المهام المتبقية غير المنفذة / المؤجلة |
+| `DEVELOPMENT_GUIDELINES.md` | قواعد التطوير الإلزامية |
