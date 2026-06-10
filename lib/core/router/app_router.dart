@@ -63,7 +63,7 @@ import '../services/permission_service.dart';
 
 class AppRouter {
   static String? _adminRoutePermission(String path) {
-    if (path == '/admin/dashboard') return PermissionKeys.adminDashboard;
+    if (path == '/admin/dashboard') return null;
     if (path == '/admin/office-operations') return PermissionKeys.officeOperations;
     if (path == '/admin/permissions') return PermissionKeys.managePermissions;
     if (path.startsWith('/admin/users') || path.startsWith('/admin/user/')) return PermissionKeys.manageUsers;
