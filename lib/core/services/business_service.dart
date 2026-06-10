@@ -112,7 +112,6 @@ class BusinessService {
     ConfigModel? config,
   }) async {
     try {
-      print('DEBUG canPublishOffer start for uid=$uid');
       // 🔒 Phase 8: نحسب الفعّالة + المحذوفة حديثاً (آخر 24 ساعة)
       // لمنع ثغرة "احذف لتنشر" — Scam #4 في التقرير الأمني
       final since24h =
@@ -143,7 +142,6 @@ class BusinessService {
       final limit = offerQuota(config, role: role, packageType: packageType);
 
       final allowed = used < limit;
-      print('DEBUG canPublishOffer result: allowed=$allowed, used=$used, limit=$limit');
       return {
         'allowed': allowed,
         'used': used,
@@ -154,7 +152,6 @@ class BusinessService {
                 'رقّ باقتك لنشر المزيد.',
       };
     } catch (e) {// 🔒 Phase 8: عند الفشل الكامل نمنع (fail-closed) بدل السماح للأمان
-      print('DEBUG canPublishOffer ERROR: $e');
       return {
         'allowed': false,
         'used': 0,

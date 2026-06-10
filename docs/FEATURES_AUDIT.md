@@ -537,3 +537,9 @@
 ملاحظة سيرفر: إذا كانت دالة `admin_update_user_permissions` منفذة مسبقاً قبل إضافة `media_review`، يجب تنفيذ:
 
 - `supabase/migrations/2026_06_10_add_media_review_permission.sql`
+
+---
+
+## 🧹 تحديث 2026-06-10 — إزالة prints نهائية
+
+تمت إزالة `print` debug المتبقية من `BusinessService.canPublishOffer` التزاماً بـ `DEVELOPMENT_GUIDELINES.md`.
