@@ -200,7 +200,7 @@ BEGIN
     'idx_users_role',
     'idx_users_sts',
     'idx_offers_sts',
-    'idx_offers_iPub',
+    'idx_offers_ipub',
     'idx_photo_tasks_offer',
     'idx_photo_tasks_photographer',
     'idx_photo_tasks_status'

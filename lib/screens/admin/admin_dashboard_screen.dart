@@ -95,28 +95,24 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           fontSize: 16,
                           fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final wide = constraints.maxWidth >= 520;
-                      return GridView.count(
-                        crossAxisCount: 2,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        mainAxisSpacing: 10,
-                        crossAxisSpacing: 10,
-                        childAspectRatio: wide ? 2.45 : 2.15,
+                  Column(
+                    children: [
+                      Row(
                         children: [
-                      _statCard('👥', 'المستخدمون',
-                          '${_stats['totalUsers'] ?? 0}', 'نشط: ${_stats['activeUsers'] ?? 0}'),
-                      _statCard('🏠', 'العروض',
-                          '${_stats['totalOffers'] ?? 0}', 'منشور: ${_stats['publishedOffers'] ?? 0}'),
-                      _statCard('🤝', 'الصفقات',
-                          '${_stats['totalDeals'] ?? 0}', 'مكتمل: ${_stats['completedDeals'] ?? 0}'),
-                      _statCard('💰', 'العمولات',
-                          _fmt(_stats['totalCommission']), 'إجمالي محقّق'),
+                          Expanded(child: _statCard('👥', 'المستخدمون', '${_stats['totalUsers'] ?? 0}', 'نشط: ${_stats['activeUsers'] ?? 0}')),
+                          const SizedBox(width: 10),
+                          Expanded(child: _statCard('🏠', 'العروض', '${_stats['totalOffers'] ?? 0}', 'منشور: ${_stats['publishedOffers'] ?? 0}')),
                         ],
-                      );
-                    },
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(child: _statCard('🤝', 'الصفقات', '${_stats['totalDeals'] ?? 0}', 'مكتمل: ${_stats['completedDeals'] ?? 0}')),
+                          const SizedBox(width: 10),
+                          Expanded(child: _statCard('💰', 'العمولات', _fmt(_stats['totalCommission']), 'إجمالي محقّق')),
+                        ],
+                      ),
+                    ],
                   ),
 
                   const SizedBox(height: 24),
@@ -236,6 +232,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Widget _statCard(String emoji, String label, String value, String sub) {
     return Container(
+      height: 78,
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
@@ -251,31 +248,23 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: AppTheme.textGrey, fontSize: 11),
-                ),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    value,
+                Text(label,
                     maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+                const SizedBox(height: 2),
+                Text(value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      color: AppTheme.primaryGold,
-                      fontSize: 19,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                Text(
-                  sub,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: AppTheme.textGrey, fontSize: 9),
-                ),
+                        color: AppTheme.primaryGold,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold)),
+                const SizedBox(height: 2),
+                Text(sub,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: AppTheme.textGrey, fontSize: 9)),
               ],
             ),
           ),

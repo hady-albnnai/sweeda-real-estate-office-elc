@@ -85,3 +85,10 @@ supabase/migrations/2026_06_10_qa_system_check.sql
   - مهام تصوير بلا مصور.
   - مهام مرسلة بلا وسائط.
 - إظهار عدادات الطوابير: مدفوعات معلقة، تبليغات مفتوحة، توثيق بانتظار المراجعة.
+
+
+## تحديث 2026-06-10 — إصلاحات فحص QA
+
+- تم تصحيح فحص فهرس `idx_offers_iPub` إلى الاسم الفعلي في PostgreSQL: `idx_offers_ipub`.
+- تمت إضافة migration لضمان وجود مفتاح `locs` في `app_config.main` إذا كان مفقوداً:
+  `supabase/migrations/2026_06_10_ensure_config_locs.sql`.

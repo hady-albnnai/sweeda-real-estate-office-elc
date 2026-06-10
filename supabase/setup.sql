@@ -1413,7 +1413,7 @@ BEGIN
     'idx_users_role',
     'idx_users_sts',
     'idx_offers_sts',
-    'idx_offers_iPub',
+    'idx_offers_ipub',
     'idx_photo_tasks_offer',
     'idx_photo_tasks_photographer',
     'idx_photo_tasks_status'
@@ -1620,3 +1620,18 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 GRANT EXECUTE ON FUNCTION qa_system_check(UUID) TO anon, authenticated;
+
+
+-- ============================================================================
+-- Ensure app_config.main has locs key (2026-06-10)
+-- ============================================================================
+-- Ensure app_config.main has locs key for QA/config completeness.
+UPDATE app_config
+SET value = jsonb_set(
+  value,
+  '{locs}',
+  COALESCE(value->'locs', '[]'::jsonb),
+  true
+)
+WHERE key = 'main'
+  AND NOT (value ? 'locs');
