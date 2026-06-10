@@ -361,6 +361,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   Widget build(BuildContext context) {
     final config = context.watch<ConfigProvider>().config;
     final user = context.watch<AuthProvider>().userModel;
+    final isInternalAccount = (user?.role ?? 0) >= 2;
     final limit = _biz.offerQuota(config,
         role: user?.role ?? 0, packageType: user?.bPkg ?? 0);
 
@@ -378,7 +379,9 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
                 padding: const EdgeInsets.all(10),
                 color: AppTheme.surfaceBlack,
                 child: Text(
-                  'حصّتك: حتى $limit عرض فعّال ${user?.bPkg != null && user!.bPkg > 0 ? '(باقة مدفوعة)' : '(باقة مجانية)'}',
+                  isInternalAccount
+                      ? 'حساب إداري — إضافة العروض غير محدودة'
+                      : 'حصّتك: حتى $limit عرض فعّال ${user?.bPkg != null && user!.bPkg > 0 ? '(باقة مدفوعة)' : '(باقة مجانية)'}',
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: AppTheme.textGrey, fontSize: 12),
                 ),
