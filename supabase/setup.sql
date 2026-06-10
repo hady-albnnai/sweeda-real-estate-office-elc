@@ -314,3 +314,82 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Config Data
 INSERT INTO app_config (key, value, description) VALUES ('main', '{"pts":{"sgn":1000,"wkL":100,"addO":500,"att":300,"dlD":2000,"ref":1500,"strk":50,"soc":100,"like":{"p":5,"l":10},"shr":{"p":10,"l":5},"cmt":{"p":20,"l":3},"gft":{"max":500,"pw":1}},"pen":{"noSh":-500,"cnl3":-300,"rej3":-1000,"fRp":-2000,"ban":-40000},"spd":{"ren":500,"pin":2000,"bst":4000,"dsc5":3000,"fms":8000},"bdg":{"0":{"nm":"🔰 جديد","p":0,"d":0},"1":{"nm":"🥉 برونزي","p":10000,"d":10},"2":{"nm":"🥈 فضي","p":20000,"d":15},"3":{"nm":"🥇 ذهبي","p":30000,"d":20,"eS":1},"4":{"nm":"💎 ماسي","p":40000,"d":20,"eS":1,"fA":1}},"pkg":{"0":{"nm":"مجاني","o":5,"d":30},"1":{"nm":"فضي","o":15,"d":45},"2":{"nm":"ذهبي","o":40,"d":60}},"com":{"sl":3,"rn":"hm","ml":2},"qta":{"u":{"o":1,"r":3,"a":3},"b":{"o":5,"r":5,"a":3}},"soc":{"fb":"","ig":"","tk":"","wa":""},"ads":{"mx":5,"dd":7,"pr":null},"rptRsn":["إعلان وهمي / غير موجود","احتيال / نصب","معلومات مضللة","مضايقة / سلوك غير لائق","عرض مكرر","آخر"],"txts":{"plg":"إقرار وتعهد إلكتروني — عقارات السويداء","warnApp":"تحذير: هذا العرض عليه مواعيد سابقة","visBlk":"تسجيل دخول مطلوب","bnRsn":"تم حظر حسابك نهائياً","frzRsn":"تم تجميد حسابك"},"catProp":{"0":{"nm":"سكني","sub":["شقة سكنية","دار عربي","فيلا","مزرعة","بناء كامل","سطح"]},"1":{"nm":"تجاري","sub":["محل تجاري","معرض","مركز تجاري","مكتب","مستودع"]},"2":{"nm":"زراعي","sub":["أرض زراعية","مزرعة دواجن","مزرعة مواشي","مشتل"]},"3":{"nm":"صناعي","sub":["منشأة صناعية","ورشة","مصنع","أرض صناعية"]}},"catVeh":{"0":{"nm":"سيارة","sub":["سيدان","دفع رباعي","هاتشباك","كوبيه","مكشوفة"]},"1":{"nm":"شاحنة","sub":["شاحنة صغيرة","شاحنة كبيرة","نقل عام"]},"2":{"nm":"دراجة نارية","sub":["دراجة عادية","دراجة رياضية","دراجة كهربائية"]},"3":{"nm":"معدات ثقيلة","sub":["جرّار","حفّارة","حصّادة","درّاسة"]},"4":{"nm":"باصات/نقل","sub":["باص سكانيا","باص 24 راكب","ميكروباص","فان"]}},"docTp":{"0":"طابو أخضر","1":"حصة سهمية-حكم محكمة","2":"حصة سهمية-كاتب بالعدل","3":"مستملك","4":"تسلسل عقود","5":"جمعيات سكنية","6":"نمرة قديمة","7":"نمرة جديدة","8":"وارد"},"brnds":["تويوتا","هوندا","نيسان","هيونداي","كيا","مرسيدس","بي إم دبليو","فولكس فاجن","رينو","فورد","شيفروليه","أخرى"],"clrs":["أبيض","أسود","فضي","رمادي","أحمر","أزرق","أخضر","أصفر","بيج","بني","ذهبي","أخرى"],"roles":{"0":{"nm":"مستخدم"},"1":{"nm":"وسيط"},"2":{"nm":"مشرف"},"3":{"nm":"نائب"},"4":{"nm":"مدير"}}}'::jsonb, 'إعدادات التطبيق الرئيسية');
+
+-- ============================================================================
+-- Internal permissions management (2026-06-10)
+-- ============================================================================
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS perm JSONB NOT NULL DEFAULT '[]'::jsonb;
+
+CREATE OR REPLACE FUNCTION admin_update_user_permissions(
+  p_target_uid UUID,
+  p_perm JSONB DEFAULT '[]'::jsonb
+)
+RETURNS BOOLEAN AS $$
+DECLARE
+  v_admin_role INT;
+  v_item TEXT;
+  v_allowed TEXT[] := ARRAY[
+    'admin_dashboard',
+    'office_operations',
+    'manage_users',
+    'manage_permissions',
+    'review_offers',
+    'review_verifications',
+    'media_review',
+    'fraud_suspects',
+    'manage_appointments',
+    'manage_deals',
+    'manage_payments',
+    'manage_reports',
+    'manage_config',
+    'view_analytics',
+    'broker_dashboard',
+    'broker_offers',
+    'broker_appointments',
+    'broker_deals',
+    'broker_stats',
+    'user_home',
+    'user_offers',
+    'user_requests',
+    'user_appointments',
+    'user_profile'
+  ];
+BEGIN
+  SELECT role INTO v_admin_role FROM users WHERE id = auth.uid();
+
+  IF v_admin_role IS NULL OR v_admin_role < 3 THEN
+    RAISE EXCEPTION 'FORBIDDEN: Deputy/admin role required.';
+  END IF;
+
+  IF p_perm IS NULL THEN
+    p_perm := '[]'::jsonb;
+  END IF;
+
+  IF jsonb_typeof(p_perm) <> 'array' THEN
+    RAISE EXCEPTION 'INVALID_PERMISSIONS: Expected JSON array.';
+  END IF;
+
+  FOR v_item IN SELECT jsonb_array_elements_text(p_perm)
+  LOOP
+    IF NOT (v_item = ANY(v_allowed)) THEN
+      RAISE EXCEPTION 'INVALID_PERMISSION: %', v_item;
+    END IF;
+  END LOOP;
+
+  UPDATE users
+  SET perm = p_perm,
+      ts_upd = NOW()
+  WHERE id = p_target_uid
+    AND i_del = 0;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'USER_NOT_FOUND';
+  END IF;
+
+  RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+REVOKE EXECUTE ON FUNCTION admin_update_user_permissions FROM anon;
+GRANT EXECUTE ON FUNCTION admin_update_user_permissions TO authenticated;

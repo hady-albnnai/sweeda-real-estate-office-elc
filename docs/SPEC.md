@@ -300,3 +300,8 @@ supabase/
   - DELETE: admin/owner فقط
 
 **ملاحظة legacy:** قد توجد إيصالات قديمة في `offer_images` تحت `payments/{uid}/` — يدعمها `admin/payments_screen` تلقائياً (إذا `proof.startsWith('http')` يعرضها مباشرة).
+
+
+## تحديث 2026-06-10 — إدارة الوسائط
+
+تمت إضافة صلاحية داخلية `media_review` لمسار مراجعة وسائط العروض `/admin/media-review`، وهي تراجع الصور والفيديو وصور السند ضمن نموذج `offers` الحالي بدون إنشاء جدول تصوير جديد.

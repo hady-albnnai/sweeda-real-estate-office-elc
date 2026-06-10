@@ -7,6 +7,7 @@ class PermissionKeys {
   static const managePermissions = 'manage_permissions';
   static const reviewOffers = 'review_offers';
   static const reviewVerifications = 'review_verifications';
+  static const mediaReview = 'media_review';
   static const fraudSuspects = 'fraud_suspects';
   static const manageAppointments = 'manage_appointments';
   static const manageDeals = 'manage_deals';
@@ -48,6 +49,7 @@ class PermissionService {
     AppPermission(key: PermissionKeys.managePermissions, title: 'إدارة الصلاحيات', group: 'الإدارة', minimumRoleForDefault: 3),
     AppPermission(key: PermissionKeys.reviewOffers, title: 'مراجعة العروض', group: 'الإدارة', minimumRoleForDefault: 2),
     AppPermission(key: PermissionKeys.reviewVerifications, title: 'طلبات التوثيق', group: 'الإدارة', minimumRoleForDefault: 2),
+    AppPermission(key: PermissionKeys.mediaReview, title: 'إدارة الوسائط والتصوير', group: 'الإدارة', minimumRoleForDefault: 2),
     AppPermission(key: PermissionKeys.fraudSuspects, title: 'كشف الاحتيال', group: 'الإدارة', minimumRoleForDefault: 2),
     AppPermission(key: PermissionKeys.manageAppointments, title: 'إدارة المواعيد', group: 'التشغيل', minimumRoleForDefault: 2),
     AppPermission(key: PermissionKeys.manageDeals, title: 'إدارة الصفقات', group: 'التشغيل', minimumRoleForDefault: 2),

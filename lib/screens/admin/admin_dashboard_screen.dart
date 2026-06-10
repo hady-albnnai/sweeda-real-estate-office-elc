@@ -141,6 +141,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         _navCard(Icons.fact_check_outlined, 'مراجعة العروض',
                             '/admin/review-offers',
                             badge: _counts['pendingOffers'] ?? 0),
+                      if (PermissionService.has(auth.userModel, PermissionKeys.mediaReview))
+                        _navCard(Icons.photo_library_outlined, 'إدارة الوسائط',
+                            '/admin/media-review'),
                       if (PermissionService.has(auth.userModel, PermissionKeys.reviewVerifications))
                         _navCard(Icons.verified_user_outlined, 'طلبات التوثيق',
                             '/admin/review-verifications',
