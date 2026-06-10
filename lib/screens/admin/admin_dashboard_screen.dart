@@ -130,6 +130,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     crossAxisSpacing: 12,
                     childAspectRatio: 1.3,
                     children: [
+                      _navCard(Icons.support_agent_outlined, 'عمليات المكتب',
+                          '/admin/office-operations'),
                       _navCard(Icons.fact_check_outlined, 'مراجعة العروض',
                           '/admin/review-offers',
                           badge: _counts['pendingOffers'] ?? 0),
