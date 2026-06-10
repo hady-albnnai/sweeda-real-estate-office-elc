@@ -96,3 +96,8 @@ docs/INTERNAL_MANAGEMENT_TEST_CHECKLIST.md
 ```txt
 docs/NEXT_DEVELOPMENT_ITEMS.md
 ```
+
+
+## 🛠️ تحديث 2026-06-10 — تطبيع الهاتف في upsert_user_after_otp
+
+تم تحديث دالة `upsert_user_after_otp` لتستخدم `normalize_sy_phone` في مسار WhatsApp/SMS، لأن وضع التطوير يعتمد عليها عند تسجيل الدخول. هذا يكمل منع تكرار الحسابات لنفس رقم الهاتف.
