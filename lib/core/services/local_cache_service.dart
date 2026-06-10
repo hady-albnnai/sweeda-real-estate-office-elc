@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 /// خدمة التخزين المحلي (Hive) — للكاش + دعم العمل دون اتصال

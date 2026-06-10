@@ -1,4 +1,3 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// نموذج المستخدم — أسماء الحقول القصيرة تطابق قاعدة البيانات
 class UserModel {
