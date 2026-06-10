@@ -135,9 +135,12 @@ class AppRouter {
         }
       }
 
-      if (path.startsWith('/user') && auth.isAdmin) {
-        // المدير يستطيع تصفح واجهة المستخدم عبر زر الصفحة الرئيسية إن احتاج.
-        return null;
+      if (path.startsWith('/user')) {
+        final requiredPermission = _userRoutePermission(path);
+        if (requiredPermission != null &&
+            !PermissionService.has(auth.userModel, requiredPermission)) {
+          return '/home';
+        }
       }
 
       return null;
