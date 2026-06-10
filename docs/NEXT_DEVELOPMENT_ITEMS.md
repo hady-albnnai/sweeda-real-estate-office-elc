@@ -8,6 +8,7 @@
 
 ```txt
 supabase/migrations/2026_06_10_qa_system_check.sql
+supabase/migrations/2026_06_10_extend_qa_system_check.sql
 ```
 
 ثم افتح داخل التطبيق:
