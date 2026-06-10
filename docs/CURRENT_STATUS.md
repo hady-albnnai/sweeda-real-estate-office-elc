@@ -59,6 +59,7 @@ users.perm JSONB DEFAULT '[]'
 | إدارة الصلاحيات | `/admin/permissions` | `manage_permissions` |
 | إدارة الوسائط | `/admin/media-review` | `media_review` |
 | إدارة مهام التصوير | `/admin/photography-management` | `photography_management` |
+| فحص النظام | `/admin/qa` | role >= 2 |
 | مهام المصور | `/photographer/tasks` | `photographer_tasks` |
 
 ## الإدارة الداخلية

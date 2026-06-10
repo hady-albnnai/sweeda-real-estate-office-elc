@@ -61,6 +61,7 @@ import '../../screens/admin/payments_screen.dart';
 import '../../screens/admin/reports_screen.dart';
 import '../../screens/admin/config_editor_screen.dart';
 import '../../screens/admin/analytics_screen.dart';
+import '../../screens/admin/system_qa_screen.dart';
 import '../../providers/auth_provider.dart';
 import '../services/permission_service.dart';
 
@@ -81,6 +82,7 @@ class AppRouter {
     if (path == '/admin/reports') return PermissionKeys.manageReports;
     if (path == '/admin/config') return PermissionKeys.manageConfig;
     if (path == '/admin/analytics') return PermissionKeys.viewAnalytics;
+    if (path == '/admin/qa') return null;
     return null;
   }
 
@@ -418,6 +420,10 @@ class AppRouter {
       GoRoute(
         path: '/admin/config',
         builder: (context, state) => const ConfigEditorScreen(),
+      ),
+      GoRoute(
+        path: '/admin/qa',
+        builder: (context, state) => const SystemQaScreen(),
       ),
       GoRoute(
         path: '/admin/analytics',
