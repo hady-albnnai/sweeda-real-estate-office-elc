@@ -90,6 +90,35 @@ class AppRouter {
     return null;
   }
 
+
+  static String? _userRoutePermission(String path) {
+    if (path == '/user/home') return PermissionKeys.userHome;
+    if (path == '/user/my-offers' ||
+        path == '/user/add-offer' ||
+        path.startsWith('/user/edit-offer/') ||
+        path.startsWith('/user/boost-offer/')) {
+      return PermissionKeys.userOffers;
+    }
+    if (path == '/user/my-requests' ||
+        path == '/user/add-request' ||
+        path.startsWith('/user/request/')) {
+      return PermissionKeys.userRequests;
+    }
+    if (path == '/user/my-appointments') return PermissionKeys.userAppointments;
+    if (path == '/user/profile' ||
+        path == '/user/settings' ||
+        path == '/user/notifications' ||
+        path == '/user/packages' ||
+        path == '/user/payment' ||
+        path == '/user/become-broker' ||
+        path == '/user/referral' ||
+        path == '/user/my-ratings' ||
+        path == '/user/favorites') {
+      return PermissionKeys.userProfile;
+    }
+    return null;
+  }
+
   static final GoRouter router = GoRouter(
     initialLocation: '/splash',
     redirect: (context, state) {
