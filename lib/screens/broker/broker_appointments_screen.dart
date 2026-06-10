@@ -104,7 +104,8 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
 
   Future<void> _accept(AppointmentModel a) async {
     final broker = context.read<BrokerProvider>();
-    final ok = await broker.handleAppointment(a.id, 1);
+    final brokerUid = context.read<AuthProvider>().userModel?.uid ?? '';
+    final ok = await broker.handleAppointment(brokerUid, a.id, 1);
     if (!mounted) return;
     if (ok) {
       _snack('✅ تم قبول الموعد');
@@ -139,7 +140,8 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
     );
     if (confirm != true || !mounted) return;
     final broker = context.read<BrokerProvider>();
-    final ok = await broker.handleAppointment(a.id, 2);
+    final brokerUid = context.read<AuthProvider>().userModel?.uid ?? '';
+    final ok = await broker.handleAppointment(brokerUid, a.id, 2);
     if (!mounted) return;
     if (ok) {
       _snack('تم رفض الموعد');
@@ -176,7 +178,8 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
     );
     if (confirm != true || !mounted) return;
     final broker = context.read<BrokerProvider>();
-    final ok = await broker.completeAppointment(a.id);
+    final brokerUid = context.read<AuthProvider>().userModel?.uid ?? '';
+    final ok = await broker.completeAppointment(brokerUid, a.id);
     if (!mounted) return;
     if (ok) {
       _snack('✅ تم تسجيل المعاينة كمكتملة');

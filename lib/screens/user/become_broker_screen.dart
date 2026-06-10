@@ -66,36 +66,16 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
     setState(() => _submitting = true);
 
     try {
-      // نسجّل الطلب في users بحقول brk_nm + brk_cls
-      // ولكن brk = 0 (غير مفعّل) — الإدارة تفعّله من users management
-      // 🛡️ نرفع vrf إلى 1 تلقائياً لأن الوسيط يحتاج توثيقاً إلزامياً
-      // (إن لم يكن موثقاً بالفعل) — مرجع: docs/LOGIC_SPEC.md §2.1
-      final updateMap = <String, dynamic>{
-        'brk_nm': _businessNameCtrl.text.trim(),
-        'brk_cls': _category,
-        'ts_upd': DateTime.now().toIso8601String(),
-      };
-      if (user.vrf == 0) {
-        updateMap['vrf'] = 1; // طلب التوثيق تلقائياً
-      }
-      await SupabaseService()
-          .client
-          .from(DbTables.users)
-          .update(updateMap)
-          .eq('id', user.uid);
-
-      // سجل في activity_log كطلب وساطة جديد
-      await SupabaseService().client.from(DbTables.activityLog).insert({
-        'uid': user.uid,
-        'action': 'broker_request',
-        'details': {
-          'business_name': _businessNameCtrl.text.trim(),
-          'category': _category,
-          'experience': _experienceCtrl.text.trim(),
-          'about': _aboutCtrl.text.trim(),
+      await SupabaseService().client.rpc(
+        'submit_broker_request_internal',
+        params: {
+          'p_user_uid': user.uid,
+          'p_business_name': _businessNameCtrl.text.trim(),
+          'p_category': _category,
+          'p_experience': _experienceCtrl.text.trim(),
+          'p_about': _aboutCtrl.text.trim(),
         },
-        'ts_crt': DateTime.now().toIso8601String(),
-      }).select();
+      );
 
       await auth.refreshUser();
 

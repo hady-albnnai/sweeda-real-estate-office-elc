@@ -37,7 +37,8 @@ class _AppointmentsManagementScreenState
 
   Future<void> _load() async {
     setState(() => _loading = true);
-    final list = await context.read<AdminProvider>().getAllAppointments();
+    final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
+    final list = await context.read<AdminProvider>().getAllAppointments(adminUid);
     if (mounted) {
       setState(() {
         _all = list;
@@ -239,7 +240,10 @@ class _AppointmentsManagementScreenState
   }
 
   Future<void> _setStatus(AppointmentModel a, int status) async {
-    if (await context.read<AdminProvider>().updateAppointmentStatus(a.id, status)) {
+    final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
+    if (await context
+        .read<AdminProvider>()
+        .updateAppointmentStatus(adminUid, a.id, status)) {
       _snack('تم تحديث حالة الموعد');
       _load();
     }

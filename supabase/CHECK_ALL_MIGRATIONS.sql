@@ -423,6 +423,30 @@ WITH checks AS (
     ) = false,
     'users_public_no_private_img'
   UNION ALL
+  SELECT 1491, 'FN', 'admin_review_offer_internal',
+    EXISTS(SELECT 1 FROM pg_proc WHERE proname='admin_review_offer_internal'),
+    'real_test_stabilization_internal_rpcs'
+  UNION ALL
+  SELECT 1492, 'FN', 'create_request_internal',
+    EXISTS(SELECT 1 FROM pg_proc WHERE proname='create_request_internal'),
+    'real_test_stabilization_internal_rpcs'
+  UNION ALL
+  SELECT 1493, 'FN', 'book_appointment_internal',
+    EXISTS(SELECT 1 FROM pg_proc WHERE proname='book_appointment_internal'),
+    'real_test_stabilization_internal_rpcs'
+  UNION ALL
+  SELECT 1494, 'FN', 'create_payment_internal',
+    EXISTS(SELECT 1 FROM pg_proc WHERE proname='create_payment_internal'),
+    'real_test_stabilization_internal_rpcs'
+  UNION ALL
+  SELECT 1495, 'FN', 'create_report_internal',
+    EXISTS(SELECT 1 FROM pg_proc WHERE proname='create_report_internal'),
+    'real_test_stabilization_internal_rpcs'
+  UNION ALL
+  SELECT 1496, 'FN', 'register_daily_streak_internal',
+    EXISTS(SELECT 1 FROM pg_proc WHERE proname='register_daily_streak_internal'),
+    'real_test_stabilization_internal_rpcs'
+  UNION ALL
 
   -- ═══════════════════════════════════════════════════
   -- 14) Cron jobs (يتطلب pg_cron مفعّل)

@@ -42,9 +42,10 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
 
   Future<void> _load() async {
     final provider = context.read<OfferProvider>();
+    final userId = context.read<AuthProvider>().userModel?.uid;
     // محاولة من الذاكرة أولاً ثم جلب من السيرفر
     var offer = provider.getOfferById(widget.offerId);
-    offer ??= await provider.fetchOfferById(widget.offerId);
+    offer ??= await provider.fetchOfferById(widget.offerId, userId: userId);
     if (offer != null) {
       provider.incrementViews(widget.offerId);
 
@@ -209,18 +210,20 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
     if (result != true || selected == null || !mounted) return;
 
     try {
-      // فهرس السبب من القائمة (rsn integer حسب schema)
       final rsnIndex = reasons.indexOf(selected!);
-      await SupabaseService().client.from(DbTables.reports).insert({
-        'rep_uid': auth.userModel!.uid,
-        'tgt_uid': _offer!.usrId,
-        'tgt_tp': 1, // 0=user, 1=offer, 2=request
-        'tgt_id': _offer!.id,
-        'rsn': rsnIndex < 0 ? 0 : rsnIndex,
-        'det': notesCtrl.text.trim(),
-        'sts': 0,
-        'ts_crt': DateTime.now().toIso8601String(),
-      });
+      await SupabaseService().client.rpc(
+        'create_report_internal',
+        params: {
+          'p_reporter_uid': auth.userModel!.uid,
+          'p_report': {
+            'tgt_uid': _offer!.usrId,
+            'tgt_tp': 1,
+            'tgt_id': _offer!.id,
+            'rsn': rsnIndex < 0 ? 0 : rsnIndex,
+            'det': notesCtrl.text.trim(),
+          },
+        },
+      );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -555,7 +558,11 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
     await SharePlus.instance.share(
       ShareParams(text: text, subject: _offer!.ttl),
     );
-    await BusinessService().markSocialPublished(_offer!.id, text);
+    await BusinessService().markSocialPublished(
+      _offer!.id,
+      text,
+      userId: auth.userModel?.uid,
+    );
     // منح نقاط النشر على السوشال (pts.soc)
     if (auth.userModel != null) {
       await BusinessService()

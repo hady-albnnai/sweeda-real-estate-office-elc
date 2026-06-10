@@ -298,67 +298,15 @@ class BusinessService {
   Future<Map<String, dynamic>> registerDailyStreak(
       String uid, ConfigModel? config) async {
     try {
-      // 1. جلب البيانات الحالية
-      final row = await _sb.client
-          .from(DbTables.users)
-          .select('strk, strk_dt')
-          .eq('id', uid)
-          .single();
-
-      final int currentStreak = (row['strk'] as int?) ?? 0;
-      final String? strkDtStr = row['strk_dt'] as String?;
-      
-      final now = DateTime.now();
-
-      // دالة مساعدة لاستخراج تاريخ اليوم بتوقيت سوريا كـ string (YYYY-MM-DD)
-      // هذا أكثر أماناً ويمنع مشاكل الـ timezone مع DateTime
-      String syriaDateStr(DateTime dt) {
-        final syria = dt.toUtc().add(const Duration(hours: 3));
-        return '${syria.year.toString().padLeft(4, '0')}-'
-            '${syria.month.toString().padLeft(2, '0')}-'
-            '${syria.day.toString().padLeft(2, '0')}';
-      }
-
-      final todayStr = syriaDateStr(now);
-
-      String? lastStr;
-      if (strkDtStr != null) {
-        try {
-          final lastDate = DateTime.parse(strkDtStr);
-          lastStr = syriaDateStr(lastDate);
-        } catch (_) {
-          lastStr = null;
-        }
-      }
-
-      if (lastStr == null || lastStr != todayStr) {
-        // يوم جديد (أو أول مرة) — منح نقاط + تحديث
-        final isNew = lastStr == null;
-        final newStreak = isNew ? 1 : currentStreak + 1;
-
-        await _sb.client.from(DbTables.users).update({
-          'strk': newStreak,
-          'strk_dt': now.toIso8601String(),  // نخزن الوقت الحالي للـ reference
-          'ts_upd': now.toIso8601String(),
-        }).eq('id', uid);
-
-        final strkPts = _ptsFromConfig(config, 'strk', 50);  // يطابق الطلب الجديد (يومي 50)
-        await addPoints(uid, strkPts);
-
-        return {
-          'streak': newStreak,
-          'changed': true,
-          'awarded': true,
-          'isNew': isNew
-        };
-      } else {
-        // نفس اليوم بتوقيت سوريا — لا نقاط
-        return {
-          'streak': currentStreak,
-          'changed': false,
-          'awarded': false,
-        };
-      }
+      final strkPts = _ptsFromConfig(config, 'strk', 50);
+      final result = await _sb.client.rpc(
+        'register_daily_streak_internal',
+        params: {
+          'p_user_uid': uid,
+          'p_points': strkPts,
+        },
+      );
+      return Map<String, dynamic>.from(result as Map);
     } catch (e) {
       return {'streak': 0, 'changed': false, 'awarded': false};
     }
@@ -409,13 +357,15 @@ class BusinessService {
   }
 
   /// تعليم العرض بأنه جاهز/منشور على السوشال (soc_pub) + حفظ النص
-  Future<bool> markSocialPublished(String offerId, String text) async {
+  Future<bool> markSocialPublished(String offerId, String text,
+      {String? userId}) async {
     try {
-      await _sb.client.from(DbTables.offers).update({
-        'soc_pub': 1,
-        'soc_txt': text,
-        'ts_upd': DateTime.now().toIso8601String(),
-      }).eq('id', offerId);
+      if (userId == null || userId.isEmpty) return false;
+      await _sb.client.rpc('mark_social_published_internal', params: {
+        'p_user_uid': userId,
+        'p_offer_id': offerId,
+        'p_text': text,
+      });
       return true;
     } catch (e) {return false;
     }

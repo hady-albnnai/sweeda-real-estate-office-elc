@@ -206,28 +206,38 @@ class OfferProvider with ChangeNotifier {
 
   Future<List<OfferModel>> fetchUserOffers(String userId) async {
     try {
-      final response = await SupabaseService().client
-          .from(DbTables.offers).select()
-          .eq('usr_id', userId).eq('i_del', 0)
-          .order('ts_crt', ascending: false);
-      final list = (response as List).map((d) =>
-          OfferModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String)).toList();
+      final response = await SupabaseService().client.rpc(
+        'get_user_offers_internal',
+        params: {'p_user_uid': userId},
+      );
+      final list = (response as List)
+          .map((d) => OfferModel.fromSupabase(
+              Map<String, dynamic>.from(d), d['id'] as String))
+          .toList();
       await _enrichOwnerLabels(list);
       return list;
-    } catch (e) {return []; }
+    } catch (e) {
+      return [];
+    }
   }
 
-  Future<OfferModel?> fetchOfferById(String offerId) async {
+  Future<OfferModel?> fetchOfferById(String offerId, {String? userId}) async {
     try {
-      final response = await SupabaseService().client
-          .from(DbTables.offers).select()
-          .eq('id', offerId).eq('i_del', 0).single();
-      final offer = OfferModel.fromSupabase(
-          Map<String, dynamic>.from(response), response['id'] as String);
-      // 🏢 إثراء بهوية المكتب
+      final response = await SupabaseService().client.rpc(
+        'get_offer_by_id_internal',
+        params: {
+          'p_offer_id': offerId,
+          'p_user_uid': userId,
+        },
+      );
+      if (response == null || (response as List).isEmpty) return null;
+      final row = Map<String, dynamic>.from(response.first as Map);
+      final offer = OfferModel.fromSupabase(row, row['id'] as String);
       await _enrichOwnerLabels([offer]);
       return offer;
-    } catch (e) {return null; }
+    } catch (e) {
+      return null;
+    }
   }
 
   Future<OfferModel?> addOffer(OfferModel offer) async {
@@ -276,11 +286,10 @@ class OfferProvider with ChangeNotifier {
 
   Future<void> incrementViews(String offerId) async {
     try {
-      final current = await SupabaseService().client
-          .from(DbTables.offers).select('vws').eq('id', offerId).single();
-      final v = (current['vws'] as int? ?? 0) + 1;
-      await SupabaseService().client.from(DbTables.offers)
-          .update({'vws': v}).eq('id', offerId);
+      await SupabaseService().client.rpc(
+        'increment_offer_views_internal',
+        params: {'p_offer_id': offerId},
+      );
     } catch (e) {}
   }
 

@@ -31,6 +31,7 @@ supabase/migrations/2026_06_10_users_public_no_private_img.sql
 supabase/migrations/2026_06_10_verification_dev_auth_rpcs.sql
 supabase/migrations/2026_06_11_drop_obsolete_verification_rpcs.sql
 supabase/migrations/2026_06_11_drop_obsolete_unused_rpcs.sql
+supabase/migrations/2026_06_11_real_test_stabilization_internal_rpcs.sql
 ```
 
 ### ملاحظات مهمة

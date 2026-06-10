@@ -31,7 +31,8 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
 
   Future<void> _load() async {
     setState(() => _loading = true);
-    final list = await context.read<AdminProvider>().getAllPayments();
+    final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
+    final list = await context.read<AdminProvider>().getAllPayments(adminUid);
     if (mounted) {
       setState(() {
         _all = list;

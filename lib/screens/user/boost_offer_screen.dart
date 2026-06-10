@@ -31,8 +31,9 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
 
   Future<void> _load() async {
     final prov = context.read<OfferProvider>();
+    final userId = context.read<AuthProvider>().userModel?.uid;
     var offer = prov.getOfferById(widget.offerId);
-    offer ??= await prov.fetchOfferById(widget.offerId);
+    offer ??= await prov.fetchOfferById(widget.offerId, userId: userId);
     if (!mounted) return;
     setState(() {
       _offer = offer;

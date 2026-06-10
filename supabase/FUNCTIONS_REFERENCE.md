@@ -32,6 +32,7 @@
 | ✅ **مُطبّق على السيرفر** | `2026_06_10_verification_dev_auth_rpcs.sql` — RPCs توثيق متوافقة مع وضع التطوير الحالي |
 | ✅ **مُطبّق على السيرفر** | `2026_06_11_drop_obsolete_verification_rpcs.sql` — حذف RPCs التوثيق القديمة غير المستخدمة |
 | ✅ **مُطبّق على السيرفر** | `2026_06_11_drop_obsolete_unused_rpcs.sql` — حذف RPCs قديمة غير مستخدمة (`admin_update_user_permissions`, `verify_otp_safe`) |
+| ⚠️ **جاهز في المستودع ولم يُنفّذ على السيرفر بعد** | `2026_06_11_real_test_stabilization_internal_rpcs.sql` — دفعة تثبيت إضافية لتحويل المسارات الحساسة إلى RPCs قبل الاختبار الحقيقي |
 
 ---
 
@@ -802,6 +803,7 @@ await client.rpc('send_appointment_reminders');
 | `supabase/migrations/2026_06_10_verification_dev_auth_rpcs.sql` 🛠️ | RPCs توثيق متوافقة مع وضع التطوير الحالي — **مطبّق ✅** |
 | `supabase/migrations/2026_06_11_drop_obsolete_verification_rpcs.sql` 🧹 | حذف RPCs التوثيق القديمة غير المستخدمة — **مطبّق ✅** |
 | `supabase/migrations/2026_06_11_drop_obsolete_unused_rpcs.sql` 🧹 | حذف `admin_update_user_permissions` و `verify_otp_safe` بعد التحقق من عدم استخدامهما — **مطبّق ✅** |
+| `supabase/migrations/2026_06_11_real_test_stabilization_internal_rpcs.sql` 🛠️ | دفعة RPCs إضافية لتثبيت ما قبل الاختبار الحقيقي — **جاهز للتطبيق** |
 | `supabase/functions/send-push-notification/index.ts` 🆕🆕🆕🆕🆕 | Edge Function لإرسال FCM Push عبر Service Account |
 | `lib/services/fcm_service.dart` 🆕🆕🆕🆕🆕 | خدمة FCM Flutter (تهيئة + token + معالجات الإشعارات) |
 | `lib/screens/user/boost_offer_screen.dart` 🆕🆕🆕 | شاشة شراء ترقيات العروض (5 خيارات: ren/pin/bst/dsc5/fms) |

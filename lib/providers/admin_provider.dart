@@ -26,87 +26,55 @@ class AdminProvider with ChangeNotifier {
   // ═══════════════════════════════════════
   // 1) العروض (مراجعة)
   // ═══════════════════════════════════════
-  Future<List<OfferModel>> getPendingOffers() async {
+  Future<List<OfferModel>> getPendingOffers(String adminUid) async {
     try {
-      final response = await SupabaseService().client
-          .from(DbTables.offers)
-          .select()
-          .eq('sts', 1)
-          .eq('i_del', 0)
-          .order('ts_crt', ascending: false);
-      return (response as List)
-          .map((d) =>
-              OfferModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String))
-          .toList();
-    } catch (e) {return [];
-    }
-  }
-
-  Future<bool> reviewOffer(String offerId, bool approve, {String reason = ''}) async {
-    try {
-      final sb = SupabaseService().client;
-      final now = DateTime.now().toIso8601String();
-
-      // اجلب صاحب العرض قبل التحديث (لتطبيق pen عند الرفض)
-      String? ownerUid;
-      try {
-        final r = await sb
-            .from(DbTables.offers)
-            .select('usr_id')
-            .eq('id', offerId)
-            .maybeSingle();
-        ownerUid = r?['usr_id'] as String?;
-      } catch (_) {}
-
-      await sb.from(DbTables.offers).update({
-        'sts': approve ? 2 : 3,
-        'i_pub': approve ? 1 : 0,
-        'rsn': reason,
-        'ts_pub': approve ? now : null,
-        'ts_upd': now,
-      }).eq('id', offerId);
-
-      // ─── تطبيق penalty rej3 (-1000 نقطة) بعد ثالث رفض متتالٍ ───
-      if (!approve && ownerUid != null) {
-        try {
-          // عد العروض المرفوضة آخر 30 يوم لنفس المالك
-          final since = DateTime.now()
-              .subtract(const Duration(days: 30))
-              .toIso8601String();
-          final rejected = await sb
-              .from(DbTables.offers)
-              .select('id')
-              .eq('usr_id', ownerUid)
-              .eq('sts', 3)
-              .gte('ts_upd', since);
-          final count = (rejected as List).length;
-          // كل 3 رفضات متتالية → عقوبة
-          if (count > 0 && count % 3 == 0) {
-            await sb.rpc('add_points',
-                params: {'p_uid': ownerUid, 'p_pts': -1000});}
-        } catch (e) {}
-      }
-
-      notifyListeners();
-      return true;
-    } catch (e) {return false;
-    }
-  }
-
-
-  Future<List<OfferModel>> getOffersForMediaReview() async {
-    try {
-      final response = await SupabaseService().client
-          .from(DbTables.offers)
-          .select()
-          .eq('i_del', 0)
-          .order('ts_crt', ascending: false)
-          .limit(100);
+      final response = await SupabaseService().client.rpc(
+        'get_admin_pending_offers_internal',
+        params: {'p_admin_uid': adminUid},
+      );
       return (response as List)
           .map((d) => OfferModel.fromSupabase(
               Map<String, dynamic>.from(d), d['id'] as String))
           .toList();
-    } catch (e) {return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<bool> reviewOffer(String adminUid, String offerId, bool approve,
+      {String reason = ''}) async {
+    try {
+      await SupabaseService().client.rpc(
+        'admin_review_offer_internal',
+        params: {
+          'p_admin_uid': adminUid,
+          'p_offer_id': offerId,
+          'p_approve': approve,
+          'p_reason': reason,
+        },
+      );
+      notifyListeners();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<List<OfferModel>> getOffersForMediaReview(String adminUid) async {
+    try {
+      final response = await SupabaseService().client.rpc(
+        'get_admin_offers_internal',
+        params: {
+          'p_admin_uid': adminUid,
+          'p_limit': 100,
+        },
+      );
+      return (response as List)
+          .map((d) => OfferModel.fromSupabase(
+              Map<String, dynamic>.from(d), d['id'] as String))
+          .toList();
+    } catch (e) {
+      return [];
     }
   }
 
@@ -201,113 +169,89 @@ class AdminProvider with ChangeNotifier {
   // ═══════════════════════════════════════
   // 3) المواعيد (إدارة)
   // ═══════════════════════════════════════
-  Future<List<AppointmentModel>> getAllAppointments() async {
+  Future<List<AppointmentModel>> getAllAppointments(String adminUid) async {
     try {
-      final response = await SupabaseService().client
-          .from(DbTables.appointments)
-          .select()
-          .order('dt', ascending: false);
+      final response = await SupabaseService().client.rpc(
+        'get_admin_appointments_internal',
+        params: {'p_admin_uid': adminUid},
+      );
       return (response as List)
           .map((d) => AppointmentModel.fromSupabase(
               Map<String, dynamic>.from(d), d['id'] as String))
           .toList();
-    } catch (e) {return [];
+    } catch (e) {
+      return [];
     }
   }
 
-  Future<bool> updateAppointmentStatus(String apptId, int status,
+  Future<bool> updateAppointmentStatus(String adminUid, String apptId, int status,
       {String adminNote = ''}) async {
     try {
-      final sb = SupabaseService().client;
-      final data = <String, dynamic>{'sts': status};
-      if (adminNote.isNotEmpty) data['admin_nt'] = adminNote;
-
-      // اجلب بيانات الموعد قبل التحديث (لتطبيق penalties على طالب الموعد)
-      String? requesterUid;
-      try {
-        final r = await sb
-            .from(DbTables.appointments)
-            .select('req_uid, own_id, off_id')
-            .eq('id', apptId)
-            .maybeSingle();
-        requesterUid = r?['req_uid'] as String?;
-      } catch (_) {}
-
-      await sb.from(DbTables.appointments).update(data).eq('id', apptId);
-
-      // ─── pen.noSh (-500): الحالة 5 = لم يحضر طالب الموعد ───
-      if (status == 5 && requesterUid != null) {
-        try {
-          await sb.rpc('add_points',
-              params: {'p_uid': requesterUid, 'p_pts': -500});
-        } catch (e) {}
-      }
-
-      // ─── pen.cnl3 (-300): بعد ثالث إلغاء متكرر من طالب الموعد ───
-      if (status == 3 && requesterUid != null) {
-        try {
-          final since = DateTime.now()
-              .subtract(const Duration(days: 30))
-              .toIso8601String();
-          final canceled = await sb
-              .from(DbTables.appointments)
-              .select('id')
-              .eq('req_uid', requesterUid)
-              .eq('sts', 3)
-              .gte('ts_crt', since);
-          final count = (canceled as List).length;
-          if (count > 0 && count % 3 == 0) {
-            await sb.rpc('add_points',
-                params: {'p_uid': requesterUid, 'p_pts': -300});
-          }
-        } catch (e) {}
-      }
-
+      await SupabaseService().client.rpc(
+        'admin_update_appointment_status_internal',
+        params: {
+          'p_admin_uid': adminUid,
+          'p_appointment_id': apptId,
+          'p_status': status,
+          'p_admin_note': adminNote,
+        },
+      );
       notifyListeners();
       return true;
-    } catch (e) {return false;
+    } catch (e) {
+      return false;
     }
   }
 
   /// فرض موعد من قبل الإدارة
   Future<bool> forceAppointment(String apptId, String adminId) async {
     try {
-      await SupabaseService().client.from(DbTables.appointments).update({
-        'i_force': 1,
-        'force_by': adminId,
-        'sts': 1,
-      }).eq('id', apptId);
+      await SupabaseService().client.rpc(
+        'admin_force_appointment_internal',
+        params: {
+          'p_admin_uid': adminId,
+          'p_appointment_id': apptId,
+        },
+      );
       notifyListeners();
       return true;
-    } catch (e) {return false;
+    } catch (e) {
+      return false;
     }
   }
 
   // ═══════════════════════════════════════
   // 4) الصفقات (إدارة)
   // ═══════════════════════════════════════
-  Future<List<DealModel>> getAllDeals() async {
+  Future<List<DealModel>> getAllDeals(String adminUid) async {
     try {
-      final response = await SupabaseService().client
-          .from(DbTables.deals)
-          .select()
-          .eq('i_del', 0)
-          .order('ts_crt', ascending: false);
+      final response = await SupabaseService().client.rpc(
+        'get_admin_deals_internal',
+        params: {'p_admin_uid': adminUid},
+      );
       return (response as List)
           .map((d) =>
               DealModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String))
           .toList();
-    } catch (e) {return [];
+    } catch (e) {
+      return [];
     }
   }
 
   /// إنشاء صفقة (استمارة المندوب)
-  Future<bool> createDeal(DealModel deal) async {
+  Future<bool> createDeal(String adminUid, DealModel deal) async {
     try {
-      await SupabaseService().client.from(DbTables.deals).insert(deal.toMap());
+      await SupabaseService().client.rpc(
+        'create_deal_internal',
+        params: {
+          'p_admin_uid': adminUid,
+          'p_deal': deal.toMap(),
+        },
+      );
       notifyListeners();
       return true;
-    } catch (e) {return false;
+    } catch (e) {
+      return false;
     }
   }
 
@@ -315,38 +259,41 @@ class AdminProvider with ChangeNotifier {
   Future<bool> completeDeal(String dealId, String adminId,
       {double? commission, String? note}) async {
     try {
-      final data = <String, dynamic>{
-        'sts': 1,
-        'cmpl_by': adminId,
-        'ts_cmpl': DateTime.now().toIso8601String(),
-      };
-      if (commission != null) data['com_val'] = commission;
-      if (note != null) data['com_note'] = note;
-      await SupabaseService()
-          .client
-          .from(DbTables.deals)
-          .update(data)
-          .eq('id', dealId);
-
+      await SupabaseService().client.rpc(
+        'complete_deal_internal',
+        params: {
+          'p_admin_uid': adminId,
+          'p_deal_id': dealId,
+          'p_commission': commission,
+          'p_note': note,
+        },
+      );
       notifyListeners();
       return true;
-    } catch (e) {return false;
+    } catch (e) {
+      return false;
     }
   }
 
   // ═══════════════════════════════════════
   // 5) المدفوعات (إدارة)
   // ═══════════════════════════════════════
-  Future<List<PaymentModel>> getAllPayments({int? status}) async {
+  Future<List<PaymentModel>> getAllPayments(String adminUid, {int? status}) async {
     try {
-      var q = SupabaseService().client.from(DbTables.payments).select();
-      if (status != null) q = q.eq('sts', status);
-      final response = await q.order('ts_crt', ascending: false);
-      return (response as List)
-          .map((d) =>
-              PaymentModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String))
+      final response = await SupabaseService().client.rpc(
+        'get_admin_payments_internal',
+        params: {'p_admin_uid': adminUid},
+      );
+      var list = (response as List)
+          .map((d) => PaymentModel.fromSupabase(
+              Map<String, dynamic>.from(d), d['id'] as String))
           .toList();
-    } catch (e) {return [];
+      if (status != null) {
+        list = list.where((p) => p.sts == status).toList();
+      }
+      return list;
+    } catch (e) {
+      return [];
     }
   }
 
@@ -370,29 +317,39 @@ class AdminProvider with ChangeNotifier {
 
   Future<bool> rejectPayment(String paymentId, String adminId) async {
     try {
-      await SupabaseService().client.from(DbTables.payments).update({
-        'sts': 2,
-        'appr_by': adminId,
-      }).eq('id', paymentId);
+      await SupabaseService().client.rpc(
+        'admin_reject_payment_internal',
+        params: {
+          'p_admin_uid': adminId,
+          'p_payment_id': paymentId,
+        },
+      );
       notifyListeners();
       return true;
-    } catch (e) {return false;
+    } catch (e) {
+      return false;
     }
   }
 
   // ═══════════════════════════════════════
   // 6) التبليغات (إدارة)
   // ═══════════════════════════════════════
-  Future<List<ReportModel>> getAllReports({int? status}) async {
+  Future<List<ReportModel>> getAllReports(String adminUid, {int? status}) async {
     try {
-      var q = SupabaseService().client.from(DbTables.reports).select();
-      if (status != null) q = q.eq('sts', status);
-      final response = await q.order('ts_crt', ascending: false);
-      return (response as List)
-          .map((d) =>
-              ReportModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String))
+      final response = await SupabaseService().client.rpc(
+        'get_admin_reports_internal',
+        params: {'p_admin_uid': adminUid},
+      );
+      var list = (response as List)
+          .map((d) => ReportModel.fromSupabase(
+              Map<String, dynamic>.from(d), d['id'] as String))
           .toList();
-    } catch (e) {return [];
+      if (status != null) {
+        list = list.where((r) => r.sts == status).toList();
+      }
+      return list;
+    } catch (e) {
+      return [];
     }
   }
 
@@ -401,92 +358,60 @@ class AdminProvider with ChangeNotifier {
   Future<bool> handleReport(String reportId, int action, String adminId,
       {String note = '', int duration = 0}) async {
     try {
-      await SupabaseService().client.from(DbTables.reports).update({
-        'sts': 1, // تمت المعالجة
-        'act': action,
-        'act_dur': duration,
-        'note': note,
-        'act_by': adminId,
-      }).eq('id', reportId);
+      await SupabaseService().client.rpc(
+        'admin_handle_report_internal',
+        params: {
+          'p_admin_uid': adminId,
+          'p_report_id': reportId,
+          'p_action': action,
+          'p_note': note,
+          'p_duration': duration,
+        },
+      );
       notifyListeners();
       return true;
-    } catch (e) {return false;
+    } catch (e) {
+      return false;
     }
   }
 
   // ═══════════════════════════════════════
   // 7) الإحصائيات الشاملة
   // ═══════════════════════════════════════
-  Future<Map<String, dynamic>> getStats() async {
+  Future<Map<String, dynamic>> getStats(String adminUid) async {
     try {
-      final offers = await SupabaseService()
-          .client
-          .from(DbTables.offers)
-          .select('id, sts')
-          .eq('i_del', 0);
-      final users = await SupabaseService()
-          .client
-          .from(DbTables.users)
-          .select('id, sts, role')
-          .eq('i_del', 0);
-      final deals = await SupabaseService()
-          .client
-          .from(DbTables.deals)
-          .select('id, sts, com_val')
-          .eq('i_del', 0);
-      final appts = await SupabaseService()
-          .client
-          .from(DbTables.appointments)
-          .select('id, sts');
-
-      final offersList = offers as List;
-      final usersList = users as List;
-      final dealsList = deals as List;
-      final apptsList = appts as List;
+      final offers = await getOffersForMediaReview(adminUid);
+      final users = await getAllUsers();
+      final deals = await getAllDeals(adminUid);
+      final appts = await getAllAppointments(adminUid);
 
       return {
-        'totalOffers': offersList.length,
-        'pendingOffers': offersList.where((o) => (o['sts'] ?? 0) == 1).length,
-        'publishedOffers': offersList.where((o) => (o['sts'] ?? 0) == 2).length,
-        'totalUsers': usersList.length,
-        'activeUsers': usersList.where((u) => (u['sts'] ?? 0) == 0).length,
-        'bannedUsers': usersList.where((u) => (u['sts'] ?? 0) == 2).length,
-        'brokers': usersList.where((u) => (u['role'] ?? 0) == 1).length,
-        'totalDeals': dealsList.length,
-        'completedDeals': dealsList.where((d) => (d['sts'] ?? 0) == 1).length,
-        'totalCommission': dealsList
-            .where((d) => (d['sts'] ?? 0) == 1)
-            .fold<double>(
-                0, (s, d) => s + (((d['com_val'] ?? 0) as num).toDouble())),
-        'totalAppointments': apptsList.length,
-        'completedAppointments':
-            apptsList.where((a) => (a['sts'] ?? 0) == 2).length,
+        'totalOffers': offers.length,
+        'pendingOffers': offers.where((o) => o.sts == 1).length,
+        'publishedOffers': offers.where((o) => o.sts == 2).length,
+        'totalUsers': users.length,
+        'activeUsers': users.where((u) => u.sts == 0).length,
+        'bannedUsers': users.where((u) => u.sts == 2).length,
+        'brokers': users.where((u) => u.role == 1).length,
+        'totalDeals': deals.length,
+        'completedDeals': deals.where((d) => d.sts == 1).length,
+        'totalCommission': deals
+            .where((d) => d.sts == 1)
+            .fold<double>(0, (s, d) => s + d.comVal),
+        'totalAppointments': appts.length,
+        'completedAppointments': appts.where((a) => a.sts == 2).length,
       };
-    } catch (e) {return {};
+    } catch (e) {
+      return {};
     }
   }
 
   /// عدّاد سريع للعناصر التي تحتاج إجراء (للوحة الرئيسية)
-  Future<Map<String, int>> getActionCounts() async {
+  Future<Map<String, int>> getActionCounts(String adminUid) async {
     try {
-      final pendingOffers = await SupabaseService()
-          .client
-          .from(DbTables.offers)
-          .select('id')
-          .eq('sts', 1)
-          .eq('i_del', 0);
-      final pendingPayments = await SupabaseService()
-          .client
-          .from(DbTables.payments)
-          .select('id')
-          .eq('sts', 0);
-      final openReports = await SupabaseService()
-          .client
-          .from(DbTables.reports)
-          .select('id')
-          .eq('sts', 0);
-      // 🛡️ طلبات التوثيق قيد المراجعة (vrf = 1)
-      // مرجع: docs/LOGIC_SPEC.md §2.1
+      final pendingOffers = await getPendingOffers(adminUid);
+      final pendingPayments = await getAllPayments(adminUid, status: 0);
+      final openReports = await getAllReports(adminUid, status: 0);
       final pendingVerifications = await SupabaseService()
           .client
           .from(DbTables.users)
@@ -494,12 +419,13 @@ class AdminProvider with ChangeNotifier {
           .eq('vrf', 1)
           .eq('i_del', 0);
       return {
-        'pendingOffers': (pendingOffers as List).length,
-        'pendingPayments': (pendingPayments as List).length,
-        'openReports': (openReports as List).length,
+        'pendingOffers': pendingOffers.length,
+        'pendingPayments': pendingPayments.length,
+        'openReports': openReports.length,
         'pendingVerifications': (pendingVerifications as List).length,
       };
-    } catch (e) {return {};
+    } catch (e) {
+      return {};
     }
   }
 

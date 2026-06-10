@@ -35,28 +35,33 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      final res = await SupabaseService()
-          .client
-          .from(DbTables.requests)
-          .select()
-          .eq('id', widget.requestId)
-          .maybeSingle();
-
-      if (res == null) {
+      final auth = context.read<AuthProvider>();
+      final userId = auth.userModel?.uid;
+      if (userId == null || userId.isEmpty) {
         if (mounted) setState(() => _loading = false);
         return;
       }
 
-      final req = RequestModel.fromSupabase(
-          Map<String, dynamic>.from(res), widget.requestId);
+      final rows = await SupabaseService().client.rpc(
+        'get_user_requests_internal',
+        params: {'p_user_uid': userId},
+      );
 
-      // تأكد من ملكية الطلب
-      final auth = context.read<AuthProvider>();
-      if (auth.userModel?.uid != req.usrId) {
-        _snack('ليس لديك صلاحية لعرض هذا الطلب');
-        if (mounted) Navigator.pop(context);
+      Map<String, dynamic>? match;
+      for (final row in (rows as List)) {
+        final map = Map<String, dynamic>.from(row as Map);
+        if (map['id'] == widget.requestId) {
+          match = map;
+          break;
+        }
+      }
+
+      if (match == null) {
+        if (mounted) setState(() => _loading = false);
         return;
       }
+
+      final req = RequestModel.fromSupabase(match, widget.requestId);
 
       // جلب العروض المطابقة
       final matches = await _biz.matchOffersForRequest(
@@ -104,20 +109,14 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
 
     setState(() => _deleting = true);
     try {
-      await SupabaseService()
-          .client
-          .from(DbTables.requests)
-          .update({'i_del': 1}).eq('id', widget.requestId);
+      final auth = context.read<AuthProvider>();
+      final reqProv = context.read<RequestProvider>();
+      final userId = auth.userModel?.uid ?? '';
+      final ok = await reqProv.softDeleteRequest(userId, widget.requestId);
+      if (!ok) throw Exception('DELETE_FAILED');
 
       if (!mounted) return;
       _snack('تم حذف الطلب');
-
-      // حدّث الـ provider
-      final auth = context.read<AuthProvider>();
-      final reqProv = context.read<RequestProvider>();
-      if (auth.userModel != null) {
-        await reqProv.fetchMyRequests(auth.userModel!.uid);
-      }
       if (mounted) Navigator.pop(context, true);
     } catch (e) {if (mounted) {
         setState(() => _deleting = false);
@@ -438,11 +437,11 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
       case 0:
         return ('نشط', Colors.green, Icons.check_circle);
       case 1:
-        return ('قيد البحث', Colors.orange, Icons.search);
+        return ('قيد المعالجة', Colors.orange, Icons.search);
       case 2:
-        return ('تم العثور', Colors.blue, Icons.done_all);
+        return ('مغلق / تمت المطابقة', Colors.blue, Icons.done_all);
       case 3:
-        return ('مغلق', Colors.grey, Icons.lock);
+        return ('ملغي', Colors.grey, Icons.lock);
       default:
         return ('غير معروف', Colors.grey, Icons.help);
     }
