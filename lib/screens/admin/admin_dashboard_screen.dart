@@ -104,7 +104,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         physics: const NeverScrollableScrollPhysics(),
                         mainAxisSpacing: 10,
                         crossAxisSpacing: 10,
-                        childAspectRatio: wide ? 2.15 : 1.85,
+                        childAspectRatio: wide ? 2.45 : 2.15,
                         children: [
                       _statCard('👥', 'المستخدمون',
                           '${_stats['totalUsers'] ?? 0}', 'نشط: ${_stats['activeUsers'] ?? 0}'),
@@ -236,50 +236,48 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Widget _statCard(String emoji, String label, String value, String sub) {
     return Container(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.25)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
+      child: Row(
         children: [
-          Row(
-            children: [
-              Text(emoji, style: const TextStyle(fontSize: 17)),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
+          Text(emoji, style: const TextStyle(fontSize: 20)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: AppTheme.textGrey, fontSize: 12),
+                  style: const TextStyle(color: AppTheme.textGrey, fontSize: 11),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 5),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerRight,
-            child: Text(
-              value,
-              maxLines: 1,
-              style: const TextStyle(
-                color: AppTheme.primaryGold,
-                fontSize: 21,
-                fontWeight: FontWeight.bold,
-              ),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    value,
+                    maxLines: 1,
+                    style: const TextStyle(
+                      color: AppTheme.primaryGold,
+                      fontSize: 19,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                Text(
+                  sub,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: AppTheme.textGrey, fontSize: 9),
+                ),
+              ],
             ),
-          ),
-          Text(
-            sub,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: AppTheme.textGrey, fontSize: 10),
           ),
         ],
       ),
