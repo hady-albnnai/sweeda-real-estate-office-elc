@@ -1,91 +1,49 @@
-# 🏛️ عقارات السويداء — مكتب عقاري إلكتروني
+# المكتب العقاري الالكتروني
 
-> تطبيق موبايل (Flutter) + Backend (Supabase PostgreSQL)
+تطبيق Flutter + Supabase لإدارة مكتب عقاري إلكتروني. بدأ المشروع على بيانات عقارات السويداء، وتم تجهيز الاسم والبنية للتوسع لاحقاً.
 
-تطبيق لمكتب عقاري إلكتروني خاص بمحافظة السويداء، يتيح تصفّح وعرض العقارات والسيارات (بيعاً وإيجاراً)، حجز مواعيد المعاينة، ونشر الطلبات — مع لوحات إدارة للمكتب والسماسرة.
+## الحالة الحالية
 
----
+راجع أولاً:
 
-## 🧭 نظرة عامة
+```txt
+docs/CURRENT_STATUS.md
+```
 
-| العنصر | القرار |
+هذا الملف هو مرجع البداية لأي محادثة أو تطوير قادم.
+
+## أهم المسارات
+
+| القسم | المسار |
 |---|---|
-| **النوع** | تطبيق موبايل (Android / iOS) |
-| **الواجهة** | عربية بالكامل، اتجاه RTL، خط Cairo |
-| **الأدوار** | زائر · مستخدم · سمسار · إدارة |
-| **الـ Backend** | Supabase (PostgreSQL + Auth + Realtime + Storage + RPC Functions) |
-| **التحقق** | طريقتان: **WhatsApp OTP** (Meta Cloud API عبر Edge Function) + **Email Magic Link** (Supabase Auth) — مع dev fallback |
-| **الإشعارات** | داخلية (Realtime) + خارجية (Firebase FCM — للتطبيق المغلق) |
-| **التقنية** | Flutter + Supabase + Provider + GoRouter |
-| **الإصدار المستهدف** | Android (API 24+) · iOS (15+) |
+| الزائر | `/home` |
+| المستخدم | `/user/home` |
+| الوسيط | `/broker/dashboard` |
+| الإدارة | `/admin/dashboard` |
+| عمليات المكتب | `/admin/office-operations` |
+| إدارة الصلاحيات | `/admin/permissions` |
+| إدارة الوسائط | `/admin/media-review` |
+| إدارة مهام التصوير | `/admin/photography-management` |
+| مهام المصور | `/photographer/tasks` |
 
----
+## الملفات المرجعية المهمة
 
-## 📂 بنية المستودع
+| الملف | الغرض |
+|---|---|
+| `docs/CURRENT_STATUS.md` | الوضع الحالي المختصر |
+| `docs/NEXT_DEVELOPMENT_ITEMS.md` | المتبقي فقط |
+| `docs/INTERNAL_MANAGEMENT_TEST_CHECKLIST.md` | اختبارات الإدارة والصلاحيات والمصور |
+| `docs/SPEC.md` | المواصفات التقنية |
+| `docs/LOGIC_SPEC.md` | ميثاق المنطق |
+| `DEVELOPMENT_GUIDELINES.md` | قواعد التطوير الإلزامية |
+| `supabase/FUNCTIONS_REFERENCE.md` | مرجع دوال السيرفر |
+| `supabase/CHECK_ALL_MIGRATIONS.sql` | فحص حالة السيرفر |
+| `docs/AUTH_SETUP.md` | إعداد المصادقة |
+| `docs/WHATSAPP_ACTIVATION_PLAN.md` | تفعيل واتساب الإنتاجي |
+| `docs/SECURITY_REVIEW.md` | مراجعة أمنية |
+| `BUILD_GUIDE.md` | البناء والنشر |
 
-```
-sweeda-real-estate-office-elc/
-├── docs/
-│   ├── SPEC.md                    ← المواصفات الكاملة
-│   ├── PROJECT_PLAN.md            ← خطة المشروع التفصيلية
-│   └── locations.json             ← مناطق السويداء
-├── supabase/
-│   ├── setup.sql                  ← الجداول + الدوال + RLS + Config
-│   └── SERVER_DOCS.md             ← توثيق السيرفر
-├── lib/
-│   ├── main.dart                  ← Supabase init
-│   ├── app.dart                   ← Providers + MaterialApp
-│   ├── core/                      ← constants, network, router, theme, utils
-│   ├── models/                    ← 10 ملفات
-│   ├── providers/                 ← 9 ملفات
-│   ├── services/                  ← auth, storage(+ضغط/رفع), notification
-│   ├── core/services/             ← business_service, local_cache_service (Hive)
-│   ├── screens/                   ← splash, visitor, auth, user(8), broker(5), admin(9)
-│   └── widgets/                   ← ويدجت مشتركة
-├── prototype/                     ← نموذج HTML
-├── assets/                        ← صور + أيقونات
-└── android/ ios/ web/ linux/ macos/ windows/
-```
-
----
-
-## 🗄️ بنية Supabase
-
-### الجداول (13 جدول)
-`users` · `offers` · `requests` · `appointments` · `notifications` · `payments` · `reports` · `deals` · `activity_log` · `stats` · `app_config` · `otp_codes` · `user_devices`
-
-### الدوال (33 دالة RPC)
-`generate_otp` · `verify_otp` · `generate_otp_v2` · `verify_otp_v2` · `upsert_user_after_otp` · `get_user_by_email` · `create_user_from_phone` · `get_user_by_phone` · `check_offer_duplicate` · `calculate_commission` · `update_user_badge` · `get_pending_offers_count` · `add_points` · `soft_delete` · `expire_offers` · `send_appointment_reminders` + الدوال التلقائية (Triggers) و `send_push_notification`
-
-**Edge Functions:** `send-whatsapp-otp` · `verify-whatsapp-otp` (راجع `docs/AUTH_SETUP.md` للتفعيل)
-
-### Realtime
-`offers` · `notifications` · `appointments` · `deals` · `requests`
-
-### Storage
-`offer_images` (Public bucket)
-
----
-
-
-### الإدارة الداخلية والصلاحيات
-
-تمت إضافة توثيق ومسارات للإدارة الداخلية:
-
-- [`docs/INTERNAL_MANAGEMENT_ADAPTATION_PLAN.md`](docs/INTERNAL_MANAGEMENT_ADAPTATION_PLAN.md)
-- [`docs/INTERNAL_MANAGEMENT_TEST_CHECKLIST.md`](docs/INTERNAL_MANAGEMENT_TEST_CHECKLIST.md)
-- شاشة عمليات المكتب: `/admin/office-operations`
-- شاشة إدارة الصلاحيات: `/admin/permissions`
-- شاشة إدارة الوسائط والتصوير: `/admin/media-review`
-- شاشة إدارة مهام التصوير: `/admin/photography-management`
-- شاشة مهام المصور: `/photographer/tasks`
-
-> إذا كانت دالة الصلاحيات منفذة على السيرفر قبل إضافة إدارة الوسائط، نفّذ migration:
-> `supabase/migrations/2026_06_10_add_media_review_permission.sql`
-
----
-
-## 🚀 بدء التطوير
+## تشغيل المشروع
 
 ```bash
 flutter pub get
@@ -93,37 +51,17 @@ flutter analyze
 flutter run
 ```
 
-للبناء للإنتاج (APK / App Bundle / iOS) راجع الدليل الكامل: [`BUILD_GUIDE.md`](BUILD_GUIDE.md)
+## ملاحظات مهمة
 
----
+- أي تعديل برمجي يجب أن يحدّث التوثيق المناسب.
+- أي تعديل قاعدة بيانات يجب أن يكون داخل `supabase/migrations/` وأن ينعكس في `supabase/setup.sql` إذا كان دائماً.
+- لا تترك `print` في الكود النهائي.
+- لا تخزن أسرار أو Tokens داخل المستودع.
 
-## 📋 حالة المشروع
+## المرحلة القادمة
 
-راجع [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) للخطة التفصيلية.
+المرحلة القادمة هي الاختبار الفعلي وإصلاح ما يظهر. راجع:
 
-| المرحلة | الحالة |
-|---|---|
-| ✅ السيرفر (Supabase) | مكتمل |
-| ✅ التنظيف (Firebase → Supabase) | مكتمل |
-| ✅ شاشة السبلاش | مكتملة |
-| ✅ المرحلة 1: شاشات المستخدم (**13 شاشة**) | مكتملة |
-| ✅ المرحلة 2: لوحة السمسار (5 شاشات) | مكتملة |
-| ✅ المرحلة 3: لوحة الإدارة (9 شاشات) | مكتملة |
-| ✅ المرحلة 4: المنطق الخلفي (نقاط/باقات/مطابقة/streak/سوشال/صور) | مكتملة |
-| ✅ المرحلة 5: التحسينات (Realtime/إشعارات/Offline/Shimmer/Splash) | مكتملة |
-| ✅ المرحلة 6: إعداد البناء والأمان (Gradle/توقيع/iOS/دليل) | مُجهّزة |
-| ✅ **المرحلة 7: المصادقة (WhatsApp OTP + Email Magic Link)** | مكتملة |
-| ✅ **المرحلة 8: استكمال الشاشات المتبقية (packages/payment/edit/broker/request)** | مكتملة |
-| ✅ **المرحلة 9: إصلاحات ما بعد الاختبار + إضافات** | مكتملة |
-| ✅ **المرحلة 10 (A→E2+): مزايا متقدّمة (إقرار/spd/فيديو/خريطة/cron/FCM/triggers)** | مكتملة |
-| ✅ **المرحلة 11: نظام قنوات الدفع اليدوي (Config-driven)** | مكتملة |
-| ⏳ تنفيذ البناء والنشر للمتاجر | محلياً |
-
-> **الإجمالي:** 38 شاشة · ~98% اكتمال · يتبقّى البناء فقط
-> **التفاصيل:** [`docs/SCREENS_AUDIT.md`](docs/SCREENS_AUDIT.md) · [`docs/AUTH_SETUP.md`](docs/AUTH_SETUP.md)
-
-> **للبناء والنشر:** راجع [`BUILD_GUIDE.md`](BUILD_GUIDE.md) · **للأمان:** [`docs/SECURITY_REVIEW.md`](docs/SECURITY_REVIEW.md)
-
----
-
-جميع الحقوق محفوظة © 2026 — مشروع عقارات السويداء
+```txt
+docs/NEXT_DEVELOPMENT_ITEMS.md
+```
