@@ -804,3 +804,136 @@ await client.rpc('send_appointment_reminders');
 | `docs/FEATURES_AUDIT.md` | تدقيق الميزات الحالي بعد إعادة الهيكلة |
 | `docs/NEXT_DEVELOPMENT_ITEMS.md` | المهام المتبقية غير المنفذة / المؤجلة |
 | `DEVELOPMENT_GUIDELINES.md` | قواعد التطوير الإلزامية |
+
+---
+
+## 🆕 تحديث 2026-06-10 — دوال الإدارة الداخلية والمصور
+
+تمت إضافة دوال RPC جديدة لدعم الإدارة الداخلية، الصلاحيات، وضع المصادقة التطويري، ومنع تكرار الهاتف.
+
+### إدارة الصلاحيات والأدوار
+
+#### `admin_update_user_permissions(p_target_uid UUID, p_perm JSONB)` → `BOOLEAN`
+
+- دالة الصلاحيات الأساسية.
+- تعتمد على `auth.uid()`.
+- تتطلب نائب/مدير.
+- تضبط `users.perm`.
+
+#### `admin_update_user_permissions_by_admin(p_admin_uid UUID, p_target_uid UUID, p_perm JSONB)` → `BOOLEAN`
+
+- نسخة متوافقة مع وضع التطوير الحالي حيث قد لا تكون `auth.uid()` متاحة.
+- تفحص دور `p_admin_uid` من جدول `users`.
+- تتطلب `role >= 3`.
+- تستخدمها شاشة `/admin/permissions`.
+
+#### `admin_update_user_role(p_admin_uid UUID, p_target_uid UUID, p_role INT)` → `BOOLEAN`
+
+- تغيير دور مستخدم من الإدارة.
+- تتطلب `p_admin_uid` بدور نائب/مدير (`role >= 3`).
+- تحل مشكلة نجاح وهمي عند التحديث المباشر بسبب RLS/Triggers.
+
+#### `admin_set_user_status(p_admin_uid UUID, p_target_uid UUID, p_status INT, p_reason TEXT)` → `BOOLEAN`
+
+- تغيير حالة المستخدم:
+  - `0` نشط
+  - `1` مجمّد
+  - `2` محظور
+- تتطلب `role >= 2` للمستخدم الإداري.
+
+---
+
+### منع تكرار الهاتف
+
+#### `normalize_sy_phone(p_phone TEXT)` → `TEXT`
+
+- توحيد أرقام سوريا لصيغة واحدة.
+- أمثلة تتحول إلى نفس الصيغة:
+  - `09xxxxxxxx`
+  - `9639xxxxxxxx`
+  - `009639xxxxxxxx`
+  - `+9639xxxxxxxx`
+- النتيجة القياسية: `+9639xxxxxxxx`.
+
+#### `ux_users_normalized_phone_active`
+
+- Unique index على:
+
+```sql
+normalize_sy_phone(ph)
+```
+
+- يمنع إنشاء أكثر من حساب فعال لنفس رقم الهاتف بصيغ مختلفة.
+
+#### `upsert_user_after_otp(p_identifier TEXT, p_channel TEXT)` → `TABLE(user_id UUID, is_new BOOLEAN)`
+
+- تم تحديثها لتستخدم `normalize_sy_phone` عند قناة `whatsapp` أو `sms`.
+- مهم لأن وضع التطوير الحالي يعتمد عليها عند تسجيل الدخول.
+
+---
+
+### إنشاء العرض في وضع التطوير
+
+#### `create_offer_internal(p_user_uid UUID, p_offer JSONB)` → `SETOF offers`
+
+- إنشاء عرض عبر RPC بدل INSERT مباشر.
+- يحل مشاكل RLS عندما لا تكون `auth.uid()` متاحة في WhatsApp dev fallback.
+- يستخدمها `OfferProvider.addOffer`.
+- تتحقق أن المستخدم موجود ونشط (`sts=0`, `i_del=0`).
+
+---
+
+### مهام التصوير
+
+#### جدول `photography_tasks`
+
+يدير مهام التصوير المستقلة.
+
+الحالات:
+
+| sts | الحالة |
+|---:|---|
+| 0 | بانتظار المصور |
+| 1 | قيد التنفيذ |
+| 2 | مرسلة للمكتب |
+| 3 | معتمدة |
+| 4 | مرفوضة |
+| 5 | ملغاة |
+
+#### `create_photography_task_internal(p_admin_uid UUID, p_offer_id UUID, p_photographer_id UUID, p_notes TEXT, p_ts_scheduled TIMESTAMPTZ)` → `SETOF photography_tasks`
+
+- إنشاء مهمة تصوير من الإدارة.
+- تفحص أن `p_admin_uid` له `role >= 2`.
+- تستخدمها شاشة `/admin/photography-management`.
+
+#### `submit_photography_task_internal(p_photographer_uid UUID, p_task_id UUID, p_media JSONB, p_photographer_note TEXT)` → `BOOLEAN`
+
+- إرسال مهمة التصوير من المصور إلى المكتب.
+- تفحص أن المهمة تخص المصور.
+- تحدث الحالة إلى `2` مرسلة للمكتب.
+- تستخدمها شاشة `/photographer/tasks`.
+
+#### `update_photography_task_status_internal(p_admin_uid UUID, p_task_id UUID, p_status INT, p_office_note TEXT)` → `BOOLEAN`
+
+- تغيير حالة مهمة التصوير من الإدارة.
+- تستخدم للرفض أو الإلغاء أو التحديث الإداري.
+
+#### `attach_photography_media_to_offer_internal(p_admin_uid UUID, p_task_id UUID)` → `BOOLEAN`
+
+- تعتمد مهمة التصوير.
+- تدمج `photography_tasks.media` داخل `offers.imgs` بدون تكرار.
+- تحول المهمة إلى حالة `3` معتمدة.
+
+---
+
+## ملفات migrations المرتبطة — 2026-06-10
+
+| الملف | الغرض |
+|---|---|
+| `2026_06_10_internal_permissions.sql` | إضافة `users.perm` ودالة الصلاحيات الأساسية |
+| `2026_06_10_add_media_review_permission.sql` | إضافة صلاحية `media_review` للدالة |
+| `2026_06_10_photography_tasks.sql` | جدول مهام التصوير وصلاحياته الأساسية |
+| `2026_06_10_admin_user_role_and_phone_uniqueness.sql` | إصلاح تغيير الأدوار والحالات ومنع تكرار الهاتف |
+| `2026_06_10_offer_create_rpc_and_admin_quota.sql` | إنشاء العروض عبر RPC وإعفاء الإدارة من الحصة |
+| `2026_06_10_fix_upsert_user_phone_normalization.sql` | تطبيع الهاتف داخل `upsert_user_after_otp` |
+| `2026_06_10_photography_dev_auth_rpcs.sql` | دوال مهام التصوير المتوافقة مع وضع التطوير |
