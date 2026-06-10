@@ -32,7 +32,7 @@
 | ✅ **مُطبّق على السيرفر** | `2026_06_10_verification_dev_auth_rpcs.sql` — RPCs توثيق متوافقة مع وضع التطوير الحالي |
 | ✅ **مُطبّق على السيرفر** | `2026_06_11_drop_obsolete_verification_rpcs.sql` — حذف RPCs التوثيق القديمة غير المستخدمة |
 | ✅ **مُطبّق على السيرفر** | `2026_06_11_drop_obsolete_unused_rpcs.sql` — حذف RPCs قديمة غير مستخدمة (`admin_update_user_permissions`, `verify_otp_safe`) |
-| ⚠️ **جاهز في المستودع ولم يُنفّذ على السيرفر بعد** | `2026_06_11_real_test_stabilization_internal_rpcs.sql` — دفعة تثبيت إضافية لتحويل المسارات الحساسة إلى RPCs قبل الاختبار الحقيقي |
+| ✅ **مُطبّق على السيرفر** | `2026_06_11_real_test_stabilization_internal_rpcs.sql` — 40 دالة RPC لتثبيت المسارات الحساسة قبل الاختبار الحقيقي (تم التحقق من وجودها كاملةً بتاريخ 2026-06-11) |
 
 ---
 
@@ -86,6 +86,48 @@
 | 31 | `trg_deal_completed` 🆕🔔 | TRIGGER على `deals.sts` | `TRIGGER` | ✅ |
 | 32 | `trg_payment_approved` 🆕🔔 | TRIGGER على `payments.sts` | `TRIGGER` | ✅ |
 | 33 | `trg_offer_published_match_requests` 🆕🔔 | TRIGGER على `offers.i_pub` (1→0) | `TRIGGER` | ✅ |
+| **— دوال القراءة الداخلية (2026-06-11 Batch) —** | | | | |
+| 34 | `get_offer_by_id_internal` | `p_offer_id UUID, p_user_uid UUID?` | `SETOF offers` | ✅ |
+| 35 | `get_user_offers_internal` | `p_user_uid UUID` | `SETOF offers` | ✅ |
+| 36 | `get_user_requests_internal` | `p_user_uid UUID` | `SETOF requests` | ✅ |
+| 37 | `get_user_payments_internal` | `p_user_uid UUID` | `SETOF payments` | ✅ |
+| 38 | `get_user_notifications_internal` | `p_user_uid UUID` | `SETOF notifications` | ✅ |
+| 39 | `get_user_appointments_internal` | `p_user_uid UUID` | `SETOF appointments` | ✅ |
+| 40 | `get_owner_appointments_internal` | `p_owner_uid UUID` | `SETOF appointments` | ✅ |
+| 41 | `get_broker_offers_internal` | `p_broker_uid UUID` | `SETOF offers` | ✅ |
+| 42 | `get_broker_appointments_internal` | `p_broker_uid UUID` | `SETOF appointments` | ✅ |
+| 43 | `get_broker_deals_internal` | `p_broker_uid UUID` | `SETOF deals` | ✅ |
+| 44 | `get_admin_pending_offers_internal` | `p_admin_uid UUID` | `SETOF offers` | ✅ |
+| 45 | `get_admin_offers_internal` | `p_admin_uid UUID, p_limit INT?` | `SETOF offers` | ✅ |
+| 46 | `get_admin_appointments_internal` | `p_admin_uid UUID` | `SETOF appointments` | ✅ |
+| 47 | `get_admin_deals_internal` | `p_admin_uid UUID` | `SETOF deals` | ✅ |
+| 48 | `get_admin_payments_internal` | `p_admin_uid UUID` | `SETOF payments` | ✅ |
+| 49 | `get_admin_reports_internal` | `p_admin_uid UUID` | `SETOF reports` | ✅ |
+| **— دوال الكتابة الداخلية (2026-06-11 Batch) —** | | | | |
+| 50 | `admin_review_offer_internal` | `p_admin_uid UUID, p_offer_id UUID, p_approve BOOLEAN, p_reason TEXT?` | `BOOLEAN` | ✅ |
+| 51 | `create_request_internal` | `p_user_uid UUID, p_request JSONB` | `SETOF requests` | ✅ |
+| 52 | `update_request_internal` | `p_user_uid UUID, p_request_id UUID, p_patch JSONB` | `BOOLEAN` | ✅ |
+| 53 | `soft_delete_request_internal` | `p_user_uid UUID, p_request_id UUID` | `BOOLEAN` | ✅ |
+| 54 | `create_payment_internal` | `p_user_uid UUID, p_payment JSONB` | `SETOF payments` | ✅ |
+| 55 | `admin_reject_payment_internal` | `p_admin_uid UUID, p_payment_id UUID` | `BOOLEAN` | ✅ |
+| 56 | `create_report_internal` | `p_reporter_uid UUID, p_report JSONB` | `SETOF reports` | ✅ |
+| 57 | `admin_handle_report_internal` | `p_admin_uid UUID, p_report_id UUID, p_action INT, p_note TEXT?, p_duration INT?` | `BOOLEAN` | ✅ |
+| 58 | `book_appointment_internal` | `p_user_uid UUID, p_offer_id UUID, p_dt TIMESTAMPTZ, p_broker_id UUID?, p_request_id UUID?` | `SETOF appointments` | ✅ |
+| 59 | `cancel_appointment_internal` | `p_requester_uid UUID, p_appointment_id UUID, p_reason TEXT?` | `BOOLEAN` | ✅ |
+| 60 | `broker_handle_appointment_internal` | `p_broker_uid UUID, p_appointment_id UUID, p_action TEXT` | `BOOLEAN` | ✅ |
+| 61 | `admin_update_appointment_status_internal` | `p_admin_uid UUID, p_appointment_id UUID, p_status INT, p_admin_note TEXT?` | `BOOLEAN` | ✅ |
+| 62 | `admin_force_appointment_internal` | `p_admin_uid UUID, p_appointment_id UUID` | `BOOLEAN` | ✅ |
+| 63 | `create_deal_internal` | `p_admin_uid UUID, p_deal JSONB` | `SETOF deals` | ✅ |
+| 64 | `complete_deal_internal` | `p_admin_uid UUID, p_deal_id UUID, p_commission NUMERIC?, p_note TEXT?` | `BOOLEAN` | ✅ |
+| 65 | `mark_notification_read_internal` | `p_user_uid UUID, p_notification_id UUID` | `BOOLEAN` | ✅ |
+| 66 | `mark_all_notifications_read_internal` | `p_user_uid UUID` | `BOOLEAN` | ✅ |
+| 67 | `create_rating_internal` | `p_reviewer_uid UUID, p_target_uid UUID, p_stars INT, p_comment TEXT?` | `BOOLEAN` | ✅ |
+| 68 | `register_daily_streak_internal` | `p_user_uid UUID, p_points INT?` | `JSONB` | ✅ |
+| 69 | `update_user_profile_internal` | `p_user_uid UUID, p_payload JSONB` | `BOOLEAN` | ✅ |
+| 70 | `update_user_notification_settings_internal` | `p_user_uid UUID, p_ntf JSONB` | `BOOLEAN` | ✅ |
+| 71 | `submit_broker_request_internal` | `p_user_uid UUID, p_business_name TEXT, p_category INT, p_experience TEXT?, p_about TEXT?` | `BOOLEAN` | ✅ |
+| 72 | `mark_social_published_internal` | `p_user_uid UUID, p_offer_id UUID, p_text TEXT` | `BOOLEAN` | ✅ |
+| 73 | `increment_offer_views_internal` | `p_offer_id UUID` | `BOOLEAN` | ✅ |
 
 ### 🔗 Triggers Active على الجداول:
 
