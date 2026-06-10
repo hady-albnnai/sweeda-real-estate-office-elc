@@ -588,3 +588,24 @@
 
 - `lib/screens/photographer/photographer_tasks_screen.dart`
 - `lib/core/router/app_router.dart`
+
+---
+
+## 🆕 تحديث 2026-06-10 — شاشة إدارة مهام التصوير
+
+تمت إضافة شاشة إدارية لإدارة مهام التصوير:
+
+- المسار: `/admin/photography-management`
+- الصلاحية: `photography_management`
+- إنشاء مهمة تصوير لعرض.
+- تعيين مصور من المستخدمين الذين يملكون صلاحية `photographer_tasks`.
+- فلترة المهام حسب الحالة.
+- مراجعة الوسائط المرسلة من المصور.
+- اعتماد التصوير وربط الصور بالعرض.
+- رفض التصوير مع ملاحظة للمصور.
+
+الملفات:
+
+- `lib/screens/admin/photography_management_screen.dart`
+- `lib/core/router/app_router.dart`
+- `lib/screens/admin/admin_dashboard_screen.dart`
