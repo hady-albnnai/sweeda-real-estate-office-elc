@@ -321,7 +321,8 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
   }
 
   Future<void> _approveAndAttach(PhotographyTaskModel task) async {
-    final ok = await context.read<PhotographyProvider>().attachMediaToOffer(task);
+    final adminId = context.read<AuthProvider>().userModel?.uid ?? '';
+    final ok = await context.read<PhotographyProvider>().attachMediaToOffer(adminId, task);
     _snack(ok ? 'تم اعتماد التصوير وربطه بالعرض' : 'فشل اعتماد التصوير');
     _load();
   }
@@ -345,7 +346,8 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
       ),
     );
     if (reason == null) return;
-    final ok = await context.read<PhotographyProvider>().updateStatus(task.id, 4, officeNote: reason);
+    final adminId = context.read<AuthProvider>().userModel?.uid ?? '';
+    final ok = await context.read<PhotographyProvider>().updateStatus(adminId, task.id, 4, officeNote: reason);
     _snack(ok ? 'تم رفض التصوير' : 'فشل الرفض');
     _load();
   }
