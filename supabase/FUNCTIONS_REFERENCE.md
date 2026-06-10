@@ -31,6 +31,7 @@
 | ✅ **مُطبّق على السيرفر** | `2026_06_10_users_public_no_private_img.sql` — إزالة `img` من `users_public` |
 | ✅ **مُطبّق على السيرفر** | `2026_06_10_verification_dev_auth_rpcs.sql` — RPCs توثيق متوافقة مع وضع التطوير الحالي |
 | ✅ **مُطبّق على السيرفر** | `2026_06_11_drop_obsolete_verification_rpcs.sql` — حذف RPCs التوثيق القديمة غير المستخدمة |
+| ✅ **مُطبّق على السيرفر** | `2026_06_11_drop_obsolete_unused_rpcs.sql` — حذف RPCs قديمة غير مستخدمة (`admin_update_user_permissions`, `verify_otp_safe`) |
 
 ---
 
@@ -799,7 +800,8 @@ await client.rpc('send_appointment_reminders');
 | `supabase/migrations/2026_06_10_auth_uid_alignment_guards.sql` 🛠️ | حراسات جزئية لربط uid المرسل بـ `auth.uid()` عندما تتوفر الجلسة الحقيقية — **مطبّق ✅** |
 | `supabase/migrations/2026_06_10_users_public_no_private_img.sql` 🛠️ | إزالة `img` من `users_public` بعد نقل الهوية إلى bucket خاص — **مطبّق ✅** |
 | `supabase/migrations/2026_06_10_verification_dev_auth_rpcs.sql` 🛠️ | RPCs توثيق متوافقة مع وضع التطوير الحالي — **مطبّق ✅** |
-| `supabase/migrations/2026_06_11_drop_obsolete_verification_rpcs.sql` 🧹 | حذف RPCs التوثيق القديمة غير المستخدمة — **جاهز للتنفيذ / أو مطبّق حسب حالة السيرفر** |
+| `supabase/migrations/2026_06_11_drop_obsolete_verification_rpcs.sql` 🧹 | حذف RPCs التوثيق القديمة غير المستخدمة — **مطبّق ✅** |
+| `supabase/migrations/2026_06_11_drop_obsolete_unused_rpcs.sql` 🧹 | حذف `admin_update_user_permissions` و `verify_otp_safe` بعد التحقق من عدم استخدامهما — **مطبّق ✅** |
 | `supabase/functions/send-push-notification/index.ts` 🆕🆕🆕🆕🆕 | Edge Function لإرسال FCM Push عبر Service Account |
 | `lib/services/fcm_service.dart` 🆕🆕🆕🆕🆕 | خدمة FCM Flutter (تهيئة + token + معالجات الإشعارات) |
 | `lib/screens/user/boost_offer_screen.dart` 🆕🆕🆕 | شاشة شراء ترقيات العروض (5 خيارات: ren/pin/bst/dsc5/fms) |
@@ -831,19 +833,14 @@ await client.rpc('send_appointment_reminders');
 
 ### إدارة الصلاحيات والأدوار
 
-#### `admin_update_user_permissions(p_target_uid UUID, p_perm JSONB)` → `BOOLEAN`
-
-- دالة الصلاحيات الأساسية.
-- تعتمد على `auth.uid()`.
-- تتطلب نائب/مدير.
-- تضبط `users.perm`.
-
 #### `admin_update_user_permissions_by_admin(p_admin_uid UUID, p_target_uid UUID, p_perm JSONB)` → `BOOLEAN`
 
-- نسخة متوافقة مع وضع التطوير الحالي حيث قد لا تكون `auth.uid()` متاحة.
+- النسخة المعتمدة حالياً لإدارة الصلاحيات.
+- متوافقة مع وضع التطوير الحالي حيث قد لا تكون `auth.uid()` متاحة.
 - تفحص دور `p_admin_uid` من جدول `users`.
 - تتطلب `role >= 3`.
 - تستخدمها شاشة `/admin/permissions`.
+- تم حذف النسخة الأقدم `admin_update_user_permissions` بعد التأكد من عدم استخدامها.
 
 #### `admin_update_user_role(p_admin_uid UUID, p_target_uid UUID, p_role INT)` → `BOOLEAN`
 

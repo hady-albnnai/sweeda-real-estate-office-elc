@@ -148,12 +148,17 @@
   - تم إزالة fallbackات المواقع والمدن المحلية الأثقل من الواجهة.
 - تم تشديد إضافي في `S-01`:
   - أضيفت مطابقة `auth.uid()` أيضاً لمسار `submit_photography_task_internal` عند توفر الجلسة الحقيقية.
+- تم تنفيذ تنظيف آمن إضافي على السيرفر بعد فحص التبعيات:
+  - حذف `admin_update_user_permissions`.
+  - حذف `verify_otp_safe`.
 - تم إنشاء مرجع تنفيذي للاختبار بعد الإصلاحات:
   - `docs/POST_FIX_EXECUTION_AND_TEST_PLAN.md`
 - تم إنشاء ملف SQL مجمّع جاهز للتنفيذ على السيرفر:
   - `supabase/RUN_ME_LOGIC_FIXES_2026_06_11.sql`
 - تم إنشاء migration تنظيف إضافية لحذف RPCs التوثيق القديمة غير المستخدمة:
   - `supabase/migrations/2026_06_11_drop_obsolete_verification_rpcs.sql`
+- تم إنشاء migration تنظيف إضافية لحذف RPCs قديمة غير مستخدمة بعد التحقق من عدم وجود تبعيات:
+  - `supabase/migrations/2026_06_11_drop_obsolete_unused_rpcs.sql`
 - تم تحديث الملفات المرجعية التالية:
   - `docs/SPEC.md`
   - `docs/LOGIC_SPEC.md`

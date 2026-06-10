@@ -147,9 +147,9 @@ WITH checks AS (
     EXISTS(SELECT 1 FROM pg_proc WHERE proname='verify_otp_v2'),
     'whatsapp_email_auth'
   UNION ALL
-  SELECT 62, 'FN', 'verify_otp_safe',
-    EXISTS(SELECT 1 FROM pg_proc WHERE proname='verify_otp_safe'),
-    'Phase 8 — قفل المحاولات'
+  SELECT 62, 'FN', 'legacy verify_otp_safe removed',
+    NOT EXISTS(SELECT 1 FROM pg_proc WHERE proname='verify_otp_safe'),
+    'cleanup_2026_06_11'
   UNION ALL
   SELECT 63, 'FN', 'apply_referral',
     EXISTS(SELECT 1 FROM pg_proc WHERE proname='apply_referral'),
@@ -344,9 +344,9 @@ WITH checks AS (
            WHERE table_schema='public' AND table_name='users' AND column_name='perm'),
     'internal_permissions'
   UNION ALL
-  SELECT 136, 'FN', 'admin_update_user_permissions',
-    EXISTS(SELECT 1 FROM pg_proc WHERE proname='admin_update_user_permissions'),
-    'internal_permissions'
+  SELECT 136, 'FN', 'legacy admin_update_user_permissions removed',
+    NOT EXISTS(SELECT 1 FROM pg_proc WHERE proname='admin_update_user_permissions'),
+    'cleanup_2026_06_11'
   UNION ALL
   SELECT 137, 'FN', 'admin_update_user_role',
     EXISTS(SELECT 1 FROM pg_proc WHERE proname='admin_update_user_role'),

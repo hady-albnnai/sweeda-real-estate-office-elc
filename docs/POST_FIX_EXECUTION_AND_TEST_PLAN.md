@@ -29,6 +29,8 @@ supabase/migrations/2026_06_10_config_package_prices_and_fx.sql
 supabase/migrations/2026_06_10_auth_uid_alignment_guards.sql
 supabase/migrations/2026_06_10_users_public_no_private_img.sql
 supabase/migrations/2026_06_10_verification_dev_auth_rpcs.sql
+supabase/migrations/2026_06_11_drop_obsolete_verification_rpcs.sql
+supabase/migrations/2026_06_11_drop_obsolete_unused_rpcs.sql
 ```
 
 ### ملاحظات مهمة

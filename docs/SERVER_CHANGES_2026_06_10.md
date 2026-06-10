@@ -26,6 +26,7 @@
 | `supabase/migrations/2026_06_10_users_public_no_private_img.sql` | إزالة مسار صورة الهوية الخاصة من `users_public` |
 | `supabase/migrations/2026_06_10_verification_dev_auth_rpcs.sql` | RPCs توثيق متوافقة مع وضع التطوير الحالي |
 | `supabase/migrations/2026_06_11_drop_obsolete_verification_rpcs.sql` | حذف RPCs التوثيق القديمة غير المستخدمة |
+| `supabase/migrations/2026_06_11_drop_obsolete_unused_rpcs.sql` | حذف RPCs قديمة غير مستخدمة بعد التحقق من عدم اعتماد التطبيق والسيرفر عليها |
 
 ## تحديث لاحق — إصلاحات منطقية
 
@@ -41,6 +42,7 @@
 - إزالة مسار صورة الهوية الخاصة من `users_public` بعد فصل الهوية الخاصة عن أي avatar عام.
 - إضافة RPCs متوافقة مع وضع التطوير لتقديم/اعتماد/رفض التوثيق دون كسر التدفق الحالي.
 - إضافة تنظيف لاحق لحذف RPCs التوثيق القديمة بعد التأكد من اعتماد المسارات الجديدة على التطبيق والسيرفر.
+- إضافة تنظيف إضافي لحذف `admin_update_user_permissions` و `verify_otp_safe` بعد فحص عدم وجود تبعيات داخلية وعدم وجود استخدام من التطبيق الحالي.
 
 ## التغييرات حسب النوع
 
