@@ -42,6 +42,7 @@ import '../../screens/broker/broker_offers_screen.dart';
 import '../../screens/broker/broker_appointments_screen.dart';
 import '../../screens/broker/broker_deals_screen.dart';
 import '../../screens/broker/broker_stats_screen.dart';
+import '../../screens/photographer/photographer_tasks_screen.dart';
 
 // === Admin ===
 import '../../screens/admin/admin_dashboard_screen.dart';
@@ -161,6 +162,12 @@ class AppRouter {
             (requiredPermission != null &&
                 !PermissionService.has(auth.userModel, requiredPermission))) {
           return '/user/home';
+        }
+      }
+
+      if (path.startsWith('/photographer')) {
+        if (!PermissionService.has(auth.userModel, PermissionKeys.photographerTasks)) {
+          return '/home';
         }
       }
 
@@ -334,6 +341,14 @@ class AppRouter {
       GoRoute(
         path: '/broker/stats',
         builder: (context, state) => const BrokerStatsScreen(),
+      ),
+
+      // ═══════════════════════════════════════
+      // 📸 PHOTOGRAPHER
+      // ═══════════════════════════════════════
+      GoRoute(
+        path: '/photographer/tasks',
+        builder: (context, state) => const PhotographerTasksScreen(),
       ),
 
       // ═══════════════════════════════════════

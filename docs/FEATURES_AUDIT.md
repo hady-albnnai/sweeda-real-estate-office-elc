@@ -571,3 +571,20 @@
 - `lib/providers/photography_provider.dart`
 - `lib/core/services/permission_service.dart`
 - `lib/app.dart`
+
+---
+
+## 🆕 تحديث 2026-06-10 — شاشة مهام المصور
+
+تمت إضافة شاشة مستقلة للمصور:
+
+- المسار: `/photographer/tasks`
+- الصلاحية: `photographer_tasks`
+- عرض المهام النشطة، المرسلة للمكتب، والمنتهية.
+- رفع صور التصوير إلى Storage.
+- إرسال الصور وملاحظات المصور للمكتب.
+
+الملفات:
+
+- `lib/screens/photographer/photographer_tasks_screen.dart`
+- `lib/core/router/app_router.dart`
