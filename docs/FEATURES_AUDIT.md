@@ -543,3 +543,9 @@
 ## 🧹 تحديث 2026-06-10 — إزالة prints نهائية
 
 تمت إزالة `print` debug المتبقية من `BusinessService.canPublishOffer` التزاماً بـ `DEVELOPMENT_GUIDELINES.md`.
+
+---
+
+## 🖼️ تحديث 2026-06-10 — تصحيح مقاسات الأيقونات
+
+تم توليد أيقونات Android/Web بالمقاسات الصحيحة من `assets/images/logo_app.png` بدلاً من ترك ملفات كبيرة بنفس المقاس داخل كل density.
