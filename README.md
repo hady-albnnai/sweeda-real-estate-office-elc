@@ -77,6 +77,8 @@ sweeda-real-estate-office-elc/
 - شاشة عمليات المكتب: `/admin/office-operations`
 - شاشة إدارة الصلاحيات: `/admin/permissions`
 - شاشة إدارة الوسائط والتصوير: `/admin/media-review`
+- شاشة إدارة مهام التصوير: `/admin/photography-management`
+- شاشة مهام المصور: `/photographer/tasks`
 
 > إذا كانت دالة الصلاحيات منفذة على السيرفر قبل إضافة إدارة الوسائط، نفّذ migration:
 > `supabase/migrations/2026_06_10_add_media_review_permission.sql`
