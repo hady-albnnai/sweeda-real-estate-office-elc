@@ -103,7 +103,7 @@
 | UX-01 | Low | حقول معلنة كإلزامية لكنها غير مفروضة برمجياً بالكامل | نفس المرجع | `lib/screens/user/add_offer_screen.dart`, `lib/screens/user/add_request_screen.dart` | `FIXED_VERIFIED` | تم فرض هاتف التواصل/هاتف العميل فعلياً |
 | CFG-02 | Low | ما زالت هناك قيم fallback/مدن hardcoded في بعض الواجهات | نفس المرجع | `lib/screens/user/add_offer_screen.dart` وغيرها | `FIXED_VERIFIED` | تم تحويل قوائم المناطق إلى قراءة من Config وإزالة fallbackات المحلية الأثقل |
 | U-01 | Medium | شاشة "عروضي" كانت تعتمد قائمة العروض المنشورة العامة بدلاً من جلب عروض المستخدم كاملة | مشكلة مكتشفة أثناء الإصلاح | `lib/screens/user/my_offers_screen.dart` | `FIXED_VERIFIED` | تم تحويلها إلى جلب مباشر لكل عروض المستخدم عبر `fetchUserOffers` |
-| RT-01 | Critical | مسارات الكتابة/القراءة الحساسة ما تزال تعتمد direct client DB operations وغير مستقرة للاختبار الحقيقي | تحليل المحادثة الحالية | `lib/providers/*`, `lib/screens/*`, `supabase/migrations/2026_06_11_real_test_stabilization_internal_rpcs.sql`, `supabase/setup.sql` | `FIXED_CODE` | تم تحويل دفعة كبيرة من العمليات الحرجة إلى RPCs وتجهيز تغييرات السيرفر، بانتظار تطبيقها والتحقق العملي |
+| RT-01 | Critical | مسارات الكتابة/القراءة الحساسة ما تزال تعتمد direct client DB operations وغير مستقرة للاختبار الحقيقي | تحليل المحادثة الحالية | `lib/providers/*`, `lib/screens/*`, `supabase/migrations/2026_06_11_real_test_stabilization_internal_rpcs.sql`, `supabase/setup.sql` | `FIXED_VERIFIED` | تم تحويل 40 دالة RPC إلى السيرفر وتحققنا من وجودها جميعاً. اكتُشفت 4 أخطاء بنيوية وأُصلحت قبل التطبيق (offers.ts_upd, brk_id UUID, activity_log أعمدة, payments.ts_upd). الدوال مطبّقة ومُتحقق منها بتاريخ 2026-06-11 |
 
 ---
 
@@ -163,6 +163,12 @@
 - تم تجهيز دفعة تثبيت جديدة قبل الاختبار الحقيقي:
   - migration: `supabase/migrations/2026_06_11_real_test_stabilization_internal_rpcs.sql`
   - وتشمل تحويل مسارات حساسة كثيرة إلى RPCs (العروض، الطلبات، المدفوعات، التبليغات، المواعيد، الإشعارات، التقييمات، بعض تحديثات المستخدم).
+- تم اكتشاف وإصلاح 4 أخطاء بنيوية في الدفعة قبل تطبيقها:
+  1. `offers` لا يحتوي `ts_upd` → حُذف من `admin_review_offer_internal` و`mark_social_published_internal`
+  2. `offers.brk_id` هو UUID → `NULLIF(brk_id,'')` خاطئ النوع → استُبدل بـ `COALESCE` مباشرة في `book_appointment_internal`
+  3. `activity_log` أعمدته `act(INT)` و`det(TEXT)` لا `action(TEXT)` و`details(JSONB)` → أُصلح في `submit_broker_request_internal`
+  4. `payments` لا يحتوي `ts_upd` → حُذف من `admin_reject_payment_internal`
+- تم التحقق الفعلي من تطبيق 40 دالة على السيرفر بنجاح كامل — `RT-01` أصبح `FIXED_VERIFIED`.
 - تم تحديث الملفات المرجعية التالية:
   - `docs/SPEC.md`
   - `docs/LOGIC_SPEC.md`
