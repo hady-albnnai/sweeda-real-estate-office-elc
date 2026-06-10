@@ -339,7 +339,7 @@ class BusinessService {
       buffer.writeln(offer.descript);
     }
     buffer.writeln('');
-    buffer.writeln('📞 للتواصل والمعاينة عبر تطبيق عقارات السويداء');
+    buffer.writeln('📞 للتواصل والمعاينة عبر المكتب العقاري الالكتروني');
 
     // هاشتاغات
     buffer.writeln('');
@@ -449,6 +449,6 @@ class BusinessService {
       }
     }
 
-    return 'منشور بواسطة المكتب • $label';
+    return 'منشور بواسطة المكتب العقاري الالكتروني • $label';
   }
 }
