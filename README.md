@@ -67,6 +67,22 @@ sweeda-real-estate-office-elc/
 
 ---
 
+
+### الإدارة الداخلية والصلاحيات
+
+تمت إضافة توثيق ومسارات للإدارة الداخلية:
+
+- [`docs/INTERNAL_MANAGEMENT_ADAPTATION_PLAN.md`](docs/INTERNAL_MANAGEMENT_ADAPTATION_PLAN.md)
+- [`docs/INTERNAL_MANAGEMENT_TEST_CHECKLIST.md`](docs/INTERNAL_MANAGEMENT_TEST_CHECKLIST.md)
+- شاشة عمليات المكتب: `/admin/office-operations`
+- شاشة إدارة الصلاحيات: `/admin/permissions`
+- شاشة إدارة الوسائط والتصوير: `/admin/media-review`
+
+> إذا كانت دالة الصلاحيات منفذة على السيرفر قبل إضافة إدارة الوسائط، نفّذ migration:
+> `supabase/migrations/2026_06_10_add_media_review_permission.sql`
+
+---
+
 ## 🚀 بدء التطوير
 
 ```bash
