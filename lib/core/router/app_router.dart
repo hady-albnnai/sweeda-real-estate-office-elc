@@ -45,6 +45,7 @@ import '../../screens/broker/broker_stats_screen.dart';
 
 // === Admin ===
 import '../../screens/admin/admin_dashboard_screen.dart';
+import '../../screens/admin/office_operations_screen.dart';
 import '../../screens/admin/users_management_screen.dart';
 import '../../screens/admin/user_details_screen.dart';
 import '../../screens/admin/offers_review_screen.dart';
@@ -267,6 +268,10 @@ class AppRouter {
       GoRoute(
         path: '/admin/dashboard',
         builder: (context, state) => const AdminDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/admin/office-operations',
+        builder: (context, state) => const OfficeOperationsScreen(),
       ),
       GoRoute(
         path: '/admin/users',
