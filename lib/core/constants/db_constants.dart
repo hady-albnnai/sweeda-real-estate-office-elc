@@ -13,6 +13,7 @@ class DbTables {
   static const String appConfig = 'app_config';
   static const String otpCodes = 'otp_codes';
   static const String userDevices = 'user_devices';
+  static const String photographyTasks = 'photography_tasks';
 }
 
 /// أسماء دوال PostgreSQL
