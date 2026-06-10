@@ -61,12 +61,13 @@ class _SystemQaScreenState extends State<SystemQaScreen> {
     }
   }
 
-  int get _failed => _checks.where((check) => !check.ok).length;
+  int get _criticalFailed => _checks.where((check) => !check.ok && check.severity == 'critical').length;
+  int get _warningFailed => _checks.where((check) => !check.ok && check.severity == 'warning').length;
   int get _passed => _checks.where((check) => check.ok).length;
 
   @override
   Widget build(BuildContext context) {
-    final ready = _checks.isNotEmpty && _failed == 0;
+    final ready = _checks.isNotEmpty && _criticalFailed == 0;
     return Scaffold(
       backgroundColor: AppTheme.deepBlack,
       appBar: AppBar(
@@ -89,8 +90,11 @@ class _SystemQaScreenState extends State<SystemQaScreen> {
           const SizedBox(height: 12),
           if (_checks.isEmpty)
             _emptyState()
-          else
-            ..._checks.map(_checkTile),
+          else ...[
+            ..._section('Critical', _checks.where((c) => c.severity == 'critical').toList()),
+            ..._section('Warnings', _checks.where((c) => c.severity == 'warning').toList()),
+            ..._section('Info', _checks.where((c) => c.severity == 'info').toList()),
+          ],
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -133,7 +137,7 @@ class _SystemQaScreenState extends State<SystemQaScreen> {
                 Text(
                   _checks.isEmpty
                       ? 'اضغط تشغيل الفحص للتحقق من الجداول والدوال والصلاحيات.'
-                      : 'ناجح: $_passed — فاشل: $_failed',
+                      : 'ناجح: $_passed — أخطاء: $_criticalFailed — تحذيرات: $_warningFailed',
                   style: const TextStyle(color: AppTheme.textGrey, fontSize: 12),
                 ),
               ],
@@ -194,8 +198,32 @@ class _SystemQaScreenState extends State<SystemQaScreen> {
     );
   }
 
+
+  List<Widget> _section(String title, List<_QaCheck> items) {
+    if (items.isEmpty) return const [];
+    final failed = items.where((item) => !item.ok).length;
+    return [
+      Padding(
+        padding: const EdgeInsets.only(top: 10, bottom: 8),
+        child: Row(
+          children: [
+            Text(
+              '$title (${items.length})',
+              style: const TextStyle(color: AppTheme.primaryGold, fontSize: 15, fontWeight: FontWeight.bold),
+            ),
+            if (failed > 0) ...[
+              const SizedBox(width: 8),
+              Text('غير ناجح: $failed', style: const TextStyle(color: AppTheme.errorRed, fontSize: 12)),
+            ],
+          ],
+        ),
+      ),
+      ...items.map(_checkTile),
+    ];
+  }
+
   Widget _checkTile(_QaCheck check) {
-    final color = check.ok ? Colors.green : AppTheme.errorRed;
+    final color = check.ok ? Colors.green : (check.severity == 'warning' ? Colors.orange : AppTheme.errorRed);
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
@@ -207,7 +235,7 @@ class _SystemQaScreenState extends State<SystemQaScreen> {
         leading: Icon(check.ok ? Icons.check_circle_outline : Icons.error_outline, color: color),
         title: Text(check.name, style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.w600, fontSize: 13)),
         subtitle: Text(check.details, style: const TextStyle(color: AppTheme.textGrey, fontSize: 11)),
-        trailing: Text(check.ok ? 'OK' : 'FAIL', style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 11)),
+        trailing: Text(check.ok ? 'OK' : check.severity.toUpperCase(), style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 10)),
       ),
     );
   }
@@ -217,14 +245,18 @@ class _QaCheck {
   final String name;
   final bool ok;
   final String details;
+  final String severity;
+  final String category;
 
-  _QaCheck(this.name, this.ok, this.details);
+  _QaCheck(this.name, this.ok, this.details, {this.severity = 'critical', this.category = 'local'});
 
   factory _QaCheck.fromMap(Map<String, dynamic> map) {
     return _QaCheck(
       map['name']?.toString() ?? 'unknown',
       map['ok'] == true,
       map['details']?.toString() ?? '',
+      severity: map['severity']?.toString() ?? 'critical',
+      category: map['category']?.toString() ?? '',
     );
   }
 }
