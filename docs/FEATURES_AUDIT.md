@@ -549,3 +549,25 @@
 ## 🖼️ تحديث 2026-06-10 — تصحيح مقاسات الأيقونات
 
 تم توليد أيقونات Android/Web بالمقاسات الصحيحة من `assets/images/logo_app.png` بدلاً من ترك ملفات كبيرة بنفس المقاس داخل كل density.
+
+---
+
+## 🆕 تحديث 2026-06-10 — بنية مهام التصوير
+
+تمت إضافة بنية مهام تصوير مستقلة:
+
+- جدول `photography_tasks`.
+- موديل `PhotographyTaskModel`.
+- Provider باسم `PhotographyProvider`.
+- صلاحيات جديدة:
+  - `photography_management`
+  - `photographer_tasks`
+- إمكانية إنشاء مهمة تصوير لعرض، رفع وسائط من المصور، إرسالها للمكتب، ثم اعتمادها وربط الصور بالعرض.
+
+الملفات:
+
+- `supabase/migrations/2026_06_10_photography_tasks.sql`
+- `lib/models/photography_task_model.dart`
+- `lib/providers/photography_provider.dart`
+- `lib/core/services/permission_service.dart`
+- `lib/app.dart`

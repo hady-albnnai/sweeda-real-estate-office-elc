@@ -15,6 +15,7 @@ import 'providers/notification_provider.dart';
 import 'providers/payment_provider.dart';
 import 'providers/admin_provider.dart';
 import 'providers/broker_provider.dart';
+import 'providers/photography_provider.dart';
 import 'services/notification_service.dart';
 
 class MyApp extends StatefulWidget {
@@ -96,6 +97,7 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider(create: (_) => PaymentProvider()),
         ChangeNotifierProvider(create: (_) => AdminProvider()),
         ChangeNotifierProvider(create: (_) => BrokerProvider()),
+        ChangeNotifierProvider(create: (_) => PhotographyProvider()),
       ],
       child: Builder(builder: (ctx) {
         // ربط الـ listener مرة واحدة بعد ما يتوفر context الموجود فيه AuthProvider
