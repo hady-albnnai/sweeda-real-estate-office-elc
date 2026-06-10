@@ -132,8 +132,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     crossAxisSpacing: 12,
                     childAspectRatio: 1.3,
                     children: [
-                      _navCard(Icons.fact_check_outlined, 'فحص النظام',
-                          '/admin/qa'),
                       if (PermissionService.has(auth.userModel, PermissionKeys.officeOperations))
                         _navCard(Icons.support_agent_outlined, 'عمليات المكتب',
                             '/admin/office-operations'),

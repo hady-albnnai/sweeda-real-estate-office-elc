@@ -18,8 +18,6 @@
 | `supabase/migrations/2026_06_10_offer_create_rpc_and_admin_quota.sql` | إنشاء العرض عبر RPC وإعفاء الإدارة من الحصة |
 | `supabase/migrations/2026_06_10_fix_upsert_user_phone_normalization.sql` | تطبيع الهاتف داخل `upsert_user_after_otp` |
 | `supabase/migrations/2026_06_10_photography_dev_auth_rpcs.sql` | دوال التصوير المتوافقة مع وضع التطوير |
-| `supabase/migrations/2026_06_10_qa_system_check.sql` | فحص النظام الأولي |
-| `supabase/migrations/2026_06_10_extend_qa_system_check.sql` | فحص النظام الموسع |
 | `supabase/migrations/2026_06_10_ensure_config_locs.sql` | ضمان وجود `locs` داخل `app_config.main` |
 
 ## التغييرات حسب النوع
@@ -136,12 +134,10 @@ p_admin_uid
 
 ### 5. دوال الفحص QA
 
-#### `qa_system_check`
 
 دالة فحص شاملة من شاشة:
 
 ```txt
-/admin/qa
 ```
 
 الغرض:
@@ -150,7 +146,6 @@ p_admin_uid
 
 تأثير الحذف:
 
-- سيكسر شاشة فحص النظام فقط.
 - لا يؤثر على وظائف المستخدمين الأساسية.
 
 ---
@@ -167,7 +162,6 @@ supabase/ROLLBACK_2026_06_10_INTERNAL_MANAGEMENT.sql
 
 | التغيير | يمكن التراجع؟ | ملاحظات |
 |---|---|---|
-| `qa_system_check` | نعم، آمن نسبياً | يكسر شاشة QA فقط |
 | `create_offer_internal` | لا يفضل | التطبيق يعتمد عليه لإضافة العرض |
 | `admin_update_user_role` | لا يفضل | إدارة المستخدمين تعتمد عليه |
 | `admin_set_user_status` | لا يفضل | إدارة المستخدمين والتبليغات تعتمد عليه |
@@ -177,6 +171,15 @@ supabase/ROLLBACK_2026_06_10_INTERNAL_MANAGEMENT.sql
 
 ## توصية
 
-- إذا ظهرت مشكلة في QA فقط، يمكن تعديل أو حذف `qa_system_check` دون لمس باقي النظام.
 - إذا ظهرت مشكلة في الصلاحيات أو التصوير، الأفضل إصلاح الدالة المعنية لا حذفها.
 - لا تحذف `photography_tasks` بعد بدء استخدامه إلا بعد أخذ نسخة احتياطية.
+
+## تحديث لاحق — إزالة QA من النسخة النظيفة
+
+تم حذف شاشة فحص النظام وملفات QA من التطبيق والمستودع بعد انتهاء الاستفادة منها. لحذف دالة الفحص من السيرفر استخدم:
+
+```txt
+supabase/migrations/2026_06_10_remove_qa_system_check.sql
+```
+
+هذا لا يؤثر على وظائف الإدارة أو الصلاحيات أو المصور، فقط يزيل دالة الفحص المؤقتة.
