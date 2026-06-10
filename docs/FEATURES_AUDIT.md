@@ -609,3 +609,18 @@
 - `lib/screens/admin/photography_management_screen.dart`
 - `lib/core/router/app_router.dart`
 - `lib/screens/admin/admin_dashboard_screen.dart`
+
+---
+
+## 🏷️ تحديث 2026-06-10 — اسم التطبيق المثبت
+
+تم تغيير اسم التطبيق الظاهر عند التثبيت من "عقارات السويداء" إلى:
+
+- `المكتب العقاري الالكتروني`
+
+وذلك ليبقى الاسم قابلاً للتوسع مستقبلاً خارج محافظة السويداء.
+
+الملفات:
+
+- `android/app/src/main/AndroidManifest.xml`
+- `web/manifest.json`
