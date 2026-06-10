@@ -232,18 +232,24 @@ class OfferProvider with ChangeNotifier {
 
   Future<OfferModel?> addOffer(OfferModel offer) async {
     try {
-      final response = await SupabaseService().client
-          .from(DbTables.offers).insert(offer.toMap()).select().single();
-      final created = OfferModel.fromSupabase(
-          Map<String, dynamic>.from(response), response['id'] as String);
+      final response = await SupabaseService().client.rpc(
+        'create_offer_internal',
+        params: {
+          'p_user_uid': offer.usrId,
+          'p_offer': offer.toMap(),
+        },
+      );
+      if (response == null || (response as List).isEmpty) return null;
+      final row = Map<String, dynamic>.from(response.first as Map);
+      final created = OfferModel.fromSupabase(row, row['id'] as String);
       _offers.insert(0, created);
       notifyListeners();
-      
+
       // تحديث إحصائيات المستخدم (عدد العروض)
       await BusinessService().updateUserStat(offer.usrId, 'off');
-      
+
       return created;
-    } catch (e, stack) {
+    } catch (e) {
       return null;
     }
   }

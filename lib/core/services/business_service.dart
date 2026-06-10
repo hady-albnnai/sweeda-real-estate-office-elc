@@ -112,6 +112,14 @@ class BusinessService {
     ConfigModel? config,
   }) async {
     try {
+      if (role >= 2) {
+        return {
+          'allowed': true,
+          'used': 0,
+          'limit': 999999,
+          'reason': '',
+        };
+      }
       // 🔒 Phase 8: نحسب الفعّالة + المحذوفة حديثاً (آخر 24 ساعة)
       // لمنع ثغرة "احذف لتنشر" — Scam #4 في التقرير الأمني
       final since24h =
@@ -164,6 +172,7 @@ class BusinessService {
   /// حساب حصة العروض: تعتمد على الباقة أولاً ثم على الدور (qta.u / qta.b)
   int offerQuota(ConfigModel? config,
       {required int role, required int packageType}) {
+    if (role >= 2) return 999999;
     if (config != null) {
       // 1) حد الباقة (pkg.{type}.o) — له الأولوية
       final pkgMap = config.data['pkg'];
