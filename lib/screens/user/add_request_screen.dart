@@ -34,9 +34,13 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
   bool _submitting = false;
 
   Future<void> _submit() async {
-    if (_selectedType == null || _clientNameCtrl.text.isEmpty) {
+    if (_selectedType == null ||
+        _selectedElement == null ||
+        _clientNameCtrl.text.trim().isEmpty ||
+        _clientPhoneCtrl.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('يرجى إكمال البيانات الأساسية')));
+        const SnackBar(content: Text('يرجى إكمال البيانات الأساسية بما فيها هاتف العميل')),
+      );
       return;
     }
     final auth = Provider.of<AuthProvider>(context, listen: false);
@@ -67,11 +71,11 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
       id: '',
       typ: _selectedType!,
       elm: element,
-      clNm: _clientNameCtrl.text,
-      clPh: _clientPhoneCtrl.text,
+      clNm: _clientNameCtrl.text.trim(),
+      clPh: _clientPhoneCtrl.text.trim(),
       prc: budget,
       cur: 1,
-      notes: _notesCtrl.text,
+      notes: _notesCtrl.text.trim(),
       specs: _specs,
       usrId: user.uid,
       sts: 0,
@@ -101,7 +105,8 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
 
     // المطابقة التلقائية: البحث عن عروض مطابقة (نوع العنصر + الميزانية ±20%)
     final matches = await BusinessService().matchOffersForRequest(
-      type: element,
+      elementType: element,
+      transactionType: _selectedType!,
       targetPrice: budget,
       currency: request.cur,
     );

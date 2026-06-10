@@ -74,11 +74,11 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
               Map<String, dynamic>.from(d), d['id'] as String))
           .toList();
 
-      // المواعيد (own_id = صاحب العرض)
+      // المواعيد: كمالك عرض أو كطالب موعد
       final appData = await sb
           .from(DbTables.appointments)
           .select()
-          .or('own_id.eq.${widget.userId},req_id.eq.${widget.userId}')
+          .or('own_id.eq.${widget.userId},req_uid.eq.${widget.userId}')
           .order('ts_crt', ascending: false)
           .limit(50);
       _appointments = (appData as List)
@@ -266,18 +266,13 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
               CircleAvatar(
                 radius: 32,
                 backgroundColor: AppTheme.primaryGold,
-                backgroundImage: u.img.isNotEmpty
-                    ? NetworkImage(u.img) as ImageProvider
-                    : null,
-                child: u.img.isEmpty
-                    ? Text(
-                        u.nm.isNotEmpty ? u.nm[0].toUpperCase() : '؟',
-                        style: const TextStyle(
-                            color: Colors.black,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold),
-                      )
-                    : null,
+                child: Text(
+                  u.nm.isNotEmpty ? u.nm[0].toUpperCase() : '؟',
+                  style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold),
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -598,10 +593,10 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
   String _apptStatusText(int s) {
     const m = {
       0: 'قيد الانتظار',
-      1: 'مقبول',
-      2: 'مرفوض',
-      3: 'مكتمل',
-      4: 'ملغي',
+      1: 'مؤكد',
+      2: 'مكتمل',
+      3: 'ملغي',
+      4: 'مرفوض',
       5: 'لم يحضر',
     };
     return m[s] ?? 'غير معروف';

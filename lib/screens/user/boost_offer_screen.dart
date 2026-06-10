@@ -91,7 +91,6 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
           'p_uid': user.uid,
           'p_offer_id': _offer!.id,
           'p_boost_type': boostType,
-          'p_cost': cost,
         },
       );
 

@@ -57,8 +57,10 @@ USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role >= 2));
 - [x] ترقية سياسات RLS الإدارية لتعتمد على `role >= 2` (البند 1) → ✅ محدث في setup.sql reference (و migrations المتقدمة)
 - [x] إضافة سياسات UPDATE للمشرف على `payments`/`reports`/`deals` (البند 2) → ✅ مضافة في setup.sql
 - [ ] نقل إنشاء الإشعارات إلى RPC `SECURITY DEFINER` (البند 3) — لا يزال يعتمد على client في بعض الحالات (راجع migrations)
+- [~] ربط RPCs الداخلية/الإدارية بـ `auth.uid()` عند توفر الجلسة الحقيقية → تمت إضافة حراسات جزئية في إصلاحات 2026-06-10، لكن الإغلاق الكامل ما زال يحتاج إنهاء dev fallback
 - [ ] إنشاء keystore إنتاج + `key.properties` (غير مرفوع)
 - [x] التأكد أن `verify_otp` يطبّق حد محاولات + انتهاء صلاحية → ✅ `generate_otp_v2` (5 طلبات/10د) + `verify_otp_v2` (5 دقائق صلاحية + حذف بعد الاستخدام)
+- [x] إزالة مسار صورة الهوية الخاصة من القراءة العامة → ✅ `users_public` لم تعد تكشف `img` بعد فصل الهوية الخاصة عن avatar العام
 - [ ] مراجعة bucket `offer_images`: عام للقراءة، والكتابة للمستخدمين المسجّلين فقط
 - [x] تدوير (rotate) أي توكن GitHub استُخدم أثناء التطوير → ✅ يُنصح بتدوير الـPAT المستخدم في هذه الجلسة (ghp_...) فوراً بعد السحب
 - [ ] تفعيل Email/Rate limiting في إعدادات مشروع Supabase

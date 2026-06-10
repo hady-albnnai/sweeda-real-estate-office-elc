@@ -27,6 +27,7 @@ class ConfigModel {
   Map<String, dynamic> get badges => _getNestedMap('bdg', {});
   Map<String, dynamic> get packages => _getNestedMap('pkg', {});
   Map<String, dynamic> get texts => _getNestedMap('txts', {});
+  int get usdToSypRate => _getNested('fx.usd_syp', 15000);
 
   /// قنوات الدفع اليدوية (المرحلة 11)
   /// المفاتيح: haram | sham_cash | balance | bank

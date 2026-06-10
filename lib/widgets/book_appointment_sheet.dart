@@ -74,13 +74,31 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
             children: entry.value.map((time) => ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: AppTheme.surfaceBlack, foregroundColor: AppTheme.primaryGold, side: const BorderSide(color: AppTheme.primaryGold)),
               onPressed: () async {
-                bool s = await provider.bookAppointment(userId: auth.userModel?.uid ?? '', offerId: widget.offer.id, ownerId: widget.offer.usrId);
-                if (!mounted) return; // الحل هنا: التأكد من أن الوجت لا يزال موجوداً
-                if (s) {
+                final userId = auth.userModel?.uid ?? '';
+                final success = await provider.bookAppointment(
+                  userId: userId,
+                  offerId: widget.offer.id,
+                  ownerId: widget.offer.usrId,
+                  selectedDayKey: entry.key,
+                  selectedTime: time,
+                  brokerId: widget.offer.brkId,
+                );
+                if (!mounted) return;
+                if (success) {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
                       content: Text(
-                          '✅ تم إرسال طلب الموعد إلى المكتب، سيتم التواصل معك للتأكيد')));
+                        '✅ تم إرسال طلب الموعد ليوم ${_dayName(entry.key)} عند $time، وسيتم التأكيد عبر المكتب',
+                      ),
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('تعذّر حجز الموعد. قد يكون الموعد محجوزاً أو غير صالح.'),
+                    ),
+                  );
                 }
               },
               child: Text(time),

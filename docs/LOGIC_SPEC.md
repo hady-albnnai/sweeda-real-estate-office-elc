@@ -108,6 +108,25 @@
 - منع التكرار: استبعاد العروض الموجودة مسبقاً قبل الإضافة.
 - معطّل تلقائياً أثناء البحث (`_isSearching`).
 
+### 4.3 عقدة حالات المواعيد (Appointment Status Contract)
+- الحقول المرجعية:
+  - `appointments.req_uid` = المستخدم الذي حجز الموعد.
+  - `appointments.own_id` = مالك العرض.
+  - `appointments.bkr_id` = الوسيط/المعالج إن وُجد.
+- الحالات الرسمية المعتمدة:
+
+| القيمة | المعنى |
+|---|---|
+| `0` | قيد الانتظار |
+| `1` | مؤكد |
+| `2` | مكتمل |
+| `3` | ملغي |
+| `4` | مرفوض |
+| `5` | لم يحضر |
+
+- أي شاشة أو Provider أو RPC يجب أن يلتزم بهذه القيم حصراً.
+- شاشة **مواعيدي** للمستخدم يجب أن تعتمد على `req_uid` لا `own_id`.
+
 ---
 
 ## 🚫 رابعاً: الأمان والسيطرة
@@ -166,7 +185,7 @@
 
 ### 5.2 إخفاء البيانات الشخصية
 - `users` لا يقرأها إلا مالكها (policy `Users can read own row only`).
-- VIEW `users_public` تكشف فقط: `id, nm, role, brk, brk_cls, brk_nm, bg, vrf, img, pt, ref_cnt, ts_crt`.
+- VIEW `users_public` تكشف فقط: `id, nm, role, brk, brk_cls, brk_nm, bg, vrf, pt, ref_cnt, ts_crt`.
 - الـclient يجب أن يستعمل `users_public` لجلب بيانات الملاك.
 
 ### 5.3 منع التقييم الذاتي والمتكرر
@@ -180,9 +199,9 @@
 - مرفوعة من `anon` (لا تعمل بدون تسجيل دخول).
 
 ### 5.5 RPCs آمنة للأدمن
-- `request_verification()` — المسار الوحيد لرفع vrf للمستخدم.
-- `admin_approve_verification(uid)` — يفحص role>=2 ويرسل إشعار.
-- `admin_reject_verification(uid, reason)` — مثلها مع السبب.
+- `request_verification_by_uid(p_user_uid)` — المسار المتوافق مع الوضع الحالي لرفع `vrf` من المستخدم، مع مطابقة `auth.uid()` متى كانت الجلسة الحقيقية متاحة.
+- `admin_approve_verification_by_admin(p_admin_uid, uid)` — يفحص دور الإداري ويرسل إشعاراً.
+- `admin_reject_verification_by_admin(p_admin_uid, uid, reason)` — مثلها مع السبب.
 
 ### 5.6 منع phishing notifications
 - INSERT في `notifications` محظور من client (`WITH CHECK (false)`).
@@ -225,8 +244,8 @@
 | المرجع | الموقع |
 |---|---|
 | Migration الأمان | `supabase/migrations/2026_06_07_security_hardening.sql` |
-| RPC طلب التوثيق | `lib/screens/user/profile_screen.dart` → `request_verification` |
-| RPC اعتماد/رفض | `lib/providers/admin_provider.dart` → `admin_approve_verification` / `admin_reject_verification` |
+| RPC طلب التوثيق | `lib/screens/user/profile_screen.dart` → `request_verification_by_uid` |
+| RPC اعتماد/رفض | `lib/providers/admin_provider.dart` → `admin_approve_verification_by_admin` / `admin_reject_verification_by_admin` |
 | فحص canPublishOffer | `lib/core/services/business_service.dart` |
 | رسائل خطأ التقييم | `lib/widgets/rating_dialog.dart` |
 

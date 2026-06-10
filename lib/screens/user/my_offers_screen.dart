@@ -6,9 +6,8 @@ import '../../providers/auth_provider.dart';
 import '../../models/offer_model.dart';
 import '../../core/theme/app_theme.dart';
 
-
 /// شاشة عروضي — تعرض كل عروض المستخدم مع فلترة بالحالة
-/// + إمكانية التعديل/الحذف/التجديد/مشاهدة التفاصيل.
+/// + إمكانية التعديل/الترقية/مشاهدة التفاصيل.
 class MyOffersScreen extends StatefulWidget {
   const MyOffersScreen({super.key});
 
@@ -19,8 +18,9 @@ class MyOffersScreen extends StatefulWidget {
 class _MyOffersScreenState extends State<MyOffersScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tab;
+  List<OfferModel> _myOffers = [];
+  bool _loading = true;
 
-  // فلاتر: 0=الكل, 1=قيد المراجعة, 2=منشور, 3=مرفوض, 4=منتهي
   final List<_FilterTab> _filters = const [
     _FilterTab('الكل', -1),
     _FilterTab('قيد المراجعة', 1),
@@ -43,8 +43,15 @@ class _MyOffersScreenState extends State<MyOffersScreen>
   }
 
   Future<void> _refresh() async {
-    final offerProv = context.read<OfferProvider>();
-    await offerProv.fetchOffers();
+    final uid = context.read<AuthProvider>().userModel?.uid;
+    if (uid == null || uid.isEmpty) return;
+    setState(() => _loading = true);
+    final offers = await context.read<OfferProvider>().fetchUserOffers(uid);
+    if (!mounted) return;
+    setState(() {
+      _myOffers = offers;
+      _loading = false;
+    });
   }
 
   List<OfferModel> _filterOffers(List<OfferModel> offers, int status) {
@@ -54,13 +61,6 @@ class _MyOffersScreenState extends State<MyOffersScreen>
 
   @override
   Widget build(BuildContext context) {
-    final offerProvider = context.watch<OfferProvider>();
-    final authProvider = context.watch<AuthProvider>();
-    final uid = authProvider.userModel?.uid;
-    final myOffers = uid == null
-        ? <OfferModel>[]
-        : offerProvider.offers.where((o) => o.usrId == uid).toList();
-
     return Scaffold(
       backgroundColor: AppTheme.deepBlack,
       appBar: AppBar(
@@ -78,7 +78,7 @@ class _MyOffersScreenState extends State<MyOffersScreen>
           tabs: _filters
               .map((f) => Tab(
                     text:
-                        '${f.label} (${_filterOffers(myOffers, f.status).length})',
+                        '${f.label} (${_filterOffers(_myOffers, f.status).length})',
                   ))
               .toList(),
         ),
@@ -88,18 +88,25 @@ class _MyOffersScreenState extends State<MyOffersScreen>
         foregroundColor: Colors.black,
         icon: const Icon(Icons.add),
         label: const Text('عرض جديد'),
-        onPressed: () => context.push('/user/add-offer'),
+        onPressed: () async {
+          await context.push('/user/add-offer');
+          if (mounted) _refresh();
+        },
       ),
-      body: RefreshIndicator(
-        color: AppTheme.primaryGold,
-        onRefresh: _refresh,
-        child: TabBarView(
-          controller: _tab,
-          children: _filters
-              .map((f) => _offersList(_filterOffers(myOffers, f.status)))
-              .toList(),
-        ),
-      ),
+      body: _loading
+          ? const Center(
+              child: CircularProgressIndicator(color: AppTheme.primaryGold),
+            )
+          : RefreshIndicator(
+              color: AppTheme.primaryGold,
+              onRefresh: _refresh,
+              child: TabBarView(
+                controller: _tab,
+                children: _filters
+                    .map((f) => _offersList(_filterOffers(_myOffers, f.status)))
+                    .toList(),
+              ),
+            ),
     );
   }
 
@@ -116,7 +123,10 @@ class _MyOffersScreenState extends State<MyOffersScreen>
                 style: TextStyle(color: AppTheme.textGrey, fontSize: 16)),
             const SizedBox(height: 16),
             ElevatedButton.icon(
-              onPressed: () => context.push('/user/add-offer'),
+              onPressed: () async {
+                await context.push('/user/add-offer');
+                if (mounted) _refresh();
+              },
               icon: const Icon(Icons.add, color: Colors.black),
               label: const Text('أضف عرضك الأول'),
             ),
@@ -148,13 +158,12 @@ class _MyOffersScreenState extends State<MyOffersScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // شريط الحالة العلوي
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: status.$2.withValues(alpha: 0.15),
-                borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(13)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(13)),
               ),
               child: Row(
                 children: [
@@ -175,12 +184,10 @@ class _MyOffersScreenState extends State<MyOffersScreen>
                 ],
               ),
             ),
-            // المحتوى
             Padding(
               padding: const EdgeInsets.all(12),
               child: Row(
                 children: [
-                  // الصورة
                   ClipRRect(
                     borderRadius: BorderRadius.circular(10),
                     child: SizedBox(
@@ -194,7 +201,6 @@ class _MyOffersScreenState extends State<MyOffersScreen>
                     ),
                   ),
                   const SizedBox(width: 12),
-                  // التفاصيل
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -240,7 +246,6 @@ class _MyOffersScreenState extends State<MyOffersScreen>
                 ],
               ),
             ),
-            // أزرار الإجراءات
             Container(
               decoration: const BoxDecoration(
                 border: Border(
@@ -255,9 +260,8 @@ class _MyOffersScreenState extends State<MyOffersScreen>
                       label: 'تعديل',
                       color: AppTheme.primaryGold,
                       onTap: () async {
-                        final changed = await context
-                            .push('/user/edit-offer/${o.id}');
-                        if (changed == true) _refresh();
+                        final changed = await context.push('/user/edit-offer/${o.id}');
+                        if (changed == true && mounted) _refresh();
                       },
                     ),
                   ),
@@ -268,9 +272,8 @@ class _MyOffersScreenState extends State<MyOffersScreen>
                       label: 'ترقية',
                       color: Colors.purple,
                       onTap: () async {
-                        final result = await context
-                            .push('/user/boost-offer/${o.id}');
-                        if (result == true) _refresh();
+                        final result = await context.push('/user/boost-offer/${o.id}');
+                        if (result == true && mounted) _refresh();
                       },
                     ),
                   ),
@@ -313,8 +316,7 @@ class _MyOffersScreenState extends State<MyOffersScreen>
           children: [
             Icon(icon, color: color, size: 18),
             const SizedBox(height: 2),
-            Text(label,
-                style: TextStyle(color: color, fontSize: 11)),
+            Text(label, style: TextStyle(color: color, fontSize: 11)),
           ],
         ),
       ),

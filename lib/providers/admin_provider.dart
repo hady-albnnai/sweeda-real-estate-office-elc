@@ -7,7 +7,6 @@ import '../models/payment_model.dart';
 import '../models/report_model.dart';
 import '../core/network/supabase_service.dart';
 import '../core/constants/db_constants.dart';
-import '../core/services/business_service.dart';
 
 /// Provider لوحة الإدارة (role >= 2)
 /// يجمع كل عمليات الإدارة: العروض، المستخدمون، المواعيد، الصفقات،
@@ -32,7 +31,7 @@ class AdminProvider with ChangeNotifier {
       final response = await SupabaseService().client
           .from(DbTables.offers)
           .select()
-          .eq('sts', 0)
+          .eq('sts', 1)
           .eq('i_del', 0)
           .order('ts_crt', ascending: false);
       return (response as List)
@@ -223,32 +222,29 @@ class AdminProvider with ChangeNotifier {
       final data = <String, dynamic>{'sts': status};
       if (adminNote.isNotEmpty) data['admin_nt'] = adminNote;
 
-      // اجلب بيانات الموعد قبل التحديث (لتطبيق pen)
-      String? reqUid;
-      String? offId;
+      // اجلب بيانات الموعد قبل التحديث (لتطبيق penalties على طالب الموعد)
+      String? requesterUid;
       try {
         final r = await sb
             .from(DbTables.appointments)
-            .select('req_id, own_id, off_id')
+            .select('req_uid, own_id, off_id')
             .eq('id', apptId)
             .maybeSingle();
-        // ملاحظة: req_id = طالب الموعد (clientside)
-        // own_id = صاحب العرض
-        reqUid = r?['own_id'] as String?; // المحاسَب عادةً = صاحب العرض
-        offId = r?['off_id'] as String?;
+        requesterUid = r?['req_uid'] as String?;
       } catch (_) {}
 
       await sb.from(DbTables.appointments).update(data).eq('id', apptId);
 
-      // ─── pen.noSh (-500): الحالة 5 = لم يحضر ───
-      if (status == 5 && reqUid != null) {
+      // ─── pen.noSh (-500): الحالة 5 = لم يحضر طالب الموعد ───
+      if (status == 5 && requesterUid != null) {
         try {
           await sb.rpc('add_points',
-              params: {'p_uid': reqUid, 'p_pts': -500});} catch (e) {}
+              params: {'p_uid': requesterUid, 'p_pts': -500});
+        } catch (e) {}
       }
 
-      // ─── pen.cnl3 (-300): بعد ثالث إلغاء متتالي ───
-      if (status == 4 && reqUid != null) {
+      // ─── pen.cnl3 (-300): بعد ثالث إلغاء متكرر من طالب الموعد ───
+      if (status == 3 && requesterUid != null) {
         try {
           final since = DateTime.now()
               .subtract(const Duration(days: 30))
@@ -256,13 +252,14 @@ class AdminProvider with ChangeNotifier {
           final canceled = await sb
               .from(DbTables.appointments)
               .select('id')
-              .eq('own_id', reqUid)
-              .eq('sts', 4)
+              .eq('req_uid', requesterUid)
+              .eq('sts', 3)
               .gte('ts_crt', since);
           final count = (canceled as List).length;
           if (count > 0 && count % 3 == 0) {
             await sb.rpc('add_points',
-                params: {'p_uid': reqUid, 'p_pts': -300});}
+                params: {'p_uid': requesterUid, 'p_pts': -300});
+          }
         } catch (e) {}
       }
 
@@ -318,15 +315,6 @@ class AdminProvider with ChangeNotifier {
   Future<bool> completeDeal(String dealId, String adminId,
       {double? commission, String? note}) async {
     try {
-      final deal = await SupabaseService().client
-          .from(DbTables.deals)
-          .select()
-          .eq('id', dealId)
-          .single();
-      
-      final sellUid = deal['sell_uid'] as String;
-      final buyUid = deal['buy_uid'] as String;
-
       final data = <String, dynamic>{
         'sts': 1,
         'cmpl_by': adminId,
@@ -339,11 +327,7 @@ class AdminProvider with ChangeNotifier {
           .from(DbTables.deals)
           .update(data)
           .eq('id', dealId);
-      
-      // تحديث إحصائيات الطرفين (عدد الصفقات)
-      await BusinessService().updateUserStat(sellUid, 'dl');
-      await BusinessService().updateUserStat(buyUid, 'dl');
-      
+
       notifyListeners();
       return true;
     } catch (e) {return false;
@@ -462,7 +446,7 @@ class AdminProvider with ChangeNotifier {
 
       return {
         'totalOffers': offersList.length,
-        'pendingOffers': offersList.where((o) => (o['sts'] ?? 0) == 0).length,
+        'pendingOffers': offersList.where((o) => (o['sts'] ?? 0) == 1).length,
         'publishedOffers': offersList.where((o) => (o['sts'] ?? 0) == 2).length,
         'totalUsers': usersList.length,
         'activeUsers': usersList.where((u) => (u['sts'] ?? 0) == 0).length,
@@ -489,7 +473,7 @@ class AdminProvider with ChangeNotifier {
           .client
           .from(DbTables.offers)
           .select('id')
-          .eq('sts', 0)
+          .eq('sts', 1)
           .eq('i_del', 0);
       final pendingPayments = await SupabaseService()
           .client
@@ -542,13 +526,13 @@ class AdminProvider with ChangeNotifier {
   }
 
   /// اعتماد توثيق مستخدم: vrf 1 → 2 (موثق رسمياً).
-  /// 🔒 Phase 8: يستدعي RPC admin_approve_verification الذي يفحص role>=2
-  /// ويرسل الإشعار تلقائياً (لا client-side INSERT في notifications).
-  Future<bool> approveVerification(String userId) async {
+  /// يستخدم نسخة متوافقة مع وضع التطوير الحالي، وتربط `p_admin_uid`
+  /// بـ `auth.uid()` متى كانت الجلسة الحقيقية متاحة.
+  Future<bool> approveVerification(String adminUid, String userId) async {
     try {
       await SupabaseService().client.rpc(
-        'admin_approve_verification',
-        params: {'p_target_uid': userId},
+        'admin_approve_verification_by_admin',
+        params: {'p_admin_uid': adminUid, 'p_target_uid': userId},
       );
       return true;
     } catch (e) {return false;
@@ -556,12 +540,16 @@ class AdminProvider with ChangeNotifier {
   }
 
   /// رفض توثيق مستخدم: vrf 1 → 0 (يحتاج إعادة رفع).
-  /// 🔒 Phase 8: عبر RPC admin_reject_verification — السبب يُحفظ في الإشعار.
-  Future<bool> rejectVerification(String userId, {String reason = ''}) async {
+  Future<bool> rejectVerification(String adminUid, String userId,
+      {String reason = ''}) async {
     try {
       await SupabaseService().client.rpc(
-        'admin_reject_verification',
-        params: {'p_target_uid': userId, 'p_reason': reason},
+        'admin_reject_verification_by_admin',
+        params: {
+          'p_admin_uid': adminUid,
+          'p_target_uid': userId,
+          'p_reason': reason,
+        },
       );
       return true;
     } catch (e) {return false;

@@ -24,12 +24,14 @@ class AddOfferScreen extends StatefulWidget {
 }
 
 class _AddOfferScreenState extends State<AddOfferScreen> {
+  static const String _customCityOption = '__custom_city__';
+
   int _currentStep = 0;
   int? _selectedType;
   int? _selectedTrans;
   int? _selectedMainCat;
   int? _selectedSubCat; // التصنيف الفرعي (index داخل sub array للمجموعة الرئيسية)
-  int? _selectedCityArea; // 0=السويداء المدينة, 1=صلخد, 2=شهبا
+  String? _selectedCityArea; // تُقرأ من config.locations مع دعم إدخال حر
   int _cur = Currency.lbp;
   final _priceCtrl = TextEditingController();
   final _locCtrl = TextEditingController();
@@ -66,6 +68,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     _specCtrl.dispose();
     _customSubCtrl.dispose();
     _contactPhoneCtrl.dispose();
+    _customCityCtrl.dispose();
     super.dispose();
   }
 
@@ -177,9 +180,16 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         (_selectedSubCat == -1 && _customSubCtrl.text.trim().isEmpty) ||
         _selectedDocType == null ||
         _selectedCityArea == null ||
-        (_selectedCityArea == -1 && _customCityCtrl.text.trim().isEmpty) ||
+        (_selectedCityArea == _customCityOption && _customCityCtrl.text.trim().isEmpty) ||
         _locCtrl.text.trim().isEmpty) {
       _snack('يرجى إكمال البيانات الأساسية (التصنيف الرئيسي + فرعي أو إدخال حر + نوع السند + المنطقة الرئيسية + وصف دقيق للموقع إلزامي)');
+      return;
+    }
+    final effectiveContactPhone = _contactPhoneCtrl.text.trim().isNotEmpty
+        ? _contactPhoneCtrl.text.trim()
+        : (user.ph.trim());
+    if (effectiveContactPhone.isEmpty) {
+      _snack('رقم الهاتف للتواصل إلزامي لإرسال العرض');
       return;
     }
     final price = double.tryParse(_priceCtrl.text) ?? 0.0;
@@ -235,12 +245,10 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     // 4) إنشاء العرض
     setState(() => _progressMsg = 'جارٍ إنشاء العرض...');
     String cityName;
-    if (_selectedCityArea == -1) {
+    if (_selectedCityArea == _customCityOption) {
       cityName = _customCityCtrl.text.trim();
-    } else if (_selectedCityArea != null && _selectedCityArea! >= 0 && _selectedCityArea! < 3) {
-      cityName = ['السويداء المدينة', 'صلخد', 'شهبا'][_selectedCityArea!];
     } else {
-      cityName = '';
+      cityName = _selectedCityArea?.trim() ?? '';
     }
     final loc = {'r': 0, 'd': _locCtrl.text, 'city': cityName};
 
@@ -257,7 +265,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       trx: _selectedTrans!,
       cat: _selectedMainCat!,
       sub: (_selectedSubCat == -1 || _selectedSubCat == null) ? 0 : _selectedSubCat!,
-      contactPh: _contactPhoneCtrl.text.isNotEmpty ? _contactPhoneCtrl.text : (user?.ph ?? ''),
+      contactPh: effectiveContactPhone,
       prc: price,
       cur: _cur,
       loc: loc,
@@ -273,7 +281,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           : '',
       docTp: _selectedDocType ?? 0,
       docImg: docUrl,
-      sts: 0,
+      sts: OfferStatus.review,
       iPub: 0,
       tsCrt: DateTime.now(),
     );
@@ -440,13 +448,19 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       ),
     );
 
-    // قائمة المناطق الرئيسية + دعم حقل حر
-    final cityItems = [
-      const DropdownMenuItem(value: 0, child: Text('السويداء المدينة')),
-      const DropdownMenuItem(value: 1, child: Text('صلخد')),
-      const DropdownMenuItem(value: 2, child: Text('شهبا')),
-      const DropdownMenuItem(value: -1, child: Text('آخر (إدخال حر)')),
-    ];
+    // قائمة المناطق تُقرأ من config.locations مع دعم إدخال حر
+    final cityItems = _cityOptions()
+        .map((city) => DropdownMenuItem<String>(
+              value: city,
+              child: Text(city, overflow: TextOverflow.ellipsis),
+            ))
+        .toList();
+    cityItems.add(
+      const DropdownMenuItem<String>(
+        value: _customCityOption,
+        child: Text('آخر (إدخال حر)'),
+      ),
+    );
 
     return Step(
       title: const Text('الأساسيات',
@@ -538,7 +552,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           ),
           const SizedBox(height: 20),
           // المنطقة الرئيسية + حقل حر
-          DropdownButtonFormField<int>(
+          DropdownButtonFormField<String>(
             initialValue: _selectedCityArea,
             dropdownColor: AppTheme.surfaceBlack,
             style: const TextStyle(color: AppTheme.textWhite),
@@ -550,19 +564,20 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
             items: cityItems,
             onChanged: (v) => setState(() {
               _selectedCityArea = v;
-              if (v != -1) _customCityCtrl.clear();
+              if (v != _customCityOption) _customCityCtrl.clear();
             }),
             hint: const Text('اختر المنطقة الرئيسية أو آخر للإدخال الحر',
                 style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
+            menuMaxHeight: 320,
           ),
-          if (_selectedCityArea == -1)
+          if (_selectedCityArea == _customCityOption)
             Padding(
               padding: const EdgeInsets.only(top: 12),
               child: TextField(
                 controller: _customCityCtrl,
                 decoration: const InputDecoration(
                   labelText: 'اكتب المنطقة الرئيسية يدوياً',
-                  hintText: 'مثال: حي الوادي',
+                  hintText: 'اكتب اسم المنطقة أو الحي',
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -623,10 +638,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
               ),
             ]),
             const SizedBox(height: 15),
-            TextField(
-                controller: _locCtrl,
-                maxLines: 2,
-                decoration: const InputDecoration(labelText: 'وصف دقيق للموقع (إلزامي)')),
+            _buildLocationAutocomplete(),
 
             const SizedBox(height: 15),
             TextField(
@@ -916,16 +928,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         return mainItem['nm']?.toString() ?? mainItem.toString();
       }
     }
-    // fallback بسيط (يجب تحديثه إذا تغيرت الـ ids في config)
-    final fallback = _selectedType == 1
-        ? {0: 'سيارة', 1: 'شاحنة', 2: 'دراجة نارية', 3: 'معدات ثقيلة', 4: 'باصات/نقل'}
-        : {0: 'سكني', 1: 'تجاري', 2: 'زراعي', 3: 'صناعي'};
-    final mainLabel = fallback[_selectedMainCat] ?? 'عرض';
-    if (_selectedSubCat != null) {
-      // إذا أردنا عرض الفرعي في الـ fallback (لكن عادة يجب أن يكون من config)
-      return mainLabel;
-    }
-    return mainLabel;
+    return _selectedType == 1 ? 'مركبة' : 'عقار';
   }
 
   Map<int, String> _mapFromDynamic(dynamic data) {
@@ -971,17 +974,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     if (categories != null && categories.isNotEmpty) {
       return _mapFromDynamic(categories);
     }
-    return _selectedType == 1
-        ? {
-            1: 'سيدان',
-            2: 'SUV',
-            3: 'دفع رباعي',
-          }
-        : {
-            1: 'شقة',
-            2: 'فيلا',
-            3: 'أرض',
-          };
+    return {0: _selectedType == 1 ? 'مركبة' : 'عقار'};
   }
 
   Map<int, String> _subCategoryMap(int mainId) {
@@ -1003,34 +996,30 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
 
   Widget _buildLocationAutocomplete() {
     final config = context.watch<ConfigProvider>().config;
-    final configLocs = (config?.locations ?? [])
+    final locations = (config?.locations ?? [])
         .map((item) {
-      if (item is String) return item;
-      if (item is Map) {
-        return item['name']?.toString() ??
-            item['d']?.toString() ??
-            item.toString();
-      }
-      return item.toString();
-    }).where((item) => item.isNotEmpty).cast<String>().toList();
-
-    // قائمة كاملة للقرى والمناطق (من docs/locations.json) + دعم إدخال حر دائماً
-    const fallbackVillages = <String>[
-      'السويداء', 'صلخد', 'شهبا', 'القريا', 'المزرعة', 'الكفر', 'الأصلحة', 'البثينة', 'الحريسة', 'الخالدية',
-      'الدارة', 'الدور', 'الرحى', 'الرشيدة', 'الرضيمة', 'السالمية', 'السكاكة', 'السمراوية', 'السهوة',
-      'السويمرة', 'الشقراوية', 'الصورى الصغيرة', 'الصورى الكبيرة', 'الطيبة', 'العانات', 'الغارية', 'الغيضة',
-      'حي شرق السويداء', 'حي غرب السويداء', 'الحي الشمالي', 'الحي الجنوبي', 'حي المصانع', 'حي التنك', 'حي الفردوس', 'حي العمال',
-      // أضف المزيد من القرى حسب الحاجة (القائمة الكاملة في docs/locations.json)
-    ];
-    final locations = {...configLocs, ...fallbackVillages}.toList();
+          if (item is String) return item.trim();
+          if (item is Map) {
+            return item['name']?.toString().trim() ??
+                item['d']?.toString().trim() ??
+                item.toString().trim();
+          }
+          return item.toString().trim();
+        })
+        .where((item) => item.isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort();
 
     return Autocomplete<String>(
       initialValue: TextEditingValue(text: _locCtrl.text),
       optionsBuilder: (textEditingValue) {
-        if (textEditingValue.text.isEmpty) return locations;
+        if (locations.isEmpty) return const Iterable<String>.empty();
+        if (textEditingValue.text.isEmpty) return locations.take(20);
         final query = textEditingValue.text.toLowerCase();
         return locations.where(
-            (option) => option.toLowerCase().contains(query));
+          (option) => option.toLowerCase().contains(query),
+        );
       },
       fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
         controller.text = _locCtrl.text;
@@ -1038,7 +1027,11 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         return TextField(
           controller: controller,
           focusNode: focusNode,
-          decoration: const InputDecoration(labelText: 'الموقع / المنطقة'),
+          maxLines: 2,
+          decoration: const InputDecoration(
+            labelText: 'وصف دقيق للموقع (إلزامي)',
+            hintText: 'ابحث من المواقع الموجودة أو اكتب الموقع يدوياً',
+          ),
           onChanged: (value) => _locCtrl.text = value,
         );
       },
@@ -1046,6 +1039,25 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         setState(() => _locCtrl.text = selection);
       },
     );
+  }
+
+  List<String> _cityOptions() {
+    final config = context.read<ConfigProvider>().config;
+    final options = (config?.locations ?? [])
+        .map((item) {
+          if (item is String) return item.trim();
+          if (item is Map) {
+            return item['name']?.toString().trim() ??
+                item['d']?.toString().trim() ??
+                item.toString().trim();
+          }
+          return item.toString().trim();
+        })
+        .where((item) => item.isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort();
+    return options;
   }
 
   Future<void> _triggerWhatsAppVideoShare(OfferModel offer, dynamic user) async {

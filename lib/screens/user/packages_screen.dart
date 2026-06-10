@@ -11,13 +11,6 @@ import '../../core/utils/app_utils.dart';
 class PackagesScreen extends StatelessWidget {
   const PackagesScreen({super.key});
 
-  // أسعار افتراضية بالدولار — تُقرأ من config لاحقاً عند توفّرها
-  static const Map<int, double> _defaultPrices = {
-    0: 0,
-    1: 10,
-    2: 25,
-  };
-
   static const Map<int, List<Color>> _gradients = {
     0: [Color(0xFF424242), Color(0xFF616161)],
     1: [Color(0xFF8E8E8E), Color(0xFFBDBDBD)],
@@ -121,7 +114,7 @@ class PackagesScreen extends StatelessWidget {
     final isCurrent = pkg.id == currentPkg;
     final isFree = pkg.id == 0;
     final gradient = _gradients[pkg.id]!;
-    final price = _defaultPrices[pkg.id]!;
+    final price = pkg.price;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -301,20 +294,22 @@ class _PackageData {
   final String name;
   final int offers;
   final int duration;
+  final double price;
 
   _PackageData({
     required this.id,
     required this.name,
     required this.offers,
     required this.duration,
+    required this.price,
   });
 
   factory _PackageData.fromConfig(int id, dynamic raw) {
     final m = raw is Map ? Map<String, dynamic>.from(raw) : <String, dynamic>{};
-    final defaults = const {
-      0: {'nm': 'مجاني', 'o': 5, 'd': 30},
-      1: {'nm': 'فضي', 'o': 15, 'd': 45},
-      2: {'nm': 'ذهبي', 'o': 40, 'd': 60},
+    const defaults = {
+      0: {'nm': 'مجاني', 'o': 5, 'd': 30, 'pr': 0},
+      1: {'nm': 'فضي', 'o': 15, 'd': 45, 'pr': 10},
+      2: {'nm': 'ذهبي', 'o': 40, 'd': 60, 'pr': 25},
     };
     final def = defaults[id]!;
     return _PackageData(
@@ -322,6 +317,7 @@ class _PackageData {
       name: (m['nm'] ?? def['nm']) as String,
       offers: (m['o'] ?? def['o']) as int,
       duration: (m['d'] ?? def['d']) as int,
+      price: ((m['pr'] ?? def['pr']) as num).toDouble(),
     );
   }
 }

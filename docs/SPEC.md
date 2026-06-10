@@ -70,7 +70,7 @@ supabase/
 │   ├── ad ← العنوان
 │   ├── role ← المستوى: 0=مستخدم, 1=وسيط, 2=مشرف, 3=نائب, 4=مدير
 │   ├── sid ← رقم الهوية
-│   ├── img ← URL صورة البطاقة
+│   ├── img ← مسار صورة الهوية داخل bucket خاص `ids_private` (ليس URL عاماً)
 │   ├── pt ← رصيد النقاط
 │   ├── bg ← البادج: 0=جديد, 1=برونزي, 2=فضي, 3=ذهبي, 4=ماسي
 │   ├── bg_ts ← تاريخ آخر ترقية
@@ -123,7 +123,28 @@ supabase/
 │   ├── ts_crt, ts_pub, ts_end, ts_ren ← التواريخ
 │
 ├── 📋 requests/{reqId}
+│   ├── typ ← نوع الطلب: 0=شراء, 1=استئجار
+│   ├── elm ← نوع العنصر المطلوب: 0=عقار, 1=سيارة
+│   ├── cl_nm, cl_ph ← اسم/هاتف العميل
+│   ├── prc, cur, notes, specs
+│   ├── usr_id ← مالك الطلب داخل التطبيق
+│   ├── sts ← 0=نشط, 1=قيد المعالجة, 2=تمت المطابقة/الإغلاق, 3=ملغي
+│   ├── matches ← بيانات مساعدة للمطابقات إن وُجدت
+│   └── i_del, ts_crt
 ├── 📅 appointments/{appId}
+│   ├── off_id ← العرض المرتبط
+│   ├── req_id ← الطلب المرتبط (اختياري)
+│   ├── req_uid ← طالب الموعد (المستخدم الذي حجز)
+│   ├── own_id ← مالك العرض
+│   ├── bkr_id ← الوسيط/المعالج (اختياري)
+│   ├── dt, dt_end
+│   ├── sts ← 0=قيد الانتظار, 1=مؤكد, 2=مكتمل, 3=ملغي, 4=مرفوض, 5=لم يحضر
+│   ├── cnl_by, cnl_rsn
+│   ├── fbk_own, fbk_req, fbk_own_dt, fbk_req_dt
+│   ├── fbk_own_dur, fbk_req_dur
+│   ├── admin_nt, i_force, force_by
+│   ├── rmnd_24, rmnd_2, rmnd_qtr, rmnd_end
+│   └── ts_crt
 ├── 🔔 notifications/{ntfId}
 ├── 💰 payments/{payId}
 │   ├── tp ← نوع الدفع (0=باقة, 1=ترقية...)
@@ -165,10 +186,12 @@ supabase/
   },
   // —— الباقات ——
   "pkg": {
-    "0": {"nm":"مجاني","o":5,"d":30},
-    "1": {"nm":"فضي","o":15,"d":45},
-    "2": {"nm":"ذهبي","o":40,"d":60}
+    "0": {"nm":"مجاني","o":5,"d":30,"pr":0},
+    "1": {"nm":"فضي","o":15,"d":45,"pr":10},
+    "2": {"nm":"ذهبي","o":40,"d":60,"pr":25}
   },
+  // —— سعر الصرف المعتمد ——
+  "fx": {"usd_syp": 15000},
   // —— العمولة ——
   "com": {"sl": 3, "rn": "hm", "ml": 2},
   // —— الحدود ——
@@ -233,7 +256,7 @@ supabase/
 | offers | `sts`, `trx`, `ts_crt` | عرض البيع/الإيجار |
 | offers | `usr_id`, `sts` | عروض مستخدم معين |
 | appointments | `own_id`, `sts`, `dt` | مواعيد صاحب العرض |
-| appointments | `req_id`, `sts`, `dt` | مواعيد طالب الحجز |
+| appointments | `req_uid`, `sts`, `dt` | مواعيد طالب الحجز |
 | notifications | `uid`, `i_rd`, `ts_crt` | إشعارات المستخدم |
 | deals | `sell_uid`, `sts` | صفقات البائع |
 | deals | `buy_uid`, `sts` | صفقات المشتري |
@@ -282,8 +305,10 @@ supabase/
 ### الجداول (13)
 `users` · `offers` · `requests` · `appointments` · `notifications` · `payments` · `reports` · `deals` · `activity_log` · `stats` · `app_config` · `otp_codes` · `user_devices`
 
-### الدوال (12)
-`admin_update_user_permissions` · `generate_otp` · `verify_otp` · `generate_otp_v2` · `verify_otp_v2` · `upsert_user_after_otp` · `get_user_by_email` · `create_user_from_phone` · `get_user_by_phone` · `check_offer_duplicate` · `calculate_commission` · `update_user_badge` · `get_pending_offers_count` · `add_points` · `soft_delete` · `expire_offers` · `send_appointment_reminders`
+### الدوال (مرجع سريع — القائمة الكاملة في `supabase/FUNCTIONS_REFERENCE.md`)
+أهم الدوال الحالية تشمل:
+
+`generate_otp` · `verify_otp` · `generate_otp_v2` · `verify_otp_v2` · `upsert_user_after_otp` · `get_user_by_email` · `get_user_by_phone` · `create_user_from_phone` · `check_offer_duplicate` · `create_offer_internal` · `purchase_offer_boost` · `approve_payment_final` · `get_pending_offers_count` · `add_points` · `award_points_safe` · `soft_delete` · `expire_offers` · `send_appointment_reminders` · `request_verification_by_uid` · `admin_approve_verification_by_admin` · `admin_reject_verification_by_admin`
 
 **Edge Functions:** `send-whatsapp-otp`, `verify-whatsapp-otp`
 
@@ -298,6 +323,10 @@ supabase/
   - INSERT: المستخدم يرفع في مجلده الخاص فقط
   - SELECT: صاحب الإيصال + admin/owner (rl ∈ {4,5})
   - DELETE: admin/owner فقط
+- `ids_private` (Private, +RLS) — صور الهوية/البطاقات الرسمية للمستخدمين
+  - المسار: `{userId}/id_<timestamp>.jpg`
+  - لا تُعرض كرابط عام
+  - يقرأها المالك أو الإدارة فقط عبر Storage policy / signed URL
 
 **ملاحظة legacy:** قد توجد إيصالات قديمة في `offer_images` تحت `payments/{uid}/` — يدعمها `admin/payments_screen` تلقائياً (إذا `proof.startsWith('http')` يعرضها مباشرة).
 

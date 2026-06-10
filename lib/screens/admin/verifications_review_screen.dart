@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/admin_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/network/supabase_service.dart';
 import '../../services/storage_service.dart';
@@ -43,7 +44,8 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
   }
 
   Future<void> _approve(String userId, String name) async {
-    final ok = await context.read<AdminProvider>().approveVerification(userId);
+    final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
+    final ok = await context.read<AdminProvider>().approveVerification(adminUid, userId);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(ok ? '✅ تم اعتماد توثيق $name' : '❌ فشل الاعتماد'),
@@ -97,9 +99,10 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
     );
     if (confirmed != true || !mounted) return;
 
+    final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
     final ok = await context
         .read<AdminProvider>()
-        .rejectVerification(userId, reason: reasonCtrl.text.trim());
+        .rejectVerification(adminUid, userId, reason: reasonCtrl.text.trim());
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(ok ? '🚫 تم رفض توثيق $name' : '❌ فشل الرفض'),

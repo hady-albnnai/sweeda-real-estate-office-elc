@@ -227,9 +227,11 @@ class BusinessService {
   // 4.2 المطابقة التلقائية (Requests ↔ Offers)
   // ═══════════════════════════════════════
 
-  /// إيجاد العروض المنشورة المطابقة لطلب (حسب النوع + العملة + نطاق السعر ±20%).
+  /// إيجاد العروض المنشورة المطابقة لطلب
+  /// (حسب نوع العنصر + نوع المعاملة + العملة + نطاق السعر ±20%).
   Future<List<OfferModel>> matchOffersForRequest({
-    required int type,
+    required int elementType,
+    required int transactionType,
     required double targetPrice,
     required int currency,
     double tolerance = 0.20,
@@ -240,8 +242,9 @@ class BusinessService {
           .select()
           .eq('i_del', 0)
           .eq('i_pub', 1)
-          .eq('typ', type)
-          .eq('cur', currency); // شرط تطابق العملة
+          .eq('typ', elementType)
+          .eq('trx', transactionType)
+          .eq('cur', currency);
 
       if (targetPrice > 0) {
         final min = targetPrice * (1 - tolerance);
@@ -258,9 +261,10 @@ class BusinessService {
     }
   }
 
-  /// إيجاد الطلبات المطابقة لعرض (الاتجاه المعاكس) + تخزين أعدادها في matches.
+  /// إيجاد الطلبات المطابقة لعرض (الاتجاه المعاكس).
   Future<List<Map<String, dynamic>>> matchRequestsForOffer({
-    required int type,
+    required int elementType,
+    required int transactionType,
     required double price,
     required int currency,
     double tolerance = 0.20,
@@ -270,8 +274,9 @@ class BusinessService {
           .from(DbTables.requests)
           .select()
           .eq('i_del', 0)
-          .eq('typ', type)
-          .eq('cur', currency); // شرط تطابق العملة
+          .eq('elm', elementType)
+          .eq('typ', transactionType)
+          .eq('cur', currency);
       if (price > 0) {
         final min = price * (1 - tolerance);
         final max = price * (1 + tolerance);
