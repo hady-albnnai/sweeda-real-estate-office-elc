@@ -533,3 +533,7 @@
 - اللون الأساسي للويب: ذهبي.
 - الخلفية: أسود.
 - الوصف: مكتب عقاري إلكتروني لعقارات وسيارات السويداء.
+
+ملاحظة سيرفر: إذا كانت دالة `admin_update_user_permissions` منفذة مسبقاً قبل إضافة `media_review`، يجب تنفيذ:
+
+- `supabase/migrations/2026_06_10_add_media_review_permission.sql`
