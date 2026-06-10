@@ -448,3 +448,29 @@
 - `lib/screens/admin/office_operations_screen.dart`
 - رابط من `lib/screens/admin/admin_dashboard_screen.dart`
 - Route في `lib/core/router/app_router.dart`
+
+---
+
+## 🆕 تحديث 2026-06-10 — الصلاحيات الديناميكية الداخلية
+
+تمت إضافة نظام صلاحيات داخلي متوافق مع نموذج الأدوار الحالي بدون كسر `users.role`:
+
+- إضافة حقل `users.perm` كـ JSONB array.
+- إذا كان `perm` فارغاً يستخدم التطبيق صلاحيات الدور الافتراضية.
+- إذا كان `perm` غير فارغ يستخدم كتخصيص صلاحيات للمستخدم.
+- إضافة RPC آمنة `admin_update_user_permissions(p_target_uid, p_perm)`.
+- الدالة تتطلب `role >= 3` وتتحقق من مفاتيح الصلاحيات المسموحة.
+- إضافة `PermissionService` في Flutter.
+- إضافة شاشة إدارة الصلاحيات: `/admin/permissions`.
+- ربط شاشة الصلاحيات من لوحة الإدارة للنواب والمدراء افتراضياً.
+- حماية مسارات الإدارة والوسيط الآن تعتمد على الصلاحيات الفعلية بجانب الدور.
+
+الملفات:
+
+- `supabase/migrations/2026_06_10_internal_permissions.sql`
+- `supabase/setup.sql`
+- `lib/models/user_model.dart`
+- `lib/core/services/permission_service.dart`
+- `lib/screens/admin/permissions_management_screen.dart`
+- `lib/core/router/app_router.dart`
+- `lib/screens/admin/admin_dashboard_screen.dart`

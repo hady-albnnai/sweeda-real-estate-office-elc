@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
   brk_cls INTEGER DEFAULT 0 CHECK (brk_cls BETWEEN 0 AND 2), brk_nm TEXT DEFAULT '',
   sts INTEGER DEFAULT 0 CHECK (sts BETWEEN 0 AND 2), ban_rsn TEXT DEFAULT '',
   ntf JSONB DEFAULT '{"off":0,"app":0,"fin":0,"rat":0}'::jsonb,
+  perm JSONB DEFAULT '[]'::jsonb,
   stats JSONB DEFAULT '{"off":0,"req":0,"app":0,"dl":0}'::jsonb,
   wk_lgn JSONB DEFAULT '[]'::jsonb, strk INTEGER DEFAULT 0, strk_dt TIMESTAMPTZ,
   i_del INTEGER DEFAULT 0 CHECK (i_del IN (0,1)),

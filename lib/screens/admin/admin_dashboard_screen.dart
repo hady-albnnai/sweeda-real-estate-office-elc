@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../providers/admin_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/services/permission_service.dart';
 
 /// 🛡️ لوحة الإدارة الرئيسية
 /// تعرض: إحصائيات عامة + عدّادات الإجراءات المطلوبة + شبكة تنقّل للأقسام
@@ -130,32 +131,46 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     crossAxisSpacing: 12,
                     childAspectRatio: 1.3,
                     children: [
-                      _navCard(Icons.support_agent_outlined, 'عمليات المكتب',
-                          '/admin/office-operations'),
-                      _navCard(Icons.fact_check_outlined, 'مراجعة العروض',
-                          '/admin/review-offers',
-                          badge: _counts['pendingOffers'] ?? 0),
-                      _navCard(Icons.verified_user_outlined, 'طلبات التوثيق',
-                          '/admin/review-verifications',
-                          badge: _counts['pendingVerifications'] ?? 0),
-                      _navCard(Icons.people_outline, 'المستخدمون',
-                          '/admin/users'),
-                      _navCard(Icons.calendar_month_outlined, 'المواعيد',
-                          '/admin/appointments'),
-                      _navCard(Icons.handshake_outlined, 'الصفقات',
-                          '/admin/deals'),
-                      _navCard(Icons.payments_outlined, 'المدفوعات',
-                          '/admin/payments',
-                          badge: _counts['pendingPayments'] ?? 0),
-                      _navCard(Icons.flag_outlined, 'التبليغات',
-                          '/admin/reports',
-                          badge: _counts['openReports'] ?? 0),
-                      _navCard(Icons.tune_outlined, 'الإعدادات',
-                          '/admin/config'),
-                      _navCard(Icons.analytics_outlined, 'التحليلات',
-                          '/admin/analytics'),
-                      _navCard(Icons.security, 'كشف الاحتيال',
-                          '/admin/fraud-suspects'),
+                      if (PermissionService.has(auth.userModel, PermissionKeys.officeOperations))
+                        _navCard(Icons.support_agent_outlined, 'عمليات المكتب',
+                            '/admin/office-operations'),
+                      if (PermissionService.has(auth.userModel, PermissionKeys.managePermissions))
+                        _navCard(Icons.admin_panel_settings_outlined, 'الصلاحيات',
+                            '/admin/permissions'),
+                      if (PermissionService.has(auth.userModel, PermissionKeys.reviewOffers))
+                        _navCard(Icons.fact_check_outlined, 'مراجعة العروض',
+                            '/admin/review-offers',
+                            badge: _counts['pendingOffers'] ?? 0),
+                      if (PermissionService.has(auth.userModel, PermissionKeys.reviewVerifications))
+                        _navCard(Icons.verified_user_outlined, 'طلبات التوثيق',
+                            '/admin/review-verifications',
+                            badge: _counts['pendingVerifications'] ?? 0),
+                      if (PermissionService.has(auth.userModel, PermissionKeys.manageUsers))
+                        _navCard(Icons.people_outline, 'المستخدمون',
+                            '/admin/users'),
+                      if (PermissionService.has(auth.userModel, PermissionKeys.manageAppointments))
+                        _navCard(Icons.calendar_month_outlined, 'المواعيد',
+                            '/admin/appointments'),
+                      if (PermissionService.has(auth.userModel, PermissionKeys.manageDeals))
+                        _navCard(Icons.handshake_outlined, 'الصفقات',
+                            '/admin/deals'),
+                      if (PermissionService.has(auth.userModel, PermissionKeys.managePayments))
+                        _navCard(Icons.payments_outlined, 'المدفوعات',
+                            '/admin/payments',
+                            badge: _counts['pendingPayments'] ?? 0),
+                      if (PermissionService.has(auth.userModel, PermissionKeys.manageReports))
+                        _navCard(Icons.flag_outlined, 'التبليغات',
+                            '/admin/reports',
+                            badge: _counts['openReports'] ?? 0),
+                      if (PermissionService.has(auth.userModel, PermissionKeys.manageConfig))
+                        _navCard(Icons.tune_outlined, 'الإعدادات',
+                            '/admin/config'),
+                      if (PermissionService.has(auth.userModel, PermissionKeys.viewAnalytics))
+                        _navCard(Icons.analytics_outlined, 'التحليلات',
+                            '/admin/analytics'),
+                      if (PermissionService.has(auth.userModel, PermissionKeys.fraudSuspects))
+                        _navCard(Icons.security, 'كشف الاحتيال',
+                            '/admin/fraud-suspects'),
                     ],
                   ),
                   const SizedBox(height: 20),
