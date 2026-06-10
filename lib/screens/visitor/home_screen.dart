@@ -114,13 +114,24 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildChip(String label, bool isSelected) {
     return Container(
-      margin: const EdgeInsets.only(left: 10),
+      margin: const EdgeInsets.only(left: 8),
       child: Chip(
-        label: Text(label),
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        visualDensity: VisualDensity.compact,
+        labelPadding: const EdgeInsets.symmetric(horizontal: 7),
+        label: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         backgroundColor: isSelected ? AppTheme.primaryGold : AppTheme.surfaceBlack,
-        labelStyle: TextStyle(color: isSelected ? AppTheme.deepBlack : AppTheme.textWhite, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
-        side: BorderSide(color: AppTheme.primaryGold),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        labelStyle: TextStyle(
+          color: isSelected ? AppTheme.deepBlack : AppTheme.textWhite,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+          fontSize: 12,
+        ),
+        side: const BorderSide(color: AppTheme.primaryGold),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       ),
     );
   }
