@@ -996,3 +996,43 @@ GRANT EXECUTE ON FUNCTION admin_approve_verification_by_admin(UUID, UUID) TO aut
 GRANT EXECUTE ON FUNCTION admin_reject_verification_by_admin(UUID, UUID, TEXT) TO authenticated, anon;
 
 -- END supabase/migrations/2026_06_10_verification_dev_auth_rpcs.sql
+
+-- ============================================================================
+-- BEGIN supabase/migrations/2026_06_11_drop_obsolete_verification_rpcs.sql
+-- ============================================================================
+
+-- ════════════════════════════════════════════════════════════════════════════
+-- Cleanup: drop obsolete verification RPCs
+-- Date: 2026-06-11
+-- Purpose:
+--   Remove old verification RPCs that were replaced by the current
+--   dev-compatible versions:
+--     - request_verification_by_uid
+--     - admin_approve_verification_by_admin
+--     - admin_reject_verification_by_admin
+-- ════════════════════════════════════════════════════════════════════════════
+
+DROP FUNCTION IF EXISTS request_verification();
+DROP FUNCTION IF EXISTS admin_approve_verification(UUID);
+DROP FUNCTION IF EXISTS admin_reject_verification(UUID, TEXT);
+
+-- END supabase/migrations/2026_06_11_drop_obsolete_verification_rpcs.sql
+
+-- ============================================================================
+-- BEGIN supabase/migrations/2026_06_11_drop_obsolete_unused_rpcs.sql
+-- ============================================================================
+
+-- ════════════════════════════════════════════════════════════════════════════
+-- Cleanup: drop obsolete unused RPCs
+-- Date: 2026-06-11
+-- Purpose:
+--   Remove RPCs that are no longer used by the current app flow and have no
+--   internal server dependencies:
+--     - admin_update_user_permissions(UUID, JSONB)
+--     - verify_otp_safe(TEXT, TEXT)
+-- ════════════════════════════════════════════════════════════════════════════
+
+DROP FUNCTION IF EXISTS admin_update_user_permissions(UUID, JSONB);
+DROP FUNCTION IF EXISTS verify_otp_safe(TEXT, TEXT);
+
+-- END supabase/migrations/2026_06_11_drop_obsolete_unused_rpcs.sql
