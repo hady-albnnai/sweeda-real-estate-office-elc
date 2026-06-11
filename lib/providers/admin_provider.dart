@@ -5,6 +5,7 @@ import '../models/appointment_model.dart';
 import '../models/deal_model.dart';
 import '../models/payment_model.dart';
 import '../models/report_model.dart';
+import '../models/request_model.dart';
 import '../core/network/supabase_service.dart';
 import '../core/constants/db_constants.dart';
 
@@ -169,6 +170,21 @@ class AdminProvider with ChangeNotifier {
   // ═══════════════════════════════════════
   // 3) المواعيد (إدارة)
   // ═══════════════════════════════════════
+  Future<List<RequestModel>> getAllRequests(String adminUid) async {
+    try {
+      final response = await SupabaseService().client.rpc(
+        'get_admin_requests_internal',
+        params: {'p_admin_uid': adminUid},
+      );
+      return (response as List)
+          .map((d) => RequestModel.fromSupabase(
+              Map<String, dynamic>.from(d), d['id'] as String))
+          .toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
   Future<List<AppointmentModel>> getAllAppointments(String adminUid) async {
     try {
       final response = await SupabaseService().client.rpc(

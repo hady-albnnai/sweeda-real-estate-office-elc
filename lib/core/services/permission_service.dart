@@ -5,8 +5,9 @@ class PermissionKeys {
   static const officeOperations = 'office_operations';
   static const manageUsers = 'manage_users';
   static const managePermissions = 'manage_permissions';
-  static const reviewOffers  = 'review_offers';
-  static const addOfferAdmin = 'add_offer_admin';
+  static const reviewOffers   = 'review_offers';
+  static const addOfferAdmin  = 'add_offer_admin';
+  static const manageRequests = 'manage_requests';
   static const reviewVerifications = 'review_verifications';
   static const mediaReview = 'media_review';
   static const photographyManagement = 'photography_management';
@@ -59,7 +60,8 @@ class PermissionService {
     AppPermission(key: PermissionKeys.manageAppointments, title: 'إدارة المواعيد', group: 'التشغيل', minimumRoleForDefault: 2),
     AppPermission(key: PermissionKeys.manageDeals, title: 'إدارة الصفقات', group: 'التشغيل', minimumRoleForDefault: 2),
     AppPermission(key: PermissionKeys.managePayments, title: 'إدارة المدفوعات', group: 'التشغيل', minimumRoleForDefault: 2),
-    AppPermission(key: PermissionKeys.manageReports, title: 'التبليغات', group: 'التشغيل', minimumRoleForDefault: 2),
+    AppPermission(key: PermissionKeys.manageReports,   title: 'التبليغات',       group: 'التشغيل', minimumRoleForDefault: 2),
+    AppPermission(key: PermissionKeys.manageRequests,  title: 'إدارة الطلبات',   group: 'التشغيل', minimumRoleForDefault: 2),
     AppPermission(key: PermissionKeys.manageConfig, title: 'إعدادات التطبيق', group: 'الإعدادات', minimumRoleForDefault: 4),
     AppPermission(key: PermissionKeys.viewAnalytics, title: 'التحليلات', group: 'الإدارة', minimumRoleForDefault: 2),
     AppPermission(key: PermissionKeys.brokerDashboard, title: 'لوحة الوسيط', group: 'الوسيط', minimumRoleForDefault: 1),
