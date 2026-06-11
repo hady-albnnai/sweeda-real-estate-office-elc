@@ -21,6 +21,8 @@
 - الكود والسيرفر الآن متوافقان — كل المسارات الحرجة تعتمد RPCs.
 - المتبقي الوحيد غير المغلق هو `S-01` (تشديد نموذج المصادقة الكامل عند الانتقال من dev fallback إلى Auth إنتاجي حقيقي) — مؤجل بقرار.
 - حماية pkg_grace في check_user_safe_update trigger + user_details_screen تعرض حالة الباقة.
+- grace_days من Config (app_config.pkg.grace_days=3) + ConfigModel.pkgGraceDays getter + packages_screen يعرضها ديناميكياً.
+- إصلاح مراجعة الباقات: amt حُذف من URL + زر جدّد يذهب لصفحة الدفع + dynamic→ConfigModel? + profile_screen يعرض grace period.
 - نظام الباقات الاحترافي (2026-06-12 Batch 2): Grace Period (3 أيام) + send_renewal_reminders + منع دفعة مزدوجة + سعر من Config + my_payments_screen + payments_screen تعرض السعر المفترض
 - إصلاح نظام الباقات كاملاً (2026-06-12 Batch 1): purchase_offer_boost + create_offer_internal + expire_packages cron + canPublishOffer/offerQuota تفحصان pkgEnd + packages_screen تعرض "انتهت الباقة" + payments_screen تعرض اسم المستخدم.
 - إصلاح streak اليومي: v_yesterday + تصفير عند الانقطاع.

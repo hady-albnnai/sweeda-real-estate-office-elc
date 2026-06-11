@@ -1153,6 +1153,12 @@ NOW() > pkg_grace          → expire_packages     → b_pkg = 0
 | `isInGracePeriod` | هل pkg_end < NOW() < pkg_grace |
 | `graceDaysLeft` | أيام السماح المتبقية |
 
+### Getter جديد في `ConfigModel`
+
+| Getter | المعنى | القيمة الافتراضية |
+|---|---|---|
+| `pkgGraceDays` | عدد أيام السماح من `pkg.grace_days` | 3 أيام |
+
 ### شاشة جديدة: `/user/my-payments`
 
 - سجل دفعات المستخدم (معلقة / مقبولة / مرفوضة)
