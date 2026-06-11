@@ -50,6 +50,43 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   bool _submitting = false;
   String _progressMsg = '';
 
+  // المواعيد المتاحة — avl
+  // البنية: {"mon": ["09:00-12:00", "15:00-17:00"], "wed": ["10:00-13:00"]}
+  static const _weekDays = [
+    ('mon', 'الاثنين'),
+    ('tue', 'الثلاثاء'),
+    ('wed', 'الأربعاء'),
+    ('thu', 'الخميس'),
+    ('fri', 'الجمعة'),
+    ('sat', 'السبت'),
+    ('sun', 'الأحد'),
+  ];
+  // أيام مفعّلة
+  final Map<String, bool> _avlDaysEnabled = {
+    'mon': false, 'tue': false, 'wed': false, 'thu': false,
+    'fri': false, 'sat': false, 'sun': false,
+  };
+  // فترات لكل يوم: [{"from": "09:00", "to": "12:00"}, ...]
+  final Map<String, List<Map<String, String>>> _avlSlots = {
+    'mon': [], 'tue': [], 'wed': [], 'thu': [],
+    'fri': [], 'sat': [], 'sun': [],
+  };
+
+  /// يبني Map<String, List<String>> لإرساله في avl
+  Map<String, List<String>> _buildAvl() {
+    final result = <String, List<String>>{};
+    for (final day in _weekDays) {
+      final key = day.$1;
+      if (_avlDaysEnabled[key] == true && _avlSlots[key]!.isNotEmpty) {
+        result[key] = _avlSlots[key]!
+            .where((s) => s['from']!.isNotEmpty && s['to']!.isNotEmpty)
+            .map((s) => '${s['from']}-${s['to']}')
+            .toList();
+      }
+    }
+    return result;
+  }
+
   final _storage = StorageService();
   final _biz = BusinessService();
 
@@ -75,7 +112,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   }
 
   void _next() => setState(() {
-        if (_currentStep < 3) _currentStep++;
+        if (_currentStep < 4) _currentStep++;
       });
   void _prev() => setState(() {
         if (_currentStep > 0) _currentStep--;
@@ -303,6 +340,10 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           : '',
       docTp: _selectedDocType ?? 0,
       docImg: docUrl,
+      // avl: المواعيد المتاحة التي أدخلها صاحب العرض
+      avl: _buildAvl(),
+      // brk_id: إذا كان صاحب الحساب وسيطاً يُحفظ uid تلقائياً
+      brkId: user.role == UserRole.broker ? user.uid : '',
       sts: OfferStatus.review,
       iPub: 0,
       tsCrt: DateTime.now(),
@@ -423,7 +464,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
                   onStepTapped: (s) => setState(() => _currentStep = s),
                   // إزالة أزرار "Continue/Cancel" المزعجة (التنقل عبر النقر على عناوين الخطوات كافٍ)
                   controlsBuilder: (context, details) => const SizedBox.shrink(),
-                  steps: [_step1(), _step2(), _step3(), _step4()],
+                  steps: [_step1(), _step2(), _step3(), _stepAvl(), _step4()],
                 ),
               ),
             ],
@@ -814,6 +855,181 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         isActive: _currentStep >= 2,
       );
 
+  Step _stepAvl() {
+    return Step(
+      title: const Text('المواعيد المتاحة',
+          style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'حدد الأيام والفترات الزمنية التي يمكن فيها معاينة العرض.',
+            style: TextStyle(color: AppTheme.textGrey, fontSize: 13),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'مثال: الأربعاء من 10:00 إلى 13:00',
+            style: TextStyle(color: AppTheme.primaryGold, fontSize: 12),
+          ),
+          const SizedBox(height: 16),
+          ..._weekDays.map((day) {
+            final key = day.$1;
+            final label = day.$2;
+            final enabled = _avlDaysEnabled[key] ?? false;
+            final slots = _avlSlots[key] ?? [];
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: AppTheme.surfaceBlack,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: enabled
+                      ? AppTheme.primaryGold.withValues(alpha: 0.5)
+                      : AppTheme.textGrey.withValues(alpha: 0.2),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // رأس اليوم
+                  InkWell(
+                    onTap: () => setState(() {
+                      _avlDaysEnabled[key] = !enabled;
+                      if (!enabled && slots.isEmpty) {
+                        _avlSlots[key]!.add({'from': '', 'to': ''});
+                      }
+                    }),
+                    borderRadius: BorderRadius.circular(10),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      child: Row(
+                        children: [
+                          Icon(
+                            enabled ? Icons.check_box : Icons.check_box_outline_blank,
+                            color: enabled ? AppTheme.primaryGold : AppTheme.textGrey,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 10),
+                          Text(label,
+                              style: TextStyle(
+                                color: enabled ? AppTheme.textWhite : AppTheme.textGrey,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              )),
+                          const Spacer(),
+                          if (enabled)
+                            TextButton.icon(
+                              onPressed: () => setState(() {
+                                _avlSlots[key]!.add({'from': '', 'to': ''});
+                              }),
+                              icon: const Icon(Icons.add, size: 16, color: AppTheme.primaryGold),
+                              label: const Text('فترة', style: TextStyle(color: AppTheme.primaryGold, fontSize: 12)),
+                              style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // الفترات
+                  if (enabled)
+                    ...slots.asMap().entries.map((entry) {
+                      final i = entry.key;
+                      final slot = entry.value;
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        child: Row(
+                          children: [
+                            const Text('من', style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: _timeField(
+                                value: slot['from'] ?? '',
+                                hint: '09:00',
+                                onChanged: (v) => setState(() => _avlSlots[key]![i]['from'] = v),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Text('إلى', style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: _timeField(
+                                value: slot['to'] ?? '',
+                                hint: '12:00',
+                                onChanged: (v) => setState(() => _avlSlots[key]![i]['to'] = v),
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            IconButton(
+                              icon: const Icon(Icons.remove_circle, color: Colors.red, size: 20),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              onPressed: () => setState(() {
+                                _avlSlots[key]!.removeAt(i);
+                                if (_avlSlots[key]!.isEmpty) {
+                                  _avlDaysEnabled[key] = false;
+                                }
+                              }),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                  if (enabled) const SizedBox(height: 8),
+                ],
+              ),
+            );
+          }),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppTheme.primaryGold.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.3)),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.info_outline, color: AppTheme.primaryGold, size: 16),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'المواعيد المتاحة اختيارية. إذا تركتها فارغة لن يتمكن أحد من حجز موعد على هذا العرض.',
+                    style: TextStyle(color: AppTheme.textGrey, fontSize: 12, height: 1.4),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      isActive: _currentStep >= 3,
+    );
+  }
+
+  Widget _timeField({
+    required String value,
+    required String hint,
+    required void Function(String) onChanged,
+  }) {
+    final ctrl = TextEditingController(text: value);
+    ctrl.selection = TextSelection.collapsed(offset: ctrl.text.length);
+    return TextField(
+      controller: ctrl,
+      keyboardType: TextInputType.datetime,
+      textAlign: TextAlign.center,
+      style: const TextStyle(color: AppTheme.textWhite, fontSize: 14),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: const TextStyle(color: AppTheme.textGrey, fontSize: 13),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        isDense: true,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+      ),
+      onChanged: onChanged,
+    );
+  }
+
   Step _step4() {
     final config = context.watch<ConfigProvider>().config;
     final docTypes = config?.documentTypes ?? {};
@@ -954,7 +1170,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           ),
         ],
       ),
-      isActive: _currentStep >= 3,
+      isActive: _currentStep >= 4,
     );
   }
 

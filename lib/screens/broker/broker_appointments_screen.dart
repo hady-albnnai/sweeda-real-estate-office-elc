@@ -365,59 +365,30 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
 
                 const Divider(color: AppTheme.textGrey, height: 18),
 
-                // طالب الموعد
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 16,
-                      backgroundColor: AppTheme.primaryGold,
-                      child: Text(
-                        (requester?.nm.isNotEmpty == true
-                                ? requester!.nm[0]
-                                : '؟')
-                            .toUpperCase(),
-                        style: const TextStyle(
-                            color: Colors.black,
-                            fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
+                // القاعدة الذهبية: لا تظهر أي معلومة عن طالب الحجز
+                // التواصل يتم فقط عبر إدارة المكتب
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryGold.withValues(alpha: 0.07),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                        color: AppTheme.primaryGold.withValues(alpha: 0.3)),
+                  ),
+                  child: const Row(children: [
+                    Icon(Icons.business_center,
+                        color: AppTheme.primaryGold, size: 16),
+                    SizedBox(width: 8),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            requester?.nm.isNotEmpty == true
-                                ? requester!.nm
-                                : 'طالب الموعد',
-                            style: const TextStyle(
-                                color: AppTheme.textWhite,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13),
-                          ),
-                          Text(
-                            requester?.ph ?? '—',
-                            style: const TextStyle(
-                                color: AppTheme.textGrey, fontSize: 11),
-                          ),
-                        ],
+                      child: Text(
+                        'يوجد طلب حجز موعد — التواصل مع الطالب يتم عبر إدارة المكتب حصراً.',
+                        style: TextStyle(
+                            color: AppTheme.primaryGold,
+                            fontSize: 12,
+                            height: 1.4),
                       ),
                     ),
-                    // أزرار الاتصال (فقط إذا تأكد الموعد)
-                    if (isAccepted && requester != null && requester.ph.isNotEmpty) ...[
-                      IconButton(
-                        icon: const Icon(Icons.phone, color: Colors.green),
-                        tooltip: 'اتصال',
-                        onPressed: () => _call(requester.ph),
-                      ),
-                      IconButton(
-                        icon:
-                            const Icon(Icons.chat, color: AppTheme.primaryGold),
-                        tooltip: 'واتساب',
-                        onPressed: () => _whatsapp(requester.ph),
-                      ),
-                    ],
-                  ],
+                  ]),
                 ),
 
                 // ملاحظة الإلغاء
