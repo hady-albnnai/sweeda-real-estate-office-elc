@@ -7,6 +7,7 @@ import '../../providers/payment_provider.dart';
 import '../../models/user_model.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/app_utils.dart';
+import '../../models/config_model.dart';
 
 /// شاشة الباقات — مع دعم grace period + دفعة معلقة + السعر من Config
 class PackagesScreen extends StatefulWidget {
@@ -182,7 +183,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
         if ((isExpired || isInGrace) && user.bPkg > 0) ...[
           const SizedBox(width: 8),
           ElevatedButton(
-            onPressed: () => context.push('/user/packages'),
+            onPressed: () => context.push('/user/payment?pkg=${user.bPkg}'),
             style: ElevatedButton.styleFrom(
               backgroundColor: isInGrace ? Colors.orange : AppTheme.primaryGold,
               foregroundColor: Colors.black,
@@ -228,7 +229,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
     BuildContext context,
     _PackageData pkg,
     UserModel? user, {
-    dynamic config,
+    ConfigModel? config,
     required Set<int> pendingPkgIds,
   }) {
     final now           = DateTime.now();
@@ -354,7 +355,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
     }
     // السعر يأتي من Config مباشرة — لا من URL قابل للتعديل
     return () => ctx.push(
-        '/user/payment?pkg=${pkg.id}&amt=${price.toStringAsFixed(0)}');
+        '/user/payment?pkg=${pkg.id}');
   }
 
   Widget _badge(String label, Color color) => Container(
