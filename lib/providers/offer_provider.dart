@@ -262,15 +262,14 @@ class OfferProvider with ChangeNotifier {
 
   Future<bool> updateOffer(String offerId, Map<String, dynamic> data) async {
     try {
+      // offers لا يحتوي ts_upd — نرسل البيانات بدونه
       await SupabaseService().client.from(DbTables.offers)
-          .update({...data, 'ts_upd': DateTime.now().toIso8601String()}).eq('id', offerId);
-      
+          .update(data).eq('id', offerId);
+
       // منع تجديد العروض المرفوضة (sts == 3) إلا إذا تغيرت الحالة
-      // يتم التحقق في السيرفر عادة، ولكن هنا نمنع التحديث إذا كان الغرض التجديد فقط والعرض مرفوض
       if (data.containsKey('ts_ren') && data['sts'] == null) {
-         final offer = await fetchOfferById(offerId);
-         if (offer != null && offer.sts == 3) {return false;
-         }
+        final offer = await fetchOfferById(offerId);
+        if (offer != null && offer.sts == 3) return false;
       }
 
       final index = _offers.indexWhere((o) => o.id == offerId);
@@ -278,8 +277,11 @@ class OfferProvider with ChangeNotifier {
         final updated = await fetchOfferById(offerId);
         if (updated != null) _offers[index] = updated;
       }
-      notifyListeners(); return true;
-    } catch (e) {return false; }
+      notifyListeners();
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   Future<bool> softDeleteOffer(String offerId) => updateOffer(offerId, {'i_del': 1});
