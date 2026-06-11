@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/network/supabase_service.dart';
+import '../../core/constants/db_constants.dart';
 import '../../providers/admin_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/payment_model.dart';
+import '../../models/user_model.dart';
 import '../../core/theme/app_theme.dart';
 import '../../services/storage_service.dart';
 
@@ -17,6 +19,7 @@ class PaymentsScreen extends StatefulWidget {
 
 class _PaymentsScreenState extends State<PaymentsScreen> {
   List<PaymentModel> _all = [];
+  final Map<String, UserModel> _usersCache = {};
   bool _loading = true;
   int _filter = 0; // 0=معلّق(افتراضي), -1=الكل, 1=مقبول, 2=مرفوض
 
@@ -33,6 +36,23 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     setState(() => _loading = true);
     final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
     final list = await context.read<AdminProvider>().getAllPayments(adminUid);
+
+    // جلب أسماء المستخدمين دفعة واحدة
+    final uids = list.map((p) => p.uid).where((id) => id.isNotEmpty).toSet().toList();
+    if (uids.isNotEmpty) {
+      try {
+        final res = await SupabaseService().client
+            .from(DbTables.users)
+            .select('id, nm, ph')
+            .inFilter('id', uids);
+        for (final u in res as List) {
+          final m = Map<String, dynamic>.from(u as Map);
+          _usersCache[m['id'] as String] =
+              UserModel.fromSupabase(m, m['id'] as String);
+        }
+      } catch (_) {}
+    }
+
     if (mounted) {
       setState(() {
         _all = list;
@@ -160,7 +180,12 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
             ],
           ),
           const SizedBox(height: 8),
-          _row('المستخدم', _short(p.uid)),
+          _row('المستخدم',
+              _usersCache[p.uid]?.nm.isNotEmpty == true
+                  ? _usersCache[p.uid]!.nm
+                  : _short(p.uid)),
+          if (_usersCache[p.uid]?.ph.isNotEmpty == true)
+            _row('الهاتف', _usersCache[p.uid]!.ph),
           _row('الباقة', _pkgNames[p.pkg] ?? '—'),
           _row('قناة الدفع', p.channelDisplayName()),
           if (p.ref.isNotEmpty) _row('المرجع', p.ref),
