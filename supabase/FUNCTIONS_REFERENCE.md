@@ -33,6 +33,7 @@
 | ✅ **مُطبّق على السيرفر** | `2026_06_11_drop_obsolete_verification_rpcs.sql` — حذف RPCs التوثيق القديمة غير المستخدمة |
 | ✅ **مُطبّق على السيرفر** | `2026_06_11_drop_obsolete_unused_rpcs.sql` — حذف RPCs قديمة غير مستخدمة (`admin_update_user_permissions`, `verify_otp_safe`) |
 | ✅ **مُطبّق على السيرفر** | `2026_06_11_real_test_stabilization_internal_rpcs.sql` — 40 دالة RPC لتثبيت المسارات الحساسة قبل الاختبار الحقيقي (تم التحقق من وجودها كاملةً بتاريخ 2026-06-11) |
+| ✅ **مُطبّق على السيرفر** | تعديلات نظام المواعيد (2026-06-11 Batch 2): `appointments.supervisor_uid` + `appointments.neog` + `offers.added_by` + دالة `get_available_supervisor` + `owner_respond_appointment` + `requester_counter_appointment` + تحديث `book_appointment_internal` بـ 4 فحوصات + تحديث triggers الإشعارات |
 
 ---
 
@@ -83,6 +84,10 @@
 | 28 | `trg_offer_status_changed` 🆕🔔 | TRIGGER على `offers.sts` | `TRIGGER` | ✅ |
 | 29 | `trg_appointment_created` 🆕🔔 | TRIGGER INSERT على `appointments` | `TRIGGER` | ✅ |
 | 30 | `trg_appointment_status_changed` 🆕🔔 | TRIGGER على `appointments.sts` | `TRIGGER` | ✅ |
+| **— نظام المواعيد الجديد —** | | | | |
+| 74 | `get_available_supervisor` 🆕 | `p_dt TIMESTAMPTZ` | `UUID` | ✅ |
+| 75 | `owner_respond_appointment` 🆕 | `p_owner_uid, p_appointment_id, p_accept, p_reject_reason, p_reject_text, p_proposed_dt` | `BOOLEAN` | ✅ |
+| 76 | `requester_counter_appointment` 🆕 | `p_user_uid, p_appointment_id, p_accept, p_proposed_dt` | `BOOLEAN` | ✅ |
 | 31 | `trg_deal_completed` 🆕🔔 | TRIGGER على `deals.sts` | `TRIGGER` | ✅ |
 | 32 | `trg_payment_approved` 🆕🔔 | TRIGGER على `payments.sts` | `TRIGGER` | ✅ |
 | 33 | `trg_offer_published_match_requests` 🆕🔔 | TRIGGER على `offers.i_pub` (1→0) | `TRIGGER` | ✅ |
@@ -128,6 +133,10 @@
 | 71 | `submit_broker_request_internal` | `p_user_uid UUID, p_business_name TEXT, p_category INT, p_experience TEXT?, p_about TEXT?` | `BOOLEAN` | ✅ |
 | 72 | `mark_social_published_internal` | `p_user_uid UUID, p_offer_id UUID, p_text TEXT` | `BOOLEAN` | ✅ |
 | 73 | `increment_offer_views_internal` | `p_offer_id UUID` | `BOOLEAN` | ✅ |
+| **— نظام المواعيد الجديد (2026-06-11 Batch 2) —** | | | | |
+| 74 | `get_available_supervisor` | `p_dt TIMESTAMPTZ` | `UUID` | ✅ |
+| 75 | `owner_respond_appointment` | `p_owner_uid UUID, p_appointment_id UUID, p_accept BOOLEAN, p_reject_reason INT, p_reject_text TEXT, p_proposed_dt TIMESTAMPTZ` | `BOOLEAN` | ✅ |
+| 76 | `requester_counter_appointment` | `p_user_uid UUID, p_appointment_id UUID, p_accept BOOLEAN, p_proposed_dt TIMESTAMPTZ` | `BOOLEAN` | ✅ |
 
 ### 🔗 Triggers Active على الجداول:
 
@@ -1025,3 +1034,59 @@ normalize_sy_phone(ph)
 | `2026_06_10_offer_create_rpc_and_admin_quota.sql` | إنشاء العروض عبر RPC وإعفاء الإدارة من الحصة |
 | `2026_06_10_fix_upsert_user_phone_normalization.sql` | تطبيع الهاتف داخل `upsert_user_after_otp` |
 | `2026_06_10_photography_dev_auth_rpcs.sql` | دوال مهام التصوير المتوافقة مع وضع التطوير |
+
+---
+
+## 🆕 تغييرات الجداول — 2026-06-11 (نظام المواعيد الجديد)
+
+### أعمدة جديدة في `appointments`
+
+| العمود | النوع | الغرض |
+|---|---|---|
+| `supervisor_uid` | `UUID REFERENCES users(id)` | المشرف المعيَّن تلقائياً عند الحجز |
+| `neog` | `JSONB DEFAULT '[]'` | تاريخ جولات التراشق على الموعد (5 جولات كحد أقصى) |
+
+بنية `neog`:
+```json
+[
+  {"round": 1, "by": "owner", "at": "...", "action": "counter", "proposed": "2026-06-20T10:00:00"},
+  {"round": 2, "by": "requester", "at": "...", "action": "counter", "proposed": "2026-06-21T14:00:00"}
+]
+```
+
+### عمود جديد في `offers`
+
+| العمود | النوع | الغرض |
+|---|---|---|
+| `added_by` | `UUID REFERENCES users(id)` | uid الموظف/المدير الذي أضاف العرض — للإدارة فقط، لا يظهر للجمهور |
+
+### بنية `avl` المعتمدة (فترات من-إلى)
+
+```json
+{
+  "wed": ["10:00-13:00", "15:00-17:00"],
+  "fri": ["09:00-11:00"]
+}
+```
+
+---
+
+## منطق نظام الحجز الجديد (2026-06-11)
+
+### فحوصات `book_appointment_internal` بالترتيب:
+1. **فحص `avl`** — هل الوقت ضمن الفترات المتاحة لليوم المطلوب؟
+2. **فحص التعارض** — هل يوجد موعد مؤكد لنفس العرض في نفس الوقت؟
+3. **فحص المشرف** — هل يوجد مشرف (role=2) غير مشغول في هذا الوقت؟
+4. **الإنشاء** — ينشأ الموعد بـ `sts=0` مع `supervisor_uid` محجوز مبدئياً
+
+### دورة التراشق (`owner_respond_appointment` + `requester_counter_appointment`):
+- **5 جولات كحد أقصى** — بعدها يُلغى تلقائياً
+- **رفض "الوقت لا يناسب" (reason=0)** → تقويم حر لاقتراح بديل (تُلغى قاعدة avl)
+- **رفض "غير مهتم" (reason=1)** → يُحذف العرض soft delete تلقائياً
+- **رفض "آخر" (reason=2)** → حقل نص حر + إشعار الإدارة للمراجعة
+- **القاعدة الذهبية**: لا تظهر أي معلومة عن طالب الحجز لصاحب العرض أو الوسيط
+
+### تعيين المشرف (`get_available_supervisor`):
+- يختار مشرف (role=2) ليس لديه موعد مؤكد (sts=1) في نفس الوقت
+- الأولوية: الأقل مواعيداً → الأقدم تسجيلاً (ts_crt)
+- إذا لا يوجد مشرف متاح → `NO_SUPERVISOR_AVAILABLE`
