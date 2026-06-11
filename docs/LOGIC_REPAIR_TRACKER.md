@@ -163,6 +163,19 @@
 - تم تجهيز دفعة تثبيت جديدة قبل الاختبار الحقيقي:
   - migration: `supabase/migrations/2026_06_11_real_test_stabilization_internal_rpcs.sql`
   - وتشمل تحويل مسارات حساسة كثيرة إلى RPCs (العروض، الطلبات، المدفوعات، التبليغات، المواعيد، الإشعارات، التقييمات، بعض تحديثات المستخدم).
+### 2026-06-11 (الجلسة الخامسة) — إصلاح المشاكل المتبقية
+
+**3 إصلاحات + تحديث الوثائق:**
+1. `appointment_provider.updateStatus` → `admin_update_appointment_status_internal` RPC بدل direct update
+2. `admin_provider.softDeleteUser` → `soft_delete` RPC بدل direct update على users
+3. `referral_screen` → استبدال "عقارات السويداء" بـ "المكتب العقاري الالكتروني"
+4. `NEXT_DEVELOPMENT_ITEMS.md` → تحديث شامل يعكس الوضع الحقيقي
+
+**الحالة العامة:** لا توجد direct writes خطرة متبقية في المسارات الحرجة.
+التطبيق جاهز للاختبار الفعلي.
+
+---
+
 ### 2026-06-11 (الجلسة الرابعة) — إصلاح مشاكل مكتشفة بعد دفعة التعديلات
 
 **6 مشاكل أُصلحت:**
