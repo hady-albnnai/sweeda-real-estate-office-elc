@@ -7,6 +7,7 @@ import '../../providers/auth_provider.dart';
 import '../../models/payment_model.dart';
 import '../../models/user_model.dart';
 import '../../core/theme/app_theme.dart';
+import '../../providers/config_provider.dart';
 import '../../services/storage_service.dart';
 
 /// 💰 إدارة المدفوعات — موافقة/رفض + تفعيل الباقات
@@ -187,6 +188,49 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
           if (_usersCache[p.uid]?.ph.isNotEmpty == true)
             _row('الهاتف', _usersCache[p.uid]!.ph),
           _row('الباقة', _pkgNames[p.pkg] ?? '—'),
+          // السعر المدفوع مقابل المفترض
+          Builder(builder: (ctx) {
+            final config = ctx.read<ConfigProvider>().config;
+            double expected = 0;
+            try {
+              final pkgMap = config?.packages ?? {};
+              final pkgData = pkgMap['${p.pkg}'];
+              if (pkgData is Map && pkgData['pr'] is num) {
+                expected = (pkgData['pr'] as num).toDouble();
+              }
+            } catch (_) {}
+            final paidLabel = '${p.amt.toStringAsFixed(0)} ${p.cur == 0 ? '\$' : 'ل.س'}';
+            final expectedLabel = '\$${expected.toStringAsFixed(0)}';
+            final mismatch = expected > 0 && p.cur == 0 && p.amt < expected;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _row('المبلغ المدفوع', paidLabel),
+                if (expected > 0)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    child: Row(children: [
+                      Text('السعر المفترض: ',
+                          style: const TextStyle(
+                              color: AppTheme.textGrey, fontSize: 12)),
+                      Text(expectedLabel,
+                          style: TextStyle(
+                              color: mismatch ? Colors.red : Colors.green,
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold)),
+                      if (mismatch) ...[
+                        const SizedBox(width: 6),
+                        const Icon(Icons.warning_amber,
+                            color: Colors.red, size: 14),
+                        const Text(' أقل من المطلوب',
+                            style: TextStyle(
+                                color: Colors.red, fontSize: 11)),
+                      ],
+                    ]),
+                  ),
+              ],
+            );
+          }),
           _row('قناة الدفع', p.channelDisplayName()),
           if (p.ref.isNotEmpty) _row('المرجع', p.ref),
           _row('التاريخ', p.tsCrt.toString().split(' ').first),

@@ -33,6 +33,7 @@ import '../../screens/user/become_broker_screen.dart';
 import '../../screens/user/request_detail_screen.dart';
 import '../../screens/user/referral_screen.dart';
 import '../../screens/user/my_ratings_screen.dart';
+import '../../screens/user/my_payments_screen.dart';
 import '../../screens/user/boost_offer_screen.dart';
 
 // === Broker ===
@@ -119,6 +120,7 @@ class AppRouter {
         path == '/user/become-broker' ||
         path == '/user/referral' ||
         path == '/user/my-ratings' ||
+        path == '/user/my-payments' ||
         path == '/user/favorites') {
       return PermissionKeys.userProfile;
     }
@@ -285,9 +287,8 @@ class AppRouter {
         path: '/user/payment',
         builder: (context, state) {
           final pkg = int.tryParse(state.uri.queryParameters['pkg'] ?? '0') ?? 0;
-          final amt =
-              double.tryParse(state.uri.queryParameters['amt'] ?? '0') ?? 0;
-          return PaymentScreen(packageId: pkg, amount: amt);
+          // amt لا يُستخدم بعد الآن — السعر يُجلب من Config في PaymentScreen
+          return PaymentScreen(packageId: pkg);
         },
       ),
       GoRoute(
@@ -315,6 +316,10 @@ class AppRouter {
       GoRoute(
         path: '/user/my-ratings',
         builder: (context, state) => const MyRatingsScreen(),
+      ),
+      GoRoute(
+        path: '/user/my-payments',
+        builder: (context, state) => const MyPaymentsScreen(),
       ),
       GoRoute(
         path: '/user/boost-offer/:id',
