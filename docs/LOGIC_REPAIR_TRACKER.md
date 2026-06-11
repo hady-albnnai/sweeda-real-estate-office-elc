@@ -163,6 +163,19 @@
 - تم تجهيز دفعة تثبيت جديدة قبل الاختبار الحقيقي:
   - migration: `supabase/migrations/2026_06_11_real_test_stabilization_internal_rpcs.sql`
   - وتشمل تحويل مسارات حساسة كثيرة إلى RPCs (العروض، الطلبات، المدفوعات، التبليغات، المواعيد، الإشعارات، التقييمات، بعض تحديثات المستخدم).
+### 2026-06-11 (الجلسة الرابعة) — إصلاح مشاكل مكتشفة بعد دفعة التعديلات
+
+**6 مشاكل أُصلحت:**
+1. `offer_provider.updateOffer` — حذف `ts_upd` (offers لا يملك هذا العمود — كان يفشل دائماً)
+2. `appointment_provider.bookAppointment` — حذف `ownerId` غير المستخدم في RPC (السيرفر يجلبه تلقائياً)
+3. `book_appointment_sheet` — حذف `ownerId` من الاستدعاء
+4. `broker_appointments_screen` — حذف جلب بيانات المستخدمين كاملاً (انتهاك الخصوصية)
+5. `edit_offer_screen` — إعادة كتابة كاملة: إضافة `contactPh` + `specs` + `avl` + حذف `ts_upd`
+6. `offers_review_screen` — جلب اسم الموظف (`addedBy`) وعرضه بدل ID مقطوع
+   `appointments_management_screen` — عرض المشرف المعيَّن + جولات التراشق
+
+---
+
 ### 2026-06-11 (الجلسة الثالثة) — إصلاح شاشة الطلبات + إدارة الطلبات
 
 **السيرفر:**
