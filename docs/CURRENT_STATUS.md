@@ -20,6 +20,7 @@
 - تطبيق دفعة 40 دالة RPC على السيرفر وتحققنا من وجودها كاملةً بتاريخ 2026-06-11 (migration: `2026_06_11_real_test_stabilization_internal_rpcs.sql`).
 - الكود والسيرفر الآن متوافقان — كل المسارات الحرجة تعتمد RPCs.
 - المتبقي الوحيد غير المغلق هو `S-01` (تشديد نموذج المصادقة الكامل عند الانتقال من dev fallback إلى Auth إنتاجي حقيقي) — مؤجل بقرار.
+- حماية pkg_grace في check_user_safe_update trigger + user_details_screen تعرض حالة الباقة.
 - نظام الباقات الاحترافي (2026-06-12 Batch 2): Grace Period (3 أيام) + send_renewal_reminders + منع دفعة مزدوجة + سعر من Config + my_payments_screen + payments_screen تعرض السعر المفترض
 - إصلاح نظام الباقات كاملاً (2026-06-12 Batch 1): purchase_offer_boost + create_offer_internal + expire_packages cron + canPublishOffer/offerQuota تفحصان pkgEnd + packages_screen تعرض "انتهت الباقة" + payments_screen تعرض اسم المستخدم.
 - إصلاح streak اليومي: v_yesterday + تصفير عند الانقطاع.
