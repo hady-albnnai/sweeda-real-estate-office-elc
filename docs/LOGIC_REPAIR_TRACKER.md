@@ -163,6 +163,30 @@
 - تم تجهيز دفعة تثبيت جديدة قبل الاختبار الحقيقي:
   - migration: `supabase/migrations/2026_06_11_real_test_stabilization_internal_rpcs.sql`
   - وتشمل تحويل مسارات حساسة كثيرة إلى RPCs (العروض، الطلبات، المدفوعات، التبليغات، المواعيد، الإشعارات، التقييمات، بعض تحديثات المستخدم).
+### 2026-06-11 (الجلسة الثانية) — نظام المواعيد الجديد
+
+**السيرفر:**
+- إضافة `appointments.supervisor_uid` و`appointments.neog` و`offers.added_by`
+- دالة `get_available_supervisor` — تختار المشرف بالأولوية
+- دالة `owner_respond_appointment` — رد صاحب العرض + دورة التراشق 5 جولات
+- دالة `requester_counter_appointment` — رد طالب الحجز بالقبول أو الاقتراح
+- تحديث `book_appointment_internal` — 4 فحوصات: avl + تعارض + مشرف + تعيين
+- تحديث `trg_appointment_created` — إضافة إشعار الإدارة
+- تحديث `trg_appointment_status_changed` — إصلاح المستلم (req_uid بدل own_id) + إشعار الإدارة
+
+**الكود:**
+- `AppointmentModel`: `supervisorUid` + `neog` + helpers
+- `OfferModel`: `addedBy` + توثيق بنية `avl` (فترات من-إلى)
+- `db_constants`: ثوابت الدوال الجديدة
+- `AppointmentProvider`: `ownerRespondAppointment()` + `requesterCounterAppointment()` + `fetchMyAppointments` تُرجع List
+- `add_offer_screen`: step المواعيد المتاحة (avl) + `brk_id` تلقائي للوسيط + 5 steps
+- `book_appointment_sheet`: يوم → فترة → وقت بـ time picker (بدل أزرار الساعات)
+- `broker_appointments_screen`: حذف اسم وهاتف الطالب — القاعدة الذهبية مطبّقة
+- `my_appointments_screen`: تبويبان (مواعيدي / على عروضي) + دورة التراشق كاملة + موافقة/رفض مع أسباب
+- `admin_add_offer_screen`: شاشة إدارية جديدة (6 steps) مع اختيار صاحب العرض + `added_by`
+- `app_router`: مسار `/admin/add-offer`
+- `offers_review_screen`: تنويه داخلي "أُضيف بواسطة الإدارة"
+
 - تم اكتشاف وإصلاح 4 أخطاء بنيوية في الدفعة قبل تطبيقها:
   1. `offers` لا يحتوي `ts_upd` → حُذف من `admin_review_offer_internal` و`mark_social_published_internal`
   2. `offers.brk_id` هو UUID → `NULLIF(brk_id,'')` خاطئ النوع → استُبدل بـ `COALESCE` مباشرة في `book_appointment_internal`
