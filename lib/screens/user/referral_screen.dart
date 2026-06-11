@@ -70,10 +70,8 @@ class _ReferralScreenState extends State<ReferralScreen> {
     final link = _refLink(code);
     await SharePlus.instance.share(
       ShareParams(
-        text: 'انضم لتطبيق "عقارات السويداء" المكتب العقاري الإلكتروني واحصل على نقاط ترحيب! 🎁\n\n'
-            'استخدم كود الدعوة: $code\n'
-            'أو اضغط الرابط: $link',
-        subject: 'دعوة إلى عقارات السويداء',
+        text: 'انضم للمكتب العقاري الالكتروني واحصل على نقاط ترحيب! 🎁\n\nاستخدم كود الدعوة: $code\nأو اضغط الرابط: $link',
+        subject: 'دعوة إلى المكتب العقاري الالكتروني',
       ),
     );
   }

@@ -97,22 +97,35 @@ class AppointmentProvider with ChangeNotifier {
     }
   }
 
+  /// تحديث حالة موعد — يستخدم admin_update_appointment_status_internal
+  /// لتجنب direct update على appointments مع RLS
   Future<bool> updateStatus(String appointmentId, int newStatus,
-      {int? feedback}) async {
+      {int? feedback, String adminUid = ''}) async {
     try {
-      final data = <String, dynamic>{'sts': newStatus};
-      if (newStatus >= 2) {
-        data['dt_end'] = DateTime.now().toIso8601String();
+      // نستخدم RPC الإدارية إذا توفر adminUid، وإلا نستخدم broker_handle
+      if (adminUid.isNotEmpty) {
+        await SupabaseService().client.rpc(
+          'admin_update_appointment_status_internal',
+          params: {
+            'p_admin_uid':      adminUid,
+            'p_appointment_id': appointmentId,
+            'p_status':         newStatus,
+            'p_admin_note':     '',
+          },
+        );
+      } else {
+        // fallback: direct update محدود للحالات التي لا تحتاج uid
+        final data = <String, dynamic>{'sts': newStatus};
+        if (newStatus >= 2) data['dt_end'] = DateTime.now().toIso8601String();
+        if (feedback != null) {
+          data['fbk_own']    = feedback;
+          data['fbk_own_dt'] = DateTime.now().toIso8601String();
+        }
+        await SupabaseService().client
+            .from(DbTables.appointments)
+            .update(data)
+            .eq('id', appointmentId);
       }
-      if (feedback != null) {
-        data['fbk_own'] = feedback;
-        data['fbk_own_dt'] = DateTime.now().toIso8601String();
-      }
-      await SupabaseService()
-          .client
-          .from(DbTables.appointments)
-          .update(data)
-          .eq('id', appointmentId);
       notifyListeners();
       return true;
     } catch (e) {

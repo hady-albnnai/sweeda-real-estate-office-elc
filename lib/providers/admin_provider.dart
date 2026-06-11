@@ -140,13 +140,15 @@ class AdminProvider with ChangeNotifier {
 
   Future<bool> softDeleteUser(String uid) async {
     try {
-      await SupabaseService().client.from(DbTables.users).update({
-        'i_del': 1,
-        'ts_upd': DateTime.now().toIso8601String(),
-      }).eq('id', uid);
+      // نستخدم RPC soft_delete (SECURITY DEFINER) بدل direct update
+      await SupabaseService().client.rpc(
+        'soft_delete',
+        params: {'p_table': 'users', 'p_id': uid},
+      );
       notifyListeners();
       return true;
-    } catch (e) {return false;
+    } catch (e) {
+      return false;
     }
   }
 
