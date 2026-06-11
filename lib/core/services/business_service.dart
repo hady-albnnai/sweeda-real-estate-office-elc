@@ -108,6 +108,7 @@ class BusinessService {
     required String uid,
     required int role,
     required int packageType,
+    DateTime? pkgEnd, // تاريخ انتهاء الباقة — لفحص إذا انتهت
     ConfigModel? config,
   }) async {
     try {
@@ -146,7 +147,9 @@ class BusinessService {
 
       final used = active.length + recentlyDeleted.length;
 
-      final limit = offerQuota(config, role: role, packageType: packageType);
+      // FIX: نمرر pkgEnd لـ offerQuota لفحص انتهاء الباقة
+      final limit = offerQuota(config,
+          role: role, packageType: packageType, pkgEnd: pkgEnd);
 
       final allowed = used < limit;
       return {
@@ -168,15 +171,23 @@ class BusinessService {
     }
   }
 
-  /// حساب حصة العروض: تعتمد على الباقة أولاً ثم على الدور (qta.u / qta.b)
+  /// حساب حصة العروض مع فحص انتهاء الباقة
+  /// إذا انتهت pkg_end → نعتبر المستخدم على الباقة المجانية (0)
   int offerQuota(ConfigModel? config,
-      {required int role, required int packageType}) {
+      {required int role, required int packageType, DateTime? pkgEnd}) {
     if (role >= 2) return 999999;
+
+    // FIX: فحص انتهاء الباقة — إذا انتهت نعامله كباقة مجانية
+    final effectivePkg = (packageType > 0 &&
+            (pkgEnd == null || pkgEnd.isAfter(DateTime.now())))
+        ? packageType
+        : 0;
+
     if (config != null) {
-      // 1) حد الباقة (pkg.{type}.o) — له الأولوية
+      // 1) حد الباقة الفعلية (pkg.{effectivePkg}.o) — له الأولوية
       final pkgMap = config.data['pkg'];
-      if (pkgMap is Map && pkgMap['$packageType'] is Map) {
-        final o = (pkgMap['$packageType'] as Map)['o'];
+      if (pkgMap is Map && pkgMap['$effectivePkg'] is Map) {
+        final o = (pkgMap['$effectivePkg'] as Map)['o'];
         if (o is num) return o.toInt();
       }
       // 2) حصة حسب الدور (qta.b للوسيط، qta.u للمستخدم)

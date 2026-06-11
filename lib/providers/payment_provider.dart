@@ -43,23 +43,7 @@ class PaymentProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> updatePaymentStatus(String paymentId, int newStatus,
-      {String? approvedBy}) async {
-    try {
-      if (newStatus == 2 && approvedBy != null && approvedBy.isNotEmpty) {
-        await SupabaseService().client.rpc(
-          'admin_reject_payment_internal',
-          params: {
-            'p_admin_uid': approvedBy,
-            'p_payment_id': paymentId,
-          },
-        );
-        notifyListeners();
-        return true;
-      }
-      return false;
-    } catch (e) {
-      return false;
-    }
-  }
+  // updatePaymentStatus حُذفت — غير مستخدمة
+  // الموافقة: admin_provider.approvePayment → approve_payment_final RPC
+  // الرفض:    admin_provider.rejectPayment  → admin_reject_payment_internal RPC
 }

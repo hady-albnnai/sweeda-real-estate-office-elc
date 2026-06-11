@@ -261,6 +261,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       uid: user.uid,
       role: user.role,
       packageType: user.bPkg,
+      pkgEnd: user.pkgEnd,
       config: configProv.config,
     );
     if (quota['allowed'] != true) {
@@ -434,7 +435,8 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     final user = context.watch<AuthProvider>().userModel;
     final isInternalAccount = (user?.role ?? 0) >= 2;
     final limit = _biz.offerQuota(config,
-        role: user?.role ?? 0, packageType: user?.bPkg ?? 0);
+        role: user?.role ?? 0, packageType: user?.bPkg ?? 0,
+        pkgEnd: user?.pkgEnd);
 
     return Scaffold(
       appBar: AppBar(
@@ -452,7 +454,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
                 child: Text(
                   isInternalAccount
                       ? 'حساب إداري — إضافة العروض غير محدودة'
-                      : 'حصّتك: حتى $limit عرض فعّال ${user?.bPkg != null && user!.bPkg > 0 ? '(باقة مدفوعة)' : '(باقة مجانية)'}',
+                      : 'حصّتك: حتى $limit عرض فعّال ${user?.bPkg != null && user!.bPkg > 0 ? (user!.pkgEnd != null && user.pkgEnd!.isBefore(DateTime.now()) ? '(باقة منتهية)' : '(باقة مدفوعة)') : '(باقة مجانية)'}',
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: AppTheme.textGrey, fontSize: 12),
                 ),

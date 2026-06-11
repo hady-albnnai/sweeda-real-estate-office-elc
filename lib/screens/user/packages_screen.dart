@@ -98,9 +98,18 @@ class PackagesScreen extends StatelessWidget {
                 ),
                 if (pkgEnd != null && currentPkg > 0)
                   Text(
-                    'تنتهي: ${AppUtils.formatTimestamp(pkgEnd)}',
-                    style: const TextStyle(
-                        color: AppTheme.textGrey, fontSize: 11),
+                    pkgEnd.isBefore(DateTime.now())
+                        ? '⚠️ انتهت الباقة — أجدّد اشتراكك'
+                        : 'تنتهي: ${AppUtils.formatTimestamp(pkgEnd)}',
+                    style: TextStyle(
+                      color: pkgEnd.isBefore(DateTime.now())
+                          ? Colors.orange
+                          : AppTheme.textGrey,
+                      fontSize: 11,
+                      fontWeight: pkgEnd.isBefore(DateTime.now())
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                    ),
                   ),
               ],
             ),
