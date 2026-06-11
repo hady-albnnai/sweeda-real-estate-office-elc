@@ -173,6 +173,8 @@
 | 1 | `daily-expire-offers` | `0 3 * * *` (3:00 UTC يومياً) | يستدعي `expire_offers()` لإنهاء العروض المنتهية |
 | 2 | `daily-expire-boosts` | `5 3 * * *` (3:05 UTC يومياً) | يستدعي `expire_offer_boosts()` لإلغاء الترقيات المنتهية |
 | 3 | `hourly-appointment-reminders` | `0 * * * *` (بداية كل ساعة) | يستدعي `send_appointment_reminders()` للتذكير قبل المواعيد |
+| 4 | `daily-expire-packages` | `10 3 * * *` (3:10 UTC يومياً) | يستدعي `expire_packages()` لإعادة `b_pkg=0` بعد `pkg_grace` |
+| 5 | `daily-renewal-reminders` | `15 3 * * *` (3:15 UTC يومياً) | يستدعي `send_renewal_reminders()` لإرسال تذكيرات التجديد |
 
 **التحقق من حالة الجدولة:**
 ```sql
@@ -1122,3 +1124,36 @@ expire_packages() RETURNS INTEGER
 
 - `activity_log` كانت تستخدم `action(TEXT)` و`details(JSONB)` ← خطأ
 - الآن تستخدم `act=20` (INT) و`det=text` ← صحيح
+
+---
+
+## 🆕 تغييرات الجداول — 2026-06-12 (نظام الباقات الاحترافي)
+
+### عمود جديد في `users`
+
+| العمود | النوع | الغرض |
+|---|---|---|
+| `pkg_grace` | `TIMESTAMPTZ` | نهاية فترة السماح = `pkg_end + 3 أيام` — محمي بـ `check_user_safe_update` trigger |
+
+### منطق Grace Period
+
+```
+pkg_end > NOW()           → باقة نشطة         → effectivePkg = b_pkg
+pkg_grace > NOW() > pkg_end → فترة سماح (3 أيام) → effectivePkg = b_pkg (نفس المزايا)
+NOW() > pkg_grace          → expire_packages     → b_pkg = 0
+```
+
+### Getters الجديدة في `UserModel`
+
+| Getter | المعنى |
+|---|---|
+| `effectivePkg` | الباقة الفعلية مع مراعاة grace period |
+| `isPkgActive` | هل pkg_end > NOW() |
+| `isInGracePeriod` | هل pkg_end < NOW() < pkg_grace |
+| `graceDaysLeft` | أيام السماح المتبقية |
+
+### شاشة جديدة: `/user/my-payments`
+
+- سجل دفعات المستخدم (معلقة / مقبولة / مرفوضة)
+- زر "محاولة مجدداً" للدفعات المرفوضة
+- رابط من شاشة الباقات والملف الشخصي
