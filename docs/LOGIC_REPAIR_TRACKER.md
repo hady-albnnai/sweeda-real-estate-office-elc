@@ -163,6 +163,21 @@
 - تم تجهيز دفعة تثبيت جديدة قبل الاختبار الحقيقي:
   - migration: `supabase/migrations/2026_06_11_real_test_stabilization_internal_rpcs.sql`
   - وتشمل تحويل مسارات حساسة كثيرة إلى RPCs (العروض، الطلبات، المدفوعات، التبليغات، المواعيد، الإشعارات، التقييمات، بعض تحديثات المستخدم).
+### 2026-06-12 — إصلاح شاشة الزائر
+
+**7 مشاكل أُصلحت:**
+1. `offer_card`: السعر يعرض `ل.س` دائماً حتى للعروض بالدولار → `AppUtils.formatPrice(offer.prc, currency: offer.cur)`
+2. `offer_card`: السعر بدون تنسيق `5000.0` → `5,000 $` عبر `NumberFormat`
+3. `offer_detail_screen`: زر الحجز يظهر للمالك → مخفي بـ `if (!isOwner)`
+4. `home_screen`: الشرائح ثابتة hardcoded → تعمل وتفلتر (عقار/سيارة/بيع/إيجار)
+5. `home_screen`: البحث لا يعمل → `TextEditingController` + `onSubmitted` + زر إلغاء
+6. `home_screen`: `StatelessWidget` بدون `initState` → `StatefulWidget` مع `fetchOffers()`
+7. `offer_card`: المفضلة أيقونة بدون `onTap` → `toggle` + icon يتغير + `SnackBar`
+   + `BottomNav`: زر المفضلة يفتح `/user/favorites`
+   + `RefreshIndicator` للسحب للتحديث
+
+---
+
 ### 2026-06-12 — grace_days من Config بدل hardcoded
 
 - `app_config.pkg.grace_days = 3` — قابل للتعديل من Config Editor دون migration
