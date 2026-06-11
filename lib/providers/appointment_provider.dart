@@ -47,7 +47,7 @@ class AppointmentProvider with ChangeNotifier {
     }
   }
 
-  Future<void> fetchMyAppointments(String userId) async {
+  Future<List<AppointmentModel>> fetchMyAppointments(String userId) async {
     _isLoading = true;
     notifyListeners();
     try {
@@ -62,6 +62,7 @@ class AppointmentProvider with ChangeNotifier {
     } catch (e) {}
     _isLoading = false;
     notifyListeners();
+    return _myAppointments;
   }
 
   Future<List<AppointmentModel>> fetchAppointmentsForMyOffers(String userId) async {
