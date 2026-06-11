@@ -315,6 +315,22 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
             _chip(statusInfo.$1, statusInfo.$2),
             _chip('${u.pt} نقطة', Colors.purple),
             if (u.isBroker) _chip('وسيط مفعّل', Colors.green),
+            // حالة الباقة مع grace period
+            if (u.effectivePkg > 0)
+              _chip(
+                u.isPkgActive
+                    ? '${u.effectivePkg == 1 ? 'فضي' : 'ذهبي'} — نشط'
+                    : u.isInGracePeriod
+                        ? 'سماح ${u.graceDaysLeft} يوم'
+                        : 'باقة مدفوعة',
+                u.isPkgActive
+                    ? AppTheme.primaryGold
+                    : u.isInGracePeriod
+                        ? Colors.orange
+                        : Colors.grey,
+              )
+            else
+              _chip('مجاني', Colors.grey),
             // 🛡️ حالة التوثيق الرسمي (LOGIC_SPEC §2.1)
             if (u.isVerifiedOfficial)
               _chip('✓ موثق رسمياً', Colors.green)
