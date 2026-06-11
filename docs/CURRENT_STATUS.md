@@ -20,6 +20,7 @@
 - تطبيق دفعة 40 دالة RPC على السيرفر وتحققنا من وجودها كاملةً بتاريخ 2026-06-11 (migration: `2026_06_11_real_test_stabilization_internal_rpcs.sql`).
 - الكود والسيرفر الآن متوافقان — كل المسارات الحرجة تعتمد RPCs.
 - المتبقي الوحيد غير المغلق هو `S-01` (تشديد نموذج المصادقة الكامل عند الانتقال من dev fallback إلى Auth إنتاجي حقيقي) — مؤجل بقرار.
+- إصلاح 6 مشاكل مكتشفة: updateOffer بلا ts_upd + bookAppointment بلا ownerId + broker لا يجلب بيانات الطالب + edit_offer_screen كامل + addedBy يعرض اسم الموظف + appointments_management تعرض المشرف.
 - تطبيق دفعة إدارة الطلبات (2026-06-11 Batch 3): `get_admin_requests_internal` + شاشة `/admin/requests` + إصلاح `add_request_screen` كاملاً.
 - إصلاح شاشة إضافة الطلب: تصنيف من Config + عملة + specs + خصوصية بيانات العميل.
 - **التطبيق جاهز للاختبار الحقيقي الشامل.**
