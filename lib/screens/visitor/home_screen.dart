@@ -1,98 +1,216 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/offer_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../widgets/offer_card.dart';
 import '../../core/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final _searchCtrl = TextEditingController();
+  int? _filterType; // null=الكل, 0=عقار, 1=سيارة
+  int? _filterTrx;  // null=الكل, 0=بيع, 1=إيجار
+  bool _isSearching = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // FIX 6: استدعاء fetchOffers عند أول تحميل للزائر
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final offerProv = context.read<OfferProvider>();
+      if (offerProv.offers.isEmpty) {
+        offerProv.fetchOffers();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _doSearch() async {
+    final query = _searchCtrl.text.trim();
+    if (query.isEmpty && _filterType == null && _filterTrx == null) {
+      // بدون فلاتر → اعرض الكل
+      await context.read<OfferProvider>().fetchOffers();
+      if (mounted) setState(() => _isSearching = false);
+      return;
+    }
+    setState(() => _isSearching = true);
+    await context.read<OfferProvider>().searchOffers(
+          query: query.isEmpty ? null : query,
+          type: _filterType,
+          transaction: _filterTrx,
+        );
+    if (mounted) setState(() {});
+  }
+
+  void _clearSearch() {
+    _searchCtrl.clear();
+    setState(() {
+      _filterType = null;
+      _filterTrx  = null;
+      _isSearching = false;
+    });
+    context.read<OfferProvider>().fetchOffers();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final offerProvider = Provider.of<OfferProvider>(context);
+    final offerProvider = context.watch<OfferProvider>();
+    final auth = context.watch<AuthProvider>();
+
     return Scaffold(
+      backgroundColor: AppTheme.deepBlack,
       appBar: AppBar(
-        title: const Text('المكتب العقاري الالكتروني'),
+        backgroundColor: AppTheme.deepBlack,
+        elevation: 0,
+        title: const Text('المكتب العقاري الالكتروني',
+            style: TextStyle(color: AppTheme.primaryGold, fontSize: 16)),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_none),
+            icon: const Icon(Icons.notifications_none, color: AppTheme.textGrey),
             onPressed: () {
-              // الزائر بحاجة تسجيل دخول لرؤية الإشعارات
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
+              if (!auth.isLoggedIn) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: const Text('سجّل دخولك لرؤية الإشعارات'),
                   action: SnackBarAction(
-                    label: 'دخول',
-                    onPressed: () => context.push('/login'),
-                  ),
-                ),
-              );
+                      label: 'دخول',
+                      onPressed: () => context.push('/login')),
+                ));
+              } else {
+                context.push('/user/notifications');
+              }
             },
           ),
-          IconButton(icon: const Icon(Icons.person_outline), onPressed: () => context.push('/login')),
+          IconButton(
+            icon: const Icon(Icons.person_outline, color: AppTheme.textGrey),
+            onPressed: () => context.push('/login'),
+          ),
         ],
       ),
-      body: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                TextField(
-                  decoration: InputDecoration(
-                    hintText: 'ابحث عن عقار أو سيارة...',
-                    prefixIcon: const Icon(Icons.search, color: AppTheme.primaryGold),
-                    suffixIcon: IconButton(icon: const Icon(Icons.tune, color: AppTheme.primaryGold), onPressed: () => context.push('/search')),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(children: [
-                    _buildChip('الكل', true), _buildChip('شقق', false),
-                    _buildChip('فلل', false), _buildChip('أراضي', false), _buildChip('سيارات', false),
-                  ]),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: offerProvider.offers.isEmpty
-                ? const Center(child: Text('لا توجد عروض متاحة حالياً', style: TextStyle(color: AppTheme.textGrey, fontSize: 16)))
-                // 📄 Infinite scroll — يطلب صفحة جديدة عند الاقتراب من النهاية
-                : NotificationListener<ScrollNotification>(
-                    onNotification: (sn) {
-                      if (sn.metrics.pixels >=
-                              sn.metrics.maxScrollExtent - 200 &&
-                          offerProvider.hasMore &&
-                          !offerProvider.loadingMore) {
-                        offerProvider.loadMoreOffers();
-                      }
-                      return false;
-                    },
-                    child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      itemCount: offerProvider.offers.length +
-                          (offerProvider.hasMore ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (index >= offerProvider.offers.length) {
-                          return const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 20),
-                            child: Center(
-                              child: CircularProgressIndicator(
-                                  color: AppTheme.primaryGold),
-                            ),
-                          );
-                        }
-                        return OfferCard(
-                            offer: offerProvider.offers[index]);
-                      },
+      body: Column(children: [
+        // ── شريط البحث ──
+        Padding(
+          padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
+          child: TextField(
+            controller: _searchCtrl,
+            style: const TextStyle(color: AppTheme.textWhite),
+            textInputAction: TextInputAction.search,
+            onSubmitted: (_) => _doSearch(),
+            decoration: InputDecoration(
+              hintText: 'ابحث عن عقار أو سيارة...',
+              hintStyle: const TextStyle(color: AppTheme.textGrey),
+              prefixIcon: const Icon(Icons.search, color: AppTheme.primaryGold),
+              suffixIcon: _searchCtrl.text.isNotEmpty || _isSearching
+                  ? IconButton(
+                      icon: const Icon(Icons.close, color: AppTheme.textGrey),
+                      onPressed: _clearSearch,
+                    )
+                  : IconButton(
+                      icon: const Icon(Icons.tune, color: AppTheme.primaryGold),
+                      onPressed: () => context.push('/search'),
                     ),
-                  ),
+              filled: true,
+              fillColor: AppTheme.surfaceBlack,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+            ),
+            onChanged: (_) => setState(() {}),
           ),
-        ],
-      ),
+        ),
+
+        // ── الشرائح (FIX 4: تعمل وتفلتر) ──
+        SizedBox(
+          height: 48,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 6),
+            children: [
+              _chip('الكل',    _filterType == null && _filterTrx == null,
+                  () { setState(() { _filterType = null; _filterTrx = null; }); _doSearch(); }),
+              const SizedBox(width: 8),
+              _chip('🏠 عقار', _filterType == 0,
+                  () { setState(() => _filterType = _filterType == 0 ? null : 0); _doSearch(); }),
+              const SizedBox(width: 8),
+              _chip('🚗 سيارة', _filterType == 1,
+                  () { setState(() => _filterType = _filterType == 1 ? null : 1); _doSearch(); }),
+              const SizedBox(width: 8),
+              _chip('بيع',    _filterTrx == 0,
+                  () { setState(() => _filterTrx = _filterTrx == 0 ? null : 0); _doSearch(); }),
+              const SizedBox(width: 8),
+              _chip('إيجار',  _filterTrx == 1,
+                  () { setState(() => _filterTrx = _filterTrx == 1 ? null : 1); _doSearch(); }),
+            ],
+          ),
+        ),
+
+        // ── القائمة ──
+        Expanded(
+          child: offerProvider.isLoading && offerProvider.offers.isEmpty
+              ? const Center(
+                  child: CircularProgressIndicator(color: AppTheme.primaryGold))
+              : offerProvider.offers.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.home_work_outlined,
+                              size: 80,
+                              color: AppTheme.textGrey.withValues(alpha: 0.3)),
+                          const SizedBox(height: 16),
+                          const Text('لا توجد عروض متاحة حالياً',
+                              style: TextStyle(
+                                  color: AppTheme.textGrey, fontSize: 16)),
+                        ],
+                      ),
+                    )
+                  : RefreshIndicator(
+                      color: AppTheme.primaryGold,
+                      onRefresh: () => context.read<OfferProvider>().fetchOffers(),
+                      child: NotificationListener<ScrollNotification>(
+                        onNotification: (sn) {
+                          if (sn.metrics.pixels >=
+                                  sn.metrics.maxScrollExtent - 200 &&
+                              offerProvider.hasMore &&
+                              !offerProvider.loadingMore) {
+                            offerProvider.loadMoreOffers();
+                          }
+                          return false;
+                        },
+                        child: ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 15),
+                          itemCount: offerProvider.offers.length +
+                              (offerProvider.hasMore ? 1 : 0),
+                          itemBuilder: (context, index) {
+                            if (index >= offerProvider.offers.length) {
+                              return const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 20),
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                      color: AppTheme.primaryGold),
+                                ),
+                              );
+                            }
+                            return OfferCard(offer: offerProvider.offers[index]);
+                          },
+                        ),
+                      ),
+                    ),
+        ),
+      ]),
+
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: AppTheme.deepBlack,
         selectedItemColor: AppTheme.primaryGold,
@@ -106,33 +224,29 @@ class HomeScreen extends StatelessWidget {
         ],
         onTap: (index) {
           if (index == 1) context.push('/search');
+          if (index == 2) context.push('/user/favorites');
           if (index == 3) context.push('/login');
         },
       ),
     );
   }
 
-  Widget _buildChip(String label, bool isSelected) {
-    return Container(
-      margin: const EdgeInsets.only(left: 8),
-      child: Chip(
-        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        visualDensity: VisualDensity.compact,
-        labelPadding: const EdgeInsets.symmetric(horizontal: 7),
-        label: Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        backgroundColor: isSelected ? AppTheme.primaryGold : AppTheme.surfaceBlack,
-        labelStyle: TextStyle(
-          color: isSelected ? AppTheme.deepBlack : AppTheme.textWhite,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-          fontSize: 12,
-        ),
-        side: const BorderSide(color: AppTheme.primaryGold),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      ),
+  Widget _chip(String label, bool selected, VoidCallback onTap) {
+    return FilterChip(
+      label: Text(label,
+          style: TextStyle(
+            color: selected ? AppTheme.deepBlack : AppTheme.textWhite,
+            fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+            fontSize: 12,
+          )),
+      selected: selected,
+      selectedColor: AppTheme.primaryGold,
+      backgroundColor: AppTheme.surfaceBlack,
+      checkmarkColor: AppTheme.deepBlack,
+      side: BorderSide(color: AppTheme.primaryGold.withValues(alpha: 0.5)),
+      onSelected: (_) => onTap(),
+      visualDensity: VisualDensity.compact,
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
     );
   }
 }

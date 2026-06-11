@@ -504,6 +504,8 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                     ),
                   if (isOwner) const SizedBox(height: 14),
 
+                  // زر الحجز — مخفي عن المالك (السيرفر يمنعه أيضاً)
+                  if (!isOwner)
                   SizedBox(
                     width: double.infinity,
                     height: 55,
