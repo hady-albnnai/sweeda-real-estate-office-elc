@@ -163,6 +163,18 @@
 - تم تجهيز دفعة تثبيت جديدة قبل الاختبار الحقيقي:
   - migration: `supabase/migrations/2026_06_11_real_test_stabilization_internal_rpcs.sql`
   - وتشمل تحويل مسارات حساسة كثيرة إلى RPCs (العروض، الطلبات، المدفوعات، التبليغات، المواعيد، الإشعارات، التقييمات، بعض تحديثات المستخدم).
+### 2026-06-12 — مراجعة نظام الباقات (عين غريبة)
+
+**3 مشاكل اكتُشفت وأُصلحت:**
+1. `packages_screen._btnAction`: `amt` لا يزال في URL رغم أن `PaymentScreen` لا تستخدمه → حُذف
+2. `packages_screen._currentBadge`: زر "جدّد" يعيد لنفس الصفحة → يذهب لصفحة الدفع مباشرة
+3. `packages_screen._packageCard`: `dynamic config` → `ConfigModel?` (type safety)
+4. `profile_screen`: يعرض `bPkg` بدل الحالة الفعلية → يعرض grace period وحالة الانتهاء الصحيحة
+
+**ملاحظة مؤجلة:** مدة السماح (3 أيام) hardcoded في `approve_payment_final` — يمكن نقلها لـ Config لاحقاً عبر migration جديدة.
+
+---
+
 ### 2026-06-12 — إكمال نظام الباقات
 
 - `check_user_safe_update` trigger: إضافة حماية `pkg_grace` — المستخدم لا يستطيع تعديلها مباشرة
