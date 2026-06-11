@@ -117,7 +117,6 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
     final success = await provider.bookAppointment(
       userId: userId,
       offerId: widget.offer.id,
-      ownerId: widget.offer.usrId,
       selectedDayKey: _selectedDayKey!,
       selectedTime:
           '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}',

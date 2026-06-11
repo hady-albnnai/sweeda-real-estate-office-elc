@@ -13,15 +13,13 @@ class AppointmentProvider with ChangeNotifier {
   Future<bool> bookAppointment({
     required String userId,
     required String offerId,
-    required String ownerId,
     required String selectedDayKey,
     required String selectedTime,
     String? brokerId,
     String? requestId,
   }) async {
     try {
-      if (userId.isEmpty || offerId.isEmpty || ownerId.isEmpty) return false;
-      if (userId == ownerId) return false;
+      if (userId.isEmpty || offerId.isEmpty) return false;
 
       final dateTime = _resolveNextAppointmentDate(
         selectedDayKey,

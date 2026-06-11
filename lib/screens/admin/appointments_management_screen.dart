@@ -194,6 +194,22 @@ class _AppointmentsManagementScreenState
           const SizedBox(height: 8),
           Text('العرض: ${_short(a.offId)}',
               style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+          if (a.supervisorUid != null && a.supervisorUid!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 3),
+              child: Row(children: [
+                const Icon(Icons.support_agent, color: AppTheme.primaryGold, size: 12),
+                const SizedBox(width: 4),
+                Text('المشرف: ${_short(a.supervisorUid!)}',
+                    style: const TextStyle(color: AppTheme.primaryGold, fontSize: 11)),
+              ]),
+            ),
+          if (a.neogRounds > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 3),
+              child: Text('جولات التفاوض: ${a.neogRounds}/5',
+                  style: const TextStyle(color: Colors.orange, fontSize: 11)),
+            ),
           if (a.cnlRsn != null && a.cnlRsn!.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 4),

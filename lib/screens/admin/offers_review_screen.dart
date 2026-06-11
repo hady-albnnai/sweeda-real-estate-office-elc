@@ -38,8 +38,12 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
     final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
     final offers = await admin.getPendingOffers(adminUid);
 
-    // اجلب بيانات المرسلين دفعة واحدة
-    final uids = offers.map((o) => o.usrId).toSet().toList();
+    // اجلب بيانات المرسلين + مضيفي الإدارة دفعة واحدة
+    final uids = {
+      ...offers.map((o) => o.usrId),
+      ...offers.where((o) => o.addedBy != null).map((o) => o.addedBy!),
+    }.where((id) => id.isNotEmpty).toList();
+
     if (uids.isNotEmpty) {
       try {
         final usersData = await SupabaseService()
@@ -388,13 +392,11 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                 if (o.addedBy != null && o.addedBy!.isNotEmpty) ...[
                   const SizedBox(height: 6),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
                       color: Colors.amber.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                          color: Colors.amber.withValues(alpha: 0.3)),
+                      border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
                     ),
                     child: Row(children: [
                       const Icon(Icons.admin_panel_settings,
@@ -402,9 +404,9 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          'أُضيف بواسطة موظف الإدارة — (ID: ${o.addedBy!.substring(0, 8)})',
-                          style: const TextStyle(
-                              color: Colors.amber, fontSize: 11),
+                          // نعرض اسم الموظف إذا توفر، وإلا ID مختصر
+                          'أُضيف بواسطة: ${_ownersCache[o.addedBy]?.nm.isNotEmpty == true ? _ownersCache[o.addedBy]!.nm : 'موظف (${o.addedBy!.substring(0, 8)})'}',
+                          style: const TextStyle(color: Colors.amber, fontSize: 11),
                         ),
                       ),
                     ]),

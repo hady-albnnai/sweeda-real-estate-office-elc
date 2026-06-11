@@ -6,7 +6,6 @@ import '../../providers/broker_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/appointment_model.dart';
 import '../../models/offer_model.dart';
-import '../../models/user_model.dart';
 import '../../core/network/supabase_service.dart';
 import '../../core/constants/db_constants.dart';
 import '../../core/theme/app_theme.dart';
@@ -28,7 +27,7 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
   bool _loading = true;
 
   final Map<String, OfferModel> _offers = {};
-  final Map<String, UserModel> _requesters = {};
+  // _requesters حُذف — القاعدة الذهبية: لا نجلب بيانات طالب الحجز أبداً
 
   // فلاتر: -1=الكل, 0=قيد الانتظار, 1=مؤكد, 2=مكتمل, 4=مرفوض, 3=ملغي, 5=لم يحضر
   static const _tabs = [
@@ -71,23 +70,6 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
           final m = Map<String, dynamic>.from(o as Map);
           _offers[m['id'] as String] =
               OfferModel.fromSupabase(m, m['id'] as String);
-        }
-      } catch (e) {}
-    }
-
-    final requesterIds =
-        list.map((a) => a.reqUid).where((e) => e.isNotEmpty).toSet();
-    if (requesterIds.isNotEmpty) {
-      try {
-        final requesterData = await SupabaseService()
-            .client
-            .from(DbTables.users)
-            .select()
-            .inFilter('id', requesterIds.toList());
-        for (final u in requesterData as List) {
-          final m = Map<String, dynamic>.from(u as Map);
-          _requesters[m['id'] as String] =
-              UserModel.fromSupabase(m, m['id'] as String);
         }
       } catch (e) {}
     }
@@ -268,7 +250,6 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
 
   Widget _card(AppointmentModel a) {
     final offer = _offers[a.offId];
-    final requester = _requesters[a.reqUid];
     final status = _statusInfo(a.sts);
     final isPending = a.sts == 0;
     final isAccepted = a.sts == 1;
