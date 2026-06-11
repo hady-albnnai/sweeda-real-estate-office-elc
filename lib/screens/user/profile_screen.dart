@@ -271,9 +271,22 @@ class ProfileScreen extends StatelessWidget {
           _infoRow('🪪 صورة الهوية', user.img.isEmpty ? 'غير مرفوعة' : 'مرفوعة بشكل خاص'),
           _infoRow('📅 تاريخ التسجيل',
               user.tsCrt != null ? AppUtils.formatTimestamp(user.tsCrt) : 'غير معروف'),
-          _infoRow('🏷️ الباقة', _packageText(user.bPkg)),
-          if (user.pkgEnd != null)
-            _infoRow('⏰ انتهاء الباقة', AppUtils.formatTimestamp(user.pkgEnd!)),
+          _infoRow('🏷️ الباقة',
+              user.effectivePkg == 0
+                  ? (user.bPkg > 0 ? 'منتهية (${_packageText(user.bPkg)})' : 'مجانية')
+                  : user.isInGracePeriod
+                      ? '${_packageText(user.bPkg)} — سماح ${user.graceDaysLeft} يوم'
+                      : _packageText(user.bPkg)),
+          if (user.pkgEnd != null && user.bPkg > 0)
+            _infoRow(
+              user.isPkgActive ? '⏰ انتهاء الباقة' :
+              user.isInGracePeriod ? '⚠️ فترة السماح حتى' : '❌ انتهت',
+              user.isPkgActive
+                  ? AppUtils.formatTimestamp(user.pkgEnd!)
+                  : user.isInGracePeriod
+                      ? AppUtils.formatTimestamp(user.pkgGrace!)
+                      : AppUtils.formatTimestamp(user.pkgEnd!),
+            ),
           const SizedBox(height: 10),
           SizedBox(
             width: double.infinity,
