@@ -34,6 +34,7 @@
 | ✅ **مُطبّق على السيرفر** | `2026_06_11_drop_obsolete_unused_rpcs.sql` — حذف RPCs قديمة غير مستخدمة (`admin_update_user_permissions`, `verify_otp_safe`) |
 | ✅ **مُطبّق على السيرفر** | `2026_06_11_real_test_stabilization_internal_rpcs.sql` — 40 دالة RPC لتثبيت المسارات الحساسة قبل الاختبار الحقيقي (تم التحقق من وجودها كاملةً بتاريخ 2026-06-11) |
 | ✅ **مُطبّق على السيرفر** | تعديلات نظام المواعيد (2026-06-11 Batch 2): `appointments.supervisor_uid` + `appointments.neog` + `offers.added_by` + دالة `get_available_supervisor` + `owner_respond_appointment` + `requester_counter_appointment` + تحديث `book_appointment_internal` بـ 4 فحوصات + تحديث triggers الإشعارات |
+| ✅ **مُطبّق على السيرفر** | إدارة الطلبات (2026-06-11 Batch 3): `get_admin_requests_internal` — تتيح للإدارة قراءة كل الطلبات مع بيانات العميل (cl_nm + cl_ph) |
 
 ---
 
@@ -88,6 +89,8 @@
 | 74 | `get_available_supervisor` 🆕 | `p_dt TIMESTAMPTZ` | `UUID` | ✅ |
 | 75 | `owner_respond_appointment` 🆕 | `p_owner_uid, p_appointment_id, p_accept, p_reject_reason, p_reject_text, p_proposed_dt` | `BOOLEAN` | ✅ |
 | 76 | `requester_counter_appointment` 🆕 | `p_user_uid, p_appointment_id, p_accept, p_proposed_dt` | `BOOLEAN` | ✅ |
+| **— إدارة الطلبات (2026-06-11 Batch 3) —** | | | | |
+| 77 | `get_admin_requests_internal` 🆕 | `p_admin_uid UUID` | `TABLE(id, typ, elm, cl_nm, cl_ph, prc, cur, notes, specs, usr_id, sts, matches, i_del, ts_crt)` | ✅ |
 | 31 | `trg_deal_completed` 🆕🔔 | TRIGGER على `deals.sts` | `TRIGGER` | ✅ |
 | 32 | `trg_payment_approved` 🆕🔔 | TRIGGER على `payments.sts` | `TRIGGER` | ✅ |
 | 33 | `trg_offer_published_match_requests` 🆕🔔 | TRIGGER على `offers.i_pub` (1→0) | `TRIGGER` | ✅ |

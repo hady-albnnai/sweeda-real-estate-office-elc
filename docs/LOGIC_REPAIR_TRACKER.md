@@ -163,6 +163,26 @@
 - تم تجهيز دفعة تثبيت جديدة قبل الاختبار الحقيقي:
   - migration: `supabase/migrations/2026_06_11_real_test_stabilization_internal_rpcs.sql`
   - وتشمل تحويل مسارات حساسة كثيرة إلى RPCs (العروض، الطلبات، المدفوعات، التبليغات، المواعيد، الإشعارات، التقييمات، بعض تحديثات المستخدم).
+### 2026-06-11 (الجلسة الثالثة) — إصلاح شاشة الطلبات + إدارة الطلبات
+
+**السيرفر:**
+- `get_admin_requests_internal` — دالة جديدة تتيح للإدارة قراءة كل الطلبات مع `cl_nm` و`cl_ph`
+
+**الكود:**
+- `business_service`: `canPublishRequest` تستخدم `get_user_requests_internal` RPC بدل direct query + إعفاء role≥2
+- `add_request_screen`: إعادة كتابة كاملة — التصنيف من Config + dropdown عملة + حقل specs + توضيح خصوصية العميل
+- `my_requests_screen`: إخفاء `clNm` من بطاقة القائمة — يظهر فقط في التفاصيل وللإدارة
+- `admin_provider`: إضافة `getAllRequests()`
+- `requests_management_screen`: شاشة إدارية جديدة تعرض بيانات العميل مع بحث وفلتر
+- `app_router`: مسار `/admin/requests`
+- `permission_service`: صلاحية `manageRequests` جديدة
+- `admin_dashboard`: بطاقة "الطلبات" في لوحة الإدارة
+- `db_constants`: ثابت `getAdminRequestsInternal`
+
+**ملاحظة:** القاعدة الذهبية للخصوصية — `cl_nm` و`cl_ph` تظهر فقط لصاحب الطلب في تفاصيله وللإدارة في شاشتها المخصصة.
+
+---
+
 ### 2026-06-11 (الجلسة الثانية) — نظام المواعيد الجديد
 
 **السيرفر:**
