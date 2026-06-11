@@ -14,101 +14,317 @@ class BookAppointmentSheet extends StatefulWidget {
 }
 
 class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
+  String? _selectedDayKey;
+  String? _selectedSlot; // "HH:MM-HH:MM"
+  TimeOfDay? _selectedTime; // الوقت المختار داخل الفترة
+
+  String _dayName(String d) => {
+        'mon': 'الاثنين',
+        'tue': 'الثلاثاء',
+        'wed': 'الأربعاء',
+        'thu': 'الخميس',
+        'fri': 'الجمعة',
+        'sat': 'السبت',
+        'sun': 'الأحد',
+      }[d] ??
+      d;
+
+  /// يحوّل "HH:MM" إلى TimeOfDay
+  TimeOfDay? _parseTime(String raw) {
+    final parts = raw.trim().split(':');
+    if (parts.length != 2) return null;
+    final h = int.tryParse(parts[0]);
+    final m = int.tryParse(parts[1]);
+    if (h == null || m == null) return null;
+    return TimeOfDay(hour: h, minute: m);
+  }
+
+  /// يحسب تاريخ الموعد القادم لليوم المختار
+  DateTime? _resolveDate(String dayKey, TimeOfDay time) {
+    const keys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+    final targetWeekday = keys.indexOf(dayKey) + 1; // 1=Mon..7=Sun
+    if (targetWeekday == 0) return null;
+
+    final now = DateTime.now();
+    var daysAhead = (targetWeekday - now.weekday) % 7;
+    if (daysAhead == 0 &&
+        (time.hour < now.hour ||
+            (time.hour == now.hour && time.minute <= now.minute))) {
+      daysAhead = 7;
+    }
+    if (daysAhead < 0) daysAhead += 7;
+
+    return DateTime(
+      now.year, now.month, now.day + daysAhead,
+      time.hour, time.minute,
+    );
+  }
+
+  Future<void> _pickTime(String slotStr) async {
+    final parts = slotStr.split('-');
+    if (parts.length != 2) return;
+    final fromT = _parseTime(parts[0]);
+    final toT   = _parseTime(parts[1]);
+    if (fromT == null || toT == null) return;
+
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: fromT,
+      helpText: 'اختر الوقت المناسب',
+      builder: (context, child) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: child!,
+      ),
+    );
+    if (picked == null) return;
+
+    // تحقق أن الوقت ضمن الفترة
+    final pickedMins = picked.hour * 60 + picked.minute;
+    final fromMins   = fromT.hour * 60 + fromT.minute;
+    final toMins     = toT.hour * 60 + toT.minute;
+
+    if (pickedMins < fromMins || pickedMins >= toMins) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'الرجاء اختيار وقت بين ${parts[0]} و${parts[1]}',
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
+    setState(() => _selectedTime = picked);
+  }
+
+  Future<void> _confirm() async {
+    if (_selectedDayKey == null || _selectedSlot == null || _selectedTime == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('يرجى اختيار اليوم والفترة والوقت')),
+      );
+      return;
+    }
+
+    final dt = _resolveDate(_selectedDayKey!, _selectedTime!);
+    if (dt == null) return;
+
+    final auth = context.read<AuthProvider>();
+    final provider = context.read<AppointmentProvider>();
+    final userId = auth.userModel?.uid ?? '';
+
+    final success = await provider.bookAppointment(
+      userId: userId,
+      offerId: widget.offer.id,
+      ownerId: widget.offer.usrId,
+      selectedDayKey: _selectedDayKey!,
+      selectedTime:
+          '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
+      brokerId: widget.offer.brkId.isNotEmpty ? widget.offer.brkId : null,
+    );
+
+    if (!mounted) return;
+    if (success) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '✅ تم إرسال طلب الموعد ليوم ${_dayName(_selectedDayKey!)} — '
+            'سيتم التأكيد عبر المكتب',
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'تعذّر حجز الموعد. قد يكون الوقت محجوزاً أو لا يوجد مشرف متاح في هذا الوقت.',
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final apptProvider = Provider.of<AppointmentProvider>(context, listen: false);
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final avl = widget.offer.avl;
+
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(color: AppTheme.deepBlack, borderRadius: BorderRadius.vertical(top: Radius.circular(30))),
+      decoration: const BoxDecoration(
+        color: AppTheme.deepBlack,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      ),
       child: Column(
-        mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Center(child: Container(width: 50, height: 5, decoration: BoxDecoration(color: AppTheme.primaryGold, borderRadius: BorderRadius.circular(10)))),
+          Center(
+            child: Container(
+              width: 50, height: 5,
+              decoration: BoxDecoration(
+                color: AppTheme.primaryGold,
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
           const SizedBox(height: 20),
-          const Text('حجز موعد معاينة', style: TextStyle(color: AppTheme.textWhite, fontSize: 20, fontWeight: FontWeight.bold)),
+          const Text('حجز موعد معاينة',
+              style: TextStyle(
+                  color: AppTheme.textWhite,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-          // 🏢 توضيح أن الحجز يمر عبر المكتب (LOGIC_SPEC §1)
+          // توضيح المكتب
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
               color: AppTheme.primaryGold.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                  color: AppTheme.primaryGold.withValues(alpha: 0.4)),
+              border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.4)),
             ),
             child: const Row(children: [
-              Icon(Icons.business_center,
-                  color: AppTheme.primaryGold, size: 18),
+              Icon(Icons.business_center, color: AppTheme.primaryGold, size: 18),
               SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'الحجز يتم عبر إدارة المكتب لضمان جدية الطرفين وحماية خصوصية المالك.',
                   style: TextStyle(
-                      color: AppTheme.primaryGold,
-                      fontSize: 12,
-                      height: 1.4),
+                      color: AppTheme.primaryGold, fontSize: 12, height: 1.4),
                 ),
               ),
             ]),
           ),
-          const SizedBox(height: 12),
-          const Text('اختر يوماً ووقتاً مناسباً من المواعيد المتاحة', style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
+          const SizedBox(height: 16),
+
+          if (avl.isEmpty)
+            const Center(
+              child: Text('لا توجد مواعيد متاحة حالياً للمعاينة.',
+                  style: TextStyle(color: AppTheme.textGrey)),
+            )
+          else ...[
+            const Text('1. اختر اليوم:',
+                style: TextStyle(
+                    color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: avl.keys.map((key) {
+                final selected = _selectedDayKey == key;
+                return GestureDetector(
+                  onTap: () => setState(() {
+                    _selectedDayKey = key;
+                    _selectedSlot   = null;
+                    _selectedTime   = null;
+                  }),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? AppTheme.primaryGold
+                          : AppTheme.surfaceBlack,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppTheme.primaryGold),
+                    ),
+                    child: Text(
+                      _dayName(key),
+                      style: TextStyle(
+                        color: selected ? AppTheme.deepBlack : AppTheme.primaryGold,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 16),
+
+            if (_selectedDayKey != null) ...[
+              const Text('2. اختر الفترة:',
+                  style: TextStyle(
+                      color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: (avl[_selectedDayKey!] ?? []).map((slot) {
+                  final selected = _selectedSlot == slot;
+                  return GestureDetector(
+                    onTap: () => setState(() {
+                      _selectedSlot = slot;
+                      _selectedTime = null;
+                    }),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: selected
+                            ? AppTheme.primaryGold.withValues(alpha: 0.2)
+                            : AppTheme.surfaceBlack,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: selected
+                              ? AppTheme.primaryGold
+                              : AppTheme.textGrey.withValues(alpha: 0.4),
+                        ),
+                      ),
+                      child: Text(
+                        slot.replaceAll('-', ' — '),
+                        style: TextStyle(
+                          color: selected ? AppTheme.primaryGold : AppTheme.textGrey,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            if (_selectedSlot != null) ...[
+              const Text('3. اختر الوقت المحدد:',
+                  style: TextStyle(
+                      color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 10),
+              Row(children: [
+                ElevatedButton.icon(
+                  onPressed: () => _pickTime(_selectedSlot!),
+                  icon: const Icon(Icons.access_time),
+                  label: Text(
+                    _selectedTime == null
+                        ? 'اختر الوقت'
+                        : '${_selectedTime!.hour.toString().padLeft(2, '0')}:'
+                            '${_selectedTime!.minute.toString().padLeft(2, '0')}',
+                  ),
+                ),
+                if (_selectedTime != null) ...[
+                  const SizedBox(width: 10),
+                  const Icon(Icons.check_circle, color: Colors.green, size: 20),
+                ],
+              ]),
+              const SizedBox(height: 6),
+              Text(
+                'ضمن الفترة: ${_selectedSlot!.replaceAll('-', ' إلى ')}',
+                style: const TextStyle(color: AppTheme.textGrey, fontSize: 12),
+              ),
+              const SizedBox(height: 20),
+            ],
+
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: _selectedTime != null ? _confirm : null,
+                child: const Text('تأكيد طلب الموعد',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
           const SizedBox(height: 20),
-          widget.offer.avl.isEmpty
-              ? const Center(child: Text('لا توجد مواعيد متاحة حالياً', style: TextStyle(color: AppTheme.textGrey)))
-              : _buildGrid(context, apptProvider, authProvider),
-          const SizedBox(height: 30),
         ],
       ),
     );
   }
-
-  Widget _buildGrid(BuildContext context, AppointmentProvider provider, AuthProvider auth) {
-    return ListView(shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
-      children: widget.offer.avl.entries.map((entry) {
-        return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(_dayName(entry.key), style: const TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 16)),
-          const SizedBox(height: 10),
-          Wrap(spacing: 10,
-            children: entry.value.map((time) => ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.surfaceBlack, foregroundColor: AppTheme.primaryGold, side: const BorderSide(color: AppTheme.primaryGold)),
-              onPressed: () async {
-                final userId = auth.userModel?.uid ?? '';
-                final success = await provider.bookAppointment(
-                  userId: userId,
-                  offerId: widget.offer.id,
-                  ownerId: widget.offer.usrId,
-                  selectedDayKey: entry.key,
-                  selectedTime: time,
-                  brokerId: widget.offer.brkId,
-                );
-                if (!mounted) return;
-                if (success) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        '✅ تم إرسال طلب الموعد ليوم ${_dayName(entry.key)} عند $time، وسيتم التأكيد عبر المكتب',
-                      ),
-                    ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('تعذّر حجز الموعد. قد يكون الموعد محجوزاً أو غير صالح.'),
-                    ),
-                  );
-                }
-              },
-              child: Text(time),
-            )).toList(),
-          ),
-          const SizedBox(height: 20),
-        ]);
-      }).toList(),
-    );
-  }
-
-  String _dayName(String d) => {'mon':'الاثنين','tue':'الثلاثاء','wed':'الأربعاء','thu':'الخميس','fri':'الجمعة','sat':'السبت','sun':'الأحد'}[d] ?? d;
 }
