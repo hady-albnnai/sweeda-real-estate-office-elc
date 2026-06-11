@@ -19,12 +19,11 @@ import '../../core/network/supabase_service.dart';
 /// كل قناة تعرض بياناتها + تعليماتها ديناميكياً.
 class PaymentScreen extends StatefulWidget {
   final int packageId;
-  final double amount;
+  // السعر يُجلب من Config مباشرة — لا يُمرَّر من URL لمنع التلاعب
 
   const PaymentScreen({
     super.key,
     required this.packageId,
-    required this.amount,
   });
 
   @override
@@ -45,6 +44,24 @@ class _PaymentScreenState extends State<PaymentScreen> {
   void dispose() {
     _refCtrl.dispose();
     super.dispose();
+  }
+
+  /// السعر الرسمي للباقة من Config — لا يمكن للمستخدم تعديله
+  double _priceFromConfig(dynamic config) {
+    if (config == null) return 0;
+    try {
+      final pkgMap = config.packages;
+      final pkg = pkgMap['${widget.packageId}'];
+      if (pkg is Map && pkg['pr'] is num) {
+        return (pkg['pr'] as num).toDouble();
+      }
+    } catch (_) {}
+    // قيم افتراضية آمنة
+    switch (widget.packageId) {
+      case 1: return 10;
+      case 2: return 25;
+      default: return 0;
+    }
   }
 
   String get _packageName {
@@ -137,7 +154,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       uid: user.uid,
       tp: 0, // 0 = اشتراك باقة
       pkg: widget.packageId,
-      amt: _currency == 0 ? widget.amount : (widget.amount * usdToSypRate),
+      amt: _currency == 0 ? _priceFromConfig(config) : (_priceFromConfig(config) * usdToSypRate),
       cur: _currency,
       mtd: 0, // legacy
       channel: _channel,
@@ -338,11 +355,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   String _getDisplayAmount() {
     if (_currency == 0) {
-      return '\$${widget.amount.toStringAsFixed(0)}';
+      final config = context.read<ConfigProvider>().config;
+      return '\$${_priceFromConfig(config).toStringAsFixed(0)}';
     } else {
       final config = context.read<ConfigProvider>().config;
-      final rate = (config?.usdToSypRate ?? 15000).toDouble();
-      return '${(widget.amount * rate).toStringAsFixed(0)} ل.س';
+      final rate2 = (config?.usdToSypRate ?? 15000).toDouble();
+      return '${(_priceFromConfig(config) * rate2).toStringAsFixed(0)} ل.س';
     }
   }
 

@@ -108,7 +108,8 @@ class BusinessService {
     required String uid,
     required int role,
     required int packageType,
-    DateTime? pkgEnd, // تاريخ انتهاء الباقة — لفحص إذا انتهت
+    DateTime? pkgEnd,   // تاريخ انتهاء الباقة
+    DateTime? pkgGrace, // تاريخ انتهاء فترة السماح
     ConfigModel? config,
   }) async {
     try {
@@ -147,9 +148,10 @@ class BusinessService {
 
       final used = active.length + recentlyDeleted.length;
 
-      // FIX: نمرر pkgEnd لـ offerQuota لفحص انتهاء الباقة
+      // نمرر pkgEnd + pkgGrace لـ offerQuota لفحص الباقة الفعلية
       final limit = offerQuota(config,
-          role: role, packageType: packageType, pkgEnd: pkgEnd);
+          role: role, packageType: packageType,
+          pkgEnd: pkgEnd, pkgGrace: pkgGrace);
 
       final allowed = used < limit;
       return {
@@ -174,14 +176,24 @@ class BusinessService {
   /// حساب حصة العروض مع فحص انتهاء الباقة
   /// إذا انتهت pkg_end → نعتبر المستخدم على الباقة المجانية (0)
   int offerQuota(ConfigModel? config,
-      {required int role, required int packageType, DateTime? pkgEnd}) {
+      {required int role, required int packageType,
+       DateTime? pkgEnd, DateTime? pkgGrace}) {
     if (role >= 2) return 999999;
 
-    // FIX: فحص انتهاء الباقة — إذا انتهت نعامله كباقة مجانية
-    final effectivePkg = (packageType > 0 &&
-            (pkgEnd == null || pkgEnd.isAfter(DateTime.now())))
-        ? packageType
-        : 0;
+    // حساب الباقة الفعلية مع مراعاة فترة السماح (pkg_grace)
+    final now = DateTime.now();
+    int effectivePkg;
+    if (packageType <= 0) {
+      effectivePkg = 0;
+    } else if (pkgGrace != null && pkgGrace.isAfter(now)) {
+      // ضمن فترة السماح → نفس مزايا الباقة
+      effectivePkg = packageType;
+    } else if (pkgGrace == null && pkgEnd != null && pkgEnd.isAfter(now)) {
+      // سجل قديم بدون grace → نعتمد على pkg_end
+      effectivePkg = packageType;
+    } else {
+      effectivePkg = 0;
+    }
 
     if (config != null) {
       // 1) حد الباقة الفعلية (pkg.{effectivePkg}.o) — له الأولوية

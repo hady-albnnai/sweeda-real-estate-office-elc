@@ -289,6 +289,20 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => context.push('/user/my-payments'),
+              icon: const Icon(Icons.receipt_long, color: AppTheme.primaryGold),
+              label: const Text('سجل دفعاتي',
+                  style: TextStyle(color: AppTheme.primaryGold)),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(
+                    color: AppTheme.primaryGold),
+              ),
+            ),
+          ),
         ],
       ),
     );

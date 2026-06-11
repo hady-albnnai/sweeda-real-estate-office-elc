@@ -261,8 +261,9 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       uid: user.uid,
       role: user.role,
       packageType: user.bPkg,
-      pkgEnd: user.pkgEnd,
-      config: configProv.config,
+      pkgEnd:   user.pkgEnd,
+      pkgGrace: user.pkgGrace,
+      config:   configProv.config,
     );
     if (quota['allowed'] != true) {
       setState(() => _submitting = false);
@@ -436,7 +437,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     final isInternalAccount = (user?.role ?? 0) >= 2;
     final limit = _biz.offerQuota(config,
         role: user?.role ?? 0, packageType: user?.bPkg ?? 0,
-        pkgEnd: user?.pkgEnd);
+        pkgEnd: user?.pkgEnd, pkgGrace: user?.pkgGrace);
 
     return Scaffold(
       appBar: AppBar(
@@ -454,7 +455,20 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
                 child: Text(
                   isInternalAccount
                       ? 'حساب إداري — إضافة العروض غير محدودة'
-                      : 'حصّتك: حتى $limit عرض فعّال ${user?.bPkg != null && user!.bPkg > 0 ? (user!.pkgEnd != null && user.pkgEnd!.isBefore(DateTime.now()) ? '(باقة منتهية)' : '(باقة مدفوعة)') : '(باقة مجانية)'}',
+                      : () {
+                          final u = user;
+                          String pkgLabel;
+                          if (u == null || u.bPkg == 0) {
+                            pkgLabel = '(باقة مجانية)';
+                          } else if (u.isPkgActive) {
+                            pkgLabel = '(باقة مدفوعة)';
+                          } else if (u.isInGracePeriod) {
+                            pkgLabel = '(فترة السماح — ${u.graceDaysLeft} يوم متبقي)';
+                          } else {
+                            pkgLabel = '(باقة منتهية)';
+                          }
+                          return 'حصّتك: حتى $limit عرض فعّال $pkgLabel';
+                        }(),
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: AppTheme.textGrey, fontSize: 12),
                 ),

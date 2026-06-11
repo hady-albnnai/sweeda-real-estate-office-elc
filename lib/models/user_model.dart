@@ -14,6 +14,7 @@ class UserModel {
   final DateTime? bgTs;
   final int bPkg;
   final DateTime? pkgEnd;
+  final DateTime? pkgGrace; // نهاية فترة السماح (pkg_end + 3 أيام)
   final int brk;
   final int brkCls;
   final String brkNm;
@@ -46,6 +47,7 @@ class UserModel {
     this.bgTs,
     this.bPkg = 0,
     this.pkgEnd,
+    this.pkgGrace,
     this.brk = 0,
     this.brkCls = 0,
     this.brkNm = '',
@@ -92,7 +94,8 @@ class UserModel {
       bg: data['bg'] ?? 0,
       bgTs: data['bg_ts'] != null ? DateTime.parse(data['bg_ts']) : null,
       bPkg: data['b_pkg'] ?? 0,
-      pkgEnd: data['pkg_end'] != null ? DateTime.parse(data['pkg_end']) : null,
+      pkgEnd:   data['pkg_end']   != null ? DateTime.parse(data['pkg_end'])   : null,
+      pkgGrace: data['pkg_grace'] != null ? DateTime.parse(data['pkg_grace']) : null,
       brk: data['brk'] ?? 0,
       brkCls: data['brk_cls'] ?? 0,
       brkNm: data['brk_nm'] ?? '',
@@ -120,7 +123,9 @@ class UserModel {
       'nm': nm, 'ph': ph, 'ad': ad, 'role': role, 'sid': sid,
       'img': img, 'pt': pt, 'bg': bg,
       'bg_ts': bgTs?.toIso8601String(), 'b_pkg': bPkg,
-      'pkg_end': pkgEnd?.toIso8601String(), 'brk': brk,
+      'pkg_end':   pkgEnd?.toIso8601String(),
+      'pkg_grace': pkgGrace?.toIso8601String(),
+      'brk': brk,
       'brk_cls': brkCls, 'brk_nm': brkNm, 'sts': sts,
       'ban_rsn': banRsn, 'ntf': ntf, 'stats': stats,
       'wk_lgn': wkLgn, 'strk': strk,
@@ -138,6 +143,37 @@ class UserModel {
   bool get isBroker => brk == 1;
   bool get isDeleted => iDel == 1;
   bool get isAdmin => role >= 2;
+
+  /// الباقة الفعلية مع مراعاة فترة السماح
+  /// — إذا كانت ضمن pkg_grace تُعامَل كباقة نشطة
+  int get effectivePkg {
+    if (bPkg == 0) return 0;
+    final now = DateTime.now();
+    // نشطة أو ضمن فترة السماح
+    if (pkgGrace != null && pkgGrace!.isAfter(now)) return bPkg;
+    // قديمة بدون grace: نعتمد على pkg_end
+    if (pkgGrace == null && pkgEnd != null && pkgEnd!.isAfter(now)) return bPkg;
+    return 0;
+  }
+
+  /// هل الباقة نشطة (لم تنته pkg_end)
+  bool get isPkgActive =>
+      bPkg > 0 && pkgEnd != null && pkgEnd!.isAfter(DateTime.now());
+
+  /// هل في فترة السماح (pkg_end انتهت لكن pkg_grace لم تنته)
+  bool get isInGracePeriod {
+    if (bPkg == 0 || pkgEnd == null) return false;
+    final now = DateTime.now();
+    if (pkgEnd!.isAfter(now)) return false; // لم تنته بعد
+    if (pkgGrace == null) return false;
+    return pkgGrace!.isAfter(now);
+  }
+
+  /// أيام السماح المتبقية (0 إذا لم يكن في grace)
+  int get graceDaysLeft {
+    if (!isInGracePeriod || pkgGrace == null) return 0;
+    return pkgGrace!.difference(DateTime.now()).inDays;
+  }
 
   String get roleName {
     switch (role) {
