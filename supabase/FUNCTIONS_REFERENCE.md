@@ -1093,3 +1093,22 @@ normalize_sy_phone(ph)
 - يختار مشرف (role=2) ليس لديه موعد مؤكد (sts=1) في نفس الوقت
 - الأولوية: الأقل مواعيداً → الأقدم تسجيلاً (ts_crt)
 - إذا لا يوجد مشرف متاح → `NO_SUPERVISOR_AVAILABLE`
+
+---
+
+## 🆕 إضافة 2026-06-12 — نظام الباقات
+
+### دالة جديدة: `expire_packages()`
+
+```sql
+expire_packages() RETURNS INTEGER
+```
+
+- تُعيد `b_pkg = 0` لكل مستخدم انتهت باقته (`pkg_end < NOW()`)
+- مجدولة يومياً: `10 3 * * *` (3:10 UTC = 6:10 صباحاً بتوقيت دمشق)
+- تُرجع عدد المستخدمين الذين طُبّق عليهم التغيير
+
+### تصحيح `purchase_offer_boost`
+
+- `activity_log` كانت تستخدم `action(TEXT)` و`details(JSONB)` ← خطأ
+- الآن تستخدم `act=20` (INT) و`det=text` ← صحيح
