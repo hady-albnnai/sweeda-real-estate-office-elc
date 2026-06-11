@@ -45,6 +45,7 @@ import '../../screens/photographer/photographer_tasks_screen.dart';
 
 // === Admin ===
 import '../../screens/admin/admin_dashboard_screen.dart';
+import '../../screens/admin/admin_add_offer_screen.dart';
 import '../../screens/admin/office_operations_screen.dart';
 import '../../screens/admin/permissions_management_screen.dart';
 import '../../screens/admin/users_management_screen.dart';
@@ -70,6 +71,7 @@ class AppRouter {
     if (path == '/admin/permissions') return PermissionKeys.managePermissions;
     if (path.startsWith('/admin/users') || path.startsWith('/admin/user/')) return PermissionKeys.manageUsers;
     if (path == '/admin/review-offers') return PermissionKeys.reviewOffers;
+    if (path == '/admin/add-offer') return PermissionKeys.reviewOffers;
     if (path == '/admin/review-verifications') return PermissionKeys.reviewVerifications;
     if (path == '/admin/media-review') return PermissionKeys.mediaReview;
     if (path == '/admin/photography-management') return PermissionKeys.photographyManagement;
@@ -381,6 +383,10 @@ class AppRouter {
       GoRoute(
         path: '/admin/review-offers',
         builder: (context, state) => const OffersReviewScreen(),
+      ),
+      GoRoute(
+        path: '/admin/add-offer',
+        builder: (context, state) => const AdminAddOfferScreen(),
       ),
       GoRoute(
         path: '/admin/photography-management',

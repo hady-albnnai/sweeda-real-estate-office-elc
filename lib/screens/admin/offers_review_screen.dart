@@ -384,7 +384,35 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                   const SizedBox(height: 10),
                 ],
 
-                // المرسل
+                // تنويه داخلي: من أضاف العرض (إذا أضافته الإدارة)
+                if (o.addedBy != null && o.addedBy!.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                          color: Colors.amber.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(children: [
+                      const Icon(Icons.admin_panel_settings,
+                          color: Colors.amber, size: 14),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'أُضيف بواسطة موظف الإدارة — (ID: ${o.addedBy!.substring(0, 8)})',
+                          style: const TextStyle(
+                              color: Colors.amber, fontSize: 11),
+                        ),
+                      ),
+                    ]),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+
+                // المرسل (صاحب العرض)
                 const Divider(color: AppTheme.textGrey, height: 16),
                 Row(
                   children: [
