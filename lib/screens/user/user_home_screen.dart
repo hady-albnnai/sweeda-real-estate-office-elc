@@ -41,36 +41,15 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
       // تسجيل سلسلة الدخول اليومي (Streak) + منح النقاط + جلب الإشعارات
       final auth = Provider.of<AuthProvider>(context, listen: false);
-      if (auth.isLoggedIn) {
-        final uid = auth.userModel?.uid ?? '';
-        if (uid.isNotEmpty) {
-          Provider.of<NotificationProvider>(context, listen: false)
-              .fetchNotifications(uid);
-        }
-
-        // Guard: لا نستدعي registerStreak إلا إذا كان اليوم مختلف (بتوقيت سوريا)
-        // هذا يمنع التكرار عند التنقل بين الشاشات
-        bool shouldRegisterStreak = true;
-        final user = auth.userModel;
-        if (user != null && user.strkDt != null) {
-          final now = DateTime.now();
-          final syriaNow = now.toUtc().add(const Duration(hours: 3));
-          final todayStr = '${syriaNow.year.toString().padLeft(4, '0')}-'
-              '${syriaNow.month.toString().padLeft(2, '0')}-'
-              '${syriaNow.day.toString().padLeft(2, '0')}';
-
-          final last = user.strkDt!;
-          final lastSyria = last.toUtc().add(const Duration(hours: 3));
-          final lastStr = '${lastSyria.year.toString().padLeft(4, '0')}-'
-              '${lastSyria.month.toString().padLeft(2, '0')}-'
-              '${lastSyria.day.toString().padLeft(2, '0')}';
-
-          if (lastStr == todayStr) {
-            shouldRegisterStreak = false;
+        if (auth.isLoggedIn) {
+          final uid = auth.userModel?.uid ?? '';
+          if (uid.isNotEmpty) {
+            Provider.of<NotificationProvider>(context, listen: false)
+                .fetchNotifications(uid);
           }
-        }
 
-        if (shouldRegisterStreak) {
+          // تسجيل streak اليومي — الـ guard الكامل موجود في auth_provider.registerStreak
+          // (يفحص strkDt من DB + in-memory guard) فلا حاجة لفحص مكرر هنا
           final res = await auth.registerStreak(config.config);
           if (mounted && res['awarded'] == true) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -81,7 +60,6 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             );
           }
         }
-      }
     });
   }
 
