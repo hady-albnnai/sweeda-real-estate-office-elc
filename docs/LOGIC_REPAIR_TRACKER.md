@@ -163,6 +163,28 @@
 - تم تجهيز دفعة تثبيت جديدة قبل الاختبار الحقيقي:
   - migration: `supabase/migrations/2026_06_11_real_test_stabilization_internal_rpcs.sql`
   - وتشمل تحويل مسارات حساسة كثيرة إلى RPCs (العروض، الطلبات، المدفوعات، التبليغات، المواعيد، الإشعارات، التقييمات، بعض تحديثات المستخدم).
+### 2026-06-12 — نظام الباقات الاحترافي (Grace Period)
+
+**السيرفر:**
+1. `users.pkg_grace` عمود جديد — `pkg_end + 3 أيام`
+2. `approve_payment_final` — يحسب `pkg_grace` + يمنع دفعة مكررة معلقة + إشعار يتضمن السعر المفترض
+3. `create_payment_internal` — يمنع الدفعة المعلقة المكررة لنفس الباقة
+4. `expire_packages` — تعمل بعد `pkg_grace` لا `pkg_end` + إشعار للمستخدم
+5. `send_renewal_reminders()` — إشعارات: 3 أيام قبل + يوم قبل + يوم الانتهاء + آخر يوم سماح + cron 3:15 UTC
+
+**الكود:**
+- `UserModel`: `pkgGrace` + `effectivePkg` + `isPkgActive` + `isInGracePeriod` + `graceDaysLeft`
+- `business_service`: `offerQuota` + `canPublishOffer` يدعمان `pkgGrace`
+- `add_offer_screen`: يمرر `pkgGrace` + يعرض حالة Grace في شريط الحصة
+- `packages_screen`: إعادة كتابة كاملة — `isCurrent` صحيح + grace period مرئية + تنبيه دفعة معلقة + سعر من Config
+- `payment_screen`: السعر من Config مباشرة — لا من URL قابل للتعديل
+- `my_payments_screen`: شاشة جديدة لسجل دفعات المستخدم مع حالة كل دفعة
+- `profile_screen`: زر "سجل دفعاتي" جديد
+- `payments_screen` (إدارة): السعر المفترض مقابل المدفوع مع تحذير بالأحمر
+- `app_router`: مسار `/user/my-payments` + `PaymentScreen` بدون `amount`
+
+---
+
 ### 2026-06-12 — تحليل وإصلاح نظام الباقات
 
 **السيرفر:**
