@@ -107,7 +107,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
                 )),
 
             const SizedBox(height: 20),
-            _infoBox(),
+            _infoBox(config),
           ],
         ),
       ),
@@ -310,7 +310,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
             const Divider(color: AppTheme.textGrey, height: 24),
             _feature(Icons.list_alt, '${pkg.offers} عروض فعّالة'),
             _feature(Icons.calendar_today, 'مدة العرض ${pkg.duration} يوم'),
-            _feature(Icons.hourglass_bottom, '3 أيام سماح بعد الانتهاء'),
+            _feature(Icons.hourglass_bottom, '${config?.pkgGraceDays ?? 3} أيام سماح بعد الانتهاء'),
             if (pkg.id >= 1) _feature(Icons.star, 'أولوية بالظهور'),
             if (pkg.id >= 2) _feature(Icons.support_agent, 'دعم فني مميّز'),
             if (pkg.id >= 2) _feature(Icons.verified, 'شارة موثّق'),
@@ -382,7 +382,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
         ]),
       );
 
-  Widget _infoBox() => Container(
+  Widget _infoBox(ConfigModel? config) => Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: AppTheme.surfaceBlack,
@@ -396,7 +396,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
           Expanded(
             child: Text(
               'يتم تفعيل الباقة بعد موافقة الإدارة على إثبات الدفع (عادة < 24 ساعة). '
-              'بعد انتهاء الباقة لديك 3 أيام سماح قبل التحول للمجانية.',
+              'بعد انتهاء الباقة لديك ${config?.pkgGraceDays ?? 3} أيام سماح قبل التحول للمجانية.',
               style: TextStyle(color: AppTheme.textGrey, fontSize: 12),
             ),
           ),

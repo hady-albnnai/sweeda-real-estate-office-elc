@@ -26,6 +26,15 @@ class ConfigModel {
   List<dynamic> get reportReasons => _getNestedList('rptRsn', []);
   Map<String, dynamic> get badges => _getNestedMap('bdg', {});
   Map<String, dynamic> get packages => _getNestedMap('pkg', {});
+
+  /// عدد أيام السماح بعد انتهاء الباقة — يُقرأ من pkg.grace_days (افتراضي: 3)
+  int get pkgGraceDays {
+    final pkgMap = packages;
+    final val = pkgMap['grace_days'];
+    if (val is num) return val.toInt();
+    return 3; // fallback آمن
+  }
+
   Map<String, dynamic> get texts => _getNestedMap('txts', {});
   int get usdToSypRate => _getNested('fx.usd_syp', 15000);
 
