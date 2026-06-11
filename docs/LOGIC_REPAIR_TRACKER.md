@@ -163,6 +163,28 @@
 - تم تجهيز دفعة تثبيت جديدة قبل الاختبار الحقيقي:
   - migration: `supabase/migrations/2026_06_11_real_test_stabilization_internal_rpcs.sql`
   - وتشمل تحويل مسارات حساسة كثيرة إلى RPCs (العروض، الطلبات، المدفوعات، التبليغات، المواعيد، الإشعارات، التقييمات، بعض تحديثات المستخدم).
+### 2026-06-12 — تحليل وإصلاح نظام الباقات
+
+**السيرفر:**
+1. `purchase_offer_boost` — تصحيح `activity_log` من `(action, details)` إلى `(act=20, det=text)`
+2. `create_offer_internal` — إضافة `v_effective_pkg` لفحص `pkg_end` قبل حساب الحصة
+3. `expire_packages()` — دالة جديدة تُعيد `b_pkg=0` عند انتهاء `pkg_end` + cron يومي 3:10 UTC
+
+**الكلاينت:**
+4. `business_service.offerQuota` — إضافة `pkgEnd` كمعامل + فحص انتهاء الباقة → `effectivePkg`
+5. `business_service.canPublishOffer` — تمرير `pkgEnd` لـ `offerQuota`
+6. `add_offer_screen` — تمرير `user.pkgEnd` + عرض "باقة منتهية" في شريط الحصة
+7. `packages_screen` — عرض "⚠️ انتهت الباقة" باللون البرتقالي عند انتهائها
+8. `payments_screen` — جلب اسم وهاتف المستخدم من `users` بدل عرض uid مقطوع
+9. `payment_provider` — حذف `updatePaymentStatus` الميتة (منطق خاطئ + لا تُستدعى)
+
+**ما كان صحيحاً ولم يُلمس:**
+- `approve_payment_final`: تفحص `sts=0` + تمديد تراكمي + تفحص دور الإداري ✅
+- `b_pkg` و`pkg_end` محميتان بـ trigger ✅
+- قنوات الدفع من Config ✅
+
+---
+
 ### 2026-06-12 — إصلاح منطق Streak اليومي
 
 **السيرفر (`register_daily_streak_internal`):**
