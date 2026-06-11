@@ -5,7 +5,8 @@ class PermissionKeys {
   static const officeOperations = 'office_operations';
   static const manageUsers = 'manage_users';
   static const managePermissions = 'manage_permissions';
-  static const reviewOffers = 'review_offers';
+  static const reviewOffers  = 'review_offers';
+  static const addOfferAdmin = 'add_offer_admin';
   static const reviewVerifications = 'review_verifications';
   static const mediaReview = 'media_review';
   static const photographyManagement = 'photography_management';
