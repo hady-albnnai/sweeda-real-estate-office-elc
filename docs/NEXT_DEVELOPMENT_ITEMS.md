@@ -132,4 +132,6 @@ BUILD_GUIDE.md
 | منع الدفعة المزدوجة المعلقة | ✅ مطبّق |
 | my_payments_screen (سجل دفعات المستخدم) | ✅ مطبّق |
 | السعر من Config — لا من URL | ✅ مطبّق |
+| grace_days من Config (app_config.pkg.grace_days) | ✅ مطبّق |
+| ConfigModel.pkgGraceDays getter | ✅ مطبّق |
 | expire_packages cron يومي | ✅ مطبّق |
