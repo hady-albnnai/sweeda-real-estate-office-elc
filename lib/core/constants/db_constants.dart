@@ -47,6 +47,10 @@ class DbFunctions {
   static const String sendPushNotification = 'send_push_notification';
   // ملاحظة: trg_* triggers تعمل تلقائياً من السيرفر — لا تُستدعى من Flutter
   // تفعّل عند: تغيير offer.sts/i_pub, INSERT/UPDATE appointment, UPDATE deal.sts, UPDATE payment.sts
+  // === نظام المواعيد الجديد ===
+  static const String getAvailableSupervisor    = 'get_available_supervisor';
+  static const String ownerRespondAppointment   = 'owner_respond_appointment';
+  static const String requesterCounterAppointment = 'requester_counter_appointment';
 }
 
 /// مفاتيح Config

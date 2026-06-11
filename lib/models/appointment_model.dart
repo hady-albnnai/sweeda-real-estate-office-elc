@@ -24,6 +24,9 @@ class AppointmentModel {
   final int rmndQtr;
   final int rmndEnd;
   final DateTime tsCrt;
+  // حقول جديدة
+  final String? supervisorUid; // المشرف المعيَّن تلقائياً
+  final List<Map<String, dynamic>> neog; // تاريخ التراشق (5 جولات كحد أقصى)
 
   AppointmentModel({
     required this.id,
@@ -51,6 +54,8 @@ class AppointmentModel {
     this.rmndQtr = 0,
     this.rmndEnd = 0,
     required this.tsCrt,
+    this.supervisorUid,
+    this.neog = const [],
   });
 
   factory AppointmentModel.fromSupabase(Map<String, dynamic> data, String id) {
@@ -80,6 +85,11 @@ class AppointmentModel {
       rmndQtr: data['rmnd_qtr'] ?? 0,
       rmndEnd: data['rmnd_end'] ?? 0,
       tsCrt: DateTime.parse(data['ts_crt']),
+      supervisorUid: data['supervisor_uid'],
+      neog: data['neog'] != null
+          ? List<Map<String, dynamic>>.from(
+              (data['neog'] as List).map((e) => Map<String, dynamic>.from(e as Map)))
+          : [],
     );
   }
 
@@ -109,6 +119,28 @@ class AppointmentModel {
       'rmnd_qtr': rmndQtr,
       'rmnd_end': rmndEnd,
       'ts_crt': tsCrt.toIso8601String(),
+      'supervisor_uid': supervisorUid,
+      'neog': neog,
     };
+  }
+
+  /// عدد جولات التراشق المنجزة
+  int get neogRounds => neog.length;
+
+  /// هل وصلنا للحد الأقصى من التراشق؟
+  bool get neogMaxReached => neog.length >= 5;
+
+  /// آخر جولة تراشق
+  Map<String, dynamic>? get lastNeogRound =>
+      neog.isNotEmpty ? neog.last : null;
+
+  /// من الذي اقترح آخر وقت بديل؟ ('owner' أو 'requester')
+  String? get lastProposedBy => lastNeogRound?['by'] as String?;
+
+  /// آخر وقت مقترح في التراشق
+  DateTime? get lastProposedDt {
+    final raw = lastNeogRound?['proposed'];
+    if (raw == null) return null;
+    try { return DateTime.parse(raw.toString()); } catch (_) { return null; }
   }
 }

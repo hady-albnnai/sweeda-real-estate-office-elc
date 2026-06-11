@@ -121,6 +121,59 @@ class AppointmentProvider with ChangeNotifier {
     }
   }
 
+  /// رد صاحب العرض على طلب الحجز
+  /// p_rejectReason: 0=الوقت لا يناسب، 1=غير مهتم، 2=آخر
+  Future<bool> ownerRespondAppointment({
+    required String ownerUid,
+    required String appointmentId,
+    required bool accept,
+    int rejectReason = 0,
+    String rejectText = '',
+    DateTime? proposedDt,
+  }) async {
+    try {
+      await SupabaseService().client.rpc(
+        DbFunctions.ownerRespondAppointment,
+        params: {
+          'p_owner_uid':       ownerUid,
+          'p_appointment_id':  appointmentId,
+          'p_accept':          accept,
+          'p_reject_reason':   rejectReason,
+          'p_reject_text':     rejectText,
+          'p_proposed_dt':     proposedDt?.toIso8601String(),
+        },
+      );
+      notifyListeners();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// رد طالب الحجز على الوقت البديل المقترح
+  Future<bool> requesterCounterAppointment({
+    required String userUid,
+    required String appointmentId,
+    required bool accept,
+    DateTime? proposedDt,
+  }) async {
+    try {
+      await SupabaseService().client.rpc(
+        DbFunctions.requesterCounterAppointment,
+        params: {
+          'p_user_uid':        userUid,
+          'p_appointment_id':  appointmentId,
+          'p_accept':          accept,
+          'p_proposed_dt':     proposedDt?.toIso8601String(),
+        },
+      );
+      notifyListeners();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   DateTime? _resolveNextAppointmentDate(String dayKey, String timeText) {
     final weekday = _weekdayFromKey(dayKey);
     final parsedTime = _parseTime(timeText);

@@ -30,7 +30,11 @@ class OfferModel {
   final String socTxt;
   final int iDup;
   final String dupOf;
+  // avl: أيام وفترات المواعيد المتاحة للمعاينة
+  // البنية: {"wed": ["10:00-13:00", "15:00-17:00"], "fri": ["09:00-11:00"]}
   final Map<String, List<String>> avl;
+  // من أضاف العرض (للإدارة فقط — لا يظهر للجمهور)
+  final String? addedBy;
   // ─── ترقيات (spd) ───
   final int iPin; // مثبّت في الأعلى
   final int iBst; // boosted
@@ -85,6 +89,7 @@ class OfferModel {
     this.iDup = 0,
     this.dupOf = '',
     Map<String, List<String>>? avl,
+    this.addedBy,
     this.iPin = 0,
     this.iBst = 0,
     this.iFms = 0,
@@ -146,6 +151,7 @@ class OfferModel {
           ? (data['avl'] as Map).map((k, v) =>
               MapEntry(k.toString(), List<String>.from(v as List)))
           : {},
+      addedBy: data['added_by'],
       iPin: data['i_pin'] ?? 0,
       iBst: data['i_bst'] ?? 0,
       iFms: data['i_fms'] ?? 0,
@@ -177,6 +183,7 @@ class OfferModel {
       'soc_pub': socPub, 'soc_txt': socTxt, 'i_dup': iDup,
       'dup_of': dupOf.isEmpty ? null : dupOf,
       'avl': avl,
+      'added_by': addedBy,
       'i_pin': iPin, 'i_bst': iBst, 'i_fms': iFms,
       'pin_end': pinEnd?.toIso8601String(),
       'bst_end': bstEnd?.toIso8601String(),
