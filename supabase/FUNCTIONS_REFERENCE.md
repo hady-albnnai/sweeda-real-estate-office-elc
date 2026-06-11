@@ -35,7 +35,8 @@
 | ✅ **مُطبّق على السيرفر** | `2026_06_11_real_test_stabilization_internal_rpcs.sql` — 40 دالة RPC لتثبيت المسارات الحساسة قبل الاختبار الحقيقي (تم التحقق من وجودها كاملةً بتاريخ 2026-06-11) |
 | ✅ **مُطبّق على السيرفر** | تعديلات نظام المواعيد (2026-06-11 Batch 2): `appointments.supervisor_uid` + `appointments.neog` + `offers.added_by` + دالة `get_available_supervisor` + `owner_respond_appointment` + `requester_counter_appointment` + تحديث `book_appointment_internal` بـ 4 فحوصات + تحديث triggers الإشعارات |
 | ✅ **مُطبّق على السيرفر** | إدارة الطلبات (2026-06-11 Batch 3): `get_admin_requests_internal` — تتيح للإدارة قراءة كل الطلبات مع بيانات العميل (cl_nm + cl_ph) |
-| ✅ **مُطبّق على السيرفر** | إصلاحات نظام الباقات (2026-06-12): تصحيح `purchase_offer_boost` في `activity_log` (act/det) + فحص `pkg_end` في `create_offer_internal` + دالة `expire_packages()` + cron يومي 3:10 UTC + تصحيح `register_daily_streak_internal` (v_yesterday) |
+| ✅ **مُطبّق على السيرفر** | إصلاحات نظام الباقات (2026-06-12 Batch 1): تصحيح `purchase_offer_boost` + `create_offer_internal` + `expire_packages()` + `register_daily_streak_internal` |
+| ✅ **مُطبّق على السيرفر** | نظام الباقات الاحترافي (2026-06-12 Batch 2): `users.pkg_grace` + `approve_payment_final` مع grace + `create_payment_internal` يمنع دفعة مزدوجة + `expire_packages` مع إشعار + `send_renewal_reminders()` + cron 3:15 UTC |
 
 ---
 
@@ -93,7 +94,10 @@
 | **— إدارة الطلبات (2026-06-11 Batch 3) —** | | | | |
 | 77 | `get_admin_requests_internal` 🆕 | `p_admin_uid UUID` | `TABLE(id, typ, elm, cl_nm, cl_ph, prc, cur, notes, specs, usr_id, sts, matches, i_del, ts_crt)` | ✅ |
 | **— إصلاحات نظام الباقات والـ Streak (2026-06-12) —** | | | | |
-| 78 | `expire_packages` 🆕 | — | `INTEGER` (عدد المتأثرين) | ✅ |
+| 78 | `expire_packages` 🆕 | — | `INTEGER` | ✅ مُحدَّثة (grace period + إشعار) |
+| 79 | `send_renewal_reminders` 🆕 | — | `INTEGER` | ✅ |
+| — | `approve_payment_final` | `p_payment_id UUID, p_admin_id UUID` | `JSONB` | ✅ مُحدَّثة (pkg_grace + منع مزدوج) |
+| — | `create_payment_internal` | `p_user_uid UUID, p_payment JSONB` | `SETOF payments` | ✅ مُحدَّثة (منع دفعة مزدوجة) |
 | — | `register_daily_streak_internal` | `p_user_uid UUID, p_points INT` | `JSONB` | ✅ مُصحَّح |
 | — | `purchase_offer_boost` | `p_uid UUID, p_offer_id UUID, p_boost_type TEXT` | `JSONB` | ✅ مُصحَّح |
 | — | `create_offer_internal` | `p_user_uid UUID, p_offer JSONB` | `SETOF offers` | ✅ مُصحَّح |
