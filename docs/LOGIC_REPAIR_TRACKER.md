@@ -163,6 +163,15 @@
 - تم تجهيز دفعة تثبيت جديدة قبل الاختبار الحقيقي:
   - migration: `supabase/migrations/2026_06_11_real_test_stabilization_internal_rpcs.sql`
   - وتشمل تحويل مسارات حساسة كثيرة إلى RPCs (العروض، الطلبات، المدفوعات، التبليغات، المواعيد، الإشعارات، التقييمات، بعض تحديثات المستخدم).
+### 2026-06-12 — grace_days من Config بدل hardcoded
+
+- `app_config.pkg.grace_days = 3` — قابل للتعديل من Config Editor دون migration
+- `approve_payment_final`: يقرأ `grace_days` من Config مع fallback=3
+- `ConfigModel.pkgGraceDays`: getter جديد يقرأ `pkg.grace_days`
+- `packages_screen`: يعرض أيام السماح ديناميكياً من Config
+
+---
+
 ### 2026-06-12 — مراجعة نظام الباقات (عين غريبة)
 
 **3 مشاكل اكتُشفت وأُصلحت:**

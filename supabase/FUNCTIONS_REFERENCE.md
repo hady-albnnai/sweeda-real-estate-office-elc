@@ -37,6 +37,7 @@
 | ✅ **مُطبّق على السيرفر** | إدارة الطلبات (2026-06-11 Batch 3): `get_admin_requests_internal` — تتيح للإدارة قراءة كل الطلبات مع بيانات العميل (cl_nm + cl_ph) |
 | ✅ **مُطبّق على السيرفر** | إصلاحات نظام الباقات (2026-06-12 Batch 1): تصحيح `purchase_offer_boost` + `create_offer_internal` + `expire_packages()` + `register_daily_streak_internal` |
 | ✅ **مُطبّق على السيرفر** | نظام الباقات الاحترافي (2026-06-12 Batch 2): `users.pkg_grace` + `approve_payment_final` مع grace + `create_payment_internal` يمنع دفعة مزدوجة + `expire_packages` مع إشعار + `send_renewal_reminders()` + cron 3:15 UTC |
+| ✅ **مُطبّق على السيرفر** | `app_config.pkg.grace_days = 3` — أيام السماح من Config + `approve_payment_final` يقرأها ديناميكياً |
 
 ---
 
