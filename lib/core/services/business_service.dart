@@ -204,22 +204,30 @@ class BusinessService {
     required int role,
     ConfigModel? config,
   }) async {
+    // الإدارة معفاة من الحصة
+    if (role >= 2) {
+      return {'allowed': true, 'used': 0, 'limit': 999999, 'reason': ''};
+    }
     try {
-      final existing = await _sb.client
-          .from(DbTables.requests)
-          .select('id')
-          .eq('usr_id', uid)
-          .eq('i_del', 0);
-      final used = (existing as List).length;
+      // نستخدم RPC بدل direct query لتجنب مشاكل RLS
+      final existing = await _sb.client.rpc(
+        'get_user_requests_internal',
+        params: {'p_user_uid': uid},
+      );
+      final used  = (existing as List).length;
       final limit = requestQuota(config, role: role);
       final allowed = used < limit;
       return {
         'allowed': allowed,
-        'used': used,
-        'limit': limit,
-        'reason': allowed ? '' : 'وصلت للحد الأقصى ($limit طلب).',
+        'used':    used,
+        'limit':   limit,
+        'reason':  allowed ? '' : 'وصلت للحد الأقصى ($limit طلب).',
       };
-    } catch (e) {return {'allowed': false, 'used': 0, 'limit': 0, 'reason': 'تعذّر التحقق من حصتك، حاول لاحقاً.'};
+    } catch (e) {
+      return {
+        'allowed': false, 'used': 0, 'limit': 0,
+        'reason': 'تعذّر التحقق من حصتك، حاول لاحقاً.',
+      };
     }
   }
 

@@ -167,6 +167,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                             '/admin/payments',
                             badge: _counts['pendingPayments'] ?? 0),
                       if (PermissionService.has(auth.userModel, PermissionKeys.manageReports))
+                        _navCard(Icons.assignment_outlined, 'الطلبات',
+                            '/admin/requests',
+                            badge: 0),
                         _navCard(Icons.flag_outlined, 'التبليغات',
                             '/admin/reports',
                             badge: _counts['openReports'] ?? 0),

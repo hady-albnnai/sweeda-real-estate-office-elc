@@ -104,7 +104,8 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
           child: Icon(req.elm == 0 ? Icons.home : Icons.directions_car, color: AppTheme.primaryGold),
         ),
         title: Text(
-          req.clNm ?? 'طلب $elementText',
+          // اسم العميل وهاتفه للإدارة وصاحب الطلب فقط — لا يظهر في القائمة
+          '$typeText $elementText',
           style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold),
         ),
         subtitle: Column(
