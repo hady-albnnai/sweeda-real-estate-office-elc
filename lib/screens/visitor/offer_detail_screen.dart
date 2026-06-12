@@ -8,6 +8,7 @@ import '../../providers/offer_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/config_provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/app_utils.dart';
 import '../../core/services/business_service.dart';
 import '../../core/services/local_cache_service.dart';
 import '../../core/network/supabase_service.dart';
@@ -27,17 +28,25 @@ class OfferDetailScreen extends StatefulWidget {
 
 class _OfferDetailScreenState extends State<OfferDetailScreen> {
   OfferModel? _offer;
-  UserModel? _owner; // مالك العرض — يُستخدم لتوليد التسمية المهنية (هوية المكتب)
-  double? _ownerAvgRating; // ⭐ متوسط تقييم المالك
+  UserModel? _owner;
+  double? _ownerAvgRating;
   int _ownerRatingCount = 0;
   bool _loading = true;
   bool _isFav = false;
+  int _currentImg = 0;
+  late final PageController _pageCtrl = PageController();
 
   @override
   void initState() {
     super.initState();
     _isFav = LocalCacheService().isFavorite(widget.offerId);
     WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+  }
+
+  @override
+  void dispose() {
+    _pageCtrl.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -268,23 +277,67 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(fit: StackFit.expand, children: [
-                offer.imgs.isNotEmpty
-                    ? Image.network(offer.imgs[0],
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
-                            color: AppTheme.surfaceBlack,
-                            child: const Icon(Icons.image,
-                                size: 80, color: AppTheme.textGrey)))
-                    : Container(
+                // Slider الصور
+                offer.imgs.isEmpty
+                    ? Container(
                         color: AppTheme.surfaceBlack,
                         child: const Icon(Icons.home_work,
-                            size: 80, color: AppTheme.textGrey)),
+                            size: 80, color: AppTheme.textGrey))
+                    : PageView.builder(
+                        controller: _pageCtrl,
+                        itemCount: offer.imgs.length,
+                        onPageChanged: (i) => setState(() => _currentImg = i),
+                        itemBuilder: (_, i) => Image.network(
+                          offer.imgs[i],
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                              color: AppTheme.surfaceBlack,
+                              child: const Icon(Icons.image,
+                                  size: 80, color: AppTheme.textGrey)),
+                        ),
+                      ),
                 const DecoratedBox(
                     decoration: BoxDecoration(
                         gradient: LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                             colors: [Colors.transparent, AppTheme.deepBlack]))),
+                // مؤشر الصور (dots)
+                if (offer.imgs.length > 1)
+                  Positioned(
+                    bottom: 12,
+                    left: 0, right: 0,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(offer.imgs.length, (i) => Container(
+                        width: _currentImg == i ? 18 : 6,
+                        height: 6,
+                        margin: const EdgeInsets.symmetric(horizontal: 3),
+                        decoration: BoxDecoration(
+                          color: _currentImg == i
+                              ? AppTheme.primaryGold
+                              : Colors.white.withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      )),
+                    ),
+                  ),
+                // عداد الصور (1/3)
+                if (offer.imgs.length > 1)
+                  Positioned(
+                    top: 12, left: 16,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${_currentImg + 1}/${offer.imgs.length}',
+                        style: const TextStyle(color: Colors.white, fontSize: 12),
+                      ),
+                    ),
+                  ),
               ]),
             ),
             leading: IconButton(
@@ -329,7 +382,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                            '${offer.prc.toStringAsFixed(0)} ${offer.cur == 0 ? '\$' : 'ل.س'}',
+                            AppUtils.formatPrice(offer.prc, currency: offer.cur),
                             style: const TextStyle(
                                 color: AppTheme.primaryGold,
                                 fontSize: 20,
@@ -389,13 +442,26 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                   ],
 
                   const SizedBox(height: 10),
-                  Row(children: [
+                  Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     const Icon(Icons.location_on,
                         color: AppTheme.primaryGold, size: 20),
                     const SizedBox(width: 5),
-                    Text(offer.loc['d'] ?? '',
-                        style: const TextStyle(
-                            color: AppTheme.textGrey, fontSize: 16)),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if ((offer.loc['city'] ?? '').toString().isNotEmpty)
+                            Text((offer.loc['city'] ?? '').toString(),
+                                style: const TextStyle(
+                                    color: AppTheme.primaryGold,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold)),
+                          Text(offer.loc['d'] ?? '',
+                              style: const TextStyle(
+                                  color: AppTheme.textGrey, fontSize: 15)),
+                        ],
+                      ),
+                    ),
                   ]),
                   const SizedBox(height: 20),
                   const Text('الوصف التفصيلي',
@@ -407,6 +473,31 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                   Text(offer.descript.isEmpty ? 'لا يوجد وصف' : offer.descript,
                       style: const TextStyle(
                           color: AppTheme.textWhite, fontSize: 16, height: 1.5)),
+                  // المواصفات التقنية
+                  if ((offer.specs['details'] ?? '').toString().trim().isNotEmpty) ...[
+                    const SizedBox(height: 20),
+                    const Text('المواصفات التقنية',
+                        style: TextStyle(
+                            color: AppTheme.primaryGold,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 10),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: AppTheme.surfaceBlack,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: AppTheme.primaryGold.withValues(alpha: 0.2)),
+                      ),
+                      child: Text(
+                        offer.specs['details'].toString(),
+                        style: const TextStyle(
+                            color: AppTheme.textWhite, fontSize: 15, height: 1.6),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 20),
 
                   // فيديو العرض (إذا موجود)
@@ -504,19 +595,31 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                     ),
                   if (isOwner) const SizedBox(height: 14),
 
-                  // زر الحجز — مخفي عن المالك (السيرفر يمنعه أيضاً)
+                  // زر الحجز — مخفي عن المالك
                   if (!isOwner)
                   SizedBox(
                     width: double.infinity,
                     height: 55,
                     child: ElevatedButton(
-                      onPressed: () => showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          backgroundColor: Colors.transparent,
-                          builder: (context) =>
-                              BookAppointmentSheet(offer: offer)),
-                      child: const Text('حجز موعد للمعاينة'),
+                      onPressed: offer.avl.isEmpty
+                          ? null // تعطيل إذا لا مواعيد
+                          : () => showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) =>
+                                  BookAppointmentSheet(offer: offer)),
+                      style: offer.avl.isEmpty
+                          ? ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.surfaceBlack,
+                              disabledForegroundColor: AppTheme.textGrey,
+                            )
+                          : null,
+                      child: Text(
+                        offer.avl.isEmpty
+                            ? 'لا توجد مواعيد متاحة حالياً'
+                            : 'حجز موعد للمعاينة',
+                      ),
                     ),
                   ),
                   // ⭐ تقييم المالك (لغير المالك المسجّل) — LOGIC_SPEC §3.3

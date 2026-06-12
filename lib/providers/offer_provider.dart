@@ -297,6 +297,7 @@ class OfferProvider with ChangeNotifier {
 
   Future<List<OfferModel>> searchOffers({
     String? query, int? type, int? transaction, int? category,
+    double? minPrice, double? maxPrice, int? currency,
   }) async {
     _isSearching = true; // تفعيل حالة البحث
     try {
@@ -306,6 +307,9 @@ class OfferProvider with ChangeNotifier {
       if (type != null) q = q.eq('typ', type);
       if (transaction != null) q = q.eq('trx', transaction);
       if (category != null) q = q.eq('cat', category);
+      if (currency != null) q = q.eq('cur', currency);
+      if (minPrice != null) q = q.gte('prc', minPrice);
+      if (maxPrice != null) q = q.lte('prc', maxPrice);
       final response = await q.order('ts_crt', ascending: false);
       final results = (response as List).map((d) =>
           OfferModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String)).toList();
