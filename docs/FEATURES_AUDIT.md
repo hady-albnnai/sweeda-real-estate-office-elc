@@ -90,6 +90,26 @@
 
 - TabBar بـ 3 تبويبات (مهام اليوم / المؤجلة + تقويم / المنفذة) بدل ChoiceChip.
 
+### إصلاح حجز المواعيد ودورة حياة العرض (2026-06-12)
+
+- `book_appointment_internal` أُعيد كتابتها بالكامل — 10 فحوصات:
+  1. العرض منشور (sts=2)
+  2. منع حجز عرضك
+  3. وقت بالمستقبل
+  4. فحص طلب إتمام معلق على العرض
+  5. فحص avl (يوم + فترة زمنية بتوقيت دمشق)
+  6. فحص تعارض العقار (نفس الوقت)
+  7. منع تكرار نفس المستخدم
+  8. اختيار منفذ (role=3) متاح
+  9. إنشاء مع supervisor_uid
+  10. إرجاع عدد المواعيد النشطة
+- `process_completion_request`: عند الموافقة يحوّل `offers.sts=5` + يلغي كل المواعيد الأخرى + يرسل إشعار لأصحابها.
+- `create_deal_internal`: `role>=5` + يحوّل `offers.sts=5`.
+- `complete_deal_internal`: `role>=5` + يحوّل `offers.sts=6` + يلغي مواعيد متبقية.
+- `admin_force_appointment_internal`: `role>=4`.
+- `admin_handle_report_internal`: `role>=4`.
+- `create_request_internal`: إعفاء `role>=4`.
+
 ### تدقيق عميق (2026-06-12)
 
 - `approve_payment_final`: role >= 5 (نائب/مدير فقط).
