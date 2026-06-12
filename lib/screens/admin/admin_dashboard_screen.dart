@@ -133,6 +133,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     crossAxisSpacing: 12,
                     childAspectRatio: 1.3,
                     children: [
+                      // بطاقة مهام المنفذ — تظهر لأي مستخدم لديه مواعيد كـ supervisor
+                      _navCard(Icons.engineering_outlined, 'مهامي الميدانية',
+                          '/executor/tasks'),
                       if (PermissionService.has(auth.userModel, PermissionKeys.officeOperations))
                         _navCard(Icons.support_agent_outlined, 'عمليات المكتب',
                             '/admin/office-operations'),
@@ -159,6 +162,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       if (PermissionService.has(auth.userModel, PermissionKeys.manageAppointments))
                         _navCard(Icons.calendar_month_outlined, 'المواعيد',
                             '/admin/appointments'),
+                      if (PermissionService.has(auth.userModel, PermissionKeys.completionRequests))
+                        _navCard(Icons.assignment_turned_in_outlined, 'طلبات الإتمام',
+                            '/admin/completion-requests'),
                       if (PermissionService.has(auth.userModel, PermissionKeys.manageDeals))
                         _navCard(Icons.handshake_outlined, 'الصفقات',
                             '/admin/deals'),
