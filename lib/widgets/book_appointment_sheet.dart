@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/appointment_provider.dart';
 import '../providers/auth_provider.dart';
 import '../models/offer_model.dart';
@@ -148,6 +149,52 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
   @override
   Widget build(BuildContext context) {
     final avl = widget.offer.avl;
+    final auth = context.read<AuthProvider>();
+    final isLoggedIn = auth.isLoggedIn;
+
+    // الزائر غير المسجّل — نعرض رسالة تسجيل الدخول بدل الـ sheet
+    if (!isLoggedIn) {
+      return Container(
+        padding: const EdgeInsets.all(30),
+        decoration: const BoxDecoration(
+          color: AppTheme.deepBlack,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+        ),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Icon(Icons.lock_outline, color: AppTheme.primaryGold, size: 60),
+          const SizedBox(height: 16),
+          const Text('يجب تسجيل الدخول',
+              style: TextStyle(
+                  color: AppTheme.textWhite,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          const Text(
+            'لحجز موعد معاينة يجب أن تكون مسجّلاً في التطبيق.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppTheme.textGrey, fontSize: 14, height: 1.5),
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                context.push('/login');
+              },
+              child: const Text('تسجيل الدخول',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ),
+          const SizedBox(height: 10),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('لاحقاً',
+                style: TextStyle(color: AppTheme.textGrey)),
+          ),
+        ]),
+      );
+    }
 
     return Container(
       padding: const EdgeInsets.all(20),

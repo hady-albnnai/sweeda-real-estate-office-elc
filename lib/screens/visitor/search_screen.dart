@@ -17,7 +17,10 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   final _searchCtrl = TextEditingController();
   int? _type; // 0=عقار, 1=سيارة
-  int? _trx; // 0=بيع, 1=إيجار
+  int? _trx;  // 0=بيع, 1=إيجار
+  int? _currency; // 0=دولار, 1=ل.س
+  final _minPriceCtrl = TextEditingController();
+  final _maxPriceCtrl = TextEditingController();
 
   List<OfferModel> _results = [];
   bool _loading = false;
@@ -26,6 +29,8 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   void dispose() {
     _searchCtrl.dispose();
+    _minPriceCtrl.dispose();
+    _maxPriceCtrl.dispose();
     super.dispose();
   }
 
@@ -38,6 +43,9 @@ class _SearchScreenState extends State<SearchScreen> {
           query: _searchCtrl.text.trim().isEmpty ? null : _searchCtrl.text.trim(),
           type: _type,
           transaction: _trx,
+          currency: _currency,
+          minPrice: double.tryParse(_minPriceCtrl.text.trim()),
+          maxPrice: double.tryParse(_maxPriceCtrl.text.trim()),
         );
     if (mounted) {
       setState(() {
@@ -107,6 +115,63 @@ class _SearchScreenState extends State<SearchScreen> {
                 }),
               ],
             ),
+          ),
+
+          // ── فلتر السعر ──
+          Padding(
+            padding: const EdgeInsets.fromLTRB(15, 0, 15, 6),
+            child: Row(children: [
+              // العملة
+              DropdownButton<int?>(
+                value: _currency,
+                dropdownColor: AppTheme.surfaceBlack,
+                style: const TextStyle(color: AppTheme.textWhite, fontSize: 13),
+                hint: const Text('العملة', style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+                items: const [
+                  DropdownMenuItem(value: null, child: Text('الكل')),
+                  DropdownMenuItem(value: 0, child: Text('\$')),
+                  DropdownMenuItem(value: 1, child: Text('ل.س')),
+                ],
+                onChanged: (v) => setState(() => _currency = v),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: TextField(
+                  controller: _minPriceCtrl,
+                  keyboardType: TextInputType.number,
+                  style: const TextStyle(color: AppTheme.textWhite, fontSize: 13),
+                  decoration: const InputDecoration(
+                    hintText: 'سعر من',
+                    hintStyle: TextStyle(color: AppTheme.textGrey, fontSize: 13),
+                    filled: true, fillColor: AppTheme.surfaceBlack,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    border: OutlineInputBorder(borderSide: BorderSide.none,
+                        borderRadius: BorderRadius.all(Radius.circular(8))),
+                    isDense: true,
+                  ),
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 6),
+                child: Text('—', style: TextStyle(color: AppTheme.textGrey)),
+              ),
+              Expanded(
+                child: TextField(
+                  controller: _maxPriceCtrl,
+                  keyboardType: TextInputType.number,
+                  style: const TextStyle(color: AppTheme.textWhite, fontSize: 13),
+                  decoration: const InputDecoration(
+                    hintText: 'سعر إلى',
+                    hintStyle: TextStyle(color: AppTheme.textGrey, fontSize: 13),
+                    filled: true, fillColor: AppTheme.surfaceBlack,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    border: OutlineInputBorder(borderSide: BorderSide.none,
+                        borderRadius: BorderRadius.all(Radius.circular(8))),
+                    isDense: true,
+                  ),
+                ),
+              ),
+            ]),
           ),
 
           // ── زر البحث ──

@@ -131,9 +131,32 @@ class _OfferCardState extends State<OfferCard> {
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: AppTheme.primaryGold, width: 0.5),
                   ),
-                  child: Text(offer.typ == 0 ? 'عقار' : 'سيارة',
-                      style: const TextStyle(
-                          color: AppTheme.primaryGold, fontSize: 12)),
+                  child: Text(
+                    offer.typ == 0 ? 'عقار' : 'سيارة',
+                    style: const TextStyle(
+                        color: AppTheme.primaryGold, fontSize: 12)),
+                ),
+              ),
+              // نوع المعاملة
+              Positioned(
+                bottom: 15, right: 15,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.6),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                        color: offer.trx == 0
+                            ? Colors.green.withValues(alpha: 0.8)
+                            : Colors.blue.withValues(alpha: 0.8),
+                        width: 0.5),
+                  ),
+                  child: Text(
+                    offer.trx == 0 ? 'بيع' : 'إيجار',
+                    style: TextStyle(
+                        color: offer.trx == 0 ? Colors.green : Colors.blue,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold)),
                 ),
               ),
             ]),

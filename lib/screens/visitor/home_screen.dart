@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/offer_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/offer_card.dart';
+import '../../widgets/shimmer_loading.dart';
 import '../../core/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 
@@ -157,10 +158,20 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
 
         // ── القائمة ──
+        // عداد النتائج عند الفلترة
+        if (_isSearching && !offerProvider.isLoading)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Text(
+              '${offerProvider.offers.length} نتيجة',
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: 13),
+            ),
+          ),
+
         Expanded(
           child: offerProvider.isLoading && offerProvider.offers.isEmpty
-              ? const Center(
-                  child: CircularProgressIndicator(color: AppTheme.primaryGold))
+              // Shimmer بدل الدوامة
+              ? SingleChildScrollView(child: ShimmerLoading.offerList())
               : offerProvider.offers.isEmpty
                   ? Center(
                       child: Column(
@@ -170,9 +181,20 @@ class _HomeScreenState extends State<HomeScreen> {
                               size: 80,
                               color: AppTheme.textGrey.withValues(alpha: 0.3)),
                           const SizedBox(height: 16),
-                          const Text('لا توجد عروض متاحة حالياً',
-                              style: TextStyle(
-                                  color: AppTheme.textGrey, fontSize: 16)),
+                          Text(
+                            _isSearching
+                                ? 'لا توجد نتائج مطابقة'
+                                : 'لا توجد عروض متاحة حالياً',
+                            style: const TextStyle(
+                                color: AppTheme.textGrey, fontSize: 16)),
+                          if (_isSearching) ...[
+                            const SizedBox(height: 8),
+                            TextButton(
+                              onPressed: _clearSearch,
+                              child: const Text('إلغاء الفلتر',
+                                  style: TextStyle(color: AppTheme.primaryGold)),
+                            ),
+                          ],
                         ],
                       ),
                     )
