@@ -51,7 +51,7 @@ class AdminProvider with ChangeNotifier {
           'p_admin_uid': adminUid,
           'p_offer_id': offerId,
           'p_approve': approve,
-          'p_reason': reason,
+          'p_reject_reason': reason,
         },
       );
       notifyListeners();
