@@ -162,7 +162,8 @@ class AppRouter {
       if (path == '/setup-profile') return null;
 
       if (path.startsWith('/admin')) {
-        if (!auth.isAdmin) {
+        // موظف المكتب فما فوق (role >= 4) — المشرف والمصور لا يصلون
+        if (!(auth.isEmployee || auth.isSenior)) {
           return auth.isBroker ? '/broker/dashboard' : '/user/home';
         }
         final requiredPermission = _adminRoutePermission(path);
