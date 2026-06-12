@@ -134,4 +134,7 @@ BUILD_GUIDE.md
 | السعر من Config — لا من URL | ✅ مطبّق |
 | grace_days من Config (app_config.pkg.grace_days) | ✅ مطبّق |
 | ConfigModel.pkgGraceDays getter | ✅ مطبّق |
+| تحسينات تجربة الزائر (Slider صور + فلتر سعر + Shimmer + شارة بيع/إيجار) | ✅ مطبّق |
+| searchOffers تدعم minPrice/maxPrice/currency | ✅ مطبّق |
+| book_appointment_sheet يحمي الزائر غير المسجّل | ✅ مطبّق |
 | expire_packages cron يومي | ✅ مطبّق |
