@@ -11,9 +11,8 @@ class UserRole {
 
   /// أقل مستوى يُعتبر "موظف داخلي" (مصور فما فوق)
   static const int minInternal = photographer;
-  /// أقل مستوى يُعتبر "إدارة" — حالياً role=2 على السيرفر (المشرف القديم)
-  /// سيتغير إلى supervisor (3) بعد تنفيذ migration الأدوار
-  static const int minAdmin = 2;
+  /// أقل مستوى يُعتبر "إدارة" (مشرف فما فوق)
+  static const int minAdmin = supervisor;
   /// أقل مستوى يُعتبر "إدارة عليا" (نائب مدير فما فوق)
   static const int minSenior = deputy;
 
