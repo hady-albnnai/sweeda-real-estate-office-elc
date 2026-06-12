@@ -10,6 +10,9 @@ class AppointmentProvider with ChangeNotifier {
   List<AppointmentModel> get myAppointments => _myAppointments;
   bool get isLoading => _isLoading;
 
+  /// نتيجة آخر حجز — تتضمن عدد المواعيد النشطة
+  int lastBookingActiveCount = 0;
+
   Future<bool> bookAppointment({
     required String userId,
     required String offerId,
@@ -27,7 +30,7 @@ class AppointmentProvider with ChangeNotifier {
       );
       if (dateTime == null) return false;
 
-      await SupabaseService().client.rpc(
+      final result = await SupabaseService().client.rpc(
         'book_appointment_internal',
         params: {
           'p_user_uid': userId,
@@ -37,6 +40,12 @@ class AppointmentProvider with ChangeNotifier {
           'p_request_id': requestId,
         },
       );
+
+      // السيرفر يرجع JSONB: {success, active_appointments, supervisor_uid}
+      if (result is Map) {
+        lastBookingActiveCount = (result['active_appointments'] ?? 0) as int;
+      }
+
       await fetchMyAppointments(userId);
       notifyListeners();
       return true;
