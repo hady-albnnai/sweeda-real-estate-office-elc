@@ -188,7 +188,7 @@ class AppRouter {
       }
 
       if (path.startsWith('/executor')) {
-        // المنفذ = مشرف (role=2 حالياً على السيرفر) أو من لديه مواعيد كـ supervisor
+        // المنفذ = مشرف ميداني (role=3) أو من لديه صلاحية إدارية
         if (!auth.isAdmin && !auth.isSupervisor) {
           return '/user/home';
         }
