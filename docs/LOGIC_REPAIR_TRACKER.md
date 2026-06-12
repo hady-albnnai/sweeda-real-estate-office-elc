@@ -163,6 +163,21 @@
 - تم تجهيز دفعة تثبيت جديدة قبل الاختبار الحقيقي:
   - migration: `supabase/migrations/2026_06_11_real_test_stabilization_internal_rpcs.sql`
   - وتشمل تحويل مسارات حساسة كثيرة إلى RPCs (العروض، الطلبات، المدفوعات، التبليغات، المواعيد، الإشعارات، التقييمات، بعض تحديثات المستخدم).
+### 2026-06-12 — تحسين تجربة الزائر
+
+**9 تحسينات:**
+1. `offer_detail`: Slider للصور (PageView + dots + عداد 1/3)
+2. `offer_detail`: السعر مع `AppUtils.formatPrice` (تنسيق + عملة)
+3. `offer_detail`: `loc['city']` + `loc['d']` معاً في الموقع
+4. `offer_detail`: `specs['details']` يظهر كقسم "المواصفات التقنية"
+5. `offer_detail`: زر الحجز معطّل مع نص "لا توجد مواعيد" إذا `avl` فارغ
+6. `offer_card`: شارة نوع المعاملة (بيع خضراء / إيجار زرقاء)
+7. `book_appointment_sheet`: فحص `isLoggedIn` — الزائر يرى شاشة تسجيل الدخول
+8. `home_screen`: Shimmer بدل دوامة + عداد النتائج + رسالة "لا نتائج" مع زر إلغاء
+9. `search_screen` + `offer_provider`: فلتر السعر (min/max) مع اختيار العملة
+
+---
+
 ### 2026-06-12 — إصلاح شاشة الزائر
 
 **7 مشاكل أُصلحت:**
