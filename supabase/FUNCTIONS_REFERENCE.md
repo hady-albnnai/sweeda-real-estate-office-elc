@@ -40,6 +40,8 @@
 | ✅ **مُطبّق على السيرفر** | `app_config.pkg.grace_days = 3` — أيام السماح من Config + `approve_payment_final` يقرأها ديناميكياً |
 | ✅ **مُطبّق على السيرفر** | `2026_06_12_executor_workflow.sql` — نظام المنفذ الميداني: جدول `completion_requests` + 4 أعمدة في appointments + 7 RPCs |
 | ✅ **مُطبّق على السيرفر** | `2026_06_12_roles_final.sql` — إعادة هيكلة الأدوار (7 أدوار) + تحديث حدود 19 RPC + CHECK CONSTRAINT + Config roles + RLS |
+| ✅ **مُطبّق على السيرفر** | `2026_06_12_fix_executor_role_checks.sql` — completion RPCs: role >= 4 + إشعار المكتب فقط |
+| ✅ **مُطبّق على السيرفر** | `2026_06_12_deep_audit_fixes.sql` — approve_payment role>=5 + create_offer إعفاء role>=4 + 11 RLS policy محدّثة (role>=4/5/6) |
 
 ---
 
