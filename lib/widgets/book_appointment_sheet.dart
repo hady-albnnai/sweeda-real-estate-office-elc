@@ -126,20 +126,25 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
 
     if (!mounted) return;
     if (success) {
+      final activeCount = provider.lastBookingActiveCount;
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '✅ تم إرسال طلب الموعد ليوم ${_dayName(_selectedDayKey!)} — '
-            'سيتم التأكيد عبر المكتب',
+            activeCount > 1
+                ? '✅ تم إرسال طلب الموعد ليوم ${_dayName(_selectedDayKey!)} — '
+                  'يوجد $activeCount مواعيد نشطة على هذا العرض. سيتم التأكيد عبر المكتب.'
+                : '✅ تم إرسال طلب الموعد ليوم ${_dayName(_selectedDayKey!)} — '
+                  'سيتم التأكيد عبر المكتب',
           ),
+          duration: const Duration(seconds: 4),
         ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'تعذّر حجز الموعد. قد يكون الوقت محجوزاً أو لا يوجد مشرف متاح في هذا الوقت.',
+            'تعذّر حجز الموعد. قد يكون الوقت محجوزاً أو لا يوجد مشرف متاح أو يوجد طلب إتمام معلق.',
           ),
         ),
       );
