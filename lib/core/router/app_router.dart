@@ -48,6 +48,9 @@ import '../../screens/photographer/photographer_tasks_screen.dart';
 import '../../screens/executor/my_tasks_screen.dart';
 import '../../screens/executor/execute_task_screen.dart';
 
+// === Employee ===
+import '../../screens/employee/employee_home_screen.dart';
+
 // === Admin ===
 import '../../screens/admin/admin_dashboard_screen.dart';
 import '../../screens/admin/admin_add_offer_screen.dart';
@@ -174,6 +177,12 @@ class AppRouter {
         if (!(auth.isBroker || auth.isAdmin) ||
             (requiredPermission != null &&
                 !PermissionService.has(auth.userModel, requiredPermission))) {
+          return '/user/home';
+        }
+      }
+
+      if (path.startsWith('/employee')) {
+        if (!auth.isEmployee && !auth.isSenior) {
           return '/user/home';
         }
       }
@@ -374,6 +383,14 @@ class AppRouter {
       GoRoute(
         path: '/photographer/tasks',
         builder: (context, state) => const PhotographerTasksScreen(),
+      ),
+
+      // ═══════════════════════════════════════
+      // 🏢 EMPLOYEE (موظف المكتب)
+      // ═══════════════════════════════════════
+      GoRoute(
+        path: '/employee/home',
+        builder: (context, state) => const EmployeeHomeScreen(),
       ),
 
       // ═══════════════════════════════════════

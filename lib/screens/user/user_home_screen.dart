@@ -263,7 +263,9 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
   String? _roleShortcutRoute(AuthProvider auth) {
     final user = auth.userModel;
     if (user == null) return null;
-    if (user.isAdmin) return '/admin/dashboard';
+    if (user.isSenior) return '/admin/dashboard';
+    if (user.isEmployee) return '/employee/home';
+    if (user.isSupervisor) return '/executor/tasks';
     if (PermissionService.has(user, PermissionKeys.photographerTasks)) {
       return '/photographer/tasks';
     }

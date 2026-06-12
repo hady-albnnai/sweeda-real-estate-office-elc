@@ -143,8 +143,12 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
       setState(() => _loading = false);
 
       // التوجّه حسب الدور
-      if (authProvider.isAdmin) {
+      if (authProvider.isSenior) {
         context.go('/admin/dashboard');
+      } else if (authProvider.isEmployee) {
+        context.go('/employee/home');
+      } else if (authProvider.isSupervisor) {
+        context.go('/executor/tasks');
       } else if (authProvider.isPhotographer) {
         context.go('/photographer/tasks');
       } else if (authProvider.isBroker) {

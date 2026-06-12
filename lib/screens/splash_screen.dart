@@ -71,8 +71,12 @@ class _SplashScreenState extends State<SplashScreen>
 
     // التوجّه حسب حالة المستخدم
     if (auth.isLoggedIn) {
-      if (auth.isAdmin) {
+      if (auth.isSenior) {
         context.go('/admin/dashboard');
+      } else if (auth.isEmployee) {
+        context.go('/employee/home');
+      } else if (auth.isSupervisor) {
+        context.go('/executor/tasks');
       } else if (auth.isPhotographer) {
         context.go('/photographer/tasks');
       } else if (auth.isBroker) {

@@ -25,6 +25,7 @@ docs/CURRENT_STATUS.md
 | إدارة الوسائط | `/admin/media-review` |
 | إدارة مهام التصوير | `/admin/photography-management` |
 | مهام المصور | `/photographer/tasks` |
+| شاشة موظف المكتب | `/employee/home` |
 | مهام المنفذ | `/executor/tasks` |
 | تنفيذ مهمة | `/executor/execute/:id` |
 
