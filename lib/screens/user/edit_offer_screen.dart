@@ -117,6 +117,13 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
       return;
     }
 
+    // منع تعديل العروض المحجوزة أو المكتملة
+    if (offer.sts == 5 || offer.sts == 6) {
+      _snack(offer.sts == 5 ? 'لا يمكن تعديل عرض محجوز — يوجد معاملة قيد الإتمام' : 'لا يمكن تعديل عرض مكتمل');
+      if (mounted) Navigator.pop(context);
+      return;
+    }
+
     setState(() {
       _offer = offer;
       _titleCtrl.text     = offer!.ttl;
