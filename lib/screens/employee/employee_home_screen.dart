@@ -95,18 +95,6 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
 
                   const SizedBox(height: 20),
 
-                  // ─── المالية والصفقات ───
-                  _sectionTitle('المالية والصفقات'),
-                  const SizedBox(height: 10),
-                  _buildGrid([
-                    if (PermissionService.has(user, PermissionKeys.manageDeals))
-                      _item(Icons.handshake_outlined, 'الصفقات', '/admin/deals', Colors.purple),
-                    if (PermissionService.has(user, PermissionKeys.managePayments))
-                      _item(Icons.payments_outlined, 'المدفوعات', '/admin/payments', Colors.indigo),
-                  ]),
-
-                  const SizedBox(height: 20),
-
                   // ─── التصوير والوسائط ───
                   _sectionTitle('التصوير والوسائط'),
                   const SizedBox(height: 10),

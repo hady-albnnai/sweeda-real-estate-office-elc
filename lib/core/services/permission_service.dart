@@ -65,7 +65,7 @@ class PermissionService {
     AppPermission(key: PermissionKeys.reviewVerifications, title: 'طلبات التوثيق', group: 'الإدارة', minimumRoleForDefault: UserRole.employee),
     AppPermission(key: PermissionKeys.mediaReview, title: 'إدارة الوسائط والتصوير', group: 'الإدارة', minimumRoleForDefault: UserRole.employee),
     AppPermission(key: PermissionKeys.fraudSuspects, title: 'كشف الاحتيال', group: 'الإدارة', minimumRoleForDefault: UserRole.employee),
-    AppPermission(key: PermissionKeys.viewAnalytics, title: 'التحليلات', group: 'الإدارة', minimumRoleForDefault: UserRole.employee),
+    AppPermission(key: PermissionKeys.viewAnalytics, title: 'التحليلات', group: 'المالية', minimumRoleForDefault: UserRole.deputy),
     AppPermission(key: PermissionKeys.completionRequests, title: 'طلبات إتمام المعاملات', group: 'التشغيل', minimumRoleForDefault: UserRole.employee),
 
     // — التصوير —
@@ -74,8 +74,8 @@ class PermissionService {
 
     // — التشغيل —
     AppPermission(key: PermissionKeys.manageAppointments, title: 'إدارة المواعيد', group: 'التشغيل', minimumRoleForDefault: UserRole.supervisor),
-    AppPermission(key: PermissionKeys.manageDeals, title: 'إدارة الصفقات', group: 'التشغيل', minimumRoleForDefault: UserRole.employee),
-    AppPermission(key: PermissionKeys.managePayments, title: 'إدارة المدفوعات', group: 'التشغيل', minimumRoleForDefault: UserRole.employee),
+    AppPermission(key: PermissionKeys.manageDeals, title: 'إدارة الصفقات', group: 'المالية', minimumRoleForDefault: UserRole.deputy),
+    AppPermission(key: PermissionKeys.managePayments, title: 'إدارة المدفوعات', group: 'المالية', minimumRoleForDefault: UserRole.deputy),
     AppPermission(key: PermissionKeys.manageReports,   title: 'التبليغات',       group: 'التشغيل', minimumRoleForDefault: UserRole.supervisor),
 
     // — الإعدادات —
