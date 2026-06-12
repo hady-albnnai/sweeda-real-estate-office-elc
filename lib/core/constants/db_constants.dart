@@ -105,14 +105,8 @@ class UserStatus {
   static const int banned = 2;
 }
 
-/// الأدوار
-class UserRole {
-  static const int user = 0;
-  static const int broker = 1;
-  static const int supervisor = 2;
-  static const int deputy = 3;
-  static const int manager = 4;
-}
+/// الأدوار — التعريف الرسمي الوحيد في lib/models/user_model.dart
+/// تم حذف التعريف المكرر هنا لمنع التضارب.
 
 /// أنواع البادجات
 class BadgeLevel {
