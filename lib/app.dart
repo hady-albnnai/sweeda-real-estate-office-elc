@@ -16,6 +16,7 @@ import 'providers/payment_provider.dart';
 import 'providers/admin_provider.dart';
 import 'providers/broker_provider.dart';
 import 'providers/photography_provider.dart';
+import 'providers/executor_provider.dart';
 import 'services/notification_service.dart';
 
 class MyApp extends StatefulWidget {
@@ -61,6 +62,8 @@ class _MyAppState extends State<MyApp> {
               go.go('/setup-profile');
             } else if (auth.isAdmin) {
               go.go('/admin/dashboard');
+            } else if (auth.isPhotographer) {
+              go.go('/photographer/tasks');
             } else if (auth.isBroker) {
               go.go('/broker/dashboard');
             } else {
@@ -98,6 +101,7 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider(create: (_) => AdminProvider()),
         ChangeNotifierProvider(create: (_) => BrokerProvider()),
         ChangeNotifierProvider(create: (_) => PhotographyProvider()),
+        ChangeNotifierProvider(create: (_) => ExecutorProvider()),
       ],
       child: Builder(builder: (ctx) {
         // ربط الـ listener مرة واحدة بعد ما يتوفر context الموجود فيه AuthProvider

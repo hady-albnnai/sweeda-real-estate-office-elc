@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import '../../models/user_model.dart';
 import '../../providers/offer_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/config_provider.dart';
@@ -266,7 +267,8 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     if (PermissionService.has(user, PermissionKeys.photographerTasks)) {
       return '/photographer/tasks';
     }
-    if (user.isBroker || user.role == 1) return '/broker/dashboard';
+    if (user.isPhotographer) return '/photographer/tasks';
+    if (user.isBroker || user.role == UserRole.broker) return '/broker/dashboard';
     return null;
   }
 

@@ -25,6 +25,8 @@ docs/CURRENT_STATUS.md
 | إدارة الوسائط | `/admin/media-review` |
 | إدارة مهام التصوير | `/admin/photography-management` |
 | مهام المصور | `/photographer/tasks` |
+| مهام المنفذ | `/executor/tasks` |
+| تنفيذ مهمة | `/executor/execute/:id` |
 
 ## الملفات المرجعية المهمة
 

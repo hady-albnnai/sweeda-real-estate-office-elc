@@ -227,13 +227,10 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
   }
 
   void _showRoleDialog(UserModel u) {
-    final roles = {
-      0: 'مستخدم',
-      1: 'وسيط',
-      2: 'مشرف',
-      3: 'نائب',
-      4: 'مدير',
-    };
+    final roles = <int, String>{};
+    for (int i = 0; i < UserRole.count; i++) {
+      roles[i] = UserRole.nameOf(i);
+    }
     final admin = context.read<AdminProvider>();
     showDialog(
       context: context,

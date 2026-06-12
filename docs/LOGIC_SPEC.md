@@ -233,7 +233,7 @@
 ### 5.12 Storage Policies لصور الهوية (Phase 9)
 - Bucket جديد **خاص** `ids_private` (public=false).
 - المسار: `<userId>/id_<ts>.jpg` — RLS تشترط `auth.uid()::text = folder[1]`.
-- المالك + الأدمن (role>=2) فقط يقرؤون.
+- المالك + الأدمن (role>=3) فقط يقرؤون.
 - الـclient يحفظ المسار النسبي (لا public URL).
 - الأدمن يعرض الصورة عبر `createSignedUrl(path, 60)` — رابط 60 ثانية.
 

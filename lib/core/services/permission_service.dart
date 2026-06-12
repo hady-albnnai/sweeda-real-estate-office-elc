@@ -46,34 +46,52 @@ class AppPermission {
 }
 
 class PermissionService {
+  /// الصلاحيات المتاحة بالنظام.
+  /// minimumRoleForDefault: أقل role يحصل على هذه الصلاحية تلقائياً.
+  /// 99 = لا يحصل عليها أي role تلقائياً (تُمنح يدوياً فقط).
+  ///
+  /// الأدوار:
+  /// 0=مستخدم، 1=وسيط، 2=مصور، 3=مشرف، 4=موظف مكتب، 5=نائب مدير، 6=مدير
   static const permissions = <AppPermission>[
-    AppPermission(key: PermissionKeys.adminDashboard, title: 'لوحة الإدارة', group: 'الإدارة', minimumRoleForDefault: 2),
-    AppPermission(key: PermissionKeys.officeOperations, title: 'عمليات المكتب', group: 'الإدارة', minimumRoleForDefault: 2),
-    AppPermission(key: PermissionKeys.manageUsers, title: 'إدارة المستخدمين', group: 'الإدارة', minimumRoleForDefault: 2),
-    AppPermission(key: PermissionKeys.managePermissions, title: 'إدارة الصلاحيات', group: 'الإدارة', minimumRoleForDefault: 3),
-    AppPermission(key: PermissionKeys.reviewOffers, title: 'مراجعة العروض', group: 'الإدارة', minimumRoleForDefault: 2),
-    AppPermission(key: PermissionKeys.reviewVerifications, title: 'طلبات التوثيق', group: 'الإدارة', minimumRoleForDefault: 2),
-    AppPermission(key: PermissionKeys.mediaReview, title: 'إدارة الوسائط والتصوير', group: 'الإدارة', minimumRoleForDefault: 2),
-    AppPermission(key: PermissionKeys.photographyManagement, title: 'إدارة مهام التصوير', group: 'التصوير', minimumRoleForDefault: 2),
-    AppPermission(key: PermissionKeys.photographerTasks, title: 'مهام المصور', group: 'التصوير', minimumRoleForDefault: 99),
-    AppPermission(key: PermissionKeys.fraudSuspects, title: 'كشف الاحتيال', group: 'الإدارة', minimumRoleForDefault: 2),
-    AppPermission(key: PermissionKeys.manageAppointments, title: 'إدارة المواعيد', group: 'التشغيل', minimumRoleForDefault: 2),
-    AppPermission(key: PermissionKeys.manageDeals, title: 'إدارة الصفقات', group: 'التشغيل', minimumRoleForDefault: 2),
-    AppPermission(key: PermissionKeys.managePayments, title: 'إدارة المدفوعات', group: 'التشغيل', minimumRoleForDefault: 2),
-    AppPermission(key: PermissionKeys.manageReports,   title: 'التبليغات',       group: 'التشغيل', minimumRoleForDefault: 2),
-    AppPermission(key: PermissionKeys.manageRequests,  title: 'إدارة الطلبات',   group: 'التشغيل', minimumRoleForDefault: 2),
-    AppPermission(key: PermissionKeys.manageConfig, title: 'إعدادات التطبيق', group: 'الإعدادات', minimumRoleForDefault: 4),
-    AppPermission(key: PermissionKeys.viewAnalytics, title: 'التحليلات', group: 'الإدارة', minimumRoleForDefault: 2),
-    AppPermission(key: PermissionKeys.brokerDashboard, title: 'لوحة الوسيط', group: 'الوسيط', minimumRoleForDefault: 1),
-    AppPermission(key: PermissionKeys.brokerOffers, title: 'عروض الوسيط', group: 'الوسيط', minimumRoleForDefault: 1),
-    AppPermission(key: PermissionKeys.brokerAppointments, title: 'مواعيد الوسيط', group: 'الوسيط', minimumRoleForDefault: 1),
-    AppPermission(key: PermissionKeys.brokerDeals, title: 'صفقات الوسيط', group: 'الوسيط', minimumRoleForDefault: 1),
-    AppPermission(key: PermissionKeys.brokerStats, title: 'إحصائيات الوسيط', group: 'الوسيط', minimumRoleForDefault: 1),
-    AppPermission(key: PermissionKeys.userHome, title: 'واجهة المستخدم', group: 'المستخدم', minimumRoleForDefault: 0),
-    AppPermission(key: PermissionKeys.userOffers, title: 'عروضي', group: 'المستخدم', minimumRoleForDefault: 0),
-    AppPermission(key: PermissionKeys.userRequests, title: 'طلباتي', group: 'المستخدم', minimumRoleForDefault: 0),
-    AppPermission(key: PermissionKeys.userAppointments, title: 'مواعيدي', group: 'المستخدم', minimumRoleForDefault: 0),
-    AppPermission(key: PermissionKeys.userProfile, title: 'الملف الشخصي', group: 'المستخدم', minimumRoleForDefault: 0),
+    // — الإدارة —
+    AppPermission(key: PermissionKeys.adminDashboard, title: 'لوحة الإدارة', group: 'الإدارة', minimumRoleForDefault: UserRole.supervisor),
+    AppPermission(key: PermissionKeys.officeOperations, title: 'عمليات المكتب', group: 'الإدارة', minimumRoleForDefault: UserRole.employee),
+    AppPermission(key: PermissionKeys.manageUsers, title: 'إدارة المستخدمين', group: 'الإدارة', minimumRoleForDefault: UserRole.employee),
+    AppPermission(key: PermissionKeys.managePermissions, title: 'إدارة الصلاحيات', group: 'الإدارة', minimumRoleForDefault: UserRole.deputy),
+    AppPermission(key: PermissionKeys.reviewOffers, title: 'مراجعة العروض', group: 'الإدارة', minimumRoleForDefault: UserRole.employee),
+    AppPermission(key: PermissionKeys.addOfferAdmin, title: 'إضافة عرض (إدارة)', group: 'الإدارة', minimumRoleForDefault: UserRole.employee),
+    AppPermission(key: PermissionKeys.manageRequests, title: 'إدارة الطلبات', group: 'الإدارة', minimumRoleForDefault: UserRole.employee),
+    AppPermission(key: PermissionKeys.reviewVerifications, title: 'طلبات التوثيق', group: 'الإدارة', minimumRoleForDefault: UserRole.employee),
+    AppPermission(key: PermissionKeys.mediaReview, title: 'إدارة الوسائط والتصوير', group: 'الإدارة', minimumRoleForDefault: UserRole.employee),
+    AppPermission(key: PermissionKeys.fraudSuspects, title: 'كشف الاحتيال', group: 'الإدارة', minimumRoleForDefault: UserRole.employee),
+    AppPermission(key: PermissionKeys.viewAnalytics, title: 'التحليلات', group: 'الإدارة', minimumRoleForDefault: UserRole.employee),
+
+    // — التصوير —
+    AppPermission(key: PermissionKeys.photographyManagement, title: 'إدارة مهام التصوير', group: 'التصوير', minimumRoleForDefault: UserRole.employee),
+    AppPermission(key: PermissionKeys.photographerTasks, title: 'مهام المصور', group: 'التصوير', minimumRoleForDefault: UserRole.photographer),
+
+    // — التشغيل —
+    AppPermission(key: PermissionKeys.manageAppointments, title: 'إدارة المواعيد', group: 'التشغيل', minimumRoleForDefault: UserRole.supervisor),
+    AppPermission(key: PermissionKeys.manageDeals, title: 'إدارة الصفقات', group: 'التشغيل', minimumRoleForDefault: UserRole.employee),
+    AppPermission(key: PermissionKeys.managePayments, title: 'إدارة المدفوعات', group: 'التشغيل', minimumRoleForDefault: UserRole.employee),
+    AppPermission(key: PermissionKeys.manageReports,   title: 'التبليغات',       group: 'التشغيل', minimumRoleForDefault: UserRole.supervisor),
+
+    // — الإعدادات —
+    AppPermission(key: PermissionKeys.manageConfig, title: 'إعدادات التطبيق', group: 'الإعدادات', minimumRoleForDefault: UserRole.manager),
+
+    // — الوسيط —
+    AppPermission(key: PermissionKeys.brokerDashboard, title: 'لوحة الوسيط', group: 'الوسيط', minimumRoleForDefault: UserRole.broker),
+    AppPermission(key: PermissionKeys.brokerOffers, title: 'عروض الوسيط', group: 'الوسيط', minimumRoleForDefault: UserRole.broker),
+    AppPermission(key: PermissionKeys.brokerAppointments, title: 'مواعيد الوسيط', group: 'الوسيط', minimumRoleForDefault: UserRole.broker),
+    AppPermission(key: PermissionKeys.brokerDeals, title: 'صفقات الوسيط', group: 'الوسيط', minimumRoleForDefault: UserRole.broker),
+    AppPermission(key: PermissionKeys.brokerStats, title: 'إحصائيات الوسيط', group: 'الوسيط', minimumRoleForDefault: UserRole.broker),
+
+    // — المستخدم —
+    AppPermission(key: PermissionKeys.userHome, title: 'واجهة المستخدم', group: 'المستخدم', minimumRoleForDefault: UserRole.user),
+    AppPermission(key: PermissionKeys.userOffers, title: 'عروضي', group: 'المستخدم', minimumRoleForDefault: UserRole.user),
+    AppPermission(key: PermissionKeys.userRequests, title: 'طلباتي', group: 'المستخدم', minimumRoleForDefault: UserRole.user),
+    AppPermission(key: PermissionKeys.userAppointments, title: 'مواعيدي', group: 'المستخدم', minimumRoleForDefault: UserRole.user),
+    AppPermission(key: PermissionKeys.userProfile, title: 'الملف الشخصي', group: 'المستخدم', minimumRoleForDefault: UserRole.user),
   ];
 
   static List<String> defaultsForRole(int role) {

@@ -113,7 +113,7 @@ class BusinessService {
     ConfigModel? config,
   }) async {
     try {
-      if (role >= 2) {
+      if (role >= UserRole.minAdmin) {
         return {
           'allowed': true,
           'used': 0,
@@ -178,7 +178,7 @@ class BusinessService {
   int offerQuota(ConfigModel? config,
       {required int role, required int packageType,
        DateTime? pkgEnd, DateTime? pkgGrace}) {
-    if (role >= 2) return 999999;
+    if (role >= UserRole.minAdmin) return 999999;
 
     // حساب الباقة الفعلية مع مراعاة فترة السماح (pkg_grace)
     final now = DateTime.now();
@@ -203,23 +203,23 @@ class BusinessService {
         if (o is num) return o.toInt();
       }
       // 2) حصة حسب الدور (qta.b للوسيط، qta.u للمستخدم)
-      final isBroker = role == 1;
+      final isBroker = role == UserRole.broker;
       final quotas = isBroker ? config.brokerQuotas : config.userQuotas;
       final o = quotas['o'];
       if (o is num) return o.toInt();
     }
     // قيم افتراضية آمنة
-    return role == 1 ? 5 : 1;
+    return role == UserRole.broker ? 5 : 1;
   }
 
   /// حصة الطلبات (qta.u.r / qta.b.r)
   int requestQuota(ConfigModel? config, {required int role}) {
     if (config != null) {
-      final quotas = role == 1 ? config.brokerQuotas : config.userQuotas;
+      final quotas = role == UserRole.broker ? config.brokerQuotas : config.userQuotas;
       final r = quotas['r'];
       if (r is num) return r.toInt();
     }
-    return role == 1 ? 5 : 3;
+    return role == UserRole.broker ? 5 : 3;
   }
 
   Future<Map<String, dynamic>> canPublishRequest({
@@ -228,7 +228,7 @@ class BusinessService {
     ConfigModel? config,
   }) async {
     // الإدارة معفاة من الحصة
-    if (role >= 2) {
+    if (role >= UserRole.minAdmin) {
       return {'allowed': true, 'used': 0, 'limit': 999999, 'reason': ''};
     }
     try {

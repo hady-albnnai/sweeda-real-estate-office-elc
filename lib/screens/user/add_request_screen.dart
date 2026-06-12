@@ -1,3 +1,4 @@
+import '../../models/user_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -306,7 +307,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().userModel;
-    final isAdmin = (user?.role ?? 0) >= 2;
+    final isAdmin = (user?.role ?? 0) >= UserRole.minAdmin;
 
     return Scaffold(
       backgroundColor: AppTheme.deepBlack,

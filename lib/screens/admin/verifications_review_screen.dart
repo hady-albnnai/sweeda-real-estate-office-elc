@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../models/user_model.dart';
 import '../../providers/admin_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
@@ -242,7 +243,7 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  isBroker ? 'وسيط' : (role >= 2 ? 'موظف' : 'مستخدم'),
+                  isBroker ? 'وسيط' : (role >= UserRole.minAdmin ? 'موظف' : 'مستخدم'),
                   style: const TextStyle(
                       color: Colors.white,
                       fontSize: 11,

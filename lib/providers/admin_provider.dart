@@ -9,7 +9,7 @@ import '../models/request_model.dart';
 import '../core/network/supabase_service.dart';
 import '../core/constants/db_constants.dart';
 
-/// Provider لوحة الإدارة (role >= 2)
+/// Provider لوحة الإدارة (role >= UserRole.minAdmin)
 /// يجمع كل عمليات الإدارة: العروض، المستخدمون، المواعيد، الصفقات،
 /// المدفوعات، التبليغات، الإحصائيات.
 class AdminProvider with ChangeNotifier {
@@ -410,7 +410,7 @@ class AdminProvider with ChangeNotifier {
         'totalUsers': users.length,
         'activeUsers': users.where((u) => u.sts == 0).length,
         'bannedUsers': users.where((u) => u.sts == 2).length,
-        'brokers': users.where((u) => u.role == 1).length,
+        'brokers': users.where((u) => u.role == UserRole.broker).length,
         'totalDeals': deals.length,
         'completedDeals': deals.where((d) => d.sts == 1).length,
         'totalCommission': deals
