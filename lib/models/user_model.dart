@@ -1,3 +1,37 @@
+/// أدوار المستخدم — مرجع: docs/CURRENT_STATUS.md
+/// الزائر ليس دوراً في DB — هو حالة بدون تسجيل دخول.
+class UserRole {
+  static const int user = 0;          // مستخدم عادي
+  static const int broker = 1;       // وسيط
+  static const int photographer = 2; // مصور — موظف داخلي
+  static const int supervisor = 3;   // مشرف — موظف ميداني (ينزل مع الزبائن)
+  static const int employee = 4;     // موظف مكتب — عمليات مكتبية
+  static const int deputy = 5;       // نائب مدير
+  static const int manager = 6;      // مدير — أعلى صلاحية
+
+  /// أقل مستوى يُعتبر "موظف داخلي" (مصور فما فوق)
+  static const int minInternal = photographer;
+  /// أقل مستوى يُعتبر "إدارة" (مشرف فما فوق)
+  static const int minAdmin = supervisor;
+  /// أقل مستوى يُعتبر "إدارة عليا" (نائب مدير فما فوق)
+  static const int minSenior = deputy;
+
+  static String nameOf(int role) {
+    switch (role) {
+      case user: return 'مستخدم';
+      case broker: return 'وسيط';
+      case photographer: return 'مصور';
+      case supervisor: return 'مشرف';
+      case employee: return 'موظف مكتب';
+      case deputy: return 'نائب مدير';
+      case manager: return 'مدير';
+      default: return 'غير معروف';
+    }
+  }
+
+  /// عدد الأدوار الكلي (للحلقات والـ UI)
+  static const int count = 7;
+}
 
 /// نموذج المستخدم — أسماء الحقول القصيرة تطابق قاعدة البيانات
 class UserModel {
@@ -142,7 +176,23 @@ class UserModel {
   bool get isBanned => sts == 2;
   bool get isBroker => brk == 1;
   bool get isDeleted => iDel == 1;
-  bool get isAdmin => role >= 2;
+
+  /// هل هو موظف داخلي (مصور فما فوق)؟
+  bool get isInternal => role >= UserRole.minInternal;
+  /// هل هو إداري (مشرف فما فوق) — يصل للوحة الإدارة؟
+  bool get isAdmin => role >= UserRole.minAdmin;
+  /// هل هو إدارة عليا (نائب مدير فما فوق)؟
+  bool get isSenior => role >= UserRole.minSenior;
+  /// هل هو مصور؟
+  bool get isPhotographer => role == UserRole.photographer;
+  /// هل هو مشرف (ميداني)؟
+  bool get isSupervisor => role == UserRole.supervisor;
+  /// هل هو موظف مكتب؟
+  bool get isEmployee => role == UserRole.employee;
+  /// هل هو نائب مدير؟
+  bool get isDeputy => role == UserRole.deputy;
+  /// هل هو مدير؟
+  bool get isManager => role == UserRole.manager;
 
   /// الباقة الفعلية مع مراعاة فترة السماح
   /// — إذا كانت ضمن pkg_grace تُعامَل كباقة نشطة
@@ -175,16 +225,7 @@ class UserModel {
     return pkgGrace!.difference(DateTime.now()).inDays;
   }
 
-  String get roleName {
-    switch (role) {
-      case 0: return 'مستخدم';
-      case 1: return 'وسيط';
-      case 2: return 'مشرف';
-      case 3: return 'نائب';
-      case 4: return 'مدير';
-      default: return 'غير معروف';
-    }
-  }
+  String get roleName => UserRole.nameOf(role);
 
   /// الرتبة السلوكية (Trust) — مكتسبة بالنشاط والنقاط.
   /// ملاحظة: المعادن (برونزي/فضي/ذهبي) محجوزة للباقات المدفوعة فقط.

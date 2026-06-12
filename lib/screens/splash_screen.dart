@@ -73,6 +73,8 @@ class _SplashScreenState extends State<SplashScreen>
     if (auth.isLoggedIn) {
       if (auth.isAdmin) {
         context.go('/admin/dashboard');
+      } else if (auth.isPhotographer) {
+        context.go('/photographer/tasks');
       } else if (auth.isBroker) {
         context.go('/broker/dashboard');
       } else {

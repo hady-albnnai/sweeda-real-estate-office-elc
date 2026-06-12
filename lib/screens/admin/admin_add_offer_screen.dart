@@ -18,7 +18,7 @@ import '../../widgets/location_picker.dart';
 
 /// شاشة إضافة عرض من الإدارة
 /// - تختلف عن شاشة المستخدم في: اختيار صاحب العرض + حفظ added_by
-/// - من يصل إليها: role >= 2 فقط
+/// - من يصل إليها: role >= UserRole.minAdmin فقط
 /// - added_by = uid الموظف/المدير — يظهر فقط في لوحة الإدارة
 class AdminAddOfferScreen extends StatefulWidget {
   const AdminAddOfferScreen({super.key});
@@ -137,7 +137,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
     final config    = context.read<ConfigProvider>().config;
     final admin     = auth.userModel;
 
-    if (admin == null || (admin.role) < 2) {
+    if (admin == null || !admin.isAdmin) {
       _snack('غير مصرح لك بهذه العملية');
       return;
     }
@@ -416,7 +416,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
                                     color: AppTheme.textWhite, fontSize: 14),
                               ),
                               subtitle: Text(
-                                u.ph + (u.role == 1 ? ' • وسيط' : ''),
+                                u.ph + (u.role == UserRole.broker ? ' • وسيط' : ''),
                                 style: const TextStyle(
                                     color: AppTheme.textGrey, fontSize: 11),
                               ),

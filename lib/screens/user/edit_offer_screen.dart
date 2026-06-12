@@ -1,3 +1,4 @@
+import '../../models/user_model.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -110,7 +111,7 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
     }
 
     final auth = context.read<AuthProvider>();
-    if (auth.userModel?.uid != offer.usrId && (auth.userModel?.role ?? 0) < 2) {
+    if (auth.userModel?.uid != offer.usrId && (auth.userModel?.role ?? 0) < UserRole.minAdmin) {
       _snack('ليس لديك صلاحية تعديل هذا العرض');
       if (mounted) Navigator.pop(context);
       return;

@@ -44,6 +44,10 @@ import '../../screens/broker/broker_deals_screen.dart';
 import '../../screens/broker/broker_stats_screen.dart';
 import '../../screens/photographer/photographer_tasks_screen.dart';
 
+// === Executor ===
+import '../../screens/executor/my_tasks_screen.dart';
+import '../../screens/executor/execute_task_screen.dart';
+
 // === Admin ===
 import '../../screens/admin/admin_dashboard_screen.dart';
 import '../../screens/admin/admin_add_offer_screen.dart';
@@ -172,8 +176,17 @@ class AppRouter {
         }
       }
 
+      if (path.startsWith('/executor')) {
+        // المنفذ = مشرف (role=2 حالياً على السيرفر) أو من لديه مواعيد كـ supervisor
+        if (!auth.isAdmin && !auth.isSupervisor) {
+          return '/user/home';
+        }
+      }
+
       if (path.startsWith('/photographer')) {
-        if (!PermissionService.has(auth.userModel, PermissionKeys.photographerTasks)) {
+        // المصور يصل إذا كان role = photographer أو لديه صلاحية مهام المصور
+        if (!auth.isPhotographer &&
+            !PermissionService.has(auth.userModel, PermissionKeys.photographerTasks)) {
           return '/home';
         }
       }
@@ -359,6 +372,21 @@ class AppRouter {
       GoRoute(
         path: '/photographer/tasks',
         builder: (context, state) => const PhotographerTasksScreen(),
+      ),
+
+      // ═══════════════════════════════════════
+      // 👷 EXECUTOR (المنفذ الميداني)
+      // ═══════════════════════════════════════
+      GoRoute(
+        path: '/executor/tasks',
+        builder: (context, state) => const MyTasksScreen(),
+      ),
+      GoRoute(
+        path: '/executor/execute/:id',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return ExecuteTaskScreen(appointmentId: id);
+        },
       ),
 
       // ═══════════════════════════════════════

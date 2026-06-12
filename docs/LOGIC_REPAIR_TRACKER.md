@@ -393,6 +393,53 @@
   - `docs/LOGIC_SPEC.md`
 - ثم تابع من أول بند حالته `OPEN` أو `IN_PROGRESS` حسب السجل.
 
+### 2026-06-12 — إعادة هيكلة الأدوار
+
+**التغيير:** توسيع نظام الأدوار من 5 إلى 7:
+
+| role | القديم | الجديد |
+|---:|---|---|
+| 0 | مستخدم | مستخدم |
+| 1 | وسيط | وسيط |
+| 2 | مشرف/موظف | **مصور** (جديد) |
+| 3 | نائب مدير | **مشرف** (ميداني) |
+| 4 | مدير | **موظف مكتب** (جديد) |
+| 5 | — | **نائب مدير** |
+| 6 | — | **مدير** |
+
+**الملفات المعدلة:**
+- `lib/models/user_model.dart` — إضافة `UserRole` class + تحديث getters
+- `lib/core/services/permission_service.dart` — إعادة كتابة `minimumRoleForDefault` للأدوار الجديدة
+- `lib/core/services/business_service.dart` — `UserRole.minAdmin` بدل `2`
+- `lib/providers/auth_provider.dart` — إضافة getters جديدة
+- `lib/providers/admin_provider.dart` — `UserRole.broker` بدل `1`
+- `lib/screens/admin/user_details_screen.dart` — قائمة الأدوار الجديدة (7 بدل 5)
+- `lib/screens/admin/users_management_screen.dart` — قائمة الأدوار الجديدة
+- `lib/screens/admin/admin_add_offer_screen.dart` — `isAdmin` بدل `role < 2`
+- `lib/screens/admin/verifications_review_screen.dart` — `UserRole.minAdmin`
+- `lib/screens/user/add_offer_screen.dart` — `UserRole.minAdmin`
+- `lib/screens/user/add_request_screen.dart` — `UserRole.minAdmin`
+- `lib/screens/user/edit_offer_screen.dart` — `UserRole.minAdmin`
+- `lib/screens/user/user_home_screen.dart` — إضافة توجيه المصور
+- `lib/screens/splash_screen.dart` — إضافة توجيه المصور
+- `lib/screens/auth/otp_verification_screen.dart` — إضافة توجيه المصور
+- `lib/screens/auth/setup_profile_screen.dart` — إضافة توجيه المصور
+- `lib/app.dart` — إضافة توجيه المصور
+- `lib/core/router/app_router.dart` — المصور كدور بدل صلاحية فقط
+- `supabase/migrations/2026_06_12_roles_restructure.sql` — migration كامل
+- تحديث كل الملفات المرجعية
+
+**السيرفر:**
+- ترقية أدوار المستخدمين الموجودين تلقائياً (4→6, 3→5, 2→4)
+- المصورون (صلاحية photographer_tasks) يصبحون role=2
+- كل RPCs الإدارية: `role >= 2` → `role >= 3`
+- تغيير أدوار/صلاحيات: `role >= 3` → `role >= 5`
+- إعدادات التطبيق: `role >= 4` → `role >= 6`
+- `get_available_supervisor`: يختار role=3 (مشرف ميداني)
+- Config roles محدثة
+
+---
+
 ### الحالة الحالية المختصرة للمحادثة
 - تم تنفيذ دفعة إصلاحات منطقية كبيرة وتحديث التوثيق المرجعي.
 - جميع البنود المسجلة في التدقيق أصبحت `FIXED_VERIFIED` ما عدا `S-01`.

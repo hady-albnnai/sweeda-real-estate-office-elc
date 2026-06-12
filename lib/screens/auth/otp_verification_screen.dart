@@ -70,6 +70,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         context.go('/setup-profile');
       } else if (auth.isAdmin) {
         context.go('/admin/dashboard');
+      } else if (auth.isPhotographer) {
+        context.go('/photographer/tasks');
       } else if (auth.isBroker) {
         context.go('/broker/dashboard');
       } else {

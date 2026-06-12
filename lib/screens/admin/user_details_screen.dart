@@ -414,11 +414,10 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
             style: TextStyle(color: AppTheme.textWhite)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
-          children: List.generate(5, (i) {
-            const names = ['مستخدم', 'وسيط', 'مشرف', 'نائب', 'مدير'];
+          children: List.generate(UserRole.count, (i) {
             return ListTile(
               leading: const Icon(Icons.person, color: AppTheme.primaryGold),
-              title: Text(names[i],
+              title: Text(UserRole.nameOf(i),
                   style: const TextStyle(color: AppTheme.textWhite)),
               selected: _user!.role == i,
               onTap: () {

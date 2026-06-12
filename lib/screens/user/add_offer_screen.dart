@@ -1,3 +1,4 @@
+import '../../models/user_model.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -434,7 +435,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   Widget build(BuildContext context) {
     final config = context.watch<ConfigProvider>().config;
     final user = context.watch<AuthProvider>().userModel;
-    final isInternalAccount = (user?.role ?? 0) >= 2;
+    final isInternalAccount = (user?.role ?? 0) >= UserRole.minAdmin;
     final limit = _biz.offerQuota(config,
         role: user?.role ?? 0, packageType: user?.bPkg ?? 0,
         pkgEnd: user?.pkgEnd, pkgGrace: user?.pkgGrace);

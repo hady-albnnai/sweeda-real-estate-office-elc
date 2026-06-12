@@ -24,6 +24,12 @@ class AuthProvider with ChangeNotifier {
   bool get isLoggedIn => _userModel != null;
   bool get isAdmin => _userModel?.isAdmin ?? false;
   bool get isBroker => _userModel?.isBroker ?? false;
+  bool get isInternal => _userModel?.isInternal ?? false;
+  bool get isPhotographer => _userModel?.isPhotographer ?? false;
+  bool get isSupervisor => _userModel?.isSupervisor ?? false;
+  bool get isEmployee => _userModel?.isEmployee ?? false;
+  bool get isSenior => _userModel?.isSenior ?? false;
+  bool get isManager => _userModel?.isManager ?? false;
 
   // ════════════════════════════════════════════════════════════════════
   // 📱 WhatsApp
