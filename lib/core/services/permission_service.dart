@@ -55,7 +55,7 @@ class PermissionService {
   /// 0=مستخدم، 1=وسيط، 2=مصور، 3=مشرف، 4=موظف مكتب، 5=نائب مدير، 6=مدير
   static const permissions = <AppPermission>[
     // — الإدارة —
-    AppPermission(key: PermissionKeys.adminDashboard, title: 'لوحة الإدارة', group: 'الإدارة', minimumRoleForDefault: UserRole.supervisor),
+    AppPermission(key: PermissionKeys.adminDashboard, title: 'لوحة الإدارة', group: 'الإدارة', minimumRoleForDefault: UserRole.employee),
     AppPermission(key: PermissionKeys.officeOperations, title: 'عمليات المكتب', group: 'الإدارة', minimumRoleForDefault: UserRole.employee),
     AppPermission(key: PermissionKeys.manageUsers, title: 'إدارة المستخدمين', group: 'الإدارة', minimumRoleForDefault: UserRole.employee),
     AppPermission(key: PermissionKeys.managePermissions, title: 'إدارة الصلاحيات', group: 'الإدارة', minimumRoleForDefault: UserRole.deputy),
@@ -73,20 +73,23 @@ class PermissionService {
     AppPermission(key: PermissionKeys.photographerTasks, title: 'مهام المصور', group: 'التصوير', minimumRoleForDefault: UserRole.photographer),
 
     // — التشغيل —
-    AppPermission(key: PermissionKeys.manageAppointments, title: 'إدارة المواعيد', group: 'التشغيل', minimumRoleForDefault: UserRole.supervisor),
+    AppPermission(key: PermissionKeys.manageAppointments, title: 'إدارة المواعيد', group: 'التشغيل', minimumRoleForDefault: UserRole.employee),
     AppPermission(key: PermissionKeys.manageDeals, title: 'إدارة الصفقات', group: 'المالية', minimumRoleForDefault: UserRole.deputy),
     AppPermission(key: PermissionKeys.managePayments, title: 'إدارة المدفوعات', group: 'المالية', minimumRoleForDefault: UserRole.deputy),
-    AppPermission(key: PermissionKeys.manageReports,   title: 'التبليغات',       group: 'التشغيل', minimumRoleForDefault: UserRole.supervisor),
+    AppPermission(key: PermissionKeys.manageReports,   title: 'التبليغات',       group: 'التشغيل', minimumRoleForDefault: UserRole.employee),
 
     // — الإعدادات —
     AppPermission(key: PermissionKeys.manageConfig, title: 'إعدادات التطبيق', group: 'الإعدادات', minimumRoleForDefault: UserRole.manager),
 
-    // — الوسيط —
-    AppPermission(key: PermissionKeys.brokerDashboard, title: 'لوحة الوسيط', group: 'الوسيط', minimumRoleForDefault: UserRole.broker),
-    AppPermission(key: PermissionKeys.brokerOffers, title: 'عروض الوسيط', group: 'الوسيط', minimumRoleForDefault: UserRole.broker),
-    AppPermission(key: PermissionKeys.brokerAppointments, title: 'مواعيد الوسيط', group: 'الوسيط', minimumRoleForDefault: UserRole.broker),
-    AppPermission(key: PermissionKeys.brokerDeals, title: 'صفقات الوسيط', group: 'الوسيط', minimumRoleForDefault: UserRole.broker),
-    AppPermission(key: PermissionKeys.brokerStats, title: 'إحصائيات الوسيط', group: 'الوسيط', minimumRoleForDefault: UserRole.broker),
+    // — الوسيط — (brk==1 فقط، ليس بالـ role number)
+    // ملاحظة: هذه الصلاحيات تُمنح تلقائياً لـ role=1 فقط
+    // الأدوار الأعلى (مصور/مشرف/موظف...) لا يرثونها تلقائياً
+    // إلا إذا كان brk==1 (وسيط مفعّل)
+    AppPermission(key: PermissionKeys.brokerDashboard, title: 'لوحة الوسيط', group: 'الوسيط', minimumRoleForDefault: 99),
+    AppPermission(key: PermissionKeys.brokerOffers, title: 'عروض الوسيط', group: 'الوسيط', minimumRoleForDefault: 99),
+    AppPermission(key: PermissionKeys.brokerAppointments, title: 'مواعيد الوسيط', group: 'الوسيط', minimumRoleForDefault: 99),
+    AppPermission(key: PermissionKeys.brokerDeals, title: 'صفقات الوسيط', group: 'الوسيط', minimumRoleForDefault: 99),
+    AppPermission(key: PermissionKeys.brokerStats, title: 'إحصائيات الوسيط', group: 'الوسيط', minimumRoleForDefault: 99),
 
     // — المستخدم —
     AppPermission(key: PermissionKeys.userHome, title: 'واجهة المستخدم', group: 'المستخدم', minimumRoleForDefault: UserRole.user),
@@ -106,7 +109,22 @@ class PermissionService {
   static List<String> effectivePermissions(UserModel? user) {
     if (user == null) return const [];
     if (user.perm.isNotEmpty) return user.perm;
-    return defaultsForRole(user.role);
+
+    final perms = defaultsForRole(user.role);
+
+    // الوسيط (brk==1) يحصل على صلاحيات الوسيط بغض النظر عن الـ role
+    if (user.isBroker) {
+      return [
+        ...perms,
+        PermissionKeys.brokerDashboard,
+        PermissionKeys.brokerOffers,
+        PermissionKeys.brokerAppointments,
+        PermissionKeys.brokerDeals,
+        PermissionKeys.brokerStats,
+      ];
+    }
+
+    return perms;
   }
 
   static bool has(UserModel? user, String permission) {
