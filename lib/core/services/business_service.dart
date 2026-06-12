@@ -113,7 +113,7 @@ class BusinessService {
     ConfigModel? config,
   }) async {
     try {
-      if (role >= UserRole.minAdmin) {
+      if (role >= UserRole.employee) {
         return {
           'allowed': true,
           'used': 0,
@@ -143,7 +143,7 @@ class BusinessService {
             .select('id')
             .eq('usr_id', uid)
             .eq('i_del', 1)
-            .gte('ts_upd', since24h);
+            .gte('ts_crt', since24h);
       } catch (_) {}
 
       final used = active.length + recentlyDeleted.length;
@@ -178,7 +178,7 @@ class BusinessService {
   int offerQuota(ConfigModel? config,
       {required int role, required int packageType,
        DateTime? pkgEnd, DateTime? pkgGrace}) {
-    if (role >= UserRole.minAdmin) return 999999;
+    if (role >= UserRole.employee) return 999999;
 
     // حساب الباقة الفعلية مع مراعاة فترة السماح (pkg_grace)
     final now = DateTime.now();
@@ -228,7 +228,7 @@ class BusinessService {
     ConfigModel? config,
   }) async {
     // الإدارة معفاة من الحصة
-    if (role >= UserRole.minAdmin) {
+    if (role >= UserRole.employee) {
       return {'allowed': true, 'used': 0, 'limit': 999999, 'reason': ''};
     }
     try {
