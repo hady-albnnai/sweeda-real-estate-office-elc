@@ -60,8 +60,12 @@ class _MyAppState extends State<MyApp> {
             final go = AppRouter.router;
             if (auth.isNewUser) {
               go.go('/setup-profile');
-            } else if (auth.isAdmin) {
+            } else if (auth.isSenior) {
               go.go('/admin/dashboard');
+            } else if (auth.isEmployee) {
+              go.go('/employee/home');
+            } else if (auth.isSupervisor) {
+              go.go('/executor/tasks');
             } else if (auth.isPhotographer) {
               go.go('/photographer/tasks');
             } else if (auth.isBroker) {
