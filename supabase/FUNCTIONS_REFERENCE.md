@@ -39,7 +39,7 @@
 | ✅ **مُطبّق على السيرفر** | نظام الباقات الاحترافي (2026-06-12 Batch 2): `users.pkg_grace` + `approve_payment_final` مع grace + `create_payment_internal` يمنع دفعة مزدوجة + `expire_packages` مع إشعار + `send_renewal_reminders()` + cron 3:15 UTC |
 | ✅ **مُطبّق على السيرفر** | `app_config.pkg.grace_days = 3` — أيام السماح من Config + `approve_payment_final` يقرأها ديناميكياً |
 | ✅ **مُطبّق على السيرفر** | `2026_06_12_executor_workflow.sql` — نظام المنفذ الميداني: جدول `completion_requests` + 4 أعمدة في appointments + 7 RPCs |
-| ✅ **مُطبّق على السيرفر** | `2026_06_12_roles_restructure.sql` — إعادة هيكلة الأدوار (7 أدوار) + تحديث حدود RPCs |
+| ✅ **مُطبّق على السيرفر** | `2026_06_12_roles_final.sql` — إعادة هيكلة الأدوار (7 أدوار) + تحديث حدود 19 RPC + CHECK CONSTRAINT + Config roles + RLS |
 
 ---
 
