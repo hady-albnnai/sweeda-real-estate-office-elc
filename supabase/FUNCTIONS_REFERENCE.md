@@ -44,6 +44,8 @@
 | ✅ **مُطبّق على السيرفر** | `2026_06_12_deep_audit_fixes.sql` — approve_payment role>=5 + create_offer إعفاء role>=4 + 11 RLS policy محدّثة (role>=4/5/6) |
 | ✅ **مُطبّق على السيرفر** | `2026_06_12_booking_and_lifecycle_overhaul.sql` — إعادة كتابة book_appointment (10 فحوصات + avl + منفذ + عدد مواعيد) + دورة حياة العرض (sts 5/6 + إلغاء مواعيد) + 5 دوال role محدّثة |
 | ✅ **مُطبّق على السيرفر** | `2026_06_12_lifecycle_final_fixes.sql` — expire فقط المنشور + mark_social بدون ts_upd + إرجاع العرض عند رفض الإتمام |
+| ✅ **مُطبّق على السيرفر** | `2026_06_13_notifications_text_and_offer_number.sql` — رقم عرض تسلسلي (offer_number + sequence + trigger) + إشعارات "العرض الخاص بك" |
+| ✅ **مُطبّق على السيرفر** | `2026_06_13_locations_and_car_docs.sql` — مناطق (السويداء/صلخد/شهبا) + سند سيارة (carDocTp) + نوع نمرة (plateTp) |
 
 ---
 
