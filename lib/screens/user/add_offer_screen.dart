@@ -61,6 +61,13 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   String? _carTransmission;
   int? _selectedCarDocType;  // نوع سند ملكية السيارة
   int? _selectedPlateType;   // نوع النمرة
+
+  // حقول العقار الإضافية
+  final _areaCtrl = TextEditingController();    // المساحة (م²)
+  final _floorCtrl = TextEditingController();   // الطابق
+  final _legalNotesCtrl = TextEditingController(); // ملاحظات قانونية
+  String? _finishing;   // الإكساء
+  String? _direction;   // الاتجاه
   String _progressMsg = '';
 
   // المواعيد المتاحة — avl
@@ -126,6 +133,9 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     _carYearCtrl.dispose();
     _carColorCtrl.dispose();
     _carKmCtrl.dispose();
+    _areaCtrl.dispose();
+    _floorCtrl.dispose();
+    _legalNotesCtrl.dispose();
     super.dispose();
   }
 
@@ -366,6 +376,14 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       specs: {
         'details': _specCtrl.text,
         if (customSub.isNotEmpty) 'custom_sub': customSub,
+        // حقول العقار
+        if (_selectedType == 0) ...{
+          if (_areaCtrl.text.trim().isNotEmpty) 'area': _areaCtrl.text.trim(),
+          if (_floorCtrl.text.trim().isNotEmpty) 'floor': _floorCtrl.text.trim(),
+          if (_finishing != null) 'finishing': _finishing!,
+          if (_direction != null) 'direction': _direction!,
+          if (_legalNotesCtrl.text.trim().isNotEmpty) 'legal_notes': _legalNotesCtrl.text.trim(),
+        },
         // حقول السيارة
         if (_selectedType == 1) ...{
           'brand': _carBrandCtrl.text.trim(),
@@ -822,27 +840,70 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
               ),
             ]),
             const SizedBox(height: 15),
-            // الوصف التفصيلي للعرض (يختلف عن وصف الموقع الذي أُدخل في step1)
+            // ─── حقول العقار الإضافية ───
+            if (_selectedType == 0 || _selectedType == null) ...[
+              TextField(
+                controller: _areaCtrl,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'المساحة (م²)',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              _dd('الإكساء', ['على العظم', 'نص إكساء', 'إكساء كامل', 'إكساء فاخر (سوبر ديلوكس)', 'آخر'],
+                  (v) => setState(() => _finishing = v)),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _floorCtrl,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'الطابق',
+                  hintText: 'مثال: 3',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              _dd('اتجاه العقار', ['شمالي', 'جنوبي', 'شرقي', 'غربي', 'شمالي شرقي', 'شمالي غربي', 'جنوبي شرقي', 'جنوبي غربي'],
+                  (v) => setState(() => _direction = v)),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _legalNotesCtrl,
+                maxLines: 2,
+                decoration: const InputDecoration(
+                  labelText: 'ملاحظات قانونية (اختياري)',
+                  hintText: 'مثال: منطقة تنظيمية، أو ملاحظة عن السند...',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 15),
+            ],
+            // الوصف التفصيلي للعرض
             TextField(
               controller: _descCtrl,
               maxLines: 4,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'وصف تفصيلي للعرض (اختياري)',
-                hintText: 'اذكر مميزات العرض، حالته، الطابق، المساحة، أي تفاصيل مهمة...',
-                border: OutlineInputBorder(),
+                hintText: _selectedType == 1
+                    ? 'اذكر مميزات السيارة، حالتها، أي تفاصيل مهمة...'
+                    : 'اذكر مميزات العقار، حالته، عدد الغرف، أي تفاصيل مهمة...',
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 15),
             TextField(
                 controller: _specCtrl,
                 maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'المواصفات التقنية (اختيارية)',
-                  hintText: 'مثال: 3 غرف، 2 حمام، مساحة 150م²',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: 'مواصفات إضافية (اختيارية)',
+                  hintText: _selectedType == 1
+                      ? 'مثال: فتحة سقف، جلد، كاميرا...'
+                      : 'مثال: 3 غرف، 2 حمام، بلكون، موقف...',
+                  border: const OutlineInputBorder(),
                 )),
             const SizedBox(height: 20),
-            // الموقع الدقيق على الخريطة
+            // الموقع الدقيق على الخريطة (للعقار فقط)
+            if (_selectedType == 0 || _selectedType == null) ...[
             const Row(children: [
               Icon(Icons.map, color: AppTheme.primaryGold, size: 18),
               SizedBox(width: 6),
@@ -889,6 +950,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
                 ]),
               ),
             ],
+            ], // إغلاق if (_selectedType == 0) للخريطة
           ]),
         ),
         isActive: _currentStep >= 1,
