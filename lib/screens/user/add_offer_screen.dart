@@ -438,12 +438,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     OfferModel? createdOffer;
     try {
       createdOffer = await offerProv.addOffer(offer);
-
-      if (createdOffer != null) {
-        // 4) منح نقاط إضافة عرض (pts.addO)
-        await _biz.awardEvent(user.uid, configProv.config, 'addO', fallback: 500);
-        await auth.refreshUser();
-      }
+      // النقاط تُمنح بعد موافقة الإدارة — ليس عند الإنشاء
     } catch (e) {
       if (!mounted) return;
       setState(() => _submitting = false);
@@ -455,12 +450,10 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     setState(() => _submitting = false);
 
     if (createdOffer != null) {
-      if (_shareOnSocial) {
-        await _triggerWhatsAppVideoShare(createdOffer, user);
-      }
+      // لا يتم فتح واتساب أو منح نقاط — العرض بانتظار موافقة الإدارة
       if (!mounted) return;
       Navigator.pop(context);
-      _snack('تم إرسال عرضك للمراجعة بنجاح ✅ (+نقاط)');
+      _snack('تم إرسال العرض للمراجعة بنجاح ✅ سيتم إشعارك عند الموافقة');
     } else {
       _snack('فشل إنشاء العرض، حاول مجدداً');
     }

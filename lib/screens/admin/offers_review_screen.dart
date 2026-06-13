@@ -3,8 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/admin_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/config_provider.dart';
 import '../../models/offer_model.dart';
 import '../../models/user_model.dart';
+import '../../core/services/business_service.dart';
 import '../../core/network/supabase_service.dart';
 import '../../core/constants/db_constants.dart';
 import '../../core/theme/app_theme.dart';
@@ -98,7 +100,10 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
     final ok = await admin.reviewOffer(adminUid, o.id, true);
     if (!mounted) return;
     if (ok) {
-      _snack('✅ تم نشر العرض');
+      // منح نقاط إضافة عرض لصاحب العرض بعد الموافقة
+      final config = context.read<ConfigProvider>().config;
+      await BusinessService().awardEvent(o.usrId, config, 'addO', fallback: 500);
+      _snack('✅ تم نشر العرض (+نقاط لصاحب العرض)');
       _load();
     } else {
       _snack('فشل النشر');
