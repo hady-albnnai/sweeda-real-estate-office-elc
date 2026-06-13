@@ -162,6 +162,8 @@ class AuthProvider with ChangeNotifier {
 
   Future<Map<String, dynamic>> registerStreak(dynamic config) async {
     if (_userModel == null) return {'streak': 0, 'changed': false};
+    // الإدارة لا تحتاج streak أو نقاط يومية
+    if (_userModel!.isAdmin) return {'streak': 0, 'changed': false, 'awarded': false};
 
     final todayStr = _getSyriaDateString(DateTime.now());
 

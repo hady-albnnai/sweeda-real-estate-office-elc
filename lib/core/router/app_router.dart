@@ -204,6 +204,14 @@ class AppRouter {
       }
 
       if (path.startsWith('/user')) {
+        // منع الإدارة من شاشات الباقات/الدفع/الإحالة
+        if (auth.isAdmin && (
+            path == '/user/packages' ||
+            path == '/user/payment' ||
+            path == '/user/referral' ||
+            path == '/user/my-payments')) {
+          return auth.isSenior ? '/admin/dashboard' : '/employee/home';
+        }
         final requiredPermission = _userRoutePermission(path);
         if (requiredPermission != null &&
             !PermissionService.has(auth.userModel, requiredPermission)) {

@@ -132,9 +132,11 @@ class ProfileScreen extends StatelessWidget {
             _profileHeader(user),
             const SizedBox(height: 30),
 
-            // النقاط والبادج
-            _statsCards(user),
-            const SizedBox(height: 20),
+            // النقاط والبادج — للمستخدمين والوسطاء فقط (ليس الإدارة)
+            if (!user.isAdmin) ...[
+              _statsCards(user),
+              const SizedBox(height: 20),
+            ],
 
             // معلومات الحساب
           _infoCard(user, context),
@@ -194,7 +196,7 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 5),
-        // البادج
+        // البادج — للمستخدمين فقط / الدور — للإدارة
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 6),
           decoration: BoxDecoration(
@@ -203,15 +205,17 @@ class ProfileScreen extends StatelessWidget {
             border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.3)),
           ),
           child: Text(
-            user.badgeName,
+            user.isAdmin ? user.roleName : user.badgeName,
             style: const TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold),
           ),
         ),
-        const SizedBox(height: 5),
-        Text(
-          user.roleName,
-          style: TextStyle(color: AppTheme.textGrey, fontSize: 13),
-        ),
+        if (!user.isAdmin) ...[
+          const SizedBox(height: 5),
+          Text(
+            user.roleName,
+            style: TextStyle(color: AppTheme.textGrey, fontSize: 13),
+          ),
+        ],
       ],
     );
   }
@@ -271,43 +275,45 @@ class ProfileScreen extends StatelessWidget {
           _infoRow('🪪 صورة الهوية', user.img.isEmpty ? 'غير مرفوعة' : 'مرفوعة بشكل خاص'),
           _infoRow('📅 تاريخ التسجيل',
               user.tsCrt != null ? AppUtils.formatTimestamp(user.tsCrt) : 'غير معروف'),
-          _infoRow('🏷️ الباقة',
-              user.effectivePkg == 0
-                  ? (user.bPkg > 0 ? 'منتهية (${_packageText(user.bPkg)})' : 'مجانية')
-                  : user.isInGracePeriod
-                      ? '${_packageText(user.bPkg)} — سماح ${user.graceDaysLeft} يوم'
-                      : _packageText(user.bPkg)),
-          if (user.pkgEnd != null && user.bPkg > 0)
-            _infoRow(
-              user.isPkgActive ? '⏰ انتهاء الباقة' :
-              user.isInGracePeriod ? '⚠️ فترة السماح حتى' : '❌ انتهت',
-              user.isPkgActive
-                  ? AppUtils.formatTimestamp(user.pkgEnd!)
-                  : user.isInGracePeriod
-                      ? AppUtils.formatTimestamp(user.pkgGrace!)
-                      : AppUtils.formatTimestamp(user.pkgEnd!),
-            ),
-          const SizedBox(height: 10),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () => context.push('/user/packages'),
-              icon: const Icon(Icons.upgrade, color: AppTheme.primaryGold),
-              label: Text(
-                user.bPkg == 0 ? 'ترقية الباقة' : 'إدارة الاشتراك',
-                style: const TextStyle(color: AppTheme.primaryGold),
+          // الباقة والدفع — للمستخدمين والوسطاء فقط
+          if (!user.isAdmin) ...[
+            _infoRow('🏷️ الباقة',
+                user.effectivePkg == 0
+                    ? (user.bPkg > 0 ? 'منتهية (${_packageText(user.bPkg)})' : 'مجانية')
+                    : user.isInGracePeriod
+                        ? '${_packageText(user.bPkg)} — سماح ${user.graceDaysLeft} يوم'
+                        : _packageText(user.bPkg)),
+            if (user.pkgEnd != null && user.bPkg > 0)
+              _infoRow(
+                user.isPkgActive ? '⏰ انتهاء الباقة' :
+                user.isInGracePeriod ? '⚠️ فترة السماح حتى' : '❌ انتهت',
+                user.isPkgActive
+                    ? AppUtils.formatTimestamp(user.pkgEnd!)
+                    : user.isInGracePeriod
+                        ? AppUtils.formatTimestamp(user.pkgGrace!)
+                        : AppUtils.formatTimestamp(user.pkgEnd!),
               ),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppTheme.primaryGold),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => context.push('/user/packages'),
+                icon: const Icon(Icons.upgrade, color: AppTheme.primaryGold),
+                label: Text(
+                  user.bPkg == 0 ? 'ترقية الباقة' : 'إدارة الاشتراك',
+                  style: const TextStyle(color: AppTheme.primaryGold),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: AppTheme.primaryGold),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () => context.push('/user/my-payments'),
-              icon: const Icon(Icons.receipt_long, color: AppTheme.primaryGold),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => context.push('/user/my-payments'),
+                icon: const Icon(Icons.receipt_long, color: AppTheme.primaryGold),
               label: const Text('سجل دفعاتي',
                   style: TextStyle(color: AppTheme.primaryGold)),
               style: OutlinedButton.styleFrom(
@@ -316,6 +322,7 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
           ),
+          ], // إغلاق if (!user.isAdmin) للباقة والدفع
         ],
       ),
     );
@@ -472,8 +479,8 @@ class ProfileScreen extends StatelessWidget {
     final user = auth.userModel;
     return Column(
       children: [
-        // دعوة الأصدقاء
-        if (user != null) ...[
+        // دعوة الأصدقاء — للمستخدمين والوسطاء فقط
+        if (user != null && !user.isAdmin) ...[
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
