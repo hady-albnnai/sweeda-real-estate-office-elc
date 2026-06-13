@@ -49,6 +49,7 @@
 | ✅ **مُطبّق على السيرفر** | `2026_06_13_fix_property_doc_types.sql` — حذف نمرة/وارد من سند العقار (فقط للسيارات) |
 | ✅ **مُطبّق على السيرفر** | `2026_06_13_fix_notifications_typ_to_tp.sql` — إصلاح notifications.typ → tp في 5 دوال + DROP/CREATE لـ trg_offer_status_changed |
 | ✅ **مُطبّق على السيرفر** | Storage policies لـ `offer_images` — INSERT/SELECT/UPDATE/DELETE مفتوحة |
+| 📝 **جاهز للتطبيق (لم يُنفّذ بعد)** | `2026_06_13_auth_username_password.sql` — اسم مستخدم `usr` + كلمة مرور مشفّرة `pwd` + 6 RPCs (`register_password`, `login_with_password`, `reset_password_with_otp`, `change_password_internal`, `check_username_available`, `get_staff_stats_internal`) + تحديث `users_public` (إضافة `usr`) + تحديث `get_user_full_by_id` (إضافة `usr` + إخفاء `pwd` خلف flag) |
 
 ---
 
@@ -67,6 +68,13 @@
 | 6 | `get_user_by_email` 🆕 | `p_email TEXT` | `SETOF users` | ✅ |
 | 7 | `get_user_by_phone` | `p_phone TEXT` | `SETOF users` | ✅ |
 | 8 | `create_user_from_phone` | `p_phone, p_nm` | `UUID` | ✅ |
+| **— اسم مستخدم + كلمة مرور (2026-06-13) —** | | | | |
+| 9 | `register_password` 🆕 | `p_user_uid UUID, p_username TEXT, p_password TEXT` | `JSONB` | ✅ |
+| 10 | `login_with_password` 🆕 | `p_identifier TEXT, p_password TEXT` | `JSONB` | ✅ |
+| 11 | `reset_password_with_otp` 🆕 | `p_user_uid UUID, p_new_password TEXT` | `BOOLEAN` | ✅ |
+| 12 | `change_password_internal` 🆕 | `p_user_uid UUID, p_old_password TEXT, p_new_password TEXT` | `BOOLEAN` | ✅ |
+| 13 | `check_username_available` 🆕 | `p_username TEXT` | `BOOLEAN` | ✅ |
+| 14 | `get_staff_stats_internal` 🆕 | `p_user_uid UUID` | `JSONB` | ✅ |
 | **— مستخدمون ونقاط —** | | | | |
 | 9 | `update_user_badge` | `p_uid UUID` | `VOID` | ❌ |
 | 10 | `add_points` | `p_uid, p_pts` | `VOID` | ❌ |
@@ -447,6 +455,108 @@ print('userId: ${row['user_id']}, isNew: ${row['is_new']}');
 ### `get_user_by_email(p_email TEXT)` → `SETOF users`
 
 مقابل `get_user_by_phone` لكن للإيميل (العمود `eml`).
+
+---
+
+## 🔑 دوال اسم المستخدم + كلمة المرور (2026-06-13)
+
+> Migration: `supabase/migrations/2026_06_13_auth_username_password.sql`
+> تضيف طبقة دخول ثانية (اسم مستخدم + كلمة مرور) فوق مسار الواتساب OTP.
+> الأعمدة الجديدة: `users.usr` (اسم مستخدم فريد، LOWER) + `users.pwd` (هاش bcrypt).
+
+### `register_password(p_user_uid UUID, p_username TEXT, p_password TEXT)` → `JSONB`
+
+تُسجّل اسم مستخدم + كلمة مرور لمستخدم موجود (بعد أول OTP واتساب). تُستدعى من
+`setup_profile_screen`. تطبّع اسم المستخدم (LOWER + TRIM) وتشفّر كلمة المرور بـ
+bcrypt (`crypt` + `gen_salt('bf', 8)`).
+
+**التحققات (تطلق استثناء عند الفشل):**
+| الخطأ | الشرط |
+|---|---|
+| `USERNAME_LENGTH` | الطول خارج 3–30 |
+| `USERNAME_INVALID_CHARS` | أحرف خارج `[a-z0-9_.]` |
+| `PASSWORD_TOO_SHORT` | أقصر من 6 |
+| `USERNAME_TAKEN` | اسم مستخدم محجوز لمستخدم آخر |
+| `USER_NOT_FOUND` | المستخدم غير موجود/محذوف |
+
+```dart
+final res = await client.rpc('register_password', params: {
+  'p_user_uid': uid,
+  'p_username': username,
+  'p_password': password,
+});
+// → { "success": true, "username": "hady" }
+```
+
+---
+
+### `login_with_password(p_identifier TEXT, p_password TEXT)` → `JSONB`
+
+تسجيل الدخول باسم مستخدم **أو** رقم هاتف + كلمة مرور. تبحث أولاً بـ `usr`
+ثم بـ `normalize_sy_phone(ph)`.
+
+**التحققات:** `USER_NOT_FOUND`, `NO_PASSWORD_SET` (سجّل عبر واتساب أولاً),
+`USER_BANNED` (sts=2), `USER_FROZEN` (sts=1), `WRONG_PASSWORD`.
+
+```dart
+final res = await client.rpc('login_with_password', params: {
+  'p_identifier': 'hady',  // أو '+963938862469'
+  'p_password': password,
+});
+// → { "success": true, "user_id": "...", "role": 0, "nm": "Hady Albnnai" }
+```
+
+---
+
+### `reset_password_with_otp(p_user_uid UUID, p_new_password TEXT)` → `BOOLEAN`
+
+تعيين كلمة مرور جديدة بعد التحقق عبر OTP (نسيان كلمة المرور). فحص `PASSWORD_TOO_SHORT`
+و `USER_NOT_FOUND`.
+
+---
+
+### `change_password_internal(p_user_uid UUID, p_old_password TEXT, p_new_password TEXT)` → `BOOLEAN`
+
+تغيير كلمة المرور من شاشة الإعدادات (يتطلب كلمة المرور القديمة).
+الأخطاء: `NO_PASSWORD_SET`, `WRONG_OLD_PASSWORD`, `PASSWORD_TOO_SHORT`.
+
+---
+
+### `check_username_available(p_username TEXT)` → `BOOLEAN`
+
+فحص لحظي لتوفر اسم المستخدم أثناء الكتابة. تُرجع `FALSE` إذا أقصر من 3 أحرف أو
+محجوز. تُستخدم في `setup_profile_screen` للإظهار الفوري (✓ أخضر / ✗ أحمر).
+
+```dart
+final ok = await client.rpc('check_username_available',
+  params: {'p_username': 'hady'});  // → true / false
+```
+
+---
+
+### `get_staff_stats_internal(p_user_uid UUID)` → `JSONB`
+
+إحصائيات مخصّصة لكل موظف حسب دوره (تُعرض في الملف الشخصي). تعتمد على الأدوار
+النهائية (`roles_final`):
+
+| الدور | المفاتيح المُرجَعة |
+|---|---|
+| `2` (مصور) | `completed_tasks`, `pending_tasks`, `submitted_tasks` |
+| `3` (مشرف ميداني) | `completed_visits`, `completion_requests`, `active_tasks` |
+| `4` (موظف مكتب) | `reviewed_offers`, `managed_appointments`, `processed_completions` |
+| `≥5` (نائب/مدير) | `total_deals`, `approved_payments`, `pending_payments`, `verified_users`, `pending_verifications`, `total_users`, `active_offers` |
+
+كل النتائج تضمّ `role` أيضاً. المستخدم العادي (role=0/1) لا يحصل على مفاتيح إضافية
+(تُعرض له النقاط/streak من `get_user_full_by_id`).
+
+---
+
+### تغييرات على دوال/عروض موجودة
+
+| العنصر | التغيير |
+|---|---|
+| `users_public` (VIEW) | أُضيف عمود `usr` (اسم المستخدم). `pwd` لا يُكشف. |
+| `get_user_full_by_id` | تحوّلت من `RETURNS SETOF users` إلى `RETURNS TABLE(...)` — أُضيف `usr`، وأُخفي `pwd` خلف flag (`'set'`/`NULL`) بدل تسريب الهاش. تتطلب `DROP FUNCTION` ثم `CREATE` (لا يمكن تغيير نوع الإرجاع عبر `CREATE OR REPLACE`). |
 
 ---
 
