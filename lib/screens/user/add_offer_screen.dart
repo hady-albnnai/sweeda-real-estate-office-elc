@@ -48,6 +48,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   LatLng? _pickedLocation; // الموقع الدقيق على الخريطة (اختياري)
   int? _selectedDocType; // نوع السند من config.docTp
   bool _agreePledge = false; // الإقرار والتعهد
+  bool _shareOnSocial = true; // نشر على وسائل التواصل الاجتماعي للمكتب
   bool _submitting = false;
   String _progressMsg = '';
 
@@ -349,6 +350,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       brkId: user.role == UserRole.broker ? user.uid : '',
       sts: OfferStatus.review,
       iPub: 0,
+      iSoc: _shareOnSocial ? 1 : 0,
       tsCrt: DateTime.now(),
     );
 
@@ -372,7 +374,9 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     setState(() => _submitting = false);
 
     if (createdOffer != null) {
-      await _triggerWhatsAppVideoShare(createdOffer, user);
+      if (_shareOnSocial) {
+        await _triggerWhatsAppVideoShare(createdOffer, user);
+      }
       if (!mounted) return;
       Navigator.pop(context);
       _snack('تم إرسال عرضك للمراجعة بنجاح ✅ (+نقاط)');
@@ -1173,6 +1177,24 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
                   ),
                 ),
               ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          // خيار النشر على وسائل التواصل الاجتماعي
+          Material(
+            color: Colors.transparent,
+            child: CheckboxListTile(
+              value: _shareOnSocial,
+              onChanged: (v) => setState(() => _shareOnSocial = v ?? true),
+              title: const Text('أرغب بنشر العرض على وسائل التواصل الاجتماعي الخاصة بالمكتب',
+                  style: TextStyle(color: AppTheme.textWhite, fontSize: 13)),
+              subtitle: const Text('يساعد في زيادة فرص البيع/الإيجار',
+                  style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+              activeColor: AppTheme.primaryGold,
+              checkColor: Colors.black,
+              contentPadding: EdgeInsets.zero,
+              controlAffinity: ListTileControlAffinity.leading,
+              dense: true,
             ),
           ),
           const SizedBox(height: 16),
