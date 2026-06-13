@@ -690,7 +690,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
         userId: auth.userModel?.uid,
       );
       if (auth.userModel != null) {
-        final pts = config?.pointsConfig['soc'] ?? 100;
+        final pts = config?.socialSharePoints ?? 100;
         await BusinessService()
             .awardEvent(auth.userModel!.uid, config, 'soc', fallback: 100);
         if (mounted) {
