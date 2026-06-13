@@ -20,6 +20,8 @@ class ConfigModel {
   Map<String, dynamic> get propertyCategories => _getNestedMap('catProp', {});
   Map<String, dynamic> get vehicleCategories => _getNestedMap('catVeh', {});
   Map<String, dynamic> get documentTypes => _getNestedMap('docTp', {});
+  Map<String, dynamic> get carDocumentTypes => _getNestedMap('carDocTp', {});
+  Map<String, dynamic> get plateTypes => _getNestedMap('plateTp', {});
   List<dynamic> get locations => _getNestedList('locs', []);
   List<dynamic> get brands => _getNestedList('brnds', []);
   List<dynamic> get colors => _getNestedList('clrs', []);

@@ -50,6 +50,17 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   bool _agreePledge = false; // الإقرار والتعهد
   bool _shareOnSocial = true; // نشر على وسائل التواصل الاجتماعي للمكتب
   bool _submitting = false;
+
+  // حقول السيارة
+  final _carBrandCtrl = TextEditingController();
+  final _carModelCtrl = TextEditingController();
+  final _carYearCtrl = TextEditingController();
+  final _carColorCtrl = TextEditingController();
+  final _carKmCtrl = TextEditingController();
+  String? _carFuel;
+  String? _carTransmission;
+  int? _selectedCarDocType;  // نوع سند ملكية السيارة
+  int? _selectedPlateType;   // نوع النمرة
   String _progressMsg = '';
 
   // المواعيد المتاحة — avl
@@ -110,6 +121,11 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     _customSubCtrl.dispose();
     _contactPhoneCtrl.dispose();
     _customCityCtrl.dispose();
+    _carBrandCtrl.dispose();
+    _carModelCtrl.dispose();
+    _carYearCtrl.dispose();
+    _carColorCtrl.dispose();
+    _carKmCtrl.dispose();
     super.dispose();
   }
 
@@ -226,15 +242,29 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       _snack('يجب تسجيل الدخول أولاً');
       return;
     }
+    // فحص الحقول الإلزامية المشتركة
     if (_selectedType == null || _selectedTrans == null || _selectedMainCat == null ||
         (_selectedSubCat == null && _customSubCtrl.text.trim().isEmpty) ||
         (_selectedSubCat == -1 && _customSubCtrl.text.trim().isEmpty) ||
-        _selectedDocType == null ||
-        _selectedCityArea == null ||
-        (_selectedCityArea == _customCityOption && _customCityCtrl.text.trim().isEmpty) ||
-        _locCtrl.text.trim().isEmpty) {
-      _snack('يرجى إكمال البيانات الأساسية (التصنيف الرئيسي + فرعي أو إدخال حر + نوع السند + المنطقة الرئيسية + وصف دقيق للموقع إلزامي)');
+        _selectedDocType == null) {
+      _snack('يرجى إكمال البيانات الأساسية (التصنيف الرئيسي + فرعي + نوع السند)');
       return;
+    }
+    // فحص حقول العقار
+    if (_selectedType == 0) {
+      if (_selectedCityArea == null ||
+          (_selectedCityArea == _customCityOption && _customCityCtrl.text.trim().isEmpty) ||
+          _locCtrl.text.trim().isEmpty) {
+        _snack('يرجى اختيار المنطقة الرئيسية وكتابة وصف دقيق للموقع');
+        return;
+      }
+    }
+    // فحص حقول السيارة
+    if (_selectedType == 1) {
+      if (_carBrandCtrl.text.trim().isEmpty || _carModelCtrl.text.trim().isEmpty || _carYearCtrl.text.trim().isEmpty) {
+        _snack('يرجى إدخال الماركة والموديل وسنة الصنع');
+        return;
+      }
     }
     final effectiveContactPhone = _contactPhoneCtrl.text.trim().isNotEmpty
         ? _contactPhoneCtrl.text.trim()
@@ -336,6 +366,17 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       specs: {
         'details': _specCtrl.text,
         if (customSub.isNotEmpty) 'custom_sub': customSub,
+        // حقول السيارة
+        if (_selectedType == 1) ...{
+          'brand': _carBrandCtrl.text.trim(),
+          'model': _carModelCtrl.text.trim(),
+          'year': _carYearCtrl.text.trim(),
+          'color': _carColorCtrl.text.trim(),
+          'km': _carKmCtrl.text.trim(),
+          'fuel': _carFuel ?? '',
+          'transmission': _carTransmission ?? '',
+          'plate_type': _selectedPlateType ?? 0,
+        },
       },
       imgs: imageUrls,
       vdo: videoUrl,
@@ -635,40 +676,79 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          // المنطقة الرئيسية + حقل حر
-          DropdownButtonFormField<String>(
-            initialValue: _selectedCityArea,
-            dropdownColor: AppTheme.surfaceBlack,
-            style: const TextStyle(color: AppTheme.textWhite),
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              labelText: 'المنطقة الرئيسية',
-              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          // ─── حقول العقار (المنطقة + الموقع) ───
+          if (_selectedType == 0 || _selectedType == null) ...[
+            // المنطقة الرئيسية + حقل حر
+            DropdownButtonFormField<String>(
+              initialValue: _selectedCityArea,
+              dropdownColor: AppTheme.surfaceBlack,
+              style: const TextStyle(color: AppTheme.textWhite),
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'المنطقة الرئيسية',
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ),
+              items: cityItems,
+              onChanged: (v) => setState(() {
+                _selectedCityArea = v;
+                if (v != _customCityOption) _customCityCtrl.clear();
+              }),
+              hint: const Text('اختر المنطقة الرئيسية أو آخر للإدخال الحر',
+                  style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
+              menuMaxHeight: 320,
             ),
-            items: cityItems,
-            onChanged: (v) => setState(() {
-              _selectedCityArea = v;
-              if (v != _customCityOption) _customCityCtrl.clear();
-            }),
-            hint: const Text('اختر المنطقة الرئيسية أو آخر للإدخال الحر',
-                style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
-            menuMaxHeight: 320,
-          ),
-          if (_selectedCityArea == _customCityOption)
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: TextField(
-                controller: _customCityCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'اكتب المنطقة الرئيسية يدوياً',
-                  hintText: 'اكتب اسم المنطقة أو الحي',
-                  border: OutlineInputBorder(),
+            if (_selectedCityArea == _customCityOption)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: TextField(
+                  controller: _customCityCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'اكتب المنطقة الرئيسية يدوياً',
+                    hintText: 'اكتب اسم المنطقة أو الحي',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
               ),
+            const SizedBox(height: 20),
+            // الوصف الدقيق للموقع (إلزامي) — يُحفظ في loc['d'] وليس في descript
+            _buildLocationAutocomplete(),
+          ],
+
+          // ─── حقول السيارة ───
+          if (_selectedType == 1) ...[
+            TextField(
+              controller: _carBrandCtrl,
+              decoration: const InputDecoration(labelText: 'الماركة *', border: OutlineInputBorder()),
             ),
-          const SizedBox(height: 20),
-          // الوصف الدقيق للموقع (إلزامي) — يُحفظ في loc['d'] وليس في descript
-          _buildLocationAutocomplete(),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _carModelCtrl,
+              decoration: const InputDecoration(labelText: 'الموديل *', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _carYearCtrl,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: 'سنة الصنع *', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _carColorCtrl,
+              decoration: const InputDecoration(labelText: 'اللون', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _carKmCtrl,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: 'عدد الكيلومترات', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 12),
+            _dd('نوع الوقود', ['بنزين', 'ديزل', 'هجين', 'كهربائي', 'غاز'],
+                (v) => setState(() => _carFuel = v)),
+            const SizedBox(height: 12),
+            _dd('ناقل الحركة', ['عادي', 'أوتوماتيك'],
+                (v) => setState(() => _carTransmission = v)),
+          ],
           const SizedBox(height: 8),
           if (_selectedTrans != null)
             Container(
@@ -1062,26 +1142,56 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // نوع سند الملكية (إلزامي)
-          const Text('نوع سند الملكية (إلزامي)',
-              style: TextStyle(
-                  color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 6),
-          DropdownButtonFormField<int>(
-            initialValue: _selectedDocType,
-            dropdownColor: AppTheme.surfaceBlack,
-            style: const TextStyle(color: AppTheme.textWhite),
-            decoration: const InputDecoration(border: OutlineInputBorder()),
-            hint: const Text('اختر نوع السند',
-                style: TextStyle(color: AppTheme.textGrey)),
-            items: docTypes.entries
-                .map((e) => DropdownMenuItem(
-                      value: int.tryParse(e.key) ?? 0,
-                      child: Text(e.value.toString()),
-                    ))
-                .toList(),
-            onChanged: (v) => setState(() => _selectedDocType = v),
-          ),
+          // ─── نوع السند — حسب نوع العرض ───
+          if (_selectedType == 1) ...[
+            // سيارة: سند ملكية السيارة
+            const Text('نوع سند الملكية (إلزامي)',
+                style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 6),
+            DropdownButtonFormField<int>(
+              initialValue: _selectedCarDocType,
+              dropdownColor: AppTheme.surfaceBlack,
+              style: const TextStyle(color: AppTheme.textWhite),
+              decoration: const InputDecoration(border: OutlineInputBorder()),
+              hint: const Text('اختر نوع السند', style: TextStyle(color: AppTheme.textGrey)),
+              items: (config?.carDocumentTypes ?? {}).entries
+                  .map((e) => DropdownMenuItem(value: int.tryParse(e.key) ?? 0, child: Text(e.value.toString())))
+                  .toList(),
+              onChanged: (v) => setState(() { _selectedCarDocType = v; _selectedDocType = v; }),
+            ),
+            const SizedBox(height: 14),
+            // نوع النمرة
+            const Text('نوع النمرة (إلزامي)',
+                style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 6),
+            DropdownButtonFormField<int>(
+              initialValue: _selectedPlateType,
+              dropdownColor: AppTheme.surfaceBlack,
+              style: const TextStyle(color: AppTheme.textWhite),
+              decoration: const InputDecoration(border: OutlineInputBorder()),
+              hint: const Text('اختر نوع النمرة', style: TextStyle(color: AppTheme.textGrey)),
+              items: (config?.plateTypes ?? {}).entries
+                  .map((e) => DropdownMenuItem(value: int.tryParse(e.key) ?? 0, child: Text(e.value.toString())))
+                  .toList(),
+              onChanged: (v) => setState(() => _selectedPlateType = v),
+            ),
+          ] else ...[
+            // عقار: سند ملكية العقار
+            const Text('نوع سند الملكية (إلزامي)',
+                style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 6),
+            DropdownButtonFormField<int>(
+              initialValue: _selectedDocType,
+              dropdownColor: AppTheme.surfaceBlack,
+              style: const TextStyle(color: AppTheme.textWhite),
+              decoration: const InputDecoration(border: OutlineInputBorder()),
+              hint: const Text('اختر نوع السند', style: TextStyle(color: AppTheme.textGrey)),
+              items: docTypes.entries
+                  .map((e) => DropdownMenuItem(value: int.tryParse(e.key) ?? 0, child: Text(e.value.toString())))
+                  .toList(),
+              onChanged: (v) => setState(() => _selectedDocType = v),
+            ),
+          ],
           const SizedBox(height: 14),
 
           // صورة سند الملكية (اختيارية)
