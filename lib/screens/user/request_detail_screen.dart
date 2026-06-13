@@ -9,6 +9,8 @@ import '../../core/services/business_service.dart';
 import '../../core/network/supabase_service.dart';
 import '../../core/constants/db_constants.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/app_utils.dart';
+import '../../widgets/book_appointment_sheet.dart';
 
 /// شاشة تفاصيل طلب البحث + العروض المطابقة
 class RequestDetailScreen extends StatefulWidget {
@@ -22,6 +24,10 @@ class RequestDetailScreen extends StatefulWidget {
 class _RequestDetailScreenState extends State<RequestDetailScreen> {
   RequestModel? _request;
   List<OfferModel> _matches = [];
+  // فلتر العروض المطابقة
+  double? _filterMinPrice;
+  double? _filterMaxPrice;
+  String? _filterLocation;
   bool _loading = true;
   bool _deleting = false;
   final _biz = BusinessService();
@@ -172,8 +178,13 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
             _detailsCard(r),
             const SizedBox(height: 20),
             _matchesHeader(),
+            if (_matches.isNotEmpty) _filterBar(),
             const SizedBox(height: 10),
-            if (_matches.isEmpty) _noMatches() else ..._matches.map(_matchTile),
+            if (_filteredMatches.isEmpty && _matches.isNotEmpty)
+              const Padding(padding: EdgeInsets.all(20),
+                child: Text('لا توجد عروض تطابق الفلتر', style: TextStyle(color: AppTheme.textGrey)))
+            else if (_matches.isEmpty) _noMatches()
+            else ..._filteredMatches.map(_matchTile),
             const SizedBox(height: 20),
           ],
         ),
@@ -288,6 +299,42 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
     );
   }
 
+  List<OfferModel> get _filteredMatches {
+    var list = _matches;
+    if (_filterMinPrice != null) list = list.where((o) => o.prc >= _filterMinPrice!).toList();
+    if (_filterMaxPrice != null) list = list.where((o) => o.prc <= _filterMaxPrice!).toList();
+    if (_filterLocation != null && _filterLocation!.isNotEmpty) {
+      list = list.where((o) => (o.loc['city'] ?? o.loc['d'] ?? '').toString().contains(_filterLocation!)).toList();
+    }
+    return list;
+  }
+
+  Widget _filterBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(children: [
+        Row(children: [
+          Expanded(child: TextField(
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(labelText: 'السعر من', border: OutlineInputBorder(), isDense: true),
+            onChanged: (v) => setState(() => _filterMinPrice = double.tryParse(v)),
+          )),
+          const SizedBox(width: 8),
+          Expanded(child: TextField(
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(labelText: 'السعر إلى', border: OutlineInputBorder(), isDense: true),
+            onChanged: (v) => setState(() => _filterMaxPrice = double.tryParse(v)),
+          )),
+        ]),
+        const SizedBox(height: 8),
+        TextField(
+          decoration: const InputDecoration(labelText: 'فلتر الموقع', hintText: 'اكتب اسم المنطقة...', border: OutlineInputBorder(), isDense: true, prefixIcon: Icon(Icons.location_on, size: 18)),
+          onChanged: (v) => setState(() => _filterLocation = v.trim()),
+        ),
+      ]),
+    );
+  }
+
   Widget _matchesHeader() {
     return Row(
       children: [
@@ -399,12 +446,43 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                   ],
                 ),
               ),
-              const Icon(Icons.arrow_forward_ios,
-                  color: AppTheme.primaryGold, size: 14),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.arrow_forward_ios, color: AppTheme.primaryGold, size: 14),
+                  const SizedBox(height: 8),
+                  GestureDetector(
+                    onTap: () => _bookOnOffer(o),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryGold.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.4)),
+                      ),
+                      child: const Text('📅 حجز', style: TextStyle(color: AppTheme.primaryGold, fontSize: 11, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  void _bookOnOffer(OfferModel offer) {
+    if (offer.avl.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('هذا العرض لا يحتوي مواعيد متاحة حالياً')));
+      return;
+    }
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => BookAppointmentSheet(offer: offer),
     );
   }
 
