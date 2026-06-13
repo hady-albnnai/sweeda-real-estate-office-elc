@@ -207,18 +207,36 @@ class _OfferCardState extends State<OfferCard> {
                         ),
                       ]),
                     ),
-                  Row(children: [
-                    const Icon(Icons.location_on,
-                        color: AppTheme.primaryGold, size: 16),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(offer.loc['d'] ?? '',
-                          style: const TextStyle(
-                              color: AppTheme.textGrey, fontSize: 14),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis),
-                    ),
-                  ]),
+                  // معلومات سريعة حسب النوع
+                  if (offer.typ == 1) ...[
+                    // سيارة: ماركة + سنة + كم
+                    Row(children: [
+                      const Icon(Icons.directions_car, color: AppTheme.primaryGold, size: 14),
+                      const SizedBox(width: 4),
+                      Expanded(child: Text(
+                        [
+                          offer.specs['brand'], offer.specs['year'],
+                          if ((offer.specs['km'] ?? '').toString().isNotEmpty) '${offer.specs['km']} كم',
+                        ].where((s) => s != null && s.toString().isNotEmpty).join(' • '),
+                        style: const TextStyle(color: AppTheme.textGrey, fontSize: 12),
+                        maxLines: 1, overflow: TextOverflow.ellipsis,
+                      )),
+                    ]),
+                  ] else ...[
+                    // عقار: الموقع + المساحة
+                    Row(children: [
+                      const Icon(Icons.location_on, color: AppTheme.primaryGold, size: 16),
+                      const SizedBox(width: 4),
+                      Expanded(child: Text(
+                        [
+                          offer.loc['d'], offer.loc['city'],
+                          if ((offer.specs['area'] ?? '').toString().isNotEmpty) '${offer.specs['area']} م²',
+                        ].where((s) => s != null && s.toString().isNotEmpty).join(' • '),
+                        style: const TextStyle(color: AppTheme.textGrey, fontSize: 14),
+                        maxLines: 1, overflow: TextOverflow.ellipsis,
+                      )),
+                    ]),
+                  ],
                   const SizedBox(height: 15),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,

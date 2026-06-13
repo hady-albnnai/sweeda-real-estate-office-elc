@@ -562,7 +562,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
                   onStepTapped: (s) => setState(() => _currentStep = s),
                   // إزالة أزرار "Continue/Cancel" المزعجة (التنقل عبر النقر على عناوين الخطوات كافٍ)
                   controlsBuilder: (context, details) => const SizedBox.shrink(),
-                  steps: [_step1(), _step2(), _step3(), _stepAvl(), _step4()],
+                  steps: [_step1(), _step2(), _step3(), if (_selectedType != 1) _stepAvl(), _step4()],
                 ),
               ),
             ],
