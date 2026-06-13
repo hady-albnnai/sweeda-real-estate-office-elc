@@ -390,9 +390,9 @@ class _PackagesScreenState extends State<PackagesScreen> {
           border:
               Border.all(color: AppTheme.textGrey.withValues(alpha: 0.3)),
         ),
-        child: const Row(children: [
-          Icon(Icons.info_outline, color: AppTheme.primaryGold, size: 20),
-          SizedBox(width: 10),
+                child: Row(children: [
+          const Icon(Icons.info_outline, color: AppTheme.primaryGold, size: 20),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               'يتم تفعيل الباقة بعد موافقة الإدارة على إثبات الدفع (عادة < 24 ساعة). '
