@@ -323,11 +323,11 @@ BEGIN
       u.brk, u.brk_cls, u.brk_nm, u.sts, u.ban_rsn,
       u.ntf, u.stats, u.wk_lgn, u.strk, u.strk_dt::DATE,
       u.i_del, u.perm, u.ts_crt, u.ts_upd,
-      u.vrf, u.ref_by::TEXT, u.ref_cnt,
+      u.vrf::INT, u.ref_by::TEXT, u.ref_cnt,
       u.usr,
       -- pwd: فقط flag (لا نُرجع الهاش الفعلي)
       CASE WHEN u.pwd IS NOT NULL THEN 'set'::TEXT ELSE NULL END AS pwd,
-      u.rl, u.device_id, u.last_ip::TEXT, u.signup_ip::TEXT, u.device_history
+      u.rl::INT, u.device_id, u.last_ip::TEXT, u.signup_ip::TEXT, u.device_history
     FROM users u
     WHERE u.id = p_uid AND u.i_del = 0;
 END;
