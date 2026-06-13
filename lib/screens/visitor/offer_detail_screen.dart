@@ -287,13 +287,17 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                         controller: _pageCtrl,
                         itemCount: offer.imgs.length,
                         onPageChanged: (i) => setState(() => _currentImg = i),
-                        itemBuilder: (_, i) => Image.network(
-                          offer.imgs[i],
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(
-                              color: AppTheme.surfaceBlack,
-                              child: const Icon(Icons.image,
-                                  size: 80, color: AppTheme.textGrey)),
+                        itemBuilder: (_, i) => GestureDetector(
+                          onTap: () => _openImageViewer(offer.imgs, i),
+                          child: Image.network(
+                            offer.imgs[i],
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            errorBuilder: (_, __, ___) => Container(
+                                color: AppTheme.surfaceBlack,
+                                child: const Icon(Icons.image,
+                                    size: 80, color: AppTheme.textGrey)),
+                          ),
                         ),
                       ),
                 const DecoratedBox(
@@ -706,6 +710,12 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
     }
   }
 
+  void _openImageViewer(List<String> images, int initialIndex) {
+    Navigator.push(context, MaterialPageRoute(
+      builder: (_) => _FullScreenImageViewer(images: images, initialIndex: initialIndex),
+    ));
+  }
+
   Widget _spec(IconData icon, String label, String value) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -721,6 +731,72 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                 style: const TextStyle(color: AppTheme.textWhite, fontSize: 14),
                 overflow: TextOverflow.ellipsis)),
       ]),
+    );
+  }
+}
+
+/// عارض صور بملء الشاشة — تصفح + زوم + إغلاق
+class _FullScreenImageViewer extends StatefulWidget {
+  final List<String> images;
+  final int initialIndex;
+  const _FullScreenImageViewer({required this.images, required this.initialIndex});
+
+  @override
+  State<_FullScreenImageViewer> createState() => _FullScreenImageViewerState();
+}
+
+class _FullScreenImageViewerState extends State<_FullScreenImageViewer> {
+  late PageController _ctrl;
+  late int _current;
+
+  @override
+  void initState() {
+    super.initState();
+    _current = widget.initialIndex;
+    _ctrl = PageController(initialPage: _current);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.close, color: Colors.white, size: 28),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          '${_current + 1} / ${widget.images.length}',
+          style: const TextStyle(color: Colors.white, fontSize: 16),
+        ),
+        centerTitle: true,
+      ),
+      body: PageView.builder(
+        controller: _ctrl,
+        itemCount: widget.images.length,
+        onPageChanged: (i) => setState(() => _current = i),
+        itemBuilder: (_, i) => InteractiveViewer(
+          minScale: 0.5,
+          maxScale: 4.0,
+          child: Center(
+            child: Image.network(
+              widget.images[i],
+              fit: BoxFit.contain,
+              width: double.infinity,
+              errorBuilder: (_, __, ___) => const Icon(
+                Icons.broken_image, color: Colors.grey, size: 80),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
