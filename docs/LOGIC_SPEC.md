@@ -185,7 +185,8 @@
 
 ### 5.2 إخفاء البيانات الشخصية
 - `users` لا يقرأها إلا مالكها (policy `Users can read own row only`).
-- VIEW `users_public` تكشف فقط: `id, nm, role, brk, brk_cls, brk_nm, bg, vrf, pt, ref_cnt, ts_crt`.
+- VIEW `users_public` تكشف فقط: `id, nm, usr, role, brk, brk_cls, brk_nm, bg, vrf, pt, ref_cnt, ts_crt`
+  (أُضيف `usr` اسم المستخدم عبر migration 2026-06-13). `pwd` لا يُكشف أبداً.
 - الـclient يجب أن يستعمل `users_public` لجلب بيانات الملاك.
 
 ### 5.3 منع التقييم الذاتي والمتكرر
@@ -247,8 +248,16 @@
 | Migration الأمان | `supabase/migrations/2026_06_07_security_hardening.sql` |
 | RPC طلب التوثيق | `lib/screens/user/profile_screen.dart` → `request_verification_by_uid` |
 | RPC اعتماد/رفض | `lib/providers/admin_provider.dart` → `admin_approve_verification_by_admin` / `admin_reject_verification_by_admin` |
-| فحص canPublishOffer | `lib/core/services/business_service.dart` |
-| رسائل خطأ التقييم | `lib/widgets/rating_dialog.dart` |
+### 5.14 اسم مستخدم + كلمة مرور (Phase 10 — 2026-06-13)
+- مسار دخول إضافي فوق واتساب OTP: اسم مستخدم (`usr`) أو هاتف + كلمة مرور (`pwd`).
+- `usr`: اسم فريد موحّد (LOWER)، 3–30 حرف، `[a-z0-9_.]` فقط.
+- `pwd`: هاش bcrypt فقط (`gen_salt('bf',8)`) — لا يُخزّن نصاً ولا يُسرّب للعميل أبداً.
+- التسجيل الأول عبر واتساب ثم إلزام إكمال `usr`/`pwd` في `setup_profile`.
+- نسيان كلمة المرور → تبويبة واتساب OTP → `reset_password_with_otp`.
+- `get_user_full_by_id` تُرجع `pwd` كـ flag (`'set'`/`NULL`) لا كهاش.
+- Migration: `supabase/migrations/2026_06_13_auth_username_password.sql`.
+- RPCs: `register_password`, `login_with_password`, `reset_password_with_otp`,
+  `change_password_internal`, `check_username_available`, `get_staff_stats_internal`.
 
 ---
 

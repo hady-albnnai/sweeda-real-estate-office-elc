@@ -3,8 +3,10 @@
 -- التاريخ: 2026-06-13
 -- الغرض:
 --   1) إضافة usr (اسم مستخدم فريد) + pwd (كلمة مرور مشفرة) لجدول users
---   2) RPCs: register_password, login_with_password, reset_password_with_otp
+--   2) RPCs: register_password, login_with_password, reset_password_with_otp,
+--             change_password_internal, check_username_available
 --   3) RPC: get_staff_stats_internal (إحصائيات كل موظف حسب دوره)
+--   4) تحديث users_public (إضافة usr) + get_user_full_by_id (إضافة usr، إخفاء pwd)
 -- ══════════════════════════════════════════════════════════════════════
 
 -- ─── 1) تأكد من وجود pgcrypto ───
@@ -71,6 +73,7 @@ BEGIN
   RETURN jsonb_build_object('success', true, 'username', v_usr);
 END;
 $$;
+GRANT EXECUTE ON FUNCTION register_password(UUID, TEXT, TEXT) TO anon, authenticated;
 
 -- ─── 4) تسجيل الدخول باسم مستخدم + كلمة مرور ───
 CREATE OR REPLACE FUNCTION login_with_password(
@@ -122,6 +125,7 @@ BEGIN
   );
 END;
 $$;
+GRANT EXECUTE ON FUNCTION login_with_password(TEXT, TEXT) TO anon, authenticated;
 
 -- ─── 5) إعادة تعيين كلمة المرور بعد OTP واتساب ───
 CREATE OR REPLACE FUNCTION reset_password_with_otp(
@@ -146,6 +150,7 @@ BEGIN
   RETURN TRUE;
 END;
 $$;
+GRANT EXECUTE ON FUNCTION reset_password_with_otp(UUID, TEXT) TO anon, authenticated;
 
 -- ─── 6) تغيير كلمة المرور (من الإعدادات) ───
 CREATE OR REPLACE FUNCTION change_password_internal(
@@ -178,6 +183,7 @@ BEGIN
   RETURN TRUE;
 END;
 $$;
+GRANT EXECUTE ON FUNCTION change_password_internal(UUID, TEXT, TEXT) TO anon, authenticated;
 
 -- ─── 7) فحص توفر اسم مستخدم ───
 CREATE OR REPLACE FUNCTION check_username_available(
@@ -194,6 +200,7 @@ BEGIN
   );
 END;
 $$;
+GRANT EXECUTE ON FUNCTION check_username_available(TEXT) TO anon, authenticated;
 
 -- ─── 8) إحصائيات الموظف حسب الدور ───
 -- تُرجع إحصائيات مخصصة لكل موظف بناءً على دوره
@@ -241,9 +248,6 @@ BEGIN
 
   -- موظف مكتب (role=4): عروض راجعها + مواعيد أدارها + طلبات إتمام
   ELSIF v_role = 4 THEN
-    SELECT COUNT(*) INTO v_count FROM offers
-      WHERE added_by = p_user_uid OR (sts >= 2);
-    -- نقرّب: عدد العروض المقبولة/المرفوضة (كل الإحصائيات العامة)
     SELECT COUNT(*) INTO v_count FROM offers WHERE sts IN (2, 3);
     v_result := v_result || jsonb_build_object('reviewed_offers', v_count);
 
@@ -281,6 +285,7 @@ BEGIN
   RETURN v_result;
 END;
 $$;
+GRANT EXECUTE ON FUNCTION get_staff_stats_internal(UUID) TO anon, authenticated;
 
 -- ─── 9) إضافة usr لـ users_public view ───
 -- إعادة إنشاء VIEW بدون كشف pwd
@@ -291,8 +296,12 @@ CREATE VIEW users_public AS
   WHERE i_del = 0;
 
 -- ─── 10) تحديث get_user_full_by_id لإضافة usr وإخفاء pwd ───
--- pwd_flag: يُرجع فقط هل يوجد كلمة مرور أم لا (بدون القيمة)
-CREATE OR REPLACE FUNCTION get_user_full_by_id(p_uid UUID)
+-- ⚠️ ملاحظة: الدالة الأصلية كانت RETURNS SETOF users. PostgreSQL لا يسمح بتغيير
+--    نوع الإرجاع عبر CREATE OR REPLACE، لذا نستخدم DROP ثم CREATE.
+-- pwd_flag: يُرجع فقط هل يوجد كلمة مرور أم لا (بدون القيمة الفعلية)
+DROP FUNCTION IF EXISTS get_user_full_by_id(UUID);
+
+CREATE FUNCTION get_user_full_by_id(p_uid UUID)
 RETURNS TABLE(
   id UUID, nm TEXT, ph TEXT, eml TEXT, ad TEXT, role INT,
   sid TEXT, img TEXT, pt INT, bg INT, bg_ts TIMESTAMPTZ,
@@ -312,19 +321,21 @@ BEGIN
       u.sid, u.img, u.pt, u.bg, u.bg_ts,
       u.b_pkg, u.pkg_end, u.pkg_grace,
       u.brk, u.brk_cls, u.brk_nm, u.sts, u.ban_rsn,
-      u.ntf, u.stats, u.wk_lgn, u.strk, u.strk_dt,
+      u.ntf, u.stats, u.wk_lgn, u.strk, u.strk_dt::DATE,
       u.i_del, u.perm, u.ts_crt, u.ts_upd,
-      u.vrf, u.ref_by, u.ref_cnt,
+      u.vrf, u.ref_by::TEXT, u.ref_cnt,
       u.usr,
       -- pwd: فقط flag (لا نُرجع الهاش الفعلي)
       CASE WHEN u.pwd IS NOT NULL THEN 'set'::TEXT ELSE NULL END AS pwd,
-      u.rl, u.device_id, u.last_ip, u.signup_ip, u.device_history
+      u.rl, u.device_id, u.last_ip::TEXT, u.signup_ip::TEXT, u.device_history
     FROM users u
     WHERE u.id = p_uid AND u.i_del = 0;
 END;
 $$;
+GRANT EXECUTE ON FUNCTION get_user_full_by_id(UUID) TO anon, authenticated;
 
--- ─── 11) حماية pwd من التعديل المباشر ───
--- pwd لا يظهر في users_public
--- pwd لا يُرجع كهاش في get_user_full_by_id (فقط flag)
--- check_user_safe_update يجب أن يمنع تعديل pwd مباشرة (فقط عبر RPCs)
+-- ─── 11) حماية pwd ───
+-- • pwd لا يظهر في users_public (العرض العام).
+-- • pwd لا يُرجع كهاش في get_user_full_by_id (فقط flag 'set' أو NULL).
+-- • الحماية الفعلية لـ pwd هي RLS على users (لا تعديل مباشر من العميل) +
+--   أن الكتابة تتم فقط عبر دوال SECURITY DEFINER الموثوقة.
