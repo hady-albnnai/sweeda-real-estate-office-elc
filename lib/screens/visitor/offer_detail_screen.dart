@@ -283,13 +283,16 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                         color: AppTheme.surfaceBlack,
                         child: const Icon(Icons.home_work,
                             size: 80, color: AppTheme.textGrey))
-                    : PageView.builder(
-                        controller: _pageCtrl,
-                        itemCount: offer.imgs.length,
-                        onPageChanged: (i) => setState(() => _currentImg = i),
-                        itemBuilder: (_, i) => GestureDetector(
-                          onTap: () => _openImageViewer(offer.imgs, i),
-                          child: Image.network(
+                    : GestureDetector(
+                        onTap: () => _openImageViewer(offer.imgs, _currentImg),
+                        // منع CustomScrollView من سرقة السحب الأفقي
+                        onHorizontalDragEnd: (_) {},
+                        child: PageView.builder(
+                          controller: _pageCtrl,
+                          itemCount: offer.imgs.length,
+                          onPageChanged: (i) => setState(() => _currentImg = i),
+                          physics: const ClampingScrollPhysics(),
+                          itemBuilder: (_, i) => Image.network(
                             offer.imgs[i],
                             fit: BoxFit.cover,
                             width: double.infinity,
