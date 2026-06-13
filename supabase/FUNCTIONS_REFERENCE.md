@@ -46,6 +46,9 @@
 | ✅ **مُطبّق على السيرفر** | `2026_06_12_lifecycle_final_fixes.sql` — expire فقط المنشور + mark_social بدون ts_upd + إرجاع العرض عند رفض الإتمام |
 | ✅ **مُطبّق على السيرفر** | `2026_06_13_notifications_text_and_offer_number.sql` — رقم عرض تسلسلي (offer_number + sequence + trigger) + إشعارات "العرض الخاص بك" |
 | ✅ **مُطبّق على السيرفر** | `2026_06_13_locations_and_car_docs.sql` — مناطق (السويداء/صلخد/شهبا) + سند سيارة (carDocTp) + نوع نمرة (plateTp) |
+| ✅ **مُطبّق على السيرفر** | `2026_06_13_fix_property_doc_types.sql` — حذف نمرة/وارد من سند العقار (فقط للسيارات) |
+| ✅ **مُطبّق على السيرفر** | `2026_06_13_fix_notifications_typ_to_tp.sql` — إصلاح notifications.typ → tp في 5 دوال + DROP/CREATE لـ trg_offer_status_changed |
+| ✅ **مُطبّق على السيرفر** | Storage policies لـ `offer_images` — INSERT/SELECT/UPDATE/DELETE مفتوحة |
 
 ---
 

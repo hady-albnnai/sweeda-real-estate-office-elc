@@ -83,7 +83,6 @@ class StorageService {
       final fileName =
           '${DateTime.now().millisecondsSinceEpoch}_${xfile.name}';
       final fullPath = 'offers/$userId/${offerId ?? 'draft'}/$fileName';
-      debugPrint('📸 uploadOfferImage: path=$fullPath, bucket=$offerBucket');
 
       Uint8List bytes;
       if (kIsWeb) {
@@ -92,7 +91,6 @@ class StorageService {
         final compressed = await compressImage(File(xfile.path));
         bytes = await (compressed ?? File(xfile.path)).readAsBytes();
       }
-      debugPrint('📸 uploadOfferImage: bytes=${bytes.length}, uploading...');
 
       await _storage.from(offerBucket).uploadBinary(
             fullPath,
@@ -100,12 +98,8 @@ class StorageService {
             fileOptions:
                 const FileOptions(cacheControl: '3600', upsert: true),
           );
-      final url = _storage.from(offerBucket).getPublicUrl(fullPath);
-      debugPrint('✅ uploadOfferImage SUCCESS: $url');
-      return url;
+      return _storage.from(offerBucket).getPublicUrl(fullPath);
     } catch (e) {
-      debugPrint('❌ uploadOfferImage FAILED: $e');
-      debugPrint('❌ uploadOfferImage stack: ${StackTrace.current.toString().split('\n').take(5).join('\n')}');
       return null;
     }
   }
@@ -117,7 +111,6 @@ class StorageService {
     String? offerId,
     void Function(int done, int total)? onProgress,
   }) async {
-    debugPrint('📸 uploadOfferImages: ${files.length} files, userId=$userId');
     final urls = <String>[];
     for (var i = 0; i < files.length; i++) {
       final url =
@@ -125,7 +118,6 @@ class StorageService {
       if (url != null) urls.add(url);
       onProgress?.call(i + 1, files.length);
     }
-    debugPrint('📸 uploadOfferImages DONE: ${urls.length}/${files.length} succeeded');
     return urls;
   }
 
