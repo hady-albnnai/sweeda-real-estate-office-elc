@@ -142,8 +142,10 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     super.dispose();
   }
 
+  int get _totalSteps => _selectedType == 1 ? 4 : 5;
+
   void _next() => setState(() {
-        if (_currentStep < 4) _currentStep++;
+        if (_currentStep < _totalSteps - 1) _currentStep++;
       });
   void _prev() => setState(() {
         if (_currentStep > 0) _currentStep--;
@@ -350,7 +352,9 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     } else {
       cityName = _selectedCityArea?.trim() ?? '';
     }
-    final loc = {'r': 0, 'd': _locCtrl.text, 'city': cityName};
+    final loc = _selectedType == 1
+        ? {'r': 0, 'd': '', 'city': _carGovernorate ?? ''}
+        : {'r': 0, 'd': _locCtrl.text, 'city': cityName};
 
     final customSub = _customSubCtrl.text.trim();
     final catForTitle = customSub.isNotEmpty
@@ -633,6 +637,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           children: [
           _dd('نوع العرض', ['عقار', 'سيارة'], (v) => setState(() {
             _selectedType = v == 'عقار' ? 0 : 1;
+            _currentStep = 0; // إعادة للخطوة الأولى عند تبديل النوع
             _selectedMainCat = null;
             _selectedSubCat = null;
             _selectedCityArea = null;
@@ -1416,7 +1421,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           ),
         ],
       ),
-      isActive: _currentStep >= 4,
+      isActive: _currentStep >= _totalSteps - 1,
     );
   }
 
