@@ -14,6 +14,7 @@ class ConfigModel {
   int get weeklyLoginPoints => _getNested('pts.wkL', 100);
   int get addOfferPoints => _getNested('pts.addO', 500);
   int get dealDonePoints => _getNested('pts.dlD', 2000);
+  int get socialSharePoints => _getNested('pts.soc', 100);
   int get sellCommission => _getNested('com.sl', 3);
   Map<String, dynamic> get userQuotas => _getNestedMap('qta.u', {'o': 1, 'r': 3, 'a': 3});
   Map<String, dynamic> get brokerQuotas => _getNestedMap('qta.b', {'o': 5, 'r': 5, 'a': 3});
