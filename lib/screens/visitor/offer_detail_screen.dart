@@ -277,7 +277,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(fit: StackFit.expand, children: [
-                // Slider الصور
+                // الصور — عرض ثابت (بدون PageView) + ضغط يفتح العارض الكامل
                 offer.imgs.isEmpty
                     ? Container(
                         color: AppTheme.surfaceBlack,
@@ -285,22 +285,14 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                             size: 80, color: AppTheme.textGrey))
                     : GestureDetector(
                         onTap: () => _openImageViewer(offer.imgs, _currentImg),
-                        // منع CustomScrollView من سرقة السحب الأفقي
-                        onHorizontalDragEnd: (_) {},
-                        child: PageView.builder(
-                          controller: _pageCtrl,
-                          itemCount: offer.imgs.length,
-                          onPageChanged: (i) => setState(() => _currentImg = i),
-                          physics: const ClampingScrollPhysics(),
-                          itemBuilder: (_, i) => Image.network(
-                            offer.imgs[i],
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            errorBuilder: (_, __, ___) => Container(
-                                color: AppTheme.surfaceBlack,
-                                child: const Icon(Icons.image,
-                                    size: 80, color: AppTheme.textGrey)),
-                          ),
+                        child: Image.network(
+                          offer.imgs[_currentImg],
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          errorBuilder: (_, __, ___) => Container(
+                              color: AppTheme.surfaceBlack,
+                              child: const Icon(Icons.image,
+                                  size: 80, color: AppTheme.textGrey)),
                         ),
                       ),
                 const DecoratedBox(
@@ -309,26 +301,54 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                             colors: [Colors.transparent, AppTheme.deepBlack]))),
-                // مؤشر الصور (dots)
+                // مؤشر الصور (dots قابلة للضغط)
                 if (offer.imgs.length > 1)
                   Positioned(
                     bottom: 12,
                     left: 0, right: 0,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(offer.imgs.length, (i) => Container(
-                        width: _currentImg == i ? 18 : 6,
-                        height: 6,
-                        margin: const EdgeInsets.symmetric(horizontal: 3),
-                        decoration: BoxDecoration(
-                          color: _currentImg == i
-                              ? AppTheme.primaryGold
-                              : Colors.white.withValues(alpha: 0.5),
-                          borderRadius: BorderRadius.circular(4),
+                      children: List.generate(offer.imgs.length, (i) => GestureDetector(
+                        onTap: () => setState(() => _currentImg = i),
+                        child: Container(
+                          width: _currentImg == i ? 18 : 8,
+                          height: 8,
+                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                          decoration: BoxDecoration(
+                            color: _currentImg == i
+                                ? AppTheme.primaryGold
+                                : Colors.white.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
                         ),
                       )),
                     ),
                   ),
+                // أسهم التنقل
+                if (offer.imgs.length > 1) ...[
+                  Positioned(
+                    left: 8, top: 0, bottom: 0,
+                    child: Center(child: GestureDetector(
+                      onTap: () { if (_currentImg > 0) setState(() => _currentImg--); },
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(color: Colors.black45, shape: BoxShape.circle),
+                        child: const Icon(Icons.chevron_left, color: Colors.white, size: 24),
+                      ),
+                    )),
+                  ),
+                  Positioned(
+                    right: 8, top: 0, bottom: 0,
+                    child: Center(child: GestureDetector(
+                      onTap: () { if (_currentImg < offer.imgs.length - 1) setState(() => _currentImg++); },
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(color: Colors.black45, shape: BoxShape.circle),
+                        child: const Icon(Icons.chevron_right, color: Colors.white, size: 24),
+                      ),
+                    )),
+                  ),
+                ],
                 // عداد الصور (1/3)
                 if (offer.imgs.length > 1)
                   Positioned(
