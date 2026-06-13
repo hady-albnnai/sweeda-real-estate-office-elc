@@ -29,15 +29,18 @@ class AdminProvider with ChangeNotifier {
   // ═══════════════════════════════════════
   Future<List<OfferModel>> getPendingOffers(String adminUid) async {
     try {
+      debugPrint('🔍 getPendingOffers: adminUid=$adminUid');
       final response = await SupabaseService().client.rpc(
         'get_admin_pending_offers_internal',
         params: {'p_admin_uid': adminUid},
       );
-      return (response as List)
+      debugPrint('✅ getPendingOffers: ${(response as List).length} عروض');
+      return response
           .map((d) => OfferModel.fromSupabase(
               Map<String, dynamic>.from(d), d['id'] as String))
           .toList();
     } catch (e) {
+      debugPrint('❌ getPendingOffers FAILED: $e');
       return [];
     }
   }
@@ -45,7 +48,8 @@ class AdminProvider with ChangeNotifier {
   Future<bool> reviewOffer(String adminUid, String offerId, bool approve,
       {String reason = ''}) async {
     try {
-      await SupabaseService().client.rpc(
+      debugPrint('🔍 reviewOffer START: adminUid=$adminUid, offerId=$offerId, approve=$approve, reason=$reason');
+      final result = await SupabaseService().client.rpc(
         'admin_review_offer_internal',
         params: {
           'p_admin_uid': adminUid,
@@ -54,9 +58,11 @@ class AdminProvider with ChangeNotifier {
           'p_reject_reason': reason,
         },
       );
+      debugPrint('✅ reviewOffer SUCCESS: result=$result');
       notifyListeners();
       return true;
     } catch (e) {
+      debugPrint('❌ reviewOffer FAILED: $e');
       return false;
     }
   }
