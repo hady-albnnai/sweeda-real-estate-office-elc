@@ -374,11 +374,19 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(
-                          child: Text(offer.ttl,
-                              style: const TextStyle(
-                                  color: AppTheme.textWhite,
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold)),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (offer.offerNumber != null)
+                                Text('عرض رقم #${offer.offerNumber}',
+                                    style: TextStyle(color: AppTheme.primaryGold.withValues(alpha: 0.7), fontSize: 12)),
+                              Text(offer.ttl,
+                                  style: const TextStyle(
+                                      color: AppTheme.textWhite,
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold)),
+                            ],
+                          ),
                         ),
                         const SizedBox(width: 8),
                         Text(
@@ -661,22 +669,31 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
     final config = context.read<ConfigProvider>().config;
     final auth = context.read<AuthProvider>();
     final text = BusinessService().generateSocialPost(_offer!, config: config);
-    await SharePlus.instance.share(
+    final result = await SharePlus.instance.share(
       ShareParams(text: text, subject: _offer!.ttl),
     );
-    await BusinessService().markSocialPublished(
-      _offer!.id,
-      text,
-      userId: auth.userModel?.uid,
-    );
-    // منح نقاط النشر على السوشال (pts.soc)
-    if (auth.userModel != null) {
-      await BusinessService()
-          .awardEvent(auth.userModel!.uid, config, 'soc', fallback: 100);
-    }
-    if (mounted) {
-      messenger.showSnackBar(
-          const SnackBar(content: Text('تم تجهيز المنشور ✅ (+نقاط)')));
+
+    // منح النقاط فقط إذا تمت المشاركة فعلياً
+    if (result.status == ShareResultStatus.success) {
+      await BusinessService().markSocialPublished(
+        _offer!.id,
+        text,
+        userId: auth.userModel?.uid,
+      );
+      if (auth.userModel != null) {
+        final pts = config?.pointsConfig['soc'] ?? 100;
+        await BusinessService()
+            .awardEvent(auth.userModel!.uid, config, 'soc', fallback: 100);
+        if (mounted) {
+          messenger.showSnackBar(
+              SnackBar(content: Text('تم مشاركة العرض ✅ (+$pts نقطة)')));
+        }
+      }
+    } else {
+      if (mounted) {
+        messenger.showSnackBar(
+            const SnackBar(content: Text('لم تتم المشاركة')));
+      }
     }
   }
 

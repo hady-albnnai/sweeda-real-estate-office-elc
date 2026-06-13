@@ -165,13 +165,28 @@ class _OfferCardState extends State<OfferCard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(offer.ttl,
-                      style: const TextStyle(
-                          color: AppTheme.textWhite,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis),
+                  Row(children: [
+                    if (offer.offerNumber != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        margin: const EdgeInsets.only(left: 8),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryGold.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text('#${offer.offerNumber}',
+                            style: const TextStyle(color: AppTheme.primaryGold, fontSize: 11, fontWeight: FontWeight.bold)),
+                      ),
+                    Expanded(
+                      child: Text(offer.ttl,
+                          style: const TextStyle(
+                              color: AppTheme.textWhite,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis),
+                    ),
+                  ]),
                   const SizedBox(height: 6),
                   // 🏢 هوية المكتب
                   if (offer.ownerLabel != null && offer.ownerLabel!.isNotEmpty)

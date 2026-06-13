@@ -147,7 +147,7 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                     const SizedBox(height: 30),
                     const Text(
-                      'عقارات السويداء',
+                      'المكتب العقاري الالكتروني',
                       style: TextStyle(
                         color: AppTheme.primaryGold,
                         fontSize: 28,
@@ -157,7 +157,7 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      'المكتب العقاري الالكتروني',
+                      'السويداء',
                       style: TextStyle(
                         color: AppTheme.primaryGold.withValues(alpha: 0.6),
                         fontSize: 13,
