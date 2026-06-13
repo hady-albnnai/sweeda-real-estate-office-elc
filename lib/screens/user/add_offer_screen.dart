@@ -840,11 +840,11 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
               controller: _ttlCtrl,
               maxLength: 80,
               decoration: InputDecoration(
-                labelText: 'عنوان مخصص (اختياري)',
-                hintText: _selectedSubCat != null
-                    ? 'مثال: ${_catLabel()} فاخرة مع حديقة — إذا تُرك فارغاً يُبنى تلقائياً'
+                labelText: 'عنوان العرض بالتطبيق (اختياري)',
+                hintText: _selectedType == 1
+                    ? 'مثال: كيا سيراتو 2020 فل — إذا تُرك فارغاً يُبنى تلقائياً'
                     : 'مثال: شقة فاخرة مع حديقة — إذا تُرك فارغاً يُبنى تلقائياً',
-                helperText: 'العنوان الآلي: ${_catLabel()} في ${_locCtrl.text.isNotEmpty ? _locCtrl.text : "الموقع"}',
+                helperText: 'هذا العنوان سيظهر للجمهور كاسم لعرضك',
                 helperStyle: const TextStyle(color: AppTheme.primaryGold, fontSize: 11),
                 border: const OutlineInputBorder(),
                 counterStyle: const TextStyle(color: AppTheme.textGrey),
@@ -891,7 +891,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              _dd('الإكساء', ['على العظم', 'نص إكساء', 'إكساء كامل', 'إكساء فاخر (سوبر ديلوكس)', 'آخر'],
+              _dd('الإكساء', ['ملكي', 'سوبر ديلوكس', 'ديلوكس', 'كسوة عادية', 'هيكل', 'آخر'],
                   (v) => setState(() => _finishing = v)),
               const SizedBox(height: 12),
               TextField(
@@ -1508,49 +1508,14 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   }
 
   Widget _buildLocationAutocomplete() {
-    final config = context.watch<ConfigProvider>().config;
-    final locations = (config?.locations ?? [])
-        .map((item) {
-          if (item is String) return item.trim();
-          if (item is Map) {
-            return item['name']?.toString().trim() ??
-                item['d']?.toString().trim() ??
-                item.toString().trim();
-          }
-          return item.toString().trim();
-        })
-        .where((item) => item.isNotEmpty)
-        .toSet()
-        .toList()
-      ..sort();
-
-    return Autocomplete<String>(
-      initialValue: TextEditingValue(text: _locCtrl.text),
-      optionsBuilder: (textEditingValue) {
-        if (locations.isEmpty) return const Iterable<String>.empty();
-        if (textEditingValue.text.isEmpty) return locations.take(20);
-        final query = textEditingValue.text.toLowerCase();
-        return locations.where(
-          (option) => option.toLowerCase().contains(query),
-        );
-      },
-      fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
-        controller.text = _locCtrl.text;
-        controller.selection = _locCtrl.selection;
-        return TextField(
-          controller: controller,
-          focusNode: focusNode,
-          maxLines: 2,
-          decoration: const InputDecoration(
-            labelText: 'وصف دقيق للموقع (إلزامي)',
-            hintText: 'ابحث من المواقع الموجودة أو اكتب الموقع يدوياً',
-          ),
-          onChanged: (value) => _locCtrl.text = value,
-        );
-      },
-      onSelected: (selection) {
-        setState(() => _locCtrl.text = selection);
-      },
+    return TextField(
+      controller: _locCtrl,
+      maxLines: 2,
+      decoration: const InputDecoration(
+        labelText: 'وصف دقيق للموقع (إلزامي)',
+        hintText: 'مثال: بجانب مدرسة الفارابي — شارع الجلاء — الطابق الثالث',
+        border: OutlineInputBorder(),
+      ),
     );
   }
 
