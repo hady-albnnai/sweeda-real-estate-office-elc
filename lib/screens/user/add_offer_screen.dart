@@ -57,8 +57,10 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   final _carYearCtrl = TextEditingController();
   final _carColorCtrl = TextEditingController();
   final _carKmCtrl = TextEditingController();
+  final _carPlateCtrl = TextEditingController(); // لوحة السيارة
   String? _carFuel;
   String? _carTransmission;
+  String? _carGovernorate; // محافظة السيارة
   int? _selectedCarDocType;  // نوع سند ملكية السيارة
   int? _selectedPlateType;   // نوع النمرة
 
@@ -133,6 +135,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     _carYearCtrl.dispose();
     _carColorCtrl.dispose();
     _carKmCtrl.dispose();
+    _carPlateCtrl.dispose();
     _areaCtrl.dispose();
     _floorCtrl.dispose();
     _legalNotesCtrl.dispose();
@@ -271,6 +274,10 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     }
     // فحص حقول السيارة
     if (_selectedType == 1) {
+      if (_carPlateCtrl.text.trim().isEmpty) {
+        _snack('يرجى إدخال لوحة السيارة');
+        return;
+      }
       if (_carBrandCtrl.text.trim().isEmpty || _carModelCtrl.text.trim().isEmpty || _carYearCtrl.text.trim().isEmpty) {
         _snack('يرجى إدخال الماركة والموديل وسنة الصنع');
         return;
@@ -351,7 +358,16 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         : (_selectedSubCat != null ? _catLabel() : 'عرض');
 
     // العنوان: يُستخدم ما كتبه المستخدم إن وُجد، وإلا يُبنى آلياً
-    final autoTitle = '$catForTitle في $cityName';
+    String autoTitle;
+    if (_selectedType == 1) {
+      final brand = _carBrandCtrl.text.trim();
+      final model = _carModelCtrl.text.trim();
+      final year = _carYearCtrl.text.trim();
+      autoTitle = '$brand $model $year'.trim();
+      if (autoTitle.isEmpty) autoTitle = 'سيارة للبيع';
+    } else {
+      autoTitle = '$catForTitle في $cityName';
+    }
     final finalTitle = _ttlCtrl.text.trim().isNotEmpty
         ? _ttlCtrl.text.trim()
         : autoTitle;
@@ -386,6 +402,8 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         },
         // حقول السيارة
         if (_selectedType == 1) ...{
+          'plate': _carPlateCtrl.text.trim(),
+          'governorate': _carGovernorate ?? '',
           'brand': _carBrandCtrl.text.trim(),
           'model': _carModelCtrl.text.trim(),
           'year': _carYearCtrl.text.trim(),
@@ -734,37 +752,54 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
 
           // ─── حقول السيارة ───
           if (_selectedType == 1) ...[
+            // لوحة السيارة
+            TextField(
+              controller: _carPlateCtrl,
+              decoration: const InputDecoration(labelText: 'لوحة السيارة *', border: OutlineInputBorder(), hintText: 'مثال: 123456'),
+            ),
+            const SizedBox(height: 12),
+            // المحافظة
+            _dd('المحافظة', ['السويداء', 'دمشق', 'ريف دمشق', 'حمص', 'حماة', 'حلب', 'اللاذقية', 'طرطوس', 'إدلب', 'دير الزور', 'الرقة', 'الحسكة', 'درعا', 'القنيطرة'],
+                (v) => setState(() => _carGovernorate = v)),
+            const SizedBox(height: 12),
+            // الماركة
             TextField(
               controller: _carBrandCtrl,
-              decoration: const InputDecoration(labelText: 'الماركة *', border: OutlineInputBorder()),
+              decoration: const InputDecoration(labelText: 'الماركة *', border: OutlineInputBorder(), hintText: 'مثال: كيا، هيونداي، تويوتا...'),
             ),
             const SizedBox(height: 12),
+            // الموديل
             TextField(
               controller: _carModelCtrl,
-              decoration: const InputDecoration(labelText: 'الموديل *', border: OutlineInputBorder()),
+              decoration: const InputDecoration(labelText: 'الموديل *', border: OutlineInputBorder(), hintText: 'مثال: سيراتو، أكسنت...'),
             ),
             const SizedBox(height: 12),
+            // سنة الصنع
             TextField(
               controller: _carYearCtrl,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'سنة الصنع *', border: OutlineInputBorder()),
+              decoration: const InputDecoration(labelText: 'سنة الصنع *', border: OutlineInputBorder(), hintText: 'مثال: 2020'),
             ),
             const SizedBox(height: 12),
+            // اللون
             TextField(
               controller: _carColorCtrl,
-              decoration: const InputDecoration(labelText: 'اللون', border: OutlineInputBorder()),
+              decoration: const InputDecoration(labelText: 'اللون', border: OutlineInputBorder(), hintText: 'مثال: أبيض، أسود، فضي...'),
             ),
             const SizedBox(height: 12),
+            // عدد الكيلومترات
             TextField(
               controller: _carKmCtrl,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'عدد الكيلومترات', border: OutlineInputBorder()),
+              decoration: const InputDecoration(labelText: 'عدد الكيلومترات', border: OutlineInputBorder(), hintText: 'مثال: 50000'),
             ),
             const SizedBox(height: 12),
+            // نوع الوقود
             _dd('نوع الوقود', ['بنزين', 'ديزل', 'هجين', 'كهربائي', 'غاز'],
                 (v) => setState(() => _carFuel = v)),
             const SizedBox(height: 12),
-            _dd('ناقل الحركة', ['عادي', 'أوتوماتيك'],
+            // ناقل الحركة
+            _dd('ناقل الحركة', ['عادي', 'أوتوماتيك', 'نصف أوتوماتيك'],
                 (v) => setState(() => _carTransmission = v)),
           ],
           const SizedBox(height: 8),
