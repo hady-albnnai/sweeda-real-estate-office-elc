@@ -69,6 +69,11 @@ class BusinessService {
   /// أمثلة المفاتيح: 'sgn','wkL','addO','dlD','strk','soc','att','ref'
   Future<bool> awardEvent(String uid, ConfigModel? config, String eventKey,
       {int fallback = 0}) async {
+    // الإدارة لا تحتاج نقاط
+    try {
+      final user = await _sb.client.from(DbTables.users).select('role').eq('id', uid).maybeSingle();
+      if (user != null && (user['role'] as int? ?? 0) >= UserRole.minAdmin) return false;
+    } catch (_) {}
     final pts = _ptsFromConfig(config, eventKey, fallback);
     if (pts == 0) return false;
     return awardPointsSafe(uid, eventKey, pts);
