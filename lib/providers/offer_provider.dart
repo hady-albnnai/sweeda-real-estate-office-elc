@@ -242,7 +242,6 @@ class OfferProvider with ChangeNotifier {
 
   Future<OfferModel?> addOffer(OfferModel offer) async {
     try {
-      debugPrint('🔍 addOffer START: usrId=${offer.usrId}, ttl=${offer.ttl}, typ=${offer.typ}');
       final response = await SupabaseService().client.rpc(
         'create_offer_internal',
         params: {
@@ -250,19 +249,13 @@ class OfferProvider with ChangeNotifier {
           'p_offer': offer.toMap(),
         },
       );
-      debugPrint('🔍 addOffer response: $response');
-      if (response == null || (response as List).isEmpty) {
-        debugPrint('⚠️ addOffer: response null or empty');
-        return null;
-      }
+      if (response == null || (response as List).isEmpty) return null;
       final row = Map<String, dynamic>.from(response.first as Map);
       final created = OfferModel.fromSupabase(row, row['id'] as String);
-      debugPrint('✅ addOffer SUCCESS: id=${created.id}, sts=${created.sts}, offer_number=${created.offerNumber}');
       _offers.insert(0, created);
       notifyListeners();
       return created;
     } catch (e) {
-      debugPrint('❌ addOffer FAILED: $e');
       return null;
     }
   }

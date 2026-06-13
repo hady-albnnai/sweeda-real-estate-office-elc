@@ -97,22 +97,17 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
 
     final admin = context.read<AdminProvider>();
     final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
-    debugPrint('🔍 APPROVE: adminUid=$adminUid, offerId=${o.id}, offerSts=${o.sts}');
     final ok = await admin.reviewOffer(adminUid, o.id, true);
-    debugPrint('🔍 APPROVE result: ok=$ok');
     if (!mounted) return;
     if (ok) {
       try {
         final config = context.read<ConfigProvider>().config;
         await BusinessService().awardEvent(o.usrId, config, 'addO', fallback: 500);
-        debugPrint('✅ نقاط مُنحت لـ ${o.usrId}');
-      } catch (e) {
-        debugPrint('⚠️ فشل منح النقاط: $e');
-      }
+      } catch (_) {}
       _snack('✅ تم نشر العرض');
       _load();
     } else {
-      _snack('فشل النشر — راجع الـ console');
+      _snack('فشل النشر');
     }
   }
 
@@ -122,9 +117,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
 
     final admin = context.read<AdminProvider>();
     final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
-    debugPrint('🔍 REJECT: adminUid=$adminUid, offerId=${o.id}, reason=$reason');
     final ok = await admin.reviewOffer(adminUid, o.id, false, reason: reason);
-    debugPrint('🔍 REJECT result: ok=$ok');
     if (!mounted) return;
     if (ok) {
       _snack('تم رفض العرض');
