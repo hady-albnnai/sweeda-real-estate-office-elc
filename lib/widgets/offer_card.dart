@@ -80,13 +80,21 @@ class _OfferCardState extends State<OfferCard> {
                 height: 200,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: NetworkImage(offer.imgs.isNotEmpty
-                        ? offer.imgs[0]
-                        : 'https://via.placeholder.com/400x200'),
-                    fit: BoxFit.cover,
-                  ),
+                  color: AppTheme.surfaceBlack,
+                  image: offer.imgs.isNotEmpty
+                      ? DecorationImage(
+                          image: NetworkImage(offer.imgs[0]),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
                 ),
+                child: offer.imgs.isEmpty
+                    ? Center(
+                        child: Icon(Icons.apartment_outlined,
+                            color: AppTheme.primaryGold.withValues(alpha: 0.4),
+                            size: 56),
+                      )
+                    : null,
               ),
               // شارات الترقيات (spd)
               Positioned(

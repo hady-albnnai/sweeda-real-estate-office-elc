@@ -1,17 +1,14 @@
-import 'dart:io';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/auth_provider.dart';
-import '../../providers/config_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/network/supabase_service.dart';
-import '../../core/constants/db_constants.dart';
-import '../../services/storage_service.dart';
 
+/// ════════════════════════════════════════════════════════════════════
+/// شاشة إعداد اسم المستخدم + كلمة المرور (إلزامية بعد أول تسجيل عبر OTP).
+/// الهوية (رقم وطني + صورة) تُترك لخيار التوثيق لاحقاً.
+/// ════════════════════════════════════════════════════════════════════
 class SetupProfileScreen extends StatefulWidget {
   const SetupProfileScreen({super.key});
 
@@ -20,40 +17,32 @@ class SetupProfileScreen extends StatefulWidget {
 }
 
 class _SetupProfileScreenState extends State<SetupProfileScreen> {
-  final _nameController = TextEditingController();
-  final _usernameController = TextEditingController(); // 🔑 اسم المستخدم
-  final _passwordController = TextEditingController(); // 🔑 كلمة المرور
-  final _confirmPasswordController = TextEditingController(); // 🔑 تأكيد كلمة المرور
-  final _sidController = TextEditingController();
-  final _addressController = TextEditingController();
-  final _referralCodeController = TextEditingController(); // 🎁 كود إحالة اختياري
-  XFile? _idImage;
-  bool _agreePledge = false;
+  final _usernameController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  bool _obscure = true;
   bool _loading = false;
   bool _usernameAvailable = false;
   bool _checkingUsername = false;
-  final _storage = StorageService();
 
   @override
   void dispose() {
-    _nameController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
-    _sidController.dispose();
-    _addressController.dispose();
-    _referralCodeController.dispose();
     super.dispose();
   }
 
-  /// فحص توفر اسم المستخدم
+  /// فحص توفر اسم المستخدم لحظياً
   Future<void> _checkUsername() async {
     final usr = _usernameController.text.trim().toLowerCase();
     if (usr.length < 3) {
-      setState(() {
-        _usernameAvailable = false;
-        _checkingUsername = false;
-      });
+      if (mounted) {
+        setState(() {
+          _usernameAvailable = false;
+          _checkingUsername = false;
+        });
+      }
       return;
     }
     setState(() => _checkingUsername = true);
@@ -73,42 +62,11 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
     }
   }
 
-  Future<void> _pickIdImage() async {
-    final file = await _storage.pickImage(fromCamera: false);
-    if (file != null) setState(() => _idImage = file);
-  }
-
-  /// 🔒 Phase 9: رفع صورة الهوية في bucket خاص (ids_private).
-  /// المسار: <userId>/id_<timestamp>.jpg — RLS تشترط أن المسار = auth.uid().
-  /// نُرجع المسار (path) فقط، لا getPublicUrl (الـbucket غير عام).
-  /// الإدارة تقرأها عبر admin_get_id_signed_path RPC.
-  Future<String?> _uploadId(String userId) async {
-    if (_idImage == null) return null;
-    try {
-      final storage = SupabaseService().storage;
-      final path = '$userId/id_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      final bytes = kIsWeb
-          ? await _idImage!.readAsBytes()
-          : await (await _storage.compressImage(File(_idImage!.path)) ??
-                  File(_idImage!.path))
-              .readAsBytes();
-      await storage.from(StorageService.idsPrivateBucket).uploadBinary(
-            path, bytes,
-            fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
-          );
-      // نُرجع المسار النسبي (لا URL عام لمنع التسرب)
-      return path;
-    } catch (e) {return null;
-    }
-  }
-
   Future<void> _submit() async {
-    if (_nameController.text.trim().isEmpty) {
-      _snack('يرجى إكمال الاسم');
-      return;
-    }
-    // فحص اسم المستخدم
     final username = _usernameController.text.trim().toLowerCase();
+    final password = _passwordController.text;
+
+    // فحص اسم المستخدم
     if (username.isEmpty || username.length < 3) {
       _snack('يرجى إدخال اسم مستخدم (3 أحرف على الأقل)');
       return;
@@ -117,122 +75,75 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
       _snack('اسم المستخدم يحتوي أحرف غير مسموحة (فقط a-z, 0-9, _, .)');
       return;
     }
+    if (!_usernameAvailable) {
+      _snack('اسم المستخدم محجوز، اختر اسماً آخر');
+      return;
+    }
     // فحص كلمة المرور
-    if (_passwordController.text.length < 6) {
+    if (password.length < 6) {
       _snack('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
       return;
     }
-    if (_passwordController.text != _confirmPasswordController.text) {
+    if (password != _confirmPasswordController.text) {
       _snack('كلمتا المرور غير متطابقتين');
-      return;
-    }
-    if (!_agreePledge) {
-      _snack('يجب الموافقة على الإقرار والتعهد');
       return;
     }
 
     setState(() => _loading = true);
-    final authProvider = context.read<AuthProvider>();
-    final user = authProvider.userModel;
+    final auth = context.read<AuthProvider>();
+    final user = auth.userModel;
     if (user == null) {
       setState(() => _loading = false);
       _snack('انتهت الجلسة، أعد تسجيل الدخول');
       return;
     }
 
-    // 1) رفع صورة الهوية (إذا كانت موجودة)
-    String? idUrl;
-    if (_idImage != null) {
-      idUrl = await _uploadId(user.uid);
-      if (idUrl == null) {
-        setState(() => _loading = false);
-        _snack('فشل رفع صورة الهوية، حاول مرة أخرى');
-        return;
-      }
-    }
-
-    // 2) تحديث بيانات المستخدم
     try {
       await SupabaseService().client.rpc(
-        'update_user_profile_internal',
+        'register_password',
         params: {
           'p_user_uid': user.uid,
-          'p_payload': {
-            'nm': _nameController.text.trim(),
-            'sid': _sidController.text.trim(),
-            'ad': _addressController.text.trim(),
-            'img': idUrl ?? user.img,
-          },
+          'p_username': username,
+          'p_password': password,
         },
       );
 
-      // 2.5) 🔑 تسجيل اسم المستخدم + كلمة المرور
-      try {
-        await SupabaseService().client.rpc(
-          'register_password',
-          params: {
-            'p_user_uid': user.uid,
-            'p_username': username,
-            'p_password': _passwordController.text,
-          },
-        );
-      } catch (e) {
-        final msg = e.toString();
-        if (msg.contains('USERNAME_TAKEN')) {
-          setState(() => _loading = false);
-          _snack('اسم المستخدم محجوز، اختر اسماً آخر');
-          return;
-        }
-        // لا نُفشل العملية بالكامل لو فشلت كلمة المرور
-      }
-
-      // 3) 🎁 تطبيق كود الإحالة (إن وُجد) — RPC apply_referral
-      // مرجع: docs/LOGIC_SPEC.md §3.2 + supabase/FUNCTIONS_REFERENCE.md
-      final refCode = _referralCodeController.text.trim();
-      if (refCode.isNotEmpty) {
-        try {
-          final ok = await SupabaseService().client.rpc(
-            DbFunctions.applyReferral,
-            params: {
-              'p_new_uid': user.uid,
-              'p_referrer_code': refCode.toUpperCase(),
-            },
-          );
-          if (ok == true && mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('🎁 تم تطبيق كود الإحالة، حصلت أنت والمحيل على نقاط ترحيب!'),
-                backgroundColor: Colors.green,
-                duration: Duration(seconds: 3),
-              ),
-            );
-          }
-        } catch (e) {// لا نُفشل عملية التسجيل بسبب كود إحالة خاطئ
-        }
-      }
-
-      await authProvider.refreshUser();
-
+      await auth.refreshUser();
       if (!mounted) return;
       setState(() => _loading = false);
 
-      // التوجّه حسب الدور
-      if (authProvider.isSenior) {
-        context.go('/admin/dashboard');
-      } else if (authProvider.isEmployee) {
-        context.go('/employee/home');
-      } else if (authProvider.isSupervisor) {
-        context.go('/executor/tasks');
-      } else if (authProvider.isPhotographer) {
-        context.go('/photographer/tasks');
-      } else if (authProvider.isBroker) {
-        context.go('/broker/dashboard');
-      } else {
-        context.go('/user/home');
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('✅ تم إنشاء حسابك بنجاح'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      _navigateByRole(auth);
     } catch (e) {
       setState(() => _loading = false);
-      _snack('فشل حفظ البيانات: ${e.toString()}');
+      final msg = e.toString();
+      if (msg.contains('USERNAME_TAKEN')) {
+        _snack('اسم المستخدم محجوز، اختر اسماً آخر');
+      } else {
+        _snack('حدث خطأ، حاول مرة أخرى');
+      }
+    }
+  }
+
+  void _navigateByRole(AuthProvider auth) {
+    if (auth.isSenior) {
+      context.go('/admin/dashboard');
+    } else if (auth.isEmployee) {
+      context.go('/employee/home');
+    } else if (auth.isSupervisor) {
+      context.go('/executor/tasks');
+    } else if (auth.isPhotographer) {
+      context.go('/photographer/tasks');
+    } else if (auth.isBroker) {
+      context.go('/broker/dashboard');
+    } else {
+      context.go('/user/home');
     }
   }
 
@@ -241,93 +152,65 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
   }
 
-  void _showPledgeDialog() {
-    final config = context.read<ConfigProvider>().config;
-    final pledgeText = config?.texts['plg'] ??
-        'إقرار وتعهد إلكتروني — عقارات السويداء\n\n'
-            '• أُقرّ بأن جميع البيانات والمعلومات المُدخلة صحيحة وكاملة.\n'
-            '• أتعهّد بعدم إدراج أي إعلانات وهمية أو مضللة.\n'
-            '• ألتزم بقوانين العمل العقاري في الجمهورية العربية السورية.\n'
-            '• أُوافق على معالجة بياناتي وفقاً لسياسة الخصوصية.\n'
-            '• أُقرّ بأن أي مخالفة قد تؤدي لتجميد أو حظر حسابي.';
-
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: AppTheme.surfaceBlack,
-        title: const Row(
-          children: [
-            Icon(Icons.gavel, color: AppTheme.primaryGold),
-            SizedBox(width: 8),
-            Text('الإقرار والتعهد',
-                style: TextStyle(color: AppTheme.textWhite)),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Text(pledgeText,
-              style:
-                  const TextStyle(color: AppTheme.textGrey, fontSize: 13)),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('إغلاق',
-                style: TextStyle(color: AppTheme.primaryGold)),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.deepBlack,
       appBar: AppBar(
-        title: const Text('إكمال الملف الشخصي'),
+        title: const Text('إعداد الحساب'),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        automaticallyImplyLeading: false,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 8),
-              const Text(
-                'أهلاً بك في المكتب العقاري',
-                style: TextStyle(
-                    color: AppTheme.textWhite,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold),
+              // ─── أيقونة + عنوان ───
+              Center(
+                child: Column(children: [
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryGold.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Icon(Icons.lock_person_outlined,
+                        color: AppTheme.primaryGold, size: 36),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'إعداد بيانات الدخول',
+                    style: TextStyle(
+                        color: AppTheme.textWhite,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'اختر اسم مستخدم وكلمة مرور لتسجيل الدخول لاحقاً',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: AppTheme.textGrey, fontSize: 13),
+                  ),
+                ]),
               ),
-              const SizedBox(height: 6),
-              const Text(
-                'يرجى تزويدنا ببعض المعلومات الأساسية لتوثيق حسابك',
-                style: TextStyle(color: AppTheme.textGrey, fontSize: 13),
-              ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 28),
 
-              // الاسم
-              _label('الاسم الكامل *'),
-              TextField(
-                controller: _nameController,
-                style: const TextStyle(color: AppTheme.textWhite),
-                decoration: const InputDecoration(
-                  hintText: 'أدخل اسمك الثلاثي',
-                  prefixIcon: Icon(Icons.person, color: AppTheme.primaryGold),
-                ),
-              ),
-              const SizedBox(height: 14),
-
-              // 🔑 اسم المستخدم (إلزامي)
-              _label('اسم المستخدم *'),
+              // ─── اسم المستخدم ───
+              const Text('اسم المستخدم *',
+                  style: TextStyle(
+                      color: AppTheme.primaryGold,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13)),
+              const SizedBox(height: 4),
               const Text(
-                'سيُستخدم لتسجيل الدخول لاحقاً (أحرف إنجليزية + أرقام)',
+                'أحرف إنجليزية + أرقام + _ + . (3–30 حرف)',
                 style: TextStyle(color: AppTheme.textGrey, fontSize: 11),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
               TextField(
                 controller: _usernameController,
                 textAlign: TextAlign.left,
@@ -361,191 +244,62 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                 ),
                 onChanged: (_) => _checkUsername(),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 18),
 
-              // 🔑 كلمة المرور (إلزامية)
-              _label('كلمة المرور *'),
+              // ─── كلمة المرور ───
+              const Text('كلمة المرور *',
+                  style: TextStyle(
+                      color: AppTheme.primaryGold,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13)),
+              const SizedBox(height: 8),
               TextField(
                 controller: _passwordController,
-                obscureText: true,
+                obscureText: _obscure,
                 textAlign: TextAlign.left,
                 textDirection: TextDirection.ltr,
                 style: const TextStyle(color: AppTheme.textWhite),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: '6 أحرف على الأقل',
-                  prefixIcon: Icon(Icons.lock_outline,
+                  prefixIcon: const Icon(Icons.lock_outline,
                       color: AppTheme.primaryGold),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscure
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      color: AppTheme.textGrey,
+                      size: 20,
+                    ),
+                    onPressed: () => setState(() => _obscure = !_obscure),
+                  ),
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 18),
 
-              // تأكيد كلمة المرور
-              _label('تأكيد كلمة المرور *'),
+              // ─── تأكيد كلمة المرور ───
+              const Text('تأكيد كلمة المرور *',
+                  style: TextStyle(
+                      color: AppTheme.primaryGold,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13)),
+              const SizedBox(height: 8),
               TextField(
                 controller: _confirmPasswordController,
-                obscureText: true,
+                obscureText: _obscure,
                 textAlign: TextAlign.left,
                 textDirection: TextDirection.ltr,
                 style: const TextStyle(color: AppTheme.textWhite),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: 'أعد إدخال كلمة المرور',
-                  prefixIcon: Icon(Icons.lock_rounded,
+                  prefixIcon: const Icon(Icons.lock_rounded,
                       color: AppTheme.primaryGold),
                 ),
+                onSubmitted: (_) => _submit(),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 28),
 
-              // رقم الهوية (اختياري حالياً)
-              _label('الرقم الوطني (اختياري)'),
-              TextField(
-                controller: _sidController,
-                keyboardType: TextInputType.number,
-                style: const TextStyle(color: AppTheme.textWhite),
-                decoration: const InputDecoration(
-                  hintText: 'أدخل رقم الهوية إن رغبت',
-                  prefixIcon: Icon(Icons.badge, color: AppTheme.primaryGold),
-                ),
-              ),
-              const SizedBox(height: 14),
-              
-              // العنوان
-              _label('العنوان (اختياري)'),
-              TextField(
-                controller: _addressController,
-                style: const TextStyle(color: AppTheme.textWhite),
-                decoration: const InputDecoration(
-                  hintText: 'مثلاً: السويداء — الجادة الرئيسية',
-                  prefixIcon: Icon(Icons.location_on,
-                      color: AppTheme.primaryGold),
-                ),
-              ),
-              const SizedBox(height: 14),
-
-              // 🎁 كود الإحالة (اختياري) — LOGIC_SPEC §3.2
-              _label('كود إحالة (اختياري — احصل على نقاط ترحيب 🎁)'),
-              TextField(
-                controller: _referralCodeController,
-                textCapitalization: TextCapitalization.characters,
-                style: const TextStyle(
-                    color: AppTheme.textWhite, letterSpacing: 2),
-                decoration: const InputDecoration(
-                  hintText: 'مثلاً: ABCD1234',
-                  prefixIcon:
-                      Icon(Icons.card_giftcard, color: AppTheme.primaryGold),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // صورة الهوية (اختيارية للمستخدم العادي)
-              _label('صورة بطاقة الهوية (اختياري)'),
-              const Text(
-                'يمكنك رفعها لزيادة موثوقية حسابك',
-                style: TextStyle(color: AppTheme.textGrey, fontSize: 11),
-              ),
-              const SizedBox(height: 6),
-              GestureDetector(
-                onTap: _pickIdImage,
-                child: Container(
-                  height: 160,
-                  decoration: BoxDecoration(
-                    color: AppTheme.surfaceBlack,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: _idImage != null
-                          ? Colors.green
-                          : AppTheme.primaryGold.withValues(alpha: 0.4),
-                      width: 1.5,
-                    ),
-                  ),
-                  child: _idImage == null
-                      ? const Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.add_a_photo,
-                                  color: AppTheme.primaryGold, size: 42),
-                              SizedBox(height: 6),
-                              Text('اضغط لرفع صورة الهوية',
-                                  style: TextStyle(
-                                      color: AppTheme.textGrey,
-                                      fontSize: 13)),
-                            ],
-                          ),
-                        )
-                      : ClipRRect(
-                          borderRadius: BorderRadius.circular(11),
-                          child: kIsWeb
-                              ? Image.network(_idImage!.path,
-                                  fit: BoxFit.cover, width: double.infinity)
-                              : Image.file(File(_idImage!.path),
-                                  fit: BoxFit.cover, width: double.infinity),
-                        ),
-                ),
-              ),
-              if (_idImage != null)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    onPressed: () => setState(() => _idImage = null),
-                    icon: const Icon(Icons.close, color: Colors.red, size: 16),
-                    label: const Text('تغيير الصورة',
-                        style: TextStyle(color: Colors.red, fontSize: 12)),
-                  ),
-                ),
-              const SizedBox(height: 16),
-
-              // الإقرار والتعهد
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppTheme.surfaceBlack,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                      color: _agreePledge
-                          ? Colors.green
-                          : AppTheme.primaryGold.withValues(alpha: 0.3)),
-                ),
-                child: Column(
-                  children: [
-                    InkWell(
-                      onTap: _showPledgeDialog,
-                      child: const Row(
-                        children: [
-                          Icon(Icons.gavel,
-                              color: AppTheme.primaryGold, size: 18),
-                          SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'اقرأ نص الإقرار والتعهد قبل المتابعة',
-                              style: TextStyle(
-                                  color: AppTheme.textWhite, fontSize: 12),
-                            ),
-                          ),
-                          Icon(Icons.arrow_forward_ios,
-                              color: AppTheme.primaryGold, size: 12),
-                        ],
-                      ),
-                    ),
-                    const Divider(color: AppTheme.textGrey, height: 16),
-                    CheckboxListTile(
-                      value: _agreePledge,
-                      onChanged: (v) =>
-                          setState(() => _agreePledge = v ?? false),
-                      title: const Text(
-                        'أوافق على الإقرار والتعهد الإلكتروني',
-                        style: TextStyle(
-                            color: AppTheme.textWhite, fontSize: 13),
-                      ),
-                      activeColor: AppTheme.primaryGold,
-                      checkColor: Colors.black,
-                      contentPadding: EdgeInsets.zero,
-                      controlAffinity: ListTileControlAffinity.leading,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-
+              // ─── زر الإرسال ───
               SizedBox(
                 width: double.infinity,
                 height: 52,
@@ -558,32 +312,23 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                           child: CircularProgressIndicator(
                               strokeWidth: 2, color: Colors.black),
                         )
-                      : const Icon(Icons.check, color: Colors.black),
-                  label: const Text('ابدأ الآن',
+                      : const Icon(Icons.check_rounded, color: Colors.black),
+                  label: const Text('حفظ ومتابعة',
                       style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
               const Center(
                 child: Text(
                   '🔒 بياناتك مشفّرة ومحفوظة بأمان',
                   style: TextStyle(color: AppTheme.textGrey, fontSize: 11),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
             ],
           ),
         ),
       ),
     );
   }
-
-  Widget _label(String text) => Padding(
-        padding: const EdgeInsets.only(bottom: 6),
-        child: Text(text,
-            style: const TextStyle(
-                color: AppTheme.primaryGold,
-                fontWeight: FontWeight.bold,
-                fontSize: 13)),
-      );
 }

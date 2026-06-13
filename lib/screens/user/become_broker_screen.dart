@@ -54,7 +54,7 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
       _snack(
           'التوثيق إلزامي للوسطاء: يجب رفع صورة الهوية + الرقم الوطني أولاً');
       Future.delayed(const Duration(milliseconds: 800), () {
-        if (mounted) context.push('/setup-profile');
+        if (mounted) context.push('/setup-identity');
       });
       return;
     }
