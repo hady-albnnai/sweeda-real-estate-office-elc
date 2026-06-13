@@ -26,6 +26,7 @@ class OfferModel {
   final int fvs;
   final int iPub;
   final int iSoc;
+  final int? offerNumber; // رقم العرض التسلسلي — يظهر للجمهور
   final int socPub;
   final String socTxt;
   final int iDup;
@@ -84,6 +85,7 @@ class OfferModel {
     this.fvs = 0,
     this.iPub = 0,
     this.iSoc = 0,
+    this.offerNumber,
     this.socPub = 0,
     this.socTxt = '',
     this.iDup = 0,
@@ -143,6 +145,7 @@ class OfferModel {
       fvs: data['fvs'] ?? 0,
       iPub: data['i_pub'] ?? 0,
       iSoc: data['i_soc'] ?? 0,
+      offerNumber: data['offer_number'] as int?,
       socPub: data['soc_pub'] ?? 0,
       socTxt: data['soc_txt'] ?? '',
       iDup: data['i_dup'] ?? 0,
