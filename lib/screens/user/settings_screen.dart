@@ -53,7 +53,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.all(15),
         children: [
           // قسم الإشعارات
-          _sectionTitle('🔔 إعدادات الإشعارات'),
+          _sectionTitle('إعدادات الإشعارات', Icons.notifications_outlined),
           _toggleTile('إشعارات العروض الجديدة', _notifOffers, (v) => _toggle('off', v)),
           _toggleTile('إشعارات المواعيد', _notifAppointments, (v) => _toggle('app', v)),
           _toggleTile('الإشعارات المالية', _notifFinance, (v) => _toggle('fin', v)),
@@ -62,16 +62,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 20),
 
           // قسم الحساب
-          _sectionTitle('👤 الحساب'),
-          _settingsTile('تعديل الملف الشخصي', Icons.edit, () {}),
-          _settingsTile('تغيير كلمة المرور', Icons.lock, () {}),
+          _sectionTitle('الحساب', Icons.person_outline_rounded),
+          _settingsTile('معلومات الحساب', Icons.person_outline, () => context.push('/user/account-info')),
+          _settingsTile('تغيير كلمة المرور', Icons.lock_outline, () => context.push('/user/account-info')),
           _settingsTile('الباقة الحالية', Icons.card_membership,
               () => context.push('/user/packages')),
 
           const SizedBox(height: 20),
 
           // قسم التطبيق
-          _sectionTitle('📱 التطبيق'),
+          _sectionTitle('التطبيق', Icons.phone_android_outlined),
           _settingsTile('عن التطبيق', Icons.info, () => _showAboutDialog()),
           _settingsTile('سياسة الخصوصية', Icons.privacy_tip, () {}),
           _settingsTile('شروط الاستخدام', Icons.gavel, () {}),
@@ -105,10 +105,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _sectionTitle(String title) {
+  Widget _sectionTitle(String title, IconData icon) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10, top: 5),
-      child: Text(title, style: const TextStyle(color: AppTheme.primaryGold, fontSize: 16, fontWeight: FontWeight.bold)),
+      child: Row(
+        children: [
+          Icon(icon, color: AppTheme.primaryGold.withValues(alpha: 0.8), size: 18),
+          const SizedBox(width: 8),
+          Text(title, style: const TextStyle(color: AppTheme.primaryGold, fontSize: 15, fontWeight: FontWeight.w600)),
+        ],
+      ),
     );
   }
 

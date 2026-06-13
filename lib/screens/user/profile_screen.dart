@@ -4,98 +4,52 @@ import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/network/supabase_service.dart';
-import '../../widgets/bottom_nav_bar.dart';
 import '../../core/utils/app_utils.dart';
+import '../../models/user_model.dart';
+import '../../widgets/bottom_nav_bar.dart';
 
-/// شاشة الملف الشخصي — عرض البيانات + البادج + النقاط + حالة التوثيق
-class ProfileScreen extends StatelessWidget {
+/// شاشة الملف الشخصي — إعادة تصميم كاملة
+/// تصميم راقي متوافق مع ثيم ذهبي/أسود
+/// - الإدارة: إحصائيات مخصصة حسب الدور
+/// - المستخدم: نقاط + بادج + streak
+/// - بطاقة معلومات الحساب والتوثيق نُقلت لشاشة مستقلة
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
-  /// 🛡️ تقديم طلب توثيق رسمي للإدارة (vrf: 0 → 1).
-  /// مرجع: docs/LOGIC_SPEC.md §2.1
-  Future<void> _requestVerification(BuildContext context) async {
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  Map<String, dynamic>? _staffStats;
+  bool _loadingStats = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStaffStats();
+  }
+
+  /// جلب إحصائيات الموظف حسب الدور (للإدارة فقط)
+  Future<void> _loadStaffStats() async {
     final auth = context.read<AuthProvider>();
     final user = auth.userModel;
-    if (user == null) return;
+    if (user == null || !user.isInternal) return;
 
-    // التحقق من توفر صورة الهوية
-    if (user.img.isEmpty || user.sid.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text(
-              'يجب رفع صورة الهوية + الرقم الوطني قبل طلب التوثيق'),
-          backgroundColor: AppTheme.errorRed,
-          action: SnackBarAction(
-            label: 'إكمال',
-            textColor: Colors.white,
-            onPressed: () => context.push('/setup-profile'),
-          ),
-        ),
-      );
-      return;
-    }
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.surfaceBlack,
-        title: const Text('طلب التوثيق الرسمي',
-            style: TextStyle(color: AppTheme.textWhite)),
-        content: const Text(
-          'سيتم إرسال بياناتك للإدارة لمراجعتها واعتمادها. '
-          'بعد الاعتماد ستحصل على شارة "موثق ✓" في كل عروضك.\n\nهل تريد المتابعة؟',
-          style: TextStyle(color: AppTheme.textGrey, height: 1.5),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('إلغاء',
-                style: TextStyle(color: AppTheme.textGrey)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryGold),
-            child: const Text('إرسال الطلب',
-                style: TextStyle(color: AppTheme.deepBlack)),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !context.mounted) return;
-
+    setState(() => _loadingStats = true);
     try {
-      // نستخدم RPC متوافقة مع وضع التطوير الحالي وتتحقق من الهوية
-      // عبر auth.uid() متى كانت الجلسة الحقيقية متاحة.
-      await SupabaseService().client.rpc(
-        'request_verification_by_uid',
+      final result = await SupabaseService().client.rpc(
+        'get_staff_stats_internal',
         params: {'p_user_uid': user.uid},
       );
-
-      // تحديث الكاش المحلي
-      await auth.refreshUser();
-
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✅ تم إرسال طلب التوثيق، بانتظار مراجعة الإدارة'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } catch (e) {
-      if (!context.mounted) return;
-      final msg = e.toString();
-      String userMsg = '❌ فشل إرسال الطلب';
-      if (msg.contains('ALREADY_VERIFIED')) {
-        userMsg = 'حسابك موثق بالفعل';
-      } else if (msg.contains('ALREADY_PENDING')) {
-        userMsg = 'طلبك السابق قيد المراجعة';
-      } else if (msg.contains('MISSING_DOCUMENTS')) {
-        userMsg = 'يجب رفع صورة الهوية + الرقم الوطني أولاً';
+      if (mounted) {
+        setState(() {
+          _staffStats = result is Map ? Map<String, dynamic>.from(result) : null;
+          _loadingStats = false;
+        });
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(userMsg), backgroundColor: AppTheme.errorRed),
-      );
+    } catch (_) {
+      if (mounted) setState(() => _loadingStats = false);
     }
   }
 
@@ -107,356 +61,335 @@ class ProfileScreen extends StatelessWidget {
     if (user == null) {
       return const Scaffold(
         backgroundColor: AppTheme.deepBlack,
-        body: Center(child: Text('جاري التحميل...', style: TextStyle(color: AppTheme.textGrey))),
+        body: Center(
+          child: Text('جاري التحميل...',
+              style: TextStyle(color: AppTheme.textGrey)),
+        ),
       );
     }
 
     return Scaffold(
       backgroundColor: AppTheme.deepBlack,
-      appBar: AppBar(
-        backgroundColor: AppTheme.deepBlack,
-        elevation: 0,
-        title: const Text('الملف الشخصي', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings, color: AppTheme.primaryGold),
-            onPressed: () => context.push('/user/settings'),
+      body: CustomScrollView(
+        slivers: [
+          // ─── Header مع gradient ───
+          SliverToBoxAdapter(child: _buildHeader(user)),
+
+          // ─── المحتوى ───
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                // ─── إحصائيات حسب الدور ───
+                if (user.isInternal)
+                  _buildStaffStats(user)
+                else ...[
+                  _buildUserStats(user),
+                  const SizedBox(height: 16),
+                  _buildActivityStats(user),
+                ],
+
+                const SizedBox(height: 20),
+
+                // ─── القائمة الرئيسية ───
+                _buildMenuSection(user),
+
+                const SizedBox(height: 20),
+
+                // ─── تسجيل الخروج ───
+                _buildLogoutButton(auth),
+
+                const SizedBox(height: 30),
+              ]),
+            ),
           ),
         ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            // صورة البروفايل + الاسم + البادج
-            _profileHeader(user),
-            const SizedBox(height: 30),
-
-            // النقاط والبادج — للمستخدمين والوسطاء فقط (ليس الإدارة)
-            if (!user.isAdmin) ...[
-              _statsCards(user),
-              const SizedBox(height: 20),
-            ],
-
-            // معلومات الحساب
-          _infoCard(user, context),
-            const SizedBox(height: 20),
-
-            // 🛡️ حالة التوثيق (LOGIC_SPEC §2.1)
-            _verificationCard(user, context),
-            const SizedBox(height: 20),
-
-            // إحصائيات النشاط
-            _activityStats(user),
-            const SizedBox(height: 30),
-
-            // أزرار
-            _actionButtons(context, auth),
-          ],
-        ),
       ),
       bottomNavigationBar: const CustomBottomNavBar(currentIndex: 4),
     );
   }
 
-  Widget _profileHeader(user) {
-    return Column(
-      children: [
-        // Avatar
-        Container(
-          width: 100,
-          height: 100,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: AppTheme.primaryGold, width: 3),
-            boxShadow: [
-              BoxShadow(
-                color: AppTheme.primaryGold.withValues(alpha: 0.3),
-                blurRadius: 15,
-                spreadRadius: 3,
+  // ═══════════════════════════════════════════════════════════════
+  //  HEADER — صورة + اسم + دور/بادج + حالة التوثيق
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildHeader(UserModel user) {
+    return Container(
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 16,
+        bottom: 24,
+        left: 20,
+        right: 20,
+      ),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            AppTheme.primaryGold.withValues(alpha: 0.15),
+            AppTheme.deepBlack,
+          ],
+        ),
+      ),
+      child: Column(
+        children: [
+          // شريط العنوان
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'حسابي',
+                style: TextStyle(
+                  color: AppTheme.primaryGold,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.settings_outlined,
+                    color: AppTheme.primaryGold, size: 24),
+                onPressed: () => context.push('/user/settings'),
               ),
             ],
           ),
-          child: CircleAvatar(
-            backgroundColor: AppTheme.surfaceBlack,
-            child: Text(
-              user.nm.isNotEmpty ? user.nm[0] : '👤',
-              style: const TextStyle(color: AppTheme.primaryGold, fontSize: 40),
+
+          const SizedBox(height: 16),
+
+          // Avatar
+          Container(
+            width: 88,
+            height: 88,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [
+                  AppTheme.primaryGold.withValues(alpha: 0.8),
+                  AppTheme.primaryGold.withValues(alpha: 0.4),
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primaryGold.withValues(alpha: 0.25),
+                  blurRadius: 20,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: Container(
+              margin: const EdgeInsets.all(3),
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppTheme.surfaceBlack,
+              ),
+              child: Center(
+                child: Text(
+                  user.nm.isNotEmpty ? user.nm[0] : '؟',
+                  style: const TextStyle(
+                    color: AppTheme.primaryGold,
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
             ),
           ),
-        ),
-        const SizedBox(height: 15),
-        // الاسم
-        Text(
-          user.nm.isNotEmpty ? user.nm : 'مستخدم جديد',
-          style: const TextStyle(
-            color: AppTheme.textWhite,
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 5),
-        // البادج — للمستخدمين فقط / الدور — للإدارة
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 6),
-          decoration: BoxDecoration(
-            color: AppTheme.primaryGold.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.3)),
-          ),
-          child: Text(
-            user.isAdmin ? user.roleName : user.badgeName,
-            style: const TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold),
-          ),
-        ),
-        if (!user.isAdmin) ...[
-          const SizedBox(height: 5),
+
+          const SizedBox(height: 12),
+
+          // الاسم
           Text(
-            user.roleName,
-            style: TextStyle(color: AppTheme.textGrey, fontSize: 13),
+            user.nm.isNotEmpty ? user.nm : 'مستخدم جديد',
+            style: const TextStyle(
+              color: AppTheme.textWhite,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 6),
+
+          // اسم المستخدم
+          if (user.usr != null && user.usr!.isNotEmpty)
+            Text(
+              '@${user.usr}',
+              style: TextStyle(
+                color: AppTheme.textGrey.withValues(alpha: 0.8),
+                fontSize: 14,
+              ),
+            ),
+
+          const SizedBox(height: 8),
+
+          // الدور + البادج
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _chip(
+                user.roleName,
+                AppTheme.primaryGold.withValues(alpha: 0.15),
+                AppTheme.primaryGold,
+              ),
+              if (!user.isAdmin) ...[
+                const SizedBox(width: 8),
+                _chip(
+                  user.badgeName,
+                  Colors.white.withValues(alpha: 0.08),
+                  AppTheme.textWhite,
+                ),
+              ],
+              // شارة التوثيق
+              if (user.isVerifiedOfficial) ...[
+                const SizedBox(width: 8),
+                _chip(
+                  '✓ موثق',
+                  Colors.green.withValues(alpha: 0.15),
+                  Colors.green,
+                ),
+              ],
+            ],
           ),
         ],
-      ],
+      ),
     );
   }
 
-  Widget _statsCards(user) {
+  Widget _chip(String text, Color bg, Color fg) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: fg.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: fg,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  إحصائيات المستخدم العادي (نقاط + streak)
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildUserStats(UserModel user) {
     return Row(
       children: [
         Expanded(
-          child: _statCard('⭐ النقاط', '${user.pt}', Icons.stars),
+          child: _statTile(
+            icon: Icons.star_rounded,
+            value: '${user.pt}',
+            label: 'النقاط',
+            color: const Color(0xFFFFD700),
+          ),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: _statCard('🔥 Streak', '${user.strk} يوم', Icons.local_fire_department),
+          child: _statTile(
+            icon: Icons.local_fire_department_rounded,
+            value: '${user.strk}',
+            label: 'أيام متتالية',
+            color: const Color(0xFFFF6B35),
+          ),
         ),
       ],
     );
   }
 
-  Widget _statCard(String label, String value, IconData icon) {
+  Widget _statTile({
+    required IconData icon,
+    required String value,
+    required String label,
+    required Color color,
+  }) {
     return Container(
-      padding: const EdgeInsets.all(15),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.2)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
-      child: Column(
-        children: [
-          Icon(icon, color: AppTheme.primaryGold, size: 28),
-          const SizedBox(height: 8),
-          Text(value,
-              style: const TextStyle(color: AppTheme.textWhite, fontSize: 20, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
-          Text(label, style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
-        ],
-      ),
-    );
-  }
-
-  Widget _infoCard(user, BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('معلومات الحساب',
-              style: TextStyle(color: AppTheme.primaryGold, fontSize: 16, fontWeight: FontWeight.bold)),
-          const Divider(color: Colors.grey, height: 20),
-          _infoRow('📱 الهاتف', user.ph),
-          _infoRow('📍 العنوان', user.ad.isEmpty ? 'غير محدد' : user.ad),
-          _infoRow('🆔 الهوية', user.sid.isEmpty ? 'غير مكتمل' : user.sid),
-          _infoRow('🪪 صورة الهوية', user.img.isEmpty ? 'غير مرفوعة' : 'مرفوعة بشكل خاص'),
-          _infoRow('📅 تاريخ التسجيل',
-              user.tsCrt != null ? AppUtils.formatTimestamp(user.tsCrt) : 'غير معروف'),
-          // الباقة والدفع — للمستخدمين والوسطاء فقط
-          if (!user.isAdmin) ...[
-            _infoRow('🏷️ الباقة',
-                user.effectivePkg == 0
-                    ? (user.bPkg > 0 ? 'منتهية (${_packageText(user.bPkg)})' : 'مجانية')
-                    : user.isInGracePeriod
-                        ? '${_packageText(user.bPkg)} — سماح ${user.graceDaysLeft} يوم'
-                        : _packageText(user.bPkg)),
-            if (user.pkgEnd != null && user.bPkg > 0)
-              _infoRow(
-                user.isPkgActive ? '⏰ انتهاء الباقة' :
-                user.isInGracePeriod ? '⚠️ فترة السماح حتى' : '❌ انتهت',
-                user.isPkgActive
-                    ? AppUtils.formatTimestamp(user.pkgEnd!)
-                    : user.isInGracePeriod
-                        ? AppUtils.formatTimestamp(user.pkgGrace!)
-                        : AppUtils.formatTimestamp(user.pkgEnd!),
-              ),
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () => context.push('/user/packages'),
-                icon: const Icon(Icons.upgrade, color: AppTheme.primaryGold),
-                label: Text(
-                  user.bPkg == 0 ? 'ترقية الباقة' : 'إدارة الاشتراك',
-                  style: const TextStyle(color: AppTheme.primaryGold),
-                ),
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: AppTheme.primaryGold),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () => context.push('/user/my-payments'),
-                icon: const Icon(Icons.receipt_long, color: AppTheme.primaryGold),
-              label: const Text('سجل دفعاتي',
-                  style: TextStyle(color: AppTheme.primaryGold)),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(
-                    color: AppTheme.primaryGold),
-              ),
-            ),
-          ),
-          ], // إغلاق if (!user.isAdmin) للباقة والدفع
-        ],
-      ),
-    );
-  }
-
-  Widget _infoRow(String icon, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Text(icon, style: const TextStyle(fontSize: 16)),
-          const SizedBox(width: 10),
-          Text(icon.split(' ').first, style: const TextStyle(color: AppTheme.textGrey, fontSize: 14)),
-          const Spacer(),
-          Text(value, style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.w500)),
-        ],
-      ),
-    );
-  }
-
-  String _packageText(int pkg) {
-    switch (pkg) {
-      case 0: return 'مجاني';
-      case 1: return 'فضي';
-      case 2: return 'ذهبي';
-      default: return 'غير محدد';
-    }
-  }
-
-  /// 🛡️ بطاقة حالة التوثيق الرسمي + زر الطلب/إعادة الطلب.
-  /// مرجع: docs/LOGIC_SPEC.md §2.1
-  Widget _verificationCard(user, BuildContext context) {
-    final vrf = user.vrf as int;
-
-    late final Color color;
-    late final IconData icon;
-    late final String title;
-    late final String subtitle;
-    late final Widget? action;
-
-    switch (vrf) {
-      case 2:
-        color = Colors.green;
-        icon = Icons.verified;
-        title = 'حسابك موثق رسمياً ✓';
-        subtitle = 'تظهر شارة "موثق" في جميع عروضك أمام العملاء.';
-        action = null;
-        break;
-      case 1:
-        color = Colors.orange;
-        icon = Icons.hourglass_top;
-        title = 'طلب التوثيق قيد المراجعة';
-        subtitle = 'الإدارة تراجع وثائقك حالياً. ستصلك إشعار بالنتيجة.';
-        action = null;
-        break;
-      default:
-        color = AppTheme.textGrey;
-        icon = Icons.verified_user_outlined;
-        title = 'حسابك غير موثق';
-        subtitle =
-            'الحسابات الموثقة تحظى بثقة أكبر من العملاء. ارفع هويتك واطلب التوثيق.';
-        action = SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: () => _requestVerification(context),
-            icon: const Icon(Icons.verified_outlined,
-                color: AppTheme.deepBlack),
-            label: const Text('طلب التوثيق الرسمي',
-                style: TextStyle(
-                    color: AppTheme.deepBlack, fontWeight: FontWeight.bold)),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryGold,
-              padding: const EdgeInsets.symmetric(vertical: 12),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
             ),
+            child: Icon(icon, color: color, size: 22),
           ),
-        );
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: color.withValues(alpha: 0.5), width: 1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(children: [
-            Icon(icon, color: color, size: 22),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(title,
-                  style: TextStyle(
-                      color: color,
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold)),
-            ),
-          ]),
-          const SizedBox(height: 8),
-          Text(subtitle,
-              style: const TextStyle(
-                  color: AppTheme.textGrey, fontSize: 13, height: 1.4)),
-          if (action != null) ...[
-            const SizedBox(height: 12),
-            action,
-          ],
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
+                style: const TextStyle(
+                  color: AppTheme.textWhite,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                label,
+                style: TextStyle(
+                  color: AppTheme.textGrey.withValues(alpha: 0.7),
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _activityStats(user) {
+  // ═══════════════════════════════════════════════════════════════
+  //  إحصائيات النشاط (عروض + طلبات + مواعيد + صفقات)
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildActivityStats(UserModel user) {
     final stats = user.stats;
     return Container(
-      padding: const EdgeInsets.all(15),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.2)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+            color: AppTheme.primaryGold.withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('📊 إحصائيات النشاط',
-              style: TextStyle(color: AppTheme.primaryGold, fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 15),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _miniStat('عروض', stats['off'] ?? 0, Icons.home),
-              _miniStat('طلبات', stats['req'] ?? 0, Icons.assignment),
-              _miniStat('مواعيد', stats['app'] ?? 0, Icons.calendar_today),
-              _miniStat('صفقات', stats['dl'] ?? 0, Icons.handshake),
+              Icon(Icons.analytics_outlined,
+                  color: AppTheme.primaryGold.withValues(alpha: 0.8),
+                  size: 18),
+              const SizedBox(width: 8),
+              const Text(
+                'إحصائيات النشاط',
+                style: TextStyle(
+                  color: AppTheme.primaryGold,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              _miniStat('عروض', stats['off'] ?? 0, Icons.home_work_outlined),
+              _miniStat('طلبات', stats['req'] ?? 0, Icons.assignment_outlined),
+              _miniStat(
+                  'مواعيد', stats['app'] ?? 0, Icons.calendar_today_outlined),
+              _miniStat('صفقات', stats['dl'] ?? 0, Icons.handshake_outlined),
             ],
           ),
         ],
@@ -465,94 +398,483 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _miniStat(String label, int count, IconData icon) {
+    return Expanded(
+      child: Column(
+        children: [
+          Icon(icon,
+              color: AppTheme.primaryGold.withValues(alpha: 0.7), size: 20),
+          const SizedBox(height: 6),
+          Text(
+            '$count',
+            style: const TextStyle(
+              color: AppTheme.textWhite,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              color: AppTheme.textGrey.withValues(alpha: 0.6),
+              fontSize: 10,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  إحصائيات الإدارة/الموظفين حسب الدور
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildStaffStats(UserModel user) {
+    if (_loadingStats) {
+      return Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceBlack,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Center(
+          child: CircularProgressIndicator(
+              strokeWidth: 2, color: AppTheme.primaryGold),
+        ),
+      );
+    }
+
+    if (_staffStats == null) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceBlack,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Center(
+          child: Column(
+            children: [
+              Icon(Icons.analytics_outlined,
+                  color: AppTheme.textGrey.withValues(alpha: 0.4), size: 32),
+              const SizedBox(height: 8),
+              const Text('لا توجد إحصائيات متاحة',
+                  style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // بناء الإحصائيات حسب الدور
+    List<_StaffStatItem> items = [];
+
+    if (user.isPhotographer) {
+      items = [
+        _StaffStatItem(
+            Icons.check_circle_outline, 'مهام مكتملة',
+            _staffStats!['completed_tasks'] ?? 0, Colors.green),
+        _StaffStatItem(
+            Icons.hourglass_top, 'مهام معلّقة',
+            _staffStats!['pending_tasks'] ?? 0, Colors.orange),
+        _StaffStatItem(
+            Icons.send_outlined, 'مرسلة للمكتب',
+            _staffStats!['submitted_tasks'] ?? 0, Colors.blue),
+      ];
+    } else if (user.isSupervisor) {
+      items = [
+        _StaffStatItem(
+            Icons.check_circle_outline, 'زيارات منفذة',
+            _staffStats!['completed_visits'] ?? 0, Colors.green),
+        _StaffStatItem(
+            Icons.task_alt, 'طلبات إتمام',
+            _staffStats!['completion_requests'] ?? 0, Colors.blue),
+        _StaffStatItem(
+            Icons.pending_actions, 'مهام نشطة',
+            _staffStats!['active_tasks'] ?? 0, Colors.orange),
+      ];
+    } else if (user.isEmployee) {
+      items = [
+        _StaffStatItem(
+            Icons.rate_review_outlined, 'عروض مراجَعة',
+            _staffStats!['reviewed_offers'] ?? 0, Colors.blue),
+        _StaffStatItem(
+            Icons.event_available, 'مواعيد',
+            _staffStats!['managed_appointments'] ?? 0, Colors.green),
+        _StaffStatItem(
+            Icons.fact_check_outlined, 'طلبات إتمام',
+            _staffStats!['processed_completions'] ?? 0, Colors.orange),
+      ];
+    } else if (user.isSenior || user.isManager) {
+      items = [
+        _StaffStatItem(
+            Icons.handshake_outlined, 'صفقات',
+            _staffStats!['total_deals'] ?? 0, Colors.green),
+        _StaffStatItem(
+            Icons.payments_outlined, 'مدفوعات معتمدة',
+            _staffStats!['approved_payments'] ?? 0, Colors.blue),
+        _StaffStatItem(
+            Icons.pending_outlined, 'مدفوعات معلّقة',
+            _staffStats!['pending_payments'] ?? 0, Colors.orange),
+        _StaffStatItem(
+            Icons.verified_user_outlined, 'مستخدمون موثقون',
+            _staffStats!['verified_users'] ?? 0, Colors.teal),
+        _StaffStatItem(
+            Icons.hourglass_top, 'توثيقات معلّقة',
+            _staffStats!['pending_verifications'] ?? 0, Colors.amber),
+        _StaffStatItem(
+            Icons.people_outline, 'إجمالي المستخدمين',
+            _staffStats!['total_users'] ?? 0, AppTheme.textGrey),
+        _StaffStatItem(
+            Icons.real_estate_agent_outlined, 'عروض نشطة',
+            _staffStats!['active_offers'] ?? 0, AppTheme.primaryGold),
+      ];
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceBlack,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+            color: AppTheme.primaryGold.withValues(alpha: 0.15)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.bar_chart_rounded,
+                  color: AppTheme.primaryGold.withValues(alpha: 0.8),
+                  size: 18),
+              const SizedBox(width: 8),
+              const Text(
+                'إحصائياتي',
+                style: TextStyle(
+                  color: AppTheme.primaryGold,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const Spacer(),
+              GestureDetector(
+                onTap: _loadStaffStats,
+                child: Icon(Icons.refresh,
+                    color: AppTheme.textGrey.withValues(alpha: 0.5),
+                    size: 18),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: items.map((item) => _staffStatCard(item)).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _staffStatCard(_StaffStatItem item) {
+    return Container(
+      width: (MediaQuery.of(context).size.width - 72) / 2,
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+      decoration: BoxDecoration(
+        color: item.color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: item.color.withValues(alpha: 0.15)),
+      ),
+      child: Row(
+        children: [
+          Icon(item.icon, color: item.color, size: 20),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${item.value}',
+                  style: const TextStyle(
+                    color: AppTheme.textWhite,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  item.label,
+                  style: TextStyle(
+                    color: AppTheme.textGrey.withValues(alpha: 0.7),
+                    fontSize: 10,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  القائمة الرئيسية
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildMenuSection(UserModel user) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: AppTheme.primaryGold, size: 24),
-        const SizedBox(height: 5),
-        Text('$count', style: const TextStyle(color: AppTheme.textWhite, fontSize: 18, fontWeight: FontWeight.bold)),
-        Text(label, style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+        // ─── معلومات الحساب والتوثيق ───
+        _menuItem(
+          icon: Icons.person_outline_rounded,
+          title: 'معلومات الحساب',
+          subtitle: _accountSubtitle(user),
+          onTap: () => context.push('/user/account-info'),
+        ),
+
+        // ─── التقييمات ───
+        _menuItem(
+          icon: Icons.star_outline_rounded,
+          title: 'تقييماتي المستلمة',
+          subtitle: 'شاهد تقييمات العملاء لك',
+          onTap: () => context.push('/user/my-ratings'),
+        ),
+
+        // ─── الباقة — للمستخدمين فقط ───
+        if (!user.isAdmin) ...[
+          _menuItem(
+            icon: Icons.workspace_premium_outlined,
+            title: user.bPkg == 0 ? 'ترقية الباقة' : 'إدارة الاشتراك',
+            subtitle: _packageSubtitle(user),
+            onTap: () => context.push('/user/packages'),
+            trailing: user.bPkg == 0
+                ? Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryGold.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      'ترقية',
+                      style: TextStyle(
+                          color: AppTheme.primaryGold, fontSize: 10,
+                          fontWeight: FontWeight.w600),
+                    ),
+                  )
+                : null,
+          ),
+
+          _menuItem(
+            icon: Icons.receipt_long_outlined,
+            title: 'سجل دفعاتي',
+            subtitle: 'الدفعات السابقة وحالتها',
+            onTap: () => context.push('/user/my-payments'),
+          ),
+        ],
+
+        // ─── الإحالة — للمستخدمين فقط ───
+        if (!user.isAdmin)
+          _menuItem(
+            icon: Icons.card_giftcard_outlined,
+            title: 'دعوة الأصدقاء',
+            subtitle: 'شارك رمز الإحالة واكسب نقاط',
+            onTap: () => context.push('/user/referral'),
+            trailing: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: Colors.green.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                'اكسب نقاط',
+                style: TextStyle(
+                    color: Colors.green,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
+
+        // ─── تقدم لتصبح وسيطاً — للمستخدم العادي فقط ───
+        if (!user.isBroker && !user.isAdmin)
+          _menuItem(
+            icon: Icons.handshake_outlined,
+            title: 'تقدّم لتصبح وسيطاً',
+            subtitle: 'احصل على صلاحيات إضافية',
+            onTap: () => context.push('/user/become-broker'),
+          ),
       ],
     );
   }
 
-  Widget _actionButtons(BuildContext context, AuthProvider auth) {
-    final user = auth.userModel;
-    return Column(
-      children: [
-        // دعوة الأصدقاء — للمستخدمين والوسطاء فقط
-        if (user != null && !user.isAdmin) ...[
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () => context.push('/user/referral'),
-              icon: const Icon(Icons.card_giftcard,
-                  color: AppTheme.primaryGold),
-              label: const Text('دعوة الأصدقاء واربح نقاط',
-                  style: TextStyle(color: AppTheme.primaryGold)),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppTheme.primaryGold),
-                padding: const EdgeInsets.symmetric(vertical: 15),
-              ),
+  String _accountSubtitle(UserModel user) {
+    if (user.isVerifiedOfficial) return 'حسابك موثق رسمياً ✓';
+    if (user.vrf == 1) return 'طلب التوثيق قيد المراجعة';
+    return 'معلوماتك الشخصية والتوثيق';
+  }
+
+  String _packageSubtitle(UserModel user) {
+    if (user.bPkg == 0) return 'باقة مجانية';
+    final name = user.bPkg == 1 ? 'فضي' : 'ذهبي';
+    if (user.isPkgActive) return 'باقة $name نشطة';
+    if (user.isInGracePeriod) {
+      return 'باقة $name — فترة سماح ${user.graceDaysLeft} يوم';
+    }
+    return 'باقة $name منتهية';
+  }
+
+  Widget _menuItem({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+    Widget? trailing,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceBlack,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.04)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryGold.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon,
+                      color: AppTheme.primaryGold.withValues(alpha: 0.8),
+                      size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          color: AppTheme.textWhite,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          color: AppTheme.textGrey.withValues(alpha: 0.6),
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (trailing != null) ...[
+                  const SizedBox(width: 8),
+                  trailing,
+                ],
+                const SizedBox(width: 4),
+                Icon(Icons.chevron_right_rounded,
+                    color: AppTheme.textGrey.withValues(alpha: 0.3),
+                    size: 20),
+              ],
             ),
           ),
-          const SizedBox(height: 12),
-        ],
+        ),
+      ),
+    );
+  }
 
-        // ⭐ تقييماتي المستلمة — LOGIC_SPEC §3.3
-        if (user != null) ...[
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () => context.push('/user/my-ratings'),
-              icon: const Icon(Icons.star_rate,
-                  color: AppTheme.primaryGold),
-              label: const Text('تقييماتي المستلمة',
-                  style: TextStyle(color: AppTheme.primaryGold)),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppTheme.primaryGold),
-                padding: const EdgeInsets.symmetric(vertical: 15),
-              ),
-            ),
+  // ═══════════════════════════════════════════════════════════════
+  //  زر تسجيل الخروج
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildLogoutButton(AuthProvider auth) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _showLogoutDialog(auth),
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            color: Colors.red.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.red.withValues(alpha: 0.15)),
           ),
-          const SizedBox(height: 12),
-        ],
-
-        // تقدّم لتصبح وسيطاً — للمستخدم العادي فقط
-        if (user != null && !user.isBroker && !user.isAdmin) ...[
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () => context.push('/user/become-broker'),
-              icon: const Icon(Icons.handshake,
-                  color: AppTheme.primaryGold),
-              label: const Text('تقدّم لتصبح وسيطاً',
-                  style: TextStyle(color: AppTheme.primaryGold)),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppTheme.primaryGold),
-                padding: const EdgeInsets.symmetric(vertical: 15),
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.logout_rounded, color: Colors.red, size: 20),
+              SizedBox(width: 8),
+              Text(
+                'تسجيل الخروج',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
+            ],
           ),
-          const SizedBox(height: 12),
-        ],
+        ),
+      ),
+    );
+  }
 
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
+  void _showLogoutDialog(AuthProvider auth) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surfaceBlack,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('تسجيل الخروج',
+            style: TextStyle(color: AppTheme.textWhite)),
+        content: const Text('هل أنت متأكد من تسجيل الخروج؟',
+            style: TextStyle(color: AppTheme.textGrey)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('إلغاء',
+                style: TextStyle(color: AppTheme.textGrey)),
+          ),
+          TextButton(
             onPressed: () {
               auth.logout();
               context.go('/login');
             },
-            icon: const Icon(Icons.logout),
-            label: const Text('تسجيل الخروج'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red.withValues(alpha: 0.2),
-              foregroundColor: Colors.red,
-              padding: const EdgeInsets.symmetric(vertical: 15),
-            ),
+            child: const Text('خروج',
+                style: TextStyle(
+                    color: Colors.red, fontWeight: FontWeight.bold)),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Helper class
+// ═══════════════════════════════════════════════════════════════
+
+class _StaffStatItem {
+  final IconData icon;
+  final String label;
+  final int value;
+  final Color color;
+
+  _StaffStatItem(this.icon, this.label, this.value, this.color);
 }

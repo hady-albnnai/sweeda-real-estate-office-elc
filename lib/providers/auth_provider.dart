@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 import '../core/network/supabase_service.dart';
 import '../core/constants/db_constants.dart';
@@ -15,6 +16,8 @@ class AuthProvider with ChangeNotifier {
   AuthChannel _channel = AuthChannel.whatsapp;
   bool _isNewUser = false;
 
+  String? _lastError;
+
   UserModel? get userModel => _userModel;
   String? get currentPhone => _currentPhone;
   String? get currentEmail => _currentEmail;
@@ -22,6 +25,7 @@ class AuthProvider with ChangeNotifier {
   AuthChannel get channel => _channel;
   bool get isNewUser => _isNewUser;
   bool get isLoggedIn => _userModel != null;
+  String? get lastError => _lastError;
   bool get isAdmin => _userModel?.isAdmin ?? false;
   bool get isBroker => _userModel?.isBroker ?? false;
   bool get isInternal => _userModel?.isInternal ?? false;
@@ -30,6 +34,65 @@ class AuthProvider with ChangeNotifier {
   bool get isEmployee => _userModel?.isEmployee ?? false;
   bool get isSenior => _userModel?.isSenior ?? false;
   bool get isManager => _userModel?.isManager ?? false;
+
+  // ════════════════════════════════════════════════════════════════════
+  // 🔑 اسم مستخدم + كلمة مرور
+  // ════════════════════════════════════════════════════════════════════
+
+  /// تسجيل الدخول باسم مستخدم/رقم هاتف + كلمة مرور
+  Future<bool> loginWithPassword(String identifier, String password) async {
+    try {
+      _lastError = null;
+      final result = await SupabaseService().client.rpc(
+        'login_with_password',
+        params: {
+          'p_identifier': identifier,
+          'p_password': password,
+        },
+      );
+
+      final data = result is Map ? Map<String, dynamic>.from(result) : null;
+      if (data == null || data['success'] != true) {
+        _lastError = 'فشل تسجيل الدخول';
+        return false;
+      }
+
+      final userId = data['user_id'] as String;
+      _isNewUser = false;
+      await _loadUserData(userId);
+
+      // حفظ الجلسة محلياً
+      final prefs = await _getPrefs();
+      await prefs.setString('user_id', userId);
+      await prefs.setString('auth_channel', 'password');
+
+      // تسجيل FCM token
+      await FCMService().registerCurrentTokenForUser();
+
+      notifyListeners();
+      return true;
+    } catch (e) {
+      final msg = e.toString();
+      if (msg.contains('USER_NOT_FOUND')) {
+        _lastError = 'لم يتم العثور على حساب بهذا الاسم أو الرقم';
+      } else if (msg.contains('WRONG_PASSWORD')) {
+        _lastError = 'كلمة المرور غير صحيحة';
+      } else if (msg.contains('NO_PASSWORD_SET')) {
+        _lastError = 'لم يتم تعيين كلمة مرور لهذا الحساب، سجّل دخولك عبر واتساب أولاً';
+      } else if (msg.contains('USER_BANNED')) {
+        _lastError = 'حسابك محظور';
+      } else if (msg.contains('USER_FROZEN')) {
+        _lastError = 'حسابك مجمّد مؤقتاً';
+      } else {
+        _lastError = 'فشل تسجيل الدخول';
+      }
+      return false;
+    }
+  }
+
+  Future<SharedPreferences> _getPrefs() async {
+    return await SharedPreferences.getInstance();
+  }
 
   // ════════════════════════════════════════════════════════════════════
   // 📱 WhatsApp
