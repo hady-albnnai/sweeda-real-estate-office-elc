@@ -21,21 +21,56 @@ class SetupProfileScreen extends StatefulWidget {
 
 class _SetupProfileScreenState extends State<SetupProfileScreen> {
   final _nameController = TextEditingController();
+  final _usernameController = TextEditingController(); // 🔑 اسم المستخدم
+  final _passwordController = TextEditingController(); // 🔑 كلمة المرور
+  final _confirmPasswordController = TextEditingController(); // 🔑 تأكيد كلمة المرور
   final _sidController = TextEditingController();
   final _addressController = TextEditingController();
   final _referralCodeController = TextEditingController(); // 🎁 كود إحالة اختياري
   XFile? _idImage;
   bool _agreePledge = false;
   bool _loading = false;
+  bool _usernameAvailable = false;
+  bool _checkingUsername = false;
   final _storage = StorageService();
 
   @override
   void dispose() {
     _nameController.dispose();
+    _usernameController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
     _sidController.dispose();
     _addressController.dispose();
     _referralCodeController.dispose();
     super.dispose();
+  }
+
+  /// فحص توفر اسم المستخدم
+  Future<void> _checkUsername() async {
+    final usr = _usernameController.text.trim().toLowerCase();
+    if (usr.length < 3) {
+      setState(() {
+        _usernameAvailable = false;
+        _checkingUsername = false;
+      });
+      return;
+    }
+    setState(() => _checkingUsername = true);
+    try {
+      final ok = await SupabaseService().client.rpc(
+        'check_username_available',
+        params: {'p_username': usr},
+      );
+      if (mounted) {
+        setState(() {
+          _usernameAvailable = ok == true;
+          _checkingUsername = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _checkingUsername = false);
+    }
   }
 
   Future<void> _pickIdImage() async {
@@ -70,6 +105,25 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
   Future<void> _submit() async {
     if (_nameController.text.trim().isEmpty) {
       _snack('يرجى إكمال الاسم');
+      return;
+    }
+    // فحص اسم المستخدم
+    final username = _usernameController.text.trim().toLowerCase();
+    if (username.isEmpty || username.length < 3) {
+      _snack('يرجى إدخال اسم مستخدم (3 أحرف على الأقل)');
+      return;
+    }
+    if (!RegExp(r'^[a-z0-9_.]+$').hasMatch(username)) {
+      _snack('اسم المستخدم يحتوي أحرف غير مسموحة (فقط a-z, 0-9, _, .)');
+      return;
+    }
+    // فحص كلمة المرور
+    if (_passwordController.text.length < 6) {
+      _snack('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+      return;
+    }
+    if (_passwordController.text != _confirmPasswordController.text) {
+      _snack('كلمتا المرور غير متطابقتين');
       return;
     }
     if (!_agreePledge) {
@@ -111,6 +165,26 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
           },
         },
       );
+
+      // 2.5) 🔑 تسجيل اسم المستخدم + كلمة المرور
+      try {
+        await SupabaseService().client.rpc(
+          'register_password',
+          params: {
+            'p_user_uid': user.uid,
+            'p_username': username,
+            'p_password': _passwordController.text,
+          },
+        );
+      } catch (e) {
+        final msg = e.toString();
+        if (msg.contains('USERNAME_TAKEN')) {
+          setState(() => _loading = false);
+          _snack('اسم المستخدم محجوز، اختر اسماً آخر');
+          return;
+        }
+        // لا نُفشل العملية بالكامل لو فشلت كلمة المرور
+      }
 
       // 3) 🎁 تطبيق كود الإحالة (إن وُجد) — RPC apply_referral
       // مرجع: docs/LOGIC_SPEC.md §3.2 + supabase/FUNCTIONS_REFERENCE.md
@@ -243,6 +317,80 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                 decoration: const InputDecoration(
                   hintText: 'أدخل اسمك الثلاثي',
                   prefixIcon: Icon(Icons.person, color: AppTheme.primaryGold),
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              // 🔑 اسم المستخدم (إلزامي)
+              _label('اسم المستخدم *'),
+              const Text(
+                'سيُستخدم لتسجيل الدخول لاحقاً (أحرف إنجليزية + أرقام)',
+                style: TextStyle(color: AppTheme.textGrey, fontSize: 11),
+              ),
+              const SizedBox(height: 6),
+              TextField(
+                controller: _usernameController,
+                textAlign: TextAlign.left,
+                textDirection: TextDirection.ltr,
+                style: const TextStyle(
+                    color: AppTheme.textWhite, letterSpacing: 1),
+                decoration: InputDecoration(
+                  hintText: 'مثلاً: ahmed_123',
+                  prefixIcon: const Icon(Icons.alternate_email,
+                      color: AppTheme.primaryGold),
+                  suffixIcon: _checkingUsername
+                      ? const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppTheme.primaryGold)),
+                        )
+                      : _usernameController.text.trim().length >= 3
+                          ? Icon(
+                              _usernameAvailable
+                                  ? Icons.check_circle
+                                  : Icons.cancel,
+                              color: _usernameAvailable
+                                  ? Colors.green
+                                  : Colors.red,
+                              size: 20)
+                          : null,
+                ),
+                onChanged: (_) => _checkUsername(),
+              ),
+              const SizedBox(height: 14),
+
+              // 🔑 كلمة المرور (إلزامية)
+              _label('كلمة المرور *'),
+              TextField(
+                controller: _passwordController,
+                obscureText: true,
+                textAlign: TextAlign.left,
+                textDirection: TextDirection.ltr,
+                style: const TextStyle(color: AppTheme.textWhite),
+                decoration: const InputDecoration(
+                  hintText: '6 أحرف على الأقل',
+                  prefixIcon: Icon(Icons.lock_outline,
+                      color: AppTheme.primaryGold),
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              // تأكيد كلمة المرور
+              _label('تأكيد كلمة المرور *'),
+              TextField(
+                controller: _confirmPasswordController,
+                obscureText: true,
+                textAlign: TextAlign.left,
+                textDirection: TextDirection.ltr,
+                style: const TextStyle(color: AppTheme.textWhite),
+                decoration: const InputDecoration(
+                  hintText: 'أعد إدخال كلمة المرور',
+                  prefixIcon: Icon(Icons.lock_rounded,
+                      color: AppTheme.primaryGold),
                 ),
               ),
               const SizedBox(height: 14),

@@ -66,6 +66,10 @@ class UserModel {
   /// ✓ التوثيق الرسمي: 0=غير موثق، 1=قيد المراجعة، 2=موثق بعد مراجعة الإدارة.
   /// مرجع: docs/LOGIC_SPEC.md §2.1
   final int vrf;
+  /// اسم المستخدم الفريد (للدخول باسم مستخدم + كلمة مرور)
+  final String? usr;
+  /// هل تم تعيين كلمة مرور (لا نحتفظ بالقيمة — فقط نعرف هل موجودة)
+  final String? pwd;
 
   UserModel({
     required this.uid,
@@ -97,6 +101,8 @@ class UserModel {
     required this.tsCrt,
     this.tsUpd,
     this.vrf = 0,
+    this.usr,
+    this.pwd,
   })  : ntf = ntf ?? {'off': 0, 'app': 0, 'fin': 0, 'rat': 0},
         perm = perm ?? const [],
         stats = stats ?? {'off': 0, 'req': 0, 'app': 0, 'dl': 0},
@@ -149,6 +155,9 @@ class UserModel {
       tsCrt: DateTime.parse(data['ts_crt']),
       tsUpd: data['ts_upd'] != null ? DateTime.parse(data['ts_upd']) : null,
       vrf: data['vrf'] ?? 0,
+      usr: data['usr'] as String?,
+      // pwd: نحتفظ فقط بمعرفة هل يوجد كلمة مرور (لا نقرأ القيمة الفعلية)
+      pwd: data['pwd'] != null ? 'set' : null,
     );
   }
 
@@ -168,6 +177,7 @@ class UserModel {
       'ts_crt': tsCrt.toIso8601String(),
       'ts_upd': tsUpd?.toIso8601String(),
       'vrf': vrf,
+      'usr': usr,
     };
   }
 
@@ -239,6 +249,12 @@ class UserModel {
       default: return '🔰 جديد';
     }
   }
+
+  /// هل عيّن المستخدم كلمة مرور؟
+  bool get hasPassword => pwd != null && pwd!.isNotEmpty;
+
+  /// هل عيّن المستخدم اسم مستخدم؟
+  bool get hasUsername => usr != null && usr!.isNotEmpty;
 
   /// هل بدأ المستخدم مسار التوثيق (رفع صورة هوية أو قيد المراجعة)؟
   bool get hasStartedVerification => img.isNotEmpty || vrf == 1;

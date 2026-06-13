@@ -23,6 +23,7 @@ import '../../screens/user/my_requests_screen.dart';
 import '../../screens/user/my_appointments_screen.dart';
 import '../../screens/user/favorites_screen.dart';
 import '../../screens/user/profile_screen.dart';
+import '../../screens/user/account_info_screen.dart';
 import '../../screens/user/settings_screen.dart';
 import '../../screens/user/notifications_screen.dart';
 import '../../screens/user/add_request_screen.dart';
@@ -122,6 +123,7 @@ class AppRouter {
     }
     if (path == '/user/my-appointments') return PermissionKeys.userAppointments;
     if (path == '/user/profile' ||
+        path == '/user/account-info' ||
         path == '/user/settings' ||
         path == '/user/notifications' ||
         path == '/user/packages' ||
@@ -303,6 +305,10 @@ class AppRouter {
       GoRoute(
         path: '/user/profile',
         builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: '/user/account-info',
+        builder: (context, state) => const AccountInfoScreen(),
       ),
       GoRoute(
         path: '/user/settings',
