@@ -296,38 +296,31 @@ CREATE VIEW users_public AS
   WHERE i_del = 0;
 
 -- ─── 10) تحديث get_user_full_by_id لإضافة usr وإخفاء pwd ───
--- ⚠️ ملاحظة: الدالة الأصلية كانت RETURNS SETOF users. PostgreSQL لا يسمح بتغيير
---    نوع الإرجاع عبر CREATE OR REPLACE، لذا نستخدم DROP ثم CREATE.
+-- ⚠️ نستخدم RETURNS SETOF JSONB لتفادي أي خطأ تطابق أنواع (مثل SMALLINT vs INT
+--    في عمود vrf) — كل القيم تُسلسَل لـ JSON بشكل صحيح تلقائياً.
+--    شكل الرد يبقى مصفوفة [{...}] — لا يحتاج تعديل كود Flutter.
 -- pwd_flag: يُرجع فقط هل يوجد كلمة مرور أم لا (بدون القيمة الفعلية)
 DROP FUNCTION IF EXISTS get_user_full_by_id(UUID);
 
 CREATE FUNCTION get_user_full_by_id(p_uid UUID)
-RETURNS TABLE(
-  id UUID, nm TEXT, ph TEXT, eml TEXT, ad TEXT, role INT,
-  sid TEXT, img TEXT, pt INT, bg INT, bg_ts TIMESTAMPTZ,
-  b_pkg INT, pkg_end TIMESTAMPTZ, pkg_grace TIMESTAMPTZ,
-  brk INT, brk_cls INT, brk_nm TEXT, sts INT, ban_rsn TEXT,
-  ntf JSONB, stats JSONB, wk_lgn JSONB, strk INT, strk_dt DATE,
-  i_del INT, perm JSONB, ts_crt TIMESTAMPTZ, ts_upd TIMESTAMPTZ,
-  vrf INT, ref_by TEXT, ref_cnt INT,
-  usr TEXT, pwd TEXT,
-  rl INT, device_id TEXT, last_ip TEXT, signup_ip TEXT, device_history JSONB
-)
+RETURNS SETOF JSONB
 LANGUAGE plpgsql SECURITY DEFINER AS $$
 BEGIN
   RETURN QUERY
-    SELECT
-      u.id, u.nm, u.ph, u.eml, u.ad, u.role,
-      u.sid, u.img, u.pt, u.bg, u.bg_ts,
-      u.b_pkg, u.pkg_end, u.pkg_grace,
-      u.brk, u.brk_cls, u.brk_nm, u.sts, u.ban_rsn,
-      u.ntf, u.stats, u.wk_lgn, u.strk, u.strk_dt::DATE,
-      u.i_del, u.perm, u.ts_crt, u.ts_upd,
-      u.vrf::INT, u.ref_by::TEXT, u.ref_cnt,
-      u.usr,
+    SELECT jsonb_build_object(
+      'id', u.id, 'nm', u.nm, 'ph', u.ph, 'eml', u.eml, 'ad', u.ad, 'role', u.role,
+      'sid', u.sid, 'img', u.img, 'pt', u.pt, 'bg', u.bg, 'bg_ts', u.bg_ts,
+      'b_pkg', u.b_pkg, 'pkg_end', u.pkg_end, 'pkg_grace', u.pkg_grace,
+      'brk', u.brk, 'brk_cls', u.brk_cls, 'brk_nm', u.brk_nm, 'sts', u.sts, 'ban_rsn', u.ban_rsn,
+      'ntf', u.ntf, 'stats', u.stats, 'wk_lgn', u.wk_lgn, 'strk', u.strk, 'strk_dt', u.strk_dt,
+      'i_del', u.i_del, 'perm', u.perm, 'ts_crt', u.ts_crt, 'ts_upd', u.ts_upd,
+      'vrf', u.vrf, 'ref_by', u.ref_by, 'ref_cnt', u.ref_cnt,
+      'usr', u.usr,
       -- pwd: فقط flag (لا نُرجع الهاش الفعلي)
-      CASE WHEN u.pwd IS NOT NULL THEN 'set'::TEXT ELSE NULL END AS pwd,
-      u.rl::INT, u.device_id, u.last_ip::TEXT, u.signup_ip::TEXT, u.device_history
+      'pwd', CASE WHEN u.pwd IS NOT NULL THEN 'set' ELSE NULL END,
+      'rl', u.rl, 'device_id', u.device_id, 'last_ip', u.last_ip, 'signup_ip', u.signup_ip,
+      'device_history', u.device_history
+    )
     FROM users u
     WHERE u.id = p_uid AND u.i_del = 0;
 END;
