@@ -1,136 +1,182 @@
 # إعداد وسائل التواصل والمصادقة
 
-> هذا الملف يجمع كل ما يتعلق بتفعيل واتساب OTP + النشر التلقائي على فيسبوك وإنستغرام.
-> كلهم يحتاجون **حساب Meta Business واحد**.
+> هذا الملف يجمع كل ما يتعلق بتفعيل نظام التحقق (OTP) + النشر التلقائي على فيسبوك وإنستغرام.
+>
+> **آخر تحديث:** 2026-06-13 — تبديل خطة واتساب Cloud API بنظام هجين (textbee + إيميل)
 
 ---
 
-## الحالة الحالية
+## 🎯 الخطة الحالية (نظام هجين ذكي)
 
-| المكوّن | الحالة |
-|---|---|
-| تسجيل دخول واتساب (Dev Mode) | ✅ شغّال — OTP بصندوق برتقالي |
-| تسجيل دخول إيميل (Magic Link) | ✅ شغّال عبر Resend SMTP |
-| واتساب OTP إنتاجي | ⏸️ يحتاج Meta Business |
-| نشر تلقائي فيسبوك | ⏸️ يحتاج صفحة + Page Access Token |
-| نشر تلقائي إنستغرام | ⏸️ يحتاج حساب بزنس مربوط بالصفحة |
-| Edge Functions (send/verify OTP) | مكتوبة — غير منشورة |
-| Edge Function (نشر سوشال) | غير مكتوبة بعد |
+بسبب القيود التالية:
+- ❌ **WhatsApp Cloud API لا يوصل للأرقام السورية (+963)** — سياسة Meta ما زالت تحظر سوريا (تحديث مايو 2026) رغم رفع العقوبات الدولية.
+- ❌ **لا يوجد سجل تجاري** — يمنع استخدام بوابات SMS السورية الرسمية (LinkSyria).
 
----
+تم اعتماد **نظام هجين ذكي** بدلاً من واتساب:
 
-## المتطلبات المشتركة
+| نوع المستخدم | طريقة التسجيل | طريقة OTP |
+|---|---|---|
+| رقم سوري (09 / +9639) | رقم الهاتف | **SMS عبر textbee.dev** (موبايل أندرويد بشريحة سورية) |
+| رقم أجنبي / مغترب | الإيميل | **Magic Link عبر Resend** (موجود وشغّال) |
+| أي مستخدم (بعد أول تسجيل) | اسم مستخدم + كلمة مرور | **بدون OTP نهائياً** |
 
-كل شي يبدأ بحساب Meta Business واحد:
-
-### الخطوة 1: صفحة فيسبوك
-- أنشئ **صفحة فيسبوك** باسم المكتب
-- Category: Real Estate Agent
-- ملاحظة: يُفضل إنشاؤها من **خارج سوريا** للاستفادة من ميزات الإعلان
-
-### الخطوة 2: حساب إنستغرام بزنس
-- حوّل حسابك لـ **Business Account** من إعدادات إنستغرام
-- اربطه بصفحة الفيسبوك
-
-### الخطوة 3: Meta Business Account
-- https://business.facebook.com → أنشئ حساب
-- أضف الصفحة المُنشأة
-
-### الخطوة 4: Meta App + Tokens
-1. https://developers.facebook.com/apps → **Create App** → **Business**
-2. أضف **WhatsApp** product
-3. أنشئ **System User** بـ Admin role
-4. **Generate Permanent Token** بصلاحيات:
-   - `whatsapp_business_messaging`
-   - `whatsapp_business_management`
-   - `pages_manage_posts` (للنشر على فيسبوك)
-   - `instagram_content_publish` (للنشر على إنستغرام)
+> 💡 **المبدأ:** OTP مطلوب مرة واحدة فقط بحياة المستخدم (وقت أول تسجيل). بعدها يدخل باسم مستخدم + كلمة مرور دائماً.
 
 ---
 
-## تفعيل واتساب OTP
+## 🐝 الحل 1: textbee.dev (للأرقام السورية)
 
-### إعداد رقم الإرسال
-- اختر **رقم Meta 555 المجاني** أو اربط رقم خارج سوريا
-- ⚠️ رقم سوري (+963) **محظور** كـ Sender من Meta
+### شو هو؟
+أداة مفتوحة المصدر تحوّل أي جهاز أندرويد إلى بوابة SMS. تطبيقك يرسل طلب عبر API → الموبايل الأندرويد بشريحته السورية يرسل SMS للعميل. الرسالة تصل عبر شبكة الاتصالات السورية العادية (لا قيود عليها).
 
-### إنشاء قالب OTP
-في **WhatsApp Manager → Message Templates:**
+### التسعيرة:
+| الباقة | السعر | الحد الشهري |
+|---|---|---|
+| **Free** ⭐ | **$0** | 300 رسالة/شهر (50/يوم) — كافية للبداية |
+| Pro | $9.99/شهر | 5,000 رسالة/شهر |
+| Scale | $29.99/شهر | 25,000 رسالة/شهر |
 
-| الحقل | القيمة |
-|---|---|
-| Category | Authentication |
-| Name | `otp_login` |
-| Language | Arabic (`ar`) |
-| Body | `{{1}} هو رمز التحقق الخاص بك. لا تشاركه مع أحد.` |
+### المتطلبات:
+- جهاز أندرويد (7.0+) شغّال 24/7 (موبايل قديم + شاحن دائم + Wi-Fi)
+- شريحة سيرياتيل + باقة SMS
+- حساب textbee.dev مجاني
 
-### نشر Edge Functions
+### خطوات الإعداد:
+1. سجّل بـ https://app.textbee.dev/register (مجاني، بدون بطاقة)
+2. نزّل تطبيق textbee على جهاز الأندرويد من textbee.dev/download
+3. أعطِ التطبيق صلاحية SMS + خلفية
+4. من Dashboard: Register Device → Scan QR code بالتطبيق
+5. خذ `API_KEY` + `DEVICE_ID` من لوحة التحكم
+6. اختبر إرسال SMS يدوياً من Dashboard لرقم سوري
+
+### Secrets المطلوبة (Supabase):
 ```bash
-supabase login
-supabase link --project-ref vsgkgnjtebjxyqwpuopz
-
-supabase secrets set META_WHATSAPP_TOKEN="EAAxxx..."
-supabase secrets set META_PHONE_NUMBER_ID="123456789012345"
-supabase secrets set META_OTP_TEMPLATE_NAME="otp_login"
-supabase secrets set META_OTP_TEMPLATE_LANG="ar"
-
-supabase functions deploy send-whatsapp-otp --no-verify-jwt
-supabase functions deploy verify-whatsapp-otp --no-verify-jwt
+supabase secrets set TEXTBEE_API_KEY="tb_xxx..."
+supabase secrets set TEXTBEE_DEVICE_ID="12345..."
 ```
 
-### الحدود والتكلفة
-- Tier 0: 250 مستخدم/يوم (بدون توثيق)
-- أول 250 authentication مجاناً/شهر
-- بعدها: ~$0.0125/رسالة لسوريا
+### نقاط حذرة:
+- ⚠️ الموبايل لازم يضل شغّال 24/7 (شاحن + Wi-Fi مستقر)
+- ⚠️ عطّل "توفير البطارية" لتطبيق textbee
+- ⚠️ الرسالة تطلع من رقم الشريحة (موب شارة شركة) — يُفضّل شريحة مخصصة للمكتب
+- ⚠️ الباقة المجانية: حد 50 رسالة/يوم، 300/شهر
+- ⚠️ لا تستخدم لإرسال دعائي (ممنوع بسوريا) — فقط OTP
+
+### مرجع API:
+```typescript
+POST https://api.textbee.dev/api/v1/gateway/devices/{DEVICE_ID}/send-sms
+Header: x-api-key: {API_KEY}
+Body: { recipients: ["+9639XXXXXXX"], message: "رمز التحقق: 123456" }
+```
 
 ---
 
-## تفعيل النشر التلقائي
+## 📧 الحل 2: Email Magic Link (للأرقام الأجنبية)
 
-### المنطق
+### الحالة: ✅ شغّال حالياً
+يستخدم خدمة Resend SMTP الموجودة بـ Supabase.
+
+### المنطق:
+- المستخدم برقم أجنبي → يختار الإيميل
+- يكتب إيميله → يصله Magic Link (أو OTP) عبر Resend
+- يضغط الرابط → يتم التحقق تلقائياً
+
+### Secrets (موجودة بالفعل):
+- `RESEND_API_KEY` — مفعّل
+- Email Templates — جاهزة
+
+---
+
+## 🔄 مقارنة بالخطة القديمة (واتساب Cloud API)
+
+| المعيار | الخطة القديمة (واتساب) | الخطة الجديدة (هجين) |
+|---|---|---|
+| يوصل للسوريين؟ | ❌ لا | ✅ نعم (textbee) |
+| يوصل للأجانب؟ | ✅ نعم | ✅ نعم (إيميل) |
+| يحتاج سجل تجاري؟ | ✅ نعم (Meta Verification) | ❌ لا |
+| يحتاج رقم خارجي؟ | ✅ نعم | ❌ لا |
+| التكلفة | $0.003/رسالة + Meta Business | $0 (مجاني حتى 300/شهر) |
+| التعقيد | عالي (Meta + قوالب + موافقات) | منخفض |
+| متى نلجأ لها؟ | إذا رفعت Meta حظر سوريا مستقبلاً | الآن |
+
+> 📌 **خطة مستقبلية:** إذا رفعت Meta حظر سوريا من Cloud API، يمكننا إعادة تفعيل واتساب كقناة إضافية. راجع [سياسة Meta الحالية](https://developers.facebook.com/docs/whatsapp/cloud-api/support/).
+
+---
+
+## ⏸️ مؤجل: النشر التلقائي على السوشال
+
+### المنطق (لم يتغير):
 1. العرض يتم قبوله من الإدارة (`sts=2`)
 2. إذا `i_soc=1` ← Edge Function تنشر على فيسبوك + إنستغرام
 3. بعد النشر ← `soc_pub=1`
 
-### ما يُحتاج من المالك
-بعد إنشاء الحسابات أعطيني:
-- **Page ID** (من إعدادات صفحة فيسبوك)
-- **Instagram Business Account ID**
-- **Page Access Token** (دائم)
+### المتطلبات (مؤجلة):
+- صفحة فيسبوك تجارية
+- حساب إنستغرام Business مربوط بالصفحة
+- Meta Business Account موثّق
+- Page Access Token + Instagram ID
 
-### Secrets المطلوبة
-```bash
-supabase secrets set META_PAGE_ID="123..."
-supabase secrets set META_PAGE_ACCESS_TOKEN="EAAxxx..."
-supabase secrets set META_IG_USER_ID="456..."
-```
-
-### Edge Function (ستُكتب لاحقاً)
+### Edge Function (ستُكتب لاحقاً):
 - `supabase/functions/publish-to-social/index.ts`
 - تُستدعى عبر trigger بعد `admin_review_offer_internal(approve=true)`
-- تنشر: صورة + عنوان + سعر + رابط العرض
 
 ---
 
-## Plan B (إذا فشل Meta)
+## 📋 Checklist محدّثة
 
-### Email OTP بدل Magic Link
-- تعديل `AuthService` لاستخدام `generate_otp_v2` بقناة `email`
-- نفس شاشة OTP (6 أرقام) — بدون تغيير بالواجهة
-- المدة: ~30 دقيقة
+### المرحلة 1: textbee (للأرقام السورية) — عندك
+- [ ] تجهيز جهاز أندرويد + شريحة سيرياتيل + باقة SMS
+- [ ] التسجيل بـ textbee.dev
+- [ ] تنزيل التطبيق + ربط الجهاز
+- [ ] اختبار إرسال SMS يدوي من Dashboard
+- [ ] إعطائي `TEXTBEE_API_KEY` + `TEXTBEE_DEVICE_ID`
+
+### المرحلة 2: الإيميل (للأرقام الأجنبية) — جاهز
+- [x] Resend SMTP مفعّل
+- [x] Email Templates جاهزة
+- [x] Magic Link شغّال
+
+### المرحلة 3: الربط التقني — عندي
+- [ ] كتابة Edge Function ذكية (`send-otp`) — تختار textbee أو إيميل حسب الرقم
+- [ ] إضافة Secrets لـ Supabase
+- [ ] تحديث Flutter (اختيار القناة حسب الرقم)
+- [ ] اختبار التدفق الكامل (سوري + إيميل)
+
+### المرحلة 4: النشر التلقائي (مؤجل)
+- [ ] إنشاء صفحة فيسبوك + حساب إنستغرام
+- [ ] Meta Business Account + Tokens
+- [ ] كتابة Edge Function للنشر
 
 ---
 
-## Checklist
+## 🚫 Plan B القديم (مؤرشف)
 
-- [ ] إنشاء صفحة فيسبوك
-- [ ] إنشاء حساب إنستغرام بزنس + ربط بالصفحة
-- [ ] إنشاء Meta Business Account
-- [ ] إنشاء Meta App + WhatsApp product
-- [ ] إنشاء System User + Permanent Token
-- [ ] إنشاء قالب OTP (`otp_login`)
-- [ ] نشر Edge Functions (OTP)
-- [ ] اختبار واتساب OTP
-- [ ] إعطاء Page ID + IG ID + Token
-- [ ] كتابة ونشر Edge Function النشر التلقائي
-- [ ] اختبار النشر على فيسبوك + إنستغرام
+<details>
+<summary>خطة واتساب Cloud API (مؤجلة — راجع متى رفعت Meta حظر سوريا)</summary>
+
+### المتطلبات السابقة:
+- Meta Business Manager موثّق
+- صفحة فيسبوك تجارية
+- رقم هاتف خارجي (غير مسجل بواتساب)
+- قالب OTP معتمد من Meta
+
+### Secrets المطلوبة:
+```bash
+supabase secrets set META_WHATSAPP_TOKEN="EAAxxx..."
+supabase secrets set META_PHONE_NUMBER_ID="123456789012345"
+supabase secrets set META_OTP_TEMPLATE_NAME="otp_login"
+supabase secrets set META_OTP_TEMPLATE_LANG="ar"
+```
+
+### Edge Functions المكتوبة (غير منشورة):
+- `supabase/functions/send-whatsapp-otp/index.ts`
+- `supabase/functions/verify-whatsapp-otp/index.ts`
+
+### سبب التأجيل:
+Meta لا تزال تحظر سوريا في WhatsApp Cloud API (تحديث مايو 2026). الأرقام السورية (+963) لا تستقبل الرسائل. راجع [توثيق Meta الرسمي](https://developers.facebook.com/docs/whatsapp/cloud-api/support/).
+
+</details>
+
+---
+
+**ملاحظة:** هذا الملف هو المرجع الرسمي لنظام المصادقة. أي تعديل برمجي يجب أن يحدّث هذا الملف.
