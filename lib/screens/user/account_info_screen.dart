@@ -299,7 +299,7 @@ class AccountInfoScreen extends StatelessWidget {
           action: SnackBarAction(
             label: 'إكمال',
             textColor: Colors.white,
-            onPressed: () => context.push('/setup-profile'),
+            onPressed: () => context.push('/setup-identity'),
           ),
         ),
       );
