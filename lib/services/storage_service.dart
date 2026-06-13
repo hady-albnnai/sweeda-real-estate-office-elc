@@ -99,7 +99,10 @@ class StorageService {
                 const FileOptions(cacheControl: '3600', upsert: true),
           );
       return _storage.from(offerBucket).getPublicUrl(fullPath);
-    } catch (e) {return null;
+    } catch (e) {
+      // عرض الخطأ بدل الفشل الصامت — مهم للاختبار
+      debugPrint('⚠️ uploadOfferImage FAILED: $e');
+      return null;
     }
   }
 
