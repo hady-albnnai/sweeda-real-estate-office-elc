@@ -482,29 +482,38 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                       style: const TextStyle(
                           color: AppTheme.textWhite, fontSize: 16, height: 1.5)),
                   // المواصفات التقنية
-                  if ((offer.specs['details'] ?? '').toString().trim().isNotEmpty) ...[
+                  // المواصفات التفصيلية — حسب نوع العرض
+                  if (offer.specs.isNotEmpty) ...[
                     const SizedBox(height: 20),
-                    const Text('المواصفات التقنية',
-                        style: TextStyle(
-                            color: AppTheme.primaryGold,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold)),
+                    Text(offer.typ == 1 ? 'مواصفات السيارة' : 'مواصفات العقار',
+                        style: const TextStyle(color: AppTheme.primaryGold, fontSize: 18, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 10),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: AppTheme.surfaceBlack,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                            color: AppTheme.primaryGold.withValues(alpha: 0.2)),
-                      ),
-                      child: Text(
-                        offer.specs['details'].toString(),
-                        style: const TextStyle(
-                            color: AppTheme.textWhite, fontSize: 15, height: 1.6),
-                      ),
-                    ),
+                    Wrap(spacing: 8, runSpacing: 8, children: [
+                      if (offer.typ == 0) ...[
+                        if ((offer.specs['area'] ?? '').toString().isNotEmpty) _spec(Icons.square_foot, 'المساحة', '${offer.specs['area']} م²'),
+                        if ((offer.specs['floor'] ?? '').toString().isNotEmpty) _spec(Icons.layers, 'الطابق', offer.specs['floor'].toString()),
+                        if ((offer.specs['finishing'] ?? '').toString().isNotEmpty) _spec(Icons.format_paint, 'الإكساء', offer.specs['finishing'].toString()),
+                        if ((offer.specs['direction'] ?? '').toString().isNotEmpty) _spec(Icons.explore, 'الاتجاه', offer.specs['direction'].toString()),
+                      ],
+                      if (offer.typ == 1) ...[
+                        if ((offer.specs['brand'] ?? '').toString().isNotEmpty) _spec(Icons.directions_car, 'الماركة', offer.specs['brand'].toString()),
+                        if ((offer.specs['model'] ?? '').toString().isNotEmpty) _spec(Icons.car_repair, 'الموديل', offer.specs['model'].toString()),
+                        if ((offer.specs['year'] ?? '').toString().isNotEmpty) _spec(Icons.calendar_today, 'سنة الصنع', offer.specs['year'].toString()),
+                        if ((offer.specs['color'] ?? '').toString().isNotEmpty) _spec(Icons.palette, 'اللون', offer.specs['color'].toString()),
+                        if ((offer.specs['km'] ?? '').toString().isNotEmpty) _spec(Icons.speed, 'الكيلومترات', '${offer.specs['km']} كم'),
+                        if ((offer.specs['fuel'] ?? '').toString().isNotEmpty) _spec(Icons.local_gas_station, 'الوقود', offer.specs['fuel'].toString()),
+                        if ((offer.specs['transmission'] ?? '').toString().isNotEmpty) _spec(Icons.settings, 'ناقل الحركة', offer.specs['transmission'].toString()),
+                        if ((offer.specs['plate'] ?? '').toString().isNotEmpty) _spec(Icons.confirmation_number, 'اللوحة', offer.specs['plate'].toString()),
+                      ],
+                    ]),
+                    if ((offer.specs['legal_notes'] ?? '').toString().isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      _spec(Icons.gavel, 'ملاحظات قانونية', offer.specs['legal_notes'].toString()),
+                    ],
+                    if ((offer.specs['details'] ?? '').toString().trim().isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      Text(offer.specs['details'].toString(), style: const TextStyle(color: AppTheme.textWhite, fontSize: 14, height: 1.5)),
+                    ],
                   ],
                   const SizedBox(height: 20),
 
