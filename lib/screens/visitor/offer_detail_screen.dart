@@ -324,7 +324,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                       )),
                     ),
                   ),
-                // أسهم التنقل
+                // أسهم التنقل + زر فتح الصورة
                 if (offer.imgs.length > 1) ...[
                   Positioned(
                     left: 8, top: 0, bottom: 0,
@@ -349,6 +349,26 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                     )),
                   ),
                 ],
+                // زر فتح الصورة بملء الشاشة
+                if (offer.imgs.isNotEmpty)
+                  Positioned(
+                    bottom: 12, right: 16,
+                    child: GestureDetector(
+                      onTap: () => _openImageViewer(offer.imgs, _currentImg),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                          Icon(Icons.fullscreen, color: Colors.white, size: 18),
+                          SizedBox(width: 4),
+                          Text('عرض الصور', style: TextStyle(color: Colors.white, fontSize: 12)),
+                        ]),
+                      ),
+                    ),
+                  ),
                 // عداد الصور (1/3)
                 if (offer.imgs.length > 1)
                   Positioned(
