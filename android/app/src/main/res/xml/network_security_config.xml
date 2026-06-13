@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Phase 9 Security: Network Security Config.
-  - يمنع cleartext HTTP بالكامل (HTTPS only).
-  - يُعرّف نطاقات موثوقة (Supabase + Firebase) مع مرجع لـcertificate pinning مستقبلي.
-  - مرجع: docs/LOGIC_SPEC.md §5
+  Network Security Config — HTTPS only, no certificate pinning.
+  Certificate pinning معطّل حالياً لتجنب HandshakeException
+  عند تغيير شهادات Supabase.
 -->
 <network-security-config>
     <base-config cleartextTrafficPermitted="false">
@@ -11,35 +10,6 @@
             <certificates src="system" />
         </trust-anchors>
     </base-config>
-
-    <!-- نطاقات Supabase + FCM مع Certificate Pinning على مستوى الجذر -->
-    <domain-config cleartextTrafficPermitted="false">
-        <domain includeSubdomains="true">supabase.co</domain>
-        <domain includeSubdomains="true">supabase.in</domain>
-        <trust-anchors>
-            <certificates src="system" />
-        </trust-anchors>
-        <!--
-          🔒 Pinning على مستوى جذور Let's Encrypt:
-          - يقبل أي شهادة Supabase طالما صادرة من Let's Encrypt
-          - لا يحتاج صيانة مع تجديد الشهادات كل 90 يوم
-          - ISRG Root X1: صالح حتى 2030-09-30
-          - ISRG Root X2: احتياطي (ECDSA modern root)
-        -->
-        <pin-set expiration="2030-09-30">
-            <pin digest="SHA-256">C5+lpZ7tcVwmwQIMcRtPbsQtWLABXhQzejna0wHFr8M=</pin>
-            <pin digest="SHA-256">diGVwiVYbubAI3RW4hB9xU8e/CH2GnkuvVFZE8zmgzI=</pin>
-        </pin-set>
-    </domain-config>
-
-    <!-- نطاقات Firebase/FCM بدون pinning (Google يدير شهاداتها ذاتياً) -->
-    <domain-config cleartextTrafficPermitted="false">
-        <domain includeSubdomains="true">firebaseapp.com</domain>
-        <domain includeSubdomains="true">googleapis.com</domain>
-        <trust-anchors>
-            <certificates src="system" />
-        </trust-anchors>
-    </domain-config>
 
     <!-- debug overrides — للاختبار المحلي فقط -->
     <debug-overrides>
