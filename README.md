@@ -29,24 +29,15 @@ docs/CURRENT_STATUS.md
 | مهام المنفذ | `/executor/tasks` |
 | تنفيذ مهمة | `/executor/execute/:id` |
 
-## الملفات المرجعية المهمة
+## الملفات المرجعية
 
 | الملف | الغرض |
 |---|---|
-| `docs/CURRENT_STATUS.md` | الوضع الحالي المختصر |
-| `docs/NEXT_DEVELOPMENT_ITEMS.md` | المتبقي فقط |
-| `docs/SPEC.md` | المواصفات التقنية |
-| `docs/LOGIC_SPEC.md` | ميثاق المنطق |
-| `docs/LOGIC_AUDIT_2026_06_10.md` | تقرير التدقيق المنطقي |
-| `docs/LOGIC_REPAIR_TRACKER.md` | تتبّع إصلاحات المنطق بين المحادثات |
-| `docs/POST_FIX_EXECUTION_AND_TEST_PLAN.md` | خطة التنفيذ والاختبار بعد الإصلاحات |
+| `docs/TEST_CHECKLIST.md` | قائمة الاختبار — **ابدأ من هنا** |
+| `docs/LOGIC_SPEC.md` | ميثاق المنطق (الدستور) |
+| `docs/SOCIAL_AND_AUTH_SETUP.md` | تفعيل واتساب + فيسبوك + إنستغرام |
 | `DEVELOPMENT_GUIDELINES.md` | قواعد التطوير الإلزامية |
 | `supabase/FUNCTIONS_REFERENCE.md` | مرجع دوال السيرفر |
-| `docs/SERVER_CHANGES_2026_06_10.md` | توثيق تغييرات السيرفر الأخيرة وخطة التراجع |
-| `supabase/CHECK_ALL_MIGRATIONS.sql` | فحص حالة السيرفر |
-| `docs/AUTH_SETUP.md` | إعداد المصادقة |
-| `docs/WHATSAPP_ACTIVATION_PLAN.md` | تفعيل واتساب الإنتاجي |
-| `docs/SECURITY_REVIEW.md` | مراجعة أمنية |
 | `BUILD_GUIDE.md` | البناء والنشر |
 
 ## تشغيل المشروع
