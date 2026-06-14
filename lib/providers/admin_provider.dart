@@ -103,16 +103,14 @@ class AdminProvider with ChangeNotifier {
 
   Future<bool> updateUserRole(String adminUid, String uid, int newRole) async {
     try {
-      await SupabaseService().client.rpc(
-        'admin_update_user_role',
-        params: {
-          'p_admin_uid': adminUid,
-          'p_target_uid': uid,
-          'p_role': newRole,
-        },
-      );
-      notifyListeners();
-      return true;
+      final data = await _invokeStaffFunction('update-user-role', {
+        'admin_uid': adminUid,
+        'user_id': uid,
+        'role': newRole,
+      });
+      final ok = data['success'] == true;
+      if (ok) notifyListeners();
+      return ok;
     } catch (e) {return false;
     }
   }
@@ -120,17 +118,15 @@ class AdminProvider with ChangeNotifier {
   /// تغيير حالة المستخدم: 0=نشط, 1=مجمّد, 2=محظور
   Future<bool> setUserStatus(String adminUid, String uid, int status, {String reason = ''}) async {
     try {
-      await SupabaseService().client.rpc(
-        'admin_set_user_status',
-        params: {
-          'p_admin_uid': adminUid,
-          'p_target_uid': uid,
-          'p_status': status,
-          'p_reason': reason,
-        },
-      );
-      notifyListeners();
-      return true;
+      final data = await _invokeStaffFunction('toggle-user-status', {
+        'admin_uid': adminUid,
+        'user_id': uid,
+        'status': status,
+        'reason': reason,
+      });
+      final ok = data['success'] == true;
+      if (ok) notifyListeners();
+      return ok;
     } catch (e) {return false;
     }
   }
@@ -140,32 +136,21 @@ class AdminProvider with ChangeNotifier {
   Future<bool> activateUser(String adminUid, String uid) => setUserStatus(adminUid, uid, 0);
 
   Future<bool> softDeleteUser(String uid) async {
-    try {
-      // نستخدم RPC soft_delete (SECURITY DEFINER) بدل direct update
-      await SupabaseService().client.rpc(
-        'soft_delete',
-        params: {'p_table': 'users', 'p_id': uid},
-      );
-      notifyListeners();
-      return true;
-    } catch (e) {
-      return false;
-    }
+    // تم إغلاق soft_delete العام عن العميل. استخدم deleteStaffUser مع adminUid.
+    return false;
   }
 
 
   Future<bool> updateUserPermissions(String adminUid, String uid, List<String> permissions) async {
     try {
-      await SupabaseService().client.rpc(
-        'admin_update_user_permissions_by_admin',
-        params: {
-          'p_admin_uid': adminUid,
-          'p_target_uid': uid,
-          'p_perm': permissions,
-        },
-      );
-      notifyListeners();
-      return true;
+      final data = await _invokeStaffFunction('update-user-permissions', {
+        'admin_uid': adminUid,
+        'user_id': uid,
+        'permissions': permissions,
+      });
+      final ok = data['success'] == true;
+      if (ok) notifyListeners();
+      return ok;
     } catch (e) {return false;
     }
   }

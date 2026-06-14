@@ -1,5 +1,5 @@
-// Edge Function: update-user-role
-// الغرض: تغيير دور موظف داخلي من قبل الإدارة
+// Edge Function: update-user-permissions
+// الغرض: تحديث صلاحيات مستخدم من قبل الإدارة
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -85,12 +85,12 @@ serve(async (req) => {
     if (!actor.ok) return actor.response;
     const adminUid = actor.adminUid;
     const userId = body.user_id ?? body.userId;
-    const role = Number(body.role);
+    const permissions = Array.isArray(body.permissions) ? body.permissions : [];
 
-    const { data, error } = await supabaseAdmin.rpc("admin_update_user_role", {
+    const { data, error } = await supabaseAdmin.rpc("admin_update_user_permissions_by_admin", {
       p_admin_uid: adminUid,
       p_target_uid: userId,
-      p_role: role,
+      p_perm: permissions,
     });
 
     if (error) return json({ success: false, error: error.message }, 400);
