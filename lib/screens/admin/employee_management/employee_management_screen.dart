@@ -5,7 +5,9 @@ import '../../../providers/admin_provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../models/user_model.dart';
-import '../../../core/services/permission_service.dart';
+import 'add_employee_dialog.dart';
+import 'change_role_dialog.dart';
+import 'toggle_status_dialog.dart';
 
 /// شاشة إدارة الموظفين (الأولوية الأولى)
 /// مستوحاة من مشروع Final + ملتزمة بالدستور
@@ -85,32 +87,110 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
   }
 
   Future<void> _showAddEmployeeDialog() async {
-    // سيتم تنفيذها في المرحلة التالية
-    // حالياً نعرض رسالة
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('سيتم إضافة نموذج إضافة موظف في التحديث القادم')),
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => const AddEmployeeDialog(),
     );
+    if (result == true) {
+      _loadUsers();
+    }
   }
 
   Future<void> _changeRole(UserModel user) async {
-    // سيتم تنفيذها لاحقاً
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('سيتم تنفيذ تغيير الدور في التحديث القادم')),
+    if (user.role == 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('لا يمكن تغيير دور المدير الرئيسي')),
+      );
+      return;
+    }
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => ChangeRoleDialog(user: user),
     );
+    if (result == true) {
+      _loadUsers();
+    }
   }
 
   Future<void> _toggleStatus(UserModel user) async {
-    // سيتم تنفيذها لاحقاً
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('سيتم تنفيذ تفعيل/تعطيل في التحديث القادم')),
+    final isActive = user.sts == 0;
+    
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => ToggleStatusDialog(user: user, currentStatus: isActive),
     );
+    if (result == true) {
+      _loadUsers();
+    }
   }
 
   Future<void> _resetPassword(UserModel user) async {
-    // سيتم تنفيذها لاحقاً
+    // ملاحظة: إعادة تعيين كلمة السر يجب أن تتم عبر Edge Function
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('سيتم تنفيذ إعادة تعيين كلمة السر في التحديث القادم')),
+      const SnackBar(
+        content: Text('إعادة تعيين كلمة السر تتم عبر Edge Function. سيتم تنفيذها في المرحلة القادمة.'),
+        backgroundColor: Colors.orange,
+      ),
     );
+  }
+
+  Future<void> _deleteUser(UserModel user) async {
+    if (user.role == 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('لا يمكن حذف المدير الرئيسي')),
+      );
+      return;
+    }
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.surfaceBlack,
+        title: const Text('تأكيد الحذف', style: TextStyle(color: Colors.red)),
+        content: Text(
+          'هل أنت متأكد من حذف "${user.nm}"؟\nهذا الإجراء لا يمكن التراجع عنه.',
+          style: const TextStyle(color: AppTheme.textWhite),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('إلغاء', style: TextStyle(color: AppTheme.textGrey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('حذف'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      final adminProvider = context.read<AdminProvider>();
+      final success = await adminProvider.deleteStaffUser(user.uid);
+      
+      if (mounted) {
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('تم حذف المستخدم بنجاح')),
+          );
+          _loadUsers();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('فشل حذف المستخدم')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('خطأ: $e')),
+        );
+      }
+    }
   }
 
   @override
@@ -232,30 +312,38 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
                     ],
                   ),
                 ),
-                PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert, color: AppTheme.textGrey),
-                  onSelected: (value) {
-                    switch (value) {
-                      case 'change_role':
-                        _changeRole(user);
-                        break;
-                      case 'toggle_status':
-                        _toggleStatus(user);
-                        break;
-                      case 'reset_password':
-                        _resetPassword(user);
-                        break;
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(value: 'change_role', child: Text('تغيير الدور')),
-                    PopupMenuItem(
-                      value: 'toggle_status',
-                      child: Text(isActive ? 'تعطيل' : 'تفعيل'),
-                    ),
-                    const PopupMenuItem(value: 'reset_password', child: Text('إعادة تعيين كلمة السر')),
-                  ],
-                ),
+                                PopupMenuButton<String>(
+                                  icon: const Icon(Icons.more_vert, color: AppTheme.textGrey),
+                                  onSelected: (value) {
+                                    switch (value) {
+                                      case 'change_role':
+                                        _changeRole(user);
+                                        break;
+                                      case 'toggle_status':
+                                        _toggleStatus(user);
+                                        break;
+                                      case 'reset_password':
+                                        _resetPassword(user);
+                                        break;
+                                      case 'delete':
+                                        _deleteUser(user);
+                                        break;
+                                    }
+                                  },
+                                  itemBuilder: (context) => [
+                                    const PopupMenuItem(value: 'change_role', child: Text('تغيير الدور')),
+                                    PopupMenuItem(
+                                      value: 'toggle_status',
+                                      child: Text(isActive ? 'تعطيل' : 'تفعيل'),
+                                    ),
+                                    const PopupMenuItem(value: 'reset_password', child: Text('إعادة تعيين كلمة السر')),
+                                    if (user.role != 6)
+                                      const PopupMenuItem(
+                                        value: 'delete',
+                                        child: Text('حذف', style: TextStyle(color: Colors.red)),
+                                      ),
+                                  ],
+                                ),
               ],
             ),
             const SizedBox(height: 12),
