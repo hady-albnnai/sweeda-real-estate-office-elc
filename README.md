@@ -35,6 +35,7 @@ docs/CURRENT_STATUS.md
 |---|---|
 | `docs/TEST_CHECKLIST.md` | قائمة الاختبار — **ابدأ من هنا** |
 | `docs/LOGIC_SPEC.md` | ميثاق المنطق (الدستور) |
+| `docs/PRIORITY_REMEDIATION_PLAN.md` | خطة الإصلاح ذات الأولوية بعد المراجعة الخارجية |
 | `docs/SOCIAL_AND_AUTH_SETUP.md` | تفعيل واتساب + فيسبوك + إنستغرام |
 | `DEVELOPMENT_GUIDELINES.md` | قواعد التطوير الإلزامية |
 | `supabase/FUNCTIONS_REFERENCE.md` | مرجع دوال السيرفر |
