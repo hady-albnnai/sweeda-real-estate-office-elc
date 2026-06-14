@@ -13,6 +13,7 @@ import '../services/admin/staff_admin_service.dart';
 import '../services/admin/payments_admin_service.dart';
 import '../services/admin/reports_admin_service.dart';
 import '../services/admin/offers_admin_service.dart';
+import '../services/admin/stats_admin_service.dart';
 
 /// Provider لوحة الإدارة (role >= UserRole.minAdmin)
 /// يجمع كل عمليات الإدارة: العروض، المستخدمون، المواعيد، الصفقات،
@@ -22,6 +23,7 @@ class AdminProvider with ChangeNotifier {
   final PaymentsAdminService _paymentsAdmin = PaymentsAdminService();
   final ReportsAdminService _reportsAdmin = ReportsAdminService();
   final OffersAdminService _offersAdmin = OffersAdminService();
+  final StatsAdminService _statsAdmin = StatsAdminService();
 
   bool _isLoading = false;
   String? _error;
@@ -55,6 +57,7 @@ class AdminProvider with ChangeNotifier {
   void _syncPaymentsError() => _syncServiceError(_paymentsAdmin.lastError);
   void _syncReportsError() => _syncServiceError(_reportsAdmin.lastError);
   void _syncOffersError() => _syncServiceError(_offersAdmin.lastError);
+  void _syncStatsError() => _syncServiceError(_statsAdmin.lastError);
 
   void _setLoading(bool v) {
     _isLoading = v;
@@ -401,54 +404,16 @@ class AdminProvider with ChangeNotifier {
   // 7) الإحصائيات الشاملة
   // ═══════════════════════════════════════
   Future<Map<String, dynamic>> getStats(String adminUid) async {
-    try {
-      final offers = await getOffersForMediaReview(adminUid);
-      final users = await getAllUsers();
-      final deals = await getAllDeals(adminUid);
-      final appts = await getAllAppointments(adminUid);
-
-      return {
-        'totalOffers': offers.length,
-        'pendingOffers': offers.where((o) => o.sts == 1).length,
-        'publishedOffers': offers.where((o) => o.sts == 2).length,
-        'totalUsers': users.length,
-        'activeUsers': users.where((u) => u.sts == 0).length,
-        'bannedUsers': users.where((u) => u.sts == 2).length,
-        'brokers': users.where((u) => u.role == UserRole.broker).length,
-        'totalDeals': deals.length,
-        'completedDeals': deals.where((d) => d.sts == 1).length,
-        'totalCommission': deals
-            .where((d) => d.sts == 1)
-            .fold<double>(0, (s, d) => s + d.comVal),
-        'totalAppointments': appts.length,
-        'completedAppointments': appts.where((a) => a.sts == 2).length,
-      };
-    } catch (e) {
-      return {};
-    }
+    final stats = await _statsAdmin.getStats(adminUid);
+    _syncStatsError();
+    return stats;
   }
 
   /// عدّاد سريع للعناصر التي تحتاج إجراء (للوحة الرئيسية)
   Future<Map<String, int>> getActionCounts(String adminUid) async {
-    try {
-      final pendingOffers = await getPendingOffers(adminUid);
-      final pendingPayments = await getAllPayments(adminUid, status: 0);
-      final openReports = await getAllReports(adminUid, status: 0);
-      final pendingVerifications = await SupabaseService()
-          .client
-          .from(DbTables.users)
-          .select('id')
-          .eq('vrf', 1)
-          .eq('i_del', 0);
-      return {
-        'pendingOffers': pendingOffers.length,
-        'pendingPayments': pendingPayments.length,
-        'openReports': openReports.length,
-        'pendingVerifications': (pendingVerifications as List).length,
-      };
-    } catch (e) {
-      return {};
-    }
+    final counts = await _statsAdmin.getActionCounts(adminUid);
+    _syncStatsError();
+    return counts;
   }
 
   // ═══════════════════════════════════════════════════════════════
