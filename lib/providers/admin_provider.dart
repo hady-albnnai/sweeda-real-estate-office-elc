@@ -6,8 +6,6 @@ import '../models/deal_model.dart';
 import '../models/payment_model.dart';
 import '../models/report_model.dart';
 import '../models/request_model.dart';
-import '../core/network/supabase_service.dart';
-import '../core/constants/db_constants.dart';
 import '../core/utils/error_utils.dart';
 import '../services/admin/staff_admin_service.dart';
 import '../services/admin/payments_admin_service.dart';
@@ -16,6 +14,8 @@ import '../services/admin/offers_admin_service.dart';
 import '../services/admin/stats_admin_service.dart';
 import '../services/admin/appointments_admin_service.dart';
 import '../services/admin/deals_admin_service.dart';
+import '../services/admin/verifications_admin_service.dart';
+import '../services/admin/users_admin_service.dart';
 
 /// Provider لوحة الإدارة (role >= UserRole.minAdmin)
 /// يجمع كل عمليات الإدارة: العروض، المستخدمون، المواعيد، الصفقات،
@@ -28,6 +28,8 @@ class AdminProvider with ChangeNotifier {
   final StatsAdminService _statsAdmin = StatsAdminService();
   final AppointmentsAdminService _appointmentsAdmin = AppointmentsAdminService();
   final DealsAdminService _dealsAdmin = DealsAdminService();
+  final VerificationsAdminService _verificationsAdmin = VerificationsAdminService();
+  final UsersAdminService _usersAdmin = UsersAdminService();
 
   bool _isLoading = false;
   String? _error;
@@ -64,6 +66,8 @@ class AdminProvider with ChangeNotifier {
   void _syncStatsError() => _syncServiceError(_statsAdmin.lastError);
   void _syncAppointmentsError() => _syncServiceError(_appointmentsAdmin.lastError);
   void _syncDealsError() => _syncServiceError(_dealsAdmin.lastError);
+  void _syncVerificationsError() => _syncServiceError(_verificationsAdmin.lastError);
+  void _syncUsersError() => _syncServiceError(_usersAdmin.lastError);
 
   void _setLoading(bool v) {
     _isLoading = v;
@@ -102,21 +106,9 @@ class AdminProvider with ChangeNotifier {
   // 2) المستخدمون (إدارة)
   // ═══════════════════════════════════════
   Future<List<UserModel>> getAllUsers({String? search}) async {
-    try {
-      var q = SupabaseService().client
-          .from(DbTables.users)
-          .select()
-          .eq('i_del', 0);
-      if (search != null && search.isNotEmpty) {
-        q = q.or('nm.ilike.%$search%,ph.ilike.%$search%');
-      }
-      final response = await q.order('ts_crt', ascending: false);
-      return (response as List)
-          .map((d) =>
-              UserModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String))
-          .toList();
-    } catch (e) {return [];
-    }
+    final list = await _usersAdmin.getAllUsers(search: search);
+    _syncUsersError();
+    return list;
   }
 
   Future<bool> updateUserRole(String adminUid, String uid, int newRole) async {
@@ -142,7 +134,6 @@ class AdminProvider with ChangeNotifier {
     // تم إغلاق soft_delete العام عن العميل. استخدم deleteStaffUser مع adminUid.
     return false;
   }
-
 
   Future<bool> updateUserPermissions(String adminUid, String uid, List<String> permissions) async {
     final ok = await _staffAdmin.updateUserPermissions(adminUid, uid, permissions);
@@ -372,49 +363,30 @@ class AdminProvider with ChangeNotifier {
 
   /// جلب المستخدمين الذين قدّموا طلب توثيق (vrf=1) لمراجعتهم.
   Future<List<Map<String, dynamic>>> getPendingVerifications() async {
-    try {
-      final res = await SupabaseService()
-          .client
-          .from(DbTables.users)
-          .select()
-          .eq('vrf', 1)
-          .eq('i_del', 0)
-          .order('ts_upd', ascending: true); // الأقدم أولاً (FIFO)
-      return (res as List)
-          .map((r) => Map<String, dynamic>.from(r))
-          .toList();
-    } catch (e) {return [];
-    }
+    final list = await _verificationsAdmin.getPendingVerifications();
+    _syncVerificationsError();
+    return list;
   }
 
   /// اعتماد توثيق مستخدم: vrf 1 → 2 (موثق رسمياً).
-  /// يستخدم نسخة متوافقة مع وضع التطوير الحالي، وتربط `p_admin_uid`
-  /// بـ `auth.uid()` متى كانت الجلسة الحقيقية متاحة.
   Future<bool> approveVerification(String adminUid, String userId) async {
-    try {
-      await SupabaseService().client.rpc(
-        'admin_approve_verification_by_admin',
-        params: {'p_admin_uid': adminUid, 'p_target_uid': userId},
-      );
-      return true;
-    } catch (e) {return false;
-    }
+    final ok = await _verificationsAdmin.approveVerification(adminUid, userId);
+    _syncVerificationsError();
+    if (ok) notifyListeners();
+    return ok;
   }
 
   /// رفض توثيق مستخدم: vrf 1 → 0 (يحتاج إعادة رفع).
   Future<bool> rejectVerification(String adminUid, String userId,
       {String reason = ''}) async {
-    try {
-      await SupabaseService().client.rpc(
-        'admin_reject_verification_by_admin',
-        params: {
-          'p_admin_uid': adminUid,
-          'p_target_uid': userId,
-          'p_reason': reason,
-        },
-      );
-      return true;
-    } catch (e) {return false;
-    }
+    final ok = await _verificationsAdmin.rejectVerification(
+      adminUid,
+      userId,
+      reason: reason,
+    );
+    _syncVerificationsError();
+    if (ok) notifyListeners();
+    return ok;
   }
+
 }
