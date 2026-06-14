@@ -232,6 +232,7 @@ class AppResult<T> {
 - [x] عدم ابتلاع أخطاء Edge Functions داخل مسارات إدارة الموظفين/الصلاحيات.
 - [x] عرض رسائل أوضح عبر `AdminProvider.error` و`AuthProvider.lastError`.
 - [x] توسيع النمط إلى `PaymentProvider` و`OfferProvider`.
+- [x] إضافة تتبع أخطاء أولي إلى `StorageService` و`FCMService`.
 - [ ] لاحقاً: ربط Crashlytics أو جدول `client_errors`.
 
 ## Definition of Done
