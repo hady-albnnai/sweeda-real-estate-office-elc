@@ -16,8 +16,8 @@ serve(async (req) => {
 
   try {
     const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      Deno.env.get('PROJECT_URL') ?? '',
+      Deno.env.get('SERVICE_ROLE_KEY') ?? '',
       {
         auth: {
           autoRefreshToken: false,
@@ -28,12 +28,10 @@ serve(async (req) => {
 
     const { user_id } = await req.json();
 
-    // توليد كلمة سر عشوائية
     const newPassword = Array.from({ length: 12 }, () => 
       'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#%&*'[Math.floor(Math.random() * 70)]
     ).join('');
 
-    // تحديث كلمة السر
     const { error } = await supabaseAdmin.auth.admin.updateUserById(user_id, {
       password: newPassword,
     });

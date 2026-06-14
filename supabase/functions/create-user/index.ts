@@ -1,5 +1,5 @@
 // Edge Function: create-user
-// الغرض: إنشاء مستخدم جديد من قبل الإدارة (مستوحى من مشروع Final)
+// الغرض: إنشاء مستخدم جديد من قبل الإدارة
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -16,8 +16,8 @@ serve(async (req) => {
 
   try {
     const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      Deno.env.get('PROJECT_URL') ?? '',
+      Deno.env.get('SERVICE_ROLE_KEY') ?? '',
       {
         auth: {
           autoRefreshToken: false,
@@ -28,7 +28,6 @@ serve(async (req) => {
 
     const { email, password, full_name, phone, role } = await req.json();
 
-    // إنشاء المستخدم في Auth
     const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
@@ -43,7 +42,6 @@ serve(async (req) => {
       );
     }
 
-    // تحديث الدور في جدول users
     const { error: updateError } = await supabaseAdmin
       .from('users')
       .update({ role: role, nm: full_name, ph: phone, eml: email })
