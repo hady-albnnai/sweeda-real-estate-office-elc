@@ -18,7 +18,7 @@
 | تفكيك `AdminProvider` | الخدمات الأساسية مستخرجة |
 | إحصائيات لوحة الإدارة | `get_admin_dashboard_stats` مطبقة ومتحقق منها |
 | CI | مخطط — يحتاج توكن GitHub بصلاحية `workflow` لإضافة GitHub Actions |
-| SQL verification | تمت إضافة `supabase/tests/admin_security_verification.sql` |
+| SQL verification | تمت إضافة وتشغيل `supabase/tests/admin_security_verification.sql` بنجاح — لا توجد grants خطرة والجلسة الوهمية تفشل كما يجب |
 
 ---
 
@@ -61,7 +61,7 @@
 - [ ] تشغيل `flutter analyze` محلياً أو عبر CI وإصلاح أي أخطاء.
 - [ ] تشغيل `flutter test`.
 - [ ] تنفيذ اختبار عملي كامل لإدارة الموظفين.
-- [ ] تنفيذ `supabase/tests/admin_security_verification.sql` بعد أي تعديل أمني لاحق.
+- [x] تنفيذ `supabase/tests/admin_security_verification.sql` بعد إصلاحات P1/P2/P5 ونجاحه.
 - [ ] التأكد أن المدير يستطيع الدخول بـ `main_admin` وأن الجلسة تصدر بشكل صحيح.
 - [ ] اختبار أن Edge Functions ترفض الطلبات بدون `staff_session_token`.
 
