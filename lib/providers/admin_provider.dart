@@ -10,12 +10,16 @@ import '../core/network/supabase_service.dart';
 import '../core/constants/db_constants.dart';
 import '../core/utils/error_utils.dart';
 import '../services/admin/staff_admin_service.dart';
+import '../services/admin/payments_admin_service.dart';
+import '../services/admin/reports_admin_service.dart';
 
 /// Provider لوحة الإدارة (role >= UserRole.minAdmin)
 /// يجمع كل عمليات الإدارة: العروض، المستخدمون، المواعيد، الصفقات،
 /// المدفوعات، التبليغات، الإحصائيات.
 class AdminProvider with ChangeNotifier {
   final StaffAdminService _staffAdmin = StaffAdminService();
+  final PaymentsAdminService _paymentsAdmin = PaymentsAdminService();
+  final ReportsAdminService _reportsAdmin = ReportsAdminService();
 
   bool _isLoading = false;
   String? _error;
@@ -37,14 +41,17 @@ class AdminProvider with ChangeNotifier {
     _error = null;
   }
 
-  void _syncStaffError() {
-    final err = _staffAdmin.lastError;
+  void _syncServiceError(String? err) {
     if (err == null) {
       _clearErrorSilently();
     } else {
       _error = err;
     }
   }
+
+  void _syncStaffError() => _syncServiceError(_staffAdmin.lastError);
+  void _syncPaymentsError() => _syncServiceError(_paymentsAdmin.lastError);
+  void _syncReportsError() => _syncServiceError(_reportsAdmin.lastError);
 
   void _setLoading(bool v) {
     _isLoading = v;
@@ -370,100 +377,48 @@ class AdminProvider with ChangeNotifier {
   // 5) المدفوعات (إدارة)
   // ═══════════════════════════════════════
   Future<List<PaymentModel>> getAllPayments(String adminUid, {int? status}) async {
-    try {
-      final response = await SupabaseService().client.rpc(
-        'get_admin_payments_internal',
-        params: {'p_admin_uid': adminUid},
-      );
-      var list = (response as List)
-          .map((d) => PaymentModel.fromSupabase(
-              Map<String, dynamic>.from(d), d['id'] as String))
-          .toList();
-      if (status != null) {
-        list = list.where((p) => p.sts == status).toList();
-      }
-      return list;
-    } catch (e) {
-      return [];
-    }
+    final list = await _paymentsAdmin.getAllPayments(adminUid, status: status);
+    _syncPaymentsError();
+    return list;
   }
 
   Future<bool> approvePayment(String paymentId, String adminId) async {
-    try {
-      final res = await SupabaseService().client.rpc(
-        DbFunctions.approvePaymentFinal,
-        params: {
-          'p_payment_id': paymentId,
-          'p_admin_id': adminId,
-        },
-      );
-
-      if (res['success'] == true) {
-        notifyListeners();
-        return true;
-      }return false;
-    } catch (e) {return false;
-    }
+    final ok = await _paymentsAdmin.approvePayment(paymentId, adminId);
+    _syncPaymentsError();
+    if (ok) notifyListeners();
+    return ok;
   }
 
   Future<bool> rejectPayment(String paymentId, String adminId) async {
-    try {
-      await SupabaseService().client.rpc(
-        'admin_reject_payment_internal',
-        params: {
-          'p_admin_uid': adminId,
-          'p_payment_id': paymentId,
-        },
-      );
-      notifyListeners();
-      return true;
-    } catch (e) {
-      return false;
-    }
+    final ok = await _paymentsAdmin.rejectPayment(paymentId, adminId);
+    _syncPaymentsError();
+    if (ok) notifyListeners();
+    return ok;
   }
 
   // ═══════════════════════════════════════
   // 6) التبليغات (إدارة)
   // ═══════════════════════════════════════
   Future<List<ReportModel>> getAllReports(String adminUid, {int? status}) async {
-    try {
-      final response = await SupabaseService().client.rpc(
-        'get_admin_reports_internal',
-        params: {'p_admin_uid': adminUid},
-      );
-      var list = (response as List)
-          .map((d) => ReportModel.fromSupabase(
-              Map<String, dynamic>.from(d), d['id'] as String))
-          .toList();
-      if (status != null) {
-        list = list.where((r) => r.sts == status).toList();
-      }
-      return list;
-    } catch (e) {
-      return [];
-    }
+    final list = await _reportsAdmin.getAllReports(adminUid, status: status);
+    _syncReportsError();
+    return list;
   }
 
   /// اتخاذ إجراء على تبليغ
   /// action: 0=لا إجراء, 1=تحذير, 2=تجميد, 3=حظر
   Future<bool> handleReport(String reportId, int action, String adminId,
       {String note = '', int duration = 0}) async {
-    try {
-      await SupabaseService().client.rpc(
-        'admin_handle_report_internal',
-        params: {
-          'p_admin_uid': adminId,
-          'p_report_id': reportId,
-          'p_action': action,
-          'p_note': note,
-          'p_duration': duration,
-        },
-      );
-      notifyListeners();
-      return true;
-    } catch (e) {
-      return false;
-    }
+    final ok = await _reportsAdmin.handleReport(
+      reportId,
+      action,
+      adminId,
+      note: note,
+      duration: duration,
+    );
+    _syncReportsError();
+    if (ok) notifyListeners();
+    return ok;
   }
 
   // ═══════════════════════════════════════
