@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../../core/services/permission_service.dart';
 import '../../core/theme/app_theme.dart';
+import '../../providers/admin_provider.dart';
 import '../../providers/auth_provider.dart';
 
 /// داشبورد موظف المكتب (role = 4)
@@ -11,7 +13,8 @@ class EmployeeDashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-    final name = auth.userModel?.nm ?? 'موظف المكتب';
+    final user = auth.userModel;
+    final name = user?.nm ?? 'موظف المكتب';
 
     return Scaffold(
       backgroundColor: AppTheme.deepBlack,
@@ -24,64 +27,75 @@ class EmployeeDashboardScreen extends StatelessWidget {
             Text('أهلاً، $name', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 12)),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh, color: AppTheme.primaryGold),
-            onPressed: () {},
-          ),
-        ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // إحصائيات سريعة
-            const Text('مهام اليوم', style: TextStyle(color: AppTheme.primaryGold, fontSize: 16, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            Row(
+      body: FutureBuilder<Map<String, dynamic>>(
+        future: user == null
+            ? Future.value({})
+            : context.read<AdminProvider>().getStaffStatsInternal(user.uid),
+        builder: (context, snapshot) {
+          final stats = snapshot.data ?? {};
+          final loading = snapshot.connectionState == ConnectionState.waiting;
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(child: _statCard('📋', 'عروض', '8', 'قيد المراجعة')),
-                const SizedBox(width: 12),
-                Expanded(child: _statCard('📅', 'مواعيد', '5', 'اليوم')),
+                const Text('مهام اليوم', style: TextStyle(color: AppTheme.primaryGold, fontSize: 16, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 12),
+                if (loading)
+                  const Center(child: CircularProgressIndicator(color: AppTheme.primaryGold))
+                else ...[
+                  Row(
+                    children: [
+                      Expanded(child: _statCard('📋', 'عروض مراجعة', _value(stats['reviewed_offers']), 'نشاط العروض')),
+                      const SizedBox(width: 12),
+                      Expanded(child: _statCard('📅', 'مواعيد معالجة', _value(stats['managed_appointments']), 'نشاط المواعيد')),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(child: _statCard('✅', 'طلبات إتمام', _value(stats['processed_completions']), 'طلبات معالجة')),
+                      const SizedBox(width: 12),
+                      Expanded(child: _statCard('👥', 'الدور', '4', 'موظف مكتب')),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 32),
+                const Text('الوصول السريع', style: TextStyle(color: AppTheme.primaryGold, fontSize: 16, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 12),
+                GridView.count(
+                  crossAxisCount: 2,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 1.6,
+                  children: [
+                    if (PermissionService.has(user, PermissionKeys.reviewOffers))
+                      _navCard(context, Icons.fact_check, 'مراجعة العروض', '/admin/review-offers'),
+                    if (PermissionService.has(user, PermissionKeys.manageAppointments))
+                      _navCard(context, Icons.calendar_month, 'المواعيد', '/admin/appointments'),
+                    if (PermissionService.has(user, PermissionKeys.completionRequests))
+                      _navCard(context, Icons.assignment_turned_in, 'طلبات الإتمام', '/admin/completion-requests'),
+                    if (PermissionService.has(user, PermissionKeys.manageUsers))
+                      _navCard(context, Icons.people, 'المستخدمون', '/admin/users'),
+                    if (PermissionService.has(user, PermissionKeys.mediaReview))
+                      _navCard(context, Icons.photo_library, 'إدارة الوسائط', '/admin/media-review'),
+                    if (PermissionService.has(user, PermissionKeys.photographyManagement))
+                      _navCard(context, Icons.add_a_photo, 'مهام التصوير', '/admin/photography-management'),
+                  ],
+                ),
               ],
             ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(child: _statCard('✅', 'إتمام', '3', 'بانتظار الموافقة')),
-                const SizedBox(width: 12),
-                Expanded(child: _statCard('👥', 'مستخدمون', '2', 'طلبات جديدة')),
-              ],
-            ),
-
-            const SizedBox(height: 32),
-
-            // الوصول السريع
-            const Text('الوصول السريع', style: TextStyle(color: AppTheme.primaryGold, fontSize: 16, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1.6,
-              children: [
-                _navCard(context, Icons.fact_check, 'مراجعة العروض', '/admin/review-offers'),
-                _navCard(context, Icons.calendar_month, 'المواعيد', '/admin/appointments'),
-                _navCard(context, Icons.assignment_turned_in, 'طلبات الإتمام', '/admin/completion-requests'),
-                _navCard(context, Icons.people, 'المستخدمون', '/admin/users'),
-                _navCard(context, Icons.photo_library, 'إدارة الوسائط', '/admin/media-review'),
-                _navCard(context, Icons.add_a_photo, 'مهام التصوير', '/admin/photography-management'),
-              ],
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
+
+  String _value(dynamic value) => (value ?? 0).toString();
 
   Widget _statCard(String emoji, String label, String value, String sub) {
     return Container(

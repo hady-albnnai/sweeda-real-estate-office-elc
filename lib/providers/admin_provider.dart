@@ -172,6 +172,22 @@ class AdminProvider with ChangeNotifier {
   // ═══════════════════════════════════════
   // 🆕 إدارة الموظفين (Employee Management)
   // ═══════════════════════════════════════
+
+  Map<String, dynamic>? _asMap(dynamic value) {
+    if (value is Map) return Map<String, dynamic>.from(value);
+    return null;
+  }
+
+  Future<Map<String, dynamic>> _invokeStaffFunction(
+    String name,
+    Map<String, dynamic> body,
+  ) async {
+    final res = await SupabaseService().client.functions.invoke(name, body: body);
+    final data = _asMap(res.data);
+    if (data == null) return {'success': false, 'error': 'EMPTY_RESPONSE'};
+    return data;
+  }
+
   Future<List<UserModel>> getAllStaffUsers(String adminUid) async {
     try {
       final response = await SupabaseService().client.rpc(
@@ -187,58 +203,108 @@ class AdminProvider with ChangeNotifier {
     }
   }
 
-  // ═══════════════════════════════════════
-  // 🆕 عمليات إدارة الموظفين
-  // ═══════════════════════════════════════
+  Future<Map<String, dynamic>> createStaffUser({
+    required String adminUid,
+    required String fullName,
+    required String phone,
+    String email = '',
+    String username = '',
+    required int role,
+  }) async {
+    try {
+      final data = await _invokeStaffFunction('create-user', {
+        'admin_uid': adminUid,
+        'full_name': fullName,
+        'phone': phone,
+        'email': email,
+        'username': username,
+        'role': role,
+      });
+      if (data['success'] == true) notifyListeners();
+      return data;
+    } catch (e) {
+      return {'success': false, 'error': e.toString()};
+    }
+  }
 
-  /// تغيير دور المستخدم (يستخدم الدالة الموجودة admin_update_user_role)
+  /// تغيير دور الموظف عبر Edge Function فقط.
   Future<bool> changeUserRole(String adminUid, String targetUid, int newRole) async {
     try {
-      await SupabaseService().client.rpc(
-        'admin_update_user_role',
-        params: {
-          'p_admin_uid': adminUid,
-          'p_target_uid': targetUid,
-          'p_role': newRole,
-        },
-      );
-      notifyListeners();
-      return true;
+      final data = await _invokeStaffFunction('update-user-role', {
+        'admin_uid': adminUid,
+        'user_id': targetUid,
+        'role': newRole,
+      });
+      final ok = data['success'] == true;
+      if (ok) notifyListeners();
+      return ok;
     } catch (e) {
       return false;
     }
   }
 
-  /// تفعيل/تعطيل المستخدم (يستخدم admin_set_user_status)
-  Future<bool> toggleUserStatus(String adminUid, String targetUid, int newStatus, {String reason = ''}) async {
+  /// تفعيل/تجميد/حظر الموظف عبر Edge Function فقط.
+  Future<bool> toggleUserStatus(
+    String adminUid,
+    String targetUid,
+    int newStatus, {
+    String reason = '',
+  }) async {
     try {
-      await SupabaseService().client.rpc(
-        'admin_set_user_status',
-        params: {
-          'p_admin_uid': adminUid,
-          'p_target_uid': targetUid,
-          'p_status': newStatus,
-          'p_reason': reason,
-        },
-      );
-      notifyListeners();
-      return true;
+      final data = await _invokeStaffFunction('toggle-user-status', {
+        'admin_uid': adminUid,
+        'user_id': targetUid,
+        'status': newStatus,
+        'reason': reason,
+      });
+      final ok = data['success'] == true;
+      if (ok) notifyListeners();
+      return ok;
     } catch (e) {
       return false;
     }
   }
 
-  /// حذف مستخدم (soft delete)
-  Future<bool> deleteStaffUser(String targetUid) async {
+  Future<Map<String, dynamic>> resetStaffPassword({
+    required String adminUid,
+    required String targetUid,
+  }) async {
     try {
-      await SupabaseService().client.rpc(
-        'soft_delete',
-        params: {'p_table': 'users', 'p_id': targetUid},
-      );
-      notifyListeners();
-      return true;
+      final data = await _invokeStaffFunction('reset-user-password', {
+        'admin_uid': adminUid,
+        'user_id': targetUid,
+      });
+      if (data['success'] == true) notifyListeners();
+      return data;
+    } catch (e) {
+      return {'success': false, 'error': e.toString()};
+    }
+  }
+
+  /// حذف موظف (soft delete) عبر Edge Function فقط.
+  Future<bool> deleteStaffUser(String adminUid, String targetUid) async {
+    try {
+      final data = await _invokeStaffFunction('delete-user', {
+        'admin_uid': adminUid,
+        'user_id': targetUid,
+      });
+      final ok = data['success'] == true;
+      if (ok) notifyListeners();
+      return ok;
     } catch (e) {
       return false;
+    }
+  }
+
+  Future<Map<String, dynamic>> getStaffStatsInternal(String userUid) async {
+    try {
+      final response = await SupabaseService().client.rpc(
+        'get_staff_stats_internal',
+        params: {'p_user_uid': userUid},
+      );
+      return Map<String, dynamic>.from(response as Map);
+    } catch (e) {
+      return {};
     }
   }
 

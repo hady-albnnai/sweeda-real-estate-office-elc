@@ -69,6 +69,8 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final isManager = context.read<AuthProvider>().userModel?.role == 6;
+
     return AlertDialog(
       backgroundColor: AppTheme.surfaceBlack,
       title: Text('تغيير دور ${widget.user.nm}', style: const TextStyle(color: AppTheme.textWhite)),
@@ -83,11 +85,11 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
               labelText: 'الدور الجديد',
               labelStyle: TextStyle(color: AppTheme.textGrey),
             ),
-            items: const [
-              DropdownMenuItem(value: 2, child: Text('مصور')),
-              DropdownMenuItem(value: 3, child: Text('مشرف ميداني')),
-              DropdownMenuItem(value: 4, child: Text('موظف مكتب')),
-              DropdownMenuItem(value: 5, child: Text('نائب مدير')),
+            items: [
+              const DropdownMenuItem(value: 2, child: Text('مصور')),
+              const DropdownMenuItem(value: 3, child: Text('مشرف ميداني')),
+              const DropdownMenuItem(value: 4, child: Text('موظف مكتب')),
+              if (isManager) const DropdownMenuItem(value: 5, child: Text('نائب مدير')),
             ],
             onChanged: (value) {
               setState(() => _selectedRole = value!);

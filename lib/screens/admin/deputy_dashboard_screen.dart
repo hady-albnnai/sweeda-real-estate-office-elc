@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../../core/services/permission_service.dart';
 import '../../core/theme/app_theme.dart';
+import '../../providers/admin_provider.dart';
 import '../../providers/auth_provider.dart';
 
-/// داشبورد نائب المدير (محدود - role = 5)
+/// داشبورد نائب المدير (role = 5)
 class DeputyDashboardScreen extends StatelessWidget {
   const DeputyDashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-    final name = auth.userModel?.nm ?? 'نائب المدير';
+    final user = auth.userModel;
+    final name = user?.nm ?? 'نائب المدير';
 
     return Scaffold(
       backgroundColor: AppTheme.deepBlack,
@@ -25,68 +28,82 @@ class DeputyDashboardScreen extends StatelessWidget {
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.people, color: AppTheme.primaryGold),
-            onPressed: () => context.go('/admin/dashboard'),
-            tooltip: 'إدارة الموظفين',
-          ),
-          IconButton(
-            icon: const Icon(Icons.refresh, color: AppTheme.primaryGold),
-            onPressed: () {},
-          ),
+          if (PermissionService.has(user, PermissionKeys.manageStaff))
+            IconButton(
+              icon: const Icon(Icons.people, color: AppTheme.primaryGold),
+              onPressed: () => context.go('/admin/employee-management'),
+              tooltip: 'إدارة الموظفين',
+            ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // إحصائيات سريعة
-            const Text('نظرة عامة', style: TextStyle(color: AppTheme.primaryGold, fontSize: 16, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            Row(
+      body: FutureBuilder<Map<String, dynamic>>(
+        future: user == null
+            ? Future.value({})
+            : context.read<AdminProvider>().getStaffStatsInternal(user.uid),
+        builder: (context, snapshot) {
+          final stats = snapshot.data ?? {};
+          final loading = snapshot.connectionState == ConnectionState.waiting;
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(child: _statCard('👥', 'الموظفون', '12', 'نشط: 10')),
-                const SizedBox(width: 12),
-                Expanded(child: _statCard('📋', 'العروض', '45', 'قيد المراجعة: 8')),
+                const Text('نظرة عامة', style: TextStyle(color: AppTheme.primaryGold, fontSize: 16, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 12),
+                if (loading)
+                  const Center(child: CircularProgressIndicator(color: AppTheme.primaryGold))
+                else ...[
+                  Row(
+                    children: [
+                      Expanded(child: _statCard('👥', 'المستخدمون', _value(stats['total_users']), 'إجمالي الحسابات')),
+                      const SizedBox(width: 12),
+                      Expanded(child: _statCard('🏠', 'العروض النشطة', _value(stats['active_offers']), 'منشورة حالياً')),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(child: _statCard('💰', 'دفعات معلقة', _value(stats['pending_payments']), 'بانتظار الموافقة')),
+                      const SizedBox(width: 12),
+                      Expanded(child: _statCard('✅', 'توثيقات معلقة', _value(stats['pending_verifications']), 'قيد المراجعة')),
+                    ],
+                  ),
+                ],
+                const SizedBox(height: 32),
+                const Text('الوصول السريع', style: TextStyle(color: AppTheme.primaryGold, fontSize: 16, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 12),
+                GridView.count(
+                  crossAxisCount: 2,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 1.6,
+                  children: [
+                    if (PermissionService.has(user, PermissionKeys.manageStaff))
+                      _navCard(context, Icons.people, 'إدارة الموظفين', '/admin/employee-management'),
+                    if (PermissionService.has(user, PermissionKeys.reviewOffers))
+                      _navCard(context, Icons.fact_check, 'مراجعة العروض', '/admin/review-offers'),
+                    if (PermissionService.has(user, PermissionKeys.manageAppointments))
+                      _navCard(context, Icons.calendar_month, 'المواعيد', '/admin/appointments'),
+                    if (PermissionService.has(user, PermissionKeys.managePayments))
+                      _navCard(context, Icons.payments, 'المدفوعات', '/admin/payments'),
+                    if (PermissionService.has(user, PermissionKeys.completionRequests))
+                      _navCard(context, Icons.assignment_turned_in, 'طلبات الإتمام', '/admin/completion-requests'),
+                    if (PermissionService.has(user, PermissionKeys.reviewVerifications))
+                      _navCard(context, Icons.verified_user, 'طلبات التوثيق', '/admin/review-verifications'),
+                  ],
+                ),
               ],
             ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(child: _statCard('📅', 'المواعيد', '23', 'اليوم: 5')),
-                const SizedBox(width: 12),
-                Expanded(child: _statCard('💰', 'المدفوعات', '7', 'بانتظار الموافقة')),
-              ],
-            ),
-
-            const SizedBox(height: 32),
-
-            // الوصول السريع
-            const Text('الوصول السريع', style: TextStyle(color: AppTheme.primaryGold, fontSize: 16, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1.6,
-              children: [
-                _navCard(context, Icons.people, 'إدارة الموظفين', '/admin/dashboard'),
-                _navCard(context, Icons.fact_check, 'مراجعة العروض', '/admin/review-offers'),
-                _navCard(context, Icons.calendar_month, 'المواعيد', '/admin/appointments'),
-                _navCard(context, Icons.payments, 'المدفوعات', '/admin/payments'),
-                _navCard(context, Icons.assignment_turned_in, 'طلبات الإتمام', '/admin/completion-requests'),
-                _navCard(context, Icons.verified_user, 'طلبات التوثيق', '/admin/review-verifications'),
-              ],
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
+
+  String _value(dynamic value) => (value ?? 0).toString();
 
   Widget _statCard(String emoji, String label, String value, String sub) {
     return Container(
