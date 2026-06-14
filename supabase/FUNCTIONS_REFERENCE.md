@@ -48,7 +48,8 @@
 | ✅ **مُطبّق على السيرفر** | `2026_06_13_locations_and_car_docs.sql` — مناطق (السويداء/صلخد/شهبا) + سند سيارة (carDocTp) + نوع نمرة (plateTp) |
 | ✅ **مُطبّق على السيرفر** | `2026_06_13_fix_property_doc_types.sql` — حذف نمرة/وارد من سند العقار (فقط للسيارات) |
 | ✅ **مُطبّق على السيرفر** | `2026_06_13_fix_notifications_typ_to_tp.sql` — إصلاح notifications.typ → tp في 5 دوال + DROP/CREATE لـ trg_offer_status_changed |
-| ✅ **مُطبّق على السيرفر** | `2026_06_14_admin_employee_management_safe.sql` — دوال إدارة الموظفين: `get_all_staff_users` + `get_staff_stats_internal` (مصححة) | |
+| ✅ **مُطبّق على السيرفر** | `2026_06_14_admin_employee_management_safe.sql` — دوال إدارة الموظفين: `get_all_staff_users` + `get_staff_stats_internal` (مصححة) |
+| ✅ **مُطبّق على السيرفر** | Edge Functions: `create-user` + `reset-user-password` (لإنشاء الموظفين وإعادة تعيين كلمات السر) | |
 | ✅ **مُطبّق على السيرفر** | Storage policies لـ `offer_images` — INSERT/SELECT/UPDATE/DELETE مفتوحة |
 | 📝 **جاهز للتطبيق (لم يُنفّذ بعد)** | `2026_06_13_auth_username_password.sql` — اسم مستخدم `usr` + كلمة مرور مشفّرة `pwd` + 6 RPCs (`register_password`, `login_with_password`, `reset_password_with_otp`, `change_password_internal`, `check_username_available`, `get_staff_stats_internal`) + تحديث `users_public` (إضافة `usr`) + تحديث `get_user_full_by_id` (إضافة `usr` + إخفاء `pwd` خلف flag) |
 
