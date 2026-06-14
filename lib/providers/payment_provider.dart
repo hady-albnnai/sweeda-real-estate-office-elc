@@ -1,13 +1,29 @@
 import 'package:flutter/foundation.dart';
 import '../models/payment_model.dart';
 import '../core/network/supabase_service.dart';
+import '../core/utils/error_utils.dart';
 
 class PaymentProvider with ChangeNotifier {
   List<PaymentModel> _payments = [];
   bool _isLoading = false;
+  String? _error;
 
   List<PaymentModel> get payments => _payments;
   bool get isLoading => _isLoading;
+  String? get error => _error;
+
+  void clearError() {
+    _error = null;
+    notifyListeners();
+  }
+
+  void _setError(Object? error) {
+    _error = ErrorUtils.arabicMessage(error);
+  }
+
+  void _clearError() {
+    _error = null;
+  }
 
   Future<bool> makePayment(PaymentModel payment) async {
     try {
@@ -22,6 +38,8 @@ class PaymentProvider with ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
+      _setError(e);
+      notifyListeners();
       return false;
     }
   }
@@ -30,6 +48,7 @@ class PaymentProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
+      _clearError();
       final response = await SupabaseService().client.rpc(
         'get_user_payments_internal',
         params: {'p_user_uid': userId},
@@ -38,7 +57,9 @@ class PaymentProvider with ChangeNotifier {
           .map((d) => PaymentModel.fromSupabase(
               Map<String, dynamic>.from(d), d['id'] as String))
           .toList();
-    } catch (e) {}
+    } catch (e) {
+      _setError(e);
+    }
     _isLoading = false;
     notifyListeners();
   }

@@ -231,7 +231,7 @@ class AppResult<T> {
 - [x] البدء بالمسارات الحساسة في `AuthProvider` و`AdminProvider`.
 - [x] عدم ابتلاع أخطاء Edge Functions داخل مسارات إدارة الموظفين/الصلاحيات.
 - [x] عرض رسائل أوضح عبر `AdminProvider.error` و`AuthProvider.lastError`.
-- [ ] توسيع النمط لاحقاً إلى PaymentProvider وOfferProvider.
+- [x] توسيع النمط إلى `PaymentProvider` و`OfferProvider`.
 - [ ] لاحقاً: ربط Crashlytics أو جدول `client_errors`.
 
 ## Definition of Done
