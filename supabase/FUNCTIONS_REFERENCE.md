@@ -739,11 +739,11 @@ curl -X POST 'https://<project>.supabase.co/functions/v1/verify-whatsapp-otp' \
 
 | العنصر | الغرض | الحالة |
 |---|---|---|
-| `staff_sessions` | تخزين جلسات الموظفين بهاش للتوكن وانتهاء صلاحية | 📝 جاهز للتطبيق |
-| `_issue_staff_session` | إصدار توكن بعد تسجيل دخول كلمة مرور لموظف داخلي | 📝 جاهز للتطبيق |
-| `validate_staff_session` | التحقق من `staff_session_token` داخل Edge Functions | 📝 جاهز للتطبيق |
-| `revoke_staff_session` | إلغاء جلسة حالية عند تسجيل الخروج | 📝 جاهز للتطبيق |
-| `revoke_all_staff_sessions` | إلغاء كل جلسات موظف | 📝 جاهز للتطبيق |
+| `staff_sessions` | تخزين جلسات الموظفين بهاش للتوكن وانتهاء صلاحية | ✅ مطبق على السيرفر |
+| `_issue_staff_session` | إصدار توكن بعد تسجيل دخول كلمة مرور لموظف داخلي | ✅ مطبق على السيرفر |
+| `validate_staff_session` | التحقق من `staff_session_token` داخل Edge Functions | ✅ مطبق على السيرفر |
+| `revoke_staff_session` | إلغاء جلسة حالية عند تسجيل الخروج | ✅ مطبق على السيرفر |
+| `revoke_all_staff_sessions` | إلغاء كل جلسات موظف | ✅ مطبق على السيرفر |
 
 ### أثرها على Edge Functions
 
@@ -760,7 +760,7 @@ curl -X POST 'https://<project>.supabase.co/functions/v1/verify-whatsapp-otp' \
 - `reset-user-password`
 - `delete-user`
 
-> قبل تطبيق migration ونشر الدوال الجديدة، لا تعتمد هذه الحالة كمنشورة.
+> تم تطبيق migration على السيرفر والتحقق من إصدار جلسة للمدير. تم أيضاً تطبيق hotfix لمسار `pgcrypto` عبر `search_path = public, extensions`.
 
 ## 🔐 دوال المصادقة والتحقق (3)
 

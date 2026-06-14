@@ -38,7 +38,7 @@ CREATE OR REPLACE FUNCTION _issue_staff_session(
 ) RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, extensions
 AS $$
 DECLARE
   v_role INT;
@@ -100,7 +100,7 @@ CREATE OR REPLACE FUNCTION validate_staff_session(
 ) RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, extensions
 AS $$
 DECLARE
   v_session RECORD;
@@ -167,7 +167,7 @@ CREATE OR REPLACE FUNCTION revoke_staff_session(
 ) RETURNS BOOLEAN
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, extensions
 AS $$
 DECLARE
   v_session RECORD;
@@ -200,7 +200,7 @@ CREATE OR REPLACE FUNCTION revoke_all_staff_sessions(
 ) RETURNS INT
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, extensions
 AS $$
 DECLARE
   v_count INT;
@@ -225,7 +225,7 @@ CREATE OR REPLACE FUNCTION login_with_password(
 ) RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, extensions
 AS $$
 DECLARE
   v_user RECORD;

@@ -147,6 +147,7 @@ CREATE OR REPLACE FUNCTION admin_create_staff_user(
 ) RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, extensions
 AS $$
 DECLARE
   v_admin_role INT;
@@ -334,6 +335,7 @@ CREATE OR REPLACE FUNCTION admin_reset_staff_password(
 ) RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public, extensions
 AS $$
 DECLARE
   v_admin_role INT;
