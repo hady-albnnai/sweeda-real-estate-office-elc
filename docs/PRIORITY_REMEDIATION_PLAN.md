@@ -29,7 +29,7 @@
 |---|---|---|---|
 | P0 | تثبيت خط الأساس | توثيق الوضع الحالي وعدم كسر ما تم نشره | جاهز للبدء |
 | P1 | أمان الإدارة والمصادقة | إلغاء الثقة بـ `admin_uid` وحده | مطبق على السيرفر — بانتظار اختبار عمليات Edge Functions |
-| P2 | إغلاق RPCs الخطرة | تقليل صلاحيات `anon/authenticated` للدوال الحساسة | قيد التنفيذ: كود الإغلاق جاهز للتطبيق |
+| P2 | إغلاق RPCs الخطرة | تقليل صلاحيات `anon/authenticated` للدوال الحساسة | مطبّق على السيرفر — بانتظار اختبار تكاملي |
 | P3 | معالجة الأخطاء | منع ابتلاع الأخطاء بصمت | مهم جداً |
 | P4 | تفكيك AdminProvider | فصل الخدمات والمسؤوليات | مهم للصيانة |
 | P5 | إحصائيات ودوال مجمعة | تقليل تحميل القوائم الكبيرة | أداء وقابلية توسع |
@@ -185,8 +185,8 @@
 - [x] إضافة Edge Function `update-user-permissions` لصلاحيات المستخدمين.
 - [x] تجهيز migration لإغلاق EXECUTE عن `anon/authenticated` للدوال الحساسة القديمة.
 - [x] توثيق الحالة في `FUNCTIONS_REFERENCE.md`.
-- [ ] تطبيق migration `2026_06_15_lock_legacy_admin_rpcs.sql` على السيرفر.
-- [ ] نشر Edge Function `update-user-permissions` وإعادة نشر `update-user-role` و`toggle-user-status`.
+- [x] تطبيق migration `2026_06_15_lock_legacy_admin_rpcs.sql` على السيرفر.
+- [x] نشر Edge Function `update-user-permissions` وإعادة نشر `update-user-role` و`toggle-user-status`.
 
 ## Definition of Done
 
