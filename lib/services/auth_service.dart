@@ -169,12 +169,26 @@ class AuthService {
 
   Future<void> signOut() async {
     try {
-      await _auth.signOut();
       final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getString('user_id');
+      final staffToken = prefs.getString('staff_session_token');
+
+      if (userId != null && staffToken != null && staffToken.isNotEmpty) {
+        try {
+          await _client.rpc('revoke_staff_session', params: {
+            'p_user_uid': userId,
+            'p_token': staffToken,
+          });
+        } catch (e) {}
+      }
+
+      await _auth.signOut();
       await prefs.remove('user_id');
       await prefs.remove('user_phone');
       await prefs.remove('user_email');
       await prefs.remove('auth_channel');
+      await prefs.remove('staff_session_token');
+      await prefs.remove('staff_session_expires_at');
     } catch (e) {}
   }
 

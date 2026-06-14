@@ -219,11 +219,11 @@ SELECT * FROM cron.job_run_details ORDER BY start_time DESC LIMIT 10;
 | 1 | `send-whatsapp-otp` 🆕 | يولّد OTP ويرسله عبر Meta WhatsApp Cloud API | `{ phone: "+963..." }` | `{ success, messageId?, devMode?, otp? }` | ⚠️ مكتوب — لم يُنشر |
 | 2 | `verify-whatsapp-otp` 🆕 | يتحقق + ينشئ user + يصدر session | `{ phone, code }` | `{ success, userId, isNew, session: { token_hash, ... } }` | ⚠️ مكتوب — لم يُنشر |
 | 3 | `send-push-notification` 🆕🆕🆕🆕🆕 | يرسل FCM push لكل أجهزة المستخدم (HTTP v1 API) | `{ uid, title, body, data? }` | `{ success, sent, failed, total }` | ⚠️ مكتوب — لم يُنشر |
-| 4 | `create-user` 🆕 | إنشاء موظف داخلي من الإدارة عبر `users.usr/pwd` | `{ admin_uid, full_name, phone, email?, username?, role }` | `{ success, user_id, new_password }` | ✅ منشور |
-| 5 | `update-user-role` 🆕 | تغيير دور موظف داخلي | `{ admin_uid, user_id, role }` | `{ success }` | ✅ منشور |
-| 6 | `toggle-user-status` 🆕 | تفعيل/تجميد/حظر موظف | `{ admin_uid, user_id, status, reason? }` | `{ success }` | ✅ منشور |
-| 7 | `reset-user-password` 🆕 | توليد كلمة سر جديدة وتحديث `users.pwd` | `{ admin_uid, user_id }` | `{ success, new_password }` | ✅ منشور |
-| 8 | `delete-user` 🆕 | حذف منطقي لموظف داخلي | `{ admin_uid, user_id }` | `{ success }` | ✅ منشور |
+| 4 | `create-user` 🆕 | إنشاء موظف داخلي من الإدارة عبر `users.usr/pwd` | `{ admin_uid, staff_session_token?, full_name, phone, email?, username?, role }` | `{ success, user_id, new_password }` | ✅ منشور |
+| 5 | `update-user-role` 🆕 | تغيير دور موظف داخلي | `{ admin_uid, staff_session_token?, user_id, role }` | `{ success }` | ✅ منشور |
+| 6 | `toggle-user-status` 🆕 | تفعيل/تجميد/حظر موظف | `{ admin_uid, staff_session_token?, user_id, status, reason? }` | `{ success }` | ✅ منشور |
+| 7 | `reset-user-password` 🆕 | توليد كلمة سر جديدة وتحديث `users.pwd` | `{ admin_uid, staff_session_token?, user_id }` | `{ success, new_password }` | ✅ منشور |
+| 8 | `delete-user` 🆕 | حذف منطقي لموظف داخلي | `{ admin_uid, staff_session_token?, user_id }` | `{ success }` | ✅ منشور |
 
 > ⚠️ **`generate_otp` / `verify_otp` القديمة** ما زالت موجودة للتوافق الخلفي فقط — استخدم النسخة V2 في الكود الجديد.
 > 📖 لخطوات تفعيل WhatsApp + Email Magic Link: راجع `docs/AUTH_SETUP.md`
@@ -728,6 +728,39 @@ curl -X POST 'https://<project>.supabase.co/functions/v1/verify-whatsapp-otp' \
 - الأدوار المسموحة لإنشاء/تعديل الموظفين حالياً: `2`, `3`, `4`, `5` حسب صلاحية المنفذ.
 
 ---
+
+---
+
+## 🔐 Staff Sessions — حماية العمليات الإدارية الحساسة
+
+تمت إضافة طبقة جلسات داخلية للموظفين لمنع الاعتماد على `admin_uid` وحده في Edge Functions الإدارية.
+
+### الجداول والدوال
+
+| العنصر | الغرض | الحالة |
+|---|---|---|
+| `staff_sessions` | تخزين جلسات الموظفين بهاش للتوكن وانتهاء صلاحية | 📝 جاهز للتطبيق |
+| `_issue_staff_session` | إصدار توكن بعد تسجيل دخول كلمة مرور لموظف داخلي | 📝 جاهز للتطبيق |
+| `validate_staff_session` | التحقق من `staff_session_token` داخل Edge Functions | 📝 جاهز للتطبيق |
+| `revoke_staff_session` | إلغاء جلسة حالية عند تسجيل الخروج | 📝 جاهز للتطبيق |
+| `revoke_all_staff_sessions` | إلغاء كل جلسات موظف | 📝 جاهز للتطبيق |
+
+### أثرها على Edge Functions
+
+الدوال الإدارية التالية أصبحت تتطلب أحد مسارين للتحقق:
+
+1. جلسة Supabase Auth حقيقية تطابق المستخدم الإداري.
+2. أو `staff_session_token` صالح صادر من `login_with_password`.
+
+الدوال المعنية:
+
+- `create-user`
+- `update-user-role`
+- `toggle-user-status`
+- `reset-user-password`
+- `delete-user`
+
+> قبل تطبيق migration ونشر الدوال الجديدة، لا تعتمد هذه الحالة كمنشورة.
 
 ## 🔐 دوال المصادقة والتحقق (3)
 
