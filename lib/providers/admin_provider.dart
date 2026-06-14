@@ -188,6 +188,61 @@ class AdminProvider with ChangeNotifier {
   }
 
   // ═══════════════════════════════════════
+  // 🆕 عمليات إدارة الموظفين
+  // ═══════════════════════════════════════
+
+  /// تغيير دور المستخدم (يستخدم الدالة الموجودة admin_update_user_role)
+  Future<bool> changeUserRole(String adminUid, String targetUid, int newRole) async {
+    try {
+      await SupabaseService().client.rpc(
+        'admin_update_user_role',
+        params: {
+          'p_admin_uid': adminUid,
+          'p_target_uid': targetUid,
+          'p_role': newRole,
+        },
+      );
+      notifyListeners();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// تفعيل/تعطيل المستخدم (يستخدم admin_set_user_status)
+  Future<bool> toggleUserStatus(String adminUid, String targetUid, int newStatus, {String reason = ''}) async {
+    try {
+      await SupabaseService().client.rpc(
+        'admin_set_user_status',
+        params: {
+          'p_admin_uid': adminUid,
+          'p_target_uid': targetUid,
+          'p_status': newStatus,
+          'p_reason': reason,
+        },
+      );
+      notifyListeners();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// حذف مستخدم (soft delete)
+  Future<bool> deleteStaffUser(String targetUid) async {
+    try {
+      await SupabaseService().client.rpc(
+        'soft_delete',
+        params: {'p_table': 'users', 'p_id': targetUid},
+      );
+      notifyListeners();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // ═══════════════════════════════════════
   // 3) المواعيد (إدارة)
   // ═══════════════════════════════════════
   Future<List<RequestModel>> getAllRequests(String adminUid) async {
