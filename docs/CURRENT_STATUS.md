@@ -17,7 +17,7 @@
 | توحيد الأخطاء الأولي | مطبق على المسارات الحساسة الأساسية |
 | تفكيك `AdminProvider` | الخدمات الأساسية مستخرجة |
 | إحصائيات لوحة الإدارة | `get_admin_dashboard_stats` مطبقة ومتحقق منها |
-| CI | مخطط — يحتاج توكن GitHub بصلاحية `workflow` لإضافة GitHub Actions |
+| CI | مضاف عبر GitHub Actions: `flutter analyze` و`flutter test` عند push/PR على `main` |
 | SQL verification | تمت إضافة وتشغيل `supabase/tests/admin_security_verification.sql` بنجاح — لا توجد grants خطرة والجلسة الوهمية تفشل كما يجب |
 
 ---
