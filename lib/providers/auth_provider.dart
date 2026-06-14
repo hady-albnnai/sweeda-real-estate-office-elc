@@ -5,6 +5,7 @@ import '../core/network/supabase_service.dart';
 import '../core/constants/db_constants.dart';
 import '../core/services/business_service.dart';
 import '../core/services/device_service.dart';
+import '../core/utils/error_utils.dart';
 import '../services/auth_service.dart';
 import '../services/fcm_service.dart';
 
@@ -99,7 +100,7 @@ class AuthProvider with ChangeNotifier {
       } else if (msg.contains('USER_FROZEN')) {
         _lastError = 'حسابك مجمّد مؤقتاً';
       } else {
-        _lastError = 'فشل تسجيل الدخول';
+        _lastError = ErrorUtils.arabicMessage(e);
       }
       return false;
     }
@@ -125,7 +126,9 @@ class AuthProvider with ChangeNotifier {
         return true;
       }
       return false;
-    } catch (e) {return false;
+    } catch (e) {
+      _lastError = ErrorUtils.arabicMessage(e);
+      return false;
     }
   }
 
@@ -142,7 +145,9 @@ class AuthProvider with ChangeNotifier {
         return true;
       }
       return false;
-    } catch (e) {return false;
+    } catch (e) {
+      _lastError = ErrorUtils.arabicMessage(e);
+      return false;
     }
   }
 
@@ -157,7 +162,9 @@ class AuthProvider with ChangeNotifier {
       final result = await AuthService().sendEmailMagicLink(email);
       notifyListeners();
       return result['success'] == true;
-    } catch (e) {return false;
+    } catch (e) {
+      _lastError = ErrorUtils.arabicMessage(e);
+      return false;
     }
   }
 

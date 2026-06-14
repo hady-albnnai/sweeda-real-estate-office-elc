@@ -30,7 +30,7 @@
 | P0 | تثبيت خط الأساس | توثيق الوضع الحالي وعدم كسر ما تم نشره | جاهز للبدء |
 | P1 | أمان الإدارة والمصادقة | إلغاء الثقة بـ `admin_uid` وحده | مطبق على السيرفر — بانتظار اختبار عمليات Edge Functions |
 | P2 | إغلاق RPCs الخطرة | تقليل صلاحيات `anon/authenticated` للدوال الحساسة | مطبّق على السيرفر — بانتظار اختبار تكاملي |
-| P3 | معالجة الأخطاء | منع ابتلاع الأخطاء بصمت | مهم جداً |
+| P3 | معالجة الأخطاء | منع ابتلاع الأخطاء بصمت | قيد التنفيذ: أساس AppResult/ErrorUtils مضاف |
 | P4 | تفكيك AdminProvider | فصل الخدمات والمسؤوليات | مهم للصيانة |
 | P5 | إحصائيات ودوال مجمعة | تقليل تحميل القوائم الكبيرة | أداء وقابلية توسع |
 | P6 | اختبارات وCI | تشغيل تحليل واختبارات تلقائية | قبل إعلان الاستقرار |
@@ -226,15 +226,12 @@ class AppResult<T> {
 
 ## المهام
 
-- [ ] إنشاء `lib/core/utils/app_result.dart`.
-- [ ] إنشاء `lib/core/services/error_service.dart` أو logger بسيط.
-- [ ] البدء بالمسارات الحساسة:
-  - Auth
-  - AdminProvider
-  - PaymentProvider
-  - OfferProvider
-- [ ] عدم ابتلاع أخطاء Edge Functions.
-- [ ] عرض رسائل واضحة للمستخدم.
+- [x] إنشاء `lib/core/utils/app_result.dart`.
+- [x] إنشاء `lib/core/utils/error_utils.dart` لتطبيع رسائل الأخطاء.
+- [x] البدء بالمسارات الحساسة في `AuthProvider` و`AdminProvider`.
+- [x] عدم ابتلاع أخطاء Edge Functions داخل مسارات إدارة الموظفين/الصلاحيات.
+- [x] عرض رسائل أوضح عبر `AdminProvider.error` و`AuthProvider.lastError`.
+- [ ] توسيع النمط لاحقاً إلى PaymentProvider وOfferProvider.
 - [ ] لاحقاً: ربط Crashlytics أو جدول `client_errors`.
 
 ## Definition of Done

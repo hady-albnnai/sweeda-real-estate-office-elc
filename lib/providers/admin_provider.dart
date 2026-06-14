@@ -9,6 +9,7 @@ import '../models/report_model.dart';
 import '../models/request_model.dart';
 import '../core/network/supabase_service.dart';
 import '../core/constants/db_constants.dart';
+import '../core/utils/error_utils.dart';
 
 /// Provider لوحة الإدارة (role >= UserRole.minAdmin)
 /// يجمع كل عمليات الإدارة: العروض، المستخدمون، المواعيد، الصفقات،
@@ -19,6 +20,20 @@ class AdminProvider with ChangeNotifier {
 
   bool get isLoading => _isLoading;
   String? get error => _error;
+
+  void clearError() {
+    _error = null;
+    notifyListeners();
+  }
+
+  void _setError(Object? error) {
+    _error = ErrorUtils.arabicMessage(error);
+    notifyListeners();
+  }
+
+  void _clearErrorSilently() {
+    _error = null;
+  }
 
   void _setLoading(bool v) {
     _isLoading = v;
@@ -111,7 +126,9 @@ class AdminProvider with ChangeNotifier {
       final ok = data['success'] == true;
       if (ok) notifyListeners();
       return ok;
-    } catch (e) {return false;
+    } catch (e) {
+      _setError(e);
+      return false;
     }
   }
 
@@ -127,7 +144,9 @@ class AdminProvider with ChangeNotifier {
       final ok = data['success'] == true;
       if (ok) notifyListeners();
       return ok;
-    } catch (e) {return false;
+    } catch (e) {
+      _setError(e);
+      return false;
     }
   }
 
@@ -151,7 +170,9 @@ class AdminProvider with ChangeNotifier {
       final ok = data['success'] == true;
       if (ok) notifyListeners();
       return ok;
-    } catch (e) {return false;
+    } catch (e) {
+      _setError(e);
+      return false;
     }
   }
 
@@ -168,16 +189,29 @@ class AdminProvider with ChangeNotifier {
     String name,
     Map<String, dynamic> body,
   ) async {
-    final prefs = await SharedPreferences.getInstance();
-    final sessionToken = prefs.getString('staff_session_token');
-    if (sessionToken != null && sessionToken.isNotEmpty) {
-      body['staff_session_token'] = sessionToken;
-    }
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final sessionToken = prefs.getString('staff_session_token');
+      if (sessionToken != null && sessionToken.isNotEmpty) {
+        body['staff_session_token'] = sessionToken;
+      }
 
-    final res = await SupabaseService().client.functions.invoke(name, body: body);
-    final data = _asMap(res.data);
-    if (data == null) return {'success': false, 'error': 'EMPTY_RESPONSE'};
-    return data;
+      final res = await SupabaseService().client.functions.invoke(name, body: body);
+      final data = _asMap(res.data);
+      if (data == null) {
+        _setError('EMPTY_RESPONSE');
+        return {'success': false, 'error': 'EMPTY_RESPONSE'};
+      }
+      if (data['success'] != true) {
+        _setError(data['error'] ?? 'UNKNOWN_ERROR');
+      } else {
+        _clearErrorSilently();
+      }
+      return data;
+    } catch (e) {
+      _setError(e);
+      return {'success': false, 'error': ErrorUtils.normalize(e)};
+    }
   }
 
   Future<List<UserModel>> getAllStaffUsers(String adminUid) async {
@@ -191,6 +225,7 @@ class AdminProvider with ChangeNotifier {
               Map<String, dynamic>.from(d), d['id'] as String))
           .toList();
     } catch (e) {
+      _setError(e);
       return [];
     }
   }
@@ -215,7 +250,8 @@ class AdminProvider with ChangeNotifier {
       if (data['success'] == true) notifyListeners();
       return data;
     } catch (e) {
-      return {'success': false, 'error': e.toString()};
+      _setError(e);
+      return {'success': false, 'error': ErrorUtils.normalize(e)};
     }
   }
 
@@ -231,6 +267,7 @@ class AdminProvider with ChangeNotifier {
       if (ok) notifyListeners();
       return ok;
     } catch (e) {
+      _setError(e);
       return false;
     }
   }
@@ -253,6 +290,7 @@ class AdminProvider with ChangeNotifier {
       if (ok) notifyListeners();
       return ok;
     } catch (e) {
+      _setError(e);
       return false;
     }
   }
@@ -269,7 +307,8 @@ class AdminProvider with ChangeNotifier {
       if (data['success'] == true) notifyListeners();
       return data;
     } catch (e) {
-      return {'success': false, 'error': e.toString()};
+      _setError(e);
+      return {'success': false, 'error': ErrorUtils.normalize(e)};
     }
   }
 
@@ -284,6 +323,7 @@ class AdminProvider with ChangeNotifier {
       if (ok) notifyListeners();
       return ok;
     } catch (e) {
+      _setError(e);
       return false;
     }
   }
@@ -296,6 +336,7 @@ class AdminProvider with ChangeNotifier {
       );
       return Map<String, dynamic>.from(response as Map);
     } catch (e) {
+      _setError(e);
       return {};
     }
   }
