@@ -81,14 +81,14 @@ serve(async (req) => {
     );
 
     const body = await req.json();
-    const actor = await validateActor(req, supabaseAdmin, body, 5);
+    const actor = await validateActor(req, supabaseAdmin, body, 4);
     if (!actor.ok) return actor.response;
     const adminUid = actor.adminUid;
     const userId = body.user_id ?? body.userId;
     const status = Number(body.status ?? body.sts ?? (body.is_active === true || body.is_active === 1 ? 0 : 1));
     const reason = body.reason ?? "";
 
-    const { data, error } = await supabaseAdmin.rpc("admin_toggle_staff_status", {
+    const { data, error } = await supabaseAdmin.rpc("admin_set_user_status", {
       p_admin_uid: adminUid,
       p_target_uid: userId,
       p_status: status,
