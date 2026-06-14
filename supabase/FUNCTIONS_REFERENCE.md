@@ -1,7 +1,7 @@
 # 📚 مرجع دوال Supabase (RPC + Edge Functions)
 
-> **مشروع:** عقارات السويداء  
-> **آخر تحديث:** 2026-06-11 (محدّث ليتطابق مع حالة السيرفر بعد تنفيذ إصلاحات المنطق الأساسية)  
+> **مشروع:** عقارات السويداء
+> **آخر تحديث:** 2026-06-15 (محدّث بعد تطبيق RPCs إدارة الموظفين على السيرفر — Edge Functions تحتاج إعادة نشر من آخر كود)
 > **المصدر:** `supabase/setup.sql` + Migrations + Edge Functions
 
 ---
@@ -48,8 +48,8 @@
 | ✅ **مُطبّق على السيرفر** | `2026_06_13_locations_and_car_docs.sql` — مناطق (السويداء/صلخد/شهبا) + سند سيارة (carDocTp) + نوع نمرة (plateTp) |
 | ✅ **مُطبّق على السيرفر** | `2026_06_13_fix_property_doc_types.sql` — حذف نمرة/وارد من سند العقار (فقط للسيارات) |
 | ✅ **مُطبّق على السيرفر** | `2026_06_13_fix_notifications_typ_to_tp.sql` — إصلاح notifications.typ → tp في 5 دوال + DROP/CREATE لـ trg_offer_status_changed |
-| ✅ **مُطبّق على السيرفر** | `2026_06_14_admin_employee_management_safe.sql` — دوال إدارة الموظفين: `get_all_staff_users` + `get_staff_stats_internal` (مصححة) |
-| ✅ **مُطبّق على السيرفر** | Edge Functions: `create-user` + `reset-user-password` (لإنشاء الموظفين وإعادة تعيين كلمات السر) | |
+| ✅ **مُطبّق على السيرفر** | `2026_06_15_admin_employee_management_final.sql` — دوال إدارة الموظفين النهائية: `get_all_staff_users`, `admin_create_staff_user`, `admin_update_staff_role`, `admin_toggle_staff_status`, `admin_reset_staff_password`, `admin_delete_staff_user` |
+| 📝 **مكتوب وجاهز لإعادة النشر** | Edge Functions لإدارة الموظفين: `create-user`, `update-user-role`, `toggle-user-status`, `reset-user-password`, `delete-user` — يلزم pull ثم deploy للخمس دوال |
 | ✅ **مُطبّق على السيرفر** | Storage policies لـ `offer_images` — INSERT/SELECT/UPDATE/DELETE مفتوحة |
 | 📝 **جاهز للتطبيق (لم يُنفّذ بعد)** | `2026_06_13_auth_username_password.sql` — اسم مستخدم `usr` + كلمة مرور مشفّرة `pwd` + 6 RPCs (`register_password`, `login_with_password`, `reset_password_with_otp`, `change_password_internal`, `check_username_available`, `get_staff_stats_internal`) + تحديث `users_public` (إضافة `usr`) + تحديث `get_user_full_by_id` (إضافة `usr` + إخفاء `pwd` خلف flag) |
 
@@ -77,7 +77,12 @@
 | 12 | `change_password_internal` 🆕 | `p_user_uid UUID, p_old_password TEXT, p_new_password TEXT` | `BOOLEAN` | ✅ |
 | 13 | `check_username_available` 🆕 | `p_username TEXT` | `BOOLEAN` | ✅ |
 | 14 | `get_staff_stats_internal` 🆕 | `p_user_uid UUID` | `JSONB` | ✅ |
-| 80 | `get_all_staff_users` 🆕🆕 | `p_admin_uid UUID` | `TABLE(...)` | ✅ |
+| 80 | `get_all_staff_users` 🆕🆕 | `p_admin_uid UUID` | `SETOF JSONB` | ✅ |
+| 81 | `admin_create_staff_user` 🆕 | `p_admin_uid, p_full_name, p_phone, p_email, p_username, p_password, p_role` | `JSONB` | ✅ |
+| 82 | `admin_update_staff_role` 🆕 | `p_admin_uid, p_target_uid, p_role` | `JSONB` | ✅ |
+| 83 | `admin_toggle_staff_status` 🆕 | `p_admin_uid, p_target_uid, p_status, p_reason` | `JSONB` | ✅ |
+| 84 | `admin_reset_staff_password` 🆕 | `p_admin_uid, p_target_uid, p_new_password` | `JSONB` | ✅ |
+| 85 | `admin_delete_staff_user` 🆕 | `p_admin_uid, p_target_uid` | `JSONB` | ✅ |
 | **— مستخدمون ونقاط —** | | | | |
 | 9 | `update_user_badge` | `p_uid UUID` | `VOID` | ❌ |
 | 10 | `add_points` | `p_uid, p_pts` | `VOID` | ❌ |
@@ -214,8 +219,13 @@ SELECT * FROM cron.job_run_details ORDER BY start_time DESC LIMIT 10;
 | 1 | `send-whatsapp-otp` 🆕 | يولّد OTP ويرسله عبر Meta WhatsApp Cloud API | `{ phone: "+963..." }` | `{ success, messageId?, devMode?, otp? }` | ⚠️ مكتوب — لم يُنشر |
 | 2 | `verify-whatsapp-otp` 🆕 | يتحقق + ينشئ user + يصدر session | `{ phone, code }` | `{ success, userId, isNew, session: { token_hash, ... } }` | ⚠️ مكتوب — لم يُنشر |
 | 3 | `send-push-notification` 🆕🆕🆕🆕🆕 | يرسل FCM push لكل أجهزة المستخدم (HTTP v1 API) | `{ uid, title, body, data? }` | `{ success, sent, failed, total }` | ⚠️ مكتوب — لم يُنشر |
+| 4 | `create-user` 🆕 | إنشاء موظف داخلي من الإدارة عبر `users.usr/pwd` | `{ admin_uid, full_name, phone, email?, username?, role }` | `{ success, user_id, new_password }` | 📝 مكتوب — جاهز للنشر |
+| 5 | `update-user-role` 🆕 | تغيير دور موظف داخلي | `{ admin_uid, user_id, role }` | `{ success }` | 📝 مكتوب — جاهز للنشر |
+| 6 | `toggle-user-status` 🆕 | تفعيل/تجميد/حظر موظف | `{ admin_uid, user_id, status, reason? }` | `{ success }` | 📝 مكتوب — جاهز للنشر |
+| 7 | `reset-user-password` 🆕 | توليد كلمة سر جديدة وتحديث `users.pwd` | `{ admin_uid, user_id }` | `{ success, new_password }` | 📝 مكتوب — جاهز للنشر |
+| 8 | `delete-user` 🆕 | حذف منطقي لموظف داخلي | `{ admin_uid, user_id }` | `{ success }` | 📝 مكتوب — جاهز للنشر |
 
-> ⚠️ **`generate_otp` / `verify_otp` القديمة** ما زالت موجودة للتوافق الخلفي فقط — استخدم النسخة V2 في الكود الجديد.  
+> ⚠️ **`generate_otp` / `verify_otp` القديمة** ما زالت موجودة للتوافق الخلفي فقط — استخدم النسخة V2 في الكود الجديد.
 > 📖 لخطوات تفعيل WhatsApp + Email Magic Link: راجع `docs/AUTH_SETUP.md`
 
 ---
@@ -426,7 +436,7 @@ final code = await client.rpc('generate_otp_v2',
 
 > ⚠️ **مهم (إصلاح 2026-06-08):** كان عمود `phone` لا يزال `NOT NULL`، مما يفشل INSERT.
 > الحل: شغّل migration `2026_06_08_fix_otp_phone_nullable.sql` الذي يجعل `phone` nullable
-> ويُضيف CHECK constraint أن `phone OR identifier` على الأقل موجود.  
+> ويُضيف CHECK constraint أن `phone OR identifier` على الأقل موجود.
 **استثناء:** يرمي `Too many OTP requests` لو تجاوز الحد
 
 ---
@@ -593,6 +603,132 @@ curl -X POST 'https://<project>.supabase.co/functions/v1/verify-whatsapp-otp' \
 
 ---
 
+## 🧑‍💼 Edge Functions — إدارة الموظفين
+
+> هذه الدوال لا تنفذ المنطق مباشرة من العميل. كل دالة تستدعي RPC آمنة من migration:
+> `2026_06_15_admin_employee_management_final.sql`.
+>
+> الدوال تتحقق من صلاحية المدير/نائب المدير عبر `admin_uid` داخل RPC، وتمنع تعديل أو حذف المدير الرئيسي `role=6`.
+
+### Secrets المطلوبة
+
+تحتاج الدوال التالية إلى Service Role داخل Supabase Edge Runtime:
+
+- `SUPABASE_URL` أو `PROJECT_URL`
+- `SUPABASE_SERVICE_ROLE_KEY` أو `SERVICE_ROLE_KEY`
+
+### 1. `create-user`
+
+ينشئ موظفاً داخلياً في جدول `users`، ويولد كلمة سر جديدة متوافقة مع نظام `users.pwd`.
+
+```json
+{
+  "admin_uid": "uuid-of-manager-or-deputy",
+  "full_name": "اسم الموظف",
+  "phone": "09xxxxxxxx",
+  "email": "optional@example.com",
+  "username": "office_1",
+  "role": 4
+}
+```
+
+المخرج:
+
+```json
+{
+  "success": true,
+  "user_id": "new-user-uuid",
+  "new_password": "generated-password"
+}
+```
+
+### 2. `update-user-role`
+
+```json
+{
+  "admin_uid": "uuid-of-manager-or-deputy",
+  "user_id": "target-user-uuid",
+  "role": 3
+}
+```
+
+المخرج:
+
+```json
+{ "success": true }
+```
+
+### 3. `toggle-user-status`
+
+حالات `users.sts`:
+
+| القيمة | المعنى |
+|---|---|
+| `0` | نشط |
+| `1` | مجمد |
+| `2` | محظور |
+
+```json
+{
+  "admin_uid": "uuid-of-manager-or-deputy",
+  "user_id": "target-user-uuid",
+  "status": 1,
+  "reason": "سبب اختياري"
+}
+```
+
+المخرج:
+
+```json
+{ "success": true }
+```
+
+### 4. `reset-user-password`
+
+يولد كلمة سر جديدة، يحدث `users.pwd` مشفراً، ويرجع كلمة السر الصريحة مرة واحدة فقط.
+
+```json
+{
+  "admin_uid": "uuid-of-manager-or-deputy",
+  "user_id": "target-user-uuid"
+}
+```
+
+المخرج:
+
+```json
+{
+  "success": true,
+  "new_password": "generated-password"
+}
+```
+
+### 5. `delete-user`
+
+ينفذ حذفاً منطقياً فقط: `users.i_del = 1`.
+
+```json
+{
+  "admin_uid": "uuid-of-manager-or-deputy",
+  "user_id": "target-user-uuid"
+}
+```
+
+المخرج:
+
+```json
+{ "success": true }
+```
+
+### قواعد حماية مشتركة
+
+- لا يمكن تعديل أو حذف المدير الرئيسي `role=6`.
+- نائب المدير لا يستطيع إدارة نائب مدير آخر أو إنشاء نائب مدير.
+- كل عملية تسجل في `activity_log`.
+- الأدوار المسموحة لإنشاء/تعديل الموظفين حالياً: `2`, `3`, `4`, `5` حسب صلاحية المنفذ.
+
+---
+
 ## 🔐 دوال المصادقة والتحقق (3)
 
 ### 1. `generate_otp(p_phone TEXT)` → `TEXT`
@@ -614,7 +750,7 @@ final otpCode = await client.rpc(
 print('🔑 OTP Code: $otpCode');
 ```
 
-**الجدول المتأثر:** `otp_codes` (INSERT)  
+**الجدول المتأثر:** `otp_codes` (INSERT)
 **الأمان:** `SECURITY DEFINER` (يتجاوز RLS)
 
 ---
@@ -640,7 +776,7 @@ if (isValid) {
 }
 ```
 
-**الجدول المتأثر:** `otp_codes` (UPDATE + DELETE)  
+**الجدول المتأثر:** `otp_codes` (UPDATE + DELETE)
 **الأمان:** `SECURITY DEFINER`
 
 ---
@@ -666,7 +802,7 @@ final userId = await client.rpc(
 // userId = "a1b2c3d4-..."
 ```
 
-**الجداول المتأثرة:** `users` (SELECT أو INSERT) + `add_points()` (UPDATE pt, bg, bg_ts)  
+**الجداول المتأثرة:** `users` (SELECT أو INSERT) + `add_points()` (UPDATE pt, bg, bg_ts)
 **الأمان:** `SECURITY DEFINER`
 
 ---
@@ -691,7 +827,7 @@ final users = await client.rpc(
 // List<Map<String, dynamic>>
 ```
 
-**الجدول:** `users` (SELECT WHERE ph = ? AND i_del = 0)  
+**الجدول:** `users` (SELECT WHERE ph = ? AND i_del = 0)
 **الأمان:** `SECURITY DEFINER`
 
 ---
@@ -719,7 +855,7 @@ SELECT update_user_badge('a1b2c3d4-...');
 await client.rpc('update_user_badge', params: {'p_uid': userId});
 ```
 
-**الجدول المتأثر:** `users` (UPDATE bg, bg_ts)  
+**الجدول المتأثر:** `users` (UPDATE bg, bg_ts)
 **ملاحظة:** عادةً تُستدعى عبر `add_points()` — ما تحتاج استدعاءها مباشرة
 
 ---
@@ -752,7 +888,7 @@ if (isDup) {
 }
 ```
 
-**الجدول:** `offers` (SELECT WHERE ttl = ? AND prc = ? AND i_del = 0 AND usr_id != ?)  
+**الجدول:** `offers` (SELECT WHERE ttl = ? AND prc = ? AND i_del = 0 AND usr_id != ?)
 **الأمان:** `SECURITY DEFINER`
 
 ---
@@ -772,7 +908,7 @@ SELECT expire_offers();
 await client.rpc('expire_offers');
 ```
 
-**الجدول المتأثر:** `offers` (UPDATE sts=4, ts_end=NOW())  
+**الجدول المتأثر:** `offers` (UPDATE sts=4, ts_end=NOW())
 **الشرط:** `sts IN (1, 2) AND i_del = 0 AND ts_crt < NOW() - INTERVAL '30 days'`
 
 ---
@@ -888,7 +1024,7 @@ await client.rpc(
 );
 ```
 
-**الأمان:** `SECURITY DEFINER` (يتجاوز RLS)  
+**الأمان:** `SECURITY DEFINER` (يتجاوز RLS)
 **ملاحظة:** تقبل اسم أي جدول + الـ ID
 
 ---

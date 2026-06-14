@@ -8,6 +8,7 @@ import '../../../models/user_model.dart';
 import 'add_employee_dialog.dart';
 import 'change_role_dialog.dart';
 import 'toggle_status_dialog.dart';
+import 'password_result_dialog.dart';
 
 /// شاشة إدارة الموظفين (الأولوية الأولى)
 /// مستوحاة من مشروع Final + ملتزمة بالدستور
@@ -87,19 +88,28 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
   }
 
   Future<void> _showAddEmployeeDialog() async {
-    final result = await showDialog<bool>(
+    final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => const AddEmployeeDialog(),
     );
-    if (result == true) {
-      _loadUsers();
+    if (result != null && result['success'] == true) {
+      await _loadUsers();
+      final password = result['new_password']?.toString();
+      if (mounted && password != null && password.isNotEmpty) {
+        await PasswordResultDialog.show(
+          context,
+          title: 'تم إضافة الموظف - كلمة السر',
+          password: password,
+        );
+      }
     }
   }
 
   Future<void> _changeRole(UserModel user) async {
-    if (user.role == 6) {
+    final currentRole = context.read<AuthProvider>().userModel?.role ?? 0;
+    if (user.role == 6 || (currentRole < 6 && user.role >= 5)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('لا يمكن تغيير دور المدير الرئيسي')),
+        const SnackBar(content: Text('لا يمكن تغيير دور الإدارة العليا')),
       );
       return;
     }
@@ -126,13 +136,72 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
   }
 
   Future<void> _resetPassword(UserModel user) async {
-    // ملاحظة: إعادة تعيين كلمة السر يجب أن تتم عبر Edge Function
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('إعادة تعيين كلمة السر تتم عبر Edge Function. سيتم تنفيذها في المرحلة القادمة.'),
-        backgroundColor: Colors.orange,
+    if (user.role == 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('لا يمكن إعادة تعيين كلمة سر المدير الرئيسي')),
+      );
+      return;
+    }
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.surfaceBlack,
+        title: const Text('إعادة تعيين كلمة السر', style: TextStyle(color: AppTheme.textWhite)),
+        content: Text(
+          'هل أنت متأكد من إعادة تعيين كلمة سر "${user.nm}"؟',
+          style: const TextStyle(color: AppTheme.textWhite),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('إلغاء', style: TextStyle(color: AppTheme.textGrey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryGold),
+            child: const Text('تأكيد'),
+          ),
+        ],
       ),
     );
+
+    if (confirm != true) return;
+
+    try {
+      final auth = context.read<AuthProvider>();
+      final adminProvider = context.read<AdminProvider>();
+      final adminUid = auth.userModel?.uid;
+      if (adminUid == null) throw Exception('لم يتم العثور على جلسة المدير');
+
+      final result = await adminProvider.resetStaffPassword(
+        adminUid: adminUid,
+        targetUid: user.uid,
+      );
+
+      if (!mounted) return;
+      if (result['success'] == true) {
+        await _loadUsers();
+        final password = result['new_password']?.toString();
+        if (password != null && password.isNotEmpty) {
+          await PasswordResultDialog.show(
+            context,
+            title: 'تمت إعادة تعيين كلمة السر',
+            password: password,
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("فشل إعادة التعيين: ${result['error'] ?? 'خطأ غير معروف'}")),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('خطأ: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _deleteUser(UserModel user) async {
@@ -169,8 +238,11 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
     if (confirm != true) return;
 
     try {
+      final auth = context.read<AuthProvider>();
       final adminProvider = context.read<AdminProvider>();
-      final success = await adminProvider.deleteStaffUser(user.uid);
+      final adminUid = auth.userModel?.uid;
+      if (adminUid == null) throw Exception('لم يتم العثور على جلسة المدير');
+      final success = await adminProvider.deleteStaffUser(adminUid, user.uid);
       
       if (mounted) {
         if (success) {
@@ -195,9 +267,6 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
-    final currentUser = auth.userModel;
-
     return Scaffold(
       backgroundColor: AppTheme.deepBlack,
       appBar: AppBar(

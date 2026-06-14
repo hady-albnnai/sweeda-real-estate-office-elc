@@ -1,5 +1,5 @@
-// Edge Function: create-user
-// الغرض: إنشاء موظف داخلي من قبل الإدارة وفق منطق عقارات السويداء (users.usr/pwd)
+// Edge Function: toggle-user-status
+// الغرض: تفعيل/تجميد/حظر موظف داخلي من قبل الإدارة
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -11,13 +11,6 @@ const corsHeaders = {
 
 function env(name: string, fallback?: string): string {
   return Deno.env.get(name) ?? (fallback ? Deno.env.get(fallback) ?? "" : "");
-}
-
-function randomPassword(length = 12): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#%&*";
-  const bytes = new Uint8Array(length);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes, (byte) => chars[byte % chars.length]).join("");
 }
 
 function json(body: Record<string, unknown>, status = 200): Response {
@@ -40,32 +33,19 @@ serve(async (req) => {
 
     const body = await req.json();
     const adminUid = body.admin_uid ?? body.adminUid;
-    const fullName = body.full_name ?? body.fullName;
-    const phone = body.phone;
-    const email = body.email ?? "";
-    const username = body.username ?? "";
-    const role = Number(body.role);
-    const password = typeof body.password === "string" && body.password.length >= 8
-      ? body.password
-      : randomPassword();
+    const userId = body.user_id ?? body.userId;
+    const status = Number(body.status ?? body.sts ?? (body.is_active === true || body.is_active === 1 ? 0 : 1));
+    const reason = body.reason ?? "";
 
-    const { data, error } = await supabaseAdmin.rpc("admin_create_staff_user", {
+    const { data, error } = await supabaseAdmin.rpc("admin_toggle_staff_status", {
       p_admin_uid: adminUid,
-      p_full_name: fullName,
-      p_phone: phone,
-      p_email: email,
-      p_username: username,
-      p_password: password,
-      p_role: role,
+      p_target_uid: userId,
+      p_status: status,
+      p_reason: reason,
     });
 
     if (error) return json({ success: false, error: error.message }, 400);
-
-    return json({
-      success: data?.success === true,
-      user_id: data?.user_id,
-      new_password: password,
-    });
+    return json({ success: data?.success === true });
   } catch (error) {
     return json({ success: false, error: error instanceof Error ? error.message : String(error) }, 500);
   }

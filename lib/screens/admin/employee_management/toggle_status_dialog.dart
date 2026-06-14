@@ -82,7 +82,7 @@ class _ToggleStatusDialogState extends State<ToggleStatusDialog> {
             style: const TextStyle(color: AppTheme.textWhite),
           ),
           const SizedBox(height: 16),
-          if (!widget.currentStatus) // إذا كان تعطيل
+          if (widget.currentStatus) // سبب التعطيل/التجميد عند إيقاف حساب نشط
             TextField(
               controller: _reasonController,
               style: const TextStyle(color: AppTheme.textWhite),

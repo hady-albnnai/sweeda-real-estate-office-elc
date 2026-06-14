@@ -54,7 +54,8 @@ import '../../screens/executor/execute_task_screen.dart';
 import '../../screens/employee/employee_home_screen.dart';
 
 // === Admin ===
-import '../../screens/admin/admin_dashboard_screen.dart';
+import '../../screens/admin/deputy_dashboard_screen.dart';
+import '../../screens/admin/employee_dashboard_screen.dart';
 import '../../screens/admin/employee_management/employee_management_screen.dart';
 import '../../screens/admin/admin_add_offer_screen.dart';
 import '../../screens/admin/requests_management_screen.dart';
@@ -79,7 +80,8 @@ import '../services/permission_service.dart';
 
 class AppRouter {
   static String? _adminRoutePermission(String path) {
-    if (path == '/admin/dashboard') return null;
+    if (path == '/admin/dashboard') return PermissionKeys.manageStaff;
+    if (path == '/admin/employee-management') return PermissionKeys.manageStaff;
     if (path == '/admin/office-operations') return PermissionKeys.officeOperations;
     if (path == '/admin/permissions') return PermissionKeys.managePermissions;
     if (path.startsWith('/admin/users') || path.startsWith('/admin/user/')) return PermissionKeys.manageUsers;
@@ -197,6 +199,12 @@ class AppRouter {
             (requiredPermission != null &&
                 !PermissionService.has(auth.userModel, requiredPermission))) {
           return '/user/home';
+        }
+      }
+
+      if (path.startsWith('/deputy')) {
+        if (!auth.isSenior) {
+          return auth.isEmployee ? '/employee/dashboard' : '/user/home';
         }
       }
 
@@ -426,6 +434,18 @@ class AppRouter {
       GoRoute(
         path: '/employee/home',
         builder: (context, state) => const EmployeeHomeScreen(),
+      ),
+      GoRoute(
+        path: '/employee/dashboard',
+        builder: (context, state) => const EmployeeDashboardScreen(),
+      ),
+
+      // ═══════════════════════════════════════
+      // 🧭 DEPUTY (نائب المدير)
+      // ═══════════════════════════════════════
+      GoRoute(
+        path: '/deputy/dashboard',
+        builder: (context, state) => const DeputyDashboardScreen(),
       ),
 
       // ═══════════════════════════════════════

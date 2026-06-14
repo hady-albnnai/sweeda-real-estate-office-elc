@@ -1,70 +1,85 @@
 # 📋 تقرير تنفيذ خطة إعادة هيكلة الإدارة
 
-**التاريخ:** 2026-06-14  
-**الحالة:** قيد التنفيذ (المرحلة 2 مكتملة جزئياً)
+**آخر تحديث:** 2026-06-15
+**الحالة:** قيد التنفيذ — تم تصحيح الخطة وبدأ تنفيذ الإصلاحات الفعلية
 
 ---
 
-## ✅ ما تم تنفيذه حتى الآن
+## ✅ ما تم إنجازه في جولة التصحيح الحالية
 
-### 1. النسخة الاحتياطية
-- ✅ تم إنشاء فرع `backup-before-admin-restructure`
+### 1. إعادة اعتماد الخطة
+- ✅ تمت إعادة قراءة مشروع Final كمصدر **هيكلي فقط**.
+- ✅ تم تحديث `docs/ADMIN_RESTRUCTURING_PLAN.md` ليعكس المطلوب الحقيقي:
+  - اقتباس بنية إدارة الموظفين من Final.
+  - عدم نسخ جداول/أدوار/State Management من Final.
+  - الالتزام بـ Provider + جدول `users` + الأدوار الرقمية في عقارات السويداء.
 
-### 2. ملف الدوال على السيرفر
-- ✅ تم إنشاء `supabase/migrations/2026_06_14_admin_user_management_rpcs.sql`
-  - 6 دوال رئيسية:
-    - `create_user_by_admin`
-    - `update_user_role_by_admin`
-    - `toggle_user_status_by_admin`
-    - `reset_user_password_by_admin`
-    - `delete_user_by_admin`
-    - `get_staff_stats_internal` (محسّنة)
+### 2. إصلاح الراوتر والمسارات
+- ✅ إضافة route فعلي لـ `/deputy/dashboard`.
+- ✅ إضافة route فعلي لـ `/employee/dashboard`.
+- ✅ ربط `/admin/employee-management` بصلاحية إدارة الموظفين.
+- ✅ منع بقاء redirect إلى مسارات غير معرفة.
 
-### 3. شاشة إدارة الموظفين (الأولوية الأولى)
-- ✅ تم إنشاء `lib/screens/admin/employee_management/employee_management_screen.dart`
-  - واجهة كاملة مع بحث
-  - بطاقات الموظفين
-  - قائمة منسدلة للإجراءات
+### 3. PermissionService
+- ✅ إضافة صلاحية مستقلة: `manageStaff`.
+- ✅ جعل إدارة الموظفين افتراضياً لنائب المدير فما فوق.
+- ✅ إبقاء موظف المكتب على صلاحيات التشغيل فقط.
 
-### 4. تحديث الراوتر
-- ✅ تم تعديل `lib/core/router/app_router.dart`
-  - `/admin/dashboard` الآن يفتح `EmployeeManagementScreen`
-  - إضافة مسار `/admin/employee-management`
+### 4. قاعدة البيانات
+- ✅ إنشاء migration نهائية جديدة:
+  - `supabase/migrations/2026_06_15_admin_employee_management_final.sql`
+- ✅ إضافة/تصحيح RPCs إدارة الموظفين:
+  - `get_all_staff_users`
+  - `admin_create_staff_user`
+  - `admin_update_staff_role`
+  - `admin_toggle_staff_status`
+  - `admin_reset_staff_password`
+  - `admin_delete_staff_user`
+- ✅ استخدام أعمدة `activity_log` الصحيحة:
+  - `uid`, `act`, `det`, `ref_id`, `ref_col`, `ts_crt`
+- ✅ منع تعديل/حذف المدير الرئيسي من السيرفر.
+- ✅ دعم نظام `users.usr / users.pwd` بدلاً من نسخ منطق Final الخاص بـ `profiles`.
 
-### 5. تحديث الصلاحيات
-- ✅ تم تعديل `lib/core/services/permission_service.dart`
-  - تم تغيير عنوان "لوحة الإدارة" إلى "إدارة الموظفين"
+### 5. Edge Functions
+- ✅ تحديث `create-user` ليتعامل مع `users` و`pwd`.
+- ✅ تحديث `reset-user-password` ليتعامل مع `users.pwd`.
+- ✅ إضافة `update-user-role`.
+- ✅ إضافة `toggle-user-status`.
+- ✅ إضافة `delete-user`.
 
-### 6. شاشات الداشبورد الجديدة (هيكل أولي)
-- ✅ `lib/screens/admin/deputy_dashboard_screen.dart`
-- ✅ `lib/screens/admin/employee_dashboard_screen.dart`
+### 6. ربط Flutter
+- ✅ تحديث `AdminProvider` لاستدعاء Edge Functions في عمليات الموظفين الحساسة.
+- ✅ تنفيذ إضافة موظف فعلياً من `AddEmployeeDialog`.
+- ✅ تنفيذ إعادة تعيين كلمة السر فعلياً.
+- ✅ إضافة `PasswordResultDialog` لعرض كلمة السر مرة واحدة مع زر نسخ.
+- ✅ تحديث حذف الموظف ليتم عبر Edge Function وليس `soft_delete` العام.
+- ✅ إزالة رسائل placeholder من واجهة إدارة الموظفين.
 
-### 7. التوثيق
-- ✅ `docs/ADMIN_RESTRUCTURING_PLAN.md` (موجود مسبقاً)
-- ✅ `docs/ADMIN_RESTRUCTURING_PROGRESS.md` (هذا الملف)
-
----
-
-## 🔄 ما تبقى (المراحل القادمة)
-
-### المرحلة 3: فصل الداشبوردات
-- [ ] تعديل `AdminDashboardScreen` ليصبح مركز إحصائيات فقط
-- [ ] ربط الداشبوردات الجديدة (`/deputy/dashboard` و `/employee/dashboard`)
-- [ ] تحديث `PermissionService` لدعم الداشبوردات الجديدة
-
-### المرحلة 4: التوثيق والاختبار
-- [ ] تحديث `LOGIC_SPEC.md` (إن لزم)
-- [ ] تحديث `TEST_CHECKLIST.md`
-- [ ] اختبار كامل للتدفقات الإدارية
-
----
-
-## 📌 ملاحظات هامة
-
-- الشاشة الجديدة (`EmployeeManagementScreen`) لا تزال تحتاج ربطاً كاملاً مع الـ Provider.
-- الدوال على السيرفر جاهزة للاستخدام عبر Edge Functions.
-- تم الالتزام الكامل بـ `LOGIC_SPEC.md` و `DEVELOPMENT_GUIDELINES.md`.
+### 7. الداشبوردات
+- ✅ ربط `DeputyDashboardScreen` بإحصائيات حقيقية عبر `get_staff_stats_internal`.
+- ✅ ربط `EmployeeDashboardScreen` بإحصائيات حقيقية عبر `get_staff_stats_internal`.
+- ✅ إظهار روابط الوصول السريع حسب `PermissionService`.
 
 ---
 
-**آخر تحديث:** 2026-06-14
+## ⚠️ ما يزال مطلوباً قبل إعلان الاكتمال 100%
+
+- [x] تطبيق SQL/RPCs إدارة الموظفين على Supabase فعلياً والتحقق منها.
+- [ ] إعادة نشر Edge Functions الخمسة بعد وصول آخر كود للمستودع المحلي عند المطوّر.
+- [x] تحديث `supabase/setup.sql` بمرآة الدوال النهائية من migration الجديدة.
+- [ ] تحديث `supabase/FUNCTIONS_REFERENCE.md` بالكامل.
+- [ ] تحديث `docs/TEST_CHECKLIST.md` بسيناريوهات إدارة الموظفين.
+- [ ] تشغيل `flutter analyze` عند توفر Flutter في البيئة.
+- [ ] اختبار يدوي حقيقي للأدوار:
+  - مدير 6
+  - نائب مدير 5
+  - موظف مكتب 4
+  - مشرف 3
+  - مصور 2
+- [ ] التأكد من أن `docs/ADMIN_IMPLEMENTATION_COMPLETE.md` لا يقول 100% قبل نجاح الاختبارات.
+
+---
+
+## الحكم الحالي
+
+التنفيذ تقدم من حالة "جزئي/غير مكتمل" إلى **تنفيذ برمجي أساسي قابل للاختبار**، لكنه لا يُعلن مكتملاً 100% حتى يتم تطبيق الـ migration ونشر Edge Functions وتشغيل الاختبارات.
