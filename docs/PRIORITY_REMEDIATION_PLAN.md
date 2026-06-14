@@ -275,6 +275,7 @@ lib/providers/admin/
 - [x] استخراج Offers Admin إلى `OffersAdminService`.
 - [x] استخراج Stats Admin إلى `StatsAdminService`.
 - [x] استخراج Appointments Admin إلى `AppointmentsAdminService`.
+- [x] استخراج Deals Admin إلى `DealsAdminService`.
 - [ ] إبقاء `AdminProvider` كواجهة توافقية مؤقتاً.
 - [ ] تحديث الشاشات تدريجياً.
 
