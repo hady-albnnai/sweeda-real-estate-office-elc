@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../models/offer_model.dart';
 import '../models/user_model.dart';
 import '../models/appointment_model.dart';
@@ -10,11 +9,14 @@ import '../models/request_model.dart';
 import '../core/network/supabase_service.dart';
 import '../core/constants/db_constants.dart';
 import '../core/utils/error_utils.dart';
+import '../services/admin/staff_admin_service.dart';
 
 /// Provider لوحة الإدارة (role >= UserRole.minAdmin)
 /// يجمع كل عمليات الإدارة: العروض، المستخدمون، المواعيد، الصفقات،
 /// المدفوعات، التبليغات، الإحصائيات.
 class AdminProvider with ChangeNotifier {
+  final StaffAdminService _staffAdmin = StaffAdminService();
+
   bool _isLoading = false;
   String? _error;
 
@@ -33,6 +35,15 @@ class AdminProvider with ChangeNotifier {
 
   void _clearErrorSilently() {
     _error = null;
+  }
+
+  void _syncStaffError() {
+    final err = _staffAdmin.lastError;
+    if (err == null) {
+      _clearErrorSilently();
+    } else {
+      _error = err;
+    }
   }
 
   void _setLoading(bool v) {
@@ -117,37 +128,18 @@ class AdminProvider with ChangeNotifier {
   }
 
   Future<bool> updateUserRole(String adminUid, String uid, int newRole) async {
-    try {
-      final data = await _invokeStaffFunction('update-user-role', {
-        'admin_uid': adminUid,
-        'user_id': uid,
-        'role': newRole,
-      });
-      final ok = data['success'] == true;
-      if (ok) notifyListeners();
-      return ok;
-    } catch (e) {
-      _setError(e);
-      return false;
-    }
+    final ok = await _staffAdmin.updateUserRole(adminUid, uid, newRole);
+    _syncStaffError();
+    if (ok) notifyListeners();
+    return ok;
   }
 
   /// تغيير حالة المستخدم: 0=نشط, 1=مجمّد, 2=محظور
   Future<bool> setUserStatus(String adminUid, String uid, int status, {String reason = ''}) async {
-    try {
-      final data = await _invokeStaffFunction('toggle-user-status', {
-        'admin_uid': adminUid,
-        'user_id': uid,
-        'status': status,
-        'reason': reason,
-      });
-      final ok = data['success'] == true;
-      if (ok) notifyListeners();
-      return ok;
-    } catch (e) {
-      _setError(e);
-      return false;
-    }
+    final ok = await _staffAdmin.setUserStatus(adminUid, uid, status, reason: reason);
+    _syncStaffError();
+    if (ok) notifyListeners();
+    return ok;
   }
 
   Future<bool> banUser(String adminUid, String uid, String reason) => setUserStatus(adminUid, uid, 2, reason: reason);
@@ -161,73 +153,19 @@ class AdminProvider with ChangeNotifier {
 
 
   Future<bool> updateUserPermissions(String adminUid, String uid, List<String> permissions) async {
-    try {
-      final data = await _invokeStaffFunction('update-user-permissions', {
-        'admin_uid': adminUid,
-        'user_id': uid,
-        'permissions': permissions,
-      });
-      final ok = data['success'] == true;
-      if (ok) notifyListeners();
-      return ok;
-    } catch (e) {
-      _setError(e);
-      return false;
-    }
+    final ok = await _staffAdmin.updateUserPermissions(adminUid, uid, permissions);
+    _syncStaffError();
+    if (ok) notifyListeners();
+    return ok;
   }
 
   // ═══════════════════════════════════════
   // 🆕 إدارة الموظفين (Employee Management)
   // ═══════════════════════════════════════
-
-  Map<String, dynamic>? _asMap(dynamic value) {
-    if (value is Map) return Map<String, dynamic>.from(value);
-    return null;
-  }
-
-  Future<Map<String, dynamic>> _invokeStaffFunction(
-    String name,
-    Map<String, dynamic> body,
-  ) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final sessionToken = prefs.getString('staff_session_token');
-      if (sessionToken != null && sessionToken.isNotEmpty) {
-        body['staff_session_token'] = sessionToken;
-      }
-
-      final res = await SupabaseService().client.functions.invoke(name, body: body);
-      final data = _asMap(res.data);
-      if (data == null) {
-        _setError('EMPTY_RESPONSE');
-        return {'success': false, 'error': 'EMPTY_RESPONSE'};
-      }
-      if (data['success'] != true) {
-        _setError(data['error'] ?? 'UNKNOWN_ERROR');
-      } else {
-        _clearErrorSilently();
-      }
-      return data;
-    } catch (e) {
-      _setError(e);
-      return {'success': false, 'error': ErrorUtils.normalize(e)};
-    }
-  }
-
   Future<List<UserModel>> getAllStaffUsers(String adminUid) async {
-    try {
-      final response = await SupabaseService().client.rpc(
-        'get_all_staff_users',
-        params: {'p_admin_uid': adminUid},
-      );
-      return (response as List)
-          .map((d) => UserModel.fromSupabase(
-              Map<String, dynamic>.from(d), d['id'] as String))
-          .toList();
-    } catch (e) {
-      _setError(e);
-      return [];
-    }
+    final users = await _staffAdmin.getAllStaffUsers(adminUid);
+    _syncStaffError();
+    return users;
   }
 
   Future<Map<String, dynamic>> createStaffUser({
@@ -238,38 +176,25 @@ class AdminProvider with ChangeNotifier {
     String username = '',
     required int role,
   }) async {
-    try {
-      final data = await _invokeStaffFunction('create-user', {
-        'admin_uid': adminUid,
-        'full_name': fullName,
-        'phone': phone,
-        'email': email,
-        'username': username,
-        'role': role,
-      });
-      if (data['success'] == true) notifyListeners();
-      return data;
-    } catch (e) {
-      _setError(e);
-      return {'success': false, 'error': ErrorUtils.normalize(e)};
-    }
+    final data = await _staffAdmin.createStaffUser(
+      adminUid: adminUid,
+      fullName: fullName,
+      phone: phone,
+      email: email,
+      username: username,
+      role: role,
+    );
+    _syncStaffError();
+    if (data['success'] == true) notifyListeners();
+    return data;
   }
 
   /// تغيير دور الموظف عبر Edge Function فقط.
   Future<bool> changeUserRole(String adminUid, String targetUid, int newRole) async {
-    try {
-      final data = await _invokeStaffFunction('update-user-role', {
-        'admin_uid': adminUid,
-        'user_id': targetUid,
-        'role': newRole,
-      });
-      final ok = data['success'] == true;
-      if (ok) notifyListeners();
-      return ok;
-    } catch (e) {
-      _setError(e);
-      return false;
-    }
+    final ok = await _staffAdmin.updateUserRole(adminUid, targetUid, newRole);
+    _syncStaffError();
+    if (ok) notifyListeners();
+    return ok;
   }
 
   /// تفعيل/تجميد/حظر الموظف عبر Edge Function فقط.
@@ -279,66 +204,42 @@ class AdminProvider with ChangeNotifier {
     int newStatus, {
     String reason = '',
   }) async {
-    try {
-      final data = await _invokeStaffFunction('toggle-user-status', {
-        'admin_uid': adminUid,
-        'user_id': targetUid,
-        'status': newStatus,
-        'reason': reason,
-      });
-      final ok = data['success'] == true;
-      if (ok) notifyListeners();
-      return ok;
-    } catch (e) {
-      _setError(e);
-      return false;
-    }
+    final ok = await _staffAdmin.setUserStatus(
+      adminUid,
+      targetUid,
+      newStatus,
+      reason: reason,
+    );
+    _syncStaffError();
+    if (ok) notifyListeners();
+    return ok;
   }
 
   Future<Map<String, dynamic>> resetStaffPassword({
     required String adminUid,
     required String targetUid,
   }) async {
-    try {
-      final data = await _invokeStaffFunction('reset-user-password', {
-        'admin_uid': adminUid,
-        'user_id': targetUid,
-      });
-      if (data['success'] == true) notifyListeners();
-      return data;
-    } catch (e) {
-      _setError(e);
-      return {'success': false, 'error': ErrorUtils.normalize(e)};
-    }
+    final data = await _staffAdmin.resetStaffPassword(
+      adminUid: adminUid,
+      targetUid: targetUid,
+    );
+    _syncStaffError();
+    if (data['success'] == true) notifyListeners();
+    return data;
   }
 
   /// حذف موظف (soft delete) عبر Edge Function فقط.
   Future<bool> deleteStaffUser(String adminUid, String targetUid) async {
-    try {
-      final data = await _invokeStaffFunction('delete-user', {
-        'admin_uid': adminUid,
-        'user_id': targetUid,
-      });
-      final ok = data['success'] == true;
-      if (ok) notifyListeners();
-      return ok;
-    } catch (e) {
-      _setError(e);
-      return false;
-    }
+    final ok = await _staffAdmin.deleteStaffUser(adminUid, targetUid);
+    _syncStaffError();
+    if (ok) notifyListeners();
+    return ok;
   }
 
   Future<Map<String, dynamic>> getStaffStatsInternal(String userUid) async {
-    try {
-      final response = await SupabaseService().client.rpc(
-        'get_staff_stats_internal',
-        params: {'p_user_uid': userUid},
-      );
-      return Map<String, dynamic>.from(response as Map);
-    } catch (e) {
-      _setError(e);
-      return {};
-    }
+    final stats = await _staffAdmin.getStaffStatsInternal(userUid);
+    _syncStaffError();
+    return stats;
   }
 
   // ═══════════════════════════════════════
