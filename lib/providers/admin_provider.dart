@@ -12,6 +12,7 @@ import '../core/utils/error_utils.dart';
 import '../services/admin/staff_admin_service.dart';
 import '../services/admin/payments_admin_service.dart';
 import '../services/admin/reports_admin_service.dart';
+import '../services/admin/offers_admin_service.dart';
 
 /// Provider لوحة الإدارة (role >= UserRole.minAdmin)
 /// يجمع كل عمليات الإدارة: العروض، المستخدمون، المواعيد، الصفقات،
@@ -20,6 +21,7 @@ class AdminProvider with ChangeNotifier {
   final StaffAdminService _staffAdmin = StaffAdminService();
   final PaymentsAdminService _paymentsAdmin = PaymentsAdminService();
   final ReportsAdminService _reportsAdmin = ReportsAdminService();
+  final OffersAdminService _offersAdmin = OffersAdminService();
 
   bool _isLoading = false;
   String? _error;
@@ -52,6 +54,7 @@ class AdminProvider with ChangeNotifier {
   void _syncStaffError() => _syncServiceError(_staffAdmin.lastError);
   void _syncPaymentsError() => _syncServiceError(_paymentsAdmin.lastError);
   void _syncReportsError() => _syncServiceError(_reportsAdmin.lastError);
+  void _syncOffersError() => _syncServiceError(_offersAdmin.lastError);
 
   void _setLoading(bool v) {
     _isLoading = v;
@@ -62,55 +65,28 @@ class AdminProvider with ChangeNotifier {
   // 1) العروض (مراجعة)
   // ═══════════════════════════════════════
   Future<List<OfferModel>> getPendingOffers(String adminUid) async {
-    try {
-      final response = await SupabaseService().client.rpc(
-        'get_admin_pending_offers_internal',
-        params: {'p_admin_uid': adminUid},
-      );
-      return (response as List)
-          .map((d) => OfferModel.fromSupabase(
-              Map<String, dynamic>.from(d), d['id'] as String))
-          .toList();
-    } catch (e) {
-      return [];
-    }
+    final list = await _offersAdmin.getPendingOffers(adminUid);
+    _syncOffersError();
+    return list;
   }
 
   Future<bool> reviewOffer(String adminUid, String offerId, bool approve,
       {String reason = ''}) async {
-    try {
-      await SupabaseService().client.rpc(
-        'admin_review_offer_internal',
-        params: {
-          'p_admin_uid': adminUid,
-          'p_offer_id': offerId,
-          'p_approve': approve,
-          'p_reject_reason': reason,
-        },
-      );
-      notifyListeners();
-      return true;
-    } catch (e) {
-      return false;
-    }
+    final ok = await _offersAdmin.reviewOffer(
+      adminUid,
+      offerId,
+      approve,
+      reason: reason,
+    );
+    _syncOffersError();
+    if (ok) notifyListeners();
+    return ok;
   }
 
   Future<List<OfferModel>> getOffersForMediaReview(String adminUid) async {
-    try {
-      final response = await SupabaseService().client.rpc(
-        'get_admin_offers_internal',
-        params: {
-          'p_admin_uid': adminUid,
-          'p_limit': 100,
-        },
-      );
-      return (response as List)
-          .map((d) => OfferModel.fromSupabase(
-              Map<String, dynamic>.from(d), d['id'] as String))
-          .toList();
-    } catch (e) {
-      return [];
-    }
+    final list = await _offersAdmin.getOffersForMediaReview(adminUid);
+    _syncOffersError();
+    return list;
   }
 
   // ═══════════════════════════════════════

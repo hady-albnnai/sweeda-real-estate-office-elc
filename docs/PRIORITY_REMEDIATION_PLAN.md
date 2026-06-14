@@ -272,6 +272,7 @@ lib/providers/admin/
 - [x] استخراج Staff Admin إلى `StaffAdminService`.
 - [x] استخراج Payments Admin إلى `PaymentsAdminService`.
 - [x] استخراج Reports Admin إلى `ReportsAdminService`.
+- [x] استخراج Offers Admin إلى `OffersAdminService`.
 - [ ] إبقاء `AdminProvider` كواجهة توافقية مؤقتاً.
 - [ ] تحديث الشاشات تدريجياً.
 
