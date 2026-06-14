@@ -15,6 +15,7 @@ import '../services/admin/reports_admin_service.dart';
 import '../services/admin/offers_admin_service.dart';
 import '../services/admin/stats_admin_service.dart';
 import '../services/admin/appointments_admin_service.dart';
+import '../services/admin/deals_admin_service.dart';
 
 /// Provider لوحة الإدارة (role >= UserRole.minAdmin)
 /// يجمع كل عمليات الإدارة: العروض، المستخدمون، المواعيد، الصفقات،
@@ -26,6 +27,7 @@ class AdminProvider with ChangeNotifier {
   final OffersAdminService _offersAdmin = OffersAdminService();
   final StatsAdminService _statsAdmin = StatsAdminService();
   final AppointmentsAdminService _appointmentsAdmin = AppointmentsAdminService();
+  final DealsAdminService _dealsAdmin = DealsAdminService();
 
   bool _isLoading = false;
   String? _error;
@@ -61,6 +63,7 @@ class AdminProvider with ChangeNotifier {
   void _syncOffersError() => _syncServiceError(_offersAdmin.lastError);
   void _syncStatsError() => _syncServiceError(_statsAdmin.lastError);
   void _syncAppointmentsError() => _syncServiceError(_appointmentsAdmin.lastError);
+  void _syncDealsError() => _syncServiceError(_dealsAdmin.lastError);
 
   void _setLoading(bool v) {
     _isLoading = v;
@@ -271,55 +274,31 @@ class AdminProvider with ChangeNotifier {
   // 4) الصفقات (إدارة)
   // ═══════════════════════════════════════
   Future<List<DealModel>> getAllDeals(String adminUid) async {
-    try {
-      final response = await SupabaseService().client.rpc(
-        'get_admin_deals_internal',
-        params: {'p_admin_uid': adminUid},
-      );
-      return (response as List)
-          .map((d) =>
-              DealModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String))
-          .toList();
-    } catch (e) {
-      return [];
-    }
+    final list = await _dealsAdmin.getAllDeals(adminUid);
+    _syncDealsError();
+    return list;
   }
 
   /// إنشاء صفقة (استمارة المندوب)
   Future<bool> createDeal(String adminUid, DealModel deal) async {
-    try {
-      await SupabaseService().client.rpc(
-        'create_deal_internal',
-        params: {
-          'p_admin_uid': adminUid,
-          'p_deal': deal.toMap(),
-        },
-      );
-      notifyListeners();
-      return true;
-    } catch (e) {
-      return false;
-    }
+    final ok = await _dealsAdmin.createDeal(adminUid, deal);
+    _syncDealsError();
+    if (ok) notifyListeners();
+    return ok;
   }
 
   /// إتمام صفقة (sts=1) + تسجيل العمولة
   Future<bool> completeDeal(String dealId, String adminId,
       {double? commission, String? note}) async {
-    try {
-      await SupabaseService().client.rpc(
-        'complete_deal_internal',
-        params: {
-          'p_admin_uid': adminId,
-          'p_deal_id': dealId,
-          'p_commission': commission,
-          'p_note': note,
-        },
-      );
-      notifyListeners();
-      return true;
-    } catch (e) {
-      return false;
-    }
+    final ok = await _dealsAdmin.completeDeal(
+      dealId,
+      adminId,
+      commission: commission,
+      note: note,
+    );
+    _syncDealsError();
+    if (ok) notifyListeners();
+    return ok;
   }
 
   // ═══════════════════════════════════════
