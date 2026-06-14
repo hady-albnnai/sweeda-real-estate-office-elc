@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
 import '../core/network/supabase_service.dart';
+import '../core/utils/error_utils.dart';
 
 /// خدمة التخزين — رفع الصور والملفات إلى Supabase Storage
 /// مع اختيار من المعرض/الكاميرا وضغط الصور قبل الرفع.
@@ -19,6 +20,15 @@ class StorageService {
   static const String idsPrivateBucket = 'ids_private';
   static const int maxImages = 6;
 
+  String? _lastError;
+  String? get lastError => _lastError;
+
+  void clearError() => _lastError = null;
+
+  void _setError(Object? error) {
+    _lastError = ErrorUtils.arabicMessage(error);
+  }
+
   // ═══════════════════════════════════════
   // اختيار الصور
   // ═══════════════════════════════════════
@@ -31,7 +41,9 @@ class StorageService {
         imageQuality: 90,
         maxWidth: 1920,
       );
-    } catch (e) {return null;
+    } catch (e) {
+      _setError(e);
+      return null;
     }
   }
 
@@ -41,7 +53,9 @@ class StorageService {
       final files = await _picker.pickMultiImage(imageQuality: 90, maxWidth: 1920);
       if (files.length > limit) return files.sublist(0, limit);
       return files;
-    } catch (e) {return [];
+    } catch (e) {
+      _setError(e);
+      return [];
     }
   }
 
@@ -65,7 +79,9 @@ class StorageService {
       );
       if (result == null) return file;
       return File(result.path);
-    } catch (e) {return file; // عند الفشل نرفع الأصلي
+    } catch (e) {
+      _setError(e);
+      return file; // عند الفشل نرفع الأصلي
     }
   }
 
@@ -100,6 +116,7 @@ class StorageService {
           );
       return _storage.from(offerBucket).getPublicUrl(fullPath);
     } catch (e) {
+      _setError(e);
       return null;
     }
   }
@@ -166,7 +183,9 @@ class StorageService {
         source: ImageSource.gallery,
         maxDuration: maxDuration,
       );
-    } catch (e) {return null;
+    } catch (e) {
+      _setError(e);
+      return null;
     }
   }
 
@@ -196,14 +215,18 @@ class StorageService {
                 cacheControl: '3600', upsert: true, contentType: 'video/mp4'),
           );
       return _storage.from(offerBucket).getPublicUrl(fullPath);
-    } catch (e) {return null;
+    } catch (e) {
+      _setError(e);
+      return null;
     }
   }
 
   Future<void> deleteFile(String bucket, String path) async {
     try {
       await _storage.from(bucket).remove([path]);
-    } catch (_) {}
+    } catch (e) {
+      _setError(e);
+    }
   }
 
   Future<void> deleteImage(String url) async {
@@ -216,6 +239,8 @@ class StorageService {
         final filePath = segments.sublist(idx + 2).join('/');
         await _storage.from(bucket).remove([filePath]);
       }
-    } catch (_) {}
+    } catch (e) {
+      _setError(e);
+    }
   }
 }

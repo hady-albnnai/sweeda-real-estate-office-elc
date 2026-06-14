@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/network/supabase_service.dart';
 import '../core/constants/db_constants.dart';
 import '../core/router/app_router.dart';
+import '../core/utils/error_utils.dart';
 
 /// خدمة Firebase Cloud Messaging (FCM)
 class FCMService {
@@ -19,13 +20,24 @@ class FCMService {
       FlutterLocalNotificationsPlugin();
   String? _currentToken;
   bool _initialized = false;
+  String? _lastError;
 
   String? get currentToken => _currentToken;
+  String? get lastError => _lastError;
+
+  void clearError() => _lastError = null;
+
+  void _setError(Object? error) {
+    _lastError = ErrorUtils.arabicMessage(error);
+  }
 
   /// تهيئة Firebase + FCM — تُستدعى مرّة واحدة في main()
   static Future<void> initializeFirebase() async {
     try {
-      await Firebase.initializeApp();} catch (e) {rethrow;
+      await Firebase.initializeApp();
+    } catch (e) {
+      FCMService()._setError(e);
+      rethrow;
     }
   }
 
@@ -58,7 +70,10 @@ class FCMService {
       // 6) معالجة الإشعارات الواردة
       _setupMessageHandlers();
 
-      _initialized = true;} catch (e) {}
+      _initialized = true;
+    } catch (e) {
+      _setError(e);
+    }
   }
 
   Future<void> _initLocalNotifications() async {
@@ -160,7 +175,9 @@ class FCMService {
         }
       }
       _navigateFromData(data);
-    } catch (e) {}
+    } catch (e) {
+      _setError(e);
+    }
   }
 
   /// التنقل حسب نوع الإشعار
@@ -193,7 +210,9 @@ class FCMService {
           // افتراضي: شاشة الإشعارات
           router.push('/user/notifications');
       }
-    } catch (e) {}
+    } catch (e) {
+      _setError(e);
+    }
   }
 
   /// حفظ الإشعار في DB ليظهر داخل التطبيق
@@ -218,7 +237,10 @@ class FCMService {
         'p_body': body,
         'p_ref_id': data?['id']?.toString() ?? '',
         'p_action': typeStr,
-      });} catch (e) {}
+      });
+    } catch (e) {
+      _setError(e);
+    }
   }
 
   int _typeStringToInt(String t) {
@@ -267,7 +289,9 @@ class FCMService {
             .update({'is_active': false})
             .eq('uid', uid)
             .neq('device_token', token);
-      } catch (e) {}
+      } catch (e) {
+        _setError(e);
+      }
 
       // 2) Upsert التوكن الحالي
       await sb.from(DbTables.userDevices).upsert(
@@ -279,7 +303,10 @@ class FCMService {
           'ts_upd': DateTime.now().toIso8601String(),
         },
         onConflict: 'device_token',
-      );} catch (e) {}
+      );
+    } catch (e) {
+      _setError(e);
+    }
   }
 
   Future<void> registerCurrentTokenForUser() async {
@@ -295,7 +322,10 @@ class FCMService {
           .client
           .from(DbTables.userDevices)
           .update({'is_active': false})
-          .eq('device_token', _currentToken!);} catch (e) {}
+          .eq('device_token', _currentToken!);
+    } catch (e) {
+      _setError(e);
+    }
   }
 }
 
