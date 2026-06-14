@@ -276,7 +276,9 @@ lib/providers/admin/
 - [x] استخراج Stats Admin إلى `StatsAdminService`.
 - [x] استخراج Appointments Admin إلى `AppointmentsAdminService`.
 - [x] استخراج Deals Admin إلى `DealsAdminService`.
-- [ ] إبقاء `AdminProvider` كواجهة توافقية مؤقتاً.
+- [x] استخراج Users Admin إلى `UsersAdminService`.
+- [x] استخراج Verifications Admin إلى `VerificationsAdminService`.
+- [x] إبقاء `AdminProvider` كواجهة توافقية مؤقتاً.
 - [ ] تحديث الشاشات تدريجياً.
 
 ## Definition of Done
