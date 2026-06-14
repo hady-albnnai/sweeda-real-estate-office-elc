@@ -270,8 +270,8 @@ lib/providers/admin/
 ## المهام
 
 - [x] استخراج Staff Admin إلى `StaffAdminService`.
-- [ ] استخراج Payments Admin إلى `PaymentsAdminService`.
-- [ ] استخراج Reports Admin إلى `ReportsAdminService`.
+- [x] استخراج Payments Admin إلى `PaymentsAdminService`.
+- [x] استخراج Reports Admin إلى `ReportsAdminService`.
 - [ ] إبقاء `AdminProvider` كواجهة توافقية مؤقتاً.
 - [ ] تحديث الشاشات تدريجياً.
 
