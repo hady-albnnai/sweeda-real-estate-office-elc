@@ -55,7 +55,7 @@ class PermissionService {
   /// 0=مستخدم، 1=وسيط، 2=مصور، 3=مشرف، 4=موظف مكتب، 5=نائب مدير، 6=مدير
   static const permissions = <AppPermission>[
     // — الإدارة —
-    AppPermission(key: PermissionKeys.adminDashboard, title: 'لوحة الإدارة', group: 'الإدارة', minimumRoleForDefault: UserRole.employee),
+    AppPermission(key: PermissionKeys.adminDashboard, title: 'إدارة الموظفين', group: 'الإدارة', minimumRoleForDefault: UserRole.employee),
     AppPermission(key: PermissionKeys.officeOperations, title: 'عمليات المكتب', group: 'الإدارة', minimumRoleForDefault: UserRole.employee),
     AppPermission(key: PermissionKeys.manageUsers, title: 'إدارة المستخدمين', group: 'الإدارة', minimumRoleForDefault: UserRole.employee),
     AppPermission(key: PermissionKeys.managePermissions, title: 'إدارة الصلاحيات', group: 'الإدارة', minimumRoleForDefault: UserRole.deputy),

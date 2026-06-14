@@ -55,6 +55,7 @@ import '../../screens/employee/employee_home_screen.dart';
 
 // === Admin ===
 import '../../screens/admin/admin_dashboard_screen.dart';
+import '../../screens/admin/employee_management/employee_management_screen.dart';
 import '../../screens/admin/admin_add_offer_screen.dart';
 import '../../screens/admin/requests_management_screen.dart';
 import '../../screens/admin/completion_requests_screen.dart';
@@ -433,7 +434,11 @@ class AppRouter {
       // ═══════════════════════════════════════
       GoRoute(
         path: '/admin/dashboard',
-        builder: (context, state) => const AdminDashboardScreen(),
+        builder: (context, state) => const EmployeeManagementScreen(), // تم تحويلها إلى شاشة إدارة الموظفين
+      ),
+      GoRoute(
+        path: '/admin/employee-management',
+        builder: (context, state) => const EmployeeManagementScreen(),
       ),
       GoRoute(
         path: '/admin/office-operations',
