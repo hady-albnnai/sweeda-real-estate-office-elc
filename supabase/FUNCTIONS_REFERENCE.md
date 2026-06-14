@@ -1,7 +1,7 @@
 # 📚 مرجع دوال Supabase (RPC + Edge Functions)
 
 > **مشروع:** عقارات السويداء
-> **آخر تحديث:** 2026-06-15 (محدّث بعد تطبيق RPCs إدارة الموظفين على السيرفر — Edge Functions تحتاج إعادة نشر من آخر كود)
+> **آخر تحديث:** 2026-06-15 (محدّث بعد تطبيق RPCs إدارة الموظفين ونشر Edge Functions الخمسة على السيرفر)
 > **المصدر:** `supabase/setup.sql` + Migrations + Edge Functions
 
 ---
@@ -49,7 +49,7 @@
 | ✅ **مُطبّق على السيرفر** | `2026_06_13_fix_property_doc_types.sql` — حذف نمرة/وارد من سند العقار (فقط للسيارات) |
 | ✅ **مُطبّق على السيرفر** | `2026_06_13_fix_notifications_typ_to_tp.sql` — إصلاح notifications.typ → tp في 5 دوال + DROP/CREATE لـ trg_offer_status_changed |
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_admin_employee_management_final.sql` — دوال إدارة الموظفين النهائية: `get_all_staff_users`, `admin_create_staff_user`, `admin_update_staff_role`, `admin_toggle_staff_status`, `admin_reset_staff_password`, `admin_delete_staff_user` |
-| 📝 **مكتوب وجاهز لإعادة النشر** | Edge Functions لإدارة الموظفين: `create-user`, `update-user-role`, `toggle-user-status`, `reset-user-password`, `delete-user` — يلزم pull ثم deploy للخمس دوال |
+| ✅ **مُنشر على السيرفر** | Edge Functions لإدارة الموظفين: `create-user`, `update-user-role`, `toggle-user-status`, `reset-user-password`, `delete-user` — تم نشرها بعد pull من `main` |
 | ✅ **مُطبّق على السيرفر** | Storage policies لـ `offer_images` — INSERT/SELECT/UPDATE/DELETE مفتوحة |
 | 📝 **جاهز للتطبيق (لم يُنفّذ بعد)** | `2026_06_13_auth_username_password.sql` — اسم مستخدم `usr` + كلمة مرور مشفّرة `pwd` + 6 RPCs (`register_password`, `login_with_password`, `reset_password_with_otp`, `change_password_internal`, `check_username_available`, `get_staff_stats_internal`) + تحديث `users_public` (إضافة `usr`) + تحديث `get_user_full_by_id` (إضافة `usr` + إخفاء `pwd` خلف flag) |
 
@@ -219,11 +219,11 @@ SELECT * FROM cron.job_run_details ORDER BY start_time DESC LIMIT 10;
 | 1 | `send-whatsapp-otp` 🆕 | يولّد OTP ويرسله عبر Meta WhatsApp Cloud API | `{ phone: "+963..." }` | `{ success, messageId?, devMode?, otp? }` | ⚠️ مكتوب — لم يُنشر |
 | 2 | `verify-whatsapp-otp` 🆕 | يتحقق + ينشئ user + يصدر session | `{ phone, code }` | `{ success, userId, isNew, session: { token_hash, ... } }` | ⚠️ مكتوب — لم يُنشر |
 | 3 | `send-push-notification` 🆕🆕🆕🆕🆕 | يرسل FCM push لكل أجهزة المستخدم (HTTP v1 API) | `{ uid, title, body, data? }` | `{ success, sent, failed, total }` | ⚠️ مكتوب — لم يُنشر |
-| 4 | `create-user` 🆕 | إنشاء موظف داخلي من الإدارة عبر `users.usr/pwd` | `{ admin_uid, full_name, phone, email?, username?, role }` | `{ success, user_id, new_password }` | 📝 مكتوب — جاهز للنشر |
-| 5 | `update-user-role` 🆕 | تغيير دور موظف داخلي | `{ admin_uid, user_id, role }` | `{ success }` | 📝 مكتوب — جاهز للنشر |
-| 6 | `toggle-user-status` 🆕 | تفعيل/تجميد/حظر موظف | `{ admin_uid, user_id, status, reason? }` | `{ success }` | 📝 مكتوب — جاهز للنشر |
-| 7 | `reset-user-password` 🆕 | توليد كلمة سر جديدة وتحديث `users.pwd` | `{ admin_uid, user_id }` | `{ success, new_password }` | 📝 مكتوب — جاهز للنشر |
-| 8 | `delete-user` 🆕 | حذف منطقي لموظف داخلي | `{ admin_uid, user_id }` | `{ success }` | 📝 مكتوب — جاهز للنشر |
+| 4 | `create-user` 🆕 | إنشاء موظف داخلي من الإدارة عبر `users.usr/pwd` | `{ admin_uid, full_name, phone, email?, username?, role }` | `{ success, user_id, new_password }` | ✅ منشور |
+| 5 | `update-user-role` 🆕 | تغيير دور موظف داخلي | `{ admin_uid, user_id, role }` | `{ success }` | ✅ منشور |
+| 6 | `toggle-user-status` 🆕 | تفعيل/تجميد/حظر موظف | `{ admin_uid, user_id, status, reason? }` | `{ success }` | ✅ منشور |
+| 7 | `reset-user-password` 🆕 | توليد كلمة سر جديدة وتحديث `users.pwd` | `{ admin_uid, user_id }` | `{ success, new_password }` | ✅ منشور |
+| 8 | `delete-user` 🆕 | حذف منطقي لموظف داخلي | `{ admin_uid, user_id }` | `{ success }` | ✅ منشور |
 
 > ⚠️ **`generate_otp` / `verify_otp` القديمة** ما زالت موجودة للتوافق الخلفي فقط — استخدم النسخة V2 في الكود الجديد.
 > 📖 لخطوات تفعيل WhatsApp + Email Magic Link: راجع `docs/AUTH_SETUP.md`
