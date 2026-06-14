@@ -33,8 +33,8 @@
 | P3 | معالجة الأخطاء | منع ابتلاع الأخطاء بصمت | قيد التنفيذ: أساس AppResult/ErrorUtils مضاف |
 | P4 | تفكيك AdminProvider | فصل الخدمات والمسؤوليات | قيد التنفيذ: الخدمات الأساسية مستخرجة |
 | P5 | إحصائيات ودوال مجمعة | تقليل تحميل القوائم الكبيرة | مطبق جزئياً: RPC إحصائيات الإدارة مطبقة ومتحقق منها |
-| P6 | اختبارات وCI | تشغيل تحليل واختبارات تلقائية | قبل إعلان الاستقرار |
-| P7 | تنظيف وتوثيق طويل الأمد | توحيد الحالة والمرجعيات | مستمر |
+| P6 | اختبارات وCI | تشغيل تحليل واختبارات تلقائية | قيد التنفيذ: SQL verification مضاف وCI بانتظار صلاحية workflow |
+| P7 | تنظيف وتوثيق طويل الأمد | توحيد الحالة والمرجعيات | قيد التنفيذ: CURRENT_STATUS مضاف |
 
 ---
 
@@ -337,12 +337,12 @@ lib/providers/admin/
 
 ### SQL
 
-- [ ] إنشاء `supabase/tests/admin_employee_management_verification.sql`.
-- [ ] إضافة استعلامات تحقق بعد كل patch.
+- [x] إنشاء `supabase/tests/admin_security_verification.sql`.
+- [x] إضافة استعلامات تحقق أمنية بعد patch الإدارة.
 
 ### CI
 
-- [ ] إضافة GitHub Actions:
+- [ ] إضافة GitHub Actions بعد توفر توكن بصلاحية `workflow`:
   - `flutter pub get`
   - `flutter analyze`
   - `flutter test`
@@ -376,9 +376,9 @@ lib/providers/admin/
 
 ## المهام
 
-- [ ] إنشاء `docs/CURRENT_STATUS.md`.
-- [ ] ربطه من README.
-- [ ] تحديثه بعد كل مرحلة.
+- [x] إنشاء `docs/CURRENT_STATUS.md`.
+- [x] ربطه من README.
+- [x] تحديثه بعد كل مرحلة رئيسية بدءاً من هذه المرحلة.
 - [ ] جعل `FUNCTIONS_REFERENCE.md` مرجعاً تقنياً فقط، وليس ملف حالة عام.
 
 ## Definition of Done
@@ -436,7 +436,7 @@ lib/providers/admin/
 - [ ] الداشبوردات تستخدم RPCs مجمعة فعالة.
 - [ ] `flutter analyze` يعمل دون أخطاء.
 - [ ] الاختبارات الأساسية موجودة.
-- [ ] `CURRENT_STATUS.md` موجود ومحدث.
+- [x] `CURRENT_STATUS.md` موجود ومحدث.
 - [ ] التوثيق لا يتعارض مع حالة السيرفر.
 
 ---
