@@ -170,6 +170,20 @@ class AppRouter {
         if (!(auth.isEmployee || auth.isSenior)) {
           return auth.isBroker ? '/broker/dashboard' : '/user/home';
         }
+
+        // توجيه كل دور لشاشته الخاصة
+        final userRole = auth.userModel?.role ?? 0;
+        
+        // نائب المدير (role=5) → /deputy/dashboard
+        if (userRole == 5 && path == '/admin/dashboard') {
+          return '/deputy/dashboard';
+        }
+        
+        // موظف المكتب (role=4) → /employee/dashboard
+        if (userRole == 4 && path == '/admin/dashboard') {
+          return '/employee/dashboard';
+        }
+
         final requiredPermission = _adminRoutePermission(path);
         if (requiredPermission != null &&
             !PermissionService.has(auth.userModel, requiredPermission)) {
