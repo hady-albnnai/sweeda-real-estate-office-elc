@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/offer_model.dart';
 import '../models/user_model.dart';
 import '../models/appointment_model.dart';
@@ -182,6 +183,12 @@ class AdminProvider with ChangeNotifier {
     String name,
     Map<String, dynamic> body,
   ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final sessionToken = prefs.getString('staff_session_token');
+    if (sessionToken != null && sessionToken.isNotEmpty) {
+      body['staff_session_token'] = sessionToken;
+    }
+
     final res = await SupabaseService().client.functions.invoke(name, body: body);
     final data = _asMap(res.data);
     if (data == null) return {'success': false, 'error': 'EMPTY_RESPONSE'};

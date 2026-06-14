@@ -66,6 +66,21 @@ class AuthProvider with ChangeNotifier {
       await prefs.setString('user_id', userId);
       await prefs.setString('auth_channel', 'password');
 
+      final staffSession = data['staff_session'];
+      if (staffSession is Map && staffSession['success'] == true) {
+        final token = staffSession['session_token']?.toString();
+        final expiresAt = staffSession['expires_at']?.toString();
+        if (token != null && token.isNotEmpty) {
+          await prefs.setString('staff_session_token', token);
+        }
+        if (expiresAt != null && expiresAt.isNotEmpty) {
+          await prefs.setString('staff_session_expires_at', expiresAt);
+        }
+      } else {
+        await prefs.remove('staff_session_token');
+        await prefs.remove('staff_session_expires_at');
+      }
+
       // تسجيل FCM token
       await FCMService().registerCurrentTokenForUser();
 
