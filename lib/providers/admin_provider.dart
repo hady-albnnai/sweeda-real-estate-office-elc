@@ -170,6 +170,24 @@ class AdminProvider with ChangeNotifier {
   }
 
   // ═══════════════════════════════════════
+  // 🆕 إدارة الموظفين (Employee Management)
+  // ═══════════════════════════════════════
+  Future<List<UserModel>> getAllStaffUsers(String adminUid) async {
+    try {
+      final response = await SupabaseService().client.rpc(
+        'get_all_staff_users',
+        params: {'p_admin_uid': adminUid},
+      );
+      return (response as List)
+          .map((d) => UserModel.fromSupabase(
+              Map<String, dynamic>.from(d), d['id'] as String))
+          .toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // ═══════════════════════════════════════
   // 3) المواعيد (إدارة)
   // ═══════════════════════════════════════
   Future<List<RequestModel>> getAllRequests(String adminUid) async {

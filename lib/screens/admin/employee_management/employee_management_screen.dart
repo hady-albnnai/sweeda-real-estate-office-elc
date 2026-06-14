@@ -5,6 +5,7 @@ import '../../../providers/admin_provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../models/user_model.dart';
+import '../../../core/services/permission_service.dart';
 
 /// شاشة إدارة الموظفين (الأولوية الأولى)
 /// مستوحاة من مشروع Final + ملتزمة بالدستور
@@ -36,9 +37,20 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
     });
 
     try {
+      final auth = context.read<AuthProvider>();
       final adminProvider = context.read<AdminProvider>();
-      // نفترض وجود دالة getAllStaff أو نستخدم getUsers
-      final users = await adminProvider.getAllStaffUsers();
+      
+      final currentUser = auth.userModel;
+      if (currentUser == null) {
+        throw Exception('لم يتم تسجيل الدخول');
+      }
+
+      // التحقق من الصلاحية (role >= 4)
+      if (currentUser.role < 4) {
+        throw Exception('ليس لديك صلاحية الوصول إلى هذه الشاشة');
+      }
+
+      final users = await adminProvider.getAllStaffUsers(currentUser.uid);
       
       if (mounted) {
         setState(() {
