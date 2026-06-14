@@ -6,6 +6,7 @@ import '../core/network/supabase_service.dart';
 import '../core/constants/db_constants.dart';
 import '../core/services/local_cache_service.dart';
 import '../core/services/business_service.dart';
+import '../core/utils/error_utils.dart';
 
 class OfferProvider with ChangeNotifier {
   List<OfferModel> _offers = [];
@@ -30,6 +31,15 @@ class OfferProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get fromCache => _fromCache;
+
+  void clearError() {
+    _error = null;
+    notifyListeners();
+  }
+
+  void _setError(Object? error) {
+    _error = ErrorUtils.arabicMessage(error);
+  }
 
   /// 🏢 إثراء قائمة العروض بتسميات الملاك المهنية (هوية المكتب).
   /// يجلب الملاك في استعلام واحد batch، ثم يحقن ownerLabel في كل عرض.
@@ -63,7 +73,9 @@ class OfferProvider with ChangeNotifier {
           o.ownerLabel = bs.getUserPublicLabel(owner);
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      _setError(e);
+    }
   }
 
   Future<void> fetchOffers() async {
@@ -109,7 +121,10 @@ class OfferProvider with ChangeNotifier {
       if (_offers.isEmpty) {
         _error = 'فشل في جلب العروض. تحقق من الاتصال.';
       } else {
-        _fromCache = true;}}
+        _fromCache = true;
+        _setError(e);
+      }
+    }
     // 📄 إعادة ضبط حالة pagination بعد fetch جديد
     _currentPage = (_offers.length / pageSize).ceil();
     _hasMore = _offers.length >= pageSize;
@@ -156,7 +171,9 @@ class OfferProvider with ChangeNotifier {
         _offers.addAll(unique);
         _currentPage++;
       }
-    } catch (e) {}
+    } catch (e) {
+      _setError(e);
+    }
     _loadingMore = false;
     notifyListeners();
   }
@@ -190,7 +207,9 @@ class OfferProvider with ChangeNotifier {
             notifyListeners();
           } else {}
         }
-      });} catch (e) {}
+      });} catch (e) {
+      _setError(e);
+    }
   }
 
   void unsubscribeRealtime() {
@@ -217,6 +236,7 @@ class OfferProvider with ChangeNotifier {
       await _enrichOwnerLabels(list);
       return list;
     } catch (e) {
+      _setError(e);
       return [];
     }
   }
@@ -236,6 +256,7 @@ class OfferProvider with ChangeNotifier {
       await _enrichOwnerLabels([offer]);
       return offer;
     } catch (e) {
+      _setError(e);
       return null;
     }
   }
@@ -256,6 +277,7 @@ class OfferProvider with ChangeNotifier {
       notifyListeners();
       return created;
     } catch (e) {
+      _setError(e);
       return null;
     }
   }
@@ -280,6 +302,7 @@ class OfferProvider with ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
+      _setError(e);
       return false;
     }
   }
@@ -292,7 +315,9 @@ class OfferProvider with ChangeNotifier {
         'increment_offer_views_internal',
         params: {'p_offer_id': offerId},
       );
-    } catch (e) {}
+    } catch (e) {
+      _setError(e);
+    }
   }
 
   Future<List<OfferModel>> searchOffers({
@@ -318,7 +343,10 @@ class OfferProvider with ChangeNotifier {
       _offers = results;
       notifyListeners();
       return results;
-    } catch (e) {return []; }
+    } catch (e) {
+      _setError(e);
+      return [];
+    }
   }
 
   void listenToNewOffers(Function(OfferModel) onNewOffer) {
