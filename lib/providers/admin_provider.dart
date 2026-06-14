@@ -14,6 +14,7 @@ import '../services/admin/payments_admin_service.dart';
 import '../services/admin/reports_admin_service.dart';
 import '../services/admin/offers_admin_service.dart';
 import '../services/admin/stats_admin_service.dart';
+import '../services/admin/appointments_admin_service.dart';
 
 /// Provider لوحة الإدارة (role >= UserRole.minAdmin)
 /// يجمع كل عمليات الإدارة: العروض، المستخدمون، المواعيد، الصفقات،
@@ -24,6 +25,7 @@ class AdminProvider with ChangeNotifier {
   final ReportsAdminService _reportsAdmin = ReportsAdminService();
   final OffersAdminService _offersAdmin = OffersAdminService();
   final StatsAdminService _statsAdmin = StatsAdminService();
+  final AppointmentsAdminService _appointmentsAdmin = AppointmentsAdminService();
 
   bool _isLoading = false;
   String? _error;
@@ -58,6 +60,7 @@ class AdminProvider with ChangeNotifier {
   void _syncReportsError() => _syncServiceError(_reportsAdmin.lastError);
   void _syncOffersError() => _syncServiceError(_offersAdmin.lastError);
   void _syncStatsError() => _syncServiceError(_statsAdmin.lastError);
+  void _syncAppointmentsError() => _syncServiceError(_appointmentsAdmin.lastError);
 
   void _setLoading(bool v) {
     _isLoading = v;
@@ -232,69 +235,36 @@ class AdminProvider with ChangeNotifier {
   // 3) المواعيد (إدارة)
   // ═══════════════════════════════════════
   Future<List<RequestModel>> getAllRequests(String adminUid) async {
-    try {
-      final response = await SupabaseService().client.rpc(
-        'get_admin_requests_internal',
-        params: {'p_admin_uid': adminUid},
-      );
-      return (response as List)
-          .map((d) => RequestModel.fromSupabase(
-              Map<String, dynamic>.from(d), d['id'] as String))
-          .toList();
-    } catch (e) {
-      return [];
-    }
+    final list = await _appointmentsAdmin.getAllRequests(adminUid);
+    _syncAppointmentsError();
+    return list;
   }
 
   Future<List<AppointmentModel>> getAllAppointments(String adminUid) async {
-    try {
-      final response = await SupabaseService().client.rpc(
-        'get_admin_appointments_internal',
-        params: {'p_admin_uid': adminUid},
-      );
-      return (response as List)
-          .map((d) => AppointmentModel.fromSupabase(
-              Map<String, dynamic>.from(d), d['id'] as String))
-          .toList();
-    } catch (e) {
-      return [];
-    }
+    final list = await _appointmentsAdmin.getAllAppointments(adminUid);
+    _syncAppointmentsError();
+    return list;
   }
 
   Future<bool> updateAppointmentStatus(String adminUid, String apptId, int status,
       {String adminNote = ''}) async {
-    try {
-      await SupabaseService().client.rpc(
-        'admin_update_appointment_status_internal',
-        params: {
-          'p_admin_uid': adminUid,
-          'p_appointment_id': apptId,
-          'p_status': status,
-          'p_admin_note': adminNote,
-        },
-      );
-      notifyListeners();
-      return true;
-    } catch (e) {
-      return false;
-    }
+    final ok = await _appointmentsAdmin.updateAppointmentStatus(
+      adminUid,
+      apptId,
+      status,
+      adminNote: adminNote,
+    );
+    _syncAppointmentsError();
+    if (ok) notifyListeners();
+    return ok;
   }
 
   /// فرض موعد من قبل الإدارة
   Future<bool> forceAppointment(String apptId, String adminId) async {
-    try {
-      await SupabaseService().client.rpc(
-        'admin_force_appointment_internal',
-        params: {
-          'p_admin_uid': adminId,
-          'p_appointment_id': apptId,
-        },
-      );
-      notifyListeners();
-      return true;
-    } catch (e) {
-      return false;
-    }
+    final ok = await _appointmentsAdmin.forceAppointment(apptId, adminId);
+    _syncAppointmentsError();
+    if (ok) notifyListeners();
+    return ok;
   }
 
   // ═══════════════════════════════════════
