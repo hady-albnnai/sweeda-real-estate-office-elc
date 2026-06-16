@@ -508,6 +508,31 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                               if (offer.offerNumber != null)
                                 Text('عرض رقم #${offer.offerNumber}',
                                     style: TextStyle(color: AppTheme.primaryGold.withValues(alpha: 0.7), fontSize: 12)),
+                              if (isOwner)
+                                Container(
+                                  margin: const EdgeInsets.only(top: 4, bottom: 4),
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: offer.daysUntilExpiration <= 3 ? AppTheme.errorRed.withValues(alpha: 0.1) : Colors.green.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: offer.daysUntilExpiration <= 3 ? AppTheme.errorRed.withValues(alpha: 0.3) : Colors.green.withValues(alpha: 0.3)),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.timer_outlined, size: 14, color: offer.daysUntilExpiration <= 3 ? AppTheme.errorRed : Colors.green),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        offer.daysUntilExpiration == 0 ? 'ينتهي اليوم (بانتظار التجديد)' : 'ينتهي بعد ${offer.daysUntilExpiration} يوم',
+                                        style: TextStyle(
+                                          color: offer.daysUntilExpiration <= 3 ? AppTheme.errorRed : Colors.green,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               Text(offer.ttl,
                                   style: const TextStyle(
                                       color: AppTheme.textWhite,

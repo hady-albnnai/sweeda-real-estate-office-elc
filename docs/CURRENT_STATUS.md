@@ -114,6 +114,7 @@
 
 ## تحسينات تجربة المستخدم الأخيرة
 
+- [x] Offer Expiration and Reminders -> Implemented proper display of expiration counter in the UI, and fixed database functions for `expire_offers` and `send_renewal_reminders` to accurately notify users 3 days before their offers expire.
 - [x] Login Redirection Issue (Password Auth) -> Fixed the routing issue after successful login to navigate based on role.
 - [x] Profile Redirection Issue -> Fixed the bottom navigation bar and home screen routing so logged-in users go to their dashboard/profile correctly instead of falling back to the login screen.
 - تكبير شعار شاشة السبلاش ليأخذ مساحة أكبر من الشاشة بشكل متجاوب.

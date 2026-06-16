@@ -52,6 +52,19 @@ class OfferModel {
   final DateTime? tsEnd;
   final DateTime? tsRen;
 
+  /// تاريخ انتهاء العرض الفعلي
+  DateTime get expirationDate {
+    if (tsEnd != null) return tsEnd!;
+    if (tsPub != null) return tsPub!.add(const Duration(days: 30));
+    return tsCrt.add(const Duration(days: 30));
+  }
+
+  /// عدد الأيام المتبقية حتى انتهاء العرض
+  int get daysUntilExpiration {
+    final diff = expirationDate.difference(DateTime.now()).inDays;
+    return diff < 0 ? 0 : diff;
+  }
+
   /// 🏢 تسمية مهنية لمالك العرض (هوية المكتب) — حقل عابر لا يُحفظ في DB.
   /// يُحقن من Provider بعد جلب بيانات المالك. مرجع: docs/LOGIC_SPEC.md §1.
   /// إذا كان null لا تُعرض، إذا كان غير null يُعرض بدل أي إشارة لاسم المالك.
