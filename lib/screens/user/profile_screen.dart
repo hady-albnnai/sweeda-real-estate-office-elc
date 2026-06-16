@@ -129,39 +129,72 @@ class _ProfileScreenState extends State<ProfileScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
           child: Column(
             children: [
-              const SizedBox(height: 30),
-              // 🛡️ الشعار والعنوان
+              const SizedBox(height: 40),
+              // 🛡️ الشعار والعنوان بتصميم مطابق للسبلاش
               Hero(
                 tag: 'logo',
                 child: Container(
-                  width: 120,
-                  height: 120,
-                  padding: const EdgeInsets.all(15),
+                  width: 160,
+                  height: 160,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppTheme.surfaceBlack,
-                    border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.3)),
                     boxShadow: [
-                      BoxShadow(color: AppTheme.primaryGold.withValues(alpha: 0.1), blurRadius: 30, spreadRadius: 5)
+                      BoxShadow(
+                        color: AppTheme.primaryGold.withValues(alpha: 0.2),
+                        blurRadius: 40,
+                        spreadRadius: 5,
+                      ),
                     ],
                   ),
-                  child: Image.asset('assets/images/logo_app.png', fit: BoxFit.contain),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // حلقة ذهبية خارجية
+                      Container(
+                        width: 160,
+                        height: 160,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppTheme.primaryGold.withValues(alpha: 0.4),
+                            width: 1.5,
+                          ),
+                        ),
+                      ),
+                      // خلفية سوداء للشعار
+                      Container(
+                        width: 150,
+                        height: 150,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppTheme.surfaceBlack,
+                        ),
+                        padding: const EdgeInsets.all(25),
+                        child: Image.asset('assets/images/logo_app.png', fit: BoxFit.contain),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 30),
               const Text(
-                'مرحباً بك في مكتبك العقاري',
+                'المكتب العقاري الإلكتروني',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppTheme.textWhite, fontSize: 22, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: AppTheme.primaryGold, 
+                  fontSize: 24, 
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.5,
+                ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               const Text(
-                'سجل الآن لتتمتع بكافة مزايا المكتب الإلكتروني الأول في السويداء',
+                'وجهتك الموثوقة لعقارات وسيارات السويداء',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppTheme.textGrey, fontSize: 13, height: 1.5),
+                style: TextStyle(color: AppTheme.textGrey, fontSize: 12, fontWeight: FontWeight.w500),
               ),
               
-              const SizedBox(height: 40),
+              const SizedBox(height: 45),
 
               // ─── قائمة "إنشاء حساب" ───
               _authCategoryCard(
