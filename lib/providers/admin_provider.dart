@@ -6,7 +6,6 @@ import '../models/deal_model.dart';
 import '../models/payment_model.dart';
 import '../models/report_model.dart';
 import '../models/request_model.dart';
-import '../core/utils/error_utils.dart';
 import '../services/admin/staff_admin_service.dart';
 import '../services/admin/payments_admin_service.dart';
 import '../services/admin/reports_admin_service.dart';
@@ -42,10 +41,6 @@ class AdminProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void _setError(Object? error) {
-    _error = ErrorUtils.arabicMessage(error);
-    notifyListeners();
-  }
 
   void _clearErrorSilently() {
     _error = null;
@@ -69,10 +64,6 @@ class AdminProvider with ChangeNotifier {
   void _syncVerificationsError() => _syncServiceError(_verificationsAdmin.lastError);
   void _syncUsersError() => _syncServiceError(_usersAdmin.lastError);
 
-  void _setLoading(bool v) {
-    _isLoading = v;
-    notifyListeners();
-  }
 
   // ═══════════════════════════════════════
   // 1) العروض (مراجعة)

@@ -72,7 +72,9 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
             row['id'] as String,
           );
         }
-      } catch (e) {}
+      } catch (e) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
 
       // ⭐ جلب متوسط تقييم المالك (LOGIC_SPEC §3.3)
       try {
@@ -90,7 +92,9 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
           _ownerRatingCount = list.length;
           _ownerAvgRating = sum / list.length;
         }
-      } catch (e) {}
+      } catch (e) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
     }
     if (mounted) {
       setState(() {

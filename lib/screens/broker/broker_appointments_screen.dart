@@ -71,7 +71,9 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
           _offers[m['id'] as String] =
               OfferModel.fromSupabase(m, m['id'] as String);
         }
-      } catch (e) {}
+      } catch (e) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
     }
 
     if (!mounted) return;
@@ -171,11 +173,13 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
     }
   }
 
+  // ignore: unused_element
   Future<void> _call(String phone) async {
     final uri = Uri.parse('tel:$phone');
     if (await canLaunchUrl(uri)) await launchUrl(uri);
   }
 
+  // ignore: unused_element
   Future<void> _whatsapp(String phone) async {
     final clean = phone.replaceAll(RegExp(r'[^\d+]'), '');
     final uri = Uri.parse('https://wa.me/$clean');

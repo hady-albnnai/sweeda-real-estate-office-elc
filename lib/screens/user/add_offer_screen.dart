@@ -144,9 +144,11 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
 
   int get _totalSteps => _selectedType == 1 ? 4 : 5;
 
+  // ignore: unused_element
   void _next() => setState(() {
         if (_currentStep < _totalSteps - 1) _currentStep++;
       });
+  // ignore: unused_element
   void _prev() => setState(() {
         if (_currentStep > 0) _currentStep--;
       });
@@ -178,7 +180,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   void _showPledgeDialog() {
     final config = context.read<ConfigProvider>().config;
     // النص الافتراضي باسم المكتب العقاري الالكتروني (يُستبدل بالنص من config إذا وُجد)
-    const _defaultPledge =
+    const defaultPledge =
         'إقرار وتعهد إلكتروني — المكتب العقاري الالكتروني\n\n'
         'أقر أنا الموقع أدناه بموجب هذا الإقرار والتعهد بما يلي:\n'
         '1. أن جميع البيانات والصور والمعلومات المقدمة في هذا العرض صحيحة ودقيقة وغير مضللة.\n'
@@ -190,7 +192,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         '6. أن جميع المعلومات المقدمة تقع تحت مسؤوليتي الكاملة والحصرية.';
 
     final rawText = config?.texts['plg']?.toString() ?? '';
-    final pledgeText = rawText.length > 50 ? rawText : _defaultPledge;
+    final pledgeText = rawText.length > 50 ? rawText : defaultPledge;
 
     showDialog(
       context: context,
@@ -1531,6 +1533,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     return options;
   }
 
+  // ignore: unused_element
   Future<void> _triggerWhatsAppVideoShare(OfferModel offer, dynamic user) async {
     final config = context.read<ConfigProvider>().config;
     final groupUrl = config?.texts['videoWhatsAppGroup']?.toString();

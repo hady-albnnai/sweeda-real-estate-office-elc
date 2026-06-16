@@ -7,9 +7,7 @@ import '../../models/request_model.dart';
 import '../../models/offer_model.dart';
 import '../../core/services/business_service.dart';
 import '../../core/network/supabase_service.dart';
-import '../../core/constants/db_constants.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/utils/app_utils.dart';
 import '../../widgets/book_appointment_sheet.dart';
 
 /// شاشة تفاصيل طلب البحث + العروض المطابقة

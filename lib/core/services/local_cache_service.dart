@@ -28,7 +28,9 @@ class LocalCacheService {
       await Hive.initFlutter();
       final box = await Hive.openBox(_boxName);
       _instance._box = box;
-      _instance._ready = true;} catch (e) {}
+      _instance._ready = true;} catch (e) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
   }
 
   bool get isReady => _ready && _box != null;
@@ -41,7 +43,9 @@ class LocalCacheService {
     try {
       await _box!.put(_kConfig, jsonEncode(config));
       await _box!.put(_kConfigTs, DateTime.now().toIso8601String());
-    } catch (e) {}
+    } catch (e) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
   }
 
   Map<String, dynamic>? getConfig() {
@@ -51,7 +55,9 @@ class LocalCacheService {
       if (raw is String && raw.isNotEmpty) {
         return Map<String, dynamic>.from(jsonDecode(raw) as Map);
       }
-    } catch (e) {}
+    } catch (e) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
     return null;
   }
 
@@ -69,7 +75,9 @@ class LocalCacheService {
     if (!isReady) return;
     try {
       await _box!.put(_kOffers, jsonEncode(offers));
-    } catch (e) {}
+    } catch (e) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
   }
 
   List<Map<String, dynamic>> getOffers() {
@@ -81,7 +89,9 @@ class LocalCacheService {
             .map((e) => Map<String, dynamic>.from(e as Map))
             .toList();
       }
-    } catch (e) {}
+    } catch (e) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
     return [];
   }
 
@@ -93,7 +103,9 @@ class LocalCacheService {
     try {
       final raw = _box!.get(_kFavorites);
       if (raw is List) return raw.cast<String>();
-    } catch (_) {}
+    } catch (_) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
     return [];
   }
 

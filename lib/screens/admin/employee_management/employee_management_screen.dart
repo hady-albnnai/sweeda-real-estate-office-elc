@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:go_router/go_router.dart';
 import '../../../providers/admin_provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
@@ -80,7 +79,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
       } else {
         _filteredUsers = _allUsers.where((user) {
           return user.nm.toLowerCase().contains(query) ||
-                 (user.ph?.toLowerCase().contains(query) ?? false) ||
+                 user.ph.toLowerCase().contains(query) ||
                  (user.eml?.toLowerCase().contains(query) ?? false);
         }).toList();
       }
@@ -182,6 +181,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
       if (!mounted) return;
       if (result['success'] == true) {
         await _loadUsers();
+        if (!mounted) return;
         final password = result['new_password']?.toString();
         if (password != null && password.isNotEmpty) {
           await PasswordResultDialog.show(
@@ -420,7 +420,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
               children: [
                 const Icon(Icons.phone, size: 16, color: AppTheme.textGrey),
                 const SizedBox(width: 6),
-                Text(user.ph ?? '—', style: const TextStyle(color: AppTheme.textGrey)),
+                Text(user.ph, style: const TextStyle(color: AppTheme.textGrey)),
               ],
             ),
             if (user.eml != null) ...[

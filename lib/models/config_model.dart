@@ -63,7 +63,9 @@ class ConfigModel {
     for (final key in path.split('.')) {
       if (value is Map && value.containsKey(key)) {
         value = value[key];
-      } else return defaultValue;
+      } else {
+        return defaultValue;
+      }
     }
     return (value is num) ? value.toInt() : defaultValue;
   }
@@ -73,7 +75,9 @@ class ConfigModel {
     for (final key in path.split('.')) {
       if (value is Map && value.containsKey(key)) {
         value = value[key];
-      } else return defaultValue;
+      } else {
+        return defaultValue;
+      }
     }
     return (value is Map) ? Map<String, dynamic>.from(value) : defaultValue;
   }
@@ -83,7 +87,9 @@ class ConfigModel {
     for (final key in path.split('.')) {
       if (value is Map && value.containsKey(key)) {
         value = value[key];
-      } else return defaultValue;
+      } else {
+        return defaultValue;
+      }
     }
     return (value is List) ? value : defaultValue;
   }

@@ -25,7 +25,9 @@ class NotificationProvider with ChangeNotifier {
               Map<String, dynamic>.from(d), d['id'] as String))
           .toList();
       _unreadCount = _notifications.where((n) => !n.isRead).length;
-    } catch (e) {}
+    } catch (e) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
     _isLoading = false;
     notifyListeners();
   }
@@ -48,7 +50,9 @@ class NotificationProvider with ChangeNotifier {
         _unreadCount = _notifications.where((n) => !n.isRead).length;
       }
       notifyListeners();
-    } catch (e) {}
+    } catch (e) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
   }
 
   Future<void> markAllAsRead(String userId) async {
@@ -63,7 +67,9 @@ class NotificationProvider with ChangeNotifier {
           .toList();
       _unreadCount = 0;
       notifyListeners();
-    } catch (e) {}
+    } catch (e) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
   }
 
   Future<bool> sendNotification({

@@ -55,7 +55,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
       if (pkg is Map && pkg['pr'] is num) {
         return (pkg['pr'] as num).toDouble();
       }
-    } catch (_) {}
+    } catch (_) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
     // قيم افتراضية آمنة
     switch (widget.packageId) {
       case 1: return 10;
