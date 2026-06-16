@@ -77,6 +77,23 @@ class OffersAdminService {
     }
   }
 
+  Future<bool> deleteOfferByAdmin(String adminUid, String offerId) async {
+    try {
+      await SupabaseService().client.rpc(
+        'admin_delete_offer_internal',
+        params: {
+          'p_admin_uid': adminUid,
+          'p_offer_id': offerId,
+        },
+      );
+      clearError();
+      return true;
+    } catch (e) {
+      _setError(e);
+      return false;
+    }
+  }
+
   Future<List<OfferModel>> getOffersForMediaReview(String adminUid) async {
     try {
       final response = await SupabaseService().client.rpc(

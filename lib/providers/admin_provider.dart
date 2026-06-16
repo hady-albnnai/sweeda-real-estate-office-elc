@@ -94,6 +94,13 @@ class AdminProvider with ChangeNotifier {
     return ok;
   }
 
+  Future<bool> deleteOfferByAdmin(String adminUid, String offerId) async {
+    final ok = await _offersAdmin.deleteOfferByAdmin(adminUid, offerId);
+    _syncOffersError();
+    if (ok) notifyListeners();
+    return ok;
+  }
+
   Future<List<OfferModel>> getOffersForMediaReview(String adminUid) async {
     final list = await _offersAdmin.getOffersForMediaReview(adminUid);
     _syncOffersError();
