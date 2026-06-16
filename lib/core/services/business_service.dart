@@ -474,7 +474,7 @@ class BusinessService {
   /// - مستخدم + رتبة ≥ خبير            → "عميل مميز ⭐"
   /// - مستخدم عادي                     → "عميل"
   String getUserPublicLabel(UserModel user) {
-    if (user.role >= UserRole.employee) {
+    if (user.isInternal) {
       return 'إدارة المكتب العقاري الالكتروني';
     }
 
