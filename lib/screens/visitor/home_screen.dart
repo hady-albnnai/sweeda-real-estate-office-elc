@@ -95,7 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.person_outline, color: AppTheme.textGrey),
-            onPressed: () => context.push('/login'),
+            onPressed: () => context.push('/user/profile'),
           ),
         ],
       ),
@@ -247,7 +247,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onTap: (index) {
           if (index == 1) context.push('/search');
           if (index == 2) context.push('/user/favorites');
-          if (index == 3) context.push('/login');
+          if (index == 3) context.push('/user/profile');
         },
       ),
     );
