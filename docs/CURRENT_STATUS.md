@@ -58,9 +58,9 @@
 
 ## ما يجب تنفيذه قبل إعلان 100%
 
-- [ ] تشغيل `flutter analyze` محلياً أو عبر CI وإصلاح أي أخطاء.
+- [x] تشغيل `flutter analyze` محلياً — لا توجد مشاكل.
 - [x] إضافة اختبارات وحدة أساسية لـ `PermissionService` و`ErrorUtils`.
-- [ ] تشغيل `flutter test`.
+- [x] تشغيل `flutter test` — النتيجة: All tests passed.
 - [ ] تنفيذ اختبار عملي كامل لإدارة الموظفين.
 - [x] تنفيذ `supabase/tests/admin_security_verification.sql` بعد إصلاحات P1/P2/P5 ونجاحه.
 - [ ] التأكد أن المدير يستطيع الدخول بـ `main_admin` وأن الجلسة تصدر بشكل صحيح.
