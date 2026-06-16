@@ -30,7 +30,7 @@ class AdminProvider with ChangeNotifier {
   final VerificationsAdminService _verificationsAdmin = VerificationsAdminService();
   final UsersAdminService _usersAdmin = UsersAdminService();
 
-  bool _isLoading = false;
+  final bool _isLoading = false;
   String? _error;
 
   bool get isLoading => _isLoading;
