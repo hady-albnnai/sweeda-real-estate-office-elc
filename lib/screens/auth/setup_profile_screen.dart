@@ -86,6 +86,25 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
       return;
     }
 
+    // 🛡️ طلب حفظ البيانات (User Requirement)
+    final save = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surfaceBlack,
+        title: const Text('تأكيد حفظ البيانات', style: TextStyle(color: AppTheme.textWhite)),
+        content: const Text(
+          'هل قمت بحفظ اسم المستخدم وكلمة المرور في مكان آمن؟\nستحتاج إليهما للدخول مستقبلاً.',
+          style: TextStyle(color: AppTheme.textGrey),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('انتظر')),
+          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('نعم، حفظتها')),
+        ],
+      ),
+    );
+
+    if (save != true) return;
+
     setState(() => _loading = true);
     final auth = context.read<AuthProvider>();
     final user = auth.userModel;
@@ -111,7 +130,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('✅ تم إنشاء حسابك بنجاح'),
+          content: Text('✅ تم إنشاء وتأمين حسابك بنجاح'),
           backgroundColor: Colors.green,
         ),
       );

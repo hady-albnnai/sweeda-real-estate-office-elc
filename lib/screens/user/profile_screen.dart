@@ -129,20 +129,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
           child: Column(
             children: [
-              const SizedBox(height: 40),
-              // 🛡️ الشعار والعنوان بتصميم مطابق للسبلاش
+              const SizedBox(height: 60),
+              // 🛡️ الشعار والعنوان بتصميم ضخم جداً
               Hero(
                 tag: 'logo',
                 child: Container(
-                  width: 160,
-                  height: 160,
+                  width: 240, // تكبير لقصى حد كما طلبت
+                  height: 240,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: AppTheme.primaryGold.withValues(alpha: 0.2),
-                        blurRadius: 40,
-                        spreadRadius: 5,
+                        color: AppTheme.primaryGold.withValues(alpha: 0.15),
+                        blurRadius: 60,
+                        spreadRadius: 10,
                       ),
                     ],
                   ),
@@ -151,83 +151,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       // حلقة ذهبية خارجية
                       Container(
-                        width: 160,
-                        height: 160,
+                        width: 240,
+                        height: 240,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: AppTheme.primaryGold.withValues(alpha: 0.4),
-                            width: 1.5,
+                            color: AppTheme.primaryGold.withValues(alpha: 0.3),
+                            width: 2,
                           ),
                         ),
                       ),
                       // خلفية سوداء للشعار
                       Container(
-                        width: 150,
-                        height: 150,
+                        width: 220,
+                        height: 220,
                         decoration: const BoxDecoration(
                           shape: BoxShape.circle,
                           color: AppTheme.surfaceBlack,
                         ),
-                        padding: const EdgeInsets.all(25),
+                        padding: const EdgeInsets.all(35),
                         child: Image.asset('assets/images/logo_app.png', fit: BoxFit.contain),
                       ),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 40),
               const Text(
                 'المكتب العقاري الإلكتروني',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: AppTheme.primaryGold, 
-                  fontSize: 24, 
+                  fontSize: 26, 
                   fontWeight: FontWeight.w900,
                   letterSpacing: 0.5,
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
               const Text(
                 'وجهتك الموثوقة لعقارات وسيارات السويداء',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppTheme.textGrey, fontSize: 12, fontWeight: FontWeight.w500),
+                style: TextStyle(color: AppTheme.textGrey, fontSize: 13, fontWeight: FontWeight.w500),
               ),
               
-              const SizedBox(height: 45),
+              const SizedBox(height: 60),
 
-              // ─── قائمة "إنشاء حساب" ───
-              _authCategoryCard(
-                title: 'إنشاء حساب جديد',
-                subtitle: 'كن عضواً واستفد من نظام النقاط والمتابعة',
-                icon: Icons.person_add_alt_1_outlined,
-                isOpen: _showAuthMode == 1,
-                isPrimary: true,
-                onTap: () => setState(() => _showAuthMode = _showAuthMode == 1 ? 0 : 1),
-                children: [
-                  _authOptionTile(
-                    title: 'عبر تطبيق الواتساب',
-                    subtitle: 'أسرع طريقة — لا تحتاج كلمة مرور',
-                    icon: Icons.chat_outlined,
-                    color: Colors.green,
-                    onTap: () => context.push('/login?signup=true'), // تفتح شاشة الدخول بوضع التسجيل
-                  ),
-                  _authOptionTile(
-                    title: 'عبر البريد الإلكتروني',
-                    subtitle: 'رابط تسجيل يصلك إلى صندوق الوارد',
-                    icon: Icons.alternate_email,
-                    color: Colors.blue,
-                    onTap: () => context.push('/login?signup=true'),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              // ─── قائمة "تسجيل دخول" ───
+              // ─── القائمة الأولى: تسجيل الدخول (Username/Phone + Password) ───
               _authCategoryCard(
                 title: 'تسجيل الدخول',
-                subtitle: 'لديك حساب مسبق؟ عد لمتابعة أعمالك',
+                subtitle: 'ادخل باسم المستخدم أو رقم الهاتف',
                 icon: Icons.login_rounded,
                 isOpen: _showAuthMode == 2,
                 isPrimary: false,
@@ -241,16 +213,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onTap: () => context.push('/login?signup=false'),
                   ),
                   _authOptionTile(
-                    title: 'عبر رمز واتساب السريع',
-                    subtitle: 'في حال نسيت كلمة المرور',
-                    icon: Icons.phonelink_ring_outlined,
-                    color: Colors.green,
-                    onTap: () => context.push('/login?signup=false'),
+                    title: 'هل نسيت كلمة السر؟',
+                    subtitle: 'استعادة الحساب عبر رسالة نصية SMS',
+                    icon: Icons.sms_outlined,
+                    color: Colors.orange,
+                    onTap: () => context.push('/login?signup=false&forgot=true'),
                   ),
                 ],
               ),
 
-              const SizedBox(height: 40),
+              const SizedBox(height: 20),
+
+              // ─── القائمة الثانية: تسجيل حساب جديد (Phone + SMS) ───
+              _authCategoryCard(
+                title: 'إنشاء حساب جديد',
+                subtitle: 'سجل عبر رقم هاتفك واستلم رمز التفعيل',
+                icon: Icons.person_add_alt_1_outlined,
+                isOpen: _showAuthMode == 1,
+                isPrimary: true,
+                onTap: () => setState(() => _showAuthMode = _showAuthMode == 1 ? 0 : 1),
+                children: [
+                  _authOptionTile(
+                    title: 'التسجيل عبر رقم الهاتف (SMS)',
+                    subtitle: 'سيصلك رمز تحقق برسالة نصية عادية',
+                    icon: Icons.phone_android_outlined,
+                    color: Colors.white,
+                    onTap: () => context.push('/login?signup=true'),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 60),
               
               // ℹ️ مميزات سريعة
               Row(

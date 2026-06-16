@@ -223,56 +223,47 @@ class _LoginScreenState extends State<LoginScreen> {
                             id: 1,
                             title: 'عبر الواتساب (موصى به)',
                             subtitle: 'سجّل بلمحة بصر عبر تطبيق الواتساب',
-                            icon: Icons.chat_outlined,
-                            color: Colors.green,
-                            child: _buildWhatsAppForm(),
-                          ),
-                          const SizedBox(height: 16),
-                          _authCategory(
-                            id: 2,
-                            title: 'عبر البريد الإلكتروني',
-                            subtitle: 'استلم رابط دخول آمن على بريدك',
-                            icon: Icons.alternate_email,
-                            color: Colors.blue,
-                            child: _buildEmailForm(),
-                          ),
-                          const SizedBox(height: 30),
-                          TextButton(
-                            onPressed: () => setState(() {
-                              _isSignUp = false;
-                              _activeCategory = 3; // افتح كلمة المرور تلقائياً
-                            }),
-                            child: const Text('لديك حساب مسبق؟ سجل دخولك الآن', style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
-                          ),
-                        ] 
-                        // ─── وضع تسجيل الدخول ───
-                        else ...[
-                          _authCategory(
-                            id: 3,
-                            title: 'بيانات الدخول التقليدية',
-                            subtitle: 'اسم المستخدم وكلمة المرور',
-                            icon: Icons.lock_outline,
-                            color: AppTheme.primaryGold,
-                            child: _buildPasswordForm(),
-                          ),
-                          const SizedBox(height: 16),
-                          _authCategory(
-                            id: 1,
-                            title: 'دخول سريع عبر واتساب',
-                            subtitle: 'في حال نسيت كلمة المرور',
-                            icon: Icons.phonelink_ring_outlined,
-                            color: Colors.green,
-                            child: _buildWhatsAppForm(),
-                          ),
-                          const SizedBox(height: 30),
-                          TextButton(
-                            onPressed: () => setState(() {
-                              _isSignUp = true;
-                              _activeCategory = 1; // افتح واتساب تلقائياً
-                            }),
-                            child: const Text('ليس لديك حساب؟ أنشئ حساباً جديداً', style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
-                          ),
-                        ],
+            icon: Icons.sms_outlined,
+            color: Colors.green,
+            child: _buildSMSForm(),
+          ),
+          const SizedBox(height: 30),
+          TextButton(
+            onPressed: () => setState(() {
+              _isSignUp = false;
+              _activeCategory = 3; // افتح كلمة المرور تلقائياً
+            }),
+            child: const Text('لديك حساب مسبق؟ سجل دخولك الآن', style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+          ),
+        ] 
+        // ─── وضع تسجيل الدخول ───
+        else ...[
+          _authCategory(
+            id: 3,
+            title: 'بيانات الدخول التقليدية',
+            subtitle: 'اسم المستخدم وكلمة المرور',
+            icon: Icons.lock_outline,
+            color: AppTheme.primaryGold,
+            child: _buildPasswordForm(),
+          ),
+          const SizedBox(height: 16),
+          _authCategory(
+            id: 1,
+            title: 'استعادة الحساب (SMS)',
+            subtitle: 'في حال نسيت كلمة المرور',
+            icon: Icons.phonelink_ring_outlined,
+            color: Colors.green,
+            child: _buildSMSForm(),
+          ),
+          const SizedBox(height: 30),
+          TextButton(
+            onPressed: () => setState(() {
+              _isSignUp = true;
+              _activeCategory = 1; // افتح SMS تلقائياً
+            }),
+            child: const Text('ليس لديك حساب؟ أنشئ حساباً جديداً', style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+          ),
+        ],
                         const SizedBox(height: 20),
                       ],
                     ),
@@ -330,7 +321,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildWhatsAppForm() {
+  Widget _buildSMSForm() {
     return Column(
       children: [
         const Divider(color: Colors.white10),
@@ -350,13 +341,31 @@ class _LoginScreenState extends State<LoginScreen> {
           width: double.infinity,
           height: 48,
           child: ElevatedButton(
-            onPressed: _loading ? null : _sendWhatsApp,
+            onPressed: _loading ? null : _sendSMS,
             style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-            child: const Text('إرسال الرمز', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text('إرسال الرمز (SMS)', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ),
       ],
     );
+  }
+
+  Future<void> _sendSMS() async {
+    final phone = _phoneCtrl.text.trim();
+    if (phone.length != 10 || !phone.startsWith('09')) {
+      _toast('أدخل رقم هاتف صحيح');
+      return;
+    }
+    setState(() => _loading = true);
+    final auth = context.read<AuthProvider>();
+    final ok = await auth.sendSMSOTP(phone);
+    if (!mounted) return;
+    setState(() => _loading = false);
+    if (ok) {
+      context.push('/otp');
+    } else {
+      _toast('فشل إرسال الرمز عبر SMS');
+    }
   }
 
   Widget _buildEmailForm() {

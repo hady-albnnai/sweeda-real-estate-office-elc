@@ -66,23 +66,14 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     }
     setState(() => _loading = true);
     final auth = context.read<AuthProvider>();
-    final ok = await auth.verifyWhatsAppOTP(_otp);
+    final ok = await auth.verifySMSOTP(_otp);
     if (!mounted) return;
     setState(() => _loading = false);
     if (ok) {
       if (auth.isNewUser) {
         context.go('/setup-profile');
-      } else if (auth.isSenior) {
-        context.go('/admin/dashboard');
-      } else if (auth.isEmployee) {
-        context.go('/employee/home');
-      } else if (auth.isSupervisor) {
-        context.go('/executor/tasks');
-      } else if (auth.isPhotographer) {
-        context.go('/photographer/tasks');
-      } else if (auth.isBroker) {
-        context.go('/broker/dashboard');
       } else {
+        // إذا كان يطلب استعادة كلمة مرور (Forgot Password) أو مستخدم قديم
         context.go('/user/home');
       }
     } else {
