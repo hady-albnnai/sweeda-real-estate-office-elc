@@ -166,6 +166,7 @@ class AppRouter {
       final isLoggedIn = auth.isLoggedIn;
 
       if (!isLoggedIn) {
+        // أي محاولة دخول لصفحة خاصة تحول الزائر لصفحة الدخول الموحدة الجديدة
         return '/login';
       }
 
