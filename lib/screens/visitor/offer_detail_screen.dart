@@ -854,8 +854,8 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
 
                   if (isOwner || auth.isAdmin) const SizedBox(height: 14),
 
-                  // زر الحجز — مخفي عن المالك
-                  if (!isOwner)
+                  // زر الحجز — مخفي عن المالك والإدارة
+                  if (!isOwner && !auth.isAdmin)
                   SizedBox(
                     width: double.infinity,
                     height: 55,
@@ -881,8 +881,8 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                       ),
                     ),
                   ),
-                  // ⭐ تقييم المالك (لغير المالك المسجّل) — LOGIC_SPEC §3.3
-                  if (auth.isLoggedIn && !isOwner) ...[
+                  // ⭐ تقييم المالك (لغير المالك والإدارة) — LOGIC_SPEC §3.3
+                  if (auth.isLoggedIn && !isOwner && !auth.isAdmin) ...[
                     const SizedBox(height: 10),
                     SizedBox(
                       width: double.infinity,
