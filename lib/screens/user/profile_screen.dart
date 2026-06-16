@@ -56,7 +56,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   // ── العمليات الوظيفية ──
 
-  Future<void> _doLogin() async {
+  Future<void> _handleLogin() async {
     final id = _loginIdCtrl.text.trim();
     final pass = _loginPwdCtrl.text;
     if (id.isEmpty || pass.isEmpty) { _toast('يرجى إدخال البيانات المطلوبة'); return; }
@@ -67,7 +67,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (!ok) _toast(auth.lastError ?? 'بيانات الدخول غير صحيحة');
   }
 
-  Future<void> _doForgotPassword() async {
+  Future<void> _handleForgotPassword() async {
     final phone = _loginIdCtrl.text.trim();
     if (phone.length != 10 || !phone.startsWith('09')) { _toast('أدخل رقم هاتفك في الخانة الأولى أولاً (09xxxxxxxx)'); return; }
     setState(() => _isLoginLoading = true);
@@ -76,7 +76,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (ok) { _toast('تم إرسال كود استعادة بـ SMS'); context.push('/otp'); }
   }
 
-  Future<void> _doSignUp() async {
+  Future<void> _handleSignUp() async {
     final phone = _signUpPhoneCtrl.text.trim();
     if (phone.length != 10 || !phone.startsWith('09')) { _toast('أدخل رقم هاتف صحيح'); return; }
     setState(() => _isSignUpLoading = true);
