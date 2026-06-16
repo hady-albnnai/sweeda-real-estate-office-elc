@@ -34,7 +34,9 @@ class _FraudSuspectsScreenState extends State<FraudSuspectsScreen> {
       _error = null;
     });
     try {
-      final adminId = SupabaseService().client.auth.currentUser?.id;
+      final auth = context.read<AuthProvider>();
+      final adminId = auth.userModel?.uid;
+      
       final res =
           await SupabaseService().client.rpc('admin_fraud_suspects', params: {'p_admin_uid': adminId});
       final list =

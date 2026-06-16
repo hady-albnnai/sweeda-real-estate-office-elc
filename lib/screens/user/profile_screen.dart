@@ -752,6 +752,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   String _accountSubtitle(UserModel user) {
+    if (user.isAdmin) return 'بيانات التعيين والتحقق الوظيفي ✅';
     if (user.isVerifiedOfficial) return 'حسابك موثق رسمياً ✓';
     if (user.vrf == 1) return 'طلب التوثيق قيد المراجعة';
     return 'معلوماتك الشخصية والتوثيق';
