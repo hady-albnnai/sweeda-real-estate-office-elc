@@ -15,17 +15,15 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  Map<String, dynamic>? _staffStats;
-  bool _loadingStats = false;
-  int _activeBlock = 0; // 1: signup, 2: login
-  int _signupWay = 0; // 1: phone, 2: email
+  int _activeSection = 0; // 1: Signup, 2: Login
+  int _signupWay = 0; // 1: Phone, 2: Email
+  bool _obs = true;
+  bool _loading = false;
 
   final _logUser = TextEditingController();
   final _logPass = TextEditingController();
   final _regPhone = TextEditingController();
   final _regEmail = TextEditingController();
-  bool _obs = true;
-  bool _busy = false;
 
   @override
   void dispose() {
@@ -33,38 +31,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
-  // ── العمليات ──
+  // ── العمليات الوظيفية ──
   Future<void> _login() async {
-    if (_logUser.text.isEmpty || _logPass.text.isEmpty) { _snack('يرجى إدخال البيانات'); return; }
-    setState(() => _busy = true);
+    if (_logUser.text.isEmpty || _logPass.text.isEmpty) { _snack('أدخل بياناتك'); return; }
+    setState(() => _loading = true);
     final ok = await context.read<AuthProvider>().loginWithPassword(_logUser.text.trim(), _logPass.text);
-    if (mounted) setState(() => _busy = false);
+    if (mounted) setState(() => _loading = false);
     if (!ok) _snack('خطأ في الاسم أو كلمة المرور');
   }
 
   Future<void> _forgot() async {
     final ph = _logUser.text.trim();
-    if (ph.length != 10 || !ph.startsWith('09')) { _snack('أدخل رقم هاتفك في الخانة الأولى أولاً'); return; }
-    setState(() => _busy = true);
+    if (ph.length != 10 || !ph.startsWith('09')) { _snack('أدخل رقم هاتفك في خانة المستخدم أولاً'); return; }
+    setState(() => _loading = true);
     final ok = await context.read<AuthProvider>().sendSMSOTP(ph);
-    if (mounted) setState(() => _busy = false);
-    if (ok) context.push('/otp');
+    if (mounted) setState(() => _loading = false);
+    if (ok) { _snack('تم إرسال كود الاستعادة SMS'); context.push('/otp'); }
   }
 
   Future<void> _regSMS() async {
     if (_regPhone.text.length != 10 || !_regPhone.text.startsWith('09')) { _snack('أدخل رقم هاتف صحيح'); return; }
-    setState(() => _busy = true);
+    setState(() => _loading = true);
     final ok = await context.read<AuthProvider>().sendSMSOTP(_regPhone.text.trim());
-    if (mounted) setState(() => _busy = false);
-    if (ok) context.push('/otp');
+    if (mounted) setState(() => _loading = false);
+    if (ok) { _snack('تم إرسال كود التفعيل SMS'); context.push('/otp'); }
   }
 
   Future<void> _regMail() async {
     if (_regEmail.text.isEmpty || !_regEmail.text.contains('@')) { _snack('أدخل بريداً صحيحاً'); return; }
-    setState(() => _busy = true);
+    setState(() => _loading = true);
     final ok = await context.read<AuthProvider>().sendEmailMagicLink(_regEmail.text.trim());
-    if (mounted) setState(() => _busy = false);
-    if (ok) context.push('/check-email');
+    if (mounted) setState(() => _loading = false);
+    if (ok) { _snack('تم إرسال رابط التفعيل لبريدك'); context.push('/check-email'); }
   }
 
   void _snack(String m) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
@@ -72,15 +70,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
-    if (auth.userModel == null) return Scaffold(backgroundColor: AppTheme.deepBlack, body: _guestUI(), bottomNavigationBar: const CustomBottomNavBar(currentIndex: 4));
+    final user = auth.userModel;
 
+    // إذا لم يكن مسجلاً (زائر) نعرض الواجهة الجديدة المنظمة
+    if (user == null) {
+      return Scaffold(
+        backgroundColor: AppTheme.deepBlack,
+        body: _buildGuestUI(),
+        bottomNavigationBar: const CustomBottomNavBar(currentIndex: 4),
+      );
+    }
+
+    // إذا كان مسجلاً (موظف أو عميل) نعرض واجهته الخاصة
     return Scaffold(
       backgroundColor: AppTheme.deepBlack,
       body: CustomScrollView(slivers: [
-        SliverToBoxAdapter(child: _buildHeader(auth.userModel!)),
+        SliverToBoxAdapter(child: _buildHeader(user)),
         SliverPadding(padding: const EdgeInsets.all(20), sliver: SliverList(delegate: SliverChildListDelegate([
-          if (auth.userModel!.isInternal) _buildStaffStats(auth.userModel!) else ...[_buildUserStats(auth.userModel!), const SizedBox(height: 16), _buildActivityStats(auth.userModel!)],
-          const SizedBox(height: 20), _buildMenuSection(auth.userModel!), const SizedBox(height: 20), _buildLogoutButton(auth), const SizedBox(height: 30),
+          if (user.isInternal) _buildStaffStats(user) else ...[_buildUserStats(user), const SizedBox(height: 16), _buildActivityStats(user)],
+          const SizedBox(height: 20), _buildMenuSection(user), const SizedBox(height: 20), _buildLogoutButton(auth), const SizedBox(height: 30),
         ]))),
       ]),
       bottomNavigationBar: const CustomBottomNavBar(currentIndex: 4),
@@ -88,9 +96,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // ═══════════════════════════════════════════════════════════════
-  // واجهة الزائر - تصميم فائق الوضوح
+  // واجهة الزائر - الكتالوج المنشود
   // ═══════════════════════════════════════════════════════════════
-  Widget _guestUI() {
+  Widget _buildGuestUI() {
     final sz = MediaQuery.sizeOf(context);
     final logoSize = (sz.shortestSide * 0.95).clamp(320.0, 550.0);
 
@@ -102,10 +110,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(children: [
             const SizedBox(height: 10),
-            // الشعار الماكس
+            // 🔥 شعار عملاق (تصميم السبلاش)
             Hero(tag: 'logo', child: Container(
               width: logoSize, height: logoSize * 0.72,
-              decoration: BoxDecoration(shape: BoxShape.circle, boxShadow: [BoxShadow(color: AppTheme.primaryGold.withValues(alpha: 0.2), blurRadius: 100, spreadRadius: 30)]),
+              decoration: BoxDecoration(shape: BoxShape.circle, boxShadow: [BoxShadow(color: AppTheme.primaryGold.withValues(alpha: 0.25), blurRadius: 100, spreadRadius: 30)]),
               child: Stack(alignment: Alignment.center, children: [
                 Container(width: logoSize * 0.72, height: logoSize * 0.72, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.4), width: 4))),
                 Container(width: logoSize * 0.65, height: logoSize * 0.65, decoration: const BoxDecoration(shape: BoxShape.circle, color: AppTheme.surfaceBlack), padding: const EdgeInsets.all(35), child: Image.asset('assets/images/logo_app.png', fit: BoxFit.contain)),
@@ -114,11 +122,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Text('المكتب العقاري الإلكتروني', style: GoogleFonts.cairo(color: AppTheme.primaryGold, fontSize: 26, fontWeight: FontWeight.w900)),
             const SizedBox(height: 50),
 
-            // ── البند 1: تسجيل الدخول ──
-            _mainBlock(
+            // ── البند الأول: تسجيل الدخول ──
+            _expandableBlock(
               id: 2, title: 'تسجيل الدخول', icon: Icons.login_rounded, isGold: false,
               child: Column(children: [
-                _input(_logUser, 'اسم المستخدم أو الهاتف', Icons.person_outline),
+                _input(_logUser, 'اسم المستخدم أو رقم الهاتف', Icons.person_outline),
                 const SizedBox(height: 12),
                 _input(_logPass, 'كلمة المرور', Icons.lock_outline, isPass: true, obs: _obs, onT: () => setState(() => _obs = !_obs)),
                 const SizedBox(height: 16),
@@ -129,13 +137,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 16),
 
-            // ── البند 2: تسجيل حساب جديد ──
-            _mainBlock(
+            // ── البند الثاني: تسجيل حساب جديد ──
+            _expandableBlock(
               id: 1, title: 'تسجيل حساب جديد', icon: Icons.person_add_alt_1_outlined, isGold: true,
               child: Column(children: [
-                // أ. هاتف
-                _option(
-                  t: 'تسجيل عن طريق رقم الهاتف', i: Icons.phone_android, active: _signupWay == 1,
+                // أ- تسجيل عن طريق الهاتف
+                _innerOption(
+                  t: 'تسجيل عن طريق رقم الهاتف', i: Icons.phone_android, sel: _signupWay == 1,
                   onT: () => setState(() => _signupWay = 1),
                   child: Column(children: [
                     _input(_regPhone, '09XXXXXXXX', Icons.phone_iphone, dark: true),
@@ -144,9 +152,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ]),
                 ),
                 const SizedBox(height: 12),
-                // ب. إيميل
-                _option(
-                  t: 'تسجيل عن طريق الإيميل', i: Icons.alternate_email, active: _signupWay == 2,
+                // ب- تسجيل عن طريق الايميل
+                _innerOption(
+                  t: 'تسجيل عن طريق الإيميل', i: Icons.alternate_email, sel: _signupWay == 2,
                   onT: () => setState(() => _signupWay = 2),
                   child: Column(children: [
                     _input(_regEmail, 'example@mail.com', Icons.email_outlined, dark: true),
@@ -163,34 +171,58 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _mainBlock({required int id, required String title, required IconData icon, required bool isGold, required Widget child}) {
-    final open = _activeBlock == id;
+  // ── المساعدات البنائية ──
+
+  Widget _expandableBlock({required int id, required String title, required IconData icon, required bool isGold, required Widget child}) {
+    final open = _activeSection == id;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       decoration: BoxDecoration(color: isGold ? AppTheme.primaryGold : AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(24), border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.5), width: 2)),
       child: Column(children: [
-        InkWell(
-          onTap: () => setState(() => _activeBlock = open ? 0 : id),
-          borderRadius: BorderRadius.circular(24),
-          child: Padding(padding: const EdgeInsets.all(16), child: Row(children: [
-            Icon(icon, color: isGold ? Colors.black : AppTheme.primaryGold, size: 28),
-            const SizedBox(width: 16),
-            Text(title, style: TextStyle(color: isGold ? Colors.black : AppTheme.textWhite, fontSize: 18, fontWeight: FontWeight.w900)),
-            const Spacer(),
-            Icon(open ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, color: isGold ? Colors.black : AppTheme.textGrey),
-          ])),
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => setState(() => _activeSection = open ? 0 : id),
+            borderRadius: BorderRadius.circular(24),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(children: [
+                Icon(icon, color: isGold ? Colors.black : AppTheme.primaryGold, size: 28),
+                const SizedBox(width: 16),
+                Text(title, style: TextStyle(color: isGold ? Colors.black : AppTheme.textWhite, fontSize: 18, fontWeight: FontWeight.w900)),
+                const Spacer(),
+                Icon(open ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, color: isGold ? Colors.black : AppTheme.textGrey),
+              ]),
+            ),
+          ),
         ),
         if (open) Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 20), child: child),
       ]),
     );
   }
 
-  Widget _option({required String t, required IconData i, required bool active, required VoidCallback onT, required Widget child}) {
+  Widget _innerOption({required String t, required IconData i, required bool sel, required VoidCallback onT, required Widget child}) {
     return Container(
       decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16)),
       child: Column(children: [
-        ListTile(onTap: onT, leading: Icon(i, color: Colors.black87), title: Text(t, style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 14)), trailing: Icon(active ? Icons.radio_button_checked : Icons.radio_button_off, color: Colors.black87)),
-        if (active) Padding(padding: const EdgeInsets.fromLTRB(12, 0, 12, 16), child: child),
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onT,
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(children: [
+                Icon(i, color: Colors.black87),
+                const SizedBox(width: 12),
+                Text(t, style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 14)),
+                const Spacer(),
+                Icon(sel ? Icons.radio_button_checked : Icons.radio_button_off, color: Colors.black87),
+              ]),
+            ),
+          ),
+        ),
+        if (sel) Padding(padding: const EdgeInsets.fromLTRB(12, 0, 12, 16), child: child),
       ]),
     );
   }
@@ -209,14 +241,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _bigBtn({required String l, required VoidCallback? o, bool dark = false}) {
     return SizedBox(width: double.infinity, height: 56, child: ElevatedButton(
-      onPressed: _busy ? null : o,
+      onPressed: _loading ? null : o,
       style: ElevatedButton.styleFrom(backgroundColor: dark ? Colors.black : Colors.white, foregroundColor: dark ? Colors.white : Colors.black, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
-      child: _busy ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)) : Text(l, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+      child: _loading ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)) : Text(l, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
     ));
   }
 
   // ── المكونات الأخرى (للمسجلين) ──
-  Widget _buildHeader(UserModel user) { return Container(padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 16, bottom: 24, left: 20, right: 20), decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [AppTheme.primaryGold.withValues(alpha: 0.2), AppTheme.deepBlack])), child: Column(children: [ Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(user.isAdmin ? 'الملف الوظيفي' : 'حسابي', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 22, fontWeight: FontWeight.bold)), IconButton(icon: const Icon(Icons.settings_outlined, color: AppTheme.primaryGold), onPressed: () => context.push('/user/settings'))]), const SizedBox(height: 16), Container(width: 88, height: 88, decoration: BoxDecoration(shape: BoxShape.circle, gradient: LinearGradient(colors: [AppTheme.primaryGold.withValues(alpha: 0.8), AppTheme.primaryGold.withValues(alpha: 0.4)]), boxShadow: [BoxShadow(color: AppTheme.primaryGold.withValues(alpha: 0.25), blurRadius: 20, spreadRadius: 2)]), child: Container(margin: const EdgeInsets.all(3), decoration: const BoxDecoration(shape: BoxShape.circle, color: AppTheme.surfaceBlack), child: Center(child: Text(user.nm.isNotEmpty ? user.nm[0] : '؟', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 36, fontWeight: FontWeight.bold))))), const SizedBox(height: 12), Text(user.nm.isNotEmpty ? user.nm : 'مستخدم جديد', style: const TextStyle(color: AppTheme.textWhite, fontSize: 20, fontWeight: FontWeight.bold)), const SizedBox(height: 6), if (user.isAdmin) ...[Text(user.roleName, style: const TextStyle(color: AppTheme.primaryGold, fontSize: 14, fontWeight: FontWeight.w600)), const SizedBox(height: 4), if (user.sid.isNotEmpty) Text('الرقم الوطني: ${user.sid}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)), if (user.ad.isNotEmpty) Text('العنوان: ${user.ad}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12))] else if (user.usr != null) Text('@${user.usr}', style: TextStyle(color: AppTheme.textGrey.withValues(alpha: 0.8), fontSize: 14)), const SizedBox(height: 12), if (!user.isAdmin) Row(mainAxisAlignment: MainAxisAlignment.center, children: [_chip(user.roleName, AppTheme.primaryGold.withValues(alpha: 0.15), AppTheme.primaryGold), const SizedBox(width: 8), _chip(user.badgeName, Colors.white.withValues(alpha: 0.08), AppTheme.textWhite), if (user.isVerifiedOfficial) ...[const SizedBox(width: 8), _chip('✓ موثق', Colors.green.withValues(alpha: 0.15), Colors.green)]]) ])); }
+  Widget _buildHeader(UserModel user) { return Container(padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 16, bottom: 24, left: 20, right: 20), decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [AppTheme.primaryGold.withValues(alpha: 0.2), AppTheme.deepBlack])), child: Column(children: [ Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(user.isAdmin ? 'الملف الوظيفي' : 'حسابي', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 22, fontWeight: FontWeight.bold)), IconButton(icon: const Icon(Icons.settings_outlined, color: AppTheme.primaryGold), onPressed: () => context.push('/user/settings'))]), const SizedBox(height: 16), Container(width: 88, height: 88, decoration: BoxDecoration(shape: BoxShape.circle, gradient: LinearGradient(colors: [AppTheme.primary Gold.withValues(alpha: 0.8), AppTheme.primaryGold.withValues(alpha: 0.4)]), boxShadow: [BoxShadow(color: AppTheme.primaryGold.withValues(alpha: 0.25), blurRadius: 20, spreadRadius: 2)]), child: Container(margin: const EdgeInsets.all(3), decoration: const BoxDecoration(shape: BoxShape.circle, color: AppTheme.surfaceBlack), child: Center(child: Text(user.nm.isNotEmpty ? user.nm[0] : '؟', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 36, fontWeight: FontWeight.bold))))), const SizedBox(height: 12), Text(user.nm.isNotEmpty ? user.nm : 'مستخدم جديد', style: const TextStyle(color: AppTheme.textWhite, fontSize: 20, fontWeight: FontWeight.bold)), const SizedBox(height: 6), if (user.isAdmin) ...[Text(user.roleName, style: const TextStyle(color: AppTheme.primaryGold, fontSize: 14, fontWeight: FontWeight.w600)), const SizedBox(height: 4), if (user.sid.isNotEmpty) Text('الرقم الوطني: ${user.sid}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)), if (user.ad.isNotEmpty) Text('العنوان: ${user.ad}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12))] else if (user.usr != null) Text('@${user.usr}', style: TextStyle(color: AppTheme.textGrey.withValues(alpha: 0.8), fontSize: 14)), const SizedBox(height: 12), if (!user.isAdmin) Row(mainAxisAlignment: MainAxisAlignment.center, children: [_chip(user.roleName, AppTheme.primaryGold.withValues(alpha: 0.15), AppTheme.primaryGold), const SizedBox(width: 8), _chip(user.badgeName, Colors.white.withValues(alpha: 0.08), AppTheme.textWhite), if (user.isVerifiedOfficial) ...[const SizedBox(width: 8), _chip('✓ موثق', Colors.green.withValues(alpha: 0.15), Colors.green)]]) ])); }
   Widget _chip(String t, Color b, Color f) => Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5), decoration: BoxDecoration(color: b, borderRadius: BorderRadius.circular(16), border: Border.all(color: f.withValues(alpha: 0.3))), child: Text(t, style: TextStyle(color: f, fontSize: 12, fontWeight: FontWeight.w600)));
   Widget _buildUserStats(UserModel u) => Row(children: [Expanded(child: _statTile(icon: Icons.star_rounded, value: '${u.pt}', label: 'النقاط', color: const Color(0xFFFFD700))), const SizedBox(width: 12), Expanded(child: _statTile(icon: Icons.local_fire_department_rounded, value: '${u.strk}', label: 'أيام متتالية', color: const Color(0xFFFF6B35)))]);
   Widget _statTile({required IconData icon, required String value, required String label, required Color color}) => Container(padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12), decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(16), border: Border.all(color: color.withValues(alpha: 0.2))), child: Row(children: [Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)), child: Icon(icon, color: color, size: 22)), const SizedBox(width: 10), Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(value, style: const TextStyle(color: AppTheme.textWhite, fontSize: 18, fontWeight: FontWeight.bold)), Text(label, style: TextStyle(color: AppTheme.textGrey.withValues(alpha: 0.7), fontSize: 11))])]));
