@@ -3110,6 +3110,7 @@ $$;
 GRANT EXECUTE ON FUNCTION get_admin_dashboard_stats(UUID) TO anon, authenticated, service_role;
 
 
+
 -- ============================================================================
 -- Input Validation & Abuse Hardening (2026-06-15)
 -- Source mirror: supabase/migrations/2026_06_15_input_validation_hardening.sql
@@ -3120,6 +3121,10 @@ GRANT EXECUTE ON FUNCTION get_admin_dashboard_stats(UUID) TO anon, authenticated
 -- Purpose:
 --   Add server-side input validation/sanitization helpers and patch key RPCs
 --   so the server rejects malformed/abusive input even if the client UI is bypassed.
+--
+-- Notes:
+--   This version preserves the current production logic for offer quotas,
+--   package grace, and offers.added_by while adding validation.
 -- ══════════════════════════════════════════════════════════════════════
 
 CREATE OR REPLACE FUNCTION app_clean_text(p_value TEXT, p_max_len INT DEFAULT 1000)
@@ -3131,7 +3136,7 @@ DECLARE
   v TEXT;
 BEGIN
   v := COALESCE(p_value, '');
-  v := regexp_replace(v, '[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '', 'g');
+  v := regexp_replace(v, '[[:cntrl:]]', '', 'g');
   v := regexp_replace(v, '\s+', ' ', 'g');
   v := btrim(v);
   IF p_max_len IS NOT NULL AND p_max_len > 0 AND length(v) > p_max_len THEN
@@ -3433,7 +3438,8 @@ BEGIN
     RAISE EXCEPTION 'INVALID_PRICE';
   END IF;
 
-  IF COALESCE(v_user.role, 0) < 2 THEN
+  -- موظف المكتب فما فوق معفي من الحصة.
+  IF COALESCE(v_user.role, 0) < 4 THEN
     SELECT value INTO v_config FROM app_config WHERE key = 'main';
     v_limit := CASE WHEN COALESCE(v_user.role, 0) = 1
       THEN COALESCE((v_config->'qta'->'b'->>'r')::INT, 5)
@@ -3447,19 +3453,18 @@ BEGIN
   END IF;
 
   RETURN QUERY
-  INSERT INTO requests (typ, elm, cl_nm, cl_ph, prc, cur, notes, specs, usr_id, sts, matches, i_del, ts_crt)
+  INSERT INTO requests (typ, elm, cl_nm, cl_ph, prc, cur, notes, specs, usr_id, sts, i_del, ts_crt)
   VALUES (
     COALESCE((p_request->>'typ')::INT, 0),
     COALESCE((p_request->>'elm')::INT, 0),
     v_name,
     v_phone,
     v_price,
-    COALESCE((p_request->>'cur')::INT, 1),
+    COALESCE((p_request->>'cur')::INT, 0),
     v_notes,
     COALESCE(p_request->'specs', '{}'::jsonb),
     p_user_uid,
     0,
-    COALESCE(p_request->'matches', '{}'::jsonb),
     0,
     NOW()
   ) RETURNING *;
@@ -3514,9 +3519,8 @@ BEGIN
 END;
 $$;
 GRANT EXECUTE ON FUNCTION update_request_internal(UUID, UUID, JSONB) TO anon, authenticated, service_role;
-EOF
 
--- Harden offer creation.
+-- Harden offer creation while preserving current production logic.
 CREATE OR REPLACE FUNCTION create_offer_internal(
   p_user_uid UUID,
   p_offer JSONB
@@ -3532,6 +3536,7 @@ DECLARE
   v_used INT;
   v_recent_deleted INT;
   v_duplicate BOOLEAN;
+  v_effective_pkg INT;
   v_title TEXT;
   v_contact_ph TEXT;
   v_desc TEXT;
@@ -3543,12 +3548,7 @@ BEGIN
     RAISE EXCEPTION 'AUTH_UID_MISMATCH';
   END IF;
 
-  SELECT * INTO v_user
-  FROM users
-  WHERE id = p_user_uid
-    AND i_del = 0
-    AND sts = 0;
-
+  SELECT * INTO v_user FROM users WHERE id = p_user_uid AND i_del = 0 AND sts = 0;
   IF v_user.id IS NULL THEN
     RAISE EXCEPTION 'USER_NOT_ACTIVE_OR_NOT_FOUND';
   END IF;
@@ -3560,12 +3560,18 @@ BEGIN
   v_exact_loc := app_clean_text(p_offer->>'exact_loc', 300);
   v_soc_txt := app_clean_text(p_offer->>'soc_txt', 500);
 
-  IF COALESCE(v_user.role, 0) < 2 THEN
-    SELECT value INTO v_config
-    FROM app_config
-    WHERE key = 'main';
+  -- الإدارة الداخلية (موظف مكتب فما فوق) غير مقيّدة بحصة.
+  IF COALESCE(v_user.role, 0) < 4 THEN
+    SELECT value INTO v_config FROM app_config WHERE key = 'main';
 
-    v_limit := COALESCE((v_config->'pkg'->(COALESCE(v_user.b_pkg, 0)::TEXT)->>'o')::INT,
+    v_effective_pkg := CASE
+      WHEN COALESCE(v_user.b_pkg, 0) = 0 THEN 0
+      WHEN v_user.pkg_grace IS NOT NULL AND v_user.pkg_grace > NOW() THEN v_user.b_pkg
+      WHEN v_user.pkg_end IS NOT NULL AND v_user.pkg_end > NOW() THEN v_user.b_pkg
+      ELSE 0
+    END;
+
+    v_limit := COALESCE((v_config->'pkg'->(v_effective_pkg::TEXT)->>'o')::INT,
       CASE WHEN COALESCE(v_user.role, 0) = 1 THEN 5 ELSE 1 END);
 
     SELECT COUNT(*) INTO v_used
@@ -3578,10 +3584,9 @@ BEGIN
     FROM offers
     WHERE usr_id = p_user_uid
       AND i_del = 1
-      AND ts_upd >= NOW() - INTERVAL '24 hours';
+      AND ts_crt >= NOW() - INTERVAL '24 hours';
 
     v_used := COALESCE(v_used, 0) + COALESCE(v_recent_deleted, 0);
-
     IF v_used >= v_limit THEN
       RAISE EXCEPTION 'QUOTA_EXCEEDED';
     END IF;
@@ -3603,8 +3608,7 @@ BEGIN
     usr_id, brk_id, brk_pct, typ, trx, cat, sub, contact_ph,
     ttl, prc, cur, loc, descript, imgs, vdo, doc_tp, doc_img,
     exact_loc, specs, com, sts, rsn, vws, fvs, i_pub, i_soc,
-    soc_pub, soc_txt, i_dup, dup_of, avl, i_del, ts_crt, ts_pub,
-    ts_end, ts_ren
+    soc_pub, soc_txt, i_dup, dup_of, avl, i_del, ts_crt, ts_pub, ts_end, ts_ren, added_by
   ) VALUES (
     p_user_uid,
     NULLIF(p_offer->>'brk_id', '')::UUID,
@@ -3616,8 +3620,8 @@ BEGIN
     v_contact_ph,
     v_title,
     v_price,
-    COALESCE((p_offer->>'cur')::INT, 1),
-    COALESCE(p_offer->'loc', '{"r":0,"d":""}'::jsonb),
+    COALESCE((p_offer->>'cur')::INT, 0),
+    COALESCE(p_offer->'loc', '{}'::jsonb),
     v_desc,
     COALESCE(p_offer->'imgs', '[]'::jsonb),
     app_clean_text(p_offer->>'vdo', 500),
@@ -3635,13 +3639,14 @@ BEGIN
     0,
     v_soc_txt,
     0,
-    NULLIF(p_offer->>'dup_of', '')::UUID,
+    NULL,
     COALESCE(p_offer->'avl', '{}'::jsonb),
     0,
     NOW(),
     NULL,
     NULL,
-    NULL
+    NULL,
+    CASE WHEN COALESCE(v_user.role, 0) >= 4 THEN p_user_uid ELSE NULL END
   ) RETURNING *;
 END;
 $$;
