@@ -330,10 +330,10 @@ lib/providers/admin/
 
 - [ ] تشغيل `flutter analyze`.
 - [ ] تشغيل `flutter test`.
-- [ ] إضافة Unit Tests لـ:
+- [x] إضافة Unit Tests أساسية لـ:
   - `PermissionService`
-  - `UserModel.fromSupabase`
-  - routing decisions إن أمكن
+  - `ErrorUtils`
+- [ ] إضافة اختبارات لاحقة لـ `UserModel.fromSupabase` وقرارات الراوتر إن أمكن
 
 ### SQL
 
