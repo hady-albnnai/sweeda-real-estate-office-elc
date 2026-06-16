@@ -131,7 +131,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     physics: const NeverScrollableScrollPhysics(),
                     mainAxisSpacing: 12,
                     crossAxisSpacing: 12,
-                    childAspectRatio: 1.3,
+                    mainAxisExtent: 135, // ارتفاع ثابت لمنع overflow في الأجهزة الصغيرة
                     children: [
                       _actionCard(
                         Icons.apps_outlined,

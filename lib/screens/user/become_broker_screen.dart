@@ -277,29 +277,28 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
 
         _label('فئة الوساطة *'),
         Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
             color: AppTheme.surfaceBlack,
             borderRadius: BorderRadius.circular(10),
           ),
-          child: RadioGroup<int>(
-            groupValue: _category,
-            onChanged: (value) {
-              if (value == null) return;
-              setState(() => _category = value);
-            },
-            child: Column(
-              children: _categories.entries
-                  .map((e) => RadioListTile<int>(
-                        value: e.key,
-                        title: Text(
-                          e.value,
-                          style: const TextStyle(color: AppTheme.textWhite),
-                        ),
-                        activeColor: AppTheme.primaryGold,
-                        dense: true,
-                      ))
-                  .toList(),
-            ),
+          child: Column(
+            children: _categories.entries
+                .map((e) => RadioListTile<int>(
+                      value: e.key,
+                      groupValue: _category,
+                      onChanged: (value) {
+                        if (value == null) return;
+                        setState(() => _category = value);
+                      },
+                      title: Text(
+                        e.value,
+                        style: const TextStyle(color: AppTheme.textWhite),
+                      ),
+                      activeColor: AppTheme.primaryGold,
+                      dense: true,
+                    ))
+                .toList(),
           ),
         ),
         const SizedBox(height: 16),
