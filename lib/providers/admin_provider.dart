@@ -149,6 +149,9 @@ class AdminProvider with ChangeNotifier {
     String email = '',
     String username = '',
     required int role,
+    String address = '',
+    String sid = '',
+    String img = '',
   }) async {
     final data = await _staffAdmin.createStaffUser(
       adminUid: adminUid,
@@ -157,6 +160,9 @@ class AdminProvider with ChangeNotifier {
       email: email,
       username: username,
       role: role,
+      address: address,
+      sid: sid,
+      img: img,
     );
     _syncStaffError();
     if (data['success'] == true) notifyListeners();

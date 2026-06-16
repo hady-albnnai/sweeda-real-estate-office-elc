@@ -81,18 +81,20 @@
 | 13 | `check_username_available` 🆕 | `p_username TEXT` | `BOOLEAN` | ✅ |
 | 14 | `get_staff_stats_internal` 🆕 | `p_user_uid UUID` | `JSONB` | ✅ |
 | 80 | `get_all_staff_users` 🆕🆕 | `p_admin_uid UUID` | `SETOF JSONB` | ✅ |
-| 81 | `admin_create_staff_user` 🆕 | `p_admin_uid, p_full_name, p_phone, p_email, p_username, p_password, p_role` | `JSONB` | ✅ |
+| 81 | `admin_create_staff_user` 🆕 | `p_admin_uid, p_full_name, p_phone, p_email, p_username, p_password, p_role, p_address, p_sid, p_img` | `JSONB` | ✅ |
 | 82 | `admin_update_staff_role` 🆕 | `p_admin_uid, p_target_uid, p_role` | `JSONB` | ✅ |
 | 83 | `admin_toggle_staff_status` 🆕 | `p_admin_uid, p_target_uid, p_status, p_reason` | `JSONB` | ✅ |
 | 84 | `admin_reset_staff_password` 🆕 | `p_admin_uid, p_target_uid, p_new_password` | `JSONB` | ✅ |
 | 85 | `admin_delete_staff_user` 🆕 | `p_admin_uid, p_target_uid` | `JSONB` | ✅ |
 | 86 | `get_admin_dashboard_stats` 🆕 | `p_admin_uid UUID` | `JSONB` | ✅ |
-| 87 | `app_clean_text` 🆕 | `p_value TEXT, p_max_len INT` | `TEXT` | ❌ |
-| 88 | `app_assert_text_len` 🆕 | `p_value TEXT, p_field TEXT, p_min INT, p_max INT` | `TEXT` | ❌ |
-| 89 | `app_assert_username` 🆕 | `p_username TEXT, p_required BOOLEAN` | `TEXT` | ❌ |
-| 90 | `app_assert_password` 🆕 | `p_password TEXT, p_min INT` | `TEXT` | ❌ |
-| 91 | `app_assert_phone` 🆕 | `p_phone TEXT` | `TEXT` | ❌ |
-| 92 | `app_assert_price` 🆕 | `p_value NUMERIC, p_required BOOLEAN` | `NUMERIC` | ❌ |
+| 87 | `admin_fraud_suspects` 🛠️ | `p_admin_uid UUID` | `SETOF fraud_suspects` | ✅ |
+| 88 | `admin_wipe_test_data` 🆕🔥 | `p_admin_uid UUID` | `JSONB` | ✅ |
+| 89 | `app_clean_text` 🆕 | `p_value TEXT, p_max_len INT` | `TEXT` | ❌ |
+| 90 | `app_assert_text_len` 🆕 | `p_value TEXT, p_field TEXT, p_min INT, p_max INT` | `TEXT` | ❌ |
+| 91 | `app_assert_username` 🆕 | `p_username TEXT, p_required BOOLEAN` | `TEXT` | ❌ |
+| 92 | `app_assert_password` 🆕 | `p_password TEXT, p_min INT` | `TEXT` | ❌ |
+| 93 | `app_assert_phone` 🆕 | `p_phone TEXT` | `TEXT` | ❌ |
+| 94 | `app_assert_price` 🆕 | `p_value NUMERIC, p_required BOOLEAN` | `NUMERIC` | ❌ |
 | **— مستخدمون ونقاط —** | | | | |
 | 9 | `update_user_badge` | `p_uid UUID` | `VOID` | ❌ |
 | 10 | `add_points` | `p_uid, p_pts` | `VOID` | ❌ |

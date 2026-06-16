@@ -34,8 +34,9 @@ class _FraudSuspectsScreenState extends State<FraudSuspectsScreen> {
       _error = null;
     });
     try {
+      final adminId = SupabaseService().client.auth.currentUser?.id;
       final res =
-          await SupabaseService().client.rpc('admin_fraud_suspects');
+          await SupabaseService().client.rpc('admin_fraud_suspects', params: {'p_admin_uid': adminId});
       final list =
           (res as List).map((e) => Map<String, dynamic>.from(e)).toList();
       if (!mounted) return;

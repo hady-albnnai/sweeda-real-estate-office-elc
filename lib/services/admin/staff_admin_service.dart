@@ -76,6 +76,9 @@ class StaffAdminService {
     String email = '',
     String username = '',
     required int role,
+    String address = '',
+    String sid = '',
+    String img = '',
   }) {
     return _invokeStaffFunction('create-user', {
       'admin_uid': adminUid,
@@ -84,6 +87,9 @@ class StaffAdminService {
       'email': email,
       'username': username,
       'role': role,
+      'address': address,
+      'sid': sid,
+      'img': img,
     });
   }
 

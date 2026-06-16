@@ -2462,7 +2462,10 @@ CREATE OR REPLACE FUNCTION admin_create_staff_user(
   p_email TEXT,
   p_username TEXT,
   p_password TEXT,
-  p_role INT
+  p_role INT,
+  p_address TEXT DEFAULT '',
+  p_sid TEXT DEFAULT '',
+  p_img TEXT DEFAULT ''
 ) RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -2514,7 +2517,7 @@ BEGIN
     END IF;
   END IF;
 
-  INSERT INTO users (nm, ph, eml, usr, pwd, role, sts, vrf, i_del, ts_crt, ts_upd)
+  INSERT INTO users (nm, ph, eml, usr, pwd, role, sts, vrf, ad, sid, img, i_del, ts_crt, ts_upd)
   VALUES (
     TRIM(COALESCE(p_full_name, '')),
     v_phone,
@@ -2523,7 +2526,10 @@ BEGIN
     crypt(p_password, gen_salt('bf', 8)),
     p_role,
     0,
-    0,
+    2, -- Verified officially since added by Admin
+    COALESCE(p_address, ''),
+    COALESCE(p_sid, ''),
+    COALESCE(p_img, ''),
     0,
     NOW(),
     NOW()
