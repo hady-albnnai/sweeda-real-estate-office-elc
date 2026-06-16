@@ -33,7 +33,7 @@
 | P3 | معالجة الأخطاء | منع ابتلاع الأخطاء بصمت | قيد التنفيذ: أساس AppResult/ErrorUtils مضاف |
 | P4 | تفكيك AdminProvider | فصل الخدمات والمسؤوليات | قيد التنفيذ: الخدمات الأساسية مستخرجة |
 | P5 | إحصائيات ودوال مجمعة | تقليل تحميل القوائم الكبيرة | مطبق جزئياً: RPC إحصائيات الإدارة مطبقة ومتحقق منها |
-| P6 | اختبارات وCI | تشغيل تحليل واختبارات تلقائية | CI مضاف وSQL verification نجح — بانتظار نتائج analyze/test |
+| P6 | اختبارات وCI | تشغيل تحليل واختبارات تلقائية | مكتمل أساسياً: analyze نظيف وflutter test ناجح وSQL verification ناجح |
 | P7 | تنظيف وتوثيق طويل الأمد | توحيد الحالة والمرجعيات | قيد التنفيذ: CURRENT_STATUS مضاف |
 
 ---
@@ -328,8 +328,8 @@ lib/providers/admin/
 
 ### Flutter
 
-- [ ] تشغيل `flutter analyze`.
-- [ ] تشغيل `flutter test`.
+- [x] تشغيل `flutter analyze` — لا توجد مشاكل.
+- [x] تشغيل `flutter test` — All tests passed.
 - [x] إضافة Unit Tests أساسية لـ:
   - `PermissionService`
   - `ErrorUtils`
