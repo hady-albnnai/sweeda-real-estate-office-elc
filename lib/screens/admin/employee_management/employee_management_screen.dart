@@ -276,7 +276,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.dashboard_customize, color: AppTheme.primaryGold),
-            onPressed: () => context.go('/admin/operations-dashboard'),
+            onPressed: () => context.push('/admin/operations-dashboard'),
             tooltip: 'لوحة المدير والأقسام',
           ),
           IconButton(
