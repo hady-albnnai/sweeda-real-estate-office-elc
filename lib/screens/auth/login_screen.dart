@@ -172,9 +172,48 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       children: [
                         const SizedBox(height: 10),
+                        // 🛡️ شعار بتصميم السبلاش
                         Hero(
                           tag: 'logo',
-                          child: Image.asset('assets/images/logo_app.png', height: 100),
+                          child: Container(
+                            width: 120,
+                            height: 120,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppTheme.primaryGold.withValues(alpha: 0.15),
+                                  blurRadius: 30,
+                                ),
+                              ],
+                            ),
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Container(
+                                  width: 120,
+                                  height: 120,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: AppTheme.primaryGold.withValues(alpha: 0.3),
+                                      width: 1,
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  width: 112,
+                                  height: 112,
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: AppTheme.surfaceBlack,
+                                  ),
+                                  padding: const EdgeInsets.all(20),
+                                  child: Image.asset('assets/images/logo_app.png', fit: BoxFit.contain),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 30),
 
