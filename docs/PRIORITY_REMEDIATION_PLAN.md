@@ -35,6 +35,7 @@
 | P5 | إحصائيات ودوال مجمعة | تقليل تحميل القوائم الكبيرة | مطبق جزئياً: RPC إحصائيات الإدارة مطبقة ومتحقق منها |
 | P6 | اختبارات وCI | تشغيل تحليل واختبارات تلقائية | مكتمل أساسياً: analyze نظيف وflutter test ناجح وSQL verification ناجح |
 | P7 | تنظيف وتوثيق طويل الأمد | توحيد الحالة والمرجعيات | قيد التنفيذ: CURRENT_STATUS مضاف |
+| P8 | Input Validation & Abuse Hardening | فلترة وتحقق موحد للمدخلات على الواجهة والسيرفر | قيد التنفيذ: helpers وRPC patches جاهزة للتطبيق |
 
 ---
 
@@ -448,3 +449,37 @@ lib/providers/admin/
 ## تحديث وجهة المدير الرئيسية
 
 تم تعديل `/admin/dashboard` ليكون لوحة قيادة المدير (`AdminDashboardScreen`) بدلاً من فتح إدارة الموظفين مباشرة. أصبحت إدارة الموظفين متاحة كبطاقة داخل لوحة المدير وعبر `/admin/employee-management`.
+
+
+---
+
+# P8 — Input Validation & Abuse Hardening
+
+## الهدف
+
+منع إساءة استخدام حقول الإدخال عبر فرض قواعد تحقق موحدة في الواجهة والسيرفر.
+
+## ما تم
+
+- [x] إضافة `lib/core/validation/input_validators.dart`.
+- [x] إضافة اختبارات وحدة لـ `InputValidators`.
+- [x] إضافة migration `2026_06_15_input_validation_hardening.sql`.
+- [x] إضافة helper SQL:
+  - `app_clean_text`
+  - `app_assert_text_len`
+  - `app_assert_username`
+  - `app_assert_password`
+  - `app_assert_phone`
+  - `app_assert_price`
+- [x] تقوية `register_password`.
+- [x] تقوية `admin_create_staff_user`.
+- [x] تقوية `update_user_profile_internal`.
+- [x] تقوية `create_request_internal` و`update_request_internal`.
+- [x] تقوية `create_offer_internal`.
+- [x] ربط أولي للواجهة في إضافة الموظف وإعداد كلمة المرور.
+
+## المتبقي
+
+- [ ] تطبيق migration على السيرفر.
+- [ ] تشغيل تحقق SQL بعد التطبيق.
+- [ ] توسيع استخدام `InputValidators` تدريجياً على باقي شاشات الإدخال.
