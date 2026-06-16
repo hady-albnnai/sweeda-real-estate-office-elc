@@ -1,20 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
-import '../../core/theme/app_theme.dart';
-import 'package:go_router/go_router.dart';
-
-/// ════════════════════════════════════════════════════════════════════
-/// شاشة المصادقة الموحّدة:
-///   • وضع «إنشاء حساب» (Sign Up): واتساب (أساسي) + إيميل (ثانوي)
-///   • وضع «تسجيل الدخول» (Sign In): اسم مستخدم أو هاتف + كلمة مرور
-///
-/// التدفق:
-///   Sign Up → واتساب/إيميل → OTP/Magic → شاشة إلزامية (اسم مستخدم + كلمة مرور)
-///   Sign In → اسم المستخدم أو الهاتف + كلمة مرور → دخول مباشر
-/// ════════════════════════════════════════════════════════════════════
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
@@ -47,6 +32,8 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     _isSignUp = widget.startInSignUpMode;
+    // تفعيل التصنيف المناسب تلقائياً حسب الوضع
+    _activeCategory = _isSignUp ? 1 : 3;
   }
 
   @override
@@ -57,8 +44,6 @@ class _LoginScreenState extends State<LoginScreen> {
     _emailCtrl.dispose();
     super.dispose();
   }
-
-  // ... (نفس الدوال السابقة _loginWithPassword, _sendWhatsApp, _sendEmailLink, _navigateByRole)
 
   Future<void> _loginWithPassword() async {
     final identifier = _identifierCtrl.text.trim();
@@ -143,7 +128,7 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: AppTheme.deepBlack,
       body: Stack(
         children: [
-          // ─── تأثير الإضاءة ───
+          // ─── تأثير الإضاءة الخلفية ───
           Positioned(
             top: -100,
             right: -50,
@@ -187,8 +172,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       children: [
                         const SizedBox(height: 10),
-                        // شعار صغير
-                        Image.asset('assets/images/logo_app.png', height: 80),
+                        Hero(
+                          tag: 'logo',
+                          child: Image.asset('assets/images/logo_app.png', height: 100),
+                        ),
                         const SizedBox(height: 30),
 
                         // ─── وضع إنشاء حساب ───
@@ -196,7 +183,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           _authCategory(
                             id: 1,
                             title: 'عبر الواتساب (موصى به)',
-                            subtitle: 'سجّل دخولك بلمحة بصر عبر تطبيق الواتساب',
+                            subtitle: 'سجّل بلمحة بصر عبر تطبيق الواتساب',
                             icon: Icons.chat_outlined,
                             color: Colors.green,
                             child: _buildWhatsAppForm(),
@@ -214,7 +201,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           TextButton(
                             onPressed: () => setState(() {
                               _isSignUp = false;
-                              _activeCategory = 0;
+                              _activeCategory = 3; // افتح كلمة المرور تلقائياً
                             }),
                             child: const Text('لديك حساب مسبق؟ سجل دخولك الآن', style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
                           ),
@@ -242,11 +229,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           TextButton(
                             onPressed: () => setState(() {
                               _isSignUp = true;
-                              _activeCategory = 0;
+                              _activeCategory = 1; // افتح واتساب تلقائياً
                             }),
                             child: const Text('ليس لديك حساب؟ أنشئ حساباً جديداً', style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
                           ),
                         ],
+                        const SizedBox(height: 20),
                       ],
                     ),
                   ),
@@ -398,316 +386,6 @@ class _LoginScreenState extends State<LoginScreen> {
             onPressed: _loading ? null : _loginWithPassword,
             style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryGold),
             child: const Text('دخول', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-  // ══════════════════════════════════════════════════════════════════
-  // مفتاح التبديل
-  // ══════════════════════════════════════════════════════════════════
-  Widget _buildToggle() {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(children: [
-        Expanded(
-          child: _toggleButton(
-            label: 'تسجيل الدخول',
-            icon: Icons.login_rounded,
-            selected: !_isSignUp,
-            onTap: () => setState(() => _isSignUp = false),
-          ),
-        ),
-        Expanded(
-          child: _toggleButton(
-            label: 'إنشاء حساب',
-            icon: Icons.person_add_alt_1_outlined,
-            selected: _isSignUp,
-            onTap: () => setState(() => _isSignUp = true),
-          ),
-        ),
-      ]),
-    );
-  }
-
-  Widget _toggleButton({
-    required String label,
-    required IconData icon,
-    required bool selected,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.all(4),
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: selected ? AppTheme.primaryGold : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon,
-                size: 17,
-                color: selected ? Colors.black : AppTheme.textGrey),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                color: selected ? Colors.black : AppTheme.textGrey,
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ══════════════════════════════════════════════════════════════════
-  // نموذج Sign In — اسم مستخدم/هاتف + كلمة مرور
-  // ══════════════════════════════════════════════════════════════════
-  Widget _buildSignInForm() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('اسم المستخدم أو رقم الهاتف',
-            style: TextStyle(
-                color: AppTheme.primaryGold,
-                fontWeight: FontWeight.bold,
-                fontSize: 13)),
-        const SizedBox(height: 8),
-        TextField(
-          controller: _identifierCtrl,
-          textAlign: TextAlign.left,
-          style: const TextStyle(color: AppTheme.textWhite),
-          decoration: InputDecoration(
-            hintText: 'مثال: ahmed123 أو 09XXXXXXXX',
-            hintStyle: TextStyle(
-                color: AppTheme.textGrey.withValues(alpha: 0.5),
-                fontSize: 13),
-            prefixIcon: const Icon(Icons.person_outline,
-                color: AppTheme.primaryGold, size: 20),
-          ),
-        ),
-        const SizedBox(height: 14),
-        const Text('كلمة المرور',
-            style: TextStyle(
-                color: AppTheme.primaryGold,
-                fontWeight: FontWeight.bold,
-                fontSize: 13)),
-        const SizedBox(height: 8),
-        TextField(
-          controller: _passwordCtrl,
-          obscureText: _obscure,
-          textAlign: TextAlign.left,
-          style: const TextStyle(color: AppTheme.textWhite),
-          decoration: InputDecoration(
-            hintText: '••••••',
-            hintStyle:
-                TextStyle(color: AppTheme.textGrey.withValues(alpha: 0.5)),
-            prefixIcon: const Icon(Icons.lock_outline,
-                color: AppTheme.primaryGold, size: 20),
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscure
-                    ? Icons.visibility_off_outlined
-                    : Icons.visibility_outlined,
-                color: AppTheme.textGrey,
-                size: 20,
-              ),
-              onPressed: () => setState(() => _obscure = !_obscure),
-            ),
-          ),
-          onSubmitted: (_) => _loginWithPassword(),
-        ),
-
-        // نسيت كلمة المرور → Sign Up (واتساب)
-        Align(
-          alignment: Alignment.centerLeft,
-          child: TextButton(
-            onPressed: () {
-              setState(() => _isSignUp = true);
-              _toast('سجّل عبر واتساب لإعادة تعيين كلمة المرور');
-            },
-            style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 4)),
-            child: const Text(
-              'هل نسيت كلمة المرور؟',
-              style: TextStyle(
-                  color: AppTheme.primaryGold,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500),
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 6),
-        SizedBox(
-          width: double.infinity,
-          height: 50,
-          child: ElevatedButton.icon(
-            onPressed: _loading ? null : _loginWithPassword,
-            icon: _loading
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.black))
-                : const Icon(Icons.login_rounded,
-                    color: Colors.black, size: 20),
-            label: const Text('تسجيل الدخول',
-                style: TextStyle(fontWeight: FontWeight.bold)),
-          ),
-        ),
-
-        const SizedBox(height: 10),
-        Center(
-          child: TextButton(
-            onPressed: () => setState(() => _isSignUp = true),
-            child: Text(
-              'ليس لديك حساب؟ أنشئ حساباً جديداً',
-              style: TextStyle(
-                  color: AppTheme.textGrey.withValues(alpha: 0.8),
-                  fontSize: 12),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ══════════════════════════════════════════════════════════════════
-  // نموذج Sign Up — واتساب (أساسي) + إيميل (ثانوي)
-  // ══════════════════════════════════════════════════════════════════
-  Widget _buildSignUpForm() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('رقم الموبايل',
-            style: TextStyle(
-                color: AppTheme.primaryGold,
-                fontWeight: FontWeight.bold,
-                fontSize: 13)),
-        const SizedBox(height: 8),
-        TextField(
-          controller: _phoneCtrl,
-          keyboardType: TextInputType.phone,
-          textAlign: TextAlign.left,
-          style: const TextStyle(color: AppTheme.textWhite),
-          decoration: InputDecoration(
-            hintText: '09XXXXXXXX',
-            hintStyle:
-                TextStyle(color: AppTheme.textGrey.withValues(alpha: 0.5)),
-            prefixIcon: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              alignment: Alignment.center,
-              width: 60,
-              child: const Text('+963',
-                  style: TextStyle(
-                      color: AppTheme.primaryGold,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13)),
-            ),
-            prefixIconConstraints: const BoxConstraints(minWidth: 60),
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          'سيصلك رمز تحقق عبر واتساب. بعد التحقق ستختار اسم مستخدم وكلمة مرور.',
-          style: TextStyle(
-              color: AppTheme.textGrey.withValues(alpha: 0.6),
-              fontSize: 11,
-              height: 1.5),
-        ),
-        const SizedBox(height: 18),
-
-        // زر واتساب (أساسي)
-        SizedBox(
-          width: double.infinity,
-          height: 50,
-          child: ElevatedButton.icon(
-            onPressed: _loading ? null : _sendWhatsApp,
-            icon: _loading
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.black))
-                : const Icon(Icons.chat_rounded,
-                    color: Colors.black, size: 20),
-            label: const Text('متابعة عبر واتساب',
-                style: TextStyle(fontWeight: FontWeight.bold)),
-          ),
-        ),
-
-        // فاصل
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 14),
-          child: Row(children: [
-            Expanded(child: Divider(color: AppTheme.textGrey, height: 1)),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12),
-              child: Text('أو',
-                  style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
-            ),
-            Expanded(child: Divider(color: AppTheme.textGrey, height: 1)),
-          ]),
-        ),
-
-        // إيميل (ثانوي)
-        const Text('البريد الإلكتروني',
-            style: TextStyle(
-                color: AppTheme.primaryGold,
-                fontWeight: FontWeight.bold,
-                fontSize: 13)),
-        const SizedBox(height: 8),
-        TextField(
-          controller: _emailCtrl,
-          keyboardType: TextInputType.emailAddress,
-          textAlign: TextAlign.left,
-          style: const TextStyle(color: AppTheme.textWhite),
-          decoration: InputDecoration(
-            hintText: 'example@email.com',
-            hintStyle:
-                TextStyle(color: AppTheme.textGrey.withValues(alpha: 0.5)),
-            prefixIcon: const Icon(Icons.mail_outline,
-                color: AppTheme.primaryGold, size: 20),
-          ),
-        ),
-        const SizedBox(height: 14),
-        SizedBox(
-          width: double.infinity,
-          height: 50,
-          child: OutlinedButton.icon(
-            onPressed: _loading ? null : _sendEmailLink,
-            icon: const Icon(Icons.link_rounded,
-                color: AppTheme.primaryGold, size: 20),
-            label: const Text('إرسال رابط التسجيل',
-                style: TextStyle(
-                    color: AppTheme.primaryGold,
-                    fontWeight: FontWeight.bold)),
-          ),
-        ),
-
-        const SizedBox(height: 10),
-        Center(
-          child: TextButton(
-            onPressed: () => setState(() => _isSignUp = false),
-            child: Text(
-              'لديك حساب؟ سجّل دخولك',
-              style: TextStyle(
-                  color: AppTheme.textGrey.withValues(alpha: 0.8),
-                  fontSize: 12),
-            ),
           ),
         ),
       ],

@@ -177,14 +177,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     subtitle: 'أسرع طريقة — لا تحتاج كلمة مرور',
                     icon: Icons.chat_outlined,
                     color: Colors.green,
-                    onTap: () => context.push('/login'), // تفتح شاشة الدخول بوضع التسجيل
+                    onTap: () => context.push('/login?signup=true'), // تفتح شاشة الدخول بوضع التسجيل
                   ),
                   _authOptionTile(
                     title: 'عبر البريد الإلكتروني',
                     subtitle: 'رابط تسجيل يصلك إلى صندوق الوارد',
                     icon: Icons.alternate_email,
                     color: Colors.blue,
-                    onTap: () => context.push('/login'),
+                    onTap: () => context.push('/login?signup=true'),
                   ),
                 ],
               ),
@@ -205,14 +205,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     subtitle: 'الدخول المباشر التقليدي',
                     icon: Icons.lock_outline,
                     color: AppTheme.primaryGold,
-                    onTap: () => context.push('/login'),
+                    onTap: () => context.push('/login?signup=false'),
                   ),
                   _authOptionTile(
                     title: 'عبر رمز واتساب السريع',
                     subtitle: 'في حال نسيت كلمة المرور',
                     icon: Icons.phonelink_ring_outlined,
                     color: Colors.green,
-                    onTap: () => context.push('/login'),
+                    onTap: () => context.push('/login?signup=false'),
                   ),
                 ],
               ),

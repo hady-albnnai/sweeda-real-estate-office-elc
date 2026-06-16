@@ -284,7 +284,10 @@ class AppRouter {
       // ═══════════════════════════════════════
       GoRoute(
         path: '/login',
-        builder: (context, state) => const LoginScreen(),
+        builder: (context, state) {
+          final isSignUp = state.uri.queryParameters['signup'] == 'true';
+          return LoginScreen(startInSignUpMode: isSignUp);
+        },
       ),
       GoRoute(
         path: '/otp',
