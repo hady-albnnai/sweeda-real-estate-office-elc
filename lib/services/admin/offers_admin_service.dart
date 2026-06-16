@@ -54,6 +54,29 @@ class OffersAdminService {
     }
   }
 
+  Future<bool> setOfferPriority(
+    String adminUid,
+    String offerId,
+    String priorityType,
+  ) async {
+    try {
+      await SupabaseService().client.rpc(
+        'admin_set_offer_priority_internal',
+        params: {
+          'p_admin_uid': adminUid,
+          'p_offer_id': offerId,
+          'p_priority_type': priorityType,
+          'p_duration_days': 30, // الإدارة تعطي الأولوية لمدة 30 يوم مبدئياً
+        },
+      );
+      clearError();
+      return true;
+    } catch (e) {
+      _setError(e);
+      return false;
+    }
+  }
+
   Future<List<OfferModel>> getOffersForMediaReview(String adminUid) async {
     try {
       final response = await SupabaseService().client.rpc(

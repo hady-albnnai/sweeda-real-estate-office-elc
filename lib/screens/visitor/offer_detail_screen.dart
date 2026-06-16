@@ -18,6 +18,8 @@ import '../../widgets/video_player_widget.dart';
 import '../../widgets/location_picker.dart';
 import '../../widgets/rating_dialog.dart';
 
+import '../../providers/admin_provider.dart';
+
 class OfferDetailScreen extends StatefulWidget {
   final String offerId;
   const OfferDetailScreen({super.key, required this.offerId});
@@ -121,6 +123,81 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
     final text = BusinessService().generateSocialPost(_offer!, config: config);
     await SharePlus.instance.share(
       ShareParams(text: text, subject: _offer!.ttl),
+    );
+  }
+
+  void _showAdminPrioritySheet(BuildContext context, OfferModel offer) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.surfaceBlack,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'تحديد أولوية النشر (للإدارة فقط)',
+                style: TextStyle(
+                  color: AppTheme.primaryGold,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'اختر مستوى الأولوية الذي سيظهر فيه العرض للمستخدمين. (لمدة 30 يوم)',
+                style: TextStyle(color: AppTheme.textGrey, fontSize: 12),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              _priorityOption(ctx, offer.id, 'pin', 'مثبّت في الأعلى (أعلى أولوية)', Icons.push_pin, Colors.redAccent),
+              _priorityOption(ctx, offer.id, 'fms', 'مميّز (ثاني أولوية)', Icons.star, Colors.orangeAccent),
+              _priorityOption(ctx, offer.id, 'bst', 'مُرقّى (ثالث أولوية)', Icons.rocket_launch, Colors.blueAccent),
+              _priorityOption(ctx, offer.id, 'normal', 'عادي (ترتيب حسب التاريخ)', Icons.format_list_bulleted, Colors.grey),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _priorityOption(BuildContext ctx, String offerId, String type, String label, IconData icon, Color color) {
+    return ListTile(
+      leading: Icon(icon, color: color),
+      title: Text(label, style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.w600)),
+      onTap: () async {
+        Navigator.pop(ctx);
+        final adminProv = context.read<AdminProvider>();
+        final authProv = context.read<AuthProvider>();
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('جاري التحديث...')),
+        );
+        
+        final ok = await adminProv.setOfferPriority(
+          authProv.userModel!.id,
+          offerId,
+          type,
+        );
+        
+        if (mounted) {
+          if (ok) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('تم تحديث أولوية العرض بنجاح')),
+            );
+            // Refresh to see updated state
+            _loadOffer();
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('فشل التحديث: ${adminProv.offersLastError ?? "حدث خطأ"}')),
+            );
+          }
+        }
+      },
     );
   }
 
@@ -642,8 +719,8 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                     ),
                   if (isOwner) const SizedBox(height: 10),
 
-                  // 🚀 زر ترقية بالنقاط للمالك
-                  if (isOwner)
+                  // 🚀 زر ترقية بالنقاط للمالك أو تعيين أولوية للإدارة
+                  if (isOwner && !auth.isAdmin)
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
@@ -661,7 +738,29 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                         ),
                       ),
                     ),
-                  if (isOwner) const SizedBox(height: 14),
+                  
+                  // خيار أولوية النشر للإدارة
+                  if (auth.isAdmin) ...[
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () => _showAdminPrioritySheet(context, offer),
+                        icon: const Icon(Icons.admin_panel_settings,
+                            color: AppTheme.textWhite),
+                        label: const Text('تحديد أولوية العرض (للإدارة)',
+                            style: TextStyle(
+                                color: AppTheme.textWhite,
+                                fontWeight: FontWeight.bold)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blueGrey.shade800,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                      ),
+                    ),
+                  ],
+
+                  if (isOwner || auth.isAdmin) const SizedBox(height: 14),
 
                   // زر الحجز — مخفي عن المالك
                   if (!isOwner)
