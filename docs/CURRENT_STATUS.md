@@ -1,6 +1,6 @@
 # الحالة الحالية — المكتب العقاري الإلكتروني
 
-**آخر تحديث:** 2026-06-15
+**آخر تحديث:** 2026-06-16
 **الفرع:** `main`
 **الحالة العامة:** إصلاحات الأولويات P1/P2/P3/P4 وجزء من P5 مطبقة ومرفوعة، بانتظار تشغيل تحليل Flutter والاختبار العملي الكامل.
 
@@ -61,6 +61,8 @@
 - [x] تشغيل `flutter analyze` محلياً — لا توجد مشاكل.
 - [x] إضافة اختبارات وحدة أساسية لـ `PermissionService` و`ErrorUtils` و`InputValidators`.
 - [x] تشغيل `flutter test` — النتيجة: All tests passed.
+- [x] إصلاح overflow في أيقونة أقسام الإدارة في لوحة المدير (`AdminDashboardScreen`).
+- [x] إصلاح أخطاء التحليل في `BecomeBrokerScreen` (إزالة RadioGroup غير الموجود) و `UserDetailsScreen`.
 - [ ] تنفيذ اختبار عملي كامل لإدارة الموظفين.
 - [x] تنفيذ `supabase/tests/admin_security_verification.sql` بعد إصلاحات P1/P2/P5 ونجاحه.
 - [ ] التأكد أن المدير يستطيع الدخول بـ `main_admin` وأن الجلسة تصدر بشكل صحيح.

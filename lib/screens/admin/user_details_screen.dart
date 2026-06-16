@@ -129,7 +129,6 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
   }
 
   Future<void> _changeStatus(int status) async {
-    final admin = context.read<AdminProvider>();
     final adminId = context.read<AuthProvider>().userModel?.uid ?? '';
     String? reason;
     if (status != 0) {
@@ -163,6 +162,8 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
       if (reason == null) return;
     }
 
+    if (!mounted) return;
+    final admin = context.read<AdminProvider>();
     final ok = await admin.setUserStatus(
       adminId,
       widget.userId,
@@ -176,8 +177,9 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
   }
 
   Future<void> _changeRole(int newRole) async {
+    final auth = context.read<AuthProvider>();
+    final adminId = auth.userModel?.uid ?? '';
     final admin = context.read<AdminProvider>();
-    final adminId = context.read<AuthProvider>().userModel?.uid ?? '';
     final ok = await admin.updateUserRole(adminId, widget.userId, newRole);
     if (ok && mounted) {
       _snack('✅ تم تحديث الدور');
