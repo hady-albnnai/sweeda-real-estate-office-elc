@@ -179,7 +179,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
         );
         
         final ok = await adminProv.setOfferPriority(
-          authProv.userModel!.id,
+          authProv.userModel!.uid,
           offerId,
           type,
         );
@@ -190,10 +190,10 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
               const SnackBar(content: Text('تم تحديث أولوية العرض بنجاح')),
             );
             // Refresh to see updated state
-            _loadOffer();
+            _load();
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('فشل التحديث: ${adminProv.offersLastError ?? "حدث خطأ"}')),
+              SnackBar(content: Text('فشل التحديث: ${adminProv.error ?? "حدث خطأ"}')),
             );
           }
         }
