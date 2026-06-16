@@ -470,7 +470,7 @@ class AppRouter {
       // ═══════════════════════════════════════
       GoRoute(
         path: '/admin/dashboard',
-        builder: (context, state) => const EmployeeManagementScreen(), // تم تحويلها إلى شاشة إدارة الموظفين
+        builder: (context, state) => const AdminDashboardScreen(),
       ),
       GoRoute(
         path: '/admin/employee-management',
