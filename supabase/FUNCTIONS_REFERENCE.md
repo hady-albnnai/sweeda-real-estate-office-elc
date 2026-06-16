@@ -50,7 +50,7 @@
 | ✅ **مُطبّق على السيرفر** | `2026_06_13_fix_notifications_typ_to_tp.sql` — إصلاح notifications.typ → tp في 5 دوال + DROP/CREATE لـ trg_offer_status_changed |
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_admin_employee_management_final.sql` — دوال إدارة الموظفين النهائية: `get_all_staff_users`, `admin_create_staff_user`, `admin_update_staff_role`, `admin_toggle_staff_status`, `admin_reset_staff_password`, `admin_delete_staff_user` |
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_admin_dashboard_stats.sql` — دالة `get_admin_dashboard_stats` لإحصائيات لوحة الإدارة المجمعة |
-| 📝 **جاهز للتطبيق** | `2026_06_15_input_validation_hardening.sql` — helpers للتحقق من المدخلات وتقوية RPCs إنشاء العروض/الطلبات/الملف الشخصي/الموظفين |
+| ✅ **مُطبّق على السيرفر** | `2026_06_15_input_validation_hardening.sql` — helpers للتحقق من المدخلات وتقوية RPCs إنشاء العروض/الطلبات/الملف الشخصي/الموظفين، وتم التحقق من دوال `app_*` ومن الحفاظ على منطق `create_offer_internal` |
 | ✅ **مُنشر على السيرفر** | Edge Functions لإدارة الموظفين: `create-user`, `update-user-role`, `toggle-user-status`, `reset-user-password`, `delete-user` — تم نشرها بعد pull من `main` |
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_lock_legacy_admin_rpcs.sql` — إغلاق direct execute للدوال الإدارية القديمة الحساسة بعد نقلها إلى Edge Functions |
 | ✅ **مُطبّق على السيرفر** | Storage policies لـ `offer_images` — INSERT/SELECT/UPDATE/DELETE مفتوحة |
