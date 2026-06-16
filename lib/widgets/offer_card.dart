@@ -49,221 +49,252 @@ class _OfferCardState extends State<OfferCard> {
     );
   }
 
+  Widget _buildSpecItem(IconData icon, String text) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: AppTheme.primaryGold.withValues(alpha: 0.7), size: 14),
+        const SizedBox(width: 4),
+        Text(
+          text,
+          style: const TextStyle(color: AppTheme.textGrey, fontSize: 12),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final offer = widget.offer;
-
-    // FIX 1+2: السعر مع العملة الصحيحة + تنسيق NumberFormat
     final priceLabel = AppUtils.formatPrice(offer.prc, currency: offer.cur);
+    final isProperty = offer.typ == 0;
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 5),
+      margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(
-            color: AppTheme.primaryGold.withValues(alpha: 0.3), width: 1),
+            color: AppTheme.primaryGold.withValues(alpha: 0.15), width: 1),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withValues(alpha: 0.5),
-              blurRadius: 10,
-              offset: const Offset(0, 5))
+              color: Colors.black.withValues(alpha: 0.4),
+              blurRadius: 15,
+              offset: const Offset(0, 8))
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: () => context.push('/offer/${offer.id}'),
+        borderRadius: BorderRadius.circular(22),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Stack(children: [
-              Container(
-                height: 200,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: AppTheme.surfaceBlack,
-                  image: offer.imgs.isNotEmpty
-                      ? DecorationImage(
-                          image: NetworkImage(offer.imgs[0]),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
+            Stack(
+              children: [
+                // 🖼️ الصورة الرئيسية مع Gradient خفيف
+                Hero(
+                  tag: 'off_${offer.id}',
+                  child: Container(
+                    height: 220,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+                      color: AppTheme.surfaceBlack,
+                      image: offer.imgs.isNotEmpty
+                          ? DecorationImage(
+                              image: NetworkImage(offer.imgs[0]),
+                              fit: BoxFit.cover,
+                            )
+                          : null,
+                    ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withValues(alpha: 0.6),
+                          ],
+                        ),
+                      ),
+                      child: offer.imgs.isEmpty
+                          ? Center(
+                              child: Icon(Icons.apartment_outlined,
+                                  color: AppTheme.primaryGold.withValues(alpha: 0.2),
+                                  size: 64),
+                            )
+                          : null,
+                    ),
+                  ),
                 ),
-                child: offer.imgs.isEmpty
-                    ? Center(
-                        child: Icon(Icons.apartment_outlined,
-                            color: AppTheme.primaryGold.withValues(alpha: 0.4),
-                            size: 56),
-                      )
-                    : null,
-              ),
-              // شارات الترقيات (spd)
-              Positioned(
-                top: 15, left: 15,
-                child: Wrap(
-                  spacing: 4, runSpacing: 4,
-                  children: [
-                    if (offer.iPin == 1)
-                      _boostBadge('📌 مثبّت', Colors.orange),
-                    if (offer.iFms == 1)
-                      _boostBadge('⭐ مميّز', AppTheme.primaryGold),
-                    if (offer.iBst == 1)
-                      _boostBadge('🚀 Boost', Colors.purple),
-                  ],
+
+                // 🏷️ شارات الحالة (للبيع / للإيجار)
+                Positioned(
+                  top: 15,
+                  right: 15,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: offer.trx == 0 ? Colors.green : Colors.blue,
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
+                    ),
+                    child: Text(
+                      offer.trx == 0 ? 'للبيع' : 'للإيجار',
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                    ),
+                  ),
                 ),
-              ),
-              // FIX: السعر مع العملة الصحيحة
-              Positioned(
-                top: 15, right: 15,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryGold,
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: const [
-                      BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))
+
+                // 🏷️ شارات الترقية (spd)
+                Positioned(
+                  top: 15,
+                  left: 15,
+                  child: Wrap(
+                    spacing: 4,
+                    children: [
+                      if (offer.iPin == 1) _boostBadge('📌 مثبت', Colors.orange),
+                      if (offer.iFms == 1) _boostBadge('⭐ مميز', AppTheme.primaryGold),
                     ],
                   ),
-                  child: Text(priceLabel,
-                      style: const TextStyle(
-                          color: AppTheme.deepBlack,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15)),
                 ),
-              ),
-              Positioned(
-                bottom: 15, left: 15,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.6),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppTheme.primaryGold, width: 0.5),
-                  ),
+
+                // 💰 السعر (بتصميم عصري أسفل الصورة)
+                Positioned(
+                  bottom: 12,
+                  right: 15,
                   child: Text(
-                    offer.typ == 0 ? 'عقار' : 'سيارة',
+                    priceLabel,
                     style: const TextStyle(
-                        color: AppTheme.primaryGold, fontSize: 12)),
-                ),
-              ),
-              // نوع المعاملة
-              Positioned(
-                bottom: 15, right: 15,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.6),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                        color: offer.trx == 0
-                            ? Colors.green.withValues(alpha: 0.8)
-                            : Colors.blue.withValues(alpha: 0.8),
-                        width: 0.5),
+                      color: AppTheme.primaryGold,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 20,
+                      shadows: [Shadow(color: Colors.black, blurRadius: 8)],
+                    ),
                   ),
-                  child: Text(
-                    offer.trx == 0 ? 'بيع' : 'إيجار',
-                    style: TextStyle(
-                        color: offer.trx == 0 ? Colors.green : Colors.blue,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold)),
                 ),
-              ),
-            ]),
+
+                // ⏱️ الوقت (منذ متى أضيف)
+                Positioned(
+                  bottom: 12,
+                  left: 15,
+                  child: Text(
+                    AppUtils.formatTimestamp(offer.tsCrt.toIso8601String()),
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.8),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
             Padding(
-              padding: const EdgeInsets.all(15),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(children: [
-                    if (offer.offerNumber != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        margin: const EdgeInsets.only(left: 8),
-                        decoration: BoxDecoration(
-                          color: AppTheme.primaryGold.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text('#${offer.offerNumber}',
-                            style: const TextStyle(color: AppTheme.primaryGold, fontSize: 11, fontWeight: FontWeight.bold)),
-                      ),
-                    Expanded(
-                      child: Text(offer.ttl,
+                  // 🏠 العنوان + رقم العرض
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          offer.ttl,
                           style: const TextStyle(
                               color: AppTheme.textWhite,
-                              fontSize: 18,
+                              fontSize: 17,
                               fontWeight: FontWeight.bold),
                           maxLines: 1,
-                          overflow: TextOverflow.ellipsis),
-                    ),
-                  ]),
-                  const SizedBox(height: 6),
-                  // 🏢 هوية المكتب
-                  if (offer.ownerLabel != null && offer.ownerLabel!.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 6),
-                      child: Row(children: [
-                        const Icon(Icons.business_center,
-                            color: AppTheme.primaryGold, size: 12),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(offer.ownerLabel!,
-                              style: const TextStyle(
-                                  color: AppTheme.primaryGold,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ]),
+                      ),
+                      if (offer.offerNumber != null)
+                        Text(
+                          '#${offer.offerNumber}',
+                          style: TextStyle(
+                              color: AppTheme.primaryGold.withValues(alpha: 0.6),
+                              fontSize: 12,
+                              fontFamily: 'monospace'),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+
+                  // 📊 المواصفات السريعة (أيقونات)
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildSpecItem(Icons.location_on_outlined, offer.loc['city'] ?? 'السويداء'),
+                        const SizedBox(width: 15),
+                        if (isProperty) ...[
+                          if (offer.specs['area'] != null)
+                            _buildSpecItem(Icons.straighten, '${offer.specs['area']} م²'),
+                          if (offer.specs['rooms'] != null) ...[
+                            const SizedBox(width: 15),
+                            _buildSpecItem(Icons.bed_outlined, '${offer.specs['rooms']} غرف'),
+                          ],
+                        ] else ...[
+                          if (offer.specs['brand'] != null)
+                            _buildSpecItem(Icons.directions_car_outlined, '${offer.specs['brand']}'),
+                          if (offer.specs['year'] != null) ...[
+                            const SizedBox(width: 15),
+                            _buildSpecItem(Icons.calendar_today_outlined, '${offer.specs['year']}'),
+                          ],
+                        ],
+                      ],
                     ),
-                  // معلومات سريعة حسب النوع
-                  if (offer.typ == 1) ...[
-                    // سيارة: ماركة + سنة + كم
-                    Row(children: [
-                      const Icon(Icons.directions_car, color: AppTheme.primaryGold, size: 14),
-                      const SizedBox(width: 4),
-                      Expanded(child: Text(
-                        [
-                          offer.specs['brand'], offer.specs['year'],
-                          if ((offer.specs['km'] ?? '').toString().isNotEmpty) '${offer.specs['km']} كم',
-                        ].where((s) => s != null && s.toString().isNotEmpty).join(' • '),
-                        style: const TextStyle(color: AppTheme.textGrey, fontSize: 12),
-                        maxLines: 1, overflow: TextOverflow.ellipsis,
-                      )),
-                    ]),
-                  ] else ...[
-                    // عقار: الموقع + المساحة
-                    Row(children: [
-                      const Icon(Icons.location_on, color: AppTheme.primaryGold, size: 16),
-                      const SizedBox(width: 4),
-                      Expanded(child: Text(
-                        [
-                          offer.loc['d'], offer.loc['city'],
-                          if ((offer.specs['area'] ?? '').toString().isNotEmpty) '${offer.specs['area']} م²',
-                        ].where((s) => s != null && s.toString().isNotEmpty).join(' • '),
-                        style: const TextStyle(color: AppTheme.textGrey, fontSize: 14),
-                        maxLines: 1, overflow: TextOverflow.ellipsis,
-                      )),
-                    ]),
-                  ],
-                  const SizedBox(height: 15),
+                  ),
+
+                  const SizedBox(height: 16),
+                  const Divider(color: Colors.white10, height: 1),
+                  const SizedBox(height: 12),
+
+                  // 🛡️ هوية المكتب (التصميم الاحترافي)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      TextButton(
-                        onPressed: () => context.push('/offer/${offer.id}'),
-                        style: TextButton.styleFrom(
-                            foregroundColor: AppTheme.primaryGold,
-                            padding: EdgeInsets.zero),
-                        child: const Text('التفاصيل ←',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryGold.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.2)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.verified_user_outlined,
+                                color: AppTheme.primaryGold, size: 14),
+                            const SizedBox(width: 6),
+                            Text(
+                              offer.ownerLabel ?? 'إدارة المكتب العقاري',
+                              style: const TextStyle(
+                                  color: AppTheme.primaryGold,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
                       ),
-                      // FIX 7: المفضلة تعمل
+                      
+                      // زر المفضلة
                       GestureDetector(
                         onTap: _toggleFav,
-                        child: Icon(
-                          _isFav ? Icons.favorite : Icons.favorite_border,
-                          color: _isFav ? Colors.red : AppTheme.textGrey,
-                          size: 24,
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: _isFav ? Colors.red.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.05),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            _isFav ? Icons.favorite : Icons.favorite_border,
+                            color: _isFav ? Colors.red : AppTheme.textGrey,
+                            size: 20,
+                          ),
                         ),
                       ),
                     ],
@@ -276,4 +307,5 @@ class _OfferCardState extends State<OfferCard> {
       ),
     );
   }
+}
 }
