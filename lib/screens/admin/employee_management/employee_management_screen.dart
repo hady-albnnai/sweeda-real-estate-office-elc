@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../../providers/admin_provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
@@ -273,6 +274,11 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
         backgroundColor: AppTheme.deepBlack,
         title: const Text('إدارة الموظفين', style: TextStyle(color: AppTheme.textWhite)),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.dashboard_customize, color: AppTheme.primaryGold),
+            onPressed: () => context.go('/admin/operations-dashboard'),
+            tooltip: 'لوحة العمليات والأقسام',
+          ),
           IconButton(
             icon: const Icon(Icons.add, color: AppTheme.primaryGold),
             onPressed: _showAddEmployeeDialog,
