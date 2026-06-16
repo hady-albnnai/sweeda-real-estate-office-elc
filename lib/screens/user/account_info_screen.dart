@@ -49,10 +49,11 @@ class AccountInfoScreen extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // ─── حالة التوثيق ───
-            _buildVerificationCard(user, context),
-
-            const SizedBox(height: 16),
+            // ─── حالة التوثيق (مخفي للموظفين الداخليين) ───
+            if (!user.isInternal) ...[
+              _buildVerificationCard(user, context),
+              const SizedBox(height: 16),
+            ],
 
             // ─── تغيير كلمة المرور ───
             _buildPasswordSection(user, context),
@@ -111,7 +112,7 @@ class AccountInfoScreen extends StatelessWidget {
               AppUtils.formatTimestamp(user.tsCrt), context),
 
           // الباقة — للمستخدمين فقط
-          if (!user.isAdmin) ...[
+          if (!user.isInternal) ...[
             const Divider(
                 color: Colors.white12, height: 20, thickness: 0.5),
             _infoRow(Icons.workspace_premium_outlined, 'الباقة',

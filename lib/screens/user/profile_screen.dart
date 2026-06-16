@@ -314,7 +314,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ] else if (user.usr != null)
           Text('@${user.usr}', style: TextStyle(color: AppTheme.textGrey.withValues(alpha: 0.8), fontSize: 14)),
         const SizedBox(height: 12),
-        if (!user.isAdmin)
+        if (!user.isInternal)
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
             _buildChip(user.roleName, AppTheme.primaryGold.withValues(alpha: 0.15), AppTheme.primaryGold),
             const SizedBox(width: 8),
