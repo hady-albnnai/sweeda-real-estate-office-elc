@@ -140,7 +140,7 @@ class AuthProvider with ChangeNotifier {
       if (result['success'] == true) {
         final userId = result['userId'];
         _isNewUser = result['isNewUser'] ?? false;
-        await _loadUser(userId);
+        await _loadUserData(userId);
         return true;
       }
       _lastError = result['error'];
