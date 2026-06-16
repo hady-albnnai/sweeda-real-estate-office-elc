@@ -11,6 +11,68 @@ class AuthService {
   final SupabaseClient _client = SupabaseService().client;
 
   // ════════════════════════════════════════════════════════════════════════
+  // 📱 SMS OTP — عبر Edge Function (textbee.dev)
+  // ════════════════════════════════════════════════════════════════════════
+
+  /// إرسال رمز OTP عبر SMS (TextBee).
+  Future<Map<String, dynamic>> sendSMSOTP(String phone) async {
+    final fullPhone = _normalizePhone(phone);
+    try {
+      final res = await _client.functions.invoke(
+        'send-sms-otp',
+        body: {'phone': fullPhone},
+      );
+
+      final data = res.data as Map<String, dynamic>?;
+      if (data == null) {
+        return {'success': false, 'error': 'EMPTY_RESPONSE'};
+      }
+
+      if (data['success'] == true) {
+        final devOtp = data['otp']?.toString();
+        return {
+          'success': true,
+          'channel': 'sms',
+          if (devOtp != null) 'fallbackOtp': devOtp,
+        };
+      }
+
+      return {'success': false, 'error': data['error'] ?? 'UNKNOWN'};
+    } catch (e) {
+      return _devFallbackOtp(fullPhone);
+    }
+  }
+
+  /// التحقق من رمز OTP الـ SMS.
+  Future<Map<String, dynamic>> verifySMSOTP(String phone, String code) async {
+    final fullPhone = _normalizePhone(phone);
+    // نستخدم نفس منطق التحقق الموحد v2
+    try {
+      final res = await _client.rpc('verify_otp_v2', params: {
+        'p_identifier': fullPhone,
+        'p_code': code,
+      });
+
+      if (res == true) {
+        final upsertRes = await _client.rpc('upsert_user_after_otp', params: {
+          'p_identifier': fullPhone,
+          'p_channel': 'sms',
+        });
+        
+        final row = (upsertRes as List).first;
+        final userId = row['user_id'] as String;
+        final isNew = row['is_new'] as bool? ?? false;
+
+        await _persistSession(userId, phone: fullPhone);
+        return {'success': true, 'userId': userId, 'isNewUser': isNew};
+      }
+      return {'success': false, 'error': 'INVALID_CODE'};
+    } catch (e) {
+      return {'success': false, 'error': e.toString()};
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════════════════
   // 📱 WhatsApp OTP — عبر Edge Function (Meta WhatsApp Cloud API)
   // ════════════════════════════════════════════════════════════════════════
 

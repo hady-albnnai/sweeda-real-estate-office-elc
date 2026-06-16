@@ -1,0 +1,68 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7"
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
+  try {
+    const { phone } = await req.json()
+    if (!phone) throw new Error("Phone number is required")
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
+    // 1. Generate OTP in DB
+    const { data: otp, error: otpError } = await supabase.rpc('generate_otp_v2', {
+      p_identifier: phone,
+      p_channel: 'sms'
+    })
+
+    if (otpError) throw otpError
+
+    // 2. Send via TextBee
+    const TEXTBEE_API_KEY = Deno.env.get('TEXTBEE_API_KEY')
+    const TEXTBEE_DEVICE_ID = Deno.env.get('TEXTBEE_DEVICE_ID')
+
+    if (!TEXTBEE_API_KEY || !TEXTBEE_DEVICE_ID) {
+      console.log("DEV MODE: SMS NOT SENT. OTP is:", otp)
+      return new Response(
+        JSON.stringify({ success: true, devMode: true, otp }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const response = await fetch(`https://api.textbee.dev/api/v1/gateway/devices/${TEXTBEE_DEVICE_ID}/send-sms`, {
+      method: 'POST',
+      headers: {
+        'x-api-key': TEXTBEE_API_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        recipients: [phone],
+        message: `رمز التحقق الخاص بك لمكتب عقارات السويداء هو: ${otp}`
+      })
+    })
+
+    const result = await response.json()
+
+    return new Response(
+      JSON.stringify({ success: true, result }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+
+  } catch (error) {
+    return new Response(
+      JSON.stringify({ success: false, error: error.message }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  }
+})

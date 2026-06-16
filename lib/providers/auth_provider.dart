@@ -113,6 +113,46 @@ class AuthProvider with ChangeNotifier {
   // 📱 WhatsApp
   // ════════════════════════════════════════════════════════════════════
 
+  Future<bool> sendSMSOTP(String phone) async {
+    try {
+      final result = await AuthService().sendSMSOTP(phone);
+      if (result['success'] == true) {
+        if (result['fallbackOtp'] != null) {
+          _lastError = 'DEBUG: ${result['fallbackOtp']}';
+        }
+        notifyListeners();
+        return true;
+      }
+      _lastError = result['error'];
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _lastError = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> verifySMSOTP(String code) async {
+    try {
+      if (_currentPhone == null) return false;
+      final result = await AuthService().verifySMSOTP(_currentPhone!, code);
+      if (result['success'] == true) {
+        final userId = result['userId'];
+        _isNewUser = result['isNewUser'] ?? false;
+        await _loadUser(userId);
+        return true;
+      }
+      _lastError = result['error'];
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _lastError = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> sendWhatsAppOTP(String phone) async {
     try {
       _currentPhone = phone;
