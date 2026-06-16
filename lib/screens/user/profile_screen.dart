@@ -125,7 +125,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            AppTheme.primaryGold.withValues(alpha: 0.15),
+            user.isAdmin 
+              ? AppTheme.primaryGold.withValues(alpha: 0.2) 
+              : AppTheme.primaryGold.withValues(alpha: 0.15),
             AppTheme.deepBlack,
           ],
         ),
@@ -136,9 +138,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'حسابي',
-                style: TextStyle(
+              Text(
+                user.isAdmin ? 'الملف الوظيفي' : 'حسابي',
+                style: const TextStyle(
                   color: AppTheme.primaryGold,
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -207,46 +209,68 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           const SizedBox(height: 6),
 
-          // اسم المستخدم
-          if (user.usr != null && user.usr!.isNotEmpty)
+          // معلومات الموظف (ID / العنوان)
+          if (user.isAdmin) ...[
             Text(
-              '@${user.usr}',
-              style: TextStyle(
-                color: AppTheme.textGrey.withValues(alpha: 0.8),
+              user.roleName,
+              style: const TextStyle(
+                color: AppTheme.primaryGold,
                 fontSize: 14,
+                fontWeight: FontWeight.w600,
               ),
             ),
-
-          const SizedBox(height: 8),
-
-          // الدور + البادج
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _chip(
-                user.roleName,
-                AppTheme.primaryGold.withValues(alpha: 0.15),
-                AppTheme.primaryGold,
+            const SizedBox(height: 4),
+            if (user.sid.isNotEmpty)
+              Text(
+                'الرقم الوطني: ${user.sid}',
+                style: const TextStyle(color: AppTheme.textGrey, fontSize: 12),
               ),
-              if (!user.isAdmin) ...[
+            if (user.ad.isNotEmpty)
+              Text(
+                'العنوان: ${user.ad}',
+                style: const TextStyle(color: AppTheme.textGrey, fontSize: 12),
+              ),
+          ] else ...[
+            // اسم المستخدم للمستخدم العادي
+            if (user.usr != null && user.usr!.isNotEmpty)
+              Text(
+                '@${user.usr}',
+                style: TextStyle(
+                  color: AppTheme.textGrey.withValues(alpha: 0.8),
+                  fontSize: 14,
+                ),
+              ),
+          ],
+
+          const SizedBox(height: 12),
+
+          // الدور + البادج (للمستخدم العادي فقط)
+          if (!user.isAdmin)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _chip(
+                  user.roleName,
+                  AppTheme.primaryGold.withValues(alpha: 0.15),
+                  AppTheme.primaryGold,
+                ),
                 const SizedBox(width: 8),
                 _chip(
                   user.badgeName,
                   Colors.white.withValues(alpha: 0.08),
                   AppTheme.textWhite,
                 ),
+                // شارة التوثيق
+                if (user.isVerifiedOfficial) ...[
+                  const SizedBox(width: 8),
+                  _chip(
+                    '✓ موثق',
+                    Colors.green.withValues(alpha: 0.15),
+                    Colors.green,
+                  ),
+                ],
               ],
-              // شارة التوثيق
-              if (user.isVerifiedOfficial) ...[
-                const SizedBox(width: 8),
-                _chip(
-                  '✓ موثق',
-                  Colors.green.withValues(alpha: 0.15),
-                  Colors.green,
-                ),
-              ],
-            ],
-          ),
+            ),
         ],
       ),
     );
@@ -626,7 +650,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         // ─── معلومات الحساب والتوثيق ───
         _menuItem(
           icon: Icons.person_outline_rounded,
-          title: 'معلومات الحساب',
+          title: user.isAdmin ? 'بياناتي الوظيفية' : 'معلومات الحساب',
           subtitle: _accountSubtitle(user),
           onTap: () => context.push('/user/account-info'),
         ),
@@ -702,6 +726,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
             title: 'تقدّم لتصبح وسيطاً',
             subtitle: 'احصل على صلاحيات إضافية',
             onTap: () => context.push('/user/become-broker'),
+          ),
+
+        // ─── لوحة التحكم — للموظفين فقط ───
+        if (user.isAdmin)
+          _menuItem(
+            icon: Icons.dashboard_customize_outlined,
+            title: 'لوحة التحكم الإدارية',
+            subtitle: 'الانتقال إلى واجهة العمليات',
+            onTap: () {
+              if (user.isPhotographer) {
+                context.go('/photographer/tasks');
+              } else if (user.isSupervisor) {
+                context.go('/executor/tasks');
+              } else if (user.isEmployee) {
+                context.go('/employee/dashboard');
+              } else if (user.isSenior || user.isManager) {
+                context.go('/admin/dashboard');
+              }
+            },
+            trailing: const Icon(Icons.arrow_forward_ios, color: AppTheme.primaryGold, size: 14),
           ),
       ],
     );

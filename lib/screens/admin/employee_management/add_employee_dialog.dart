@@ -1,9 +1,12 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/validation/input_validators.dart';
 import '../../../providers/admin_provider.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../services/storage_service.dart';
 
 class AddEmployeeDialog extends StatefulWidget {
   const AddEmployeeDialog({super.key});
@@ -18,8 +21,13 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
   final _usernameController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _sidController = TextEditingController();
+  
   int _selectedRole = 4; // موظف مكتب افتراضي
   bool _isLoading = false;
+  XFile? _idImage;
+  final StorageService _storage = StorageService();
 
   @override
   void dispose() {
@@ -27,13 +35,29 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
     _phoneController.dispose();
     _emailController.dispose();
     _usernameController.dispose();
+    _addressController.dispose();
+    _sidController.dispose();
     super.dispose();
   }
 
   String? _validateUsername(String? value) => InputValidators.validateUsername(value);
 
+  Future<void> _pickImage() async {
+    final img = await _storage.pickImage();
+    if (img != null) {
+      setState(() => _idImage = img);
+    }
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    
+    if (_idImage == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('يرجى اختيار صورة الهوية')),
+      );
+      return;
+    }
 
     setState(() => _isLoading = true);
 
@@ -46,6 +70,23 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
         throw Exception('لم يتم العثور على جلسة المدير');
       }
 
+      // 1. رفع صورة الهوية أولاً
+      String? idImageUrl;
+      final fileName = 'id_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      // نستخدم مسار مؤقت لأننا لا نملك UID الموظف بعد، 
+      // أو نستخدم UID المدير كفولدر مؤقت أو فولدر 'pending_staff'
+      final uploadPath = 'staff_onboarding/$fileName';
+      
+      // نرفعها للباكت الخاص بالهويات
+      final bytes = await _idImage!.readAsBytes();
+      await SupabaseService().storage.from(StorageService.idsPrivateBucket).uploadBinary(
+        uploadPath,
+        bytes,
+        fileOptions: const FileOptions(upsert: true),
+      );
+      idImageUrl = uploadPath; // نحفظ المسار النسبي وليس الرابط العام لأنه باكت خاص
+
+      // 2. إنشاء الموظف
       final result = await adminProvider.createStaffUser(
         adminUid: adminUid,
         fullName: _nameController.text.trim(),
@@ -53,6 +94,9 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
         email: _emailController.text.trim(),
         username: _usernameController.text.trim(),
         role: _selectedRole,
+        address: _addressController.text.trim(),
+        sid: _sidController.text.trim(),
+        img: idImageUrl,
       );
 
       if (!mounted) return;
@@ -110,6 +154,58 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
               ),
               const SizedBox(height: 12),
               TextFormField(
+                controller: _sidController,
+                style: const TextStyle(color: AppTheme.textWhite),
+                decoration: const InputDecoration(
+                  labelText: 'الرقم الوطني *',
+                  labelStyle: TextStyle(color: AppTheme.textGrey),
+                ),
+                keyboardType: TextInputType.number,
+                validator: (v) => (v == null || v.isEmpty) ? 'مطلوب' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _addressController,
+                style: const TextStyle(color: AppTheme.textWhite),
+                decoration: const InputDecoration(
+                  labelText: 'العنوان التفصيلي *',
+                  labelStyle: TextStyle(color: AppTheme.textGrey),
+                ),
+                validator: (v) => (v == null || v.isEmpty) ? 'مطلوب' : null,
+              ),
+              const SizedBox(height: 12),
+              // اختيار صورة الهوية
+              InkWell(
+                onTap: _pickImage,
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surfaceBlack,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppTheme.textGrey.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        _idImage == null ? Icons.add_a_photo_outlined : Icons.check_circle,
+                        color: _idImage == null ? AppTheme.primaryGold : Colors.green,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _idImage == null ? 'ارفع صورة الهوية *' : 'تم اختيار الصورة',
+                          style: TextStyle(
+                            color: _idImage == null ? AppTheme.textGrey : AppTheme.textWhite,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
                 controller: _usernameController,
                 style: const TextStyle(color: AppTheme.textWhite),
                 decoration: const InputDecoration(
@@ -132,7 +228,7 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<int>(
-                initialValue: _selectedRole,
+                value: _selectedRole,
                 dropdownColor: AppTheme.surfaceBlack,
                 style: const TextStyle(color: AppTheme.textWhite),
                 decoration: const InputDecoration(
@@ -175,8 +271,8 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
           onPressed: _isLoading ? null : _submit,
           style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryGold),
           child: _isLoading
-              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-              : const Text('إضافة'),
+              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+              : const Text('إضافة', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         ),
       ],
     );
