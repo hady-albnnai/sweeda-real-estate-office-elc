@@ -139,7 +139,7 @@ class _SplashScreenState extends State<SplashScreen>
                           child: Image.asset(
                             'assets/images/logo_app.png',
                             fit: BoxFit.contain,
-                            errorBuilder: (_, __, ___) => const Icon(
+                            errorBuilder: (_, __, ___) => Icon(
                               Icons.apartment_rounded,
                               size: logoSize * 0.48,
                               color: AppTheme.primaryGold,
