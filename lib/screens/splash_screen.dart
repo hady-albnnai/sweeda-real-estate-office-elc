@@ -98,114 +98,171 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.sizeOf(context);
-    final logoSize = (screenSize.shortestSide * 0.68).clamp(220.0, 420.0);
+    // تكبير الشعار ليأخذ مساحة أكبر
+    final logoSize = (screenSize.shortestSide * 0.85).clamp(280.0, 480.0);
 
     return Scaffold(
       backgroundColor: AppTheme.deepBlack,
-      body: Center(
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, child) {
-            return Opacity(
-              opacity: _fadeAnimation.value,
-              child: Transform.scale(
-                scale: _scaleAnimation.value,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: logoSize,
-                      height: logoSize,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppTheme.primaryGold, width: 2.5),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppTheme.primaryGold.withValues(alpha: 0.25),
-                            blurRadius: 25,
-                            spreadRadius: 5,
-                          ),
-                          BoxShadow(
-                            color: AppTheme.primaryGold.withValues(alpha: 0.1),
-                            blurRadius: 50,
-                            spreadRadius: 10,
-                          ),
-                        ],
-                      ),
-                      child: ClipOval(
-                        child: Container(
-                          color: AppTheme.surfaceBlack,
-                          padding: EdgeInsets.all(logoSize * 0.06),
-                          child: Image.asset(
-                            'assets/images/logo_app.png',
-                            fit: BoxFit.contain,
-                            errorBuilder: (_, __, ___) => Icon(
-                              Icons.apartment_rounded,
-                              size: logoSize * 0.48,
-                              color: AppTheme.primaryGold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: screenSize.height * 0.035),
-                    const Text(
-                      'المكتب العقاري الالكتروني',
-                      style: TextStyle(
-                        color: AppTheme.primaryGold,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      'السويداء',
-                      style: TextStyle(
-                        color: AppTheme.primaryGold.withValues(alpha: 0.6),
-                        fontSize: 13,
-                        letterSpacing: 3,
-                        fontWeight: FontWeight.w300,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'عقارات • سيارات • مواعيد معاينة',
-                      style: TextStyle(
-                        color: AppTheme.textGrey.withValues(alpha: 0.7),
-                        fontSize: 11,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                    const SizedBox(height: 45),
-                    // شريط تقدّم بسيط بعرض ثابت
-                    SizedBox(
-                      width: 160,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          minHeight: 4,
-                          backgroundColor: AppTheme.surfaceBlack,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            AppTheme.primaryGold.withValues(alpha: 0.85),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Text(
-                      'جارٍ التحميل...',
-                      style: TextStyle(
-                        color: AppTheme.textGrey.withValues(alpha: 0.6),
-                        fontSize: 11,
-                      ),
-                    ),
+      body: Stack(
+        children: [
+          // ─── تأثير إضاءة خلفي (Glow) ───
+          Positioned(
+            top: screenSize.height * 0.2,
+            left: -screenSize.width * 0.2,
+            child: Container(
+              width: screenSize.width * 1.4,
+              height: screenSize.width * 1.4,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppTheme.primaryGold.withValues(alpha: 0.08),
+                    Colors.transparent,
                   ],
                 ),
               ),
-            );
-          },
-        ),
+            ),
+          ),
+
+          Center(
+            child: AnimatedBuilder(
+              animation: _controller,
+              builder: (context, child) {
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // ─── الشعار الكبير ───
+                    Opacity(
+                      opacity: _fadeAnimation.value,
+                      child: Transform.scale(
+                        scale: _scaleAnimation.value,
+                        child: Container(
+                          width: logoSize,
+                          height: logoSize,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.primaryGold.withValues(alpha: 0.15),
+                                blurRadius: 40,
+                                spreadRadius: 10,
+                              ),
+                            ],
+                          ),
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              // دائرة ذهبية رقيقة محيطة
+                              Container(
+                                width: logoSize,
+                                height: logoSize,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: AppTheme.primaryGold.withValues(alpha: 0.4),
+                                    width: 1.5,
+                                  ),
+                                ),
+                              ),
+                              // الشعار الفعلي
+                              Padding(
+                                padding: EdgeInsets.all(logoSize * 0.12),
+                                child: Image.asset(
+                                  'assets/images/logo_app.png',
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (_, __, ___) => Icon(
+                                    Icons.apartment_rounded,
+                                    size: logoSize * 0.5,
+                                    color: AppTheme.primaryGold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: screenSize.height * 0.05),
+
+                    // ─── النصوص العصرية ───
+                    Opacity(
+                      opacity: _fadeAnimation.value,
+                      child: Column(
+                        children: [
+                          Text(
+                            'المكتب العقاري الإلكتروني',
+                            style: GoogleFonts.cairo(
+                              color: AppTheme.primaryGold,
+                              fontSize: 26,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'SWEEDA REAL ESTATE',
+                            style: GoogleFonts.montserrat(
+                              color: AppTheme.primaryGold.withValues(alpha: 0.5),
+                              fontSize: 10,
+                              letterSpacing: 6,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          // شعار تسويقي صغير (Slogan)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: Colors.white10),
+                              color: Colors.white.withValues(alpha: 0.03),
+                            ),
+                            child: Text(
+                              'وجهتك الموثوقة لعقارات وسيارات السويداء',
+                              style: GoogleFonts.cairo(
+                                color: AppTheme.textGrey.withValues(alpha: 0.8),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 60),
+
+                    // ─── مؤشر التحميل ───
+                    SizedBox(
+                      width: 180,
+                      child: Column(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: LinearProgressIndicator(
+                              minHeight: 3,
+                              backgroundColor: Colors.white.withValues(alpha: 0.05),
+                              valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primaryGold),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'جاري تهيئة النظام...',
+                            style: GoogleFonts.cairo(
+                              color: AppTheme.textGrey.withValues(alpha: 0.5),
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
