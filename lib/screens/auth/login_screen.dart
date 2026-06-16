@@ -1,442 +1,212 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
-import 'package:go_router/go_router.dart';
 
 class LoginScreen extends StatefulWidget {
-  final bool startInSignUpMode;
   const LoginScreen({super.key, this.startInSignUpMode = false});
-  
+  final bool startInSignUpMode;
+
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  late bool _isSignUp; 
-  int _activeCategory = 0; // 0: none, 1: WhatsApp, 2: Email, 3: Password
+  // 0: مغلق، 1: تسجيل جديد، 2: تسجيل دخول
+  int _activeSection = 0; 
+  // 1: هاتف، 2: إيميل
+  int _signupMethod = 0;
 
-  // ── Sign In fields ──
-  final _identifierCtrl = TextEditingController();
-  final _passwordCtrl = TextEditingController();
-  bool _obscure = true;
-
-  // ── Sign Up fields ──
+  final _userCtrl = TextEditingController();
+  final _passCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
-
+  
+  bool _obs = true;
   bool _loading = false;
 
   @override
   void initState() {
     super.initState();
-    _isSignUp = widget.startInSignUpMode;
-    // تفعيل التصنيف المناسب تلقائياً حسب الوضع
-    _activeCategory = _isSignUp ? 1 : 3;
+    // تفعيل القسم المناسب حسب التوجيه
+    _activeSection = widget.startInSignUpMode ? 1 : 2;
   }
 
   @override
   void dispose() {
-    _identifierCtrl.dispose();
-    _passwordCtrl.dispose();
-    _phoneCtrl.dispose();
-    _emailCtrl.dispose();
+    _userCtrl.dispose(); _passCtrl.dispose(); _phoneCtrl.dispose(); _emailCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _loginWithPassword() async {
-    final identifier = _identifierCtrl.text.trim();
-    final password = _passwordCtrl.text;
-    if (identifier.isEmpty || password.isEmpty) {
-      _toast('أدخل كافة البيانات المطلوبة');
-      return;
-    }
+  // ── العمليات الوظيفية ──
+  Future<void> _login() async {
+    if (_userCtrl.text.isEmpty || _passCtrl.text.isEmpty) { _snack('أدخل بيانات الدخول'); return; }
     setState(() => _loading = true);
-    final auth = context.read<AuthProvider>();
-    final ok = await auth.loginWithPassword(identifier, password);
-    if (!mounted) return;
-    setState(() => _loading = false);
-    if (ok) {
-      _navigateByRole(auth);
-    } else {
-      _toast(auth.lastError ?? 'فشل تسجيل الدخول');
-    }
+    final ok = await context.read<AuthProvider>().loginWithPassword(_userCtrl.text.trim(), _passCtrl.text);
+    if (mounted) setState(() => _loading = false);
+    if (!ok) _snack('خطأ في الاسم أو كلمة المرور');
   }
 
-  Future<void> _sendWhatsApp() async {
-    final phone = _phoneCtrl.text.trim();
-    if (phone.length != 10 || !phone.startsWith('09')) {
-      _toast('أدخل رقم هاتف صحيح');
-      return;
-    }
+  Future<void> _forgot() async {
+    final ph = _userCtrl.text.trim();
+    if (ph.length != 10 || !ph.startsWith('09')) { _snack('أدخل رقم هاتفك في خانة الدخول أولاً'); return; }
     setState(() => _loading = true);
-    final auth = context.read<AuthProvider>();
-    final ok = await auth.sendWhatsAppOTP(phone);
-    if (!mounted) return;
-    setState(() => _loading = false);
-    if (ok) {
-      context.push('/otp');
-    } else {
-      _toast('فشل إرسال الرمز');
-    }
+    final ok = await context.read<AuthProvider>().sendSMSOTP(ph);
+    if (mounted) setState(() => _loading = false);
+    if (ok) context.push('/otp');
   }
 
-  Future<void> _sendEmailLink() async {
-    final email = _emailCtrl.text.trim();
-    if (email.isEmpty || !email.contains('@')) {
-      _toast('أدخل بريد إلكتروني صحيح');
-      return;
-    }
+  Future<void> _regSMS() async {
+    if (_phoneCtrl.text.length != 10 || !_phoneCtrl.text.startsWith('09')) { _snack('أدخل رقم هاتف صحيح'); return; }
     setState(() => _loading = true);
-    final auth = context.read<AuthProvider>();
-    final ok = await auth.sendEmailMagicLink(email);
-    if (!mounted) return;
-    setState(() => _loading = false);
-    if (ok) {
-      context.push('/check-email');
-    } else {
-      _toast('فشل إرسال الرابط');
-    }
+    final ok = await context.read<AuthProvider>().sendSMSOTP(_phoneCtrl.text.trim());
+    if (mounted) setState(() => _loading = false);
+    if (ok) context.push('/otp');
   }
 
-  void _navigateByRole(AuthProvider auth) {
-    if (auth.isNewUser) {
-      context.go('/setup-profile');
-    } else if (auth.isSenior) {
-      context.go('/admin/dashboard');
-    } else if (auth.isEmployee) {
-      context.go('/employee/home');
-    } else if (auth.isSupervisor) {
-      context.go('/executor/tasks');
-    } else if (auth.isPhotographer) {
-      context.go('/photographer/tasks');
-    } else if (auth.isBroker) {
-      context.go('/broker/dashboard');
-    } else {
-      context.go('/user/home');
-    }
+  Future<void> _regMail() async {
+    if (_emailCtrl.text.isEmpty || !_emailCtrl.text.contains('@')) { _snack('أدخل بريداً صحيحاً'); return; }
+    setState(() => _loading = true);
+    final ok = await context.read<AuthProvider>().sendEmailMagicLink(_emailCtrl.text.trim());
+    if (mounted) setState(() => _loading = false);
+    if (ok) context.push('/check-email');
   }
 
-  void _toast(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-  }
+  void _snack(String m) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
 
   @override
   Widget build(BuildContext context) {
+    final sz = MediaQuery.sizeOf(context);
+    final logoSize = (sz.shortestSide * 0.95).clamp(300.0, 550.0);
+
     return Scaffold(
       backgroundColor: AppTheme.deepBlack,
-      body: Stack(
-        children: [
-          // ─── تأثير الإضاءة الخلفية ───
-          Positioned(
-            top: -100,
-            right: -50,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [AppTheme.primaryGold.withValues(alpha: 0.1), Colors.transparent],
-                ),
-              ),
-            ),
-          ),
-          SafeArea(
-            child: Column(
-              children: [
-                // ─── شريط العنوان ───
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.close, color: AppTheme.textGrey),
-                        onPressed: () => context.pop(),
-                      ),
-                      const Spacer(),
-                      Text(
-                        _isSignUp ? 'إنشاء حساب جديد' : 'تسجيل الدخول',
-                        style: const TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 16),
-                      ),
-                      const Spacer(),
-                      const SizedBox(width: 48),
-                    ],
-                  ),
-                ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(children: [
+            const SizedBox(height: 20),
+            // 🔥 شعار السبلاش الضخم جداً
+            Hero(tag: 'logo', child: Container(
+              width: logoSize, height: logoSize * 0.72,
+              decoration: BoxDecoration(shape: BoxShape.circle, boxShadow: [BoxShadow(color: AppTheme.primaryGold.withValues(alpha: 0.2), blurRadius: 100, spreadRadius: 25)]),
+              child: Stack(alignment: Alignment.center, children: [
+                Container(width: logoSize * 0.72, height: logoSize * 0.72, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.4), width: 3.5))),
+                Container(width: logoSize * 0.65, height: logoSize * 0.65, decoration: const BoxDecoration(shape: BoxShape.circle, color: AppTheme.surfaceBlack), padding: const EdgeInsets.all(35), child: Image.asset('assets/images/logo_app.png', fit: BoxFit.contain)),
+              ]),
+            )),
+            const SizedBox(height: 10),
+            Text('المكتب العقاري الإلكتروني', style: GoogleFonts.cairo(color: AppTheme.primaryGold, fontSize: 26, fontWeight: FontWeight.w900)),
+            const SizedBox(height: 50),
 
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 10),
-                        // 🛡️ شعار بتصميم السبلاش
-                        Hero(
-                          tag: 'logo',
-                          child: Container(
-                            width: 120,
-                            height: 120,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppTheme.primaryGold.withValues(alpha: 0.15),
-                                  blurRadius: 30,
-                                ),
-                              ],
-                            ),
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                Container(
-                                  width: 120,
-                                  height: 120,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: AppTheme.primaryGold.withValues(alpha: 0.3),
-                                      width: 1,
-                                    ),
-                                  ),
-                                ),
-                                Container(
-                                  width: 112,
-                                  height: 112,
-                                  decoration: const BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: AppTheme.surfaceBlack,
-                                  ),
-                                  padding: const EdgeInsets.all(20),
-                                  child: Image.asset('assets/images/logo_app.png', fit: BoxFit.contain),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 30),
+            // ── القائمة 1: تسجيل الدخول ──
+            _buildBlock(
+              id: 2, title: 'تسجيل الدخول', icon: Icons.login_rounded, isGold: false,
+              child: Column(children: [
+                _input(_userCtrl, 'اسم المستخدم أو الهاتف', Icons.person_outline),
+                const SizedBox(height: 12),
+                _input(_passCtrl, 'كلمة المرور', Icons.lock_outline, isPass: true, obs: _obs, onT: () => setState(() => _obs = !_obs)),
+                const SizedBox(height: 20),
+                _btn(label: 'دخول', onTap: _login),
+                TextButton(onPressed: _forgot, child: const Text('هل نسيت كلمة المرور؟ استعادة بـ SMS', style: TextStyle(color: AppTheme.primaryGold, decoration: TextDecoration.underline, fontSize: 13))),
+              ]),
+            ),
 
-                        // ─── وضع إنشاء حساب ───
-                        if (_isSignUp) ...[
-                          _authCategory(
-                            id: 1,
-                            title: 'عبر الواتساب (موصى به)',
-                            subtitle: 'سجّل بلمحة بصر عبر تطبيق الواتساب',
-            icon: Icons.sms_outlined,
-            color: Colors.green,
-            child: _buildSMSForm(),
-          ),
-          const SizedBox(height: 30),
-          TextButton(
-            onPressed: () => setState(() {
-              _isSignUp = false;
-              _activeCategory = 3; // افتح كلمة المرور تلقائياً
-            }),
-            child: const Text('لديك حساب مسبق؟ سجل دخولك الآن', style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
-          ),
-        ] 
-        // ─── وضع تسجيل الدخول ───
-        else ...[
-          _authCategory(
-            id: 3,
-            title: 'بيانات الدخول التقليدية',
-            subtitle: 'اسم المستخدم وكلمة المرور',
-            icon: Icons.lock_outline,
-            color: AppTheme.primaryGold,
-            child: _buildPasswordForm(),
-          ),
-          const SizedBox(height: 16),
-          _authCategory(
-            id: 1,
-            title: 'استعادة الحساب (SMS)',
-            subtitle: 'في حال نسيت كلمة المرور',
-            icon: Icons.phonelink_ring_outlined,
-            color: Colors.green,
-            child: _buildSMSForm(),
-          ),
-          const SizedBox(height: 30),
-          TextButton(
-            onPressed: () => setState(() {
-              _isSignUp = true;
-              _activeCategory = 1; // افتح SMS تلقائياً
-            }),
-            child: const Text('ليس لديك حساب؟ أنشئ حساباً جديداً', style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
-          ),
-        ],
-                        const SizedBox(height: 20),
-                      ],
-                    ),
-                  ),
+            const SizedBox(height: 16),
+
+            // ── القائمة 2: تسجيل حساب جديد ──
+            _buildBlock(
+              id: 1, title: 'تسجيل حساب جديد', icon: Icons.person_add_alt_1_outlined, isGold: true,
+              child: Column(children: [
+                // أ. هاتف
+                _buildOption(
+                  id: 1, title: 'عن طريق رقم الهاتف', icon: Icons.phone_android,
+                  child: Column(children: [
+                    const Text('سيصلك رمز تفعيل برسالة نصية SMS', style: TextStyle(color: Colors.black87, fontSize: 11)),
+                    const SizedBox(height: 12),
+                    _input(_phoneCtrl, '09XXXXXXXX', Icons.phone_iphone, dark: true),
+                    const SizedBox(height: 12),
+                    _btn(label: 'إرسال رمز التفعيل SMS', onTap: _regSMS, dark: true),
+                  ]),
                 ),
-              ],
+                const SizedBox(height: 12),
+                // ب. إيميل
+                _buildOption(
+                  id: 2, title: 'عن طريق الإيميل', icon: Icons.alternate_email,
+                  child: Column(children: [
+                    const Text('سيصلك رابط تفعيل إلى بريدك الإلكتروني', style: TextStyle(color: Colors.black87, fontSize: 11)),
+                    const SizedBox(height: 12),
+                    _input(_emailCtrl, 'example@mail.com', Icons.email_outlined, dark: true),
+                    const SizedBox(height: 12),
+                    _btn(label: 'إرسال رابط التفعيل', onTap: _regMail, dark: true),
+                  ]),
+                ),
+              ]),
             ),
-          ),
-          if (_loading)
-            Container(
-              color: Colors.black54,
-              child: const Center(child: CircularProgressIndicator(color: AppTheme.primaryGold)),
-            ),
-        ],
+            const SizedBox(height: 60),
+          ]),
+        ),
       ),
     );
   }
 
-  Widget _authCategory({
-    required int id,
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required Color color,
-    required Widget child,
-  }) {
-    final isOpen = _activeCategory == id;
+  Widget _buildBlock({required int id, required String title, required IconData icon, required bool isGold, required Widget child}) {
+    final open = _activeSection == id;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: isOpen ? color.withValues(alpha: 0.5) : Colors.white.withValues(alpha: 0.05)),
-        boxShadow: [
-          if (isOpen) BoxShadow(color: color.withValues(alpha: 0.1), blurRadius: 20)
-        ],
+      decoration: BoxDecoration(color: isGold ? AppTheme.primaryGold : AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(24), border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.5), width: 2)),
+      child: Column(children: [
+        InkWell(
+          onTap: () => setState(() { _activeSection = open ? 0 : id; if (id == 1) _signupMethod = 0; }),
+          borderRadius: BorderRadius.circular(24),
+          child: Padding(padding: const EdgeInsets.all(20), child: Row(children: [
+            Icon(icon, color: isGold ? Colors.black : AppTheme.primaryGold, size: 28),
+            const SizedBox(width: 16),
+            Text(title, style: TextStyle(color: isGold ? Colors.black : AppTheme.textWhite, fontSize: 18, fontWeight: FontWeight.w900)),
+            const Spacer(),
+            Icon(open ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, color: isGold ? Colors.black : AppTheme.textGrey),
+          ])),
+        ),
+        if (open) Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 20), child: child),
+      ]),
+    );
+  }
+
+  Widget _buildOption({required int id, required String title, required IconData icon, required Widget child}) {
+    final sel = _signupMethod == id;
+    return Container(
+      decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16)),
+      child: Column(children: [
+        ListTile(
+          onTap: () => setState(() => _signupMethod = sel ? 0 : id),
+          leading: Icon(icon, color: Colors.black87),
+          title: Text(title, style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 14)),
+          trailing: Icon(sel ? Icons.radio_button_checked : Icons.radio_button_off, color: Colors.black87),
+        ),
+        if (sel) Padding(padding: const EdgeInsets.fromLTRB(12, 0, 12, 16), child: child),
+      ]),
+    );
+  }
+
+  Widget _input(TextEditingController c, String h, IconData i, {bool isPass = false, bool? obs, VoidCallback? onT, bool dark = false}) {
+    return TextField(
+      controller: c, obscureText: obs ?? false, textAlign: TextAlign.left,
+      style: TextStyle(color: dark ? Colors.black : AppTheme.textWhite, fontWeight: FontWeight.bold),
+      decoration: InputDecoration(
+        hintText: h, prefixIcon: Icon(i, color: dark ? Colors.black45 : AppTheme.primaryGold),
+        fillColor: dark ? Colors.white.withValues(alpha: 0.8) : AppTheme.surfaceBlack,
+        suffixIcon: isPass ? IconButton(icon: Icon(obs! ? Icons.visibility_off : Icons.visibility, color: AppTheme.textGrey), onPressed: onT) : null,
       ),
-      child: Column(
-        children: [
-          ListTile(
-            onTap: () => setState(() => _activeCategory = isOpen ? 0 : id),
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-              child: Icon(icon, color: color, size: 22),
-            ),
-            title: Text(title, style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold, fontSize: 14)),
-            subtitle: Text(subtitle, style: const TextStyle(color: AppTheme.textGrey, fontSize: 11)),
-            trailing: Icon(isOpen ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, color: AppTheme.textGrey),
-          ),
-          if (isOpen) Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 20), child: child),
-        ],
-      ),
     );
   }
 
-  Widget _buildSMSForm() {
-    return Column(
-      children: [
-        const Divider(color: Colors.white10),
-        const SizedBox(height: 12),
-        TextField(
-          controller: _phoneCtrl,
-          keyboardType: TextInputType.phone,
-          textAlign: TextAlign.left,
-          style: const TextStyle(color: AppTheme.textWhite),
-          decoration: const InputDecoration(
-            hintText: '09XXXXXXXX',
-            prefixIcon: Icon(Icons.phone_android, color: Colors.green, size: 18),
-          ),
-        ),
-        const SizedBox(height: 16),
-        SizedBox(
-          width: double.infinity,
-          height: 48,
-          child: ElevatedButton(
-            onPressed: _loading ? null : _sendSMS,
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-            child: const Text('إرسال الرمز (SMS)', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _sendSMS() async {
-    final phone = _phoneCtrl.text.trim();
-    if (phone.length != 10 || !phone.startsWith('09')) {
-      _toast('أدخل رقم هاتف صحيح');
-      return;
-    }
-    setState(() => _loading = true);
-    final auth = context.read<AuthProvider>();
-    final ok = await auth.sendSMSOTP(phone);
-    if (!mounted) return;
-    setState(() => _loading = false);
-    if (ok) {
-      context.push('/otp');
-    } else {
-      _toast('فشل إرسال الرمز عبر SMS');
-    }
-  }
-
-  Widget _buildEmailForm() {
-    return Column(
-      children: [
-        const Divider(color: Colors.white10),
-        const SizedBox(height: 12),
-        TextField(
-          controller: _emailCtrl,
-          keyboardType: TextInputType.emailAddress,
-          textAlign: TextAlign.left,
-          style: const TextStyle(color: AppTheme.textWhite),
-          decoration: const InputDecoration(
-            hintText: 'example@email.com',
-            prefixIcon: Icon(Icons.mail_outline, color: Colors.blue, size: 18),
-          ),
-        ),
-        const SizedBox(height: 16),
-        SizedBox(
-          width: double.infinity,
-          height: 48,
-          child: ElevatedButton(
-            onPressed: _loading ? null : _sendEmailLink,
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-            child: const Text('إرسال رابط التسجيل', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPasswordForm() {
-    return Column(
-      children: [
-        const Divider(color: Colors.white10),
-        const SizedBox(height: 12),
-        TextField(
-          controller: _identifierCtrl,
-          textAlign: TextAlign.left,
-          style: const TextStyle(color: AppTheme.textWhite),
-          decoration: const InputDecoration(
-            hintText: 'اسم المستخدم أو الهاتف',
-            prefixIcon: Icon(Icons.person_outline, color: AppTheme.primaryGold, size: 18),
-          ),
-        ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: _passwordCtrl,
-          obscureText: _obscure,
-          textAlign: TextAlign.left,
-          style: const TextStyle(color: AppTheme.textWhite),
-          decoration: InputDecoration(
-            hintText: 'كلمة المرور',
-            prefixIcon: const Icon(Icons.lock_outline, color: AppTheme.primaryGold, size: 18),
-            suffixIcon: IconButton(
-              icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility, size: 18, color: AppTheme.textGrey),
-              onPressed: () => setState(() => _obscure = !_obscure),
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        SizedBox(
-          width: double.infinity,
-          height: 48,
-          child: ElevatedButton(
-            onPressed: _loading ? null : _loginWithPassword,
-            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryGold),
-            child: const Text('دخول', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-          ),
-        ),
-      ],
-    );
+  Widget _btn({required String label, required VoidCallback? onTap, bool dark = false}) {
+    return SizedBox(width: double.infinity, height: 56, child: ElevatedButton(
+      onPressed: _loading ? null : onTap,
+      style: ElevatedButton.styleFrom(backgroundColor: dark ? Colors.black : Colors.white, foregroundColor: dark ? Colors.white : Colors.black, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+      child: _loading ? const CircularProgressIndicator(color: Colors.grey) : Text(label, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17)),
+    ));
   }
 }
