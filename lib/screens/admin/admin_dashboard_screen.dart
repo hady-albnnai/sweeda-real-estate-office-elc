@@ -133,6 +133,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     crossAxisSpacing: 12,
                     childAspectRatio: 1.3,
                     children: [
+                      if (PermissionService.has(auth.userModel, PermissionKeys.manageStaff))
+                        _navCard(Icons.badge_outlined, 'إدارة الموظفين',
+                            '/admin/employee-management'),
                       // بطاقة مهام المنفذ — تظهر لأي مستخدم لديه مواعيد كـ supervisor
                       _navCard(Icons.engineering_outlined, 'مهامي الميدانية',
                           '/executor/tasks'),
@@ -172,13 +175,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         _navCard(Icons.payments_outlined, 'المدفوعات',
                             '/admin/payments',
                             badge: _counts['pendingPayments'] ?? 0),
-                      if (PermissionService.has(auth.userModel, PermissionKeys.manageReports))
+                      if (PermissionService.has(auth.userModel, PermissionKeys.manageReports)) ...[
                         _navCard(Icons.assignment_outlined, 'الطلبات',
                             '/admin/requests',
                             badge: 0),
                         _navCard(Icons.flag_outlined, 'التبليغات',
                             '/admin/reports',
                             badge: _counts['openReports'] ?? 0),
+                      ],
                       if (PermissionService.has(auth.userModel, PermissionKeys.manageConfig))
                         _navCard(Icons.tune_outlined, 'الإعدادات',
                             '/admin/config'),
