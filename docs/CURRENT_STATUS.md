@@ -115,6 +115,7 @@
 ## تحسينات تجربة المستخدم الأخيرة
 
 - [x] Login Redirection Issue (Password Auth) -> Fixed the routing issue after successful login to navigate based on role.
+- [x] Profile Redirection Issue -> Fixed the bottom navigation bar and home screen routing so logged-in users go to their dashboard/profile correctly instead of falling back to the login screen.
 - تكبير شعار شاشة السبلاش ليأخذ مساحة أكبر من الشاشة بشكل متجاوب.
 - تعديل تنقل أقسام لوحة المدير لاستخدام `push` بدلاً من `go` حتى تظهر أسهم الرجوع عند الدخول إلى شاشات الإدارة الفرعية.
 ---
