@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/network/supabase_service.dart';
+import '../../providers/auth_provider.dart';
 
 /// 🕵️ Phase 9: شاشة كشف الاحتيال (حسابات متعددة من نفس الجهاز).
 ///
