@@ -48,7 +48,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
     return Scaffold(
       backgroundColor: AppTheme.deepBlack,
       appBar: AppBar(
-        title: const Text('إدارة المستخدمين'),
+        title: const Text('إدارة الحسابات والعملاء'),
         backgroundColor: AppTheme.deepBlack,
       ),
       body: Column(
@@ -88,7 +88,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                     child: CircularProgressIndicator(color: AppTheme.primaryGold))
                 : _users.isEmpty
                     ? const Center(
-                        child: Text('لا يوجد مستخدمون',
+                        child: Text('لا يوجد حسابات عملاء أو وسطاء',
                             style: TextStyle(color: AppTheme.textGrey)))
                     : RefreshIndicator(
                         color: AppTheme.primaryGold,
@@ -227,10 +227,10 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
   }
 
   void _showRoleDialog(UserModel u) {
-    final roles = <int, String>{};
-    for (int i = 0; i < UserRole.count; i++) {
-      roles[i] = UserRole.nameOf(i);
-    }
+    final roles = <int, String>{
+      UserRole.user: UserRole.nameOf(UserRole.user),
+      UserRole.broker: UserRole.nameOf(UserRole.broker),
+    };
     final admin = context.read<AdminProvider>();
     showDialog(
       context: context,
