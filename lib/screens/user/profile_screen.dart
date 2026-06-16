@@ -10,7 +10,6 @@ import '../../widgets/bottom_nav_bar.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
-
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
@@ -18,64 +17,53 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   Map<String, dynamic>? _staffStats;
   bool _loadingStats = false;
-  
-  // 0: none, 1: signup, 2: login
-  int _activeSection = 0; 
-  // 0: none, 1: phone, 2: email
-  int _signupMethod = 0;
+  int _activeBlock = 0; // 1: signup, 2: login
+  int _signupWay = 0; // 1: phone, 2: email
 
-  final _loginUserCtrl = TextEditingController();
-  final _loginPassCtrl = TextEditingController();
-  final _signupPhoneCtrl = TextEditingController();
-  final _signupEmailCtrl = TextEditingController();
-  
-  bool _isPassObscure = true;
-  bool _isLoading = false;
+  final _logUser = TextEditingController();
+  final _logPass = TextEditingController();
+  final _regPhone = TextEditingController();
+  final _regEmail = TextEditingController();
+  bool _obs = true;
+  bool _busy = false;
 
   @override
   void dispose() {
-    _loginUserCtrl.dispose();
-    _loginPassCtrl.dispose();
-    _signupPhoneCtrl.dispose();
-    _signupEmailCtrl.dispose();
+    _logUser.dispose(); _logPass.dispose(); _regPhone.dispose(); _regEmail.dispose();
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
-    final user = _loginUserCtrl.text.trim();
-    final pass = _loginPassCtrl.text;
-    if (user.isEmpty || pass.isEmpty) { _snack('يرجى إدخال كافة البيانات'); return; }
-    setState(() => _isLoading = true);
-    final auth = context.read<AuthProvider>();
-    final ok = await auth.loginWithPassword(user, pass);
-    if (mounted) setState(() => _isLoading = false);
-    if (!ok) _snack('فشل تسجيل الدخول');
+  // ── العمليات ──
+  Future<void> _login() async {
+    if (_logUser.text.isEmpty || _logPass.text.isEmpty) { _snack('يرجى إدخال البيانات'); return; }
+    setState(() => _busy = true);
+    final ok = await context.read<AuthProvider>().loginWithPassword(_logUser.text.trim(), _logPass.text);
+    if (mounted) setState(() => _busy = false);
+    if (!ok) _snack('خطأ في الاسم أو كلمة المرور');
   }
 
-  Future<void> _handleForgot() async {
-    final phone = _loginUserCtrl.text.trim();
-    if (phone.length != 10 || !phone.startsWith('09')) { _snack('أدخل رقم هاتفك أولاً في خانة الدخول'); return; }
-    setState(() => _isLoading = true);
-    final ok = await context.read<AuthProvider>().sendSMSOTP(phone);
-    if (mounted) setState(() => _isLoading = false);
+  Future<void> _forgot() async {
+    final ph = _logUser.text.trim();
+    if (ph.length != 10 || !ph.startsWith('09')) { _snack('أدخل رقم هاتفك في الخانة الأولى أولاً'); return; }
+    setState(() => _busy = true);
+    final ok = await context.read<AuthProvider>().sendSMSOTP(ph);
+    if (mounted) setState(() => _busy = false);
     if (ok) context.push('/otp');
   }
 
-  Future<void> _handleSignupPhone() async {
-    final phone = _signupPhoneCtrl.text.trim();
-    if (phone.length != 10 || !phone.startsWith('09')) { _snack('أدخل رقم هاتف صحيح'); return; }
-    setState(() => _isLoading = true);
-    final ok = await context.read<AuthProvider>().sendSMSOTP(phone);
-    if (mounted) setState(() => _isLoading = false);
+  Future<void> _regSMS() async {
+    if (_regPhone.text.length != 10 || !_regPhone.text.startsWith('09')) { _snack('أدخل رقم هاتف صحيح'); return; }
+    setState(() => _busy = true);
+    final ok = await context.read<AuthProvider>().sendSMSOTP(_regPhone.text.trim());
+    if (mounted) setState(() => _busy = false);
     if (ok) context.push('/otp');
   }
 
-  Future<void> _handleSignupEmail() async {
-    final email = _signupEmailCtrl.text.trim();
-    if (email.isEmpty || !email.contains('@')) { _snack('أدخل بريداً صحيحاً'); return; }
-    setState(() => _isLoading = true);
-    final ok = await context.read<AuthProvider>().sendEmailMagicLink(email);
-    if (mounted) setState(() => _isLoading = false);
+  Future<void> _regMail() async {
+    if (_regEmail.text.isEmpty || !_regEmail.text.contains('@')) { _snack('أدخل بريداً صحيحاً'); return; }
+    setState(() => _busy = true);
+    final ok = await context.read<AuthProvider>().sendEmailMagicLink(_regEmail.text.trim());
+    if (mounted) setState(() => _busy = false);
     if (ok) context.push('/check-email');
   }
 
@@ -84,30 +72,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
-    final user = auth.userModel;
-
-    if (user == null) {
-      return Scaffold(
-        backgroundColor: AppTheme.deepBlack,
-        body: _buildGuestUI(),
-        bottomNavigationBar: const CustomBottomNavBar(currentIndex: 4),
-      );
-    }
+    if (auth.userModel == null) return Scaffold(backgroundColor: AppTheme.deepBlack, body: _guestUI(), bottomNavigationBar: const CustomBottomNavBar(currentIndex: 4));
 
     return Scaffold(
       backgroundColor: AppTheme.deepBlack,
       body: CustomScrollView(slivers: [
-        SliverToBoxAdapter(child: _buildHeader(user)),
+        SliverToBoxAdapter(child: _buildHeader(auth.userModel!)),
         SliverPadding(padding: const EdgeInsets.all(20), sliver: SliverList(delegate: SliverChildListDelegate([
-          if (user.isInternal) _buildStaffStats(user) else ...[_buildUserStats(user), const SizedBox(height: 16), _buildActivityStats(user)],
-          const SizedBox(height: 20), _buildMenuSection(user), const SizedBox(height: 20), _buildLogoutButton(auth), const SizedBox(height: 30),
+          if (auth.userModel!.isInternal) _buildStaffStats(auth.userModel!) else ...[_buildUserStats(auth.userModel!), const SizedBox(height: 16), _buildActivityStats(auth.userModel!)],
+          const SizedBox(height: 20), _buildMenuSection(auth.userModel!), const SizedBox(height: 20), _buildLogoutButton(auth), const SizedBox(height: 30),
         ]))),
       ]),
       bottomNavigationBar: const CustomBottomNavBar(currentIndex: 4),
     );
   }
 
-  Widget _buildGuestUI() {
+  // ═══════════════════════════════════════════════════════════════
+  // واجهة الزائر - تصميم فائق الوضوح
+  // ═══════════════════════════════════════════════════════════════
+  Widget _guestUI() {
     final sz = MediaQuery.sizeOf(context);
     final logoSize = (sz.shortestSide * 0.95).clamp(320.0, 550.0);
 
@@ -116,117 +99,98 @@ class _ProfileScreenState extends State<ProfileScreen> {
       color: AppTheme.deepBlack,
       child: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-          child: Column(
-            children: [
-              const SizedBox(height: 20),
-              // 🛡️ أيقونة السبلاش الضخمة جداً
-              Hero(tag: 'logo', child: Container(
-                width: logoSize, height: logoSize * 0.75,
-                decoration: BoxDecoration(shape: BoxShape.circle, boxShadow: [BoxShadow(color: AppTheme.primaryGold.withValues(alpha: 0.2), blurRadius: 80, spreadRadius: 25)]),
-                child: Stack(alignment: Alignment.center, children: [
-                  Container(width: logoSize * 0.72, height: logoSize * 0.72, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.4), width: 3.5))),
-                  Container(width: logoSize * 0.65, height: logoSize * 0.65, decoration: const BoxDecoration(shape: BoxShape.circle, color: AppTheme.surfaceBlack), padding: const EdgeInsets.all(35), child: Image.asset('assets/images/logo_app.png', fit: BoxFit.contain)),
-                ]),
-              )),
-              const SizedBox(height: 10),
-              Text('المكتب العقاري الإلكتروني', style: GoogleFonts.cairo(color: AppTheme.primaryGold, fontSize: 26, fontWeight: FontWeight.w900)),
-              const SizedBox(height: 50),
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(children: [
+            const SizedBox(height: 10),
+            // الشعار الماكس
+            Hero(tag: 'logo', child: Container(
+              width: logoSize, height: logoSize * 0.72,
+              decoration: BoxDecoration(shape: BoxShape.circle, boxShadow: [BoxShadow(color: AppTheme.primaryGold.withValues(alpha: 0.2), blurRadius: 100, spreadRadius: 30)]),
+              child: Stack(alignment: Alignment.center, children: [
+                Container(width: logoSize * 0.72, height: logoSize * 0.72, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.4), width: 4))),
+                Container(width: logoSize * 0.65, height: logoSize * 0.65, decoration: const BoxDecoration(shape: BoxShape.circle, color: AppTheme.surfaceBlack), padding: const EdgeInsets.all(35), child: Image.asset('assets/images/logo_app.png', fit: BoxFit.contain)),
+              ]),
+            )),
+            Text('المكتب العقاري الإلكتروني', style: GoogleFonts.cairo(color: AppTheme.primaryGold, fontSize: 26, fontWeight: FontWeight.w900)),
+            const SizedBox(height: 50),
 
-              // ── البند الأول: تسجيل الدخول ──
-              _buildBlock(
-                id: 2, title: 'تسجيل الدخول', icon: Icons.login_rounded, isGold: false,
-                child: Column(children: [
-                  _input(_loginUserCtrl, 'اسم المستخدم أو رقم الهاتف', Icons.person_outline),
-                  const SizedBox(height: 12),
-                  _input(_loginPassCtrl, 'كلمة المرور', Icons.lock_outline, isPass: true, obs: _isPassObscure, onT: () => setState(() => _isPassObscure = !_isPassObscure)),
-                  const SizedBox(height: 16),
-                  _btn(l: 'دخول', o: _handleLogin),
-                  TextButton(onPressed: _handleForgot, child: const Text('هل نسيت كلمة المرور؟ استعادة بـ SMS', style: TextStyle(color: AppTheme.primaryGold, decoration: TextDecoration.underline, fontSize: 13))),
-                ]),
-              ),
+            // ── البند 1: تسجيل الدخول ──
+            _mainBlock(
+              id: 2, title: 'تسجيل الدخول', icon: Icons.login_rounded, isGold: false,
+              child: Column(children: [
+                _input(_logUser, 'اسم المستخدم أو الهاتف', Icons.person_outline),
+                const SizedBox(height: 12),
+                _input(_logPass, 'كلمة المرور', Icons.lock_outline, isPass: true, obs: _obs, onT: () => setState(() => _obs = !_obs)),
+                const SizedBox(height: 16),
+                _bigBtn(l: 'دخول', o: _login),
+                TextButton(onPressed: _forgot, child: const Text('هل نسيت كلمة المرور؟ استعادة بـ SMS', style: TextStyle(color: AppTheme.primaryGold, decoration: TextDecoration.underline, fontSize: 13))),
+              ]),
+            ),
 
-              const SizedBox(height: 16),
+            const SizedBox(height: 16),
 
-              // ── البند الثاني: تسجيل حساب جديد ──
-              _buildBlock(
-                id: 1, title: 'تسجيل حساب جديد', icon: Icons.person_add_alt_1_outlined, isGold: true,
-                child: Column(children: [
-                  // أ- تسجيل عن طريق الهاتف
-                  _subBlock(
-                    t: 'عن طريق رقم الهاتف', i: Icons.phone_android, sel: _signupMethod == 1,
-                    onT: () => setState(() => _signupMethod = 1),
-                    child: Column(children: [
-                      _input(_signupPhoneCtrl, '09XXXXXXXX', Icons.phone_iphone, dark: true),
-                      const SizedBox(height: 12),
-                      _btn(l: 'إرسال رمز التفعيل SMS', o: _handleSignupPhone, dark: true),
-                    ]),
-                  ),
-                  const SizedBox(height: 12),
-                  // ب- تسجيل عن طريق الايميل
-                  _subBlock(
-                    t: 'عن طريق الإيميل', i: Icons.alternate_email, sel: _signupMethod == 2,
-                    onT: () => setState(() => _signupMethod = 2),
-                    child: Column(children: [
-                      _input(_signupEmailCtrl, 'example@mail.com', Icons.email_outlined, dark: true),
-                      const SizedBox(height: 12),
-                      _btn(l: 'إرسال رابط التفعيل', o: _handleSignupEmail, dark: true),
-                    ]),
-                  ),
-                ]),
-              ),
-              const SizedBox(height: 60),
-            ],
-          ),
+            // ── البند 2: تسجيل حساب جديد ──
+            _mainBlock(
+              id: 1, title: 'تسجيل حساب جديد', icon: Icons.person_add_alt_1_outlined, isGold: true,
+              child: Column(children: [
+                // أ. هاتف
+                _option(
+                  t: 'تسجيل عن طريق رقم الهاتف', i: Icons.phone_android, active: _signupWay == 1,
+                  onT: () => setState(() => _signupWay = 1),
+                  child: Column(children: [
+                    _input(_regPhone, '09XXXXXXXX', Icons.phone_iphone, dark: true),
+                    const SizedBox(height: 12),
+                    _bigBtn(l: 'إرسال رمز التفعيل SMS', o: _regSMS, dark: true),
+                  ]),
+                ),
+                const SizedBox(height: 12),
+                // ب. إيميل
+                _option(
+                  t: 'تسجيل عن طريق الإيميل', i: Icons.alternate_email, active: _signupWay == 2,
+                  onT: () => setState(() => _signupWay = 2),
+                  child: Column(children: [
+                    _input(_regEmail, 'example@mail.com', Icons.email_outlined, dark: true),
+                    const SizedBox(height: 12),
+                    _bigBtn(l: 'إرسال رابط التفعيل', o: _regMail, dark: true),
+                  ]),
+                ),
+              ]),
+            ),
+            const SizedBox(height: 60),
+          ]),
         ),
       ),
     );
   }
 
-  Widget _buildBlock({required int id, required String title, required IconData icon, required bool isGold, required Widget child}) {
-    final open = _activeSection == id;
+  Widget _mainBlock({required int id, required String title, required IconData icon, required bool isGold, required Widget child}) {
+    final open = _activeBlock == id;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       decoration: BoxDecoration(color: isGold ? AppTheme.primaryGold : AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(24), border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.5), width: 2)),
       child: Column(children: [
         InkWell(
-          onTap: () => setState(() => _activeSection = open ? 0 : id),
+          onTap: () => setState(() => _activeBlock = open ? 0 : id),
           borderRadius: BorderRadius.circular(24),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(children: [
-              Icon(icon, color: isGold ? Colors.black : AppTheme.primaryGold, size: 28),
-              const SizedBox(width: 16),
-              Text(title, style: TextStyle(color: isGold ? Colors.black : AppTheme.textWhite, fontSize: 18, fontWeight: FontWeight.w900)),
-              const Spacer(),
-              Icon(open ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, color: isGold ? Colors.black : AppTheme.textGrey),
-            ]),
-          ),
+          child: Padding(padding: const EdgeInsets.all(16), child: Row(children: [
+            Icon(icon, color: isGold ? Colors.black : AppTheme.primaryGold, size: 28),
+            const SizedBox(width: 16),
+            Text(title, style: TextStyle(color: isGold ? Colors.black : AppTheme.textWhite, fontSize: 18, fontWeight: FontWeight.w900)),
+            const Spacer(),
+            Icon(open ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, color: isGold ? Colors.black : AppTheme.textGrey),
+          ])),
         ),
         if (open) Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 20), child: child),
       ]),
     );
   }
 
-  Widget _subBlock({required String t, required IconData i, required bool sel, required VoidCallback onT, required Widget child}) {
+  Widget _option({required String t, required IconData i, required bool active, required VoidCallback onT, required Widget child}) {
     return Container(
       decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16)),
       child: Column(children: [
-        InkWell(
-          onTap: onT,
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(children: [
-              Icon(i, color: Colors.black87),
-              const SizedBox(width: 12),
-              Text(t, style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 14)),
-              const Spacer(),
-              Icon(sel ? Icons.radio_button_checked : Icons.radio_button_off, color: Colors.black87),
-            ]),
-          ),
-        ),
-        if (sel) Padding(padding: const EdgeInsets.fromLTRB(12, 0, 12, 16), child: child),
+        ListTile(onTap: onT, leading: Icon(i, color: Colors.black87), title: Text(t, style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 14)), trailing: Icon(active ? Icons.radio_button_checked : Icons.radio_button_off, color: Colors.black87)),
+        if (active) Padding(padding: const EdgeInsets.fromLTRB(12, 0, 12, 16), child: child),
       ]),
     );
   }
@@ -243,15 +207,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _btn({required String l, required VoidCallback? o, bool dark = false}) {
+  Widget _bigBtn({required String l, required VoidCallback? o, bool dark = false}) {
     return SizedBox(width: double.infinity, height: 56, child: ElevatedButton(
-      onPressed: _isLoading ? null : o,
+      onPressed: _busy ? null : o,
       style: ElevatedButton.styleFrom(backgroundColor: dark ? Colors.black : Colors.white, foregroundColor: dark ? Colors.white : Colors.black, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
-      child: _isLoading ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)) : Text(l, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+      child: _busy ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)) : Text(l, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
     ));
   }
 
-  // ── المكونات الأخرى ──
+  // ── المكونات الأخرى (للمسجلين) ──
   Widget _buildHeader(UserModel user) { return Container(padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 16, bottom: 24, left: 20, right: 20), decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [AppTheme.primaryGold.withValues(alpha: 0.2), AppTheme.deepBlack])), child: Column(children: [ Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(user.isAdmin ? 'الملف الوظيفي' : 'حسابي', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 22, fontWeight: FontWeight.bold)), IconButton(icon: const Icon(Icons.settings_outlined, color: AppTheme.primaryGold), onPressed: () => context.push('/user/settings'))]), const SizedBox(height: 16), Container(width: 88, height: 88, decoration: BoxDecoration(shape: BoxShape.circle, gradient: LinearGradient(colors: [AppTheme.primaryGold.withValues(alpha: 0.8), AppTheme.primaryGold.withValues(alpha: 0.4)]), boxShadow: [BoxShadow(color: AppTheme.primaryGold.withValues(alpha: 0.25), blurRadius: 20, spreadRadius: 2)]), child: Container(margin: const EdgeInsets.all(3), decoration: const BoxDecoration(shape: BoxShape.circle, color: AppTheme.surfaceBlack), child: Center(child: Text(user.nm.isNotEmpty ? user.nm[0] : '؟', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 36, fontWeight: FontWeight.bold))))), const SizedBox(height: 12), Text(user.nm.isNotEmpty ? user.nm : 'مستخدم جديد', style: const TextStyle(color: AppTheme.textWhite, fontSize: 20, fontWeight: FontWeight.bold)), const SizedBox(height: 6), if (user.isAdmin) ...[Text(user.roleName, style: const TextStyle(color: AppTheme.primaryGold, fontSize: 14, fontWeight: FontWeight.w600)), const SizedBox(height: 4), if (user.sid.isNotEmpty) Text('الرقم الوطني: ${user.sid}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)), if (user.ad.isNotEmpty) Text('العنوان: ${user.ad}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12))] else if (user.usr != null) Text('@${user.usr}', style: TextStyle(color: AppTheme.textGrey.withValues(alpha: 0.8), fontSize: 14)), const SizedBox(height: 12), if (!user.isAdmin) Row(mainAxisAlignment: MainAxisAlignment.center, children: [_chip(user.roleName, AppTheme.primaryGold.withValues(alpha: 0.15), AppTheme.primaryGold), const SizedBox(width: 8), _chip(user.badgeName, Colors.white.withValues(alpha: 0.08), AppTheme.textWhite), if (user.isVerifiedOfficial) ...[const SizedBox(width: 8), _chip('✓ موثق', Colors.green.withValues(alpha: 0.15), Colors.green)]]) ])); }
   Widget _chip(String t, Color b, Color f) => Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5), decoration: BoxDecoration(color: b, borderRadius: BorderRadius.circular(16), border: Border.all(color: f.withValues(alpha: 0.3))), child: Text(t, style: TextStyle(color: f, fontSize: 12, fontWeight: FontWeight.w600)));
   Widget _buildUserStats(UserModel u) => Row(children: [Expanded(child: _statTile(icon: Icons.star_rounded, value: '${u.pt}', label: 'النقاط', color: const Color(0xFFFFD700))), const SizedBox(width: 12), Expanded(child: _statTile(icon: Icons.local_fire_department_rounded, value: '${u.strk}', label: 'أيام متتالية', color: const Color(0xFFFF6B35)))]);

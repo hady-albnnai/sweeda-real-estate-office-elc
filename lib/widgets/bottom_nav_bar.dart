@@ -19,7 +19,7 @@ class CustomBottomNavBar extends StatelessWidget {
       unselectedFontSize: 11,
       onTap: (index) {
         switch (index) {
-          case 0: context.go('/user/home');
+          case 0: context.go('/home'); // الزائر يذهب لـ /home، المستخدم يتم توجيهه داخلياً
           case 1: context.go('/user/my-requests');
           case 2: context.go('/user/my-appointments');
           case 3: context.go('/user/favorites');
