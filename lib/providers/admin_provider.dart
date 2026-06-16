@@ -87,6 +87,13 @@ class AdminProvider with ChangeNotifier {
     return ok;
   }
 
+  Future<bool> setOfferPriority(String adminUid, String offerId, String priorityType) async {
+    final ok = await _offersAdmin.setOfferPriority(adminUid, offerId, priorityType);
+    _syncOffersError();
+    if (ok) notifyListeners();
+    return ok;
+  }
+
   Future<List<OfferModel>> getOffersForMediaReview(String adminUid) async {
     final list = await _offersAdmin.getOffersForMediaReview(adminUid);
     _syncOffersError();
