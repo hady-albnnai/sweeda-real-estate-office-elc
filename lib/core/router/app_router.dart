@@ -235,6 +235,9 @@ class AppRouter {
       }
 
       if (path.startsWith('/user')) {
+        // السماح بالوصول لصفحة الحساب للزوار (ليتمكنوا من رؤية خيارات الدخول)
+        if (path == '/user/profile') return null;
+
         // منع الإدارة من شاشات الباقات/الدفع/الإحالة
         if (auth.isAdmin && (
             path == '/user/packages' ||
