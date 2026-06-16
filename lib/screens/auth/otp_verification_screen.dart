@@ -47,8 +47,12 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   @override
   void dispose() {
     _timer?.cancel();
-    for (var c in _ctrls) c.dispose();
-    for (var n in _nodes) n.dispose();
+    for (var c in _ctrls) {
+      c.dispose();
+    }
+    for (var n in _nodes) {
+      n.dispose();
+    }
     super.dispose();
   }
 

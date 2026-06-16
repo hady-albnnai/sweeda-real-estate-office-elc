@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../models/request_model.dart';
 import '../core/network/supabase_service.dart';
-import '../core/constants/db_constants.dart';
 
 class RequestProvider with ChangeNotifier {
   List<RequestModel> _myRequests = [];
@@ -39,7 +38,9 @@ class RequestProvider with ChangeNotifier {
           .map((d) => RequestModel.fromSupabase(
               Map<String, dynamic>.from(d), d['id'] as String))
           .toList();
-    } catch (e) {}
+    } catch (e) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
     _isLoading = false;
     notifyListeners();
   }

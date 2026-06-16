@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 import '../core/network/supabase_service.dart';
-import '../core/constants/db_constants.dart';
 import '../core/services/business_service.dart';
 import '../core/services/device_service.dart';
 import '../core/utils/error_utils.dart';
@@ -209,7 +208,9 @@ class AuthProvider with ChangeNotifier {
       _userModel = UserModel.fromSupabase(row, userId);
       notifyListeners();
       DeviceService().registerWithServer();
-    } catch (e) {}
+    } catch (e) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
   }
 
   Future<bool> completeProfile({required String name, required String sid}) async {
@@ -302,7 +303,9 @@ class AuthProvider with ChangeNotifier {
       );
       if (granted == true) {await _loadUserData(_userModel!.uid);
       }
-    } catch (e) {}
+    } catch (e) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
   }
 
   Future<void> logout() async {
@@ -322,6 +325,8 @@ class AuthProvider with ChangeNotifier {
     try {
       final userId = await AuthService().getSavedUserId();
       if (userId != null) await _loadUserData(userId);
-    } catch (e) {}
+    } catch (e) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
   }
 }

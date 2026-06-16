@@ -51,7 +51,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
           _usersCache[m['id'] as String] =
               UserModel.fromSupabase(m, m['id'] as String);
         }
-      } catch (_) {}
+      } catch (_) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
     }
 
     if (mounted) {
@@ -198,7 +200,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               if (pkgData is Map && pkgData['pr'] is num) {
                 expected = (pkgData['pr'] as num).toDouble();
               }
-            } catch (_) {}
+            } catch (_) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
             final paidLabel = '${p.amt.toStringAsFixed(0)} ${p.cur == 0 ? '\$' : 'ل.س'}';
             final expectedLabel = '\$${expected.toStringAsFixed(0)}';
             final mismatch = expected > 0 && p.cur == 0 && p.amt < expected;

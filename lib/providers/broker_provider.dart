@@ -3,7 +3,6 @@ import '../models/appointment_model.dart';
 import '../models/offer_model.dart';
 import '../models/deal_model.dart';
 import '../core/network/supabase_service.dart';
-import '../core/constants/db_constants.dart';
 
 /// Provider خاص بلوحة الوسيط/السمسار (دور role = 1)
 /// يجمع كل عمليات السمسار: المواعيد، العروض، الصفقات، الإحصائيات

@@ -72,7 +72,9 @@ class AuthService {
             type: OtpType.magiclink,
             tokenHash: session['token_hash'] as String,
           );
-        } catch (e) {}
+        } catch (e) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
       }
 
       final userId = data['userId'] as String;
@@ -179,7 +181,9 @@ class AuthService {
             'p_user_uid': userId,
             'p_token': staffToken,
           });
-        } catch (e) {}
+        } catch (e) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
       }
 
       await _auth.signOut();
@@ -189,7 +193,9 @@ class AuthService {
       await prefs.remove('auth_channel');
       await prefs.remove('staff_session_token');
       await prefs.remove('staff_session_expires_at');
-    } catch (e) {}
+    } catch (e) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
   }
 
   Future<String?> getSavedUserId() async {

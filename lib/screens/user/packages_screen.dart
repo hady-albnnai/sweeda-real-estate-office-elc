@@ -232,7 +232,6 @@ class _PackagesScreenState extends State<PackagesScreen> {
     ConfigModel? config,
     required Set<int> pendingPkgIds,
   }) {
-    final now           = DateTime.now();
     final effectivePkg  = user?.effectivePkg ?? 0;
     final isCurrent     = pkg.id == effectivePkg && pkg.id > 0;
     final isFree        = pkg.id == 0;

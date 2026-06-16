@@ -77,8 +77,7 @@ class _AppointmentsManagementScreenState
                     .map((e) => Padding(
                           padding: const EdgeInsets.only(right: 8),
                           child: _chip(e.value, e.key),
-                        ))
-                    .toList(),
+                        )),
               ],
             ),
           ),

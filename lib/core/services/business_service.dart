@@ -73,7 +73,9 @@ class BusinessService {
     try {
       final user = await _sb.client.from(DbTables.users).select('role').eq('id', uid).maybeSingle();
       if (user != null && (user['role'] as int? ?? 0) >= UserRole.minAdmin) return false;
-    } catch (_) {}
+    } catch (_) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
     final pts = _ptsFromConfig(config, eventKey, fallback);
     if (pts == 0) return false;
     return awardPointsSafe(uid, eventKey, pts);
@@ -140,7 +142,9 @@ class BusinessService {
             .eq('usr_id', uid)
             .eq('i_del', 0)
             .inFilter('sts', [0, 1, 2, 5]);
-      } catch (_) {}
+      } catch (_) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
 
       try {
         recentlyDeleted = await _sb.client
@@ -149,7 +153,9 @@ class BusinessService {
             .eq('usr_id', uid)
             .eq('i_del', 1)
             .gte('ts_crt', since24h);
-      } catch (_) {}
+      } catch (_) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
 
       final used = active.length + recentlyDeleted.length;
 
@@ -447,7 +453,9 @@ class BusinessService {
         'stats': stats,
         'ts_upd': DateTime.now().toIso8601String(),
       }).eq('id', uid);
-    } catch (e) {}
+    } catch (e) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
   }
 
   // ═══════════════════════════════════════

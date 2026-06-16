@@ -49,7 +49,7 @@ class FCMService {
       _messaging = FirebaseMessaging.instance;
 
       // 1) طلب الأذونات
-      final settings = await _messaging.requestPermission(
+      await _messaging.requestPermission(
         alert: true,
         badge: true,
         sound: true,

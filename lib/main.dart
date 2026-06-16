@@ -19,7 +19,9 @@ void main() async {
     await FCMService.initializeFirebase();
     // تسجيل معالج الإشعارات بالخلفية
     FirebaseMessaging.onBackgroundMessage(firebaseBackgroundHandler);
-  } catch (e) {}
+  } catch (e) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
 
   runApp(const MyApp());
 }

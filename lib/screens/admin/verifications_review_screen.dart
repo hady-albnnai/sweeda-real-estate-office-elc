@@ -134,7 +134,7 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
         return;
       }
     }
-    if (!mounted || displayUrl == null) return;
+    if (!mounted) return;
     showDialog(
       context: context,
       builder: (ctx) => Dialog(

@@ -58,7 +58,9 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
           final user = UserModel.fromSupabase(m, m['id'] as String);
           _ownersCache[user.uid] = user;
         }
-      } catch (e) {}
+      } catch (e) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
     }
 
     if (!mounted) return;
@@ -103,7 +105,9 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
       try {
         final config = context.read<ConfigProvider>().config;
         await BusinessService().awardEvent(o.usrId, config, 'addO', fallback: 500);
-      } catch (_) {}
+      } catch (_) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
       _snack('✅ تم نشر العرض');
       _load();
     } else {

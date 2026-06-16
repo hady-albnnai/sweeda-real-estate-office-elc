@@ -26,7 +26,9 @@ class NotificationService {
                 _showLocalNotif(row['ttl'] ?? '', row['bdy'] ?? '');
               }
             }
-          });} catch (e) {}
+          });} catch (e) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
   }
 
   static Future<void> _showLocalNotif(String title, String body) async {
@@ -41,7 +43,9 @@ class NotificationService {
         title, body,
         const NotificationDetails(android: androidDetails),
       );
-    } catch (e) {}
+    } catch (e) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
   }
 
   static Future<void> showNotification({
@@ -69,6 +73,8 @@ class NotificationService {
         'platform': 'android', 'is_active': true,
         'ts_upd': DateTime.now().toIso8601String(),
       });
-    } catch (e) {}
+    } catch (e) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
   }
 }

@@ -66,7 +66,9 @@ class AppointmentProvider with ChangeNotifier {
           .map((d) => AppointmentModel.fromSupabase(
               Map<String, dynamic>.from(d), d['id'] as String))
           .toList();
-    } catch (e) {}
+    } catch (e) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
     _isLoading = false;
     notifyListeners();
     return _myAppointments;

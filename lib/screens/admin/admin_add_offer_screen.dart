@@ -1,16 +1,14 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:storage_client/storage_client.dart' show FileOptions;
+import 'package:supabase_flutter/supabase_flutter.dart' show FileOptions;
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
-import '../../providers/offer_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/config_provider.dart';
 import '../../core/constants/db_constants.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/services/business_service.dart';
 import '../../core/network/supabase_service.dart';
 import '../../models/offer_model.dart';
 import '../../models/user_model.dart';
@@ -81,7 +79,6 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
   String _progressMsg = '';
 
   final _storage = StorageService();
-  final _biz     = BusinessService();
 
   @override
   void initState() {
@@ -114,7 +111,9 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
           .map((d) => UserModel.fromSupabase(
               Map<String, dynamic>.from(d), d['id'] as String))
           .toList();
-    } catch (_) {}
+    } catch (_) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
     if (mounted) setState(() => _loadingUsers = false);
   }
 
@@ -134,8 +133,6 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
 
   Future<void> _submit() async {
     final auth      = context.read<AuthProvider>();
-    final offerProv = context.read<OfferProvider>();
-    final config    = context.read<ConfigProvider>().config;
     final admin     = auth.userModel;
 
     if (admin == null || !admin.isAdmin) {
@@ -192,7 +189,9 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
         await storage.from(StorageService.offerBucket).uploadBinary(path, bytes,
             fileOptions: const FileOptions(cacheControl: '3600', upsert: true));
         docUrl = storage.from(StorageService.offerBucket).getPublicUrl(path);
-      } catch (_) {}
+      } catch (_) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
     }
 
     setState(() => _progressMsg = 'جارٍ إنشاء العرض...');
@@ -448,7 +447,6 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
 
   // ─── Step 1: الأساسيات ───
   Step _stepBasics() {
-    final config = context.watch<ConfigProvider>().config;
     final mainCategories = _categoryGroupMap();
     final subCategories = _selectedMainCat != null
         ? _subCategoryMap(_selectedMainCat!)

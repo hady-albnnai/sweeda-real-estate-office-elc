@@ -195,7 +195,9 @@ class _MyRatingsScreenState extends State<MyRatingsScreen> {
     if (ts != null) {
       try {
         date = DateTime.parse(ts).toLocal();
-      } catch (_) {}
+      } catch (_) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
     }
 
     return Container(
