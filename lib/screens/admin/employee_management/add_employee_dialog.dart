@@ -2,11 +2,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/validation/input_validators.dart';
 import '../../../providers/admin_provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../services/storage_service.dart';
+import '../../../core/network/supabase_service.dart';
 
 class AddEmployeeDialog extends StatefulWidget {
   const AddEmployeeDialog({super.key});
@@ -82,7 +84,7 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
       await SupabaseService().storage.from(StorageService.idsPrivateBucket).uploadBinary(
         uploadPath,
         bytes,
-        fileOptions: const FileOptions(upsert: true),
+        fileOptions: FileOptions(upsert: true),
       );
       idImageUrl = uploadPath; // نحفظ المسار النسبي وليس الرابط العام لأنه باكت خاص
 

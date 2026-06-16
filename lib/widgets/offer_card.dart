@@ -308,4 +308,3 @@ class _OfferCardState extends State<OfferCard> {
     );
   }
 }
-}
