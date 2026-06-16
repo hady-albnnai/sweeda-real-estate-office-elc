@@ -201,6 +201,61 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
     );
   }
 
+  void _showAdminDeleteDialog(BuildContext context, OfferModel offer) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surfaceBlack,
+        title: const Row(children: [
+          Icon(Icons.warning_amber_rounded, color: AppTheme.errorRed),
+          SizedBox(width: 8),
+          Text('حذف العرض (إدارة)', style: TextStyle(color: AppTheme.textWhite)),
+        ]),
+        content: const Text(
+          'هل أنت متأكد من رغبتك في حذف هذا العرض؟ سيتم نقله إلى الأرشيف ولن يظهر للمستخدمين بعد الآن.',
+          style: TextStyle(color: AppTheme.textGrey),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final adminProv = context.read<AdminProvider>();
+              final authProv = context.read<AuthProvider>();
+              
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('جاري الحذف...')),
+              );
+              
+              final ok = await adminProv.deleteOfferByAdmin(
+                authProv.userModel!.uid,
+                offer.id,
+              );
+              
+              if (mounted) {
+                if (ok) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('تم حذف العرض بنجاح')),
+                  );
+                  Navigator.pop(context); // الرجوع للشاشة السابقة بعد الحذف
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('فشل الحذف: ${adminProv.error ?? "حدث خطأ"}')),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorRed),
+            child: const Text('تأكيد الحذف'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _reportOffer() async {
     if (_offer == null) return;
     final auth = context.read<AuthProvider>();
@@ -508,7 +563,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                               if (offer.offerNumber != null)
                                 Text('عرض رقم #${offer.offerNumber}',
                                     style: TextStyle(color: AppTheme.primaryGold.withValues(alpha: 0.7), fontSize: 12)),
-                              if (isOwner)
+                              if (isOwner || auth.isAdmin)
                                 Container(
                                   margin: const EdgeInsets.only(top: 4, bottom: 4),
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -764,24 +819,36 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                       ),
                     ),
                   
-                  // خيار أولوية النشر للإدارة
+                  // خيار أولوية النشر للإدارة + زر الحذف
                   if (auth.isAdmin) ...[
                     const SizedBox(height: 10),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () => _showAdminPrioritySheet(context, offer),
-                        icon: const Icon(Icons.admin_panel_settings,
-                            color: AppTheme.textWhite),
-                        label: const Text('تحديد أولوية العرض (للإدارة)',
-                            style: TextStyle(
-                                color: AppTheme.textWhite,
-                                fontWeight: FontWeight.bold)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blueGrey.shade800,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () => _showAdminPrioritySheet(context, offer),
+                            icon: const Icon(Icons.admin_panel_settings,
+                                color: AppTheme.textWhite),
+                            label: const Text('أولوية (إدارة)',
+                                style: TextStyle(
+                                    color: AppTheme.textWhite,
+                                    fontWeight: FontWeight.bold, fontSize: 13)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blueGrey.shade800,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                            ),
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: () => _showAdminDeleteDialog(context, offer),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.errorRed.withValues(alpha: 0.8),
+                            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                          ),
+                          child: const Icon(Icons.delete_forever, color: AppTheme.textWhite),
+                        ),
+                      ],
                     ),
                   ],
 
