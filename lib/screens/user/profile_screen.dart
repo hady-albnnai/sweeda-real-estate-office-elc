@@ -22,6 +22,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   Map<String, dynamic>? _staffStats;
   bool _loadingStats = false;
+  int _showAuthMode = 0; // 0: القائمة الرئيسية، 1: إنشاء حساب، 2: تسجيل دخول
 
   @override
   void initState() {
@@ -58,12 +59,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final user = auth.userModel;
 
     if (user == null) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: AppTheme.deepBlack,
-        body: Center(
-          child: Text('جاري التحميل...',
-              style: TextStyle(color: AppTheme.textGrey)),
-        ),
+        body: _buildGuestUI(),
+        bottomNavigationBar: const CustomBottomNavBar(currentIndex: 4),
       );
     }
 
@@ -105,6 +104,221 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
       bottomNavigationBar: const CustomBottomNavBar(currentIndex: 4),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  واجهة الزائر (Guest UI) — تصميم فخم ومنظم
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildGuestUI() {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            AppTheme.primaryGold.withValues(alpha: 0.1),
+            AppTheme.deepBlack,
+          ],
+        ),
+      ),
+      child: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          child: Column(
+            children: [
+              const SizedBox(height: 30),
+              // 🛡️ الشعار والعنوان
+              Hero(
+                tag: 'logo',
+                child: Container(
+                  width: 120,
+                  height: 120,
+                  padding: const EdgeInsets.all(15),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppTheme.surfaceBlack,
+                    border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.3)),
+                    boxShadow: [
+                      BoxShadow(color: AppTheme.primaryGold.withValues(alpha: 0.1), blurRadius: 30, spreadRadius: 5)
+                    ],
+                  ),
+                  child: Image.asset('assets/images/logo_app.png', fit: BoxFit.contain),
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'مرحباً بك في مكتبك العقاري',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppTheme.textWhite, fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'سجل الآن لتتمتع بكافة مزايا المكتب الإلكتروني الأول في السويداء',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppTheme.textGrey, fontSize: 13, height: 1.5),
+              ),
+              
+              const SizedBox(height: 40),
+
+              // ─── قائمة "إنشاء حساب" ───
+              _authCategoryCard(
+                title: 'إنشاء حساب جديد',
+                subtitle: 'كن عضواً واستفد من نظام النقاط والمتابعة',
+                icon: Icons.person_add_alt_1_outlined,
+                isOpen: _showAuthMode == 1,
+                isPrimary: true,
+                onTap: () => setState(() => _showAuthMode = _showAuthMode == 1 ? 0 : 1),
+                children: [
+                  _authOptionTile(
+                    title: 'عبر تطبيق الواتساب',
+                    subtitle: 'أسرع طريقة — لا تحتاج كلمة مرور',
+                    icon: Icons.chat_outlined,
+                    color: Colors.green,
+                    onTap: () => context.push('/login'), // تفتح شاشة الدخول بوضع التسجيل
+                  ),
+                  _authOptionTile(
+                    title: 'عبر البريد الإلكتروني',
+                    subtitle: 'رابط تسجيل يصلك إلى صندوق الوارد',
+                    icon: Icons.alternate_email,
+                    color: Colors.blue,
+                    onTap: () => context.push('/login'),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              // ─── قائمة "تسجيل دخول" ───
+              _authCategoryCard(
+                title: 'تسجيل الدخول',
+                subtitle: 'لديك حساب مسبق؟ عد لمتابعة أعمالك',
+                icon: Icons.login_rounded,
+                isOpen: _showAuthMode == 2,
+                isPrimary: false,
+                onTap: () => setState(() => _showAuthMode = _showAuthMode == 2 ? 0 : 2),
+                children: [
+                  _authOptionTile(
+                    title: 'باسم المستخدم وكلمة المرور',
+                    subtitle: 'الدخول المباشر التقليدي',
+                    icon: Icons.lock_outline,
+                    color: AppTheme.primaryGold,
+                    onTap: () => context.push('/login'),
+                  ),
+                  _authOptionTile(
+                    title: 'عبر رمز واتساب السريع',
+                    subtitle: 'في حال نسيت كلمة المرور',
+                    icon: Icons.phonelink_ring_outlined,
+                    color: Colors.green,
+                    onTap: () => context.push('/login'),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 40),
+              
+              // ℹ️ مميزات سريعة
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _benefitSmall(Icons.verified_outlined, 'موثوقية'),
+                  _benefitSmall(Icons.speed_outlined, 'سرعة'),
+                  _benefitSmall(Icons.support_agent_outlined, 'دعم فني'),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _authCategoryCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required bool isOpen,
+    required bool isPrimary,
+    required VoidCallback onTap,
+    required List<Widget> children,
+  }) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      decoration: BoxDecoration(
+        color: isPrimary ? AppTheme.primaryGold : AppTheme.surfaceBlack,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.3)),
+        boxShadow: [
+          if (isOpen) BoxShadow(color: AppTheme.primaryGold.withValues(alpha: 0.15), blurRadius: 20, offset: const Offset(0, 10))
+        ],
+      ),
+      child: Column(
+        children: [
+          ListTile(
+            onTap: onTap,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            leading: Icon(icon, color: isPrimary ? Colors.black : AppTheme.primaryGold, size: 28),
+            title: Text(
+              title,
+              style: TextStyle(
+                color: isPrimary ? Colors.black : AppTheme.textWhite,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+            subtitle: Text(
+              subtitle,
+              style: TextStyle(
+                color: isPrimary ? Colors.black.withValues(alpha: 0.7) : AppTheme.textGrey,
+                fontSize: 11,
+              ),
+            ),
+            trailing: Icon(
+              isOpen ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+              color: isPrimary ? Colors.black : AppTheme.textGrey,
+            ),
+          ),
+          if (isOpen)
+            Container(
+              padding: const EdgeInsets.all(8),
+              color: AppTheme.deepBlack.withValues(alpha: 0.3),
+              child: Column(children: children),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _authOptionTile({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      onTap: onTap,
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+        child: Icon(icon, color: color, size: 20),
+      ),
+      title: Text(title, style: const TextStyle(color: AppTheme.textWhite, fontSize: 13, fontWeight: FontWeight.w600)),
+      subtitle: Text(subtitle, style: const TextStyle(color: AppTheme.textGrey, fontSize: 10)),
+      trailing: const Icon(Icons.arrow_forward_ios, color: AppTheme.textGrey, size: 12),
+    );
+  }
+
+  Widget _benefitSmall(IconData icon, String label) {
+    return Column(
+      children: [
+        Icon(icon, color: AppTheme.primaryGold.withValues(alpha: 0.6), size: 20),
+        const SizedBox(height: 6),
+        Text(label, style: const TextStyle(color: AppTheme.textGrey, fontSize: 10)),
+      ],
     );
   }
 
