@@ -151,14 +151,13 @@ class AppRouter {
     redirect: (context, state) {
       final path = state.uri.path;
 
-      // السبلاش والصفحات العامة تبقى متاحة دائماً.
       final isPublicPath = path == '/splash' ||
           path == '/home' ||
           path == '/search' ||
           path.startsWith('/offer/') ||
           path == '/login' ||
           path == '/otp' ||
-          path == '/user/profile' || // السماح بفتح البروفايل للزائر
+          path == '/user/profile' || // فك الحظر عن صفحة الحساب
           path == '/check-email';
       if (isPublicPath) return null;
 
@@ -166,409 +165,99 @@ class AppRouter {
       final isLoggedIn = auth.isLoggedIn;
 
       if (!isLoggedIn) {
-        // أي محاولة دخول لصفحة خاصة تحول الزائر لصفحة الدخول الموحدة الجديدة
-        return '/login';
+        return '/user/profile'; // توجيه الزائر لصفحة الحساب الموحدة بدلاً من شاشة قديمة
       }
 
-      // إكمال الملف الشخصي مسموح للمستخدم الجديد فقط بعد تسجيل الدخول.
       if (path == '/setup-profile') return null;
 
       if (path.startsWith('/admin')) {
-        // موظف المكتب فما فوق (role >= 4) — المشرف والمصور لا يصلون
         if (!(auth.isEmployee || auth.isSenior)) {
           return auth.isBroker ? '/broker/dashboard' : '/user/home';
         }
-
-        // توجيه كل دور لشاشته الخاصة
         final userRole = auth.userModel?.role ?? 0;
-        
-        // نائب المدير (role=5) → /deputy/dashboard
-        if (userRole == 5 && path == '/admin/dashboard') {
-          return '/deputy/dashboard';
-        }
-        
-        // موظف المكتب (role=4) → /employee/dashboard
-        if (userRole == 4 && path == '/admin/dashboard') {
-          return '/employee/dashboard';
-        }
-
+        if (userRole == 5 && path == '/admin/dashboard') return '/deputy/dashboard';
+        if (userRole == 4 && path == '/admin/dashboard') return '/employee/dashboard';
         final requiredPermission = _adminRoutePermission(path);
-        if (requiredPermission != null &&
-            !PermissionService.has(auth.userModel, requiredPermission)) {
-          return '/admin/dashboard';
-        }
+        if (requiredPermission != null && !PermissionService.has(auth.userModel, requiredPermission)) return '/admin/dashboard';
       }
 
       if (path.startsWith('/broker')) {
         final requiredPermission = _brokerRoutePermission(path);
-        if (!(auth.isBroker || auth.isAdmin) ||
-            (requiredPermission != null &&
-                !PermissionService.has(auth.userModel, requiredPermission))) {
-          return '/user/home';
-        }
-      }
-
-      if (path.startsWith('/deputy')) {
-        if (!auth.isSenior) {
-          return auth.isEmployee ? '/employee/dashboard' : '/user/home';
-        }
-      }
-
-      if (path.startsWith('/employee')) {
-        if (!auth.isEmployee && !auth.isSenior) {
-          return '/user/home';
-        }
-      }
-
-      if (path.startsWith('/executor')) {
-        // المنفذ = مشرف ميداني (role=3) أو من لديه صلاحية إدارية
-        if (!auth.isAdmin && !auth.isSupervisor) {
-          return '/user/home';
-        }
-      }
-
-      if (path.startsWith('/photographer')) {
-        // المصور يصل إذا كان role = photographer أو لديه صلاحية مهام المصور
-        if (!auth.isPhotographer &&
-            !PermissionService.has(auth.userModel, PermissionKeys.photographerTasks)) {
-          return '/home';
-        }
+        if (!(auth.isBroker || auth.isAdmin) || (requiredPermission != null && !PermissionService.has(auth.userModel, requiredPermission))) return '/user/home';
       }
 
       if (path.startsWith('/user')) {
-        // السماح بالوصول لصفحة الحساب للزوار (ليتمكنوا من رؤية خيارات الدخول)
-        if (path == '/user/profile') return null;
-
-        // منع الإدارة من شاشات الباقات/الدفع/الإحالة
-        if (auth.isAdmin && (
-            path == '/user/packages' ||
-            path == '/user/payment' ||
-            path == '/user/referral' ||
-            path == '/user/my-payments')) {
+        if (auth.isAdmin && (path == '/user/packages' || path == '/user/payment' || path == '/user/referral' || path == '/user/my-payments')) {
           return auth.isSenior ? '/admin/dashboard' : '/employee/home';
         }
         final requiredPermission = _userRoutePermission(path);
-        if (requiredPermission != null &&
-            !PermissionService.has(auth.userModel, requiredPermission)) {
-          return '/home';
-        }
+        if (requiredPermission != null && !PermissionService.has(auth.userModel, requiredPermission)) return '/home';
       }
 
       return null;
     },
     routes: [
-      // ═══════════════════════════════════════
-      // 🎬 SPLASH
-      // ═══════════════════════════════════════
-      GoRoute(
-        path: '/splash',
-        builder: (context, state) => const SplashScreen(),
-      ),
-
-      // ═══════════════════════════════════════
-      // 🌐 VISITOR (زائر)
-      // ═══════════════════════════════════════
-      GoRoute(
-        path: '/home',
-        builder: (context, state) => const HomeScreen(),
-      ),
-      GoRoute(
-        path: '/search',
-        builder: (context, state) => const SearchScreen(),
-      ),
-      GoRoute(
-        path: '/offer/:id',
-        builder: (context, state) {
-          final id = state.pathParameters['id']!;
-          return OfferDetailScreen(offerId: id);
-        },
-      ),
-
-      // ═══════════════════════════════════════
-      // 🔐 AUTH (مصادقة)
-      // ═══════════════════════════════════════
-      GoRoute(
-        path: '/login',
-        builder: (context, state) {
-          final isSignUp = state.uri.queryParameters['signup'] == 'true';
-          return LoginScreen(startInSignUpMode: isSignUp);
-        },
-      ),
-      GoRoute(
-        path: '/otp',
-        builder: (context, state) => const OtpVerificationScreen(),
-      ),
-      GoRoute(
-        path: '/setup-profile',
-        builder: (context, state) => const SetupProfileScreen(),
-      ),
-      GoRoute(
-        path: '/setup-identity',
-        builder: (context, state) => const SetupIdentityScreen(),
-      ),
-      GoRoute(
-        path: '/check-email',
-        builder: (context, state) => const CheckEmailScreen(),
-      ),
-
-      // ═══════════════════════════════════════
-      // 👤 USER (مستخدم) — ✅ كامل
-      // ═══════════════════════════════════════
-      GoRoute(
-        path: '/user/home',
-        builder: (context, state) => const UserHomeScreen(),
-      ),
-      GoRoute(
-        path: '/user/my-offers',
-        builder: (context, state) => const MyOffersScreen(),
-      ),
-      GoRoute(
-        path: '/user/add-offer',
-        builder: (context, state) => const AddOfferScreen(),
-      ),
-      GoRoute(
-        path: '/user/my-requests',
-        builder: (context, state) => const MyRequestsScreen(),
-      ),
-      GoRoute(
-        path: '/user/add-request',
-        builder: (context, state) => const AddRequestScreen(),
-      ),
-      GoRoute(
-        path: '/user/my-appointments',
-        builder: (context, state) => const MyAppointmentsScreen(),
-      ),
-      GoRoute(
-        path: '/user/favorites',
-        builder: (context, state) => const FavoritesScreen(),
-      ),
-      GoRoute(
-        path: '/user/profile',
-        builder: (context, state) => const ProfileScreen(),
-      ),
-      GoRoute(
-        path: '/user/account-info',
-        builder: (context, state) => const AccountInfoScreen(),
-      ),
-      GoRoute(
-        path: '/user/settings',
-        builder: (context, state) => const SettingsScreen(),
-      ),
-      GoRoute(
-        path: '/user/notifications',
-        builder: (context, state) => const NotificationsScreen(),
-      ),
-      GoRoute(
-        path: '/user/packages',
-        builder: (context, state) => const PackagesScreen(),
-      ),
-      GoRoute(
-        path: '/user/payment',
-        builder: (context, state) {
-          final pkg = int.tryParse(state.uri.queryParameters['pkg'] ?? '0') ?? 0;
-          // amt لا يُستخدم بعد الآن — السعر يُجلب من Config في PaymentScreen
-          return PaymentScreen(packageId: pkg);
-        },
-      ),
-      GoRoute(
-        path: '/user/edit-offer/:id',
-        builder: (context, state) {
-          final id = state.pathParameters['id']!;
-          return EditOfferScreen(offerId: id);
-        },
-      ),
-      GoRoute(
-        path: '/user/become-broker',
-        builder: (context, state) => const BecomeBrokerScreen(),
-      ),
-      GoRoute(
-        path: '/user/request/:id',
-        builder: (context, state) {
-          final id = state.pathParameters['id']!;
-          return RequestDetailScreen(requestId: id);
-        },
-      ),
-      GoRoute(
-        path: '/user/referral',
-        builder: (context, state) => const ReferralScreen(),
-      ),
-      GoRoute(
-        path: '/user/my-ratings',
-        builder: (context, state) => const MyRatingsScreen(),
-      ),
-      GoRoute(
-        path: '/user/my-payments',
-        builder: (context, state) => const MyPaymentsScreen(),
-      ),
-      GoRoute(
-        path: '/user/boost-offer/:id',
-        builder: (context, state) {
-          final id = state.pathParameters['id']!;
-          return BoostOfferScreen(offerId: id);
-        },
-      ),
-
-      // ═══════════════════════════════════════
-      // 🤝 BROKER (وسيط/سمسار)
-      // ═══════════════════════════════════════
-      GoRoute(
-        path: '/broker/dashboard',
-        builder: (context, state) => const BrokerDashboardScreen(),
-      ),
-      GoRoute(
-        path: '/broker/offers',
-        builder: (context, state) => const BrokerOffersScreen(),
-      ),
-      GoRoute(
-        path: '/broker/appointments',
-        builder: (context, state) => const BrokerAppointmentsScreen(),
-      ),
-      GoRoute(
-        path: '/broker/deals',
-        builder: (context, state) => const BrokerDealsScreen(),
-      ),
-      GoRoute(
-        path: '/broker/stats',
-        builder: (context, state) => const BrokerStatsScreen(),
-      ),
-
-      // ═══════════════════════════════════════
-      // 📸 PHOTOGRAPHER
-      // ═══════════════════════════════════════
-      GoRoute(
-        path: '/photographer/tasks',
-        builder: (context, state) => const PhotographerTasksScreen(),
-      ),
-
-      // ═══════════════════════════════════════
-      // 🏢 EMPLOYEE (موظف المكتب)
-      // ═══════════════════════════════════════
-      GoRoute(
-        path: '/employee/home',
-        builder: (context, state) => const EmployeeHomeScreen(),
-      ),
-      GoRoute(
-        path: '/employee/dashboard',
-        builder: (context, state) => const EmployeeDashboardScreen(),
-      ),
-
-      // ═══════════════════════════════════════
-      // 🧭 DEPUTY (نائب المدير)
-      // ═══════════════════════════════════════
-      GoRoute(
-        path: '/deputy/dashboard',
-        builder: (context, state) => const DeputyDashboardScreen(),
-      ),
-
-      // ═══════════════════════════════════════
-      // 👷 EXECUTOR (المنفذ الميداني)
-      // ═══════════════════════════════════════
-      GoRoute(
-        path: '/executor/tasks',
-        builder: (context, state) => const MyTasksScreen(),
-      ),
-      GoRoute(
-        path: '/executor/execute/:id',
-        builder: (context, state) {
-          final id = state.pathParameters['id']!;
-          return ExecuteTaskScreen(appointmentId: id);
-        },
-      ),
-
-      // ═══════════════════════════════════════
-      // 🛡️ ADMIN (إدارة)
-      // ═══════════════════════════════════════
-      GoRoute(
-        path: '/admin/dashboard',
-        builder: (context, state) => const AdminDashboardScreen(),
-      ),
-      GoRoute(
-        path: '/admin/employee-management',
-        builder: (context, state) => const EmployeeManagementScreen(),
-      ),
-      GoRoute(
-        path: '/admin/operations-dashboard',
-        builder: (context, state) => const AdminDashboardScreen(),
-      ),
-      GoRoute(
-        path: '/admin/sections',
-        builder: (context, state) => const AdminSectionsScreen(),
-      ),
-      GoRoute(
-        path: '/admin/office-operations',
-        builder: (context, state) => const OfficeOperationsScreen(),
-      ),
-      GoRoute(
-        path: '/admin/permissions',
-        builder: (context, state) => const PermissionsManagementScreen(),
-      ),
-      GoRoute(
-        path: '/admin/users',
-        builder: (context, state) => const UsersManagementScreen(),
-      ),
-      GoRoute(
-        path: '/admin/user/:id',
-        builder: (context, state) {
-          final id = state.pathParameters['id']!;
-          return UserDetailsScreen(userId: id);
-        },
-      ),
-      GoRoute(
-        path: '/admin/review-offers',
-        builder: (context, state) => const OffersReviewScreen(),
-      ),
-      GoRoute(
-        path: '/admin/add-offer',
-        builder: (context, state) => const AdminAddOfferScreen(),
-      ),
-      GoRoute(
-        path: '/admin/photography-management',
-        builder: (context, state) => const PhotographyManagementScreen(),
-      ),
-      GoRoute(
-        path: '/admin/media-review',
-        builder: (context, state) => const MediaReviewScreen(),
-      ),
-      GoRoute(
-        path: '/admin/review-verifications',
-        builder: (context, state) => const VerificationsReviewScreen(),
-      ),
-      GoRoute(
-        path: '/admin/fraud-suspects',
-        builder: (context, state) => const FraudSuspectsScreen(),
-      ),
-      GoRoute(
-        path: '/admin/appointments',
-        builder: (context, state) => const AppointmentsManagementScreen(),
-      ),
-      GoRoute(
-        path: '/admin/deals',
-        builder: (context, state) => const DealsManagementScreen(),
-      ),
-      GoRoute(
-        path: '/admin/payments',
-        builder: (context, state) => const PaymentsScreen(),
-      ),
-      GoRoute(
-        path: '/admin/reports',
-        builder: (context, state) => const ReportsScreen(),
-      ),
-      GoRoute(
-        path: '/admin/requests',
-        builder: (context, state) => const RequestsManagementScreen(),
-      ),
-      GoRoute(
-        path: '/admin/config',
-        builder: (context, state) => const ConfigEditorScreen(),
-      ),
-      GoRoute(
-        path: '/admin/analytics',
-        builder: (context, state) => const AnalyticsScreen(),
-      ),
-      GoRoute(
-        path: '/admin/completion-requests',
-        builder: (context, state) => const CompletionRequestsScreen(),
-      ),
+      GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
+      GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
+      GoRoute(path: '/search', builder: (context, state) => const SearchScreen()),
+      GoRoute(path: '/offer/:id', builder: (context, state) => OfferDetailScreen(offerId: state.pathParameters['id']!)),
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+      GoRoute(path: '/otp', builder: (context, state) => const OtpVerificationScreen()),
+      GoRoute(path: '/setup-profile', builder: (context, state) => const SetupProfileScreen()),
+      GoRoute(path: '/setup-identity', builder: (context, state) => const SetupIdentityScreen()),
+      GoRoute(path: '/check-email', builder: (context, state) => const CheckEmailScreen()),
+      GoRoute(path: '/user/home', builder: (context, state) => const UserHomeScreen()),
+      GoRoute(path: '/user/my-offers', builder: (context, state) => const MyOffersScreen()),
+      GoRoute(path: '/user/add-offer', builder: (context, state) => const AddOfferScreen()),
+      GoRoute(path: '/user/my-requests', builder: (context, state) => const MyRequestsScreen()),
+      GoRoute(path: '/user/add-request', builder: (context, state) => const AddRequestScreen()),
+      GoRoute(path: '/user/my-appointments', builder: (context, state) => const MyAppointmentsScreen()),
+      GoRoute(path: '/user/favorites', builder: (context, state) => const FavoritesScreen()),
+      GoRoute(path: '/user/profile', builder: (context, state) => const ProfileScreen()),
+      GoRoute(path: '/user/account-info', builder: (context, state) => const AccountInfoScreen()),
+      GoRoute(path: '/user/settings', builder: (context, state) => const SettingsScreen()),
+      GoRoute(path: '/user/notifications', builder: (context, state) => const NotificationsScreen()),
+      GoRoute(path: '/user/packages', builder: (context, state) => const PackagesScreen()),
+      GoRoute(path: '/user/payment', builder: (context, state) => PaymentScreen(packageId: int.tryParse(state.uri.queryParameters['pkg'] ?? '0') ?? 0)),
+      GoRoute(path: '/user/edit-offer/:id', builder: (context, state) => EditOfferScreen(offerId: state.pathParameters['id']!)),
+      GoRoute(path: '/user/become-broker', builder: (context, state) => const BecomeBrokerScreen()),
+      GoRoute(path: '/user/request/:id', builder: (context, state) => RequestDetailScreen(requestId: state.pathParameters['id']!)),
+      GoRoute(path: '/user/referral', builder: (context, state) => const ReferralScreen()),
+      GoRoute(path: '/user/my-ratings', builder: (context, state) => const MyRatingsScreen()),
+      GoRoute(path: '/user/my-payments', builder: (context, state) => const MyPaymentsScreen()),
+      GoRoute(path: '/user/boost-offer/:id', builder: (context, state) => BoostOfferScreen(offerId: state.pathParameters['id']!)),
+      GoRoute(path: '/broker/dashboard', builder: (context, state) => const BrokerDashboardScreen()),
+      GoRoute(path: '/broker/offers', builder: (context, state) => const BrokerOffersScreen()),
+      GoRoute(path: '/broker/appointments', builder: (context, state) => const BrokerAppointmentsScreen()),
+      GoRoute(path: '/broker/deals', builder: (context, state) => const BrokerDealsScreen()),
+      GoRoute(path: '/broker/stats', builder: (context, state) => const BrokerStatsScreen()),
+      GoRoute(path: '/photographer/tasks', builder: (context, state) => const PhotographerTasksScreen()),
+      GoRoute(path: '/employee/home', builder: (context, state) => const EmployeeHomeScreen()),
+      GoRoute(path: '/employee/dashboard', builder: (context, state) => const EmployeeDashboardScreen()),
+      GoRoute(path: '/deputy/dashboard', builder: (context, state) => const DeputyDashboardScreen()),
+      GoRoute(path: '/executor/tasks', builder: (context, state) => const MyTasksScreen()),
+      GoRoute(path: '/executor/execute/:id', builder: (context, state) => ExecuteTaskScreen(appointmentId: state.pathParameters['id']!)),
+      GoRoute(path: '/admin/dashboard', builder: (context, state) => const AdminDashboardScreen()),
+      GoRoute(path: '/admin/employee-management', builder: (context, state) => const EmployeeManagementScreen()),
+      GoRoute(path: '/admin/sections', builder: (context, state) => const AdminSectionsScreen()),
+      GoRoute(path: '/admin/office-operations', builder: (context, state) => const OfficeOperationsScreen()),
+      GoRoute(path: '/admin/permissions', builder: (context, state) => const PermissionsManagementScreen()),
+      GoRoute(path: '/admin/users', builder: (context, state) => const UsersManagementScreen()),
+      GoRoute(path: '/admin/user/:id', builder: (context, state) => UserDetailsScreen(userId: state.pathParameters['id']!)),
+      GoRoute(path: '/admin/review-offers', builder: (context, state) => const OffersReviewScreen()),
+      GoRoute(path: '/admin/add-offer', builder: (context, state) => const AdminAddOfferScreen()),
+      GoRoute(path: '/admin/photography-management', builder: (context, state) => const PhotographyManagementScreen()),
+      GoRoute(path: '/admin/media-review', builder: (context, state) => const MediaReviewScreen()),
+      GoRoute(path: '/admin/review-verifications', builder: (context, state) => const VerificationsReviewScreen()),
+      GoRoute(path: '/admin/fraud-suspects', builder: (context, state) => const FraudSuspectsScreen()),
+      GoRoute(path: '/admin/appointments', builder: (context, state) => const AppointmentsManagementScreen()),
+      GoRoute(path: '/admin/deals', builder: (context, state) => const DealsManagementScreen()),
+      GoRoute(path: '/admin/payments', builder: (context, state) => const PaymentsScreen()),
+      GoRoute(path: '/admin/reports', builder: (context, state) => const ReportsScreen()),
+      GoRoute(path: '/admin/requests', builder: (context, state) => const RequestsManagementScreen()),
+      GoRoute(path: '/admin/config', builder: (context, state) => const ConfigEditorScreen()),
+      GoRoute(path: '/admin/analytics', builder: (context, state) => const AnalyticsScreen()),
+      GoRoute(path: '/admin/completion-requests', builder: (context, state) => const CompletionRequestsScreen()),
     ],
   );
 }
