@@ -97,6 +97,9 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.sizeOf(context);
+    final logoSize = (screenSize.shortestSide * 0.68).clamp(220.0, 420.0);
+
     return Scaffold(
       backgroundColor: AppTheme.deepBlack,
       body: Center(
@@ -111,8 +114,8 @@ class _SplashScreenState extends State<SplashScreen>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
-                      width: 130,
-                      height: 130,
+                      width: logoSize,
+                      height: logoSize,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(color: AppTheme.primaryGold, width: 2.5),
@@ -132,20 +135,20 @@ class _SplashScreenState extends State<SplashScreen>
                       child: ClipOval(
                         child: Container(
                           color: AppTheme.surfaceBlack,
-                          padding: const EdgeInsets.all(8),
+                          padding: EdgeInsets.all(logoSize * 0.06),
                           child: Image.asset(
                             'assets/images/logo_app.png',
                             fit: BoxFit.contain,
                             errorBuilder: (_, __, ___) => const Icon(
                               Icons.apartment_rounded,
-                              size: 65,
+                              size: logoSize * 0.48,
                               color: AppTheme.primaryGold,
                             ),
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 30),
+                    SizedBox(height: screenSize.height * 0.035),
                     const Text(
                       'المكتب العقاري الالكتروني',
                       style: TextStyle(

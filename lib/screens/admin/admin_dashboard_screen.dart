@@ -364,7 +364,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           : const Icon(Icons.chevron_left, color: AppTheme.textGrey),
       onTap: () {
         Navigator.pop(context);
-        context.go(route);
+        context.push(route);
       },
     );
   }
