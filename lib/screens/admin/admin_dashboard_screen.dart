@@ -124,7 +124,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                           fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
 
-                  // ── شبكة الأقسام ──
+                  // ── مدخل الأقسام ──
                   GridView.count(
                     crossAxisCount: 2,
                     shrinkWrap: true,
@@ -136,62 +136,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       if (PermissionService.has(auth.userModel, PermissionKeys.manageStaff))
                         _navCard(Icons.badge_outlined, 'إدارة الموظفين',
                             '/admin/employee-management'),
-                      // بطاقة مهام المنفذ — تظهر لأي مستخدم لديه مواعيد كـ supervisor
-                      _navCard(Icons.engineering_outlined, 'مهامي الميدانية',
-                          '/executor/tasks'),
-                      if (PermissionService.has(auth.userModel, PermissionKeys.officeOperations))
-                        _navCard(Icons.support_agent_outlined, 'عمليات المكتب',
-                            '/admin/office-operations'),
-                      if (PermissionService.has(auth.userModel, PermissionKeys.managePermissions))
-                        _navCard(Icons.admin_panel_settings_outlined, 'الصلاحيات',
-                            '/admin/permissions'),
-                      if (PermissionService.has(auth.userModel, PermissionKeys.reviewOffers))
-                        _navCard(Icons.fact_check_outlined, 'مراجعة العروض',
-                            '/admin/review-offers',
-                            badge: _counts['pendingOffers'] ?? 0),
-                      if (PermissionService.has(auth.userModel, PermissionKeys.photographyManagement))
-                        _navCard(Icons.add_a_photo_outlined, 'مهام التصوير',
-                            '/admin/photography-management'),
-                      if (PermissionService.has(auth.userModel, PermissionKeys.mediaReview))
-                        _navCard(Icons.photo_library_outlined, 'إدارة الوسائط',
-                            '/admin/media-review'),
-                      if (PermissionService.has(auth.userModel, PermissionKeys.reviewVerifications))
-                        _navCard(Icons.verified_user_outlined, 'طلبات التوثيق',
-                            '/admin/review-verifications',
-                            badge: _counts['pendingVerifications'] ?? 0),
-                      if (PermissionService.has(auth.userModel, PermissionKeys.manageUsers))
-                        _navCard(Icons.people_outline, 'المستخدمون',
-                            '/admin/users'),
-                      if (PermissionService.has(auth.userModel, PermissionKeys.manageAppointments))
-                        _navCard(Icons.calendar_month_outlined, 'المواعيد',
-                            '/admin/appointments'),
-                      if (PermissionService.has(auth.userModel, PermissionKeys.completionRequests))
-                        _navCard(Icons.assignment_turned_in_outlined, 'طلبات الإتمام',
-                            '/admin/completion-requests'),
-                      if (PermissionService.has(auth.userModel, PermissionKeys.manageDeals))
-                        _navCard(Icons.handshake_outlined, 'الصفقات',
-                            '/admin/deals'),
-                      if (PermissionService.has(auth.userModel, PermissionKeys.managePayments))
-                        _navCard(Icons.payments_outlined, 'المدفوعات',
-                            '/admin/payments',
-                            badge: _counts['pendingPayments'] ?? 0),
-                      if (PermissionService.has(auth.userModel, PermissionKeys.manageReports)) ...[
-                        _navCard(Icons.assignment_outlined, 'الطلبات',
-                            '/admin/requests',
-                            badge: 0),
-                        _navCard(Icons.flag_outlined, 'التبليغات',
-                            '/admin/reports',
-                            badge: _counts['openReports'] ?? 0),
-                      ],
-                      if (PermissionService.has(auth.userModel, PermissionKeys.manageConfig))
-                        _navCard(Icons.tune_outlined, 'الإعدادات',
-                            '/admin/config'),
-                      if (PermissionService.has(auth.userModel, PermissionKeys.viewAnalytics))
-                        _navCard(Icons.analytics_outlined, 'التحليلات',
-                            '/admin/analytics'),
-                      if (PermissionService.has(auth.userModel, PermissionKeys.fraudSuspects))
-                        _navCard(Icons.security, 'كشف الاحتيال',
-                            '/admin/fraud-suspects'),
+                      _actionCard(
+                        Icons.apps_outlined,
+                        'أقسام الإدارة',
+                        'المراجعات · العمليات · المالية · الإعدادات',
+                        () => _showAdminSectionsSheet(context, auth.userModel),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 20),
@@ -281,6 +231,170 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showAdminSectionsSheet(BuildContext context, dynamic user) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.surfaceBlack,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: SafeArea(
+          child: DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: 0.78,
+            minChildSize: 0.45,
+            maxChildSize: 0.92,
+            builder: (context, controller) => ListView(
+              controller: controller,
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+              children: [
+                Center(
+                  child: Container(
+                    width: 44,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.textGrey.withValues(alpha: 0.45),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                const Text(
+                  'أقسام الإدارة',
+                  style: TextStyle(color: AppTheme.primaryGold, fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'هذه صفحات متابعة وإدارة، وليست صفحات تنفيذ ميداني خاصة بالمنفذ أو المصور.',
+                  style: TextStyle(color: AppTheme.textGrey, fontSize: 12),
+                ),
+                const SizedBox(height: 18),
+                _sheetSection('التنظيم', [
+                  if (PermissionService.has(user, PermissionKeys.manageStaff))
+                    _sheetTile(Icons.badge_outlined, 'إدارة الموظفين', '/admin/employee-management'),
+                  if (PermissionService.has(user, PermissionKeys.manageUsers))
+                    _sheetTile(Icons.people_outline, 'إدارة الحسابات والعملاء', '/admin/users'),
+                  if (PermissionService.has(user, PermissionKeys.managePermissions))
+                    _sheetTile(Icons.admin_panel_settings_outlined, 'الصلاحيات', '/admin/permissions'),
+                  if (PermissionService.has(user, PermissionKeys.officeOperations))
+                    _sheetTile(Icons.support_agent_outlined, 'عمليات المكتب', '/admin/office-operations'),
+                ]),
+                _sheetSection('المراجعات والرقابة', [
+                  if (PermissionService.has(user, PermissionKeys.reviewOffers))
+                    _sheetTile(Icons.fact_check_outlined, 'مراجعة العروض', '/admin/review-offers', badge: _counts['pendingOffers'] ?? 0),
+                  if (PermissionService.has(user, PermissionKeys.mediaReview))
+                    _sheetTile(Icons.photo_library_outlined, 'إدارة الوسائط', '/admin/media-review'),
+                  if (PermissionService.has(user, PermissionKeys.reviewVerifications))
+                    _sheetTile(Icons.verified_user_outlined, 'طلبات التوثيق', '/admin/review-verifications', badge: _counts['pendingVerifications'] ?? 0),
+                  if (PermissionService.has(user, PermissionKeys.fraudSuspects))
+                    _sheetTile(Icons.security, 'كشف الاحتيال', '/admin/fraud-suspects'),
+                ]),
+                _sheetSection('متابعة العمليات', [
+                  if (PermissionService.has(user, PermissionKeys.manageAppointments))
+                    _sheetTile(Icons.calendar_month_outlined, 'المواعيد والمتابعة', '/admin/appointments'),
+                  if (PermissionService.has(user, PermissionKeys.completionRequests))
+                    _sheetTile(Icons.assignment_turned_in_outlined, 'طلبات الإتمام', '/admin/completion-requests'),
+                  if (PermissionService.has(user, PermissionKeys.photographyManagement))
+                    _sheetTile(Icons.add_a_photo_outlined, 'إدارة مهام التصوير', '/admin/photography-management'),
+                  if (PermissionService.has(user, PermissionKeys.manageRequests))
+                    _sheetTile(Icons.assignment_outlined, 'طلبات العملاء', '/admin/requests'),
+                ]),
+                _sheetSection('المالية والتقارير', [
+                  if (PermissionService.has(user, PermissionKeys.managePayments))
+                    _sheetTile(Icons.payments_outlined, 'المدفوعات', '/admin/payments', badge: _counts['pendingPayments'] ?? 0),
+                  if (PermissionService.has(user, PermissionKeys.manageDeals))
+                    _sheetTile(Icons.handshake_outlined, 'الصفقات', '/admin/deals'),
+                  if (PermissionService.has(user, PermissionKeys.manageReports))
+                    _sheetTile(Icons.flag_outlined, 'التبليغات', '/admin/reports', badge: _counts['openReports'] ?? 0),
+                  if (PermissionService.has(user, PermissionKeys.viewAnalytics))
+                    _sheetTile(Icons.analytics_outlined, 'التحليلات', '/admin/analytics'),
+                  if (PermissionService.has(user, PermissionKeys.manageConfig))
+                    _sheetTile(Icons.tune_outlined, 'الإعدادات', '/admin/config'),
+                ]),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _sheetSection(String title, List<Widget> children) {
+    if (children.isEmpty) return const SizedBox.shrink();
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.deepBlack,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.14)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _sheetTile(IconData icon, String title, String route, {int badge = 0}) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: CircleAvatar(
+        backgroundColor: AppTheme.primaryGold.withValues(alpha: 0.12),
+        child: Icon(icon, color: AppTheme.primaryGold),
+      ),
+      title: Text(title, style: const TextStyle(color: AppTheme.textWhite, fontSize: 13)),
+      trailing: badge > 0
+          ? CircleAvatar(
+              radius: 11,
+              backgroundColor: AppTheme.errorRed,
+              child: Text('$badge', style: const TextStyle(color: Colors.white, fontSize: 10)),
+            )
+          : const Icon(Icons.chevron_left, color: AppTheme.textGrey),
+      onTap: () {
+        Navigator.pop(context);
+        context.go(route);
+      },
+    );
+  }
+
+  Widget _actionCard(
+    IconData icon,
+    String title,
+    String subtitle,
+    VoidCallback onTap,
+  ) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceBlack,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.15)),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: AppTheme.primaryGold, size: 30),
+            const SizedBox(height: 8),
+            Text(title, textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.textWhite, fontSize: 13, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4),
+            Text(subtitle, textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppTheme.textGrey, fontSize: 10)),
+          ],
+        ),
       ),
     );
   }
