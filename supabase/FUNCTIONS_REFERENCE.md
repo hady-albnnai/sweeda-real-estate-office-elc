@@ -1,7 +1,7 @@
 # 📚 مرجع دوال Supabase (RPC + Edge Functions)
 
 > **مشروع:** عقارات السويداء
-> **آخر تحديث:** 2026-06-15 (محدّث بعد تطبيق RPCs إدارة الموظفين ونشر Edge Functions الخمسة على السيرفر)
+> **آخر تحديث:** 2026-06-16 (محدّث بعد Staff Sessions، إغلاق RPCs القديمة، نشر Edge Functions الإدارية الستة، وتطبيق Input Validation)
 > **المصدر:** `supabase/setup.sql` + Migrations + Edge Functions
 
 ---
@@ -51,7 +51,7 @@
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_admin_employee_management_final.sql` — دوال إدارة الموظفين النهائية: `get_all_staff_users`, `admin_create_staff_user`, `admin_update_staff_role`, `admin_toggle_staff_status`, `admin_reset_staff_password`, `admin_delete_staff_user` |
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_admin_dashboard_stats.sql` — دالة `get_admin_dashboard_stats` لإحصائيات لوحة الإدارة المجمعة |
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_input_validation_hardening.sql` — helpers للتحقق من المدخلات وتقوية RPCs إنشاء العروض/الطلبات/الملف الشخصي/الموظفين، وتم التحقق من دوال `app_*` ومن الحفاظ على منطق `create_offer_internal` |
-| ✅ **مُنشر على السيرفر** | Edge Functions لإدارة الموظفين: `create-user`, `update-user-role`, `toggle-user-status`, `reset-user-password`, `delete-user` — تم نشرها بعد pull من `main` |
+| ✅ **مُنشر على السيرفر** | Edge Functions الإدارية المحمية بجلسة موظف: `create-user`, `update-user-role`, `toggle-user-status`, `reset-user-password`, `delete-user`, `update-user-permissions` |
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_lock_legacy_admin_rpcs.sql` — إغلاق direct execute للدوال الإدارية القديمة الحساسة بعد نقلها إلى Edge Functions |
 | ✅ **مُطبّق على السيرفر** | Storage policies لـ `offer_images` — INSERT/SELECT/UPDATE/DELETE مفتوحة |
 | 📝 **جاهز للتطبيق (لم يُنفّذ بعد)** | `2026_06_13_auth_username_password.sql` — اسم مستخدم `usr` + كلمة مرور مشفّرة `pwd` + 6 RPCs (`register_password`, `login_with_password`, `reset_password_with_otp`, `change_password_internal`, `check_username_available`, `get_staff_stats_internal`) + تحديث `users_public` (إضافة `usr`) + تحديث `get_user_full_by_id` (إضافة `usr` + إخفاء `pwd` خلف flag) |
@@ -86,6 +86,13 @@
 | 83 | `admin_toggle_staff_status` 🆕 | `p_admin_uid, p_target_uid, p_status, p_reason` | `JSONB` | ✅ |
 | 84 | `admin_reset_staff_password` 🆕 | `p_admin_uid, p_target_uid, p_new_password` | `JSONB` | ✅ |
 | 85 | `admin_delete_staff_user` 🆕 | `p_admin_uid, p_target_uid` | `JSONB` | ✅ |
+| 86 | `get_admin_dashboard_stats` 🆕 | `p_admin_uid UUID` | `JSONB` | ✅ |
+| 87 | `app_clean_text` 🆕 | `p_value TEXT, p_max_len INT` | `TEXT` | ❌ |
+| 88 | `app_assert_text_len` 🆕 | `p_value TEXT, p_field TEXT, p_min INT, p_max INT` | `TEXT` | ❌ |
+| 89 | `app_assert_username` 🆕 | `p_username TEXT, p_required BOOLEAN` | `TEXT` | ❌ |
+| 90 | `app_assert_password` 🆕 | `p_password TEXT, p_min INT` | `TEXT` | ❌ |
+| 91 | `app_assert_phone` 🆕 | `p_phone TEXT` | `TEXT` | ❌ |
+| 92 | `app_assert_price` 🆕 | `p_value NUMERIC, p_required BOOLEAN` | `NUMERIC` | ❌ |
 | **— مستخدمون ونقاط —** | | | | |
 | 9 | `update_user_badge` | `p_uid UUID` | `VOID` | ❌ |
 | 10 | `add_points` | `p_uid, p_pts` | `VOID` | ❌ |
@@ -609,10 +616,11 @@ curl -X POST 'https://<project>.supabase.co/functions/v1/verify-whatsapp-otp' \
 
 ## 🧑‍💼 Edge Functions — إدارة الموظفين
 
-> هذه الدوال لا تنفذ المنطق مباشرة من العميل. كل دالة تستدعي RPC آمنة من migration:
-> `2026_06_15_admin_employee_management_final.sql`.
+> هذه الدوال لا تنفذ المنطق مباشرة من العميل. كل دالة تتحقق أولاً من جلسة إدارية موثوقة عبر أحد مسارين:
+> 1. جلسة Supabase Auth حقيقية تطابق المستخدم الإداري.
+> 2. أو `staff_session_token` صالح صادر من `login_with_password` ومتحقق منه عبر `validate_staff_session`.
 >
-> الدوال تتحقق من صلاحية المدير/نائب المدير عبر `admin_uid` داخل RPC، وتمنع تعديل أو حذف المدير الرئيسي `role=6`.
+> بعد التحقق تستدعي RPC آمنة بـ `service_role`. معرفة `admin_uid` وحدها غير كافية.
 
 ### Secrets المطلوبة
 
@@ -628,6 +636,7 @@ curl -X POST 'https://<project>.supabase.co/functions/v1/verify-whatsapp-otp' \
 ```json
 {
   "admin_uid": "uuid-of-manager-or-deputy",
+  "staff_session_token": "token-from-login",
   "full_name": "اسم الموظف",
   "phone": "09xxxxxxxx",
   "email": "optional@example.com",
@@ -651,6 +660,7 @@ curl -X POST 'https://<project>.supabase.co/functions/v1/verify-whatsapp-otp' \
 ```json
 {
   "admin_uid": "uuid-of-manager-or-deputy",
+  "staff_session_token": "token-from-login",
   "user_id": "target-user-uuid",
   "role": 3
 }
@@ -675,6 +685,7 @@ curl -X POST 'https://<project>.supabase.co/functions/v1/verify-whatsapp-otp' \
 ```json
 {
   "admin_uid": "uuid-of-manager-or-deputy",
+  "staff_session_token": "token-from-login",
   "user_id": "target-user-uuid",
   "status": 1,
   "reason": "سبب اختياري"
@@ -694,6 +705,7 @@ curl -X POST 'https://<project>.supabase.co/functions/v1/verify-whatsapp-otp' \
 ```json
 {
   "admin_uid": "uuid-of-manager-or-deputy",
+  "staff_session_token": "token-from-login",
   "user_id": "target-user-uuid"
 }
 ```
@@ -714,7 +726,27 @@ curl -X POST 'https://<project>.supabase.co/functions/v1/verify-whatsapp-otp' \
 ```json
 {
   "admin_uid": "uuid-of-manager-or-deputy",
+  "staff_session_token": "token-from-login",
   "user_id": "target-user-uuid"
+}
+```
+
+المخرج:
+
+```json
+{ "success": true }
+```
+
+### 6. `update-user-permissions`
+
+يحدّث صلاحيات مستخدم عبر جلسة إدارية صالحة.
+
+```json
+{
+  "admin_uid": "uuid-of-manager-or-deputy",
+  "staff_session_token": "token-from-login",
+  "user_id": "target-user-uuid",
+  "permissions": ["review_offers", "manage_appointments"]
 }
 ```
 
@@ -766,6 +798,36 @@ curl -X POST 'https://<project>.supabase.co/functions/v1/verify-whatsapp-otp' \
 - `update-user-permissions`
 
 > تم تطبيق migration على السيرفر والتحقق من إصدار جلسة للمدير. تم أيضاً تطبيق hotfix لمسار `pgcrypto` عبر `search_path = public, extensions`.
+
+## 🧹 Input Validation & Abuse Hardening
+
+تم تطبيق migration:
+
+`2026_06_15_input_validation_hardening.sql`
+
+ويضيف helpers للتحقق والتنظيف على السيرفر، ويقوّي RPCs رئيسية مثل:
+
+- `register_password`
+- `admin_create_staff_user`
+- `update_user_profile_internal`
+- `create_request_internal`
+- `update_request_internal`
+- `create_offer_internal`
+
+### دوال التحقق المساعدة
+
+| الدالة | الغرض |
+|---|---|
+| `app_clean_text` | تنظيف النصوص من control characters وتوحيد الفراغات وقص الطول |
+| `app_assert_text_len` | تنظيف نص والتحقق من الحد الأدنى/الأقصى ومنع `<` و`>` |
+| `app_assert_username` | توحيد وفحص اسم المستخدم `[a-z0-9_.]` بطول 3–30 |
+| `app_assert_password` | فرض طول كلمة المرور، حالياً 8 أحرف على الأقل |
+| `app_assert_phone` | تطبيع وفحص رقم هاتف سوري بصيغة `+9639xxxxxxxx` |
+| `app_assert_price` | رفض السعر غير الموجب أو الكبير جداً |
+
+تم التحقق من عملها على السيرفر، وتم التأكد أن `create_offer_internal` حافظت على منطق الإنتاج: `added_by`, `v_effective_pkg`, وإعفاء الإدارة الداخلية عبر `role < 4`.
+
+---
 
 ## 🔐 دوال المصادقة والتحقق (3)
 
