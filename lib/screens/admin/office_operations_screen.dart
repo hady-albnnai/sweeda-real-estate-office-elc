@@ -114,7 +114,7 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
                     physics: const NeverScrollableScrollPhysics(),
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
-                    childAspectRatio: 1.35,
+                    mainAxisExtent: 118,
                     children: [
                       if (PermissionService.has(auth.userModel, PermissionKeys.manageAppointments))
                         _shortcut(Icons.calendar_month_outlined, 'المواعيد', '/admin/appointments'),
@@ -134,7 +134,7 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
                     physics: const NeverScrollableScrollPhysics(),
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
-                    childAspectRatio: 1.45,
+                    mainAxisExtent: 112,
                     children: [
                       _stat('المستخدمون', _stats['totalUsers'] ?? 0, Icons.people_outline),
                       _stat('العروض', _stats['totalOffers'] ?? 0, Icons.home_work_outlined),

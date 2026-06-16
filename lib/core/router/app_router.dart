@@ -55,6 +55,7 @@ import '../../screens/employee/employee_home_screen.dart';
 
 // === Admin ===
 import '../../screens/admin/admin_dashboard_screen.dart';
+import '../../screens/admin/admin_sections_screen.dart';
 import '../../screens/admin/deputy_dashboard_screen.dart';
 import '../../screens/admin/employee_dashboard_screen.dart';
 import '../../screens/admin/employee_management/employee_management_screen.dart';
@@ -84,6 +85,7 @@ class AppRouter {
     if (path == '/admin/dashboard') return PermissionKeys.manageStaff;
     if (path == '/admin/employee-management') return PermissionKeys.manageStaff;
     if (path == '/admin/operations-dashboard') return PermissionKeys.adminDashboard;
+    if (path == '/admin/sections') return PermissionKeys.adminDashboard;
     if (path == '/admin/office-operations') return PermissionKeys.officeOperations;
     if (path == '/admin/permissions') return PermissionKeys.managePermissions;
     if (path.startsWith('/admin/users') || path.startsWith('/admin/user/')) return PermissionKeys.manageUsers;
@@ -479,6 +481,10 @@ class AppRouter {
       GoRoute(
         path: '/admin/operations-dashboard',
         builder: (context, state) => const AdminDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/admin/sections',
+        builder: (context, state) => const AdminSectionsScreen(),
       ),
       GoRoute(
         path: '/admin/office-operations',

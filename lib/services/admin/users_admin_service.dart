@@ -20,7 +20,8 @@ class UsersAdminService {
       var q = SupabaseService().client
           .from(DbTables.users)
           .select()
-          .eq('i_del', 0);
+          .eq('i_del', 0)
+          .inFilter('role', [0, 1]);
       if (search != null && search.isNotEmpty) {
         q = q.or('nm.ilike.%$search%,ph.ilike.%$search%');
       }
