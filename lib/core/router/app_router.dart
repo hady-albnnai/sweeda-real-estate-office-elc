@@ -158,6 +158,7 @@ class AppRouter {
           path.startsWith('/offer/') ||
           path == '/login' ||
           path == '/otp' ||
+          path == '/user/profile' || // السماح بفتح البروفايل للزائر
           path == '/check-email';
       if (isPublicPath) return null;
 
