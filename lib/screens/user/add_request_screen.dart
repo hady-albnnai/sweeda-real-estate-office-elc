@@ -305,8 +305,6 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = context.watch<AuthProvider>().userModel;
-
     return Scaffold(
       backgroundColor: AppTheme.deepBlack,
       appBar: AppBar(
