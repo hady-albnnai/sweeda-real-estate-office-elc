@@ -41,13 +41,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
-  // ── العمليات ──
   Future<void> _handleLogin() async {
     final user = _loginUserCtrl.text.trim();
     final pass = _loginPassCtrl.text;
     if (user.isEmpty || pass.isEmpty) { _snack('يرجى إدخال كافة البيانات'); return; }
     setState(() => _isLoading = true);
-    final ok = await context.read<AuthProvider>().loginWithPassword(user, pass);
+    final auth = context.read<AuthProvider>();
+    final ok = await auth.loginWithPassword(user, pass);
     if (mounted) setState(() => _isLoading = false);
     if (!ok) _snack('فشل تسجيل الدخول');
   }
@@ -109,78 +109,79 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildGuestUI() {
     final sz = MediaQuery.sizeOf(context);
-    final logoSize = (sz.shortestSide * 0.95).clamp(300.0, 550.0);
+    final logoSize = (sz.shortestSide * 0.95).clamp(320.0, 550.0);
 
     return Container(
       width: double.infinity,
       color: AppTheme.deepBlack,
       child: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(children: [
-            const SizedBox(height: 10),
-            // 🔥 شعار السبلاش الضخم
-            Hero(tag: 'logo', child: Container(
-              width: logoSize, height: logoSize * 0.72,
-              decoration: BoxDecoration(shape: BoxShape.circle, boxShadow: [BoxShadow(color: AppTheme.primaryGold.withValues(alpha: 0.25), blurRadius: 80, spreadRadius: 20)]),
-              child: Stack(alignment: Alignment.center, children: [
-                Container(width: logoSize * 0.72, height: logoSize * 0.72, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.4), width: 3))),
-                Container(width: logoSize * 0.65, height: logoSize * 0.65, decoration: const BoxDecoration(shape: BoxShape.circle, color: AppTheme.surfaceBlack), padding: const EdgeInsets.all(35), child: Image.asset('assets/images/logo_app.png', fit: BoxFit.contain)),
-              ]),
-            )),
-            Text('المكتب العقاري الإلكتروني', style: GoogleFonts.cairo(color: AppTheme.primaryGold, fontSize: 26, fontWeight: FontWeight.w900)),
-            const SizedBox(height: 50),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          child: Column(
+            children: [
+              const SizedBox(height: 20),
+              // 🛡️ أيقونة السبلاش الضخمة جداً
+              Hero(tag: 'logo', child: Container(
+                width: logoSize, height: logoSize * 0.75,
+                decoration: BoxDecoration(shape: BoxShape.circle, boxShadow: [BoxShadow(color: AppTheme.primaryGold.withValues(alpha: 0.2), blurRadius: 80, spreadRadius: 25)]),
+                child: Stack(alignment: Alignment.center, children: [
+                  Container(width: logoSize * 0.72, height: logoSize * 0.72, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.4), width: 3.5))),
+                  Container(width: logoSize * 0.65, height: logoSize * 0.65, decoration: const BoxDecoration(shape: BoxShape.circle, color: AppTheme.surfaceBlack), padding: const EdgeInsets.all(35), child: Image.asset('assets/images/logo_app.png', fit: BoxFit.contain)),
+                ]),
+              )),
+              const SizedBox(height: 10),
+              Text('المكتب العقاري الإلكتروني', style: GoogleFonts.cairo(color: AppTheme.primaryGold, fontSize: 26, fontWeight: FontWeight.w900)),
+              const SizedBox(height: 50),
 
-            // ── البند الأول: تسجيل الدخول ──
-            _buildBlock(
-              id: 2, title: 'تسجيل الدخول', icon: Icons.login_rounded, isGold: false,
-              child: Column(children: [
-                _input(_loginUserCtrl, 'اسم المستخدم أو الهاتف', Icons.person_outline),
-                const SizedBox(height: 12),
-                _input(_loginPassCtrl, 'كلمة المرور', Icons.lock_outline, isPass: true, obs: _isPassObscure, onT: () => setState(() => _isPassObscure = !_isPassObscure)),
-                const SizedBox(height: 16),
-                _btn(l: 'دخول', o: _handleLogin),
-                TextButton(onPressed: _handleForgot, child: const Text('هل نسيت كلمة المرور؟ استعادة بـ SMS', style: TextStyle(color: AppTheme.primaryGold, decoration: TextDecoration.underline, fontSize: 13))),
-              ]),
-            ),
+              // ── البند الأول: تسجيل الدخول ──
+              _buildBlock(
+                id: 2, title: 'تسجيل الدخول', icon: Icons.login_rounded, isGold: false,
+                child: Column(children: [
+                  _input(_loginUserCtrl, 'اسم المستخدم أو رقم الهاتف', Icons.person_outline),
+                  const SizedBox(height: 12),
+                  _input(_loginPassCtrl, 'كلمة المرور', Icons.lock_outline, isPass: true, obs: _isPassObscure, onT: () => setState(() => _isPassObscure = !_isPassObscure)),
+                  const SizedBox(height: 16),
+                  _btn(l: 'دخول', o: _handleLogin),
+                  TextButton(onPressed: _handleForgot, child: const Text('هل نسيت كلمة المرور؟ استعادة بـ SMS', style: TextStyle(color: AppTheme.primaryGold, decoration: TextDecoration.underline, fontSize: 13))),
+                ]),
+              ),
 
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-            // ── البند الثاني: تسجيل حساب جديد ──
-            _buildBlock(
-              id: 1, title: 'تسجيل حساب جديد', icon: Icons.person_add_alt_1_outlined, isGold: true,
-              child: Column(children: [
-                // أ- تسجيل عن طريق الهاتف
-                _subBlock(
-                  t: 'عن طريق رقم الهاتف', i: Icons.phone_android, sel: _signupMethod == 1,
-                  onT: () => setState(() => _signupMethod = 1),
-                  child: Column(children: [
-                    _input(_signupPhoneCtrl, '09XXXXXXXX', Icons.phone_iphone, dark: true),
-                    const SizedBox(height: 12),
-                    _btn(l: 'إرسال رمز التفعيل SMS', o: _handleSignupPhone, dark: true),
-                  ]),
-                ),
-                const SizedBox(height: 12),
-                // ب- تسجيل عن طريق الايميل
-                _subBlock(
-                  t: 'عن طريق الإيميل', i: Icons.alternate_email, sel: _signupMethod == 2,
-                  onT: () => setState(() => _signupMethod = 2),
-                  child: Column(children: [
-                    _input(_signupEmailCtrl, 'example@mail.com', Icons.email_outlined, dark: true),
-                    const SizedBox(height: 12),
-                    _btn(l: 'إرسال رابط التفعيل', o: _handleSignupEmail, dark: true),
-                  ]),
-                ),
-              ]),
-            ),
-            const SizedBox(height: 60),
-          ]),
+              // ── البند الثاني: تسجيل حساب جديد ──
+              _buildBlock(
+                id: 1, title: 'تسجيل حساب جديد', icon: Icons.person_add_alt_1_outlined, isGold: true,
+                child: Column(children: [
+                  // أ- تسجيل عن طريق الهاتف
+                  _subBlock(
+                    t: 'عن طريق رقم الهاتف', i: Icons.phone_android, sel: _signupMethod == 1,
+                    onT: () => setState(() => _signupMethod = 1),
+                    child: Column(children: [
+                      _input(_signupPhoneCtrl, '09XXXXXXXX', Icons.phone_iphone, dark: true),
+                      const SizedBox(height: 12),
+                      _btn(l: 'إرسال رمز التفعيل SMS', o: _handleSignupPhone, dark: true),
+                    ]),
+                  ),
+                  const SizedBox(height: 12),
+                  // ب- تسجيل عن طريق الايميل
+                  _subBlock(
+                    t: 'عن طريق الإيميل', i: Icons.alternate_email, sel: _signupMethod == 2,
+                    onT: () => setState(() => _signupMethod = 2),
+                    child: Column(children: [
+                      _input(_signupEmailCtrl, 'example@mail.com', Icons.email_outlined, dark: true),
+                      const SizedBox(height: 12),
+                      _btn(l: 'إرسال رابط التفعيل', o: _handleSignupEmail, dark: true),
+                    ]),
+                  ),
+                ]),
+              ),
+              const SizedBox(height: 60),
+            ],
+          ),
         ),
       ),
     );
   }
-
-  // ── المساعدات ──
 
   Widget _buildBlock({required int id, required String title, required IconData icon, required bool isGold, required Widget child}) {
     final open = _activeSection == id;
@@ -188,21 +189,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
       duration: const Duration(milliseconds: 300),
       decoration: BoxDecoration(color: isGold ? AppTheme.primaryGold : AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(24), border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.5), width: 2)),
       child: Column(children: [
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => setState(() => _activeSection = open ? 0 : id),
-            borderRadius: BorderRadius.circular(24),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(children: [
-                Icon(icon, color: isGold ? Colors.black : AppTheme.primaryGold, size: 28),
-                const SizedBox(width: 16),
-                Text(title, style: TextStyle(color: isGold ? Colors.black : AppTheme.textWhite, fontSize: 18, fontWeight: FontWeight.w900)),
-                const Spacer(),
-                Icon(open ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, color: isGold ? Colors.black : AppTheme.textGrey),
-              ]),
-            ),
+        InkWell(
+          onTap: () => setState(() => _activeSection = open ? 0 : id),
+          borderRadius: BorderRadius.circular(24),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(children: [
+              Icon(icon, color: isGold ? Colors.black : AppTheme.primaryGold, size: 28),
+              const SizedBox(width: 16),
+              Text(title, style: TextStyle(color: isGold ? Colors.black : AppTheme.textWhite, fontSize: 18, fontWeight: FontWeight.w900)),
+              const Spacer(),
+              Icon(open ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, color: isGold ? Colors.black : AppTheme.textGrey),
+            ]),
           ),
         ),
         if (open) Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 20), child: child),
@@ -214,13 +212,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16)),
       child: Column(children: [
-        Material(
-          color: Colors.transparent,
-          child: ListTile(
-            onTap: onT, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            leading: Icon(i, color: Colors.black87),
-            title: Text(t, style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 14)),
-            trailing: Icon(sel ? Icons.radio_button_checked : Icons.radio_button_off, color: Colors.black87),
+        InkWell(
+          onTap: onT,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(children: [
+              Icon(i, color: Colors.black87),
+              const SizedBox(width: 12),
+              Text(t, style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 14)),
+              const Spacer(),
+              Icon(sel ? Icons.radio_button_checked : Icons.radio_button_off, color: Colors.black87),
+            ]),
           ),
         ),
         if (sel) Padding(padding: const EdgeInsets.fromLTRB(12, 0, 12, 16), child: child),
@@ -258,7 +261,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildStaffStats(UserModel user) { if (_loadingStats) return const Center(child: CircularProgressIndicator(color: AppTheme.primaryGold)); if (_staffStats == null) return const SizedBox.shrink(); List<_StaffStatItem> items = []; if (user.isPhotographer) items = [_StaffStatItem(Icons.check_circle_outline, 'مهام مكتملة', _staffStats!['completed_tasks'] ?? 0, Colors.green)]; else if (user.isSupervisor) items = [_StaffStatItem(Icons.check_circle_outline, 'زيارات منفذة', _staffStats!['completed_visits'] ?? 0, Colors.green)]; else if (user.isEmployee) items = [_StaffStatItem(Icons.rate_review_outlined, 'عروض مراجَعة', _staffStats!['reviewed_offers'] ?? 0, Colors.blue)]; else if (user.isSenior || user.isManager) items = [_StaffStatItem(Icons.handshake_outlined, 'صفقات', _staffStats!['total_deals'] ?? 0, Colors.green), _StaffStatItem(Icons.payments_outlined, 'مدفوعات', _staffStats!['approved_payments'] ?? 0, Colors.blue), _StaffStatItem(Icons.verified_user_outlined, 'موثقون', _staffStats!['verified_users'] ?? 0, Colors.teal)]; return Wrap(spacing: 10, runSpacing: 10, children: items.map((it) => Container(width: (MediaQuery.of(context).size.width - 60) / 2, padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: it.color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12), border: Border.all(color: it.color.withValues(alpha: 0.2))), child: Row(children: [Icon(it.icon, color: it.color, size: 18), const SizedBox(width: 8), Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('${it.value}', style: const TextStyle(color: AppTheme.textWhite, fontSize: 16, fontWeight: FontWeight.bold)), Text(it.label, style: const TextStyle(color: AppTheme.textGrey, fontSize: 10))])]))).toList()); }
   Widget _buildMenuSection(UserModel u) => Column(children: [_menuItem(i: Icons.person_outline, t: u.isAdmin ? 'بياناتي الوظيفية' : 'معلومات الحساب', s: u.isAdmin ? 'بيانات التعيين والتحقق الوظيفي ✅' : 'معلوماتك الشخصية والتوثيق', o: () => context.push('/user/account-info')), _menuItem(i: Icons.star_outline, t: 'تقييماتي المستلمة', s: 'شاهد تقييمات العملاء لك', o: () => context.push('/user/my-ratings')), if (u.isAdmin) _menuItem(i: Icons.dashboard_outlined, t: 'لوحة التحكم الإدارية', s: 'الانتقال لواجهة العمليات', o: () { if (u.isPhotographer) context.go('/photographer/tasks'); else if (u.isSupervisor) context.go('/executor/tasks'); else if (u.isEmployee) context.go('/employee/dashboard'); else context.go('/admin/dashboard'); })]);
   Widget _menuItem({required IconData i, required String t, required String s, required VoidCallback o}) => ListTile(onTap: o, leading: Icon(i, color: AppTheme.primaryGold), title: Text(t, style: const TextStyle(color: AppTheme.textWhite, fontSize: 14, fontWeight: FontWeight.bold)), subtitle: Text(s, style: const TextStyle(color: AppTheme.textGrey, fontSize: 11)), trailing: const Icon(Icons.chevron_right, color: AppTheme.textGrey, size: 18));
-  Widget _buildLogoutButton(AuthProvider a) => OutlinedButton.icon(onPressed: () { a.logout(); context.go('/home'); }, icon: const Icon(Icons.logout, color: Colors.red), label: const Text('تسجيل الخروج', style: TextStyle(color: Colors.red)), style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.red), minimumSize: const Size(double.infinity, 50)));
+  Widget _buildLogoutButton(AuthProvider a) => OutlinedButton.icon(onPressed: () { a.logout(); context.go('/user/profile'); }, icon: const Icon(Icons.logout, color: Colors.red), label: const Text('تسجيل الخروج', style: TextStyle(color: Colors.red)), style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.red), minimumSize: const Size(double.infinity, 50)));
 
   void _loadStaffStats() async {
     final auth = context.read<AuthProvider>();
