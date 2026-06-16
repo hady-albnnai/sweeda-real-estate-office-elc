@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/validation/input_validators.dart';
 import '../../../providers/admin_provider.dart';
 import '../../../providers/auth_provider.dart';
 
@@ -29,16 +30,7 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
     super.dispose();
   }
 
-  String? _validateUsername(String? value) {
-    final username = value?.trim() ?? '';
-    if (username.isEmpty) return null;
-    if (username.length < 3 || username.length > 30) {
-      return 'اسم المستخدم يجب أن يكون بين 3 و 30 حرفاً';
-    }
-    final valid = RegExp(r'^[a-zA-Z0-9_.]+$').hasMatch(username);
-    if (!valid) return 'يسمح فقط بالأحرف اللاتينية والأرقام و _ و .';
-    return null;
-  }
+  String? _validateUsername(String? value) => InputValidators.validateUsername(value);
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
@@ -103,7 +95,7 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
                   labelText: 'الاسم الكامل *',
                   labelStyle: TextStyle(color: AppTheme.textGrey),
                 ),
-                validator: (v) => v == null || v.trim().length < 2 ? 'الاسم مطلوب' : null,
+                validator: InputValidators.validateName,
               ),
               const SizedBox(height: 12),
               TextFormField(
@@ -114,7 +106,7 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
                   labelStyle: TextStyle(color: AppTheme.textGrey),
                 ),
                 keyboardType: TextInputType.phone,
-                validator: (v) => v == null || v.trim().isEmpty ? 'رقم الهاتف مطلوب' : null,
+                validator: InputValidators.validateSyrianPhone,
               ),
               const SizedBox(height: 12),
               TextFormField(

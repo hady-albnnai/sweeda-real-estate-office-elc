@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/validation/input_validators.dart';
 import '../../core/network/supabase_service.dart';
 
 /// ════════════════════════════════════════════════════════════════════
@@ -66,22 +67,18 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
     final username = _usernameController.text.trim().toLowerCase();
     final password = _passwordController.text;
 
-    // فحص اسم المستخدم
-    if (username.isEmpty || username.length < 3) {
-      _snack('يرجى إدخال اسم مستخدم (3 أحرف على الأقل)');
-      return;
-    }
-    if (!RegExp(r'^[a-z0-9_.]+$').hasMatch(username)) {
-      _snack('اسم المستخدم يحتوي أحرف غير مسموحة (فقط a-z, 0-9, _, .)');
+    final usernameError = InputValidators.validateRequiredUsername(username);
+    if (usernameError != null) {
+      _snack(usernameError);
       return;
     }
     if (!_usernameAvailable) {
       _snack('اسم المستخدم محجوز، اختر اسماً آخر');
       return;
     }
-    // فحص كلمة المرور
-    if (password.length < 6) {
-      _snack('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+    final passwordError = InputValidators.validatePassword(password);
+    if (passwordError != null) {
+      _snack(passwordError);
       return;
     }
     if (password != _confirmPasswordController.text) {

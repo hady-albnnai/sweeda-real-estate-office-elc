@@ -59,7 +59,7 @@
 ## ما يجب تنفيذه قبل إعلان 100%
 
 - [x] تشغيل `flutter analyze` محلياً — لا توجد مشاكل.
-- [x] إضافة اختبارات وحدة أساسية لـ `PermissionService` و`ErrorUtils`.
+- [x] إضافة اختبارات وحدة أساسية لـ `PermissionService` و`ErrorUtils` و`InputValidators`.
 - [x] تشغيل `flutter test` — النتيجة: All tests passed.
 - [ ] تنفيذ اختبار عملي كامل لإدارة الموظفين.
 - [x] تنفيذ `supabase/tests/admin_security_verification.sql` بعد إصلاحات P1/P2/P5 ونجاحه.
@@ -91,3 +91,9 @@
 ## تحديث وجهة المدير الرئيسية
 
 تم تعديل `/admin/dashboard` ليكون لوحة قيادة المدير (`AdminDashboardScreen`) بدلاً من فتح إدارة الموظفين مباشرة. أصبحت إدارة الموظفين متاحة كبطاقة داخل لوحة المدير وعبر `/admin/employee-management`.
+
+---
+
+## Input Validation & Abuse Hardening
+
+تمت إضافة طبقة تحقق أولية للمدخلات في Flutter وSQL. تشمل helpers للسيرفر وتحديث RPCs مهمة مثل إنشاء العرض والطلب وتحديث الملف الشخصي وإنشاء الموظف. الحالة: جاهزة للتطبيق على السيرفر.
