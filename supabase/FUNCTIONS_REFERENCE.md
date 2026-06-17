@@ -1,7 +1,7 @@
 # 📚 مرجع دوال Supabase (RPC + Edge Functions)
 
 > **مشروع:** عقارات السويداء
-> **آخر تحديث:** 2026-06-16 (محدّث بعد Staff Sessions، إغلاق RPCs القديمة، نشر Edge Functions الإدارية الستة، وتطبيق Input Validation)
+> **آخر تحديث:** 2026-06-17 (محدّث بعد دعم صورتي هوية للموظف، عارض تفاصيل الموظفين، ودالة `get-staff-id-images`)
 > **المصدر:** `supabase/setup.sql` + Migrations + Edge Functions
 
 ---
@@ -51,7 +51,7 @@
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_admin_employee_management_final.sql` — دوال إدارة الموظفين النهائية: `get_all_staff_users`, `admin_create_staff_user`, `admin_update_staff_role`, `admin_toggle_staff_status`, `admin_reset_staff_password`, `admin_delete_staff_user` |
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_admin_dashboard_stats.sql` — دالة `get_admin_dashboard_stats` لإحصائيات لوحة الإدارة المجمعة |
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_input_validation_hardening.sql` — helpers للتحقق من المدخلات وتقوية RPCs إنشاء العروض/الطلبات/الملف الشخصي/الموظفين، وتم التحقق من دوال `app_*` ومن الحفاظ على منطق `create_offer_internal` |
-| ✅ **مُنشر على السيرفر** | Edge Functions الإدارية المحمية بجلسة موظف: `create-user`, `update-user-role`, `toggle-user-status`, `reset-user-password`, `delete-user`, `update-user-permissions` |
+| 🔄 **محدّث بالكود** | Edge Functions إدارة الموظفين: `create-user` محدثة لدعم صورتي الهوية و`get-staff-id-images` مضافة؛ يلزم deploy لهاتين الدالتين بعد `git pull` |
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_lock_legacy_admin_rpcs.sql` — إغلاق direct execute للدوال الإدارية القديمة الحساسة بعد نقلها إلى Edge Functions |
 | ✅ **مُطبّق على السيرفر** | Storage policies لـ `offer_images` — INSERT/SELECT/UPDATE/DELETE مفتوحة |
 | 📝 **جاهز للتطبيق (لم يُنفّذ بعد)** | `2026_06_13_auth_username_password.sql` — اسم مستخدم `usr` + كلمة مرور مشفّرة `pwd` + 6 RPCs (`register_password`, `login_with_password`, `reset_password_with_otp`, `change_password_internal`, `check_username_available`, `get_staff_stats_internal`) + تحديث `users_public` (إضافة `usr`) + تحديث `get_user_full_by_id` (إضافة `usr` + إخفاء `pwd` خلف flag) |
@@ -231,12 +231,13 @@ SELECT * FROM cron.job_run_details ORDER BY start_time DESC LIMIT 10;
 | 1 | `send-whatsapp-otp` 🆕 | يولّد OTP ويرسله عبر Meta WhatsApp Cloud API | `{ phone: "+963..." }` | `{ success, messageId?, devMode?, otp? }` | ⚠️ مكتوب — لم يُنشر |
 | 2 | `verify-whatsapp-otp` 🆕 | يتحقق + ينشئ user + يصدر session | `{ phone, code }` | `{ success, userId, isNew, session: { token_hash, ... } }` | ⚠️ مكتوب — لم يُنشر |
 | 3 | `send-push-notification` 🆕🆕🆕🆕🆕 | يرسل FCM push لكل أجهزة المستخدم (HTTP v1 API) | `{ uid, title, body, data? }` | `{ success, sent, failed, total }` | ⚠️ مكتوب — لم يُنشر |
-| 4 | `create-user` 🆕 | إنشاء موظف داخلي من الإدارة عبر `users.usr/pwd` | `{ admin_uid, staff_session_token?, full_name, phone, email?, username?, role }` | `{ success, user_id, new_password }` | ✅ منشور |
-| 5 | `update-user-role` 🆕 | تغيير دور موظف داخلي | `{ admin_uid, staff_session_token?, user_id, role }` | `{ success }` | ✅ منشور |
-| 6 | `toggle-user-status` 🆕 | تفعيل/تجميد/حظر موظف | `{ admin_uid, staff_session_token?, user_id, status, reason? }` | `{ success }` | ✅ منشور |
-| 7 | `reset-user-password` 🆕 | توليد كلمة سر جديدة وتحديث `users.pwd` | `{ admin_uid, staff_session_token?, user_id }` | `{ success, new_password }` | ✅ منشور |
-| 8 | `delete-user` 🆕 | حذف منطقي لموظف داخلي | `{ admin_uid, staff_session_token?, user_id }` | `{ success }` | ✅ منشور |
-| 9 | `update-user-permissions` 🆕 | تحديث صلاحيات مستخدم عبر جلسة موظف | `{ admin_uid, staff_session_token?, user_id, permissions }` | `{ success }` | ✅ منشور |
+| 4 | `create-user` 🆕 | إنشاء موظف داخلي من الإدارة عبر `users.usr/pwd` + رفع صور الهوية الخاصة عبر `service_role` | `{ admin_uid, staff_session_token?, full_name, phone, email?, username?, role, address?, sid?, id_images_base64? }` | `{ success, user_id, new_password, id_image_paths? }` | 🔄 محدث بالكود — يحتاج deploy للنسخة الجديدة |
+| 5 | `get-staff-id-images` 🆕 | إرجاع روابط مؤقتة لصور هوية موظف للمدير/النائب | `{ admin_uid, staff_session_token?, target_uid }` | `{ success, urls, count }` | ✅ مكتوب — يحتاج deploy عند التحديث |
+| 6 | `update-user-role` 🆕 | تغيير دور موظف داخلي | `{ admin_uid, staff_session_token?, user_id, role }` | `{ success }` | ✅ منشور |
+| 7 | `toggle-user-status` 🆕 | تفعيل/تجميد/حظر موظف | `{ admin_uid, staff_session_token?, user_id, status, reason? }` | `{ success }` | ✅ منشور |
+| 8 | `reset-user-password` 🆕 | توليد كلمة سر جديدة وتحديث `users.pwd` | `{ admin_uid, staff_session_token?, user_id }` | `{ success, new_password }` | ✅ منشور |
+| 9 | `delete-user` 🆕 | حذف منطقي لموظف داخلي | `{ admin_uid, staff_session_token?, user_id }` | `{ success }` | ✅ منشور |
+| 10 | `update-user-permissions` 🆕 | تحديث صلاحيات مستخدم عبر جلسة موظف | `{ admin_uid, staff_session_token?, user_id, permissions }` | `{ success }` | ✅ منشور |
 
 > ⚠️ **`generate_otp` / `verify_otp` القديمة** ما زالت موجودة للتوافق الخلفي فقط — استخدم النسخة V2 في الكود الجديد.
 > 📖 لخطوات تفعيل WhatsApp + Email Magic Link: راجع `docs/AUTH_SETUP.md`
@@ -633,7 +634,7 @@ curl -X POST 'https://<project>.supabase.co/functions/v1/verify-whatsapp-otp' \
 
 ### 1. `create-user`
 
-ينشئ موظفاً داخلياً في جدول `users`، ويولد كلمة سر جديدة متوافقة مع نظام `users.pwd`.
+ينشئ موظفاً داخلياً في جدول `users`، ويولد كلمة سر جديدة متوافقة مع نظام `users.pwd`. يدعم حقول العنوان والرقم الوطني، ويدعم رفع صورة/صورتين للهوية (`id_images_base64`) داخل bucket خاص `ids_private` عبر `service_role`، ثم يخزن المسارات في `users.img`.
 
 ```json
 {
@@ -643,7 +644,11 @@ curl -X POST 'https://<project>.supabase.co/functions/v1/verify-whatsapp-otp' \
   "phone": "09xxxxxxxx",
   "email": "optional@example.com",
   "username": "office_1",
-  "role": 4
+  "address": "عنوان الموظف",
+  "sid": "الرقم الوطني",
+  "role": 4,
+  "id_images_base64": ["base64-front", "base64-back"],
+  "id_image_content_type": "image/jpeg"
 }
 ```
 
@@ -653,11 +658,41 @@ curl -X POST 'https://<project>.supabase.co/functions/v1/verify-whatsapp-otp' \
 {
   "success": true,
   "user_id": "new-user-uuid",
-  "new_password": "generated-password"
+  "new_password": "generated-password",
+  "id_image_paths": ["staff-uid/staff_id_..._1.jpg", "staff-uid/staff_id_..._2.jpg"]
 }
 ```
 
-### 2. `update-user-role`
+
+### 2. `get-staff-id-images`
+
+يرجع روابط مؤقتة signed URLs لصور هوية موظف داخلي، لاستخدامها في شاشة تفاصيل الموظف.
+
+```json
+{
+  "admin_uid": "uuid-of-manager-or-deputy",
+  "staff_session_token": "token-from-login",
+  "target_uid": "staff-user-uuid"
+}
+```
+
+المخرج:
+
+```json
+{
+  "success": true,
+  "urls": ["signed-url-front", "signed-url-back"],
+  "count": 2
+}
+```
+
+ملاحظات حماية:
+
+- المدير `role=6` يستطيع عرض هويات الموظفين.
+- نائب المدير `role=5` يستطيع عرض هويات الموظفين الأدنى منه، ولا يستطيع عرض بيانات نائب/مدير آخر.
+- الروابط مؤقتة لمدة 300 ثانية.
+
+### 3. `update-user-role`
 
 ```json
 {
@@ -674,7 +709,7 @@ curl -X POST 'https://<project>.supabase.co/functions/v1/verify-whatsapp-otp' \
 { "success": true }
 ```
 
-### 3. `toggle-user-status`
+### 4. `toggle-user-status`
 
 حالات `users.sts`:
 
@@ -700,7 +735,7 @@ curl -X POST 'https://<project>.supabase.co/functions/v1/verify-whatsapp-otp' \
 { "success": true }
 ```
 
-### 4. `reset-user-password`
+### 5. `reset-user-password`
 
 يولد كلمة سر جديدة، يحدث `users.pwd` مشفراً، ويرجع كلمة السر الصريحة مرة واحدة فقط.
 
@@ -721,7 +756,7 @@ curl -X POST 'https://<project>.supabase.co/functions/v1/verify-whatsapp-otp' \
 }
 ```
 
-### 5. `delete-user`
+### 6. `delete-user`
 
 ينفذ حذفاً منطقياً فقط: `users.i_del = 1`.
 
@@ -739,7 +774,7 @@ curl -X POST 'https://<project>.supabase.co/functions/v1/verify-whatsapp-otp' \
 { "success": true }
 ```
 
-### 6. `update-user-permissions`
+### 7. `update-user-permissions`
 
 يحدّث صلاحيات مستخدم عبر جلسة إدارية صالحة.
 
@@ -793,6 +828,7 @@ curl -X POST 'https://<project>.supabase.co/functions/v1/verify-whatsapp-otp' \
 الدوال المعنية:
 
 - `create-user`
+- `get-staff-id-images`
 - `update-user-role`
 - `toggle-user-status`
 - `reset-user-password`
