@@ -1,7 +1,7 @@
 # 📚 مرجع دوال Supabase (RPC + Edge Functions)
 
 > **مشروع:** عقارات السويداء
-> **آخر تحديث:** 2026-06-17 (محدّث بعد تأمين تسجيل الإيميل عبر `handle_email_auth_internal`، دعم صورتي هوية للموظف، ودالة `get-staff-id-images`)
+> **آخر تحديث:** 2026-06-17 (محدّث بعد تأمين تسجيل الإيميل والهاتف عبر Edge Functions، دعم صورتي هوية للموظف، ودالة `get-staff-id-images`)
 > **المصدر:** `supabase/setup.sql` + Migrations + Edge Functions
 
 ---
@@ -53,6 +53,7 @@
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_input_validation_hardening.sql` — helpers للتحقق من المدخلات وتقوية RPCs إنشاء العروض/الطلبات/الملف الشخصي/الموظفين، وتم التحقق من دوال `app_*` ومن الحفاظ على منطق `create_offer_internal` |
 | 🔄 **محدّث بالكود** | Edge Functions إدارة الموظفين: `create-user` محدثة لدعم صورتي الهوية و`get-staff-id-images` مضافة؛ يلزم deploy لهاتين الدالتين بعد `git pull` |
 | 🆕 **جاهز للتطبيق** | `2026_06_17_secure_email_auth_internal.sql` — تأمين Email Magic Link عبر RPC `handle_email_auth_internal` + فهارس unique canonical للإيميل والهاتف |
+| 🆕 **جاهز للتطبيق** | `2026_06_17_lock_otp_direct_rpcs.sql` — إغلاق direct execute لدوال OTP/upsert عن `anon/authenticated` وجعلها عبر Edge Functions فقط |
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_lock_legacy_admin_rpcs.sql` — إغلاق direct execute للدوال الإدارية القديمة الحساسة بعد نقلها إلى Edge Functions |
 | ✅ **مُطبّق على السيرفر** | Storage policies لـ `offer_images` — INSERT/SELECT/UPDATE/DELETE مفتوحة |
 | 📝 **جاهز للتطبيق (لم يُنفّذ بعد)** | `2026_06_13_auth_username_password.sql` — اسم مستخدم `usr` + كلمة مرور مشفّرة `pwd` + 6 RPCs (`register_password`, `login_with_password`, `reset_password_with_otp`, `change_password_internal`, `check_username_available`, `get_staff_stats_internal`) + تحديث `users_public` (إضافة `usr`) + تحديث `get_user_full_by_id` (إضافة `usr` + إخفاء `pwd` خلف flag) |
@@ -68,9 +69,9 @@
 | **— مصادقة (Auth) —** | | | | |
 | 1 | `generate_otp` ⚠️ Legacy | `p_phone TEXT` | `TEXT` | ✅ |
 | 2 | `verify_otp` ⚠️ Legacy | `p_phone TEXT, p_code TEXT` | `BOOLEAN` | ✅ |
-| 3 | `generate_otp_v2` 🆕 | `p_identifier TEXT, p_channel TEXT` | `TEXT` | ✅ |
-| 4 | `verify_otp_v2` 🆕 | `p_identifier TEXT, p_code TEXT` | `BOOLEAN` | ✅ |
-| 5 | `upsert_user_after_otp` 🆕 | `p_identifier TEXT, p_channel TEXT` | `TABLE(user_id UUID, is_new BOOLEAN)` | ✅ |
+| 3 | `generate_otp_v2` 🆕 | `p_identifier TEXT, p_channel TEXT` | `TEXT` | 🔒 service_role فقط بعد القفل |
+| 4 | `verify_otp_v2` 🆕 | `p_identifier TEXT, p_code TEXT` | `BOOLEAN` | 🔒 service_role فقط بعد القفل |
+| 5 | `upsert_user_after_otp` 🆕 | `p_identifier TEXT, p_channel TEXT` | `TABLE(user_id UUID, is_new BOOLEAN)` | 🔒 service_role فقط بعد القفل |
 | 6 | `get_user_by_email` 🆕 | `p_email TEXT` | `SETOF users` | ✅ — legacy helper |
 | 6.1 | `handle_email_auth_internal` 🆕🔒 | لا مدخلات — يعتمد على `auth.uid()` و`auth.jwt()->email` | `JSONB` | 🆕 جاهز للتطبيق |
 | 7 | `get_user_by_phone` | `p_phone TEXT` | `SETOF users` | ✅ |
@@ -233,13 +234,14 @@ SELECT * FROM cron.job_run_details ORDER BY start_time DESC LIMIT 10;
 | 1 | `send-whatsapp-otp` 🆕 | يولّد OTP ويرسله عبر Meta WhatsApp Cloud API | `{ phone: "+963..." }` | `{ success, messageId?, devMode?, otp? }` | ⚠️ مكتوب — لم يُنشر |
 | 2 | `verify-whatsapp-otp` 🆕 | يتحقق + ينشئ user + يصدر session | `{ phone, code }` | `{ success, userId, isNew, session: { token_hash, ... } }` | ⚠️ مكتوب — لم يُنشر |
 | 3 | `send-push-notification` 🆕🆕🆕🆕🆕 | يرسل FCM push لكل أجهزة المستخدم (HTTP v1 API) | `{ uid, title, body, data? }` | `{ success, sent, failed, total }` | ⚠️ مكتوب — لم يُنشر |
-| 4 | `create-user` 🆕 | إنشاء موظف داخلي من الإدارة عبر `users.usr/pwd` + رفع صور الهوية الخاصة عبر `service_role` | `{ admin_uid, staff_session_token?, full_name, phone, email?, username?, role, address?, sid?, id_images_base64? }` | `{ success, user_id, new_password, id_image_paths? }` | 🔄 محدث بالكود — يحتاج deploy للنسخة الجديدة |
-| 5 | `get-staff-id-images` 🆕 | إرجاع روابط مؤقتة لصور هوية موظف للمدير/النائب | `{ admin_uid, staff_session_token?, target_uid }` | `{ success, urls, count }` | ✅ مكتوب — يحتاج deploy عند التحديث |
-| 6 | `update-user-role` 🆕 | تغيير دور موظف داخلي | `{ admin_uid, staff_session_token?, user_id, role }` | `{ success }` | ✅ منشور |
-| 7 | `toggle-user-status` 🆕 | تفعيل/تجميد/حظر موظف | `{ admin_uid, staff_session_token?, user_id, status, reason? }` | `{ success }` | ✅ منشور |
-| 8 | `reset-user-password` 🆕 | توليد كلمة سر جديدة وتحديث `users.pwd` | `{ admin_uid, staff_session_token?, user_id }` | `{ success, new_password }` | ✅ منشور |
-| 9 | `delete-user` 🆕 | حذف منطقي لموظف داخلي | `{ admin_uid, staff_session_token?, user_id }` | `{ success }` | ✅ منشور |
-| 10 | `update-user-permissions` 🆕 | تحديث صلاحيات مستخدم عبر جلسة موظف | `{ admin_uid, staff_session_token?, user_id, permissions }` | `{ success }` | ✅ منشور |
+| 4 | `verify-sms-otp` 🆕 | يتحقق من SMS OTP وينشئ/يجلب المستخدم عبر service_role | `{ phone, code }` | `{ success, userId, isNew, session }` | 🆕 جديد — يحتاج deploy |
+| 5 | `create-user` 🆕 | إنشاء موظف داخلي من الإدارة عبر `users.usr/pwd` + رفع صور الهوية الخاصة عبر `service_role` | `{ admin_uid, staff_session_token?, full_name, phone, email?, username?, role, address?, sid?, id_images_base64? }` | `{ success, user_id, new_password, id_image_paths? }` | 🔄 محدث بالكود — يحتاج deploy للنسخة الجديدة |
+| 6 | `get-staff-id-images` 🆕 | إرجاع روابط مؤقتة لصور هوية موظف للمدير/النائب | `{ admin_uid, staff_session_token?, target_uid }` | `{ success, urls, count }` | ✅ مكتوب — يحتاج deploy عند التحديث |
+| 7 | `update-user-role` 🆕 | تغيير دور موظف داخلي | `{ admin_uid, staff_session_token?, user_id, role }` | `{ success }` | ✅ منشور |
+| 8 | `toggle-user-status` 🆕 | تفعيل/تجميد/حظر موظف | `{ admin_uid, staff_session_token?, user_id, status, reason? }` | `{ success }` | ✅ منشور |
+| 9 | `reset-user-password` 🆕 | توليد كلمة سر جديدة وتحديث `users.pwd` | `{ admin_uid, staff_session_token?, user_id }` | `{ success, new_password }` | ✅ منشور |
+| 10 | `delete-user` 🆕 | حذف منطقي لموظف داخلي | `{ admin_uid, staff_session_token?, user_id }` | `{ success }` | ✅ منشور |
+| 11 | `update-user-permissions` 🆕 | تحديث صلاحيات مستخدم عبر جلسة موظف | `{ admin_uid, staff_session_token?, user_id, permissions }` | `{ success }` | ✅ منشور |
 
 > ⚠️ **`generate_otp` / `verify_otp` القديمة** ما زالت موجودة للتوافق الخلفي فقط — استخدم النسخة V2 في الكود الجديد.
 > 📖 لخطوات تفعيل WhatsApp + Email Magic Link: راجع `docs/AUTH_SETUP.md`
@@ -644,6 +646,40 @@ curl -X POST 'https://<project>.supabase.co/functions/v1/verify-whatsapp-otp' \
 ترجع `session.token_hash` يستخدمه Flutter مع `auth.verifyOTP(type: OtpType.magiclink, tokenHash: ...)` لاستلام session.
 
 ---
+
+
+### `verify-sms-otp`
+
+Edge Function جديدة لمسار التحقق من SMS OTP. تمنع العميل من استدعاء `verify_otp_v2` و`upsert_user_after_otp` مباشرة.
+
+المدخل:
+
+```json
+{
+  "phone": "+9639xxxxxxxx",
+  "code": "123456"
+}
+```
+
+المخرج:
+
+```json
+{
+  "success": true,
+  "userId": "public-user-id",
+  "isNew": false,
+  "session": {
+    "email": "sms_9639xxxxxxxx@whatsapp.local",
+    "token_hash": "..."
+  }
+}
+```
+
+بعد نشرها وإغلاق RPCs المباشرة:
+
+- `generate_otp_v2` يعمل عبر `send-sms-otp` و`send-whatsapp-otp` فقط.
+- `verify_otp_v2` يعمل عبر `verify-sms-otp` و`verify-whatsapp-otp` فقط.
+- `upsert_user_after_otp` يعمل عبر Edge Functions بـ `service_role` فقط.
 
 ## 🧑‍💼 Edge Functions — إدارة الموظفين
 
