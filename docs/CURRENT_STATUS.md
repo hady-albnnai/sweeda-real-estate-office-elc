@@ -27,11 +27,13 @@
 | SQL verification | تمت إضافة وتشغيل `supabase/tests/admin_security_verification.sql` بنجاح — لا توجد grants خطرة والجلسة الوهمية تفشل كما يجب |
 | دليل الاختبار اليدوي حسب الدور | تمت إضافة `docs/MANUAL_TEST_PLAN_BY_ROLE.md` كمرجع تفصيلي للاختبار الجماعي لكل الأدوار |
 | تأمين تسجيل الإيميل | تم نقل upsert مستخدم الإيميل من العميل إلى RPC آمنة `handle_email_auth_internal` تعتمد على JWT وتمنع التكرار |
+| تأمين تسجيل الهاتف | تم نقل تحقق SMS OTP وإنشاء المستخدم إلى Edge Function `verify-sms-otp` تمهيداً لإغلاق RPCs المباشرة عن العميل |
 
 ---
 
 ## آخر migrations مضافة
 
+- `2026_06_17_lock_otp_direct_rpcs.sql`
 - `2026_06_17_secure_email_auth_internal.sql`
 - `2026_06_16_staff_enhancements_and_wipe.sql`
 - `2026_06_15_admin_employee_management_final.sql`
@@ -155,3 +157,12 @@
 - تمت إضافة unique index للإيميل بصيغة `lower(trim(eml))` للحسابات النشطة.
 - تمت إزالة unique constraint الخام عن `users.ph` واستبداله بفهرس unique على الهاتف غير الفارغ بعد التطبيع، حتى لا تتعارض حسابات الإيميل التي لا تملك هاتفاً.
 - مستخدم الإيميل الجديد ينشأ بـ `users.id = auth.uid()` لتحسين توافق RLS المستقبلي.
+
+---
+
+## تحديث تسجيل الهاتف — 2026-06-17
+
+- لم يعد التطبيق يستدعي `verify_otp_v2` أو `upsert_user_after_otp` مباشرة أثناء تحقق SMS.
+- تمت إضافة Edge Function جديدة: `verify-sms-otp`.
+- بعد نشر الدالة وتطبيق قفل RPCs، تصبح دوال OTP/upsert المباشرة متاحة لـ `service_role` فقط.
+- يوجد فهرس unique على الهاتف بعد التطبيع لمنع أكثر من حساب نشط بنفس الرقم مهما اختلفت صيغة الإدخال.

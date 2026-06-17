@@ -38,34 +38,44 @@ class AuthService {
 
       return {'success': false, 'error': data['error'] ?? 'UNKNOWN'};
     } catch (e) {
-      return _devFallbackOtp(fullPhone);
+      return {'success': false, 'error': e.toString()};
     }
   }
 
   /// التحقق من رمز OTP الـ SMS.
+  /// لا ينفّذ verify/upsert مباشرة من العميل؛ كل العملية تتم داخل Edge Function.
   Future<Map<String, dynamic>> verifySMSOTP(String phone, String code) async {
     final fullPhone = _normalizePhone(phone);
-    // نستخدم نفس منطق التحقق الموحد v2
     try {
-      final res = await _client.rpc('verify_otp_v2', params: {
-        'p_identifier': fullPhone,
-        'p_code': code,
-      });
+      final res = await _client.functions.invoke(
+        'verify-sms-otp',
+        body: {'phone': fullPhone, 'code': code.trim()},
+      );
 
-      if (res == true) {
-        final upsertRes = await _client.rpc('upsert_user_after_otp', params: {
-          'p_identifier': fullPhone,
-          'p_channel': 'sms',
-        });
-        
-        final row = (upsertRes as List).first;
-        final userId = row['user_id'] as String;
-        final isNew = row['is_new'] as bool? ?? false;
-
-        await _persistSession(userId, phone: fullPhone);
-        return {'success': true, 'userId': userId, 'isNewUser': isNew};
+      final data = res.data as Map<String, dynamic>?;
+      if (data == null || data['success'] != true) {
+        return {
+          'success': false,
+          'error': data?['error'] ?? 'VERIFICATION_FAILED',
+        };
       }
-      return {'success': false, 'error': 'INVALID_CODE'};
+
+      final session = data['session'] as Map<String, dynamic>?;
+      if (session != null && session['token_hash'] != null) {
+        try {
+          await _auth.verifyOTP(
+            type: OtpType.magiclink,
+            tokenHash: session['token_hash'] as String,
+          );
+        } catch (_) {
+          // لا نوقف التدفق؛ الجلسة المحلية للتطبيق تُحفظ بالأسفل.
+        }
+      }
+
+      final userId = data['userId'] as String;
+      final isNew = data['isNew'] as bool? ?? false;
+      await _persistSession(userId, phone: fullPhone);
+      return {'success': true, 'userId': userId, 'isNewUser': isNew};
     } catch (e) {
       return {'success': false, 'error': e.toString()};
     }
@@ -102,8 +112,8 @@ class AuthService {
       }
 
       return {'success': false, 'error': data['error'] ?? 'UNKNOWN'};
-    } catch (e) {// Fallback: استخدم RPC المحلية مباشرة (للتطوير فقط)
-      return _devFallbackOtp(fullPhone);
+    } catch (e) {
+      return {'success': false, 'error': e.toString()};
     }
   }
 
@@ -144,8 +154,8 @@ class AuthService {
       await _persistSession(userId, phone: fullPhone);
 
       return {'success': true, 'userId': userId, 'isNewUser': isNew};
-    } catch (e) {// Fallback: التحقق المحلي مباشرة (للتطوير)
-      return _devFallbackVerify(fullPhone, code);
+    } catch (e) {
+      return {'success': false, 'error': e.toString()};
     }
   }
 
@@ -280,46 +290,5 @@ class AuthService {
         'auth_channel', email != null ? 'email' : 'whatsapp');
   }
 
-  // ───────── Dev fallback (لما تكون Edge Function ما تشتغل بعد) ─────────
 
-  // Dev fallback — معدل ليتطابق مع الدوال الموجودة فعلياً على السيرفر
-  // (generate_otp و verify_otp الأساسيين موجودين، الـ v2 غير موجودة)
-  Future<Map<String, dynamic>> _devFallbackOtp(String fullPhone) async {
-    try {
-      final code = await _client.rpc(
-        'generate_otp',
-        params: {'p_phone': fullPhone},
-      );
-      return {'success': true, 'fallbackOtp': code, 'channel': 'whatsapp'};
-    } catch (e) {
-      return {'success': false, 'error': e.toString()};
-    }
-  }
-
-  Future<Map<String, dynamic>> _devFallbackVerify(
-      String fullPhone, String code) async {
-    try {
-      final ok = await _client.rpc(
-        'verify_otp',
-        params: {'p_phone': fullPhone, 'p_code': code},
-      );
-      if (ok != true) {
-        return {'success': false, 'error': 'INVALID_CODE'};
-      }
-      // استخدام upsert_user_after_otp (موجود على السيرفر)
-      final rows = await _client.rpc(
-        'upsert_user_after_otp',
-        params: {'p_identifier': fullPhone, 'p_channel': 'whatsapp'},
-      );
-      final row = (rows as List).first as Map<String, dynamic>;
-      await _persistSession(row['user_id'] as String, phone: fullPhone);
-      return {
-        'success': true,
-        'userId': row['user_id'],
-        'isNewUser': row['is_new'] ?? false,
-      };
-    } catch (e) {
-      return {'success': false, 'error': e.toString()};
-    }
-  }
 }
