@@ -106,12 +106,25 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
     }
   }
 
-  Future<void> _changeRole(UserModel user) async {
+  bool _canModifyStaffTarget(UserModel user) {
     final currentRole = context.read<AuthProvider>().userModel?.role ?? 0;
-    if (user.role == 6 || (currentRole < 6 && user.role >= 5)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('لا يمكن تغيير دور الإدارة العليا')),
-      );
+    // لا يتم تعديل المدير الرئيسي من شاشة الموظفين.
+    if (user.role == 6) return false;
+    // المدير يستطيع إدارة النواب وما دونهم.
+    if (currentRole >= 6) return true;
+    // نائب المدير يستطيع إدارة الأدوار الأدنى فقط، ولا يدير نائباً آخر.
+    return user.role < 5;
+  }
+
+  void _showSeniorRestrictionSnack() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('هذه العملية محصورة بالمدير الرئيسي للإدارة العليا')),
+    );
+  }
+
+  Future<void> _changeRole(UserModel user) async {
+    if (!_canModifyStaffTarget(user)) {
+      _showSeniorRestrictionSnack();
       return;
     }
 
@@ -125,6 +138,10 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
   }
 
   Future<void> _toggleStatus(UserModel user) async {
+    if (!_canModifyStaffTarget(user)) {
+      _showSeniorRestrictionSnack();
+      return;
+    }
     final isActive = user.sts == 0;
     
     final result = await showDialog<bool>(
@@ -137,10 +154,8 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
   }
 
   Future<void> _resetPassword(UserModel user) async {
-    if (user.role == 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('لا يمكن إعادة تعيين كلمة سر المدير الرئيسي')),
-      );
+    if (!_canModifyStaffTarget(user)) {
+      _showSeniorRestrictionSnack();
       return;
     }
 
@@ -207,10 +222,8 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
   }
 
   Future<void> _deleteUser(UserModel user) async {
-    if (user.role == 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('لا يمكن حذف المدير الرئيسي')),
-      );
+    if (!_canModifyStaffTarget(user)) {
+      _showSeniorRestrictionSnack();
       return;
     }
 
@@ -470,6 +483,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
     final roleName = _getRoleName(user.role);
     final roleColor = _getRoleColor(user.role);
     final isActive = user.sts == 0;
+    final canModify = _canModifyStaffTarget(user);
 
     return Card(
       color: AppTheme.surfaceBlack,
@@ -540,18 +554,19 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
                                   },
                                   itemBuilder: (context) => [
                                     const PopupMenuItem(value: 'details', child: Text('عرض التفاصيل')),
-                                    const PopupMenuDivider(),
-                                    const PopupMenuItem(value: 'change_role', child: Text('تغيير الدور')),
-                                    PopupMenuItem(
-                                      value: 'toggle_status',
-                                      child: Text(isActive ? 'تعطيل' : 'تفعيل'),
-                                    ),
-                                    const PopupMenuItem(value: 'reset_password', child: Text('إعادة تعيين كلمة السر')),
-                                    if (user.role != 6)
+                                    if (canModify) ...[
+                                      const PopupMenuDivider(),
+                                      const PopupMenuItem(value: 'change_role', child: Text('تغيير الدور')),
+                                      PopupMenuItem(
+                                        value: 'toggle_status',
+                                        child: Text(isActive ? 'تعطيل' : 'تفعيل'),
+                                      ),
+                                      const PopupMenuItem(value: 'reset_password', child: Text('إعادة تعيين كلمة السر')),
                                       const PopupMenuItem(
                                         value: 'delete',
                                         child: Text('حذف', style: TextStyle(color: Colors.red)),
                                       ),
+                                    ],
                                   ],
                                 ),
               ],
