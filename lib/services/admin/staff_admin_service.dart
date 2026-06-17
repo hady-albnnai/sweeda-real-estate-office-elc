@@ -79,7 +79,7 @@ class StaffAdminService {
     String address = '',
     String sid = '',
     String img = '',
-    String idImageBase64 = '',
+    List<String> idImagesBase64 = const [],
     String idImageContentType = 'image/jpeg',
   }) {
     return _invokeStaffFunction('create-user', {
@@ -92,7 +92,7 @@ class StaffAdminService {
       'address': address,
       'sid': sid,
       'img': img,
-      'id_image_base64': idImageBase64,
+      'id_images_base64': idImagesBase64,
       'id_image_content_type': idImageContentType,
     });
   }
@@ -150,6 +150,17 @@ class StaffAdminService {
       'user_id': targetUid,
     });
     return data['success'] == true;
+  }
+
+  Future<List<String>> getStaffIdImageUrls(String adminUid, String targetUid) async {
+    final data = await _invokeStaffFunction('get-staff-id-images', {
+      'admin_uid': adminUid,
+      'target_uid': targetUid,
+    });
+    if (data['success'] != true) return const [];
+    final urls = data['urls'];
+    if (urls is! List) return const [];
+    return urls.map((e) => e.toString()).where((e) => e.isNotEmpty).toList();
   }
 
   Future<Map<String, dynamic>> getStaffStatsInternal(String userUid) async {

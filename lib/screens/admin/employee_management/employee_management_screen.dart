@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -266,6 +267,135 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
     }
   }
 
+  List<String> _parseIdImagePaths(String raw) {
+    final value = raw.trim();
+    if (value.isEmpty) return const [];
+    if (value.startsWith('[')) {
+      try {
+        final parsed = jsonDecode(value);
+        if (parsed is List) {
+          return parsed.map((e) => e.toString()).where((e) => e.isNotEmpty).toList();
+        }
+      } catch (_) {
+        // fallback below
+      }
+    }
+    return [value];
+  }
+
+  Widget _detailRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: AppTheme.primaryGold),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 95,
+            child: Text(label, style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+          ),
+          Expanded(
+            child: SelectableText(
+              value.isEmpty ? '—' : value,
+              style: const TextStyle(color: AppTheme.textWhite, fontSize: 13),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showStaffIdImages(UserModel user) async {
+    try {
+      final adminUid = context.read<AuthProvider>().userModel?.uid;
+      if (adminUid == null) throw Exception('لم يتم العثور على جلسة المدير');
+
+      final urls = await context.read<AdminProvider>().getStaffIdImageUrls(adminUid, user.uid);
+      if (!mounted) return;
+      if (urls.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('لا توجد صور هوية محفوظة لهذا الموظف')),
+        );
+        return;
+      }
+
+      await showDialog(
+        context: context,
+        builder: (ctx) => Dialog(
+          backgroundColor: Colors.black,
+          insetPadding: const EdgeInsets.all(12),
+          child: _StaffIdImagesViewer(name: user.nm, urls: urls),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('تعذّر عرض صورة الهوية: $e')),
+      );
+    }
+  }
+
+  Future<void> _showEmployeeDetails(UserModel user) async {
+    final currentRole = context.read<AuthProvider>().userModel?.role ?? 0;
+    if (currentRole < 5) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('عرض تفاصيل الموظفين محصور بالمدير ونائب المدير')),
+      );
+      return;
+    }
+    if (currentRole < 6 && user.role >= 5 && user.uid != context.read<AuthProvider>().userModel?.uid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('نائب المدير لا يستطيع عرض بيانات الإدارة العليا')),
+      );
+      return;
+    }
+
+    final idImageCount = _parseIdImagePaths(user.img).length;
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surfaceBlack,
+        title: Text('بيانات ${user.nm}', style: const TextStyle(color: AppTheme.textWhite)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _detailRow(Icons.badge_outlined, 'الدور', _getRoleName(user.role)),
+              _detailRow(Icons.phone, 'الهاتف', user.ph),
+              _detailRow(Icons.alternate_email, 'اسم المستخدم', user.usr ?? ''),
+              _detailRow(Icons.email_outlined, 'الإيميل', user.eml ?? ''),
+              _detailRow(Icons.credit_card, 'الرقم الوطني', user.sid),
+              _detailRow(Icons.location_on_outlined, 'العنوان', user.ad),
+              _detailRow(Icons.verified_user_outlined, 'التوثيق', user.vrf == 2 ? 'موثق' : 'غير موثق'),
+              _detailRow(Icons.circle, 'الحالة', user.sts == 0 ? 'نشط' : 'معطّل/مجمّد'),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: user.img.trim().isEmpty ? null : () => _showStaffIdImages(user),
+                icon: const Icon(Icons.image_search, color: AppTheme.primaryGold),
+                label: Text(
+                  idImageCount <= 0 ? 'لا توجد صور هوية' : 'عرض صور الهوية ($idImageCount)',
+                  style: const TextStyle(color: AppTheme.primaryGold),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: AppTheme.primaryGold),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('إغلاق', style: TextStyle(color: AppTheme.textGrey)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -391,6 +521,9 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
                                   icon: const Icon(Icons.more_vert, color: AppTheme.textGrey),
                                   onSelected: (value) {
                                     switch (value) {
+                                      case 'details':
+                                        _showEmployeeDetails(user);
+                                        break;
                                       case 'change_role':
                                         _changeRole(user);
                                         break;
@@ -406,6 +539,8 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
                                     }
                                   },
                                   itemBuilder: (context) => [
+                                    const PopupMenuItem(value: 'details', child: Text('عرض التفاصيل')),
+                                    const PopupMenuDivider(),
                                     const PopupMenuItem(value: 'change_role', child: Text('تغيير الدور')),
                                     PopupMenuItem(
                                       value: 'toggle_status',
@@ -488,5 +623,101 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+}
+class _StaffIdImagesViewer extends StatefulWidget {
+  final String name;
+  final List<String> urls;
+
+  const _StaffIdImagesViewer({required this.name, required this.urls});
+
+  @override
+  State<_StaffIdImagesViewer> createState() => _StaffIdImagesViewerState();
+}
+
+class _StaffIdImagesViewerState extends State<_StaffIdImagesViewer> {
+  late final PageController _controller;
+  int _current = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = PageController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: MediaQuery.of(context).size.height * 0.82,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            child: Row(
+              children: [
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close, color: Colors.white),
+                ),
+                Expanded(
+                  child: Text(
+                    '${widget.name} - صورة ${_current + 1}/${widget.urls.length}',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: PageView.builder(
+              controller: _controller,
+              itemCount: widget.urls.length,
+              onPageChanged: (i) => setState(() => _current = i),
+              itemBuilder: (_, i) => InteractiveViewer(
+                minScale: 0.5,
+                maxScale: 5,
+                child: Center(
+                  child: Image.network(
+                    widget.urls[i],
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => const Icon(
+                      Icons.broken_image,
+                      color: AppTheme.textGrey,
+                      size: 80,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          if (widget.urls.length > 1)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(widget.urls.length, (i) {
+                  final active = i == _current;
+                  return Container(
+                    width: active ? 18 : 8,
+                    height: 8,
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    decoration: BoxDecoration(
+                      color: active ? AppTheme.primaryGold : Colors.white54,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  );
+                }),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }

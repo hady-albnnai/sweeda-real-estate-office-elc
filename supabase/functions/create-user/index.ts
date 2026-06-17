@@ -116,9 +116,14 @@ serve(async (req) => {
     const password = typeof body.password === "string" && body.password.length >= 8
       ? body.password
       : randomPassword();
-    const idImageBase64 = typeof body.id_image_base64 === "string" ? body.id_image_base64 : "";
-    const idImageBytes = idImageBase64 ? base64ToUint8Array(idImageBase64) : null;
-    if (idImageBytes && idImageBytes.length > 8 * 1024 * 1024) {
+    const rawIdImages = Array.isArray(body.id_images_base64)
+      ? body.id_images_base64
+      : (typeof body.id_image_base64 === "string" && body.id_image_base64 ? [body.id_image_base64] : []);
+    const idImageBytesList = rawIdImages
+      .filter((item): item is string => typeof item === "string" && item.length > 0)
+      .slice(0, 2)
+      .map(base64ToUint8Array);
+    if (idImageBytesList.some((bytes) => bytes.length > 8 * 1024 * 1024)) {
       return json({ success: false, error: "ID_IMAGE_TOO_LARGE" }, 413);
     }
 
@@ -142,27 +147,31 @@ serve(async (req) => {
       return json({ success: false, error: data?.error ?? "CREATE_USER_FAILED" }, 400);
     }
 
-    let idImagePath = "";
-    if (idImageBytes) {
+    const idImagePaths: string[] = [];
+    if (idImageBytesList.length > 0) {
       const contentType = safeImageContentType(body.id_image_content_type);
       const ext = contentType === "image/png" ? "png" : contentType === "image/webp" ? "webp" : "jpg";
-      idImagePath = `${data.user_id}/staff_id_${Date.now()}.${ext}`;
 
-      const { error: uploadError } = await supabaseAdmin.storage
-        .from("ids_private")
-        .upload(idImagePath, idImageBytes, {
-          contentType,
-          cacheControl: "3600",
-          upsert: true,
-        });
+      for (let index = 0; index < idImageBytesList.length; index++) {
+        const idImagePath = `${data.user_id}/staff_id_${Date.now()}_${index + 1}.${ext}`;
+        const { error: uploadError } = await supabaseAdmin.storage
+          .from("ids_private")
+          .upload(idImagePath, idImageBytesList[index], {
+            contentType,
+            cacheControl: "3600",
+            upsert: true,
+          });
 
-      if (uploadError) {
-        return json({ success: false, error: `ID_UPLOAD_FAILED: ${uploadError.message}`, user_id: data.user_id }, 400);
+        if (uploadError) {
+          return json({ success: false, error: `ID_UPLOAD_FAILED: ${uploadError.message}`, user_id: data.user_id }, 400);
+        }
+        idImagePaths.push(idImagePath);
       }
 
+      const storedImg = idImagePaths.length === 1 ? idImagePaths[0] : JSON.stringify(idImagePaths);
       const { error: updateImageError } = await supabaseAdmin
         .from("users")
-        .update({ img: idImagePath, ts_upd: new Date().toISOString() })
+        .update({ img: storedImg, ts_upd: new Date().toISOString() })
         .eq("id", data.user_id);
 
       if (updateImageError) {
@@ -174,7 +183,8 @@ serve(async (req) => {
       success: true,
       user_id: data.user_id,
       new_password: password,
-      id_image_path: idImagePath,
+      id_image_paths: idImagePaths,
+      id_image_path: idImagePaths[0] ?? "",
     });
   } catch (error) {
     return json({ success: false, error: error instanceof Error ? error.message : String(error) }, 500);
