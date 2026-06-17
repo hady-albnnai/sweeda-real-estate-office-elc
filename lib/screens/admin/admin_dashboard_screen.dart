@@ -5,6 +5,7 @@ import '../../providers/admin_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/services/permission_service.dart';
+import '../../widgets/app_back_button.dart';
 
 /// 🛡️ لوحة الإدارة الرئيسية
 /// تعرض: إحصائيات عامة + عدّادات الإجراءات المطلوبة + شبكة تنقّل للأقسام
@@ -49,6 +50,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     return Scaffold(
       backgroundColor: AppTheme.deepBlack,
       appBar: AppBar(
+        leading: const AppBackButton(),
         backgroundColor: AppTheme.deepBlack,
         elevation: 0,
         title: Column(

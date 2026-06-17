@@ -5,6 +5,7 @@ import '../../core/services/permission_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/admin_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/app_back_button.dart';
 
 /// داشبورد موظف المكتب (role = 4)
 class EmployeeDashboardScreen extends StatelessWidget {
@@ -19,6 +20,7 @@ class EmployeeDashboardScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppTheme.deepBlack,
       appBar: AppBar(
+        leading: const AppBackButton(),
         backgroundColor: AppTheme.deepBlack,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -120,7 +122,7 @@ class EmployeeDashboardScreen extends StatelessWidget {
 
   Widget _navCard(BuildContext context, IconData icon, String title, String route) {
     return InkWell(
-      onTap: () => context.go(route),
+      onTap: () => context.push(route),
       borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.all(16),

@@ -5,6 +5,7 @@ import '../../core/services/permission_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/admin_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/app_back_button.dart';
 
 /// داشبورد نائب المدير (role = 5)
 class DeputyDashboardScreen extends StatelessWidget {
@@ -19,6 +20,7 @@ class DeputyDashboardScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppTheme.deepBlack,
       appBar: AppBar(
+        leading: const AppBackButton(),
         backgroundColor: AppTheme.deepBlack,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -31,7 +33,7 @@ class DeputyDashboardScreen extends StatelessWidget {
           if (PermissionService.has(user, PermissionKeys.manageStaff))
             IconButton(
               icon: const Icon(Icons.people, color: AppTheme.primaryGold),
-              onPressed: () => context.go('/admin/employee-management'),
+              onPressed: () => context.push('/admin/employee-management'),
               tooltip: 'إدارة الموظفين',
             ),
         ],
@@ -128,7 +130,7 @@ class DeputyDashboardScreen extends StatelessWidget {
 
   Widget _navCard(BuildContext context, IconData icon, String title, String route) {
     return InkWell(
-      onTap: () => context.go(route),
+      onTap: () => context.push(route),
       borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.all(16),

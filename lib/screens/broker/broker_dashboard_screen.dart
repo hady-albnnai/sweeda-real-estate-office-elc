@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../providers/broker_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../widgets/app_back_button.dart';
 
 /// 🤝 لوحة تحكم الوسيط/السمسار — الشاشة الرئيسية
 /// تعرض: ترحيب + إحصائيات سريعة + بطاقات تنقل للأقسام
@@ -41,6 +42,7 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
     return Scaffold(
       backgroundColor: AppTheme.deepBlack,
       appBar: AppBar(
+        leading: const AppBackButton(),
         backgroundColor: AppTheme.deepBlack,
         elevation: 0,
         title: Column(

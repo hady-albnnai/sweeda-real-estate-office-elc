@@ -5,6 +5,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/services/permission_service.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/executor_provider.dart';
+import '../../widgets/app_back_button.dart';
 
 /// الشاشة الرئيسية لموظف المكتب — تجمع عمليات المكتب اليومية
 class EmployeeHomeScreen extends StatefulWidget {
@@ -48,6 +49,7 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
     return Scaffold(
       backgroundColor: AppTheme.deepBlack,
       appBar: AppBar(
+        leading: const AppBackButton(),
         backgroundColor: AppTheme.deepBlack,
         elevation: 0,
         title: Column(

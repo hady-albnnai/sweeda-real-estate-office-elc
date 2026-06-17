@@ -6,6 +6,7 @@ import '../../models/photography_task_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/photography_provider.dart';
 import '../../services/storage_service.dart';
+import '../../widgets/app_back_button.dart';
 
 class PhotographerTasksScreen extends StatefulWidget {
   const PhotographerTasksScreen({super.key});
@@ -164,6 +165,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
     return Scaffold(
       backgroundColor: AppTheme.deepBlack,
       appBar: AppBar(
+        leading: const AppBackButton(),
         backgroundColor: AppTheme.deepBlack,
         title: const Text('مهام التصوير',
             style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
