@@ -26,11 +26,13 @@
 | CI | مضاف عبر GitHub Actions: `flutter analyze` و`flutter test` عند push/PR على `main` |
 | SQL verification | تمت إضافة وتشغيل `supabase/tests/admin_security_verification.sql` بنجاح — لا توجد grants خطرة والجلسة الوهمية تفشل كما يجب |
 | دليل الاختبار اليدوي حسب الدور | تمت إضافة `docs/MANUAL_TEST_PLAN_BY_ROLE.md` كمرجع تفصيلي للاختبار الجماعي لكل الأدوار |
+| تأمين تسجيل الإيميل | تم نقل upsert مستخدم الإيميل من العميل إلى RPC آمنة `handle_email_auth_internal` تعتمد على JWT وتمنع التكرار |
 
 ---
 
 ## آخر migrations مضافة
 
+- `2026_06_17_secure_email_auth_internal.sql`
 - `2026_06_16_staff_enhancements_and_wipe.sql`
 - `2026_06_15_admin_employee_management_final.sql`
 - `2026_06_15_staff_sessions_security.sql`
@@ -142,3 +144,14 @@
 - تمت إضافة Edge Function `get-staff-id-images` لإرجاع signed URLs مؤقتة لصور هوية الموظف.
 - شاشة إدارة الموظفين أصبحت تحتوي خيار **عرض التفاصيل**: بيانات الموظف + زر عرض صور الهوية مع زوم وتصفح.
 - صلاحية عرض التفاصيل الحساسة محصورة بالمدير ونائب المدير، مع منع نائب المدير من عرض بيانات إدارة عليا أخرى.
+
+---
+
+## تحديث تسجيل الإيميل — 2026-06-17
+
+- تم إيقاف إنشاء/جلب مستخدم الإيميل من التطبيق مباشرة عبر select/insert.
+- التطبيق يستدعي الآن RPC: `handle_email_auth_internal`.
+- الدالة تقرأ الإيميل من `auth.jwt()` ولا تسمح للعميل بتمريره، مما يمنع spoofing.
+- تمت إضافة unique index للإيميل بصيغة `lower(trim(eml))` للحسابات النشطة.
+- تمت إزالة unique constraint الخام عن `users.ph` واستبداله بفهرس unique على الهاتف غير الفارغ بعد التطبيع، حتى لا تتعارض حسابات الإيميل التي لا تملك هاتفاً.
+- مستخدم الإيميل الجديد ينشأ بـ `users.id = auth.uid()` لتحسين توافق RLS المستقبلي.

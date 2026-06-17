@@ -1,7 +1,7 @@
 # 📚 مرجع دوال Supabase (RPC + Edge Functions)
 
 > **مشروع:** عقارات السويداء
-> **آخر تحديث:** 2026-06-17 (محدّث بعد دعم صورتي هوية للموظف، عارض تفاصيل الموظفين، ودالة `get-staff-id-images`)
+> **آخر تحديث:** 2026-06-17 (محدّث بعد تأمين تسجيل الإيميل عبر `handle_email_auth_internal`، دعم صورتي هوية للموظف، ودالة `get-staff-id-images`)
 > **المصدر:** `supabase/setup.sql` + Migrations + Edge Functions
 
 ---
@@ -52,6 +52,7 @@
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_admin_dashboard_stats.sql` — دالة `get_admin_dashboard_stats` لإحصائيات لوحة الإدارة المجمعة |
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_input_validation_hardening.sql` — helpers للتحقق من المدخلات وتقوية RPCs إنشاء العروض/الطلبات/الملف الشخصي/الموظفين، وتم التحقق من دوال `app_*` ومن الحفاظ على منطق `create_offer_internal` |
 | 🔄 **محدّث بالكود** | Edge Functions إدارة الموظفين: `create-user` محدثة لدعم صورتي الهوية و`get-staff-id-images` مضافة؛ يلزم deploy لهاتين الدالتين بعد `git pull` |
+| 🆕 **جاهز للتطبيق** | `2026_06_17_secure_email_auth_internal.sql` — تأمين Email Magic Link عبر RPC `handle_email_auth_internal` + فهارس unique canonical للإيميل والهاتف |
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_lock_legacy_admin_rpcs.sql` — إغلاق direct execute للدوال الإدارية القديمة الحساسة بعد نقلها إلى Edge Functions |
 | ✅ **مُطبّق على السيرفر** | Storage policies لـ `offer_images` — INSERT/SELECT/UPDATE/DELETE مفتوحة |
 | 📝 **جاهز للتطبيق (لم يُنفّذ بعد)** | `2026_06_13_auth_username_password.sql` — اسم مستخدم `usr` + كلمة مرور مشفّرة `pwd` + 6 RPCs (`register_password`, `login_with_password`, `reset_password_with_otp`, `change_password_internal`, `check_username_available`, `get_staff_stats_internal`) + تحديث `users_public` (إضافة `usr`) + تحديث `get_user_full_by_id` (إضافة `usr` + إخفاء `pwd` خلف flag) |
@@ -70,7 +71,8 @@
 | 3 | `generate_otp_v2` 🆕 | `p_identifier TEXT, p_channel TEXT` | `TEXT` | ✅ |
 | 4 | `verify_otp_v2` 🆕 | `p_identifier TEXT, p_code TEXT` | `BOOLEAN` | ✅ |
 | 5 | `upsert_user_after_otp` 🆕 | `p_identifier TEXT, p_channel TEXT` | `TABLE(user_id UUID, is_new BOOLEAN)` | ✅ |
-| 6 | `get_user_by_email` 🆕 | `p_email TEXT` | `SETOF users` | ✅ |
+| 6 | `get_user_by_email` 🆕 | `p_email TEXT` | `SETOF users` | ✅ — legacy helper |
+| 6.1 | `handle_email_auth_internal` 🆕🔒 | لا مدخلات — يعتمد على `auth.uid()` و`auth.jwt()->email` | `JSONB` | 🆕 جاهز للتطبيق |
 | 7 | `get_user_by_phone` | `p_phone TEXT` | `SETOF users` | ✅ |
 | 8 | `create_user_from_phone` | `p_phone, p_nm` | `UUID` | ✅ |
 | **— اسم مستخدم + كلمة مرور (2026-06-13) —** | | | | |
@@ -560,6 +562,32 @@ final ok = await client.rpc('check_username_available',
 ```
 
 ---
+
+
+### `handle_email_auth_internal()` → `JSONB`
+
+دالة آمنة لمسار Email Magic Link. لا تستقبل الإيميل من العميل نهائياً، بل تقرأه من Supabase Auth JWT بعد فتح رابط الإيميل.
+
+المخرجات:
+
+```json
+{
+  "success": true,
+  "user_id": "public-users-uuid",
+  "is_new": true,
+  "email": "user@example.com"
+}
+```
+
+الحماية:
+
+- ترفض التنفيذ بدون جلسة Supabase Auth حقيقية: `auth.uid() IS NULL`.
+- ترفض الإيميل الفارغ أو غير الصالح.
+- ترفض pseudo emails مثل `@whatsapp.local`.
+- تستخدم advisory lock لمنع إنشاء حسابين لنفس الإيميل بالتوازي.
+- تنشئ مستخدم الإيميل الجديد بـ `id = auth.uid()` لتحسين توافق RLS مستقبلاً.
+- صلاحية التنفيذ لـ `authenticated` فقط، وليست لـ `anon`.
+- تعتمد unique index على `lower(trim(eml))` للحسابات النشطة.
 
 ### `get_staff_stats_internal(p_user_uid UUID)` → `JSONB`
 
