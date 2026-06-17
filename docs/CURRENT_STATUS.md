@@ -25,6 +25,7 @@
 | إحصائيات لوحة الإدارة | `get_admin_dashboard_stats` مطبقة ومتحقق منها |
 | CI | مضاف عبر GitHub Actions: `flutter analyze` و`flutter test` عند push/PR على `main` |
 | SQL verification | تمت إضافة وتشغيل `supabase/tests/admin_security_verification.sql` بنجاح — لا توجد grants خطرة والجلسة الوهمية تفشل كما يجب |
+| دليل الاختبار اليدوي حسب الدور | تمت إضافة `docs/MANUAL_TEST_PLAN_BY_ROLE.md` كمرجع تفصيلي للاختبار الجماعي لكل الأدوار |
 
 ---
 
@@ -80,6 +81,7 @@
 - [x] إضافة عرض تفاصيل الموظف وصور هويته للمدير/نائب المدير.
 - [x] تصفير النظام من البيانات التجريبية.
 - [x] إصلاح أخطاء الصياغة والاستيراد (Imports) في `OfferCard` و `SplashScreen` و `FraudSuspectsScreen` و `AddEmployeeDialog`.
+- [x] إضافة دليل اختبار يدوي شامل حسب الدور: `docs/MANUAL_TEST_PLAN_BY_ROLE.md`.
 
 ---
 
