@@ -263,17 +263,18 @@
 
 ### 6.4 داشبورد نائب المدير وموظف المكتب
 
-الملفات:
+> تحديث لاحق 2026-06-17: تم إلغاء الفصل العملي لشاشة نائب المدير، وأصبح نائب المدير يستخدم `AdminDashboardScreen` نفسها مع اختلاف الصلاحيات فقط. وتم توحيد موظف المكتب على `/employee/home` وحذف ملف `employee_dashboard_screen.dart` القديم.
 
-- `lib/screens/admin/deputy_dashboard_screen.dart`
-- `lib/screens/admin/employee_dashboard_screen.dart`
+الملفات الحالية:
 
-المطلوب:
+- `lib/screens/admin/admin_dashboard_screen.dart` للمدير ونائب المدير.
+- `lib/screens/employee/employee_home_screen.dart` لموظف المكتب.
 
-- إزالة الإحصائيات الثابتة hardcoded.
-- استخدام `get_staff_stats_internal` أو دوال إحصاء مناسبة.
+المطلوب/المطبق:
+
 - إظهار روابط فقط لما تسمح به `PermissionService`.
 - عدم إظهار إدارة الموظفين لموظف المكتب.
+- منع نائب المدير من إدارة المدير أو نائب آخر.
 
 ### 6.5 PermissionService
 
@@ -403,8 +404,8 @@
 - `lib/screens/admin/employee_management/add_employee_dialog.dart`
 - `lib/screens/admin/employee_management/change_role_dialog.dart`
 - `lib/screens/admin/employee_management/toggle_status_dialog.dart`
-- `lib/screens/admin/deputy_dashboard_screen.dart`
-- `lib/screens/admin/employee_dashboard_screen.dart`
+- `lib/screens/admin/admin_dashboard_screen.dart`
+- `lib/screens/employee/employee_home_screen.dart`
 - وربما إنشاء widget مشترك:
   - `lib/screens/admin/employee_management/password_result_dialog.dart`
 
