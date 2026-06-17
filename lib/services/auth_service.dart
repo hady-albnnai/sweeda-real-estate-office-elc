@@ -1,7 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/network/supabase_service.dart';
-import '../core/constants/db_constants.dart';
 
 /// قنوات تسجيل الدخول المدعومة
 enum AuthChannel { whatsapp, email, sms }
@@ -167,7 +166,7 @@ class AuthService {
   }
 
   /// يُستدعى تلقائياً بعد ما يضغط المستخدم رابط الإيميل ويفتح التطبيق.
-  /// يتأكد من وجود user في جدول users (يُنشئه لو جديد).
+  /// لا ينشئ المستخدم من العميل مباشرة؛ يستدعي RPC آمنة تقرأ الإيميل من JWT.
   Future<Map<String, dynamic>> handleEmailSession() async {
     try {
       final user = _auth.currentUser;
@@ -175,38 +174,19 @@ class AuthService {
         return {'success': false, 'error': 'NO_SESSION'};
       }
 
-      final email = user.email ?? '';
-      if (email.isEmpty) {
-        return {'success': false, 'error': 'NO_EMAIL'};
+      final result = await _client.rpc('handle_email_auth_internal');
+      final data = result is Map ? Map<String, dynamic>.from(result) : null;
+      if (data == null || data['success'] != true) {
+        return {'success': false, 'error': data?['error'] ?? 'EMAIL_AUTH_FAILED'};
       }
 
-      // ابحث في جدولنا
-      final existing = await _client
-          .from(DbTables.users)
-          .select('id')
-          .eq('eml', email)
-          .eq('i_del', 0);
-
-      String userId;
-      bool isNew;
-
-      if (existing.isEmpty) {
-        final inserted = await _client.from(DbTables.users).insert({
-          'nm': '',
-          'ph': '',
-          'eml': email,
-          'role': 0,
-          'sts': 0,
-          'i_del': 0,
-          'ts_crt': DateTime.now().toIso8601String(),
-        }).select().single();
-        userId = inserted['id'] as String;
-        isNew = true;
-      } else {
-        userId = existing[0]['id'] as String;
-        isNew = false;
+      final userId = data['user_id']?.toString();
+      final email = data['email']?.toString() ?? user.email ?? '';
+      if (userId == null || userId.isEmpty) {
+        return {'success': false, 'error': 'NO_USER_ID'};
       }
 
+      final isNew = data['is_new'] == true;
       await _persistSession(userId, email: email);
       return {'success': true, 'userId': userId, 'isNewUser': isNew};
     } catch (e) {return {'success': false, 'error': e.toString()};
