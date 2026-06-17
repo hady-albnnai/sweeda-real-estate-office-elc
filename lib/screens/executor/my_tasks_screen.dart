@@ -53,7 +53,7 @@ class _MyTasksScreenState extends State<MyTasksScreen>
       prov.getMyTasks(_uid),
       prov.getPostponedTasks(_uid),
       prov.getCompletedTasks(_uid),
-      prov.getPendingRequests(_uid),
+      prov.getMyCompletionRequests(_uid),
     ]);
     if (!mounted) return;
     setState(() {
@@ -86,7 +86,7 @@ class _MyTasksScreenState extends State<MyTasksScreen>
             Tab(text: 'اليوم (${_today.length})'),
             Tab(text: 'المؤجلة (${_postponed.length})'),
             Tab(text: 'المنفذة (${_completed.length})'),
-            Tab(text: 'بانتظار المراجعة (${_pending.length})'),
+            Tab(text: 'طلبات الإتمام (${_pending.length})'),
           ],
         ),
       ),
@@ -135,7 +135,7 @@ class _MyTasksScreenState extends State<MyTasksScreen>
   }
 
   Widget _buildPendingList() {
-    if (_pending.isEmpty) return _empty('لا توجد طلبات إتمام معلقة');
+    if (_pending.isEmpty) return _empty('لا توجد طلبات إتمام مرسلة');
     return RefreshIndicator(
       color: AppTheme.primaryGold,
       onRefresh: _load,
@@ -144,20 +144,23 @@ class _MyTasksScreenState extends State<MyTasksScreen>
         itemCount: _pending.length,
         itemBuilder: (_, i) {
           final r = _pending[i];
+          final decision = (r['decision'] ?? 'pending').toString();
+          final color = _decisionColor(decision);
           return Card(
             color: AppTheme.surfaceBlack,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             margin: const EdgeInsets.only(bottom: 10),
             child: ListTile(
-              leading: const CircleAvatar(
-                backgroundColor: Colors.orange,
-                child: Icon(Icons.pending_actions, color: Colors.white),
+              leading: CircleAvatar(
+                backgroundColor: color.withValues(alpha: 0.18),
+                child: Icon(_decisionIcon(decision), color: color),
               ),
               title: Text(r['display_title'] ?? '', style: const TextStyle(color: AppTheme.textWhite)),
-              subtitle: Text(
-                'الحالة: قيد المراجعة من قبل المكتب',
-                style: TextStyle(color: Colors.orange.shade300, fontSize: 12),
-              ),
+              subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('الحالة: ${_decisionLabel(decision)}', style: TextStyle(color: color, fontSize: 12)),
+                if ((r['office_notes'] ?? '').toString().isNotEmpty)
+                  Text('ملاحظة المكتب: ${r['office_notes']}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+              ]),
             ),
           );
         },
@@ -257,6 +260,30 @@ class _MyTasksScreenState extends State<MyTasksScreen>
   // ═══════════════════════════════════════
   // مساعدات
   // ═══════════════════════════════════════
+
+  Color _decisionColor(String decision) {
+    switch (decision) {
+      case 'approved': return Colors.green;
+      case 'rejected': return Colors.red;
+      default: return Colors.orange;
+    }
+  }
+
+  IconData _decisionIcon(String decision) {
+    switch (decision) {
+      case 'approved': return Icons.check_circle;
+      case 'rejected': return Icons.cancel;
+      default: return Icons.pending_actions;
+    }
+  }
+
+  String _decisionLabel(String decision) {
+    switch (decision) {
+      case 'approved': return 'تمت الموافقة';
+      case 'rejected': return 'مرفوض';
+      default: return 'قيد مراجعة المكتب';
+    }
+  }
 
   Widget _infoRow(IconData icon, String text) {
     return Padding(

@@ -26,10 +26,10 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
   DateTime? _selectedDay;
 
   // حالة رفع الصور لكل مهمة
-  int? _expandedTaskId;
-  final Map<int, List<XFile>> _tempMedia = {};
-  final Map<int, TextEditingController> _notesControllers = {};
-  final Map<int, bool> _isUploading = {};
+  String? _expandedTaskId;
+  final Map<String, List<XFile>> _tempMedia = {};
+  final Map<String, TextEditingController> _notesControllers = {};
+  final Map<String, bool> _isUploading = {};
 
   @override
   void initState() {
@@ -75,7 +75,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
     return _allTasks.where((t) =>
         (t.sts == 0 || t.sts == 1) &&
         t.tsScheduled != null &&
-        t.tsScheduled!.isAfter(now)).toList();
+        t.tsScheduled!.isAfter(DateTime(now.year, now.month, now.day).add(const Duration(days: 1)))).toList();
   }
 
   List<PhotographyTaskModel> get _completedTasks {
@@ -94,16 +94,24 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
 
   // ─── إجراءات المصور ───
 
-  void _startTask(PhotographyTaskModel task) {
-    final id = task.id.hashCode;
+  Future<void> _startTask(PhotographyTaskModel task) async {
+    if (!task.isInProgress) {
+      final userId = context.read<AuthProvider>().userModel?.uid ?? '';
+      final ok = await context.read<PhotographyProvider>().startTask(userId, task.id);
+      if (!mounted) return;
+      if (!ok) {
+        _snack('تعذّر بدء المهمة');
+        return;
+      }
+    }
     setState(() {
-      _expandedTaskId = id;
-      _tempMedia[id] = [];
-      _notesControllers[id] = TextEditingController(text: task.photographerNote);
+      _expandedTaskId = task.id;
+      _tempMedia[task.id] = [];
+      _notesControllers[task.id] = TextEditingController(text: task.photographerNote);
     });
   }
 
-  Future<void> _pickMedia(int taskHash) async {
+  Future<void> _pickMedia(String taskHash) async {
     final files = await StorageService().pickMultiImages(limit: 20);
     if (files.isNotEmpty) {
       setState(() {
@@ -112,14 +120,14 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
     }
   }
 
-  void _removeMedia(int taskHash, int index) {
+  void _removeMedia(String taskHash, int index) {
     setState(() {
       _tempMedia[taskHash]?.removeAt(index);
     });
   }
 
   Future<void> _submitToOffice(PhotographyTaskModel task) async {
-    final taskHash = task.id.hashCode;
+    final taskHash = task.id;
     final media = _tempMedia[taskHash];
     if (media == null || media.isEmpty) {
       _snack('يرجى رفع صورة واحدة على الأقل');
@@ -179,7 +187,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
           unselectedLabelColor: AppTheme.textGrey,
           tabs: [
             Tab(text: 'مهام اليوم (${_todayTasks.length})'),
-            Tab(text: 'المؤجلة (${_postponedTasks.length})'),
+            Tab(text: 'القادمة (${_postponedTasks.length})'),
             Tab(text: 'المنفذة (${_completedTasks.length})'),
           ],
         ),
@@ -313,7 +321,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
   // ─── بطاقة مهمة نشطة ───
 
   Widget _taskCard(PhotographyTaskModel task) {
-    final taskHash = task.id.hashCode;
+    final taskHash = task.id;
     final isExpanded = _expandedTaskId == taskHash;
     final isUploading = _isUploading[taskHash] ?? false;
     final hasMedia = _tempMedia[taskHash]?.isNotEmpty ?? false;
@@ -442,7 +450,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
             ),
             const SizedBox(height: 8),
             TextField(
-              controller: _notesControllers[taskHash] ?? TextEditingController(),
+              controller: _notesControllers.putIfAbsent(taskHash, () => TextEditingController(text: task.photographerNote)),
               maxLines: 2,
               style: const TextStyle(color: AppTheme.textWhite),
               decoration: const InputDecoration(labelText: 'ملاحظات (اختياري)'),

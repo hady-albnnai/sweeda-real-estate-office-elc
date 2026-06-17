@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/executor_provider.dart';
+import '../../widgets/app_back_button.dart';
 
 class ExecuteTaskScreen extends StatefulWidget {
   final String appointmentId;
@@ -30,12 +31,8 @@ class _ExecuteTaskScreenState extends State<ExecuteTaskScreen> {
   Future<void> _loadTask() async {
     setState(() => _loading = true);
     final prov = context.read<ExecutorProvider>();
-    final tasks = await prov.getMyTasks(_uid);
-    final postponed = await prov.getPostponedTasks(_uid);
-    final all = [...tasks, ...postponed];
-    final match = all.where((t) => t.appointmentId == widget.appointmentId);
-    if (match.isNotEmpty) {
-      final t = match.first;
+    final t = await prov.getTaskByAppointment(_uid, widget.appointmentId);
+    if (t != null) {
       setState(() {
         _task = {
           'appointment_id': t.appointmentId,
@@ -162,6 +159,7 @@ class _ExecuteTaskScreenState extends State<ExecuteTaskScreen> {
     return Scaffold(
       backgroundColor: AppTheme.deepBlack,
       appBar: AppBar(
+        leading: const AppBackButton(),
         backgroundColor: AppTheme.deepBlack,
         title: const Text('تنفيذ المهمة', style: TextStyle(color: AppTheme.primaryGold)),
       ),

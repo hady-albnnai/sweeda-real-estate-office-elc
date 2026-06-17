@@ -45,6 +45,22 @@ class ExecutorProvider with ChangeNotifier {
     }
   }
 
+  Future<ExecutorTaskModel?> getTaskByAppointment(String userId, String appointmentId) async {
+    try {
+      final res = await SupabaseService().client.rpc(
+        'get_executor_task_by_appointment',
+        params: {
+          'p_user_uid': userId,
+          'p_appointment_id': appointmentId,
+        },
+      );
+      final list = _parseList(res);
+      return list.isEmpty ? null : list.first;
+    } catch (e) {
+      return null;
+    }
+  }
+
   // ═══════════════════════════════════════
   // إجراءات المنفذ
   // ═══════════════════════════════════════
@@ -104,6 +120,19 @@ class ExecutorProvider with ChangeNotifier {
   // ═══════════════════════════════════════
   // طلبات الإتمام المعلقة (للمنفذ)
   // ═══════════════════════════════════════
+
+  Future<List<Map<String, dynamic>>> getMyCompletionRequests(String userId) async {
+    try {
+      final res = await SupabaseService().client.rpc(
+        'get_my_completion_requests',
+        params: {'p_user_uid': userId},
+      );
+      if (res == null) return [];
+      return List<Map<String, dynamic>>.from(res as List);
+    } catch (e) {
+      return [];
+    }
+  }
 
   Future<List<Map<String, dynamic>>> getPendingRequests(String userId) async {
     try {

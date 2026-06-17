@@ -37,11 +37,10 @@ class PhotographyProvider with ChangeNotifier {
 
   Future<List<PhotographyTaskModel>> getPhotographerTasks(String photographerId) async {
     try {
-      final response = await SupabaseService().client
-          .from(DbTables.photographyTasks)
-          .select()
-          .eq('photographer_id', photographerId)
-          .order('ts_crt', ascending: false);
+      final response = await SupabaseService().client.rpc(
+        'get_photographer_tasks_internal',
+        params: {'p_photographer_uid': photographerId},
+      );
       return (response as List)
           .map((row) => PhotographyTaskModel.fromSupabase(
                 Map<String, dynamic>.from(row),
@@ -51,6 +50,23 @@ class PhotographyProvider with ChangeNotifier {
     } catch (e) {
       _error = e.toString();
       return [];
+    }
+  }
+
+  Future<bool> startTask(String photographerUid, String taskId) async {
+    try {
+      await SupabaseService().client.rpc(
+        'start_photography_task_internal',
+        params: {
+          'p_photographer_uid': photographerUid,
+          'p_task_id': taskId,
+        },
+      );
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      return false;
     }
   }
 
