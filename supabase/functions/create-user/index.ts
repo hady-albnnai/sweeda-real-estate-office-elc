@@ -27,6 +27,21 @@ function json(body: Record<string, unknown>, status = 200): Response {
   });
 }
 
+function base64ToUint8Array(base64: string): Uint8Array {
+  const clean = base64.includes(",") ? base64.split(",").pop() ?? "" : base64;
+  const binary = atob(clean);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+function safeImageContentType(value: unknown): string {
+  const contentType = typeof value === "string" ? value.toLowerCase() : "image/jpeg";
+  return ["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(contentType)
+    ? (contentType === "image/jpg" ? "image/jpeg" : contentType)
+    : "image/jpeg";
+}
+
 async function validateActor(
   req: Request,
   supabaseAdmin: ReturnType<typeof createClient>,
@@ -95,11 +110,20 @@ serve(async (req) => {
     const phone = body.phone;
     const email = body.email ?? "";
     const username = body.username ?? "";
+    const address = body.address ?? "";
+    const sid = body.sid ?? "";
     const role = Number(body.role);
     const password = typeof body.password === "string" && body.password.length >= 8
       ? body.password
       : randomPassword();
+    const idImageBase64 = typeof body.id_image_base64 === "string" ? body.id_image_base64 : "";
+    const idImageBytes = idImageBase64 ? base64ToUint8Array(idImageBase64) : null;
+    if (idImageBytes && idImageBytes.length > 8 * 1024 * 1024) {
+      return json({ success: false, error: "ID_IMAGE_TOO_LARGE" }, 413);
+    }
 
+    // ننشئ الموظف أولاً بدون مسار صورة، ثم نرفع صورة الهوية عبر service_role
+    // إلى مجلد UID الموظف نفسه، وبعدها نحدّث users.img بالمسار الخاص.
     const { data, error } = await supabaseAdmin.rpc("admin_create_staff_user", {
       p_admin_uid: adminUid,
       p_full_name: fullName,
@@ -108,14 +132,49 @@ serve(async (req) => {
       p_username: username,
       p_password: password,
       p_role: role,
+      p_address: address,
+      p_sid: sid,
+      p_img: "",
     });
 
     if (error) return json({ success: false, error: error.message }, 400);
+    if (data?.success !== true || !data?.user_id) {
+      return json({ success: false, error: data?.error ?? "CREATE_USER_FAILED" }, 400);
+    }
+
+    let idImagePath = "";
+    if (idImageBytes) {
+      const contentType = safeImageContentType(body.id_image_content_type);
+      const ext = contentType === "image/png" ? "png" : contentType === "image/webp" ? "webp" : "jpg";
+      idImagePath = `${data.user_id}/staff_id_${Date.now()}.${ext}`;
+
+      const { error: uploadError } = await supabaseAdmin.storage
+        .from("ids_private")
+        .upload(idImagePath, idImageBytes, {
+          contentType,
+          cacheControl: "3600",
+          upsert: true,
+        });
+
+      if (uploadError) {
+        return json({ success: false, error: `ID_UPLOAD_FAILED: ${uploadError.message}`, user_id: data.user_id }, 400);
+      }
+
+      const { error: updateImageError } = await supabaseAdmin
+        .from("users")
+        .update({ img: idImagePath, ts_upd: new Date().toISOString() })
+        .eq("id", data.user_id);
+
+      if (updateImageError) {
+        return json({ success: false, error: `ID_IMAGE_SAVE_FAILED: ${updateImageError.message}`, user_id: data.user_id }, 400);
+      }
+    }
 
     return json({
-      success: data?.success === true,
-      user_id: data?.user_id,
+      success: true,
+      user_id: data.user_id,
       new_password: password,
+      id_image_path: idImagePath,
     });
   } catch (error) {
     return json({ success: false, error: error instanceof Error ? error.message : String(error) }, 500);

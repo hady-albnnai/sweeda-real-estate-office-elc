@@ -79,6 +79,8 @@ class StaffAdminService {
     String address = '',
     String sid = '',
     String img = '',
+    String idImageBase64 = '',
+    String idImageContentType = 'image/jpeg',
   }) {
     return _invokeStaffFunction('create-user', {
       'admin_uid': adminUid,
@@ -90,6 +92,8 @@ class StaffAdminService {
       'address': address,
       'sid': sid,
       'img': img,
+      'id_image_base64': idImageBase64,
+      'id_image_content_type': idImageContentType,
     });
   }
 

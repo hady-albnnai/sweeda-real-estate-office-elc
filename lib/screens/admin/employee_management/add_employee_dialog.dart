@@ -1,14 +1,12 @@
-import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/validation/input_validators.dart';
 import '../../../providers/admin_provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../services/storage_service.dart';
-import '../../../core/network/supabase_service.dart';
 
 class AddEmployeeDialog extends StatefulWidget {
   const AddEmployeeDialog({super.key});
@@ -72,23 +70,12 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
         throw Exception('لم يتم العثور على جلسة المدير');
       }
 
-      // 1. رفع صورة الهوية أولاً
-      String? idImageUrl;
-      final fileName = 'id_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      // نستخدم مسار مؤقت لأننا لا نملك UID الموظف بعد، 
-      // أو نستخدم UID المدير كفولدر مؤقت أو فولدر 'pending_staff'
-      final uploadPath = 'staff_onboarding/$fileName';
-      
-      // نرفعها للباكت الخاص بالهويات
-      final bytes = await _idImage!.readAsBytes();
-      await SupabaseService().storage.from(StorageService.idsPrivateBucket).uploadBinary(
-        uploadPath,
-        bytes,
-        fileOptions: FileOptions(upsert: true),
-      );
-      idImageUrl = uploadPath; // نحفظ المسار النسبي وليس الرابط العام لأنه باكت خاص
+      // صورة الهوية تُرسل إلى Edge Function create-user كـ Base64.
+      // السبب: حسابات الموظفين تستخدم staff_session_token داخلي، وليس بالضرورة Supabase Auth JWT،
+      // لذلك الرفع المباشر إلى Storage من التطبيق قد يفشل بسبب RLS.
+      final idImageBytes = await _idImage!.readAsBytes();
+      final idImageBase64 = base64Encode(idImageBytes);
 
-      // 2. إنشاء الموظف
       final result = await adminProvider.createStaffUser(
         adminUid: adminUid,
         fullName: _nameController.text.trim(),
@@ -98,7 +85,8 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
         role: _selectedRole,
         address: _addressController.text.trim(),
         sid: _sidController.text.trim(),
-        img: idImageUrl,
+        idImageBase64: idImageBase64,
+        idImageContentType: 'image/jpeg',
       );
 
       if (!mounted) return;
