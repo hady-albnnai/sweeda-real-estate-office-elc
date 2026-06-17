@@ -56,8 +56,8 @@
 - ✅ إزالة رسائل placeholder من واجهة إدارة الموظفين.
 
 ### 7. الداشبوردات
-- ✅ ربط `DeputyDashboardScreen` بإحصائيات حقيقية عبر `get_staff_stats_internal`.
-- ✅ ربط `EmployeeDashboardScreen` بإحصائيات حقيقية عبر `get_staff_stats_internal`.
+- ✅ تم توحيد نائب المدير مع شاشة المدير `AdminDashboardScreen`، والفروقات أصبحت عبر الصلاحيات فقط.
+- ✅ تم توحيد موظف المكتب على `EmployeeHomeScreen` وحذف `EmployeeDashboardScreen` القديم غير المستخدم.
 - ✅ إظهار روابط الوصول السريع حسب `PermissionService`.
 
 ---
