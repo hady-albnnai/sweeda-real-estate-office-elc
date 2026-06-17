@@ -92,6 +92,10 @@
 | 86 | `get_admin_dashboard_stats` 🆕 | `p_admin_uid UUID` | `JSONB` | ✅ |
 | 87 | `admin_fraud_suspects` 🛠️ | `p_admin_uid UUID` | `SETOF fraud_suspects` | ✅ |
 | 88 | `admin_wipe_test_data` 🆕🔥 | `p_admin_uid UUID` | `JSONB` | ✅ |
+| 90 | `get_executor_task_by_appointment` 🆕 | `p_user_uid UUID, p_appointment_id UUID` | `SETOF task row` | 🆕 جاهز للتطبيق |
+| 91 | `get_my_completion_requests` 🆕 | `p_user_uid UUID` | `SETOF request rows` | 🆕 جاهز للتطبيق |
+| 92 | `get_photographer_tasks_internal` 🆕 | `p_photographer_uid UUID` | `SETOF photography_tasks` | 🆕 جاهز للتطبيق |
+| 93 | `start_photography_task_internal` 🆕 | `p_photographer_uid UUID, p_task_id UUID` | `BOOLEAN` | 🆕 جاهز للتطبيق |
 | 89 | `app_clean_text` 🆕 | `p_value TEXT, p_max_len INT` | `TEXT` | ❌ |
 | 90 | `app_assert_text_len` 🆕 | `p_value TEXT, p_field TEXT, p_min INT, p_max INT` | `TEXT` | ❌ |
 | 91 | `app_assert_username` 🆕 | `p_username TEXT, p_required BOOLEAN` | `TEXT` | ❌ |
@@ -616,6 +620,26 @@ final ok = await client.rpc('check_username_available',
 | `get_user_full_by_id` | تحوّلت من `RETURNS SETOF users` إلى `RETURNS TABLE(...)` — أُضيف `usr`، وأُخفي `pwd` خلف flag (`'set'`/`NULL`) بدل تسريب الهاش. تتطلب `DROP FUNCTION` ثم `CREATE` (لا يمكن تغيير نوع الإرجاع عبر `CREATE OR REPLACE`). |
 
 ---
+
+
+## 🧭 Executor & Photography Flow Fixes — 2026-06-17
+
+Migration: `2026_06_17_executor_photography_flow_fixes.sql`
+
+أضيفت دوال لتصحيح فلو المنفذ والمصور:
+
+| الدالة | الغرض |
+|---|---|
+| `get_executor_task_by_appointment` | جلب مهمة منفذ واحدة مباشرة بدل إعادة تحميل قوائم اليوم/المؤجلة داخل شاشة التنفيذ |
+| `get_my_completion_requests` | عرض طلبات الإتمام التي أرسلها المنفذ نفسه فقط، بدل استخدام دالة المكتب التي تعرض كل الطلبات |
+| `get_photographer_tasks_internal` | جلب مهام المصور عبر RPC آمنة بدل القراءة المباشرة من الجدول |
+| `start_photography_task_internal` | تحويل مهمة التصوير من بانتظار/مرفوضة إلى قيد التنفيذ عند ضغط المصور زر بدء المهمة |
+
+ملاحظات منطقية:
+
+- شاشة المنفذ تعرض تبويب `طلبات الإتمام` لحالات طلباته: قيد المراجعة/مقبول/مرفوض.
+- شاشة المصور تمنع تكرار المهمة بين `مهام اليوم` و`القادمة`.
+- تم استخدام `task.id` كمفتاح UI بدلاً من `hashCode`.
 
 ## 🌐 Edge Functions
 
