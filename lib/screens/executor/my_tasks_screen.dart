@@ -6,6 +6,7 @@ import '../../core/theme/app_theme.dart';
 import '../../models/executor_task_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/executor_provider.dart';
+import '../../widgets/app_back_button.dart';
 
 class MyTasksScreen extends StatefulWidget {
   const MyTasksScreen({super.key});
@@ -69,6 +70,7 @@ class _MyTasksScreenState extends State<MyTasksScreen>
     return Scaffold(
       backgroundColor: AppTheme.deepBlack,
       appBar: AppBar(
+        leading: const AppBackButton(),
         backgroundColor: AppTheme.deepBlack,
         title: const Text('مهامي', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
         actions: [
