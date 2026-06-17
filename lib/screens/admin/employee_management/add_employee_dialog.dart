@@ -26,7 +26,7 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
   
   int _selectedRole = 4; // موظف مكتب افتراضي
   bool _isLoading = false;
-  XFile? _idImage;
+  final List<XFile> _idImages = [];
   final StorageService _storage = StorageService();
 
   @override
@@ -42,17 +42,21 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
 
   String? _validateUsername(String? value) => InputValidators.validateUsername(value);
 
-  Future<void> _pickImage() async {
-    final img = await _storage.pickImage();
-    if (img != null) {
-      setState(() => _idImage = img);
+  Future<void> _pickImages() async {
+    final imgs = await _storage.pickMultiImages(limit: 2);
+    if (imgs.isNotEmpty) {
+      setState(() {
+        _idImages
+          ..clear()
+          ..addAll(imgs.take(2));
+      });
     }
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     
-    if (_idImage == null) {
+    if (_idImages.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('يرجى اختيار صورة الهوية')),
       );
@@ -70,11 +74,13 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
         throw Exception('لم يتم العثور على جلسة المدير');
       }
 
-      // صورة الهوية تُرسل إلى Edge Function create-user كـ Base64.
+      // صور الهوية تُرسل إلى Edge Function create-user كـ Base64.
       // السبب: حسابات الموظفين تستخدم staff_session_token داخلي، وليس بالضرورة Supabase Auth JWT،
       // لذلك الرفع المباشر إلى Storage من التطبيق قد يفشل بسبب RLS.
-      final idImageBytes = await _idImage!.readAsBytes();
-      final idImageBase64 = base64Encode(idImageBytes);
+      final idImagesBase64 = <String>[];
+      for (final image in _idImages.take(2)) {
+        idImagesBase64.add(base64Encode(await image.readAsBytes()));
+      }
 
       final result = await adminProvider.createStaffUser(
         adminUid: adminUid,
@@ -85,7 +91,7 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
         role: _selectedRole,
         address: _addressController.text.trim(),
         sid: _sidController.text.trim(),
-        idImageBase64: idImageBase64,
+        idImagesBase64: idImagesBase64,
         idImageContentType: 'image/jpeg',
       );
 
@@ -166,7 +172,7 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
               const SizedBox(height: 12),
               // اختيار صورة الهوية
               InkWell(
-                onTap: _pickImage,
+                onTap: _pickImages,
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -177,15 +183,15 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
                   child: Row(
                     children: [
                       Icon(
-                        _idImage == null ? Icons.add_a_photo_outlined : Icons.check_circle,
-                        color: _idImage == null ? AppTheme.primaryGold : Colors.green,
+                        _idImages.isEmpty ? Icons.add_a_photo_outlined : Icons.check_circle,
+                        color: _idImages.isEmpty ? AppTheme.primaryGold : Colors.green,
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          _idImage == null ? 'ارفع صورة الهوية *' : 'تم اختيار الصورة',
+                          _idImages.isEmpty ? 'ارفع صور الهوية (وجه وقفا) *' : 'تم اختيار ${_idImages.length} صورة',
                           style: TextStyle(
-                            color: _idImage == null ? AppTheme.textGrey : AppTheme.textWhite,
+                            color: _idImages.isEmpty ? AppTheme.textGrey : AppTheme.textWhite,
                             fontSize: 14,
                           ),
                         ),

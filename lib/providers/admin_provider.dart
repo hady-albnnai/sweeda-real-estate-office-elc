@@ -166,7 +166,7 @@ class AdminProvider with ChangeNotifier {
     String address = '',
     String sid = '',
     String img = '',
-    String idImageBase64 = '',
+    List<String> idImagesBase64 = const [],
     String idImageContentType = 'image/jpeg',
   }) async {
     final data = await _staffAdmin.createStaffUser(
@@ -179,7 +179,7 @@ class AdminProvider with ChangeNotifier {
       address: address,
       sid: sid,
       img: img,
-      idImageBase64: idImageBase64,
+      idImagesBase64: idImagesBase64,
       idImageContentType: idImageContentType,
     );
     _syncStaffError();
@@ -232,6 +232,12 @@ class AdminProvider with ChangeNotifier {
     _syncStaffError();
     if (ok) notifyListeners();
     return ok;
+  }
+
+  Future<List<String>> getStaffIdImageUrls(String adminUid, String targetUid) async {
+    final urls = await _staffAdmin.getStaffIdImageUrls(adminUid, targetUid);
+    _syncStaffError();
+    return urls;
   }
 
   Future<Map<String, dynamic>> getStaffStatsInternal(String userUid) async {
