@@ -56,7 +56,6 @@ import '../../screens/employee/employee_home_screen.dart';
 // === Admin ===
 import '../../screens/admin/admin_dashboard_screen.dart';
 import '../../screens/admin/admin_sections_screen.dart';
-import '../../screens/admin/deputy_dashboard_screen.dart';
 import '../../screens/admin/employee_dashboard_screen.dart';
 import '../../screens/admin/employee_management/employee_management_screen.dart';
 import '../../screens/admin/admin_add_offer_screen.dart';
@@ -82,7 +81,7 @@ import '../services/permission_service.dart';
 
 class AppRouter {
   static String? _adminRoutePermission(String path) {
-    if (path == '/admin/dashboard') return PermissionKeys.manageStaff;
+    if (path == '/admin/dashboard') return PermissionKeys.adminDashboard;
     if (path == '/admin/employee-management') return PermissionKeys.manageStaff;
     if (path == '/admin/operations-dashboard') return PermissionKeys.adminDashboard;
     if (path == '/admin/sections') return PermissionKeys.adminDashboard;
@@ -175,7 +174,6 @@ class AppRouter {
           return auth.isBroker ? '/broker/dashboard' : '/user/home';
         }
         final userRole = auth.userModel?.role ?? 0;
-        if (userRole == 5 && path == '/admin/dashboard') return '/deputy/dashboard';
         if (userRole == 4 && path == '/admin/dashboard') return '/employee/dashboard';
         final requiredPermission = _adminRoutePermission(path);
         if (requiredPermission != null && !PermissionService.has(auth.userModel, requiredPermission)) return '/admin/dashboard';
@@ -234,7 +232,8 @@ class AppRouter {
       GoRoute(path: '/photographer/tasks', builder: (context, state) => const PhotographerTasksScreen()),
       GoRoute(path: '/employee/home', builder: (context, state) => const EmployeeHomeScreen()),
       GoRoute(path: '/employee/dashboard', builder: (context, state) => const EmployeeDashboardScreen()),
-      GoRoute(path: '/deputy/dashboard', builder: (context, state) => const DeputyDashboardScreen()),
+      // توافق خلفي: أي رابط قديم للوحة نائب المدير يفتح نفس لوحة الإدارة الموحدة.
+      GoRoute(path: '/deputy/dashboard', builder: (context, state) => const AdminDashboardScreen()),
       GoRoute(path: '/executor/tasks', builder: (context, state) => const MyTasksScreen()),
       GoRoute(path: '/executor/execute/:id', builder: (context, state) => ExecuteTaskScreen(appointmentId: state.pathParameters['id']!)),
       GoRoute(path: '/admin/dashboard', builder: (context, state) => const AdminDashboardScreen()),
