@@ -166,6 +166,8 @@ class AdminProvider with ChangeNotifier {
     String address = '',
     String sid = '',
     String img = '',
+    String idImageBase64 = '',
+    String idImageContentType = 'image/jpeg',
   }) async {
     final data = await _staffAdmin.createStaffUser(
       adminUid: adminUid,
@@ -177,6 +179,8 @@ class AdminProvider with ChangeNotifier {
       address: address,
       sid: sid,
       img: img,
+      idImageBase64: idImageBase64,
+      idImageContentType: idImageContentType,
     );
     _syncStaffError();
     if (data['success'] == true) notifyListeners();
