@@ -56,7 +56,6 @@ import '../../screens/employee/employee_home_screen.dart';
 // === Admin ===
 import '../../screens/admin/admin_dashboard_screen.dart';
 import '../../screens/admin/admin_sections_screen.dart';
-import '../../screens/admin/employee_dashboard_screen.dart';
 import '../../screens/admin/employee_management/employee_management_screen.dart';
 import '../../screens/admin/admin_add_offer_screen.dart';
 import '../../screens/admin/requests_management_screen.dart';
@@ -174,7 +173,7 @@ class AppRouter {
           return auth.isBroker ? '/broker/dashboard' : '/user/home';
         }
         final userRole = auth.userModel?.role ?? 0;
-        if (userRole == 4 && path == '/admin/dashboard') return '/employee/dashboard';
+        if (userRole == 4 && path == '/admin/dashboard') return '/employee/home';
         final requiredPermission = _adminRoutePermission(path);
         if (requiredPermission != null && !PermissionService.has(auth.userModel, requiredPermission)) return '/admin/dashboard';
       }
@@ -231,7 +230,8 @@ class AppRouter {
       GoRoute(path: '/broker/stats', builder: (context, state) => const BrokerStatsScreen()),
       GoRoute(path: '/photographer/tasks', builder: (context, state) => const PhotographerTasksScreen()),
       GoRoute(path: '/employee/home', builder: (context, state) => const EmployeeHomeScreen()),
-      GoRoute(path: '/employee/dashboard', builder: (context, state) => const EmployeeDashboardScreen()),
+      // توافق خلفي: أي رابط قديم للوحة موظف المكتب يفتح شاشة عمليات المكتب اليومية الموحدة.
+      GoRoute(path: '/employee/dashboard', builder: (context, state) => const EmployeeHomeScreen()),
       // توافق خلفي: أي رابط قديم للوحة نائب المدير يفتح نفس لوحة الإدارة الموحدة.
       GoRoute(path: '/deputy/dashboard', builder: (context, state) => const AdminDashboardScreen()),
       GoRoute(path: '/executor/tasks', builder: (context, state) => const MyTasksScreen()),
