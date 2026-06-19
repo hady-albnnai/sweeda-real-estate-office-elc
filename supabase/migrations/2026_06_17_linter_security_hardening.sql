@@ -112,6 +112,19 @@ REVOKE ALL ON FUNCTION public.admin_wipe_test_data(uuid) FROM anon;
 REVOKE ALL ON FUNCTION public.admin_wipe_test_data(uuid) FROM authenticated;
 GRANT EXECUTE ON FUNCTION public.admin_wipe_test_data(uuid) TO service_role;
 
+
+-- 9) Points RPCs: direct client-side point grants are unsafe because callers can pass uid/event/points.
+--    Point awards must be moved to verified server-side triggers/Edge Functions.
+REVOKE ALL ON FUNCTION public.add_points(uuid, integer) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.add_points(uuid, integer) FROM anon;
+REVOKE ALL ON FUNCTION public.add_points(uuid, integer) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.add_points(uuid, integer) TO service_role;
+
+REVOKE ALL ON FUNCTION public.award_points_safe(uuid, text, integer) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.award_points_safe(uuid, text, integer) FROM anon;
+REVOKE ALL ON FUNCTION public.award_points_safe(uuid, text, integer) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.award_points_safe(uuid, text, integer) TO service_role;
+
 -- 8) Set fixed search_path on all known public functions to satisfy linter 0011.
 --    ALTER FUNCTION does not change function bodies; it only sets execution config.
 ALTER FUNCTION public.expire_offer_boosts() SET search_path = public, extensions, pg_temp;
