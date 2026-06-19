@@ -54,7 +54,7 @@
 | 🔄 **محدّث بالكود** | Edge Functions إدارة الموظفين: `create-user` محدثة لدعم صورتي الهوية و`get-staff-id-images` مضافة؛ يلزم deploy لهاتين الدالتين بعد `git pull` |
 | 🆕 **جاهز للتطبيق** | `2026_06_17_secure_email_auth_internal.sql` — تأمين Email Magic Link عبر RPC `handle_email_auth_internal` + فهارس unique canonical للإيميل والهاتف |
 | 🆕 **جاهز للتطبيق** | `2026_06_17_lock_otp_direct_rpcs.sql` — إغلاق direct execute لدوال OTP/upsert عن `anon/authenticated` وجعلها عبر Edge Functions فقط |
-| ✅ **مُطبّق على السيرفر** | `2026_06_17_linter_security_hardening.sql` — إصلاح `users_public` كـ `security_invoker`، ضبط `search_path` لكل دوال public، قفل OTP legacy/direct، قفل `admin_create_staff_user` و`admin_wipe_test_data`، قفل دوال النقاط المباشرة `add_points` و`award_points_safe`، تشديد `otp_codes/user_devices`، وحذف سياسات list العامة لبكتات public |
+| ✅ **مُطبّق على السيرفر** | `2026_06_17_linter_security_hardening.sql` — إصلاح `users_public` كـ `security_invoker`، ضبط `search_path` لكل دوال public، قفل OTP legacy/direct، قفل `admin_create_staff_user` و`admin_wipe_test_data`، قفل دوال النقاط المباشرة `add_points` و`award_points_safe`، وقفل دوال الإشعارات المباشرة `notify_user` و`send_push_notification`، تشديد `otp_codes/user_devices`، وحذف سياسات list العامة لبكتات public |
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_lock_legacy_admin_rpcs.sql` — إغلاق direct execute للدوال الإدارية القديمة الحساسة بعد نقلها إلى Edge Functions |
 | ✅ **مُطبّق على السيرفر** | Storage policies لـ `offer_images` — INSERT/SELECT/UPDATE/DELETE مفتوحة |
 | 📝 **جاهز للتطبيق (لم يُنفّذ بعد)** | `2026_06_13_auth_username_password.sql` — اسم مستخدم `usr` + كلمة مرور مشفّرة `pwd` + 6 RPCs (`register_password`, `login_with_password`, `reset_password_with_otp`, `change_password_internal`, `check_username_available`, `get_staff_stats_internal`) + تحديث `users_public` (إضافة `usr`) + تحديث `get_user_full_by_id` (إضافة `usr` + إخفاء `pwd` خلف flag) |
@@ -641,6 +641,17 @@ Migration mirror: `2026_06_17_linter_security_hardening.sql`
 | Staff creation RPCs | قفل نسختي `admin_create_staff_user` عن `anon/authenticated`، وتشغيلها عبر Edge Function فقط | ✅ |
 | Test wipe RPC | قفل `admin_wipe_test_data` عن `anon/authenticated` | ✅ |
 
+
+
+### تحديث مهم — قفل دوال الإشعارات المباشرة
+
+تم قفل الدوال التالية عن `anon` و`authenticated` وتركها لـ `service_role` فقط:
+
+- `notify_user(uuid, integer, text, text, text, text)`
+- `send_push_notification(uuid, text, text, jsonb)`
+
+السبب: لا يجوز للعميل إنشاء إشعار أو إرسال push لأي مستخدم مباشرة.  
+الأثر المتوقع: أي إشعارات كانت تُنشأ من العميل مباشرة قد تتوقف مؤقتاً. الإشعارات المهمة يجب أن تنتقل إلى Triggers أو Edge Functions موثوقة.
 
 ### تحديث مهم — قفل دوال النقاط المباشرة
 
