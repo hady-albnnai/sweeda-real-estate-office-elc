@@ -1,7 +1,7 @@
 # 📚 مرجع دوال Supabase (RPC + Edge Functions)
 
 > **مشروع:** عقارات السويداء
-> **آخر تحديث:** 2026-06-17 (محدّث بعد تأمين تسجيل الإيميل والهاتف عبر Edge Functions، دعم صورتي هوية للموظف، ودالة `get-staff-id-images`)
+> **آخر تحديث:** 2026-06-17 (محدّث بعد linter security hardening، تأمين تسجيل الإيميل والهاتف عبر Edge Functions، دعم صورتي هوية للموظف، ودالة `get-staff-id-images`)
 > **المصدر:** `supabase/setup.sql` + Migrations + Edge Functions
 
 ---
@@ -54,6 +54,7 @@
 | 🔄 **محدّث بالكود** | Edge Functions إدارة الموظفين: `create-user` محدثة لدعم صورتي الهوية و`get-staff-id-images` مضافة؛ يلزم deploy لهاتين الدالتين بعد `git pull` |
 | 🆕 **جاهز للتطبيق** | `2026_06_17_secure_email_auth_internal.sql` — تأمين Email Magic Link عبر RPC `handle_email_auth_internal` + فهارس unique canonical للإيميل والهاتف |
 | 🆕 **جاهز للتطبيق** | `2026_06_17_lock_otp_direct_rpcs.sql` — إغلاق direct execute لدوال OTP/upsert عن `anon/authenticated` وجعلها عبر Edge Functions فقط |
+| ✅ **مُطبّق على السيرفر** | `2026_06_17_linter_security_hardening.sql` — إصلاح `users_public` كـ `security_invoker`، ضبط `search_path` لكل دوال public، قفل OTP legacy/direct، قفل `admin_create_staff_user` و`admin_wipe_test_data`، تشديد `otp_codes/user_devices`، وحذف سياسات list العامة لبكتات public |
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_lock_legacy_admin_rpcs.sql` — إغلاق direct execute للدوال الإدارية القديمة الحساسة بعد نقلها إلى Edge Functions |
 | ✅ **مُطبّق على السيرفر** | Storage policies لـ `offer_images` — INSERT/SELECT/UPDATE/DELETE مفتوحة |
 | 📝 **جاهز للتطبيق (لم يُنفّذ بعد)** | `2026_06_13_auth_username_password.sql` — اسم مستخدم `usr` + كلمة مرور مشفّرة `pwd` + 6 RPCs (`register_password`, `login_with_password`, `reset_password_with_otp`, `change_password_internal`, `check_username_available`, `get_staff_stats_internal`) + تحديث `users_public` (إضافة `usr`) + تحديث `get_user_full_by_id` (إضافة `usr` + إخفاء `pwd` خلف flag) |
@@ -621,6 +622,30 @@ final ok = await client.rpc('check_username_available',
 
 ---
 
+
+
+## 🔐 Database Linter Security Hardening — 2026-06-17
+
+Migration mirror: `2026_06_17_linter_security_hardening.sql`
+
+تم تنفيذ إصلاحات linter التالية على السيرفر وتوثيقها في migration مرجعية:
+
+| التصنيف | الإجراء | الحالة |
+|---|---|---|
+| `security_definer_view` | تحويل `public.users_public` إلى `security_invoker=true` | ✅ |
+| `function_search_path_mutable` | ضبط `search_path = public, extensions, pg_temp` لكل دوال `public` | ✅ |
+| `rls_policy_always_true` على `otp_codes` | حذف سياسة `public` المفتوحة واستبدالها بـ `service_role` فقط | ✅ |
+| `rls_policy_always_true` على `user_devices` | استبدال سياسة `USING true / WITH CHECK true` بسياسات own-device أو `service_role` | ✅ |
+| `public_bucket_allows_listing` | حذف سياسات SELECT الواسعة من `config_assets` و`offer_images` لمنع listing | ✅ |
+| Legacy OTP RPCs | قفل `generate_otp`, `verify_otp`, `create_user_from_phone` عن `anon/authenticated` وتركها لـ `service_role` | ✅ |
+| Staff creation RPCs | قفل نسختي `admin_create_staff_user` عن `anon/authenticated`، وتشغيلها عبر Edge Function فقط | ✅ |
+| Test wipe RPC | قفل `admin_wipe_test_data` عن `anon/authenticated` | ✅ |
+
+ملاحظات مهمة:
+
+- لا يتم حالياً قفل كل دوال `SECURITY DEFINER` المفتوحة للـ `anon/authenticated` دفعة واحدة، لأن التطبيق لا يزال يعتمد على RPC مباشرة في مسارات عديدة.
+- سيتم نقل الدوال الحساسة تدريجياً إلى Edge Functions قبل قفلها نهائياً.
+- حذف سياسات SELECT العامة من public buckets لا يمنع الوصول عبر public URL، لكنه يمنع listing واسع عبر Storage API.
 
 ## 🧭 Executor & Photography Flow Fixes — 2026-06-17
 

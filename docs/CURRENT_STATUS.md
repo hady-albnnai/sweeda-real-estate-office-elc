@@ -34,11 +34,13 @@
 | توحيد شاشة موظف المكتب | تم توحيد دخول role=4 إلى `/employee/home` وإبقاء `/employee/dashboard` كتوافق خلفي فقط لنفس الشاشة، لتفادي اختلاف التجربة حسب نقطة الدخول |
 | حذف شاشة موظف مكتب غير مستخدمة | تم حذف `lib/screens/admin/employee_dashboard_screen.dart` بعد توحيد موظف المكتب على `/employee/home` |
 | فلو المنفذ والمصور | تمت إضافة Migration وكود لتصحيح طلبات إتمام المنفذ، بدء مهمة التصوير، منع تكرار مهام المصور، وجلب المهام عبر RPC |
+| Database linter hardening | تم إصلاح `security_definer_view` و`function_search_path_mutable` بالكامل، وتشديد `otp_codes/user_devices` وسياسات public bucket listing، وقفل دوال OTP legacy و`admin_create_staff_user` و`admin_wipe_test_data` |
 
 ---
 
 ## آخر migrations مضافة
 
+- `2026_06_17_linter_security_hardening.sql`
 - `2026_06_17_executor_photography_flow_fixes.sql`
 - `2026_06_17_lock_otp_direct_rpcs.sql`
 - `2026_06_17_secure_email_auth_internal.sql`
@@ -216,3 +218,17 @@
 - مهام المصور القادمة أصبحت بعد اليوم فقط لمنع التكرار بين اليوم والقادمة.
 - جلب مهام المصور أصبح عبر RPC `get_photographer_tasks_internal`.
 - تم استبدال `hashCode` في شاشة المصور باستخدام `task.id` كمفتاح ثابت للصور والملاحظات المؤقتة.
+
+---
+
+## تحديث Database Linter Security — 2026-06-17
+
+- تم تحويل `users_public` إلى `security_invoker=true`.
+- تم ضبط `search_path` لكل دوال `public` بحيث لا يبقى أي `function_search_path_mutable`.
+- تم قفل دوال OTP القديمة والجديدة الحساسة لتعمل عبر `service_role` فقط.
+- تم قفل `admin_create_staff_user` بنسختيه لتعمل عبر Edge Function `create-user` فقط.
+- تم قفل `admin_wipe_test_data` عن `anon/authenticated`.
+- تم استبدال سياسة `otp_codes` المفتوحة بسياسة `service_role` فقط.
+- تم استبدال سياسة `user_devices` المفتوحة بسياسات own-device أو `service_role`.
+- تم حذف سياسات SELECT الواسعة من `config_assets` و`offer_images` لمنع listing للملفات.
+- بقيت دوال `SECURITY DEFINER` أخرى مفتوحة بشكل مقصود مؤقتاً لأن التطبيق لا يزال يعتمد على RPC مباشرة؛ ستُنقل تدريجياً إلى Edge Functions قبل قفلها.
