@@ -1,6 +1,7 @@
 import '../../core/network/supabase_service.dart';
 import '../../core/utils/error_utils.dart';
 import '../../models/report_model.dart';
+import '../auth_service.dart';
 
 /// خدمة إدارة التبليغات للإدارة.
 class ReportsAdminService {
@@ -15,17 +16,31 @@ class ReportsAdminService {
 
   Future<List<ReportModel>> getAllReports(String adminUid, {int? status}) async {
     try {
-      final response = await SupabaseService().client.rpc(
-        'get_admin_reports_internal',
-        params: {'p_admin_uid': adminUid},
+      final token = await AuthService().getStaffSessionToken();
+      final response = await SupabaseService().client.functions.invoke(
+        'admin-reports',
+        body: {
+          'action': 'list',
+          'admin_uid': adminUid,
+          'staff_session_token': token,
+        },
       );
-      var list = (response as List)
+
+      final data = response.data;
+      if (data == null || data['success'] != true) {
+        _setError(data?['error'] ?? 'حدث خطأ غير معروف');
+        return [];
+      }
+
+      var list = (data['reports'] as List)
           .map((d) => ReportModel.fromSupabase(
               Map<String, dynamic>.from(d), d['id'] as String))
           .toList();
+          
       if (status != null) {
         list = list.where((r) => r.sts == status).toList();
       }
+      
       clearError();
       return list;
     } catch (e) {
@@ -44,16 +59,26 @@ class ReportsAdminService {
     int duration = 0,
   }) async {
     try {
-      await SupabaseService().client.rpc(
-        'admin_handle_report_internal',
-        params: {
-          'p_admin_uid': adminId,
-          'p_report_id': reportId,
-          'p_action': action,
-          'p_note': note,
-          'p_duration': duration,
+      final token = await AuthService().getStaffSessionToken();
+      final response = await SupabaseService().client.functions.invoke(
+        'admin-reports',
+        body: {
+          'action': 'handle',
+          'admin_uid': adminId,
+          'staff_session_token': token,
+          'report_id': reportId,
+          'report_action': action,
+          'note': note,
+          'duration': duration,
         },
       );
+
+      final data = response.data;
+      if (data == null || data['success'] != true) {
+        _setError(data?['error'] ?? 'حدث خطأ غير معروف');
+        return false;
+      }
+      
       clearError();
       return true;
     } catch (e) {
