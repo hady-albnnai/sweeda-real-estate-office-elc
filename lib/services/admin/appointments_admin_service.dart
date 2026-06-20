@@ -3,6 +3,7 @@ import '../../core/network/supabase_service.dart';
 import '../../core/utils/error_utils.dart';
 import '../../models/appointment_model.dart';
 import '../../models/request_model.dart';
+import '../../services/auth_service.dart';
 
 /// خدمة إدارة الطلبات والمواعيد من طرف الإدارة.
 class AppointmentsAdminService {
@@ -105,4 +106,3 @@ class AppointmentsAdminService {
     return data['success'] == true;
   }
 }
-import '../auth_service.dart';
