@@ -37,6 +37,7 @@
 | Database linter hardening | تم إصلاح `security_definer_view` و`function_search_path_mutable` بالكامل، وتشديد `otp_codes/user_devices` وسياسات public bucket listing، وقفل دوال OTP legacy و`admin_create_staff_user` و`admin_wipe_test_data` |
 | قفل دوال النقاط المباشرة | تم قفل `add_points` و`award_points_safe` عن العميل؛ قد تتوقف مكافآت النقاط المباشرة مؤقتاً إلى أن تُنقل إلى Edge Functions/Triggers موثوقة |
 | قفل دوال الإشعارات المباشرة | تم قفل `notify_user` و`send_push_notification` عن العميل؛ يجب أن تُنشأ الإشعارات مستقبلاً عبر Triggers/Edge Functions موثوقة |
+| خطة قفل RPC تدريجياً | تمت إضافة `docs/SECURITY_DEFINER_RPC_HARDENING_PLAN.md` لتوثيق الدوال المفتوحة المتبقية وتصنيفها وخطة نقلها إلى Edge Functions قبل قفلها |
 
 ---
 
