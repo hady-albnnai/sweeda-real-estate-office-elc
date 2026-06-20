@@ -383,8 +383,8 @@ class AdminProvider with ChangeNotifier {
   // ═══════════════════════════════════════════════════════════════
 
   /// جلب المستخدمين الذين قدّموا طلب توثيق (vrf=1) لمراجعتهم.
-  Future<List<Map<String, dynamic>>> getPendingVerifications() async {
-    final list = await _verificationsAdmin.getPendingVerifications();
+  Future<List<Map<String, dynamic>>> getPendingVerifications(String adminUid) async {
+    final list = await _verificationsAdmin.getPendingVerifications(adminUid);
     _syncVerificationsError();
     return list;
   }

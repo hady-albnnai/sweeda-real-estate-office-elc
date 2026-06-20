@@ -39,11 +39,13 @@
 | قفل دوال الإشعارات المباشرة | تم قفل `notify_user` و`send_push_notification` عن العميل؛ يجب أن تُنشأ الإشعارات مستقبلاً عبر Triggers/Edge Functions موثوقة |
 | خطة قفل RPC تدريجياً | تمت إضافة `docs/SECURITY_DEFINER_RPC_HARDENING_PLAN.md` لتوثيق الدوال المفتوحة المتبقية وتصنيفها وخطة نقلها إلى Edge Functions قبل قفلها |
 | نقل إدارة العروض إلى Edge Function | تمت إضافة `admin-offers` وتجهيز قفل RPCs الخاصة بالعروض بعد نشر الدالة واختبارها |
+| نقل إدارة التوثيق إلى Edge Function | تمت إضافة `admin-verifications` وتجهيز قفل RPCs الخاصة باعتماد/رفض التوثيق بعد نشر الدالة واختبارها |
 
 ---
 
 ## آخر migrations مضافة
 
+- `2026_06_17_lock_admin_verification_rpcs.sql`
 - `2026_06_17_lock_admin_offer_rpcs.sql`
 - `2026_06_17_linter_security_hardening.sql`
 - `2026_06_17_executor_photography_flow_fixes.sql`
