@@ -963,3 +963,20 @@ supabase.functions.invoke('admin-deals')
 - `mark_notification_read_internal`
 - `mark_all_notifications_read_internal`
 - `update_user_notification_settings_internal`
+
+## 21. مجموعة حساب المستخدم والتسجيل — ✅ مكتمل (تم النشر والقفل)
+
+**تاريخ التجهيز:** 2026-06-20  
+**Edge Function الجديدة:** `user-account`  
+**Migration القفل بعد النشر:** `2026_06_20_lock_user_account_rpcs.sql`
+
+### 21.1 الدوال التي نُقلت
+- `login_with_password`
+- `check_username_available`
+- `register_device`
+- `get_user_full_by_id`
+- `update_user_profile_internal`
+- `get_user_device_tokens`
+- `register_password`
+- `change_password_internal`
+- `request_verification_by_uid`
