@@ -864,3 +864,47 @@ supabase.functions.invoke('admin-deals')
    supabase functions deploy admin-deals
    ```
 4. قفل الـ RPCs.
+
+## 16. مجموعة مهام المنفذ والمصور — تم النشر والتحديث في التطبيق ⏳ بانتظار القفل
+
+**تاريخ التجهيز:** 2026-06-20  
+**Edge Functions الجديدة:**
+1. `executor-tasks`
+2. `photographer-tasks`
+3. `admin-photography`
+
+**Migration القفل بعد النشر:** `2026_06_20_lock_tasks_rpcs.sql`
+
+### 16.1 الدوال التي نُقلت
+**للمنفذ (`executor-tasks`):**
+- `get_my_tasks`
+- `get_postponed_tasks`
+- `get_completed_tasks`
+- `get_executor_task_by_appointment`
+- `get_my_completion_requests`
+- `update_task_outcome`
+- `request_completion_by_appointment`
+- `get_all_pending_completion_requests` (admin)
+- `process_completion_request` (admin)
+
+**للمصور (`photographer-tasks`):**
+- `get_photographer_tasks_internal`
+- `start_photography_task_internal`
+- `submit_photography_task_internal`
+
+**للإدارة الخاصة بالتصوير (`admin-photography`):**
+- `create_photography_task_internal`
+- `update_photography_task_status_internal`
+- `attach_photography_media_to_offer_internal`
+
+### 16.2 خطوات التنفيذ
+1. إنشاء دوال Edge `executor-tasks`, `photographer-tasks`, `admin-photography`.
+2. تحديث `ExecutorProvider` و `PhotographyProvider`.
+3. النشر:
+   ```bash
+   supabase functions deploy executor-tasks
+   supabase functions deploy photographer-tasks
+   supabase functions deploy admin-photography
+   ```
+4. اختبار الشاشات.
+5. قفل الـ RPCs.

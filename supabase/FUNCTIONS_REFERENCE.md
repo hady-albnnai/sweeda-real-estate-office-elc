@@ -1844,3 +1844,11 @@ NOW() > pkg_grace          → expire_packages     → b_pkg = 0
 1. `list` — استدعاء `get_admin_deals_internal` لجلب الصفقات.
 2. `create` — استدعاء `create_deal_internal` لإنشاء صفقة جديدة.
 3. `complete` — استدعاء `complete_deal_internal` لإتمام الصفقة وإضافة العمولة.
+
+## 🛡️ Edge Functions للمهام والتصوير
+**الحالة:** جاهزة للنشر والقفل  
+**الأذونات:** `service_role` للـ Supabase client، ويتطلب `staff_session_token` صالح من العميل.
+
+1. **`executor-tasks`**: تدير مهام المنفذ، تتطلب صلاحية `>= 2` (منفذ أو أعلى).  
+2. **`photographer-tasks`**: تدير مهام المصور، تتطلب صلاحية `>= 2` (مصور أو أعلى).  
+3. **`admin-photography`**: تدير مهام التصوير من طرف الإدارة، تتطلب صلاحية `>= 3` (مكتب أو أعلى).
