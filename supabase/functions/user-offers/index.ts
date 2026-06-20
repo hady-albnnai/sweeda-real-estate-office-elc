@@ -148,6 +148,18 @@ serve(async (req) => {
       return json({ success: data === true });
     }
 
+    if (action === "broker_offers") {
+      const { data, error } = await supabaseAdmin.rpc("get_broker_offers_internal", { p_broker_uid: uid });
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json({ success: true, offers: data ?? [] });
+    }
+
+    if (action === "broker_deals") {
+      const { data, error } = await supabaseAdmin.rpc("get_broker_deals_internal", { p_broker_uid: uid });
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json({ success: true, deals: data ?? [] });
+    }
+
     if (action === "mark_social_published") {
       const offerId = (body.offer_id ?? body.offerId)?.toString() ?? "";
       const text = (body.text ?? "").toString();

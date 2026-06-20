@@ -184,7 +184,12 @@ class AuthService {
         return {'success': false, 'error': 'NO_SESSION'};
       }
 
-      final result = await _client.rpc('handle_email_auth_internal');
+      final result = await _client.functions.invoke(
+        'user-account',
+        body: {
+          'action': 'handle_email_auth',
+        },
+      );
       final data = result is Map ? Map<String, dynamic>.from(result) : null;
       if (data == null || data['success'] != true) {
         return {'success': false, 'error': data?['error'] ?? 'EMAIL_AUTH_FAILED'};
