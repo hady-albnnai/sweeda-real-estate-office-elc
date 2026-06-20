@@ -676,3 +676,68 @@ supabase/migrations/2026_06_17_lock_admin_verification_rpcs.sql
 admin_approve_verification_by_admin: anon=false, authenticated=false, service_role=true
 admin_reject_verification_by_admin: anon=false, authenticated=false, service_role=true
 ```
+
+---
+
+## 12. مجموعة إدارة المدفوعات — تم تجهيز النقل إلى Edge Function
+
+**تاريخ التجهيز:** 2026-06-17  
+**Edge Function الجديدة:** `admin-payments`  
+**Migration القفل بعد النشر:** `2026_06_17_lock_admin_payment_rpcs.sql`
+
+### 12.1 الدوال التي نُقلت
+
+```text
+get_admin_payments_internal(uuid)
+approve_payment_final(uuid, uuid)
+admin_reject_payment_internal(uuid, uuid)
+```
+
+### 12.2 التصميم الجديد
+
+التطبيق يستدعي:
+
+```text
+supabase.functions.invoke('admin-payments')
+```
+
+مع actions:
+
+```text
+list
+approve
+reject
+```
+
+Edge Function تتحقق من:
+
+- Supabase Auth JWT مطابق إن وجد.
+- أو `staff_session_token` صالح عبر `validate_staff_session`.
+- الحد الأدنى للدور `role >= 5` لأن المدفوعات من صلاحيات الإدارة العليا.
+
+### 12.3 خطوات التطبيق الآمن
+
+1. `git pull` للحصول على الكود الجديد.
+2. نشر الدالة:
+
+```bash
+supabase functions deploy admin-payments
+```
+
+3. اختبار شاشة المدفوعات.
+4. اختبار قبول/رفض دفع تجريبي إن وجد.
+5. بعدها فقط تطبيق:
+
+```text
+supabase/migrations/2026_06_17_lock_admin_payment_rpcs.sql
+```
+
+### 12.4 أثر القفل
+
+بعد تطبيق القفل:
+
+```text
+get_admin_payments_internal: anon=false, authenticated=false, service_role=true
+approve_payment_final: anon=false, authenticated=false, service_role=true
+admin_reject_payment_internal: anon=false, authenticated=false, service_role=true
+```
