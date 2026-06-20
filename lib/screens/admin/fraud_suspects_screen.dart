@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/network/supabase_service.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/auth_service.dart';
 
 /// 🕵️ Phase 9: شاشة كشف الاحتيال (حسابات متعددة من نفس الجهاز).
 ///

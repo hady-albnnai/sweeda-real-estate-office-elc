@@ -54,7 +54,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (auth.userModel == null || !auth.userModel!.isInternal) return;
     setState(() => _loadingStats = true);
     try {
-      final token = await context.read<AuthProvider>().getStaffSessionToken();
+      final token = await AuthService().getStaffSessionToken();
       final response = await SupabaseService().client.functions.invoke('admin-dashboard', body: {
         'action': 'staff_stats',
         'user_uid': auth.userModel!.uid,
