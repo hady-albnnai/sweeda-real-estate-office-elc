@@ -234,8 +234,8 @@ class OfferProvider with ChangeNotifier {
       );
       final data = response.data;
       if (data == null || data['success'] != true) throw Exception(data?['error'] ?? 'Unknown error');
-      final list = data['offers'] as List;
-      final list = (response as List)
+      final rawList = data['offers'] as List;
+      final list = rawList
           .map((d) => OfferModel.fromSupabase(
               Map<String, dynamic>.from(d), d['id'] as String))
           .toList();
@@ -261,8 +261,7 @@ class OfferProvider with ChangeNotifier {
       if (data == null || data['success'] != true) return null;
       final offerData = data['offer'];
       if (offerData == null) return null;
-      if (response == null || (response as List).isEmpty) return null;
-      final row = Map<String, dynamic>.from(response.first as Map);
+      final row = Map<String, dynamic>.from(offerData as Map);
       final offer = OfferModel.fromSupabase(row, row['id'] as String);
       await _enrichOwnerLabels([offer]);
       return offer;
