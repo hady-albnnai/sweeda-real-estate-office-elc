@@ -951,3 +951,15 @@ supabase.functions.invoke('admin-deals')
 - `broker_handle_appointment_internal`
 - `owner_respond_appointment`
 - `requester_counter_appointment`
+
+## 20. مجموعة إشعارات المستخدم — ✅ مكتمل (تم النشر والقفل)
+
+**تاريخ التجهيز:** 2026-06-20  
+**Edge Function الجديدة:** `user-notifications`  
+**Migration القفل بعد النشر:** `2026_06_20_lock_user_notifications_rpcs.sql`
+
+### 20.1 الدوال التي نُقلت
+- `get_user_notifications_internal`
+- `mark_notification_read_internal`
+- `mark_all_notifications_read_internal`
+- `update_user_notification_settings_internal`

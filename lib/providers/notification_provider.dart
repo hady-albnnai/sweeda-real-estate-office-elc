@@ -34,11 +34,12 @@ class NotificationProvider with ChangeNotifier {
 
   Future<void> markAsRead(String userId, String notificationId) async {
     try {
-      await SupabaseService().client.rpc(
-        'mark_notification_read_internal',
-        params: {
-          'p_user_uid': userId,
-          'p_notification_id': notificationId,
+      await SupabaseService().client.functions.invoke(
+        'user-notifications',
+        body: {
+          'action': 'mark_read',
+          'user_uid': userId,
+          'notification_id': notificationId,
         },
       );
       final index = _notifications.indexWhere((n) => n.id == notificationId);
@@ -57,9 +58,12 @@ class NotificationProvider with ChangeNotifier {
 
   Future<void> markAllAsRead(String userId) async {
     try {
-      await SupabaseService().client.rpc(
-        'mark_all_notifications_read_internal',
-        params: {'p_user_uid': userId},
+      await SupabaseService().client.functions.invoke(
+        'user-notifications',
+        body: {
+          'action': 'mark_all_read',
+          'user_uid': userId,
+        },
       );
       _notifications = _notifications
           .map((n) => NotificationModel.fromSupabase(
