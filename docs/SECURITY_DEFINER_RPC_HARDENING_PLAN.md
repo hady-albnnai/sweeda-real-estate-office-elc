@@ -923,3 +923,15 @@ supabase.functions.invoke('admin-deals')
 - `check_offer_duplicate`
 - `purchase_offer_boost`
 - `mark_social_published_internal`
+
+## 18. مجموعة إدارة طلبات المستخدم — ✅ مكتمل (تم النشر والقفل)
+
+**تاريخ التجهيز:** 2026-06-20  
+**Edge Function الجديدة:** `user-requests`  
+**Migration القفل بعد النشر:** `2026_06_20_lock_user_requests_rpcs.sql`
+
+### 18.1 الدوال التي نُقلت
+- `get_user_requests_internal`
+- `create_request_internal`
+- `update_request_internal`
+- `soft_delete_request_internal`
