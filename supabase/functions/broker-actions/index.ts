@@ -1,0 +1,88 @@
+// Edge Function: broker-actions
+// الغرض: تسجيل طلب الوسيط العقاري من قبل المستخدم.
+
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+function env(name: string, fallback?: string): string {
+  return Deno.env.get(name) ?? (fallback ? Deno.env.get(fallback) ?? "" : "");
+}
+
+function json(body: Record<string, unknown>, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+async function validateUser(
+  req: Request,
+  supabaseAdmin: ReturnType<typeof createClient>,
+  requestedUid: string
+): Promise<{ ok: true; uid: string } | { ok: false; response: Response }> {
+  const authHeader = req.headers.get("Authorization") ?? "";
+  const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+
+  if (!bearer) return { ok: false, response: json({ success: false, error: "AUTH_TOKEN_REQUIRED" }, 401) };
+
+  const { data: userData, error } = await supabaseAdmin.auth.getUser(bearer);
+  const uid = userData?.user?.id;
+
+  if (error || !uid) return { ok: false, response: json({ success: false, error: "INVALID_AUTH_TOKEN" }, 401) };
+  if (requestedUid && requestedUid !== uid) return { ok: false, response: json({ success: false, error: "UNAUTHORIZED_ACCESS" }, 403) };
+
+  return { ok: true, uid: uid };
+}
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method !== "POST") return json({ success: false, error: "METHOD_NOT_ALLOWED" }, 405);
+
+  try {
+    const supabaseAdmin = createClient(
+      env("SUPABASE_URL", "PROJECT_URL"),
+      env("SUPABASE_SERVICE_ROLE_KEY", "SERVICE_ROLE_KEY"),
+      { auth: { autoRefreshToken: false, persistSession: false } },
+    );
+
+    const body = await req.json() as Record<string, unknown>;
+    const action = (body.action ?? "").toString();
+    const requestedUid = (body.user_uid ?? body.userUid)?.toString() ?? "";
+    
+    if (!requestedUid) return json({ success: false, error: "USER_UID_REQUIRED" }, 400);
+
+    const actor = await validateUser(req, supabaseAdmin, requestedUid);
+    if (!actor.ok) return actor.response;
+    const uid = actor.uid;
+
+    if (action === "submit_request") {
+      const businessName = (body.business_name ?? body.businessName ?? "").toString();
+      const category = Number(body.category ?? 0);
+      const experience = (body.experience ?? "").toString();
+      const about = (body.about ?? "").toString();
+
+      if (!businessName) return json({ success: false, error: "BUSINESS_NAME_REQUIRED" }, 400);
+
+      const { data, error } = await supabaseAdmin.rpc("submit_broker_request_internal", {
+        p_user_uid: uid,
+        p_business_name: businessName,
+        p_category: category,
+        p_experience: experience,
+        p_about: about,
+      });
+
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json({ success: data === true });
+    }
+
+    return json({ success: false, error: "UNKNOWN_ACTION" }, 400);
+  } catch (error) {
+    return json({ success: false, error: error instanceof Error ? error.message : String(error) }, 500);
+  }
+});

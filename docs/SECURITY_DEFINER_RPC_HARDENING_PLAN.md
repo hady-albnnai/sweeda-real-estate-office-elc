@@ -980,3 +980,22 @@ supabase.functions.invoke('admin-deals')
 - `register_password`
 - `change_password_internal`
 - `request_verification_by_uid`
+
+## 22. المجموعة الأخيرة (لوحة التحكم، الشكوك، وصلاحيات متفرقة) — ✅ مكتمل (تم النشر والقفل)
+
+**تاريخ التجهيز:** 2026-06-20  
+**Edge Functions الجديدة:**
+- `admin-dashboard`
+- `broker-actions`
+- تم تحديث `user-account` ليدعم `reset_password_with_otp`.
+
+**Migration القفل بعد النشر:** `2026_06_20_lock_final_rpcs.sql`
+
+### 22.1 الدوال التي نُقلت
+- `submit_broker_request_internal`
+- `get_admin_dashboard_stats`
+- `get_staff_stats_internal`
+- `get_all_staff_users`
+- `admin_fraud_suspects`
+- `revoke_staff_session`
+- `reset_password_with_otp`

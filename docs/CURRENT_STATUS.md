@@ -50,6 +50,7 @@
 | نقل حجز وإدارة مواعيد المستخدم إلى Edge Function | تمت إضافة `user-appointments` وقفل RPCs الخاصة بها بعد الاختبار |
 | نقل إشعارات المستخدم إلى Edge Function | تمت إضافة `user-notifications` وقفل RPCs الخاصة بها بعد الاختبار |
 | نقل حساب المستخدم إلى Edge Function | تمت إضافة `user-account` وقفل RPCs الخاصة بها بعد الاختبار |
+| نقل اللوحة وإجراءات متفرقة إلى Edge Function | تمت إضافة `admin-dashboard` و `broker-actions` وقفل جميع RPCs المتبقية |
 
 ---
 
