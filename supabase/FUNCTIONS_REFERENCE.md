@@ -56,6 +56,7 @@
 | 🆕 **جاهز للتطبيق** | `2026_06_17_lock_otp_direct_rpcs.sql` — إغلاق direct execute لدوال OTP/upsert عن `anon/authenticated` وجعلها عبر Edge Functions فقط |
 | ✅ **مُطبّق على السيرفر** | `2026_06_17_linter_security_hardening.sql` — إصلاح `users_public` كـ `security_invoker`، ضبط `search_path` لكل دوال public، قفل OTP legacy/direct، قفل `admin_create_staff_user` و`admin_wipe_test_data`، قفل دوال النقاط المباشرة `add_points` و`award_points_safe`، وقفل دوال الإشعارات المباشرة `notify_user` و`send_push_notification`، تشديد `otp_codes/user_devices`، وحذف سياسات list العامة لبكتات public |
 | 🆕 **جاهز للنشر ثم القفل** | Edge Function `admin-offers` — تنقل دوال إدارة العروض الحساسة خلف `staff_session_token/service_role`، وبعد اختبارها يطبق `2026_06_17_lock_admin_offer_rpcs.sql` |
+| 🆕 **جاهز للنشر ثم القفل** | Edge Function `admin-verifications` — تنقل مراجعة التوثيق واعتماد/رفض الهويات خلف `staff_session_token/service_role`، وبعد اختبارها يطبق `2026_06_17_lock_admin_verification_rpcs.sql` |
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_lock_legacy_admin_rpcs.sql` — إغلاق direct execute للدوال الإدارية القديمة الحساسة بعد نقلها إلى Edge Functions |
 | ✅ **مُطبّق على السيرفر** | Storage policies لـ `offer_images` — INSERT/SELECT/UPDATE/DELETE مفتوحة |
 | 📝 **جاهز للتطبيق (لم يُنفّذ بعد)** | `2026_06_13_auth_username_password.sql` — اسم مستخدم `usr` + كلمة مرور مشفّرة `pwd` + 6 RPCs (`register_password`, `login_with_password`, `reset_password_with_otp`, `change_password_internal`, `check_username_available`, `get_staff_stats_internal`) + تحديث `users_public` (إضافة `usr`) + تحديث `get_user_full_by_id` (إضافة `usr` + إخفاء `pwd` خلف flag) |
@@ -755,6 +756,25 @@ Edge Function جديدة لمسار التحقق من SMS OTP. تمنع العم
 - `verify_otp_v2` يعمل عبر `verify-sms-otp` و`verify-whatsapp-otp` فقط.
 - `upsert_user_after_otp` يعمل عبر Edge Functions بـ `service_role` فقط.
 
+
+
+## 🛡️ Edge Function — `admin-verifications`
+
+تنقل مراجعة توثيق المستخدمين من قراءة مباشرة/RPC مباشر إلى Edge Function محمية بجلسة موظف.
+
+Actions المدعومة:
+
+| action | الغرض |
+|---|---|
+| `list_pending` | جلب المستخدمين أصحاب `vrf=1` لمراجعة التوثيق |
+| `approve` | اعتماد التوثيق عبر `admin_approve_verification_by_admin` |
+| `reject` | رفض التوثيق عبر `admin_reject_verification_by_admin` |
+
+بعد النشر والاختبار، تُقفل RPCs الخلفية عن `anon/authenticated` وتبقى لـ `service_role` فقط عبر:
+
+```text
+2026_06_17_lock_admin_verification_rpcs.sql
+```
 
 ## 🛡️ Edge Function — `admin-offers`
 

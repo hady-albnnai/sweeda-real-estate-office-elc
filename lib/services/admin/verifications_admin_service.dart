@@ -1,4 +1,4 @@
-import '../../core/constants/db_constants.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/network/supabase_service.dart';
 import '../../core/utils/error_utils.dart';
 
@@ -13,37 +13,54 @@ class VerificationsAdminService {
     _lastError = ErrorUtils.arabicMessage(error);
   }
 
-  Future<List<Map<String, dynamic>>> getPendingVerifications() async {
+  Map<String, dynamic>? _asMap(dynamic value) {
+    if (value is Map) return Map<String, dynamic>.from(value);
+    return null;
+  }
+
+  Future<Map<String, dynamic>> _invokeAdminVerifications(
+    String action,
+    Map<String, dynamic> body,
+  ) async {
     try {
-      final res = await SupabaseService()
-          .client
-          .from(DbTables.users)
-          .select()
-          .eq('vrf', 1)
-          .eq('i_del', 0)
-          .order('ts_upd', ascending: true);
-      clearError();
-      return (res as List)
-          .map((r) => Map<String, dynamic>.from(r))
-          .toList();
+      final prefs = await SharedPreferences.getInstance();
+      final sessionToken = prefs.getString('staff_session_token');
+      if (sessionToken != null && sessionToken.isNotEmpty) {
+        body['staff_session_token'] = sessionToken;
+      }
+      body['action'] = action;
+      final res = await SupabaseService().client.functions.invoke('admin-verifications', body: body);
+      final data = _asMap(res.data);
+      if (data == null) {
+        _setError('EMPTY_RESPONSE');
+        return {'success': false, 'error': 'EMPTY_RESPONSE'};
+      }
+      if (data['success'] == true) {
+        clearError();
+      } else {
+        _setError(data['error'] ?? 'UNKNOWN_ERROR');
+      }
+      return data;
     } catch (e) {
       _setError(e);
-      return [];
+      return {'success': false, 'error': ErrorUtils.normalize(e)};
     }
   }
 
+  Future<List<Map<String, dynamic>>> getPendingVerifications(String adminUid) async {
+    final data = await _invokeAdminVerifications('list_pending', {'admin_uid': adminUid});
+    if (data['success'] != true || data['users'] is! List) return [];
+    return (data['users'] as List)
+        .map((r) => Map<String, dynamic>.from(r as Map))
+        .toList();
+  }
+
   Future<bool> approveVerification(String adminUid, String userId) async {
-    try {
-      await SupabaseService().client.rpc(
-        'admin_approve_verification_by_admin',
-        params: {'p_admin_uid': adminUid, 'p_target_uid': userId},
-      );
-      clearError();
-      return true;
-    } catch (e) {
-      _setError(e);
-      return false;
-    }
+    final data = await _invokeAdminVerifications('approve', {
+      'admin_uid': adminUid,
+      'target_uid': userId,
+    });
+    return data['success'] == true;
   }
 
   Future<bool> rejectVerification(
@@ -51,20 +68,11 @@ class VerificationsAdminService {
     String userId, {
     String reason = '',
   }) async {
-    try {
-      await SupabaseService().client.rpc(
-        'admin_reject_verification_by_admin',
-        params: {
-          'p_admin_uid': adminUid,
-          'p_target_uid': userId,
-          'p_reason': reason,
-        },
-      );
-      clearError();
-      return true;
-    } catch (e) {
-      _setError(e);
-      return false;
-    }
+    final data = await _invokeAdminVerifications('reject', {
+      'admin_uid': adminUid,
+      'target_uid': userId,
+      'reason': reason,
+    });
+    return data['success'] == true;
   }
 }

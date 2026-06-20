@@ -612,3 +612,67 @@ service_role = true
 ```
 
 وهذا لا يكسر التطبيق طالما `admin-offers` منشورة والكود الجديد مستخدم.
+
+---
+
+## 11. مجموعة إدارة التوثيق — تم تجهيز النقل إلى Edge Function
+
+**تاريخ التجهيز:** 2026-06-17  
+**Edge Function الجديدة:** `admin-verifications`  
+**Migration القفل بعد النشر:** `2026_06_17_lock_admin_verification_rpcs.sql`
+
+### 11.1 الدوال/المسارات التي نُقلت
+
+```text
+قراءة طلبات التوثيق pending users vrf=1
+admin_approve_verification_by_admin(uuid, uuid)
+admin_reject_verification_by_admin(uuid, uuid, text)
+```
+
+### 11.2 التصميم الجديد
+
+التطبيق يستدعي:
+
+```text
+supabase.functions.invoke('admin-verifications')
+```
+
+مع actions:
+
+```text
+list_pending
+approve
+reject
+```
+
+Edge Function تتحقق من:
+
+- Supabase Auth JWT مطابق إن وجد.
+- أو `staff_session_token` صالح عبر `validate_staff_session`.
+- الحد الأدنى للدور حالياً `role >= 4` لأن مراجعة التوثيق من صلاحيات موظف المكتب فما فوق.
+
+### 11.3 خطوات التطبيق الآمن
+
+1. `git pull` للحصول على الكود الجديد.
+2. نشر الدالة:
+
+```bash
+supabase functions deploy admin-verifications
+```
+
+3. اختبار شاشة طلبات التوثيق.
+4. اختبار اعتماد/رفض توثيق على حساب تجريبي.
+5. بعدها فقط تطبيق:
+
+```text
+supabase/migrations/2026_06_17_lock_admin_verification_rpcs.sql
+```
+
+### 11.4 أثر القفل
+
+بعد تطبيق القفل:
+
+```text
+admin_approve_verification_by_admin: anon=false, authenticated=false, service_role=true
+admin_reject_verification_by_admin: anon=false, authenticated=false, service_role=true
+```
