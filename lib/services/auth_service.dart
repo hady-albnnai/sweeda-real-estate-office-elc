@@ -250,6 +250,11 @@ class AuthService {
     }
   }
 
+  Future<String?> getStaffSessionToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('staff_session_token');
+  }
+
   Future<String?> getSavedUserId() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('user_id');
