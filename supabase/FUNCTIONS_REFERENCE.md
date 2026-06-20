@@ -60,7 +60,7 @@
 | ✅ **منشور ومقفول** | Edge Function `admin-payments` — تعمل إدارة المدفوعات عبر `staff_session_token/service_role`، وتم تطبيق `2026_06_17_lock_admin_payment_rpcs.sql` |
 | ✅ **مكتمل** | Edge Function `admin-appointments` تم نشرها وقفل RPCs بنجاح |
 | ✅ **مكتمل** | Edge Function `admin-reports` — تنقل إدارة التبليغات خلف `staff_session_token/service_role`، وبعد اختبارها يطبق `2026_06_20_lock_admin_reports_rpcs.sql` |
-| 🆕 **جاهز للنشر ثم القفل** | Edge Function `admin-deals` — تنقل إدارة الصفقات خلف `staff_session_token/service_role`، وبعد اختبارها يطبق `2026_06_20_lock_admin_deals_rpcs.sql` |
+| ✅ **مكتمل** | Edge Function `admin-deals` — تنقل إدارة الصفقات خلف `staff_session_token/service_role`، وبعد اختبارها يطبق `2026_06_20_lock_admin_deals_rpcs.sql` |
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_lock_legacy_admin_rpcs.sql` — إغلاق direct execute للدوال الإدارية القديمة الحساسة بعد نقلها إلى Edge Functions |
 | ✅ **مُطبّق على السيرفر** | Storage policies لـ `offer_images` — INSERT/SELECT/UPDATE/DELETE مفتوحة |
 | 📝 **جاهز للتطبيق (لم يُنفّذ بعد)** | `2026_06_13_auth_username_password.sql` — اسم مستخدم `usr` + كلمة مرور مشفّرة `pwd` + 6 RPCs (`register_password`, `login_with_password`, `reset_password_with_otp`, `change_password_internal`, `check_username_available`, `get_staff_stats_internal`) + تحديث `users_public` (إضافة `usr`) + تحديث `get_user_full_by_id` (إضافة `usr` + إخفاء `pwd` خلف flag) |
