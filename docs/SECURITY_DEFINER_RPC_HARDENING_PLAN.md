@@ -807,7 +807,7 @@ admin_update_appointment_status_internal: anon=false, authenticated=false, servi
 admin_force_appointment_internal: anon=false, authenticated=false, service_role=true
 ```
 
-## 14. مجموعة إدارة التبليغات — تم النشر والتحديث في التطبيق ⏳ بانتظار القفل
+## 14. مجموعة إدارة التبليغات — ✅ مكتمل (تم النشر والقفل)
 
 **تاريخ التجهيز:** 2026-06-20  
 **Edge Function الجديدة:** `admin-reports`  
@@ -832,5 +832,35 @@ supabase.functions.invoke('admin-reports')
 3. نشر الدالة:
    ```bash
    supabase functions deploy admin-reports
+   ```
+4. قفل الـ RPCs.
+
+## 15. مجموعة إدارة الصفقات — تم النشر والتحديث في التطبيق ⏳ بانتظار القفل
+
+**تاريخ التجهيز:** 2026-06-20  
+**Edge Function الجديدة:** `admin-deals`  
+**Migration القفل بعد النشر:** `2026_06_20_lock_admin_deals_rpcs.sql`
+
+### 15.1 الدوال التي نُقلت
+- `get_admin_deals_internal`
+- `create_deal_internal`
+- `complete_deal_internal`
+
+### 15.2 طريقة العمل عبر Edge Function
+التطبيق يستدعي:
+```text
+supabase.functions.invoke('admin-deals')
+```
+مع actions:
+- `list` → استدعاء `get_admin_deals_internal`
+- `create` → استدعاء `create_deal_internal`
+- `complete` → استدعاء `complete_deal_internal`
+
+### 15.3 خطوات التنفيذ
+1. إنشاء Edge function `admin-deals`.
+2. تعديل خدمة `DealsAdminService` في Flutter.
+3. نشر الدالة:
+   ```bash
+   supabase functions deploy admin-deals
    ```
 4. قفل الـ RPCs.
