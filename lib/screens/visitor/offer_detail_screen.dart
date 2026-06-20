@@ -376,11 +376,12 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
 
     try {
       final rsnIndex = reasons.indexOf(selected!);
-      await SupabaseService().client.rpc(
-        'create_report_internal',
-        params: {
-          'p_reporter_uid': auth.userModel!.uid,
-          'p_report': {
+      final response = await SupabaseService().client.functions.invoke(
+        'user-account',
+        body: {
+          'action': 'create_report',
+          'user_uid': auth.userModel!.uid,
+          'report': {
             'tgt_uid': _offer!.usrId,
             'tgt_tp': 1,
             'tgt_id': _offer!.id,
@@ -389,6 +390,9 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
           },
         },
       );
+      if (response.data == null || response.data['success'] != true) {
+        throw Exception(response.data?['error'] ?? 'Report failed');
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

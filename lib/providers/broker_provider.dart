@@ -101,11 +101,16 @@ class BrokerProvider with ChangeNotifier {
     _error = null;
     notifyListeners();
     try {
-      final snap = await SupabaseService().client.rpc(
-        'get_broker_offers_internal',
-        params: {'p_broker_uid': brokerId},
+      final response = await SupabaseService().client.functions.invoke(
+        'user-offers',
+        body: {
+          'action': 'broker_offers',
+          'user_uid': brokerId,
+        },
       );
-      _offers = (snap as List)
+      final data = response.data;
+      if (data == null || data['success'] != true) throw Exception('Error');
+      _offers = (data['offers'] as List)
           .map((d) =>
               OfferModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String))
           .toList();
@@ -121,11 +126,16 @@ class BrokerProvider with ChangeNotifier {
     _error = null;
     notifyListeners();
     try {
-      final snap = await SupabaseService().client.rpc(
-        'get_broker_deals_internal',
-        params: {'p_broker_uid': brokerId},
+      final response = await SupabaseService().client.functions.invoke(
+        'user-offers',
+        body: {
+          'action': 'broker_deals',
+          'user_uid': brokerId,
+        },
       );
-      _deals = (snap as List)
+      final data = response.data;
+      if (data == null || data['success'] != true) throw Exception('Error');
+      _deals = (data['deals'] as List)
           .map((d) =>
               DealModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String))
           .toList();
@@ -141,11 +151,16 @@ class BrokerProvider with ChangeNotifier {
     _error = null;
     notifyListeners();
     try {
-      final offersSnap = await SupabaseService().client.rpc(
-        'get_broker_offers_internal',
-        params: {'p_broker_uid': brokerId},
+      final offersRes = await SupabaseService().client.functions.invoke(
+        'user-offers',
+        body: {
+          'action': 'broker_offers',
+          'user_uid': brokerId,
+        },
       );
-      final offersList = offersSnap as List;
+      final offersList = offersRes.data != null && offersRes.data['success'] == true 
+          ? offersRes.data['offers'] as List 
+          : [];
       final totalOffers = offersList.length;
       final publishedOffers =
           offersList.where((o) => (o['sts'] ?? 0) == 2).length;
@@ -154,20 +169,30 @@ class BrokerProvider with ChangeNotifier {
       final totalFavs = offersList.fold<int>(
           0, (sum, o) => sum + ((o['fvs'] as int?) ?? 0));
 
-      final apptSnap = await SupabaseService().client.rpc(
-        'get_broker_appointments_internal',
-        params: {'p_broker_uid': brokerId},
+      final apptRes = await SupabaseService().client.functions.invoke(
+        'user-appointments',
+        body: {
+          'action': 'list_broker_appointments',
+          'user_uid': brokerId,
+        },
       );
-      final apptList = apptSnap as List;
+      final apptList = apptRes.data != null && apptRes.data['success'] == true 
+          ? apptRes.data['appointments'] as List 
+          : [];
       final totalAppointments = apptList.length;
       final completedAppointments =
           apptList.where((a) => (a['sts'] ?? 0) == 2).length;
 
-      final dealsSnap = await SupabaseService().client.rpc(
-        'get_broker_deals_internal',
-        params: {'p_broker_uid': brokerId},
+      final dealsRes = await SupabaseService().client.functions.invoke(
+        'user-offers',
+        body: {
+          'action': 'broker_deals',
+          'user_uid': brokerId,
+        },
       );
-      final dealsList = dealsSnap as List;
+      final dealsList = dealsRes.data != null && dealsRes.data['success'] == true 
+          ? dealsRes.data['deals'] as List 
+          : [];
       final totalDeals = dealsList.length;
       final completedDeals =
           dealsList.where((d) => (d['sts'] ?? 0) == 1).length;

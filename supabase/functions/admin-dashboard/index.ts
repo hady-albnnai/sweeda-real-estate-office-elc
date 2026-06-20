@@ -131,6 +131,12 @@ serve(async (req) => {
       return json({ success: true, suspects: data ?? [] });
     }
 
+    if (action === "admin_requests") {
+      const { data, error } = await supabaseAdmin.rpc("get_admin_requests_internal", { p_admin_uid: adminUid });
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json({ success: true, requests: data ?? [] });
+    }
+
     return json({ success: false, error: "UNKNOWN_ACTION" }, 400);
   } catch (error) {
     return json({ success: false, error: error instanceof Error ? error.message : String(error) }, 500);
