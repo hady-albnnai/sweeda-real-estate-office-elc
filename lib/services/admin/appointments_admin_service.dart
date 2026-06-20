@@ -1,3 +1,4 @@
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/network/supabase_service.dart';
 import '../../core/utils/error_utils.dart';
 import '../../models/appointment_model.dart';
@@ -12,6 +13,40 @@ class AppointmentsAdminService {
 
   void _setError(Object? error) {
     _lastError = ErrorUtils.arabicMessage(error);
+  }
+
+  Map<String, dynamic>? _asMap(dynamic value) {
+    if (value is Map) return Map<String, dynamic>.from(value);
+    return null;
+  }
+
+  Future<Map<String, dynamic>> _invokeAdminAppointments(
+    String action,
+    Map<String, dynamic> body,
+  ) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final sessionToken = prefs.getString('staff_session_token');
+      if (sessionToken != null && sessionToken.isNotEmpty) {
+        body['staff_session_token'] = sessionToken;
+      }
+      body['action'] = action;
+      final res = await SupabaseService().client.functions.invoke('admin-appointments', body: body);
+      final data = _asMap(res.data);
+      if (data == null) {
+        _setError('EMPTY_RESPONSE');
+        return {'success': false, 'error': 'EMPTY_RESPONSE'};
+      }
+      if (data['success'] == true) {
+        clearError();
+      } else {
+        _setError(data['error'] ?? 'UNKNOWN_ERROR');
+      }
+      return data;
+    } catch (e) {
+      _setError(e);
+      return {'success': false, 'error': ErrorUtils.normalize(e)};
+    }
   }
 
   Future<List<RequestModel>> getAllRequests(String adminUid) async {
@@ -32,20 +67,12 @@ class AppointmentsAdminService {
   }
 
   Future<List<AppointmentModel>> getAllAppointments(String adminUid) async {
-    try {
-      final response = await SupabaseService().client.rpc(
-        'get_admin_appointments_internal',
-        params: {'p_admin_uid': adminUid},
-      );
-      clearError();
-      return (response as List)
-          .map((d) => AppointmentModel.fromSupabase(
-              Map<String, dynamic>.from(d), d['id'] as String))
-          .toList();
-    } catch (e) {
-      _setError(e);
-      return [];
-    }
+    final data = await _invokeAdminAppointments('list', {'admin_uid': adminUid});
+    if (data['success'] != true || data['appointments'] is! List) return [];
+    return (data['appointments'] as List)
+        .map((d) => AppointmentModel.fromSupabase(
+            Map<String, dynamic>.from(d as Map), d['id'] as String))
+        .toList();
   }
 
   Future<bool> updateAppointmentStatus(
@@ -54,38 +81,20 @@ class AppointmentsAdminService {
     int status, {
     String adminNote = '',
   }) async {
-    try {
-      await SupabaseService().client.rpc(
-        'admin_update_appointment_status_internal',
-        params: {
-          'p_admin_uid': adminUid,
-          'p_appointment_id': apptId,
-          'p_status': status,
-          'p_admin_note': adminNote,
-        },
-      );
-      clearError();
-      return true;
-    } catch (e) {
-      _setError(e);
-      return false;
-    }
+    final data = await _invokeAdminAppointments('update_status', {
+      'admin_uid': adminUid,
+      'appointment_id': apptId,
+      'status': status,
+      'admin_note': adminNote,
+    });
+    return data['success'] == true;
   }
 
   Future<bool> forceAppointment(String apptId, String adminId) async {
-    try {
-      await SupabaseService().client.rpc(
-        'admin_force_appointment_internal',
-        params: {
-          'p_admin_uid': adminId,
-          'p_appointment_id': apptId,
-        },
-      );
-      clearError();
-      return true;
-    } catch (e) {
-      _setError(e);
-      return false;
-    }
+    final data = await _invokeAdminAppointments('force', {
+      'admin_uid': adminId,
+      'appointment_id': apptId,
+    });
+    return data['success'] == true;
   }
 }
