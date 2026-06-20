@@ -48,6 +48,7 @@
 | نقل إدارة عروض المستخدم إلى Edge Function | تمت إضافة `user-offers` وقفل RPCs الخاصة بها بعد الاختبار |
 | نقل إدارة طلبات المستخدم إلى Edge Function | تمت إضافة `user-requests` وقفل RPCs الخاصة بها بعد الاختبار |
 | نقل حجز وإدارة مواعيد المستخدم إلى Edge Function | تمت إضافة `user-appointments` وقفل RPCs الخاصة بها بعد الاختبار |
+| نقل إشعارات المستخدم إلى Edge Function | تمت إضافة `user-notifications` وقفل RPCs الخاصة بها بعد الاختبار |
 
 ---
 

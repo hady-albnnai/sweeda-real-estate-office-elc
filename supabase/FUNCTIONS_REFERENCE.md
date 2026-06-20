@@ -1864,3 +1864,7 @@ NOW() > pkg_grace          → expire_packages     → b_pkg = 0
 ## 🛡️ Edge Function — `user-appointments`
 **الحالة:** ✅ مكتمل  
 **الأذونات:** `service_role` للـ Supabase client، وتتحقق من `JWT Token`، وتضمن أن الـ `user_uid` المطلوب مطابق لصاحب الجلسة (سواء كان المستخدم كطالب للموعد، أو مالكاً، أو وسيطاً).
+
+## 🛡️ Edge Function — `user-notifications`
+**الحالة:** ✅ مكتمل  
+**الأذونات:** `service_role` للـ Supabase client، وتتحقق من `JWT Token` وتضمن المطابقة.
