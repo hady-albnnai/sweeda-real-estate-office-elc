@@ -1,6 +1,7 @@
 import '../../core/network/supabase_service.dart';
 import '../../core/utils/error_utils.dart';
 import '../../models/deal_model.dart';
+import '../auth_service.dart';
 
 /// خدمة إدارة الصفقات من طرف الإدارة.
 class DealsAdminService {
@@ -15,12 +16,24 @@ class DealsAdminService {
 
   Future<List<DealModel>> getAllDeals(String adminUid) async {
     try {
-      final response = await SupabaseService().client.rpc(
-        'get_admin_deals_internal',
-        params: {'p_admin_uid': adminUid},
+      final token = await AuthService().getStaffSessionToken();
+      final response = await SupabaseService().client.functions.invoke(
+        'admin-deals',
+        body: {
+          'action': 'list',
+          'admin_uid': adminUid,
+          'staff_session_token': token,
+        },
       );
+
+      final data = response.data;
+      if (data == null || data['success'] != true) {
+        _setError(data?['error'] ?? 'حدث خطأ غير معروف');
+        return [];
+      }
+
       clearError();
-      return (response as List)
+      return (data['deals'] as List)
           .map((d) =>
               DealModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String))
           .toList();
@@ -32,13 +45,23 @@ class DealsAdminService {
 
   Future<bool> createDeal(String adminUid, DealModel deal) async {
     try {
-      await SupabaseService().client.rpc(
-        'create_deal_internal',
-        params: {
-          'p_admin_uid': adminUid,
-          'p_deal': deal.toMap(),
+      final token = await AuthService().getStaffSessionToken();
+      final response = await SupabaseService().client.functions.invoke(
+        'admin-deals',
+        body: {
+          'action': 'create',
+          'admin_uid': adminUid,
+          'staff_session_token': token,
+          'deal': deal.toMap(),
         },
       );
+
+      final data = response.data;
+      if (data == null || data['success'] != true) {
+        _setError(data?['error'] ?? 'حدث خطأ غير معروف');
+        return false;
+      }
+
       clearError();
       return true;
     } catch (e) {
@@ -54,15 +77,25 @@ class DealsAdminService {
     String? note,
   }) async {
     try {
-      await SupabaseService().client.rpc(
-        'complete_deal_internal',
-        params: {
-          'p_admin_uid': adminId,
-          'p_deal_id': dealId,
-          'p_commission': commission,
-          'p_note': note,
+      final token = await AuthService().getStaffSessionToken();
+      final response = await SupabaseService().client.functions.invoke(
+        'admin-deals',
+        body: {
+          'action': 'complete',
+          'admin_uid': adminId,
+          'staff_session_token': token,
+          'deal_id': dealId,
+          'commission': commission,
+          'note': note,
         },
       );
+
+      final data = response.data;
+      if (data == null || data['success'] != true) {
+        _setError(data?['error'] ?? 'حدث خطأ غير معروف');
+        return false;
+      }
+
       clearError();
       return true;
     } catch (e) {
