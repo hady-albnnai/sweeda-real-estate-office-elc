@@ -1,4 +1,4 @@
-import '../../core/constants/db_constants.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/network/supabase_service.dart';
 import '../../core/utils/error_utils.dart';
 import '../../models/payment_model.dart';
@@ -15,61 +15,66 @@ class PaymentsAdminService {
     _lastError = ErrorUtils.arabicMessage(error);
   }
 
-  Future<List<PaymentModel>> getAllPayments(String adminUid, {int? status}) async {
+  Map<String, dynamic>? _asMap(dynamic value) {
+    if (value is Map) return Map<String, dynamic>.from(value);
+    return null;
+  }
+
+  Future<Map<String, dynamic>> _invokeAdminPayments(
+    String action,
+    Map<String, dynamic> body,
+  ) async {
     try {
-      final response = await SupabaseService().client.rpc(
-        'get_admin_payments_internal',
-        params: {'p_admin_uid': adminUid},
-      );
-      var list = (response as List)
-          .map((d) => PaymentModel.fromSupabase(
-              Map<String, dynamic>.from(d), d['id'] as String))
-          .toList();
-      if (status != null) {
-        list = list.where((p) => p.sts == status).toList();
+      final prefs = await SharedPreferences.getInstance();
+      final sessionToken = prefs.getString('staff_session_token');
+      if (sessionToken != null && sessionToken.isNotEmpty) {
+        body['staff_session_token'] = sessionToken;
       }
-      clearError();
-      return list;
+      body['action'] = action;
+      final res = await SupabaseService().client.functions.invoke('admin-payments', body: body);
+      final data = _asMap(res.data);
+      if (data == null) {
+        _setError('EMPTY_RESPONSE');
+        return {'success': false, 'error': 'EMPTY_RESPONSE'};
+      }
+      if (data['success'] == true) {
+        clearError();
+      } else {
+        _setError(data['error'] ?? 'UNKNOWN_ERROR');
+      }
+      return data;
     } catch (e) {
       _setError(e);
-      return [];
+      return {'success': false, 'error': ErrorUtils.normalize(e)};
     }
+  }
+
+  Future<List<PaymentModel>> getAllPayments(String adminUid, {int? status}) async {
+    final data = await _invokeAdminPayments('list', {'admin_uid': adminUid});
+    if (data['success'] != true || data['payments'] is! List) return [];
+    var list = (data['payments'] as List)
+        .map((d) => PaymentModel.fromSupabase(
+            Map<String, dynamic>.from(d as Map), d['id'] as String))
+        .toList();
+    if (status != null) {
+      list = list.where((p) => p.sts == status).toList();
+    }
+    return list;
   }
 
   Future<bool> approvePayment(String paymentId, String adminId) async {
-    try {
-      final res = await SupabaseService().client.rpc(
-        DbFunctions.approvePaymentFinal,
-        params: {
-          'p_payment_id': paymentId,
-          'p_admin_id': adminId,
-        },
-      );
-
-      final ok = res is Map && res['success'] == true;
-      if (ok) clearError();
-      if (!ok) _setError(res is Map ? res['error'] : 'UNKNOWN_ERROR');
-      return ok;
-    } catch (e) {
-      _setError(e);
-      return false;
-    }
+    final data = await _invokeAdminPayments('approve', {
+      'admin_uid': adminId,
+      'payment_id': paymentId,
+    });
+    return data['success'] == true;
   }
 
   Future<bool> rejectPayment(String paymentId, String adminId) async {
-    try {
-      await SupabaseService().client.rpc(
-        'admin_reject_payment_internal',
-        params: {
-          'p_admin_uid': adminId,
-          'p_payment_id': paymentId,
-        },
-      );
-      clearError();
-      return true;
-    } catch (e) {
-      _setError(e);
-      return false;
-    }
+    final data = await _invokeAdminPayments('reject', {
+      'admin_uid': adminId,
+      'payment_id': paymentId,
+    });
+    return data['success'] == true;
   }
 }

@@ -40,11 +40,13 @@
 | خطة قفل RPC تدريجياً | تمت إضافة `docs/SECURITY_DEFINER_RPC_HARDENING_PLAN.md` لتوثيق الدوال المفتوحة المتبقية وتصنيفها وخطة نقلها إلى Edge Functions قبل قفلها |
 | نقل إدارة العروض إلى Edge Function | تمت إضافة `admin-offers` وتجهيز قفل RPCs الخاصة بالعروض بعد نشر الدالة واختبارها |
 | نقل إدارة التوثيق إلى Edge Function | تمت إضافة `admin-verifications` وتجهيز قفل RPCs الخاصة باعتماد/رفض التوثيق بعد نشر الدالة واختبارها |
+| نقل إدارة المدفوعات إلى Edge Function | تمت إضافة `admin-payments` وتجهيز قفل RPCs الخاصة بالمدفوعات بعد نشر الدالة واختبارها |
 
 ---
 
 ## آخر migrations مضافة
 
+- `2026_06_17_lock_admin_payment_rpcs.sql`
 - `2026_06_17_lock_admin_verification_rpcs.sql`
 - `2026_06_17_lock_admin_offer_rpcs.sql`
 - `2026_06_17_linter_security_hardening.sql`
