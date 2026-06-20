@@ -55,6 +55,7 @@
 | 🆕 **جاهز للتطبيق** | `2026_06_17_secure_email_auth_internal.sql` — تأمين Email Magic Link عبر RPC `handle_email_auth_internal` + فهارس unique canonical للإيميل والهاتف |
 | 🆕 **جاهز للتطبيق** | `2026_06_17_lock_otp_direct_rpcs.sql` — إغلاق direct execute لدوال OTP/upsert عن `anon/authenticated` وجعلها عبر Edge Functions فقط |
 | ✅ **مُطبّق على السيرفر** | `2026_06_17_linter_security_hardening.sql` — إصلاح `users_public` كـ `security_invoker`، ضبط `search_path` لكل دوال public، قفل OTP legacy/direct، قفل `admin_create_staff_user` و`admin_wipe_test_data`، قفل دوال النقاط المباشرة `add_points` و`award_points_safe`، وقفل دوال الإشعارات المباشرة `notify_user` و`send_push_notification`، تشديد `otp_codes/user_devices`، وحذف سياسات list العامة لبكتات public |
+| 🆕 **جاهز للنشر ثم القفل** | Edge Function `admin-offers` — تنقل دوال إدارة العروض الحساسة خلف `staff_session_token/service_role`، وبعد اختبارها يطبق `2026_06_17_lock_admin_offer_rpcs.sql` |
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_lock_legacy_admin_rpcs.sql` — إغلاق direct execute للدوال الإدارية القديمة الحساسة بعد نقلها إلى Edge Functions |
 | ✅ **مُطبّق على السيرفر** | Storage policies لـ `offer_images` — INSERT/SELECT/UPDATE/DELETE مفتوحة |
 | 📝 **جاهز للتطبيق (لم يُنفّذ بعد)** | `2026_06_13_auth_username_password.sql` — اسم مستخدم `usr` + كلمة مرور مشفّرة `pwd` + 6 RPCs (`register_password`, `login_with_password`, `reset_password_with_otp`, `change_password_internal`, `check_username_available`, `get_staff_stats_internal`) + تحديث `users_public` (إضافة `usr`) + تحديث `get_user_full_by_id` (إضافة `usr` + إخفاء `pwd` خلف flag) |
@@ -753,6 +754,31 @@ Edge Function جديدة لمسار التحقق من SMS OTP. تمنع العم
 - `generate_otp_v2` يعمل عبر `send-sms-otp` و`send-whatsapp-otp` فقط.
 - `verify_otp_v2` يعمل عبر `verify-sms-otp` و`verify-whatsapp-otp` فقط.
 - `upsert_user_after_otp` يعمل عبر Edge Functions بـ `service_role` فقط.
+
+
+## 🛡️ Edge Function — `admin-offers`
+
+تنقل عمليات إدارة العروض الحساسة من RPC مباشر إلى Edge Function تتحقق من جلسة الموظف أولاً.
+
+Actions المدعومة:
+
+| action | RPC خلفية | الغرض |
+|---|---|---|
+| `list_pending` | `get_admin_pending_offers_internal` | جلب عروض قيد المراجعة |
+| `list_media_review` | `get_admin_offers_internal` | جلب عروض لمراجعة الوسائط |
+| `review` | `admin_review_offer_internal` | قبول/رفض عرض |
+| `set_priority` | `admin_set_offer_priority_internal` | تحديد أولوية العرض |
+| `delete` | `admin_delete_offer_internal` | أرشفة عرض إدارياً |
+
+متطلبات الأمان:
+
+- يجب إرسال `admin_uid`.
+- يجب وجود Supabase Auth JWT مطابق، أو `staff_session_token` صالح.
+- بعد نشر الدالة واختبارها، تُقفل RPCs الخلفية عن `anon/authenticated` وتبقى لـ `service_role` فقط عبر migration:
+
+```text
+2026_06_17_lock_admin_offer_rpcs.sql
+```
 
 ## 🧑‍💼 Edge Functions — إدارة الموظفين
 

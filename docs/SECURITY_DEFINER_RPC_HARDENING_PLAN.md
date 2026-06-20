@@ -524,3 +524,91 @@ docs/CURRENT_STATUS.md
 ما زال مفتوحاً: معظم دوال المستخدم والإدارة والفلو التشغيلي التي يعتمد عليها التطبيق مباشرة.
 الخطة: نقل تدريجي إلى Edge Functions ثم قفل RPCs.
 ```
+
+---
+
+## 10. مجموعة إدارة العروض — تم تجهيز النقل إلى Edge Function
+
+**تاريخ التجهيز:** 2026-06-17  
+**Edge Function الجديدة:** `admin-offers`  
+**Migration القفل بعد النشر:** `2026_06_17_lock_admin_offer_rpcs.sql`
+
+### 10.1 الدوال التي نُقلت إلى Edge Function
+
+```text
+get_admin_pending_offers_internal(uuid)
+get_admin_offers_internal(uuid, integer)
+admin_review_offer_internal(uuid, uuid, boolean, text)
+admin_set_offer_priority_internal(uuid, uuid, text, integer)
+admin_delete_offer_internal(uuid, uuid)
+```
+
+### 10.2 لماذا هذه المجموعة أولاً؟
+
+لأنها دوال إدارية حساسة ومستخدمة في:
+
+- مراجعة العروض.
+- مراجعة الوسائط.
+- تحديد أولوية العرض.
+- حذف/أرشفة عرض من الإدارة.
+
+وكانت تُستدعى مباشرة من التطبيق عبر RPC، وهذا يظهر في linter كـ `SECURITY DEFINER` callable by `anon/authenticated`.
+
+### 10.3 التصميم الجديد
+
+التطبيق يستدعي:
+
+```text
+supabase.functions.invoke('admin-offers')
+```
+
+مع body يحتوي:
+
+```json
+{
+  "action": "list_pending | list_media_review | review | set_priority | delete",
+  "admin_uid": "...",
+  "staff_session_token": "..."
+}
+```
+
+ثم Edge Function:
+
+1. تتحقق من Supabase Auth JWT إن وجد.
+2. أو تتحقق من `staff_session_token` عبر `validate_staff_session`.
+3. بعد التحقق تستدعي RPC القديمة باستخدام `service_role`.
+
+### 10.4 خطوات التطبيق الآمن
+
+لا تطبق migration القفل قبل هذه الخطوات:
+
+1. `git pull` للحصول على الكود الجديد.
+2. نشر الدالة:
+
+```bash
+supabase functions deploy admin-offers
+```
+
+3. اختبار:
+   - فتح مراجعة العروض.
+   - قبول/رفض عرض تجريبي.
+   - فتح مراجعة الوسائط.
+   - تحديد أولوية عرض.
+   - حذف عرض تجريبي من صفحة التفاصيل.
+4. بعدها فقط تطبيق:
+
+```text
+supabase/migrations/2026_06_17_lock_admin_offer_rpcs.sql
+```
+
+### 10.5 أثر القفل
+
+بعد تطبيق القفل، الدوال المذكورة تصبح:
+
+```text
+anon = false
+authenticated = false
+service_role = true
+```
+
+وهذا لا يكسر التطبيق طالما `admin-offers` منشورة والكود الجديد مستخدم.
