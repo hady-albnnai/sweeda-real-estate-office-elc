@@ -3,6 +3,7 @@ import '../core/constants/db_constants.dart';
 import '../core/network/supabase_service.dart';
 import '../models/offer_model.dart';
 import '../models/photography_task_model.dart';
+import '../services/auth_service.dart';
 
 class PhotographyProvider with ChangeNotifier {
   bool _isLoading = false;
@@ -37,11 +38,21 @@ class PhotographyProvider with ChangeNotifier {
 
   Future<List<PhotographyTaskModel>> getPhotographerTasks(String photographerId) async {
     try {
-      final response = await SupabaseService().client.rpc(
-        'get_photographer_tasks_internal',
-        params: {'p_photographer_uid': photographerId},
+      final token = await AuthService().getStaffSessionToken();
+      final res = await SupabaseService().client.functions.invoke(
+        'photographer-tasks',
+        body: {
+          'action': 'list',
+          'user_uid': photographerId,
+          'staff_session_token': token,
+        },
       );
-      return (response as List)
+      final data = res.data;
+      if (data == null || data['success'] != true) {
+        _error = data?['error'] ?? 'Unknown error';
+        return [];
+      }
+      return (data['tasks'] as List)
           .map((row) => PhotographyTaskModel.fromSupabase(
                 Map<String, dynamic>.from(row),
                 row['id'] as String,
@@ -55,15 +66,23 @@ class PhotographyProvider with ChangeNotifier {
 
   Future<bool> startTask(String photographerUid, String taskId) async {
     try {
-      await SupabaseService().client.rpc(
-        'start_photography_task_internal',
-        params: {
-          'p_photographer_uid': photographerUid,
-          'p_task_id': taskId,
+      final token = await AuthService().getStaffSessionToken();
+      final res = await SupabaseService().client.functions.invoke(
+        'photographer-tasks',
+        body: {
+          'action': 'start',
+          'user_uid': photographerUid,
+          'staff_session_token': token,
+          'task_id': taskId,
         },
       );
-      notifyListeners();
-      return true;
+      final data = res.data;
+      if (data != null && data['success'] == true) {
+        notifyListeners();
+        return true;
+      }
+      _error = data?['error'] ?? 'Unknown error';
+      return false;
     } catch (e) {
       _error = e.toString();
       return false;
@@ -79,18 +98,27 @@ class PhotographyProvider with ChangeNotifier {
   }) async {
     _setLoading(true);
     try {
-      await SupabaseService().client.rpc(
-        'create_photography_task_internal',
-        params: {
-          'p_admin_uid': requestedBy,
-          'p_offer_id': offer.id,
-          'p_photographer_id': photographerId,
-          'p_notes': notes,
-          'p_ts_scheduled': scheduledAt?.toIso8601String(),
+      final token = await AuthService().getStaffSessionToken();
+      final res = await SupabaseService().client.functions.invoke(
+        'admin-photography',
+        body: {
+          'action': 'create',
+          'admin_uid': requestedBy,
+          'staff_session_token': token,
+          'offer_id': offer.id,
+          'photographer_id': photographerId,
+          'notes': notes,
+          'ts_scheduled': scheduledAt?.toIso8601String(),
         },
       );
+      final data = res.data;
       _setLoading(false);
-      return true;
+      
+      if (data != null && data['success'] == true) {
+        return true;
+      }
+      _error = data?['error'] ?? 'Unknown error';
+      return false;
     } catch (e) {
       _error = e.toString();
       _setLoading(false);
@@ -100,17 +128,25 @@ class PhotographyProvider with ChangeNotifier {
 
   Future<bool> updateStatus(String adminUid, String taskId, int status, {String officeNote = ''}) async {
     try {
-      await SupabaseService().client.rpc(
-        'update_photography_task_status_internal',
-        params: {
-          'p_admin_uid': adminUid,
-          'p_task_id': taskId,
-          'p_status': status,
-          'p_office_note': officeNote,
+      final token = await AuthService().getStaffSessionToken();
+      final res = await SupabaseService().client.functions.invoke(
+        'admin-photography',
+        body: {
+          'action': 'update_status',
+          'admin_uid': adminUid,
+          'staff_session_token': token,
+          'task_id': taskId,
+          'status': status,
+          'office_note': officeNote,
         },
       );
-      notifyListeners();
-      return true;
+      final data = res.data;
+      if (data != null && data['success'] == true) {
+        notifyListeners();
+        return true;
+      }
+      _error = data?['error'] ?? 'Unknown error';
+      return false;
     } catch (e) {
       _error = e.toString();
       return false;
@@ -124,17 +160,25 @@ class PhotographyProvider with ChangeNotifier {
     String photographerNote = '',
   }) async {
     try {
-      await SupabaseService().client.rpc(
-        'submit_photography_task_internal',
-        params: {
-          'p_photographer_uid': photographerUid,
-          'p_task_id': taskId,
-          'p_media': media,
-          'p_photographer_note': photographerNote,
+      final token = await AuthService().getStaffSessionToken();
+      final res = await SupabaseService().client.functions.invoke(
+        'photographer-tasks',
+        body: {
+          'action': 'submit',
+          'user_uid': photographerUid,
+          'staff_session_token': token,
+          'task_id': taskId,
+          'media': media,
+          'photographer_note': photographerNote,
         },
       );
-      notifyListeners();
-      return true;
+      final data = res.data;
+      if (data != null && data['success'] == true) {
+        notifyListeners();
+        return true;
+      }
+      _error = data?['error'] ?? 'Unknown error';
+      return false;
     } catch (e) {
       _error = e.toString();
       return false;
@@ -144,14 +188,22 @@ class PhotographyProvider with ChangeNotifier {
   Future<bool> attachMediaToOffer(String adminUid, PhotographyTaskModel task) async {
     if (task.media.isEmpty) return false;
     try {
-      await SupabaseService().client.rpc(
-        'attach_photography_media_to_offer_internal',
-        params: {
-          'p_admin_uid': adminUid,
-          'p_task_id': task.id,
+      final token = await AuthService().getStaffSessionToken();
+      final res = await SupabaseService().client.functions.invoke(
+        'admin-photography',
+        body: {
+          'action': 'attach_media',
+          'admin_uid': adminUid,
+          'staff_session_token': token,
+          'task_id': task.id,
         },
       );
-      return true;
+      final data = res.data;
+      if (data != null && data['success'] == true) {
+        return true;
+      }
+      _error = data?['error'] ?? 'Unknown error';
+      return false;
     } catch (e) {
       _error = e.toString();
       return false;

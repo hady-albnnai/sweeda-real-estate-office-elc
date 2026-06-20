@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../models/executor_task_model.dart';
 import '../core/network/supabase_service.dart';
+import '../services/auth_service.dart';
 
 /// Provider مهام المنفذ الميداني (المشرف)
 class ExecutorProvider with ChangeNotifier {
@@ -11,11 +12,18 @@ class ExecutorProvider with ChangeNotifier {
 
   Future<List<ExecutorTaskModel>> getMyTasks(String userId) async {
     try {
-      final res = await SupabaseService().client.rpc(
-        'get_my_tasks',
-        params: {'p_user_uid': userId},
+      final token = await AuthService().getStaffSessionToken();
+      final res = await SupabaseService().client.functions.invoke(
+        'executor-tasks',
+        body: {
+          'action': 'get_my_tasks',
+          'user_uid': userId,
+          'staff_session_token': token,
+        },
       );
-      return _parseList(res);
+      final data = res.data;
+      if (data == null || data['success'] != true) return [];
+      return _parseList(data['tasks']);
     } catch (e) {
       return [];
     }
@@ -23,11 +31,18 @@ class ExecutorProvider with ChangeNotifier {
 
   Future<List<ExecutorTaskModel>> getPostponedTasks(String userId) async {
     try {
-      final res = await SupabaseService().client.rpc(
-        'get_postponed_tasks',
-        params: {'p_user_uid': userId},
+      final token = await AuthService().getStaffSessionToken();
+      final res = await SupabaseService().client.functions.invoke(
+        'executor-tasks',
+        body: {
+          'action': 'get_postponed_tasks',
+          'user_uid': userId,
+          'staff_session_token': token,
+        },
       );
-      return _parseList(res);
+      final data = res.data;
+      if (data == null || data['success'] != true) return [];
+      return _parseList(data['tasks']);
     } catch (e) {
       return [];
     }
@@ -35,11 +50,18 @@ class ExecutorProvider with ChangeNotifier {
 
   Future<List<ExecutorTaskModel>> getCompletedTasks(String userId) async {
     try {
-      final res = await SupabaseService().client.rpc(
-        'get_completed_tasks',
-        params: {'p_user_uid': userId},
+      final token = await AuthService().getStaffSessionToken();
+      final res = await SupabaseService().client.functions.invoke(
+        'executor-tasks',
+        body: {
+          'action': 'get_completed_tasks',
+          'user_uid': userId,
+          'staff_session_token': token,
+        },
       );
-      return _parseList(res);
+      final data = res.data;
+      if (data == null || data['success'] != true) return [];
+      return _parseList(data['tasks']);
     } catch (e) {
       return [];
     }
@@ -47,14 +69,19 @@ class ExecutorProvider with ChangeNotifier {
 
   Future<ExecutorTaskModel?> getTaskByAppointment(String userId, String appointmentId) async {
     try {
-      final res = await SupabaseService().client.rpc(
-        'get_executor_task_by_appointment',
-        params: {
-          'p_user_uid': userId,
-          'p_appointment_id': appointmentId,
+      final token = await AuthService().getStaffSessionToken();
+      final res = await SupabaseService().client.functions.invoke(
+        'executor-tasks',
+        body: {
+          'action': 'get_task_by_appointment',
+          'user_uid': userId,
+          'staff_session_token': token,
+          'appointment_id': appointmentId,
         },
       );
-      final list = _parseList(res);
+      final data = res.data;
+      if (data == null || data['success'] != true) return null;
+      final list = _parseList(data['tasks']);
       return list.isEmpty ? null : list.first;
     } catch (e) {
       return null;
@@ -69,14 +96,21 @@ class ExecutorProvider with ChangeNotifier {
   Future<bool> postponeTask(String userId, String appointmentId,
       DateTime newDate, String notes) async {
     try {
-      await SupabaseService().client.rpc('update_task_outcome', params: {
-        'p_user_uid': userId,
-        'p_appointment_id': appointmentId,
-        'p_outcome': 'postpone',
-        'p_notes': notes,
-        'p_new_date': newDate.toIso8601String(),
-      });
-      return true;
+      final token = await AuthService().getStaffSessionToken();
+      final res = await SupabaseService().client.functions.invoke(
+        'executor-tasks',
+        body: {
+          'action': 'update_task_outcome',
+          'user_uid': userId,
+          'staff_session_token': token,
+          'appointment_id': appointmentId,
+          'outcome': 'postpone',
+          'notes': notes,
+          'new_date': newDate.toIso8601String(),
+        },
+      );
+      final data = res.data;
+      return data != null && data['success'] == true;
     } catch (e) {
       return false;
     }
@@ -86,14 +120,21 @@ class ExecutorProvider with ChangeNotifier {
   Future<bool> rejectTask(String userId, String appointmentId,
       String reason, String notes) async {
     try {
-      await SupabaseService().client.rpc('update_task_outcome', params: {
-        'p_user_uid': userId,
-        'p_appointment_id': appointmentId,
-        'p_outcome': 'reject',
-        'p_notes': notes,
-        'p_rejection_reason': reason,
-      });
-      return true;
+      final token = await AuthService().getStaffSessionToken();
+      final res = await SupabaseService().client.functions.invoke(
+        'executor-tasks',
+        body: {
+          'action': 'update_task_outcome',
+          'user_uid': userId,
+          'staff_session_token': token,
+          'appointment_id': appointmentId,
+          'outcome': 'reject',
+          'notes': notes,
+          'rejection_reason': reason,
+        },
+      );
+      final data = res.data;
+      return data != null && data['success'] == true;
     } catch (e) {
       return false;
     }
@@ -103,15 +144,19 @@ class ExecutorProvider with ChangeNotifier {
   Future<bool> requestCompletion(
       String userId, String appointmentId, String notes) async {
     try {
-      await SupabaseService().client.rpc(
-        'request_completion_by_appointment',
-        params: {
-          'p_user_uid': userId,
-          'p_appointment_id': appointmentId,
-          'p_notes': notes,
+      final token = await AuthService().getStaffSessionToken();
+      final res = await SupabaseService().client.functions.invoke(
+        'executor-tasks',
+        body: {
+          'action': 'request_completion',
+          'user_uid': userId,
+          'staff_session_token': token,
+          'appointment_id': appointmentId,
+          'notes': notes,
         },
       );
-      return true;
+      final data = res.data;
+      return data != null && data['success'] == true;
     } catch (e) {
       return false;
     }
@@ -123,25 +168,37 @@ class ExecutorProvider with ChangeNotifier {
 
   Future<List<Map<String, dynamic>>> getMyCompletionRequests(String userId) async {
     try {
-      final res = await SupabaseService().client.rpc(
-        'get_my_completion_requests',
-        params: {'p_user_uid': userId},
+      final token = await AuthService().getStaffSessionToken();
+      final res = await SupabaseService().client.functions.invoke(
+        'executor-tasks',
+        body: {
+          'action': 'get_my_completion_requests',
+          'user_uid': userId,
+          'staff_session_token': token,
+        },
       );
-      if (res == null) return [];
-      return List<Map<String, dynamic>>.from(res as List);
+      final data = res.data;
+      if (data == null || data['success'] != true) return [];
+      return List<Map<String, dynamic>>.from(data['requests'] as List);
     } catch (e) {
       return [];
     }
   }
 
-  Future<List<Map<String, dynamic>>> getPendingRequests(String userId) async {
+  Future<List<Map<String, dynamic>>> getPendingRequests(String adminUid) async {
     try {
-      final res = await SupabaseService().client.rpc(
-        'get_all_pending_completion_requests',
-        params: {'p_admin_uid': userId},
+      final token = await AuthService().getStaffSessionToken();
+      final res = await SupabaseService().client.functions.invoke(
+        'executor-tasks',
+        body: {
+          'action': 'get_pending_requests',
+          'user_uid': adminUid, // نرسل الـ ID كـ user_uid لأن الدالة تتوقع ذلك
+          'staff_session_token': token,
+        },
       );
-      if (res == null) return [];
-      return List<Map<String, dynamic>>.from(res as List);
+      final data = res.data;
+      if (data == null || data['success'] != true) return [];
+      return List<Map<String, dynamic>>.from(data['requests'] as List);
     } catch (e) {
       return [];
     }
@@ -155,14 +212,24 @@ class ExecutorProvider with ChangeNotifier {
   Future<bool> processCompletionRequest(String adminUid, String requestId,
       String decision, String officeNotes) async {
     try {
-      await SupabaseService().client.rpc('process_completion_request', params: {
-        'p_admin_uid': adminUid,
-        'p_request_id': requestId,
-        'p_decision': decision,
-        'p_office_notes': officeNotes,
-      });
-      notifyListeners();
-      return true;
+      final token = await AuthService().getStaffSessionToken();
+      final res = await SupabaseService().client.functions.invoke(
+        'executor-tasks',
+        body: {
+          'action': 'process_completion_request',
+          'user_uid': adminUid,
+          'staff_session_token': token,
+          'request_id': requestId,
+          'decision': decision,
+          'office_notes': officeNotes,
+        },
+      );
+      final data = res.data;
+      if (data != null && data['success'] == true) {
+        notifyListeners();
+        return true;
+      }
+      return false;
     } catch (e) {
       return false;
     }
