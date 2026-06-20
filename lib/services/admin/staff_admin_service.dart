@@ -2,6 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/network/supabase_service.dart';
 import '../../core/utils/error_utils.dart';
 import '../../models/user_model.dart';
+import '../auth_service.dart';
 
 /// خدمة إدارة الموظفين والعمليات الإدارية الحساسة.
 ///
