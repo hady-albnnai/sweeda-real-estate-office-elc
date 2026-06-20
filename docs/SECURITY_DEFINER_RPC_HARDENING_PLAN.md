@@ -908,3 +908,30 @@ supabase.functions.invoke('admin-deals')
    ```
 4. اختبار الشاشات.
 5. قفل الـ RPCs.
+
+## 17. مجموعة إدارة عروض المستخدم — ✅ مكتمل (تم النشر والقفل)
+
+**تاريخ التجهيز:** 2026-06-20  
+**Edge Function الجديدة:** `user-offers`  
+**Migration القفل بعد النشر:** `2026_06_20_lock_user_offers_rpcs.sql`
+
+### 17.1 الدوال التي نُقلت
+- `get_user_offers_internal`
+- `get_offer_by_id_internal`
+- `create_offer_internal`
+- `increment_offer_views_internal`
+- `check_offer_duplicate`
+- `purchase_offer_boost`
+- `mark_social_published_internal`
+
+## 18. مجموعة إدارة طلبات المستخدم — ✅ مكتمل (تم النشر والقفل)
+
+**تاريخ التجهيز:** 2026-06-20  
+**Edge Function الجديدة:** `user-requests`  
+**Migration القفل بعد النشر:** `2026_06_20_lock_user_requests_rpcs.sql`
+
+### 18.1 الدوال التي نُقلت
+- `get_user_requests_internal`
+- `create_request_internal`
+- `update_request_internal`
+- `soft_delete_request_internal`
