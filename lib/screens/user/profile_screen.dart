@@ -7,6 +7,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/network/supabase_service.dart';
 import '../../models/user_model.dart';
 import '../../widgets/bottom_nav_bar.dart';
+import '../../services/auth_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
