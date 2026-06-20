@@ -16,7 +16,7 @@
 | إعادة هيكلة إدارة الموظفين | مطبقة على الكود والسيرفر (تشمل العنوان والرقم الوطني وصورتي الهوية وجه/قفا) |
 | تنظيف النظام (Wipe) | تم تنفيذ مسح شامل للبيانات التجريبية (2026-06-16) |
 | إعادة تصميم شاشة حسابي للزائر | استخدام نظام القوائم المنسدلة (Expandable) بأسلوب فخم ومنظم |
-| Edge Functions إدارة الموظفين | `create-user` محدثة بالكود، وتمت إضافة `get-staff-id-images`؛ يلزم نشرهما بعد السحب |
+| Edge Functions إدارة الموظفين | `create-user` و`get-staff-id-images` منشورتان ومحدثتان لدعم صورتي الهوية وعرضهما بروابط مؤقتة |
 | Staff Sessions Security | مطبقة ومتحقق منها |
 | إغلاق RPCs القديمة الحساسة | مطبق |
 | إصلاح كشف الاحتيال | تم إصلاح خطأ FORBIDDEN عبر RPC جديد |
@@ -34,13 +34,13 @@
 | توحيد شاشة موظف المكتب | تم توحيد دخول role=4 إلى `/employee/home` وإبقاء `/employee/dashboard` كتوافق خلفي فقط لنفس الشاشة، لتفادي اختلاف التجربة حسب نقطة الدخول |
 | حذف شاشة موظف مكتب غير مستخدمة | تم حذف `lib/screens/admin/employee_dashboard_screen.dart` بعد توحيد موظف المكتب على `/employee/home` |
 | فلو المنفذ والمصور | تمت إضافة Migration وكود لتصحيح طلبات إتمام المنفذ، بدء مهمة التصوير، منع تكرار مهام المصور، وجلب المهام عبر RPC |
-| Database linter hardening | تم إصلاح `security_definer_view` و`function_search_path_mutable` بالكامل، وتشديد `otp_codes/user_devices` وسياسات public bucket listing، وقفل دوال OTP legacy و`admin_create_staff_user` و`admin_wipe_test_data` |
+| Database linter hardening | تم إصلاح `security_definer_view` و`function_search_path_mutable` بالكامل، وتشديد `otp_codes/user_devices` وسياسات public bucket listing، وقفل دوال OTP legacy و`admin_create_staff_user` و`admin_wipe_test_data` ودوال النقاط/الإشعارات/trigger/helper الداخلية |
 | قفل دوال النقاط المباشرة | تم قفل `add_points` و`award_points_safe` عن العميل؛ قد تتوقف مكافآت النقاط المباشرة مؤقتاً إلى أن تُنقل إلى Edge Functions/Triggers موثوقة |
 | قفل دوال الإشعارات المباشرة | تم قفل `notify_user` و`send_push_notification` عن العميل؛ يجب أن تُنشأ الإشعارات مستقبلاً عبر Triggers/Edge Functions موثوقة |
 | خطة قفل RPC تدريجياً | تمت إضافة `docs/SECURITY_DEFINER_RPC_HARDENING_PLAN.md` لتوثيق الدوال المفتوحة المتبقية وتصنيفها وخطة نقلها إلى Edge Functions قبل قفلها |
-| نقل إدارة العروض إلى Edge Function | تمت إضافة `admin-offers` وتجهيز قفل RPCs الخاصة بالعروض بعد نشر الدالة واختبارها |
-| نقل إدارة التوثيق إلى Edge Function | تمت إضافة `admin-verifications` وتجهيز قفل RPCs الخاصة باعتماد/رفض التوثيق بعد نشر الدالة واختبارها |
-| نقل إدارة المدفوعات إلى Edge Function | تمت إضافة `admin-payments` وتجهيز قفل RPCs الخاصة بالمدفوعات بعد نشر الدالة واختبارها |
+| نقل إدارة العروض إلى Edge Function | `admin-offers` منشورة ومختبرة، وRPCs الخاصة بالعروض مقفلة عن العميل |
+| نقل إدارة التوثيق إلى Edge Function | `admin-verifications` منشورة ومختبرة، وRPCs الخاصة بالتوثيق مقفلة عن العميل |
+| نقل إدارة المدفوعات إلى Edge Function | `admin-payments` منشورة ومختبرة، وRPCs الخاصة بالمدفوعات مقفلة عن العميل |
 
 ---
 
@@ -63,8 +63,8 @@
 
 ## Edge Functions الإدارية
 
-- `create-user` (منشورة سابقاً، وآخر نسخة بالكود تدعم صورتي الهوية — تحتاج deploy)
-- `get-staff-id-images` (جديدة — تحتاج deploy)
+- `create-user` (منشورة ومحدثة لدعم الحقول الإضافية وصورتي الهوية)
+- `get-staff-id-images` (منشورة — روابط مؤقتة لصور هوية الموظف)
 - `update-user-role`
 - `toggle-user-status`
 - `reset-user-password`
