@@ -225,10 +225,16 @@ class OfferProvider with ChangeNotifier {
 
   Future<List<OfferModel>> fetchUserOffers(String userId) async {
     try {
-      final response = await SupabaseService().client.rpc(
-        'get_user_offers_internal',
-        params: {'p_user_uid': userId},
+      final response = await SupabaseService().client.functions.invoke(
+        'user-offers',
+        body: {
+          'action': 'list',
+          'user_uid': userId,
+        },
       );
+      final data = response.data;
+      if (data == null || data['success'] != true) throw Exception(data?['error'] ?? 'Unknown error');
+      final list = data['offers'] as List;
       final list = (response as List)
           .map((d) => OfferModel.fromSupabase(
               Map<String, dynamic>.from(d), d['id'] as String))
@@ -243,13 +249,18 @@ class OfferProvider with ChangeNotifier {
 
   Future<OfferModel?> fetchOfferById(String offerId, {String? userId}) async {
     try {
-      final response = await SupabaseService().client.rpc(
-        'get_offer_by_id_internal',
-        params: {
-          'p_offer_id': offerId,
-          'p_user_uid': userId,
+      final response = await SupabaseService().client.functions.invoke(
+        'user-offers',
+        body: {
+          'action': 'get_by_id',
+          'offer_id': offerId,
+          'user_uid': userId,
         },
       );
+      final data = response.data;
+      if (data == null || data['success'] != true) return null;
+      final offerData = data['offer'];
+      if (offerData == null) return null;
       if (response == null || (response as List).isEmpty) return null;
       final row = Map<String, dynamic>.from(response.first as Map);
       final offer = OfferModel.fromSupabase(row, row['id'] as String);
@@ -311,9 +322,12 @@ class OfferProvider with ChangeNotifier {
 
   Future<void> incrementViews(String offerId) async {
     try {
-      await SupabaseService().client.rpc(
-        'increment_offer_views_internal',
-        params: {'p_offer_id': offerId},
+      await SupabaseService().client.functions.invoke(
+        'user-offers',
+        body: {
+          'action': 'increment_views',
+          'offer_id': offerId,
+        },
       );
     } catch (e) {
       _setError(e);
