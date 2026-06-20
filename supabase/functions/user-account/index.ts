@@ -171,6 +171,19 @@ serve(async (req) => {
       return json({ success: data === true });
     }
 
+    if (action === "reset_password") {
+      const newPassword = (body.new_password ?? body.newPassword ?? "").toString();
+      if (!newPassword) return json({ success: false, error: "NEW_PASSWORD_REQUIRED" }, 400);
+
+      // هذا الإجراء يفترض أن المستخدم قد تخطى للتو مرحلة الـ OTP وأثبت هويته
+      const { data, error } = await supabaseAdmin.rpc("reset_password_with_otp", {
+        p_user_uid: uid,
+        p_new_password: newPassword,
+      });
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json({ success: data === true });
+    }
+
     return json({ success: false, error: "UNKNOWN_ACTION" }, 400);
   } catch (error) {
     return json({ success: false, error: error instanceof Error ? error.message : String(error) }, 500);

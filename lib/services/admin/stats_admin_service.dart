@@ -16,10 +16,18 @@ class StatsAdminService {
 
   Future<Map<String, dynamic>> getStats(String adminUid) async {
     try {
-      final response = await SupabaseService().client.rpc(
-        'get_admin_dashboard_stats',
-        params: {'p_admin_uid': adminUid},
+      final token = await AuthService().getStaffSessionToken();
+      final response = await SupabaseService().client.functions.invoke(
+        'admin-dashboard',
+        body: {
+          'action': 'dashboard_stats',
+          'admin_uid': adminUid,
+          'staff_session_token': token,
+        },
       );
+      final data = response.data;
+      if (data == null || data['success'] != true) throw Exception(data?['error'] ?? 'Error');
+      final res = data['stats'];
       clearError();
       return Map<String, dynamic>.from(response as Map);
     } catch (e) {
