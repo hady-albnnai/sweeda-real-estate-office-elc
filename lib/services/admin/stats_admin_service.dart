@@ -1,5 +1,6 @@
 import '../../core/network/supabase_service.dart';
 import '../../core/utils/error_utils.dart';
+import '../auth_service.dart';
 
 /// خدمة إحصائيات الإدارة والعدادات السريعة.
 ///
