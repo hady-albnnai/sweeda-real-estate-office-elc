@@ -35,7 +35,8 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
   Future<void> _load() async {
     setState(() => _loading = true);
     final admin = context.read<AdminProvider>();
-    final list = await admin.getPendingVerifications();
+    final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
+    final list = adminUid.isEmpty ? <Map<String, dynamic>>[] : await admin.getPendingVerifications(adminUid);
     if (mounted) {
       setState(() {
         _pending = list;
