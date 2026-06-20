@@ -138,6 +138,133 @@ REVOKE ALL ON FUNCTION public.send_push_notification(uuid, text, text, jsonb) FR
 REVOKE ALL ON FUNCTION public.send_push_notification(uuid, text, text, jsonb) FROM authenticated;
 GRANT EXECUTE ON FUNCTION public.send_push_notification(uuid, text, text, jsonb) TO service_role;
 
+
+-- 11) Internal trigger/helper/legacy helper RPCs locked after linter review.
+REVOKE ALL ON FUNCTION public.trg_appointment_created() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.trg_appointment_created() FROM anon;
+REVOKE ALL ON FUNCTION public.trg_appointment_created() FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.trg_appointment_created() TO service_role;
+
+REVOKE ALL ON FUNCTION public.trg_appointment_status_changed() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.trg_appointment_status_changed() FROM anon;
+REVOKE ALL ON FUNCTION public.trg_appointment_status_changed() FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.trg_appointment_status_changed() TO service_role;
+
+REVOKE ALL ON FUNCTION public.trg_deal_completed() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.trg_deal_completed() FROM anon;
+REVOKE ALL ON FUNCTION public.trg_deal_completed() FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.trg_deal_completed() TO service_role;
+
+REVOKE ALL ON FUNCTION public.trg_offer_published_match_requests() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.trg_offer_published_match_requests() FROM anon;
+REVOKE ALL ON FUNCTION public.trg_offer_published_match_requests() FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.trg_offer_published_match_requests() TO service_role;
+
+REVOKE ALL ON FUNCTION public.trg_offer_status_changed() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.trg_offer_status_changed() FROM anon;
+REVOKE ALL ON FUNCTION public.trg_offer_status_changed() FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.trg_offer_status_changed() TO service_role;
+
+REVOKE ALL ON FUNCTION public.trg_payment_approved() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.trg_payment_approved() FROM anon;
+REVOKE ALL ON FUNCTION public.trg_payment_approved() FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.trg_payment_approved() TO service_role;
+
+REVOKE ALL ON FUNCTION public.trg_rating_bonus() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.trg_rating_bonus() FROM anon;
+REVOKE ALL ON FUNCTION public.trg_rating_bonus() FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.trg_rating_bonus() TO service_role;
+
+REVOKE ALL ON FUNCTION public.check_offer_safe_update() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.check_offer_safe_update() FROM anon;
+REVOKE ALL ON FUNCTION public.check_offer_safe_update() FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.check_offer_safe_update() TO service_role;
+
+REVOKE ALL ON FUNCTION public.check_user_safe_insert() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.check_user_safe_insert() FROM anon;
+REVOKE ALL ON FUNCTION public.check_user_safe_insert() FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.check_user_safe_insert() TO service_role;
+
+REVOKE ALL ON FUNCTION public.check_user_safe_update() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.check_user_safe_update() FROM anon;
+REVOKE ALL ON FUNCTION public.check_user_safe_update() FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.check_user_safe_update() TO service_role;
+
+REVOKE ALL ON FUNCTION public.check_rating_valid() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.check_rating_valid() FROM anon;
+REVOKE ALL ON FUNCTION public.check_rating_valid() FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.check_rating_valid() TO service_role;
+
+REVOKE ALL ON FUNCTION public.expire_offer_boosts() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.expire_offer_boosts() FROM anon;
+REVOKE ALL ON FUNCTION public.expire_offer_boosts() FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.expire_offer_boosts() TO service_role;
+
+REVOKE ALL ON FUNCTION public.expire_packages() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.expire_packages() FROM anon;
+REVOKE ALL ON FUNCTION public.expire_packages() FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.expire_packages() TO service_role;
+
+REVOKE ALL ON FUNCTION public.accounts_on_same_device(text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.accounts_on_same_device(text) FROM anon;
+REVOKE ALL ON FUNCTION public.accounts_on_same_device(text) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.accounts_on_same_device(text) TO service_role;
+
+REVOKE ALL ON FUNCTION public.get_user_by_email(text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.get_user_by_email(text) FROM anon;
+REVOKE ALL ON FUNCTION public.get_user_by_email(text) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.get_user_by_email(text) TO service_role;
+
+REVOKE ALL ON FUNCTION public.get_user_by_phone(text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.get_user_by_phone(text) FROM anon;
+REVOKE ALL ON FUNCTION public.get_user_by_phone(text) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.get_user_by_phone(text) TO service_role;
+
+REVOKE ALL ON FUNCTION public.calculate_commission(numeric, numeric) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.calculate_commission(numeric, numeric) FROM anon;
+REVOKE ALL ON FUNCTION public.calculate_commission(numeric, numeric) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.calculate_commission(numeric, numeric) TO service_role;
+
+REVOKE ALL ON FUNCTION public.get_pending_offers_count() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.get_pending_offers_count() FROM anon;
+REVOKE ALL ON FUNCTION public.get_pending_offers_count() FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.get_pending_offers_count() TO service_role;
+
+REVOKE ALL ON FUNCTION public.send_appointment_reminders() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.send_appointment_reminders() FROM anon;
+REVOKE ALL ON FUNCTION public.send_appointment_reminders() FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.send_appointment_reminders() TO service_role;
+
+REVOKE ALL ON FUNCTION public.send_renewal_reminders() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.send_renewal_reminders() FROM anon;
+REVOKE ALL ON FUNCTION public.send_renewal_reminders() FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.send_renewal_reminders() TO service_role;
+
+REVOKE ALL ON FUNCTION public.admin_get_id_signed_path(uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.admin_get_id_signed_path(uuid) FROM anon;
+REVOKE ALL ON FUNCTION public.admin_get_id_signed_path(uuid) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_get_id_signed_path(uuid) TO service_role;
+
+REVOKE ALL ON FUNCTION public.apply_referral(uuid, text, integer) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.apply_referral(uuid, text, integer) FROM anon;
+REVOKE ALL ON FUNCTION public.apply_referral(uuid, text, integer) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.apply_referral(uuid, text, integer) TO service_role;
+
+REVOKE ALL ON FUNCTION public.get_available_supervisor(timestamptz) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.get_available_supervisor(timestamptz) FROM anon;
+REVOKE ALL ON FUNCTION public.get_available_supervisor(timestamptz) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.get_available_supervisor(timestamptz) TO service_role;
+
+REVOKE ALL ON FUNCTION public.update_user_badge(uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.update_user_badge(uuid) FROM anon;
+REVOKE ALL ON FUNCTION public.update_user_badge(uuid) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.update_user_badge(uuid) TO service_role;
+
+REVOKE ALL ON FUNCTION public.register_weekly_login(uuid, integer) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.register_weekly_login(uuid, integer) FROM anon;
+REVOKE ALL ON FUNCTION public.register_weekly_login(uuid, integer) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.register_weekly_login(uuid, integer) TO service_role;
+
 -- 8) Set fixed search_path on all known public functions to satisfy linter 0011.
 --    ALTER FUNCTION does not change function bodies; it only sets execution config.
 ALTER FUNCTION public.expire_offer_boosts() SET search_path = public, extensions, pg_temp;
