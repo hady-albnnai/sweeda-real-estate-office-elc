@@ -58,6 +58,7 @@
 | ✅ **منشور ومقفول** | Edge Function `admin-offers` — تعمل إدارة العروض عبر `staff_session_token/service_role`، وتم تطبيق `2026_06_17_lock_admin_offer_rpcs.sql` |
 | ✅ **منشور ومقفول** | Edge Function `admin-verifications` — تعمل مراجعة التوثيق عبر `staff_session_token/service_role`، وتم تطبيق `2026_06_17_lock_admin_verification_rpcs.sql` |
 | ✅ **منشور ومقفول** | Edge Function `admin-payments` — تعمل إدارة المدفوعات عبر `staff_session_token/service_role`، وتم تطبيق `2026_06_17_lock_admin_payment_rpcs.sql` |
+| 🆕 **جاهز للنشر ثم القفل** | Edge Function `admin-appointments` — تنقل إدارة المواعيد خلف `staff_session_token/service_role`، وبعد اختبارها يطبق `2026_06_17_lock_admin_appointment_rpcs.sql` |
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_lock_legacy_admin_rpcs.sql` — إغلاق direct execute للدوال الإدارية القديمة الحساسة بعد نقلها إلى Edge Functions |
 | ✅ **مُطبّق على السيرفر** | Storage policies لـ `offer_images` — INSERT/SELECT/UPDATE/DELETE مفتوحة |
 | 📝 **جاهز للتطبيق (لم يُنفّذ بعد)** | `2026_06_13_auth_username_password.sql` — اسم مستخدم `usr` + كلمة مرور مشفّرة `pwd` + 6 RPCs (`register_password`, `login_with_password`, `reset_password_with_otp`, `change_password_internal`, `check_username_available`, `get_staff_stats_internal`) + تحديث `users_public` (إضافة `usr`) + تحديث `get_user_full_by_id` (إضافة `usr` + إخفاء `pwd` خلف flag) |
@@ -759,6 +760,27 @@ Edge Function جديدة لمسار التحقق من SMS OTP. تمنع العم
 
 
 
+
+
+## 🛡️ Edge Function — `admin-appointments`
+
+تنقل إدارة المواعيد من RPC مباشر إلى Edge Function محمية بجلسة موظف.
+
+Actions المدعومة:
+
+| action | RPC خلفية | الغرض |
+|---|---|---|
+| `list` | `get_admin_appointments_internal` | جلب كل المواعيد للإدارة |
+| `update_status` | `admin_update_appointment_status_internal` | تحديث حالة موعد وملاحظة الإدارة |
+| `force` | `admin_force_appointment_internal` | فرض موعد إدارياً |
+
+الحد الأدنى للدور: `role >= 4`.
+
+بعد النشر والاختبار، تُقفل RPCs الخلفية عن `anon/authenticated` وتبقى لـ `service_role` فقط عبر:
+
+```text
+2026_06_17_lock_admin_appointment_rpcs.sql
+```
 
 ## 🛡️ Edge Function — `admin-payments`
 

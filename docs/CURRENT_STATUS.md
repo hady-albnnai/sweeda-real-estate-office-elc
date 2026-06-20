@@ -41,11 +41,13 @@
 | نقل إدارة العروض إلى Edge Function | `admin-offers` منشورة ومختبرة، وRPCs الخاصة بالعروض مقفلة عن العميل |
 | نقل إدارة التوثيق إلى Edge Function | `admin-verifications` منشورة ومختبرة، وRPCs الخاصة بالتوثيق مقفلة عن العميل |
 | نقل إدارة المدفوعات إلى Edge Function | `admin-payments` منشورة ومختبرة، وRPCs الخاصة بالمدفوعات مقفلة عن العميل |
+| نقل إدارة المواعيد إلى Edge Function | تمت إضافة `admin-appointments` وتجهيز قفل RPCs الخاصة بإدارة المواعيد بعد نشر الدالة واختبارها |
 
 ---
 
 ## آخر migrations مضافة
 
+- `2026_06_17_lock_admin_appointment_rpcs.sql`
 - `2026_06_17_lock_admin_payment_rpcs.sql`
 - `2026_06_17_lock_admin_verification_rpcs.sql`
 - `2026_06_17_lock_admin_offer_rpcs.sql`
