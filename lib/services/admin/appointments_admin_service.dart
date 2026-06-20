@@ -105,4 +105,4 @@ class AppointmentsAdminService {
     return data['success'] == true;
   }
 }
-\nimport '../auth_service.dart';
+import '../auth_service.dart';
