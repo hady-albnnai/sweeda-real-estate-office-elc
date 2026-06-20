@@ -51,12 +51,19 @@ class AppointmentsAdminService {
 
   Future<List<RequestModel>> getAllRequests(String adminUid) async {
     try {
-      final response = await SupabaseService().client.rpc(
-        'get_admin_requests_internal',
-        params: {'p_admin_uid': adminUid},
+      final token = await AuthService().getStaffSessionToken();
+      final response = await SupabaseService().client.functions.invoke(
+        'admin-dashboard',
+        body: {
+          'action': 'admin_requests',
+          'admin_uid': adminUid,
+          'staff_session_token': token,
+        },
       );
+      final data = response.data;
+      if (data == null || data['success'] != true) throw Exception('Error fetching requests');
       clearError();
-      return (response as List)
+      return (data['requests'] as List)
           .map((d) => RequestModel.fromSupabase(
               Map<String, dynamic>.from(d), d['id'] as String))
           .toList();
@@ -98,3 +105,4 @@ class AppointmentsAdminService {
     return data['success'] == true;
   }
 }
+\nimport '../auth_service.dart';

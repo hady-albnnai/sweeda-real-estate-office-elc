@@ -165,6 +165,29 @@ serve(async (req) => {
       return json({ success: data === true });
     }
 
+    if (action === "create_report") {
+      const report = body.report as Record<string, unknown>;
+      if (!report) return json({ success: false, error: "REPORT_DATA_REQUIRED" }, 400);
+      const { data, error } = await supabaseAdmin.rpc("create_report_internal", {
+        p_reporter_uid: uid,
+        p_report: report,
+      });
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json({ success: true, report_id: data });
+    }
+
+    if (action === "user_payments") {
+      const { data, error } = await supabaseAdmin.rpc("get_user_payments_internal", { p_user_uid: uid });
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json({ success: true, payments: data ?? [] });
+    }
+
+    if (action === "handle_email_auth") {
+      const { data, error } = await supabaseAdmin.rpc("handle_email_auth_internal");
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json({ success: true, result: data });
+    }
+
     if (action === "request_verification") {
       const { data, error } = await supabaseAdmin.rpc("request_verification_by_uid", { p_user_uid: uid });
       if (error) return json({ success: false, error: error.message }, 400);

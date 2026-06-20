@@ -49,11 +49,16 @@ class PaymentProvider with ChangeNotifier {
     notifyListeners();
     try {
       _clearError();
-      final response = await SupabaseService().client.rpc(
-        'get_user_payments_internal',
-        params: {'p_user_uid': userId},
+      final response = await SupabaseService().client.functions.invoke(
+        'user-account',
+        body: {
+          'action': 'user_payments',
+          'user_uid': userId,
+        },
       );
-      _payments = (response as List)
+      final data = response.data;
+      if (data == null || data['success'] != true) throw Exception('Error fetching payments');
+      _payments = (data['payments'] as List)
           .map((d) => PaymentModel.fromSupabase(
               Map<String, dynamic>.from(d), d['id'] as String))
           .toList();
