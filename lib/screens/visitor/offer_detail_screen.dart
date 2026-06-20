@@ -170,30 +170,50 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
       leading: Icon(icon, color: color),
       title: Text(label, style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.w600)),
       onTap: () async {
-        Navigator.pop(ctx);
+        final messenger = ScaffoldMessenger.of(context);
         final adminProv = context.read<AdminProvider>();
         final authProv = context.read<AuthProvider>();
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('جاري التحديث...')),
-        );
-        
+
+        Navigator.pop(ctx);
+        // نعطي الـ bottom sheet وقتاً ليُغلق حتى لا تضيع الـ SnackBar خلفه/أثناء الإغلاق.
+        await Future<void>.delayed(const Duration(milliseconds: 120));
+        if (!mounted) return;
+
+        messenger
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text('جاري تحديث أولوية العرض...'),
+              behavior: SnackBarBehavior.floating,
+              duration: Duration(seconds: 2),
+            ),
+          );
+
         final ok = await adminProv.setOfferPriority(
           authProv.userModel!.uid,
           offerId,
           type,
         );
-        
+
         if (mounted) {
+          messenger.hideCurrentSnackBar();
           if (ok) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('تم تحديث أولوية العرض بنجاح')),
+            messenger.showSnackBar(
+              const SnackBar(
+                content: Text('تم تحديث أولوية العرض بنجاح'),
+                backgroundColor: Colors.green,
+                behavior: SnackBarBehavior.floating,
+              ),
             );
             // Refresh to see updated state
             _load();
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('فشل التحديث: ${adminProv.error ?? "حدث خطأ"}')),
+            messenger.showSnackBar(
+              SnackBar(
+                content: Text('فشل التحديث: ${adminProv.error ?? "حدث خطأ"}'),
+                backgroundColor: AppTheme.errorRed,
+                behavior: SnackBarBehavior.floating,
+              ),
             );
           }
         }
