@@ -1,3 +1,4 @@
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/network/supabase_service.dart';
 import '../../core/utils/error_utils.dart';
 import '../../models/offer_model.dart';
@@ -13,21 +14,48 @@ class OffersAdminService {
     _lastError = ErrorUtils.arabicMessage(error);
   }
 
-  Future<List<OfferModel>> getPendingOffers(String adminUid) async {
+  Map<String, dynamic>? _asMap(dynamic value) {
+    if (value is Map) return Map<String, dynamic>.from(value);
+    return null;
+  }
+
+  Future<Map<String, dynamic>> _invokeAdminOffers(
+    String action,
+    Map<String, dynamic> body,
+  ) async {
     try {
-      final response = await SupabaseService().client.rpc(
-        'get_admin_pending_offers_internal',
-        params: {'p_admin_uid': adminUid},
-      );
-      clearError();
-      return (response as List)
-          .map((d) => OfferModel.fromSupabase(
-              Map<String, dynamic>.from(d), d['id'] as String))
-          .toList();
+      final prefs = await SharedPreferences.getInstance();
+      final sessionToken = prefs.getString('staff_session_token');
+      if (sessionToken != null && sessionToken.isNotEmpty) {
+        body['staff_session_token'] = sessionToken;
+      }
+      body['action'] = action;
+
+      final res = await SupabaseService().client.functions.invoke('admin-offers', body: body);
+      final data = _asMap(res.data);
+      if (data == null) {
+        _setError('EMPTY_RESPONSE');
+        return {'success': false, 'error': 'EMPTY_RESPONSE'};
+      }
+      if (data['success'] == true) {
+        clearError();
+      } else {
+        _setError(data['error'] ?? 'UNKNOWN_ERROR');
+      }
+      return data;
     } catch (e) {
       _setError(e);
-      return [];
+      return {'success': false, 'error': ErrorUtils.normalize(e)};
     }
+  }
+
+  Future<List<OfferModel>> getPendingOffers(String adminUid) async {
+    final data = await _invokeAdminOffers('list_pending', {'admin_uid': adminUid});
+    if (data['success'] != true || data['offers'] is! List) return [];
+    return (data['offers'] as List)
+        .map((d) => OfferModel.fromSupabase(
+            Map<String, dynamic>.from(d as Map), d['id'] as String))
+        .toList();
   }
 
   Future<bool> reviewOffer(
@@ -36,22 +64,13 @@ class OffersAdminService {
     bool approve, {
     String reason = '',
   }) async {
-    try {
-      await SupabaseService().client.rpc(
-        'admin_review_offer_internal',
-        params: {
-          'p_admin_uid': adminUid,
-          'p_offer_id': offerId,
-          'p_approve': approve,
-          'p_reject_reason': reason,
-        },
-      );
-      clearError();
-      return true;
-    } catch (e) {
-      _setError(e);
-      return false;
-    }
+    final data = await _invokeAdminOffers('review', {
+      'admin_uid': adminUid,
+      'offer_id': offerId,
+      'approve': approve,
+      'reason': reason,
+    });
+    return data['success'] == true;
   }
 
   Future<bool> setOfferPriority(
@@ -59,58 +78,32 @@ class OffersAdminService {
     String offerId,
     String priorityType,
   ) async {
-    try {
-      await SupabaseService().client.rpc(
-        'admin_set_offer_priority_internal',
-        params: {
-          'p_admin_uid': adminUid,
-          'p_offer_id': offerId,
-          'p_priority_type': priorityType,
-          'p_duration_days': 30, // الإدارة تعطي الأولوية لمدة 30 يوم مبدئياً
-        },
-      );
-      clearError();
-      return true;
-    } catch (e) {
-      _setError(e);
-      return false;
-    }
+    final data = await _invokeAdminOffers('set_priority', {
+      'admin_uid': adminUid,
+      'offer_id': offerId,
+      'priority_type': priorityType,
+      'duration_days': 30,
+    });
+    return data['success'] == true;
   }
 
   Future<bool> deleteOfferByAdmin(String adminUid, String offerId) async {
-    try {
-      await SupabaseService().client.rpc(
-        'admin_delete_offer_internal',
-        params: {
-          'p_admin_uid': adminUid,
-          'p_offer_id': offerId,
-        },
-      );
-      clearError();
-      return true;
-    } catch (e) {
-      _setError(e);
-      return false;
-    }
+    final data = await _invokeAdminOffers('delete', {
+      'admin_uid': adminUid,
+      'offer_id': offerId,
+    });
+    return data['success'] == true;
   }
 
   Future<List<OfferModel>> getOffersForMediaReview(String adminUid) async {
-    try {
-      final response = await SupabaseService().client.rpc(
-        'get_admin_offers_internal',
-        params: {
-          'p_admin_uid': adminUid,
-          'p_limit': 100,
-        },
-      );
-      clearError();
-      return (response as List)
-          .map((d) => OfferModel.fromSupabase(
-              Map<String, dynamic>.from(d), d['id'] as String))
-          .toList();
-    } catch (e) {
-      _setError(e);
-      return [];
-    }
+    final data = await _invokeAdminOffers('list_media_review', {
+      'admin_uid': adminUid,
+      'limit': 100,
+    });
+    if (data['success'] != true || data['offers'] is! List) return [];
+    return (data['offers'] as List)
+        .map((d) => OfferModel.fromSupabase(
+            Map<String, dynamic>.from(d as Map), d['id'] as String))
+        .toList();
   }
 }

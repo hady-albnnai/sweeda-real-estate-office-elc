@@ -1,7 +1,7 @@
 # 📚 مرجع دوال Supabase (RPC + Edge Functions)
 
 > **مشروع:** عقارات السويداء
-> **آخر تحديث:** 2026-06-17 (محدّث بعد تأمين تسجيل الإيميل والهاتف عبر Edge Functions، دعم صورتي هوية للموظف، ودالة `get-staff-id-images`)
+> **آخر تحديث:** 2026-06-17 (محدّث بعد linter security hardening، تأمين تسجيل الإيميل والهاتف عبر Edge Functions، دعم صورتي هوية للموظف، ودالة `get-staff-id-images`)
 > **المصدر:** `supabase/setup.sql` + Migrations + Edge Functions
 
 ---
@@ -54,6 +54,8 @@
 | 🔄 **محدّث بالكود** | Edge Functions إدارة الموظفين: `create-user` محدثة لدعم صورتي الهوية و`get-staff-id-images` مضافة؛ يلزم deploy لهاتين الدالتين بعد `git pull` |
 | 🆕 **جاهز للتطبيق** | `2026_06_17_secure_email_auth_internal.sql` — تأمين Email Magic Link عبر RPC `handle_email_auth_internal` + فهارس unique canonical للإيميل والهاتف |
 | 🆕 **جاهز للتطبيق** | `2026_06_17_lock_otp_direct_rpcs.sql` — إغلاق direct execute لدوال OTP/upsert عن `anon/authenticated` وجعلها عبر Edge Functions فقط |
+| ✅ **مُطبّق على السيرفر** | `2026_06_17_linter_security_hardening.sql` — إصلاح `users_public` كـ `security_invoker`، ضبط `search_path` لكل دوال public، قفل OTP legacy/direct، قفل `admin_create_staff_user` و`admin_wipe_test_data`، قفل دوال النقاط المباشرة `add_points` و`award_points_safe`، وقفل دوال الإشعارات المباشرة `notify_user` و`send_push_notification`، تشديد `otp_codes/user_devices`، وحذف سياسات list العامة لبكتات public |
+| 🆕 **جاهز للنشر ثم القفل** | Edge Function `admin-offers` — تنقل دوال إدارة العروض الحساسة خلف `staff_session_token/service_role`، وبعد اختبارها يطبق `2026_06_17_lock_admin_offer_rpcs.sql` |
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_lock_legacy_admin_rpcs.sql` — إغلاق direct execute للدوال الإدارية القديمة الحساسة بعد نقلها إلى Edge Functions |
 | ✅ **مُطبّق على السيرفر** | Storage policies لـ `offer_images` — INSERT/SELECT/UPDATE/DELETE مفتوحة |
 | 📝 **جاهز للتطبيق (لم يُنفّذ بعد)** | `2026_06_13_auth_username_password.sql` — اسم مستخدم `usr` + كلمة مرور مشفّرة `pwd` + 6 RPCs (`register_password`, `login_with_password`, `reset_password_with_otp`, `change_password_internal`, `check_username_available`, `get_staff_stats_internal`) + تحديث `users_public` (إضافة `usr`) + تحديث `get_user_full_by_id` (إضافة `usr` + إخفاء `pwd` خلف flag) |
@@ -622,6 +624,54 @@ final ok = await client.rpc('check_username_available',
 ---
 
 
+
+## 🔐 Database Linter Security Hardening — 2026-06-17
+
+Migration mirror: `2026_06_17_linter_security_hardening.sql`
+
+تم تنفيذ إصلاحات linter التالية على السيرفر وتوثيقها في migration مرجعية:
+
+| التصنيف | الإجراء | الحالة |
+|---|---|---|
+| `security_definer_view` | تحويل `public.users_public` إلى `security_invoker=true` | ✅ |
+| `function_search_path_mutable` | ضبط `search_path = public, extensions, pg_temp` لكل دوال `public` | ✅ |
+| `rls_policy_always_true` على `otp_codes` | حذف سياسة `public` المفتوحة واستبدالها بـ `service_role` فقط | ✅ |
+| `rls_policy_always_true` على `user_devices` | استبدال سياسة `USING true / WITH CHECK true` بسياسات own-device أو `service_role` | ✅ |
+| `public_bucket_allows_listing` | حذف سياسات SELECT الواسعة من `config_assets` و`offer_images` لمنع listing | ✅ |
+| Legacy OTP RPCs | قفل `generate_otp`, `verify_otp`, `create_user_from_phone` عن `anon/authenticated` وتركها لـ `service_role` | ✅ |
+| Staff creation RPCs | قفل نسختي `admin_create_staff_user` عن `anon/authenticated`، وتشغيلها عبر Edge Function فقط | ✅ |
+| Test wipe RPC | قفل `admin_wipe_test_data` عن `anon/authenticated` | ✅ |
+
+
+
+### تحديث مهم — قفل دوال الإشعارات المباشرة
+
+تم قفل الدوال التالية عن `anon` و`authenticated` وتركها لـ `service_role` فقط:
+
+- `notify_user(uuid, integer, text, text, text, text)`
+- `send_push_notification(uuid, text, text, jsonb)`
+
+السبب: لا يجوز للعميل إنشاء إشعار أو إرسال push لأي مستخدم مباشرة.  
+الأثر المتوقع: أي إشعارات كانت تُنشأ من العميل مباشرة قد تتوقف مؤقتاً. الإشعارات المهمة يجب أن تنتقل إلى Triggers أو Edge Functions موثوقة.
+
+### تحديث مهم — قفل دوال النقاط المباشرة
+
+تم قفل الدوال التالية عن `anon` و`authenticated` وتركها لـ `service_role` فقط:
+
+- `add_points(uuid, integer)`
+- `award_points_safe(uuid, text, integer)`
+
+السبب: الدالتان تسمحان للعميل بتمرير `uid` وعدد النقاط أو نوع الحدث، وهذا غير آمن حتى مع وجود حدود يومية.  
+الأثر المتوقع: قد تتوقف مؤقتاً بعض مكافآت النقاط التي كانت تُمنح من التطبيق مباشرة مثل نقاط المشاركة أو بعض الأحداث اليومية، لكن الوظائف الأساسية لا تتأثر.
+
+الحل المعتمد لاحقاً: نقل منح النقاط إلى Edge Functions أو Triggers تتحقق من الحدث فعلياً من السيرفر، ولا تقبل عدد النقاط من العميل.
+
+ملاحظات مهمة:
+
+- لا يتم حالياً قفل كل دوال `SECURITY DEFINER` المفتوحة للـ `anon/authenticated` دفعة واحدة، لأن التطبيق لا يزال يعتمد على RPC مباشرة في مسارات عديدة.
+- سيتم نقل الدوال الحساسة تدريجياً إلى Edge Functions قبل قفلها نهائياً.
+- حذف سياسات SELECT العامة من public buckets لا يمنع الوصول عبر public URL، لكنه يمنع listing واسع عبر Storage API.
+
 ## 🧭 Executor & Photography Flow Fixes — 2026-06-17
 
 Migration: `2026_06_17_executor_photography_flow_fixes.sql`
@@ -704,6 +754,31 @@ Edge Function جديدة لمسار التحقق من SMS OTP. تمنع العم
 - `generate_otp_v2` يعمل عبر `send-sms-otp` و`send-whatsapp-otp` فقط.
 - `verify_otp_v2` يعمل عبر `verify-sms-otp` و`verify-whatsapp-otp` فقط.
 - `upsert_user_after_otp` يعمل عبر Edge Functions بـ `service_role` فقط.
+
+
+## 🛡️ Edge Function — `admin-offers`
+
+تنقل عمليات إدارة العروض الحساسة من RPC مباشر إلى Edge Function تتحقق من جلسة الموظف أولاً.
+
+Actions المدعومة:
+
+| action | RPC خلفية | الغرض |
+|---|---|---|
+| `list_pending` | `get_admin_pending_offers_internal` | جلب عروض قيد المراجعة |
+| `list_media_review` | `get_admin_offers_internal` | جلب عروض لمراجعة الوسائط |
+| `review` | `admin_review_offer_internal` | قبول/رفض عرض |
+| `set_priority` | `admin_set_offer_priority_internal` | تحديد أولوية العرض |
+| `delete` | `admin_delete_offer_internal` | أرشفة عرض إدارياً |
+
+متطلبات الأمان:
+
+- يجب إرسال `admin_uid`.
+- يجب وجود Supabase Auth JWT مطابق، أو `staff_session_token` صالح.
+- بعد نشر الدالة واختبارها، تُقفل RPCs الخلفية عن `anon/authenticated` وتبقى لـ `service_role` فقط عبر migration:
+
+```text
+2026_06_17_lock_admin_offer_rpcs.sql
+```
 
 ## 🧑‍💼 Edge Functions — إدارة الموظفين
 
