@@ -37,11 +37,17 @@ class BrokerProvider with ChangeNotifier {
 
   Future<List<AppointmentModel>> getBrokerAppointments(String brokerId) async {
     try {
-      final response = await SupabaseService().client.rpc(
-        'get_broker_appointments_internal',
-        params: {'p_broker_uid': brokerId},
+      final response = await SupabaseService().client.functions.invoke(
+        'user-appointments',
+        body: {
+          'action': 'list_broker_appointments',
+          'user_uid': brokerId,
+        },
       );
-      return (response as List)
+      final data = response.data;
+      if (data == null || data['success'] != true) throw Exception(data?['error'] ?? 'Unknown error');
+      final list = data['appointments'] as List;
+      return list
           .map((d) => AppointmentModel.fromSupabase(
               Map<String, dynamic>.from(d), d['id'] as String))
           .toList();

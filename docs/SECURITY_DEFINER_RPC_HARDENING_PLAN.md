@@ -935,3 +935,19 @@ supabase.functions.invoke('admin-deals')
 - `create_request_internal`
 - `update_request_internal`
 - `soft_delete_request_internal`
+
+## 19. مجموعة إدارة مواعيد المستخدم (الحجز والردود) — ✅ مكتمل (تم النشر والقفل)
+
+**تاريخ التجهيز:** 2026-06-20  
+**Edge Function الجديدة:** `user-appointments`  
+**Migration القفل بعد النشر:** `2026_06_20_lock_user_appointments_rpcs.sql`
+
+### 19.1 الدوال التي نُقلت
+- `get_user_appointments_internal`
+- `get_owner_appointments_internal`
+- `get_broker_appointments_internal`
+- `book_appointment_internal`
+- `cancel_appointment_internal`
+- `broker_handle_appointment_internal`
+- `owner_respond_appointment`
+- `requester_counter_appointment`
