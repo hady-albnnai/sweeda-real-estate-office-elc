@@ -11,13 +11,17 @@ class RequestProvider with ChangeNotifier {
 
   Future<bool> addRequest(RequestModel request) async {
     try {
-      await SupabaseService().client.rpc(
-        'create_request_internal',
-        params: {
-          'p_user_uid': request.usrId,
-          'p_request': request.toMap(),
+      final response = await SupabaseService().client.functions.invoke(
+        'user-requests',
+        body: {
+          'action': 'create',
+          'user_uid': request.usrId,
+          'request': request.toMap(),
         },
       );
+      final data = response.data;
+      if (data == null || data['success'] != true) return false;
+      
       await fetchMyRequests(request.usrId);
       notifyListeners();
       return true;
@@ -30,14 +34,21 @@ class RequestProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      final response = await SupabaseService().client.rpc(
-        'get_user_requests_internal',
-        params: {'p_user_uid': userId},
+      final response = await SupabaseService().client.functions.invoke(
+        'user-requests',
+        body: {
+          'action': 'list',
+          'user_uid': userId,
+        },
       );
-      _myRequests = (response as List)
-          .map((d) => RequestModel.fromSupabase(
-              Map<String, dynamic>.from(d), d['id'] as String))
-          .toList();
+      final data = response.data;
+      if (data != null && data['success'] == true) {
+        final list = data['requests'] as List;
+        _myRequests = list
+            .map((d) => RequestModel.fromSupabase(
+                Map<String, dynamic>.from(d), d['id'] as String))
+            .toList();
+      }
     } catch (e) {
       // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
     }
@@ -48,14 +59,18 @@ class RequestProvider with ChangeNotifier {
   Future<bool> updateRequest(
       String userId, String reqId, Map<String, dynamic> data) async {
     try {
-      await SupabaseService().client.rpc(
-        'update_request_internal',
-        params: {
-          'p_user_uid': userId,
-          'p_request_id': reqId,
-          'p_patch': data,
+      final response = await SupabaseService().client.functions.invoke(
+        'user-requests',
+        body: {
+          'action': 'update',
+          'user_uid': userId,
+          'request_id': reqId,
+          'patch': data,
         },
       );
+      final resData = response.data;
+      if (resData == null || resData['success'] != true) return false;
+
       await fetchMyRequests(userId);
       notifyListeners();
       return true;
@@ -66,13 +81,17 @@ class RequestProvider with ChangeNotifier {
 
   Future<bool> softDeleteRequest(String userId, String reqId) async {
     try {
-      await SupabaseService().client.rpc(
-        'soft_delete_request_internal',
-        params: {
-          'p_user_uid': userId,
-          'p_request_id': reqId,
+      final response = await SupabaseService().client.functions.invoke(
+        'user-requests',
+        body: {
+          'action': 'delete',
+          'user_uid': userId,
+          'request_id': reqId,
         },
       );
+      final resData = response.data;
+      if (resData == null || resData['success'] != true) return false;
+
       await fetchMyRequests(userId);
       notifyListeners();
       return true;
