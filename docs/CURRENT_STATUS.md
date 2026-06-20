@@ -44,6 +44,7 @@
 | نقل إدارة المواعيد إلى Edge Function | تم النشر وتحديث التطبيق وقفل RPCs بنجاح |
 | نقل إدارة التبليغات إلى Edge Function | تم النشر وتحديث التطبيق وقفل RPCs بنجاح |
 | نقل إدارة الصفقات إلى Edge Function | تم النشر وتحديث التطبيق وقفل RPCs بنجاح |
+| نقل مهام المنفذ والمصور إلى Edge Functions | تمت إضافة `executor-tasks`, `photographer-tasks`, `admin-photography` وتجهيز قفل RPCs الخاصة بها بعد الاختبار |
 
 ---
 
