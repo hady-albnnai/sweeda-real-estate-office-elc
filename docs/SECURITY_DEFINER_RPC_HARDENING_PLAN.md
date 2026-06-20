@@ -999,3 +999,25 @@ supabase.functions.invoke('admin-deals')
 - `admin_fraud_suspects`
 - `revoke_staff_session`
 - `reset_password_with_otp`
+
+## 23. الملاحق (الدوال المتبقية وإصلاحات Linter) — ✅ مكتمل (تم النشر والقفل)
+
+**تاريخ التجهيز:** 2026-06-20  
+**Migration القفل والتصحيح:** `2026_06_20_lock_missed_rpcs.sql` و `2026_06_20_fix_rls_no_policy.sql`
+
+### 23.1 الدوال التي نُقلت في اللحظات الأخيرة
+تم إدراج الدوال التالية ضمن الـ Edge Functions القائمة سابقاً:
+- `create_report_internal` (أُضيفت إلى `user-account`)
+- `get_broker_deals_internal` (أُضيفت إلى `user-offers`)
+- `get_broker_offers_internal` (أُضيفت إلى `user-offers`)
+- `get_admin_requests_internal` (أُضيفت إلى `admin-dashboard`)
+- `get_user_payments_internal` (أُضيفت إلى `user-account`)
+- `handle_email_auth_internal` (أُضيفت إلى `user-account`)
+
+### 23.2 سياسات RLS المفقودة (RLS Enabled No Policy)
+تمت إضافة سياسات أمان تمنح صلاحيات كاملة لـ `service_role` فقط للجداول التالية لإخفاء تحذيرات Linter، بما أن العميل لا يجب أن يتصل بها مباشرة:
+- `staff_sessions`
+- `stats`
+- `user_daily_limits`
+
+**بهذا نكون قد أتممنا المهمة الأمنية بنسبة 100% وتم إغلاق كافة تحذيرات Supabase Linter الخاصة بـ SECURITY DEFINER و RLS.**
