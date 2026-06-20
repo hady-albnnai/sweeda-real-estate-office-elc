@@ -190,7 +190,7 @@ class AuthService {
           'action': 'handle_email_auth',
         },
       );
-      final data = result is Map ? Map<String, dynamic>.from(result) : null;
+      final data = result.data is Map ? Map<String, dynamic>.from(result.data) : null;
       if (data == null || data['success'] != true) {
         return {'success': false, 'error': data?['error'] ?? 'EMAIL_AUTH_FAILED'};
       }
