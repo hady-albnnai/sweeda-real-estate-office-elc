@@ -54,7 +54,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (auth.userModel == null || !auth.userModel!.isInternal) return;
     setState(() => _loadingStats = true);
     try {
-      final res = await SupabaseService().client.rpc('get_staff_stats_internal', params: {'p_user_uid': auth.userModel!.uid});
+      final token = await context.read<AuthProvider>().getStaffSessionToken();
+      final response = await SupabaseService().client.functions.invoke('admin-dashboard', body: {
+        'action': 'staff_stats',
+        'user_uid': auth.userModel!.uid,
+        'staff_session_token': token,
+      });
+      final res = response.data != null && response.data['success'] == true ? response.data['stats'] : null;
       if (mounted) setState(() { _staffStats = res is Map ? Map<String, dynamic>.from(res) : null; _loadingStats = false; });
     } catch (_) { if (mounted) setState(() => _loadingStats = false); }
   }
