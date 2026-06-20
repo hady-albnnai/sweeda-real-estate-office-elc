@@ -741,3 +741,68 @@ get_admin_payments_internal: anon=false, authenticated=false, service_role=true
 approve_payment_final: anon=false, authenticated=false, service_role=true
 admin_reject_payment_internal: anon=false, authenticated=false, service_role=true
 ```
+
+---
+
+## 13. مجموعة إدارة المواعيد — تم تجهيز النقل إلى Edge Function
+
+**تاريخ التجهيز:** 2026-06-17  
+**Edge Function الجديدة:** `admin-appointments`  
+**Migration القفل بعد النشر:** `2026_06_17_lock_admin_appointment_rpcs.sql`
+
+### 13.1 الدوال التي نُقلت
+
+```text
+get_admin_appointments_internal(uuid)
+admin_update_appointment_status_internal(uuid, uuid, integer, text)
+admin_force_appointment_internal(uuid, uuid)
+```
+
+### 13.2 التصميم الجديد
+
+التطبيق يستدعي:
+
+```text
+supabase.functions.invoke('admin-appointments')
+```
+
+مع actions:
+
+```text
+list
+update_status
+force
+```
+
+Edge Function تتحقق من:
+
+- Supabase Auth JWT مطابق إن وجد.
+- أو `staff_session_token` صالح عبر `validate_staff_session`.
+- الحد الأدنى للدور `role >= 4` لأن إدارة المواعيد من صلاحيات موظف المكتب فما فوق.
+
+### 13.3 خطوات التطبيق الآمن
+
+1. `git pull` للحصول على الكود الجديد.
+2. نشر الدالة:
+
+```bash
+supabase functions deploy admin-appointments
+```
+
+3. اختبار شاشة إدارة المواعيد.
+4. اختبار تحديث حالة موعد أو فرض موعد تجريبي إن وجد.
+5. بعدها فقط تطبيق:
+
+```text
+supabase/migrations/2026_06_17_lock_admin_appointment_rpcs.sql
+```
+
+### 13.4 أثر القفل
+
+بعد تطبيق القفل:
+
+```text
+get_admin_appointments_internal: anon=false, authenticated=false, service_role=true
+admin_update_appointment_status_internal: anon=false, authenticated=false, service_role=true
+admin_force_appointment_internal: anon=false, authenticated=false, service_role=true
+```

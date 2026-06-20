@@ -51,13 +51,14 @@
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_admin_employee_management_final.sql` — دوال إدارة الموظفين النهائية: `get_all_staff_users`, `admin_create_staff_user`, `admin_update_staff_role`, `admin_toggle_staff_status`, `admin_reset_staff_password`, `admin_delete_staff_user` |
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_admin_dashboard_stats.sql` — دالة `get_admin_dashboard_stats` لإحصائيات لوحة الإدارة المجمعة |
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_input_validation_hardening.sql` — helpers للتحقق من المدخلات وتقوية RPCs إنشاء العروض/الطلبات/الملف الشخصي/الموظفين، وتم التحقق من دوال `app_*` ومن الحفاظ على منطق `create_offer_internal` |
-| 🔄 **محدّث بالكود** | Edge Functions إدارة الموظفين: `create-user` محدثة لدعم صورتي الهوية و`get-staff-id-images` مضافة؛ يلزم deploy لهاتين الدالتين بعد `git pull` |
+| ✅ **منشور على السيرفر** | Edge Functions إدارة الموظفين: `create-user` محدثة لدعم صورتي الهوية و`get-staff-id-images` منشورة لعرض صور الهوية بروابط مؤقتة |
 | 🆕 **جاهز للتطبيق** | `2026_06_17_secure_email_auth_internal.sql` — تأمين Email Magic Link عبر RPC `handle_email_auth_internal` + فهارس unique canonical للإيميل والهاتف |
 | 🆕 **جاهز للتطبيق** | `2026_06_17_lock_otp_direct_rpcs.sql` — إغلاق direct execute لدوال OTP/upsert عن `anon/authenticated` وجعلها عبر Edge Functions فقط |
-| ✅ **مُطبّق على السيرفر** | `2026_06_17_linter_security_hardening.sql` — إصلاح `users_public` كـ `security_invoker`، ضبط `search_path` لكل دوال public، قفل OTP legacy/direct، قفل `admin_create_staff_user` و`admin_wipe_test_data`، قفل دوال النقاط المباشرة `add_points` و`award_points_safe`، وقفل دوال الإشعارات المباشرة `notify_user` و`send_push_notification`، تشديد `otp_codes/user_devices`، وحذف سياسات list العامة لبكتات public |
-| 🆕 **جاهز للنشر ثم القفل** | Edge Function `admin-offers` — تنقل دوال إدارة العروض الحساسة خلف `staff_session_token/service_role`، وبعد اختبارها يطبق `2026_06_17_lock_admin_offer_rpcs.sql` |
-| 🆕 **جاهز للنشر ثم القفل** | Edge Function `admin-verifications` — تنقل مراجعة التوثيق واعتماد/رفض الهويات خلف `staff_session_token/service_role`، وبعد اختبارها يطبق `2026_06_17_lock_admin_verification_rpcs.sql` |
-| 🆕 **جاهز للنشر ثم القفل** | Edge Function `admin-payments` — تنقل إدارة المدفوعات خلف `staff_session_token/service_role`، وبعد اختبارها يطبق `2026_06_17_lock_admin_payment_rpcs.sql` |
+| ✅ **مُطبّق على السيرفر** | `2026_06_17_linter_security_hardening.sql` — إصلاح `users_public` كـ `security_invoker`، ضبط `search_path` لكل دوال public، قفل OTP legacy/direct، قفل `admin_create_staff_user` و`admin_wipe_test_data`، قفل دوال النقاط والإشعارات المباشرة، قفل دوال trigger/helper/legacy helper الداخلية، تشديد `otp_codes/user_devices`، وحذف سياسات list العامة لبكتات public |
+| ✅ **منشور ومقفول** | Edge Function `admin-offers` — تعمل إدارة العروض عبر `staff_session_token/service_role`، وتم تطبيق `2026_06_17_lock_admin_offer_rpcs.sql` |
+| ✅ **منشور ومقفول** | Edge Function `admin-verifications` — تعمل مراجعة التوثيق عبر `staff_session_token/service_role`، وتم تطبيق `2026_06_17_lock_admin_verification_rpcs.sql` |
+| ✅ **منشور ومقفول** | Edge Function `admin-payments` — تعمل إدارة المدفوعات عبر `staff_session_token/service_role`، وتم تطبيق `2026_06_17_lock_admin_payment_rpcs.sql` |
+| 🆕 **جاهز للنشر ثم القفل** | Edge Function `admin-appointments` — تنقل إدارة المواعيد خلف `staff_session_token/service_role`، وبعد اختبارها يطبق `2026_06_17_lock_admin_appointment_rpcs.sql` |
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_lock_legacy_admin_rpcs.sql` — إغلاق direct execute للدوال الإدارية القديمة الحساسة بعد نقلها إلى Edge Functions |
 | ✅ **مُطبّق على السيرفر** | Storage policies لـ `offer_images` — INSERT/SELECT/UPDATE/DELETE مفتوحة |
 | 📝 **جاهز للتطبيق (لم يُنفّذ بعد)** | `2026_06_13_auth_username_password.sql` — اسم مستخدم `usr` + كلمة مرور مشفّرة `pwd` + 6 RPCs (`register_password`, `login_with_password`, `reset_password_with_otp`, `change_password_internal`, `check_username_available`, `get_staff_stats_internal`) + تحديث `users_public` (إضافة `usr`) + تحديث `get_user_full_by_id` (إضافة `usr` + إخفاء `pwd` خلف flag) |
@@ -242,9 +243,9 @@ SELECT * FROM cron.job_run_details ORDER BY start_time DESC LIMIT 10;
 | 1 | `send-whatsapp-otp` 🆕 | يولّد OTP ويرسله عبر Meta WhatsApp Cloud API | `{ phone: "+963..." }` | `{ success, messageId?, devMode?, otp? }` | ⚠️ مكتوب — لم يُنشر |
 | 2 | `verify-whatsapp-otp` 🆕 | يتحقق + ينشئ user + يصدر session | `{ phone, code }` | `{ success, userId, isNew, session: { token_hash, ... } }` | ⚠️ مكتوب — لم يُنشر |
 | 3 | `send-push-notification` 🆕🆕🆕🆕🆕 | يرسل FCM push لكل أجهزة المستخدم (HTTP v1 API) | `{ uid, title, body, data? }` | `{ success, sent, failed, total }` | ⚠️ مكتوب — لم يُنشر |
-| 4 | `verify-sms-otp` 🆕 | يتحقق من SMS OTP وينشئ/يجلب المستخدم عبر service_role | `{ phone, code }` | `{ success, userId, isNew, session }` | 🆕 جديد — يحتاج deploy |
-| 5 | `create-user` 🆕 | إنشاء موظف داخلي من الإدارة عبر `users.usr/pwd` + رفع صور الهوية الخاصة عبر `service_role` | `{ admin_uid, staff_session_token?, full_name, phone, email?, username?, role, address?, sid?, id_images_base64? }` | `{ success, user_id, new_password, id_image_paths? }` | 🔄 محدث بالكود — يحتاج deploy للنسخة الجديدة |
-| 6 | `get-staff-id-images` 🆕 | إرجاع روابط مؤقتة لصور هوية موظف للمدير/النائب | `{ admin_uid, staff_session_token?, target_uid }` | `{ success, urls, count }` | ✅ مكتوب — يحتاج deploy عند التحديث |
+| 4 | `verify-sms-otp` 🆕 | يتحقق من SMS OTP وينشئ/يجلب المستخدم عبر service_role | `{ phone, code }` | `{ success, userId, isNew, session }` | ✅ منشور |
+| 5 | `create-user` 🆕 | إنشاء موظف داخلي من الإدارة عبر `users.usr/pwd` + رفع صور الهوية الخاصة عبر `service_role` | `{ admin_uid, staff_session_token?, full_name, phone, email?, username?, role, address?, sid?, id_images_base64? }` | `{ success, user_id, new_password, id_image_paths? }` | ✅ منشور |
+| 6 | `get-staff-id-images` 🆕 | إرجاع روابط مؤقتة لصور هوية موظف للمدير/النائب | `{ admin_uid, staff_session_token?, target_uid }` | `{ success, urls, count }` | ✅ منشور |
 | 7 | `update-user-role` 🆕 | تغيير دور موظف داخلي | `{ admin_uid, staff_session_token?, user_id, role }` | `{ success }` | ✅ منشور |
 | 8 | `toggle-user-status` 🆕 | تفعيل/تجميد/حظر موظف | `{ admin_uid, staff_session_token?, user_id, status, reason? }` | `{ success }` | ✅ منشور |
 | 9 | `reset-user-password` 🆕 | توليد كلمة سر جديدة وتحديث `users.pwd` | `{ admin_uid, staff_session_token?, user_id }` | `{ success, new_password }` | ✅ منشور |
@@ -760,6 +761,27 @@ Edge Function جديدة لمسار التحقق من SMS OTP. تمنع العم
 
 
 
+
+## 🛡️ Edge Function — `admin-appointments`
+
+تنقل إدارة المواعيد من RPC مباشر إلى Edge Function محمية بجلسة موظف.
+
+Actions المدعومة:
+
+| action | RPC خلفية | الغرض |
+|---|---|---|
+| `list` | `get_admin_appointments_internal` | جلب كل المواعيد للإدارة |
+| `update_status` | `admin_update_appointment_status_internal` | تحديث حالة موعد وملاحظة الإدارة |
+| `force` | `admin_force_appointment_internal` | فرض موعد إدارياً |
+
+الحد الأدنى للدور: `role >= 4`.
+
+بعد النشر والاختبار، تُقفل RPCs الخلفية عن `anon/authenticated` وتبقى لـ `service_role` فقط عبر:
+
+```text
+2026_06_17_lock_admin_appointment_rpcs.sql
+```
+
 ## 🛡️ Edge Function — `admin-payments`
 
 تنقل إدارة المدفوعات من RPC مباشر إلى Edge Function محمية بجلسة موظف.
@@ -774,7 +796,9 @@ Actions المدعومة:
 
 الحد الأدنى للدور: `role >= 5`.
 
-بعد النشر والاختبار، تُقفل RPCs الخلفية عن `anon/authenticated` وتبقى لـ `service_role` فقط عبر:
+الحالة الحالية: منشورة ومختبرة، وRPCs الخلفية مقفلة عن `anon/authenticated` وتعمل عبر `service_role` فقط.
+
+Migration المطبق:
 
 ```text
 2026_06_17_lock_admin_payment_rpcs.sql
@@ -792,7 +816,9 @@ Actions المدعومة:
 | `approve` | اعتماد التوثيق عبر `admin_approve_verification_by_admin` |
 | `reject` | رفض التوثيق عبر `admin_reject_verification_by_admin` |
 
-بعد النشر والاختبار، تُقفل RPCs الخلفية عن `anon/authenticated` وتبقى لـ `service_role` فقط عبر:
+الحالة الحالية: منشورة ومختبرة، وRPCs الخلفية مقفلة عن `anon/authenticated` وتعمل عبر `service_role` فقط.
+
+Migration المطبق:
 
 ```text
 2026_06_17_lock_admin_verification_rpcs.sql
@@ -816,7 +842,9 @@ Actions المدعومة:
 
 - يجب إرسال `admin_uid`.
 - يجب وجود Supabase Auth JWT مطابق، أو `staff_session_token` صالح.
-- بعد نشر الدالة واختبارها، تُقفل RPCs الخلفية عن `anon/authenticated` وتبقى لـ `service_role` فقط عبر migration:
+- الحالة الحالية: منشورة ومختبرة، وRPCs الخلفية مقفلة عن `anon/authenticated` وتعمل عبر `service_role` فقط.
+
+Migration المطبق:
 
 ```text
 2026_06_17_lock_admin_offer_rpcs.sql
