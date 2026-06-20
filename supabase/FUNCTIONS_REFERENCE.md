@@ -1868,3 +1868,7 @@ NOW() > pkg_grace          → expire_packages     → b_pkg = 0
 ## 🛡️ Edge Function — `user-notifications`
 **الحالة:** ✅ مكتمل  
 **الأذونات:** `service_role` للـ Supabase client، وتتحقق من `JWT Token` وتضمن المطابقة.
+
+## 🛡️ Edge Function — `user-account`
+**الحالة:** ✅ مكتمل  
+**الأذونات:** `service_role` للـ Supabase client، تدعم دوال لا تتطلب توثيق كالتسجيل، وتدعم دوال تتطلب `JWT Token` ومطابقة الـ UID لحماية الملف الشخصي.
