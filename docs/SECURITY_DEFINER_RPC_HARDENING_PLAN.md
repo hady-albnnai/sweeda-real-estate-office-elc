@@ -744,7 +744,7 @@ admin_reject_payment_internal: anon=false, authenticated=false, service_role=tru
 
 ---
 
-## 13. مجموعة إدارة المواعيد — تم تجهيز النقل إلى Edge Function
+## 13. مجموعة إدارة المواعيد — ✅ مكتمل (تم النشر والقفل)
 
 **تاريخ التجهيز:** 2026-06-17  
 **Edge Function الجديدة:** `admin-appointments`  
@@ -806,3 +806,31 @@ get_admin_appointments_internal: anon=false, authenticated=false, service_role=t
 admin_update_appointment_status_internal: anon=false, authenticated=false, service_role=true
 admin_force_appointment_internal: anon=false, authenticated=false, service_role=true
 ```
+
+## 14. مجموعة إدارة التبليغات — تم النشر والتحديث في التطبيق ⏳ بانتظار القفل
+
+**تاريخ التجهيز:** 2026-06-20  
+**Edge Function الجديدة:** `admin-reports`  
+**Migration القفل بعد النشر:** `2026_06_20_lock_admin_reports_rpcs.sql`
+
+### 14.1 الدوال التي نُقلت
+- `get_admin_reports_internal`
+- `admin_handle_report_internal`
+
+### 14.2 طريقة العمل عبر Edge Function
+التطبيق يستدعي:
+```text
+supabase.functions.invoke('admin-reports')
+```
+مع actions:
+- `list` → استدعاء `get_admin_reports_internal`
+- `handle` → استدعاء `admin_handle_report_internal`
+
+### 14.3 خطوات التنفيذ
+1. إنشاء Edge function `admin-reports`.
+2. تعديل خدمة `ReportsAdminService` في Flutter.
+3. نشر الدالة:
+   ```bash
+   supabase functions deploy admin-reports
+   ```
+4. قفل الـ RPCs.
