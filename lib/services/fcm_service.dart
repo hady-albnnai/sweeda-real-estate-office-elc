@@ -230,14 +230,8 @@ class FCMService {
       // mapping من النص للرقم حسب schema notifications.tp
       final typeNum = _typeStringToInt(typeStr);
 
-      await SupabaseService().client.rpc('notify_user', params: {
-        'p_uid': uid,
-        'p_type': typeNum,
-        'p_title': title,
-        'p_body': body,
-        'p_ref_id': data?['id']?.toString() ?? '',
-        'p_action': typeStr,
-      });
+      // Phase 8: RPC 'notify_user' is locked. Local messages shouldn't duplicate DB triggers.
+      // await SupabaseService().client.rpc('notify_user', params: {...});
     } catch (e) {
       _setError(e);
     }
