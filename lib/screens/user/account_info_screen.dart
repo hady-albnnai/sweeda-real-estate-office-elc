@@ -338,10 +338,7 @@ class AccountInfoScreen extends StatelessWidget {
     if (confirmed != true || !context.mounted) return;
 
     try {
-      await SupabaseService().client.rpc(
-        'request_verification_by_uid',
-        params: {'p_user_uid': user.uid},
-      );
+      await SupabaseService().client.functions.invoke('user-account', body: {'action': 'request_verification', 'p_user_uid': user.uid});
       await auth.refreshUser();
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -518,23 +515,9 @@ class AccountInfoScreen extends StatelessWidget {
                 final user = auth.userModel!;
 
                 if (hasOld) {
-                  await SupabaseService().client.rpc(
-                    'change_password_internal',
-                    params: {
-                      'p_user_uid': user.uid,
-                      'p_old_password': oldCtrl.text,
-                      'p_new_password': newCtrl.text,
-                    },
-                  );
+                  await SupabaseService().client.functions.invoke('user-account', body: {'action': 'change_password', 'p_user_uid': user.uid, 'p_old_password': oldCtrl.text, 'p_new_password': newCtrl.text});
                 } else {
-                  await SupabaseService().client.rpc(
-                    'register_password',
-                    params: {
-                      'p_user_uid': user.uid,
-                      'p_username': user.usr ?? user.ph,
-                      'p_password': newCtrl.text,
-                    },
-                  );
+                  await SupabaseService().client.functions.invoke('user-account', body: {'action': 'register_password', 'p_user_uid': user.uid, 'p_username': user.usr ?? user.ph, 'p_password': newCtrl.text});
                 }
 
                 await auth.refreshUser();
