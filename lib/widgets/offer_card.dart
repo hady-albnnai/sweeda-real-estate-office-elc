@@ -267,8 +267,8 @@ class _OfferCardState extends State<OfferCard> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.verified_user_outlined,
-                                color: AppTheme.primaryGold, size: 14),
+                            Icon((offer.ownerLabel ?? '').contains('✓') ? Icons.verified_rounded : Icons.storefront_outlined,
+                                color: (offer.ownerLabel ?? '').contains('✓') ? Colors.green : AppTheme.primaryGold, size: 14),
                             const SizedBox(width: 6),
                             Text(
                               offer.ownerLabel ?? 'إدارة المكتب العقاري',
