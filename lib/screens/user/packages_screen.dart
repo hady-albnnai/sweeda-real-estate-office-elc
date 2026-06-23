@@ -312,7 +312,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
             _feature(Icons.hourglass_bottom, '${config?.pkgGraceDays ?? 3} أيام سماح بعد الانتهاء'),
             if (pkg.id >= 1) _feature(Icons.star, 'أولوية بالظهور'),
             if (pkg.id >= 2) _feature(Icons.support_agent, 'دعم فني مميّز'),
-            if (pkg.id >= 2) _feature(Icons.verified, 'شارة موثّق'),
+            if (pkg.id >= 2) _feature(Icons.handshake, 'شارة موثوق'),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
