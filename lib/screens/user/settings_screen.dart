@@ -154,13 +154,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ntf[key] = value ? 0 : 1;
 
     try {
-      await SupabaseService().client.rpc(
-        'update_user_notification_settings_internal',
-        params: {
-          'p_user_uid': user.uid,
-          'p_ntf': ntf,
-        },
-      );
+      await SupabaseService().client.functions.invoke('user-notifications', body: {'action': 'update_settings', 'ntf': ntf}); //
 
       await auth.refreshUser();
 
