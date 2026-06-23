@@ -234,7 +234,7 @@ class AuthProvider with ChangeNotifier {
     try {
       // 🔒 Phase 8 fix: نستخدم RPC SECURITY DEFINER لتجاوز RLS
       // (تطبيقنا يستخدم OTP محلي لا يمر بـSupabase Auth → auth.uid()=NULL)
-      final response = await SupabaseService().client.functions.invoke('user-account', body: {'action': 'get_full_profile', 'p_uid': userId});
+      final response = await SupabaseService().client.functions.invoke('user-account', body: {'action': 'get_full_profile', 'user_uid': userId});
       final data = response.data as Map;
       if (data['success'] != true || data['profile'] == null || (data['profile'] as List).isEmpty) return;
       final row = Map<String, dynamic>.from((data['profile'] as List).first);
