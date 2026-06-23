@@ -30,16 +30,7 @@ class AppointmentProvider with ChangeNotifier {
       );
       if (dateTime == null) return false;
 
-      final result = await SupabaseService().client.rpc(
-        'book_appointment_internal',
-        params: {
-          'p_user_uid': userId,
-          'p_offer_id': offerId,
-          'p_dt': dateTime.toIso8601String(),
-          'p_broker_id': brokerId,
-          'p_request_id': requestId,
-        },
-      );
+      final resultRes = await SupabaseService().client.functions.invoke('user-appointments', body: {'action': 'book', 'offerId': offerId, 'dt': dateTime.toIso8601String(), 'brokerId': brokerId, 'requestId': requestId}); final result = resultRes.data;
 
       // السيرفر يرجع JSONB: {success, active_appointments, supervisor_uid}
       if (result is Map) {
@@ -58,10 +49,7 @@ class AppointmentProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      final response = await SupabaseService().client.rpc(
-        'get_user_appointments_internal',
-        params: {'p_user_uid': userId},
-      );
+      final res = await SupabaseService().client.functions.invoke('user-appointments', body: {'action': 'list_user_appointments'}); final data = res.data as Map; final response = data['appointments'];
       _myAppointments = (response as List)
           .map((d) => AppointmentModel.fromSupabase(
               Map<String, dynamic>.from(d), d['id'] as String))
@@ -76,10 +64,7 @@ class AppointmentProvider with ChangeNotifier {
 
   Future<List<AppointmentModel>> fetchAppointmentsForMyOffers(String userId) async {
     try {
-      final response = await SupabaseService().client.rpc(
-        'get_owner_appointments_internal',
-        params: {'p_owner_uid': userId},
-      );
+      final res = await SupabaseService().client.functions.invoke('user-appointments', body: {'action': 'list_owner_appointments'}); final data = res.data as Map; final response = data['appointments'];
       return (response as List)
           .map((d) => AppointmentModel.fromSupabase(
               Map<String, dynamic>.from(d), d['id'] as String))
@@ -92,14 +77,7 @@ class AppointmentProvider with ChangeNotifier {
   Future<bool> cancelAppointment(
       String appointmentId, String userId, String reason) async {
     try {
-      await SupabaseService().client.rpc(
-        'cancel_appointment_internal',
-        params: {
-          'p_requester_uid': userId,
-          'p_appointment_id': appointmentId,
-          'p_reason': reason,
-        },
-      );
+      await SupabaseService().client.functions.invoke('user-appointments', body: {'action': 'cancel', 'appointmentId': appointmentId, 'reason': reason});
       await fetchMyAppointments(userId);
       notifyListeners();
       return true;
@@ -115,15 +93,7 @@ class AppointmentProvider with ChangeNotifier {
     try {
       // نستخدم RPC الإدارية إذا توفر adminUid، وإلا نستخدم broker_handle
       if (adminUid.isNotEmpty) {
-        await SupabaseService().client.rpc(
-          'admin_update_appointment_status_internal',
-          params: {
-            'p_admin_uid':      adminUid,
-            'p_appointment_id': appointmentId,
-            'p_status':         newStatus,
-            'p_admin_note':     '',
-          },
-        );
+        await SupabaseService().client.functions.invoke('admin-appointments', body: {'action': 'update_status', 'appointmentId': appointmentId, 'status': newStatus, 'adminNote': ''});
       } else {
         // fallback: direct update محدود للحالات التي لا تحتاج uid
         final data = <String, dynamic>{'sts': newStatus};
