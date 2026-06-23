@@ -43,15 +43,10 @@ class AuthProvider with ChangeNotifier {
   Future<bool> loginWithPassword(String identifier, String password) async {
     try {
       _lastError = null;
-      final result = await SupabaseService().client.rpc(
-        'login_with_password',
-        params: {
-          'p_identifier': identifier,
-          'p_password': password,
-        },
-      );
+      final result = await SupabaseService().client.functions.invoke('user-account', body: {'action': 'login_with_password', 'identifier': identifier, 'password': password});
 
-      final data = result is Map ? Map<String, dynamic>.from(result) : null;
+      final respData = result.data is Map ? Map<String, dynamic>.from(result.data) : null;
+      final data = respData?['result'] is Map ? Map<String, dynamic>.from(respData!['result']) : null;
       if (data == null || data['success'] != true) {
         _lastError = 'فشل تسجيل الدخول';
         return false;
@@ -239,12 +234,10 @@ class AuthProvider with ChangeNotifier {
     try {
       // 🔒 Phase 8 fix: نستخدم RPC SECURITY DEFINER لتجاوز RLS
       // (تطبيقنا يستخدم OTP محلي لا يمر بـSupabase Auth → auth.uid()=NULL)
-      final response = await SupabaseService()
-          .client
-          .rpc('get_user_full_by_id', params: {'p_uid': userId});
-      if (response == null || (response as List).isEmpty) {return;
-      }
-      final row = Map<String, dynamic>.from(response.first);
+      final response = await SupabaseService().client.functions.invoke('user-account', body: {'action': 'get_full_profile', 'p_uid': userId});
+      final data = response.data as Map;
+      if (data['success'] != true || data['users'] == null || (data['users'] as List).isEmpty) return;
+      final row = Map<String, dynamic>.from((data['users'] as List).first);
       _userModel = UserModel.fromSupabase(row, userId);
       notifyListeners();
       DeviceService().registerWithServer();
@@ -256,16 +249,7 @@ class AuthProvider with ChangeNotifier {
   Future<bool> completeProfile({required String name, required String sid}) async {
     try {
       if (_userModel == null) return false;
-      await SupabaseService().client.rpc(
-        'update_user_profile_internal',
-        params: {
-          'p_user_uid': _userModel!.uid,
-          'p_payload': {
-            'nm': name,
-            'sid': sid,
-          },
-        },
-      );
+      await SupabaseService().client.functions.invoke('user-account', body: {'action': 'update_profile', 'p_user_uid': _userModel!.uid, 'p_payload': {'nm': name, 'sid': sid}});
       await _loadUserData(_userModel!.uid);
       return true;
     } catch (e) {return false;
