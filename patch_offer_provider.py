@@ -1,11 +1,10 @@
-import os
+import 'dart:io';
 
-file_path = 'lib/providers/offer_provider.dart'
+void main() async {
+  final file = File('lib/providers/offer_provider.dart');
+  String content = await file.readAsString();
 
-with open(file_path, 'r', encoding='utf-8') as f:
-    content = f.read()
-
-content = content.replace(
+  content = content.replaceFirst(
 '''      final response = await SupabaseService().client.rpc(
         'get_user_offers_internal',
         params: {'p_user_uid': userId},
@@ -20,9 +19,9 @@ content = content.replace(
       final data = response.data;
       if (data == null || data['success'] != true) throw Exception(data?['error'] ?? 'Unknown error');
       final list = data['offers'] as List;'''
-)
+  );
 
-content = content.replace(
+  content = content.replaceFirst(
 '''      final response = await SupabaseService().client.rpc(
         'get_offer_by_id_internal',
         params: {
@@ -42,9 +41,9 @@ content = content.replace(
       if (data == null || data['success'] != true) return null;
       final offerData = data['offer'];
       if (offerData == null) return null;'''
-)
-
-content = content.replace(
+  );
+  
+  content = content.replaceFirst(
 '''      await SupabaseService().client.rpc(
         'create_offer_internal',
         params: {
@@ -62,9 +61,9 @@ content = content.replace(
       );
       final data = response.data;
       if (data == null || data['success'] != true) throw Exception(data?['error'] ?? 'Unknown error');'''
-)
-
-content = content.replace(
+  );
+  
+  content = content.replaceFirst(
 '''      await SupabaseService().client.rpc(
         'increment_offer_views_internal',
         params: {'p_offer_id': offerId},
@@ -76,38 +75,7 @@ content = content.replace(
           'offer_id': offerId,
         },
       );'''
-)
+  );
 
-# Fix map parsing 
-content = content.replace(
-'''      return (response as List)
-          .map((item) => OfferModel.fromSupabase(
-                Map<String, dynamic>.from(item),
-                item['id'] as String,
-              ))
-          .toList();''',
-'''      return list
-          .map((item) => OfferModel.fromSupabase(
-                Map<String, dynamic>.from(item),
-                item['id'] as String,
-              ))
-          .toList();'''
-)
-
-content = content.replace(
-'''      final data = response as Map<String, dynamic>?;
-
-      if (data == null) return null;
-
-      return OfferModel.fromSupabase(
-        data,
-        data['id'] as String,
-      );''',
-'''      return OfferModel.fromSupabase(
-        Map<String, dynamic>.from(offerData),
-        offerData['id'] as String,
-      );'''
-)
-
-with open(file_path, 'w', encoding='utf-8') as f:
-    f.write(content)
+  await file.writeAsString(content);
+}
