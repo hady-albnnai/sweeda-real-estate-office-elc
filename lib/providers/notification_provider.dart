@@ -16,10 +16,7 @@ class NotificationProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      final response = await SupabaseService().client.rpc(
-        'get_user_notifications_internal',
-        params: {'p_user_uid': userId},
-      );
+      final res = await SupabaseService().client.functions.invoke('user-notifications', body: {'action': 'list'}); final data = res.data as Map; final response = data['notifications'];
       _notifications = (response as List)
           .map((d) => NotificationModel.fromSupabase(
               Map<String, dynamic>.from(d), d['id'] as String))
@@ -85,17 +82,8 @@ class NotificationProvider with ChangeNotifier {
     String refId = '',
   }) async {
     try {
-      await SupabaseService().client.rpc(
-        'notify_user',
-        params: {
-          'p_uid': userId,
-          'p_type': type,
-          'p_title': title,
-          'p_body': body,
-          'p_ref_id': refId,
-          'p_action': action,
-        },
-      );
+      // Phase 8: RPC 'notify_user' is locked.
+      // await SupabaseService().client.rpc('notify_user', ...);
       return true;
     } catch (e) {
       return false;
