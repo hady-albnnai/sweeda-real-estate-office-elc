@@ -2,13 +2,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
 
 /// نقطة الوصول المركزية لـ Supabase
-/// نقطة الوصول المركزية لـ Supabase
 class SupabaseService {
   static final SupabaseService _instance = SupabaseService._internal();
   factory SupabaseService() => _instance;
   SupabaseService._internal();
 
   static bool _initialized = false;
+  static String? _url;
+  static String? _publishableKey;
 
   /// تهيئة Supabase — تُستدعى مرة واحدة في main()
   static Future<void> initialize({
@@ -22,9 +23,19 @@ class SupabaseService {
         publishableKey: publishableKey,
         debug: kDebugMode,
       );
-      _initialized = true;} catch (e) {rethrow;
+      _url = url;
+      _publishableKey = publishableKey;
+      _initialized = true;
+    } catch (e) {
+      rethrow;
     }
   }
+
+  /// URL الخاص بـ Supabase project
+  static String? get url => _url;
+
+  /// Publishable/Anon Key
+  static String? get publishableKey => _publishableKey;
 
   /// الوصول لـ Supabase Client
   SupabaseClient get client => Supabase.instance.client;
