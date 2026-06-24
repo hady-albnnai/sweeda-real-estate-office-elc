@@ -1,14 +1,22 @@
 import 'dart:io';
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
 import '../core/network/supabase_service.dart';
 import '../core/utils/error_utils.dart';
+import 'auth_service.dart';
 
 /// خدمة التخزين — رفع الصور والملفات إلى Supabase Storage
 /// مع اختيار من المعرض/الكاميرا وضغط الصور قبل الرفع.
+/// المرحلة: رفع عبر Edge Function (upload-offer-images) بدلاً من RLS المباشرة
+/// لأن التطبيق يستخدم custom auth (staff_session_token / JWT من الـ Edge Function).
 class StorageService {
   final SupabaseStorageClient _storage = SupabaseService().storage;
   final ImagePicker _picker = ImagePicker();
@@ -42,7 +50,7 @@ class StorageService {
         maxWidth: 1920,
       );
     } catch (e) {
-      print('==== IMAGE UPLOAD ERROR ====');
+      print('==== IMAGE PICK ERROR ====');
       print(e.toString());
       _setError(e);
       return null;
@@ -88,7 +96,89 @@ class StorageService {
   }
 
   // ═══════════════════════════════════════
-  // الرفع
+  // رفع عبر Edge Function (الجديد)
+  // ═══════════════════════════════════════
+
+  /// يبني رابط Edge Function (يفترض نفس الدومين أو supabase.functions.url)
+  String get _edgeUrl {
+    final supabase = SupabaseService().client;
+    // إذا كان Supabase Edge Functions مفعل
+    return '${supabase.supabaseUrl}/functions/v1/upload-offer-images';
+  }
+
+  /// رفع ملفات عبر Edge Function `upload-offer-images`.
+  /// [files] : قائمة ملفات (Uint8List + اسم الملف).
+  /// [userId] : مجلد المستخدم (uid).
+  /// [offerId] : مجلد العرض (أو 'draft').
+  /// [folder] : 'offers' | 'images' | 'videos' — يتفق مع storage_service القديم.
+  Future<List<String>> _uploadViaEdgeFunction({
+    required List<({Uint8List bytes, String name})> files,
+    required String userId,
+    String? offerId,
+    String folder = 'offers',
+  }) async {
+    try {
+      final request = http.MultipartRequest('POST', Uri.parse(_edgeUrl));
+
+      // Headers
+      final supabase = SupabaseService().client;
+      final headers = <String, String>{
+        'apikey': supabase.supabaseKey,
+        'Authorization': 'Bearer ${supabase.supabaseKey}',
+      };
+
+      // إذا كان المستخدم مسجل دخول بـ Supabase Auth (JWT) نضيفه
+      final session = supabase.auth.currentSession;
+      if (session != null) {
+        headers['Authorization'] = 'Bearer ${session.accessToken}';
+      }
+
+      // إذا كان هناك staff_session_token (من AuthService) نضيفه
+      final staffToken = await AuthService().getStaffSessionToken();
+      if (staffToken != null && staffToken.isNotEmpty) {
+        headers['x-staff-session-token'] = staffToken;
+      }
+
+      request.headers.addAll(headers);
+
+      // Fields
+      request.fields['user_id'] = userId;
+      request.fields['offer_id'] = offerId ?? 'draft';
+      request.fields['folder'] = folder;
+
+      for (final f in files) {
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            'files',
+            f.bytes,
+            filename: f.name,
+            contentType: MediaType('image', 'jpeg'),
+          ),
+        );
+      }
+
+      final response = await request.send();
+      final body = await response.stream.bytesToString();
+      final data = jsonDecode(body) as Map<String, dynamic>;
+
+      if (response.statusCode != 200 || data['success'] != true) {
+        throw StorageException(
+          data['error']?.toString() ?? 'UPLOAD_FAILED',
+          statusCode: response.statusCode.toString(),
+        );
+      }
+
+      return (data['urls'] as List<dynamic>).cast<String>();
+    } catch (e) {
+      print('==== EDGE UPLOAD ERROR ====');
+      print(e.toString());
+      _setError(e);
+      rethrow;
+    }
+  }
+
+  // ═══════════════════════════════════════
+  // الرفع (مُحدّث ليستخدم Edge Function)
   // ═══════════════════════════════════════
 
   /// رفع صورة عرض واحدة (مع ضغط) وإرجاع الرابط العام
@@ -98,10 +188,6 @@ class StorageService {
     String? offerId,
   }) async {
     try {
-      final fileName =
-          '${DateTime.now().millisecondsSinceEpoch}_${xfile.name}';
-      final fullPath = 'offers/$userId/${offerId ?? 'draft'}/$fileName';
-
       Uint8List bytes;
       if (kIsWeb) {
         bytes = await xfile.readAsBytes();
@@ -110,13 +196,13 @@ class StorageService {
         bytes = await (compressed ?? File(xfile.path)).readAsBytes();
       }
 
-      await _storage.from(offerBucket).uploadBinary(
-            fullPath,
-            bytes,
-            fileOptions:
-                const FileOptions(cacheControl: '3600', upsert: true),
-          );
-      return _storage.from(offerBucket).getPublicUrl(fullPath);
+      final urls = await _uploadViaEdgeFunction(
+        files: [(bytes: bytes, name: xfile.name)],
+        userId: userId,
+        offerId: offerId,
+        folder: 'offers',
+      );
+      return urls.isNotEmpty ? urls.first : null;
     } catch (e) {
       print('==== IMAGE UPLOAD ERROR ====');
       print(e.toString());
@@ -134,8 +220,11 @@ class StorageService {
   }) async {
     final urls = <String>[];
     for (var i = 0; i < files.length; i++) {
-      final url =
-          await uploadOfferImage(xfile: files[i], userId: userId, offerId: offerId);
+      final url = await uploadOfferImage(
+        xfile: files[i],
+        userId: userId,
+        offerId: offerId,
+      );
       if (url != null) urls.add(url);
       onProgress?.call(i + 1, files.length);
     }
@@ -151,15 +240,13 @@ class StorageService {
     required String path,
     String? userId,
   }) async {
-    final fullPath = 'images/${userId ?? 'anonymous'}/$path';
-    final compressed = kIsWeb ? file : (await compressImage(file) ?? file);
-    final fileBytes = await compressed.readAsBytes();
-    await _storage.from(offerBucket).uploadBinary(
-          fullPath,
-          fileBytes,
-          fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
-        );
-    return _storage.from(offerBucket).getPublicUrl(fullPath);
+    final bytes = await file.readAsBytes();
+    final urls = await _uploadViaEdgeFunction(
+      files: [(bytes: bytes, name: path)],
+      userId: userId ?? 'anonymous',
+      folder: 'images',
+    );
+    return urls.first;
   }
 
   Future<String> uploadFile({
@@ -167,12 +254,24 @@ class StorageService {
     required String bucket,
     required String path,
   }) async {
+    // للـ buckets الأخرى (config_assets, payment_proofs) نحتفظ بالرفع المباشر
+    // لأنها تستخدم RLS مختلفة أو service_role من Edge Functions أخرى
+    if (bucket == offerBucket) {
+      final bytes = await file.readAsBytes();
+      final urls = await _uploadViaEdgeFunction(
+        files: [(bytes: bytes, name: path)],
+        userId: 'anonymous',
+        folder: 'offers',
+      );
+      return urls.first;
+    }
+
     final fileBytes = await file.readAsBytes();
     await _storage.from(bucket).uploadBinary(
-          path,
-          fileBytes,
-          fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
-        );
+      path,
+      fileBytes,
+      fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
+    );
     return _storage.from(bucket).getPublicUrl(path);
   }
 
@@ -188,7 +287,7 @@ class StorageService {
         maxDuration: maxDuration,
       );
     } catch (e) {
-      print('==== IMAGE UPLOAD ERROR ====');
+      print('==== VIDEO PICK ERROR ====');
       print(e.toString());
       _setError(e);
       return null;
@@ -202,27 +301,24 @@ class StorageService {
     String? offerId,
   }) async {
     try {
-      final fileName =
-          '${DateTime.now().millisecondsSinceEpoch}_${xfile.name}';
-      final fullPath = 'videos/$userId/${offerId ?? 'draft'}/$fileName';
-
       final bytes = kIsWeb
           ? await xfile.readAsBytes()
           : await File(xfile.path).readAsBytes();
 
       // فحص الحجم (حد أقصى 50 MB)
-      if (bytes.length > 50 * 1024 * 1024) {return null;
+      if (bytes.length > 50 * 1024 * 1024) {
+        return null;
       }
 
-      await _storage.from(offerBucket).uploadBinary(
-            fullPath,
-            bytes,
-            fileOptions: const FileOptions(
-                cacheControl: '3600', upsert: true, contentType: 'video/mp4'),
-          );
-      return _storage.from(offerBucket).getPublicUrl(fullPath);
+      final urls = await _uploadViaEdgeFunction(
+        files: [(bytes: bytes, name: xfile.name)],
+        userId: userId,
+        offerId: offerId,
+        folder: 'videos',
+      );
+      return urls.isNotEmpty ? urls.first : null;
     } catch (e) {
-      print('==== IMAGE UPLOAD ERROR ====');
+      print('==== VIDEO UPLOAD ERROR ====');
       print(e.toString());
       _setError(e);
       return null;
@@ -251,4 +347,13 @@ class StorageService {
       _setError(e);
     }
   }
+}
+
+/// Exception بسيط لحمل رسائل الـ Edge Function
+class StorageException implements Exception {
+  final String message;
+  final String statusCode;
+  StorageException(this.message, {this.statusCode = ''});
+  @override
+  String toString() => 'StorageException: $message (status: $statusCode)';
 }

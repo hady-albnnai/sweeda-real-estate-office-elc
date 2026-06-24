@@ -62,7 +62,7 @@
 | ✅ **مكتمل** | Edge Function `admin-reports` — تنقل إدارة التبليغات خلف `staff_session_token/service_role`، وبعد اختبارها يطبق `2026_06_20_lock_admin_reports_rpcs.sql` |
 | ✅ **مكتمل** | Edge Function `admin-deals` — تنقل إدارة الصفقات خلف `staff_session_token/service_role`، وبعد اختبارها يطبق `2026_06_20_lock_admin_deals_rpcs.sql` |
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_lock_legacy_admin_rpcs.sql` — إغلاق direct execute للدوال الإدارية القديمة الحساسة بعد نقلها إلى Edge Functions |
-| ✅ **مُطبّق على السيرفر** | Storage policies لـ `offer_images` — INSERT/UPDATE/DELETE مقفلة (owner-only + role>=4)، لا SELECT policy (public URLs لا تحتاجها) |
+| ✅ **مُطبّق على السيرفر** | Storage policies لـ `offer_images` — INSERT/UPDATE/DELETE مقفلة (owner OR admin OR service_role)، لا SELECT policy (public URLs لا تحتاجها) |
 | 📝 **جاهز للتطبيق (لم يُنفّذ بعد)** | `2026_06_13_auth_username_password.sql` — اسم مستخدم `usr` + كلمة مرور مشفّرة `pwd` + 6 RPCs (`register_password`, `login_with_password`, `reset_password_with_otp`, `change_password_internal`, `check_username_available`, `get_staff_stats_internal`) + تحديث `users_public` (إضافة `usr`) + تحديث `get_user_full_by_id` (إضافة `usr` + إخفاء `pwd` خلف flag) |
 
 ---
@@ -1510,6 +1510,7 @@ await client.rpc('send_appointment_reminders');
 | `lib/screens/user/boost_offer_screen.dart` 🆕🆕🆕 | شاشة شراء ترقيات العروض (5 خيارات: ren/pin/bst/dsc5/fms) |
 | `supabase/functions/send-whatsapp-otp/index.ts` 🆕 | Edge Function لإرسال OTP عبر Meta WhatsApp — **لم يُنشر ⚠️** |
 | `supabase/functions/verify-whatsapp-otp/index.ts` 🆕 | Edge Function للتحقق وإصدار session — **لم يُنشر ⚠️** |
+| `supabase/functions/upload-offer-images/index.ts` 🆕🔒 | Edge Function لرفع صور العروض بأمان عبر service_role (يتحقق من staff_session_token أو JWT) — **جاهز للنشر ⚠️** |
 | `lib/core/constants/db_constants.dart` | أسماء الدوال كـ constants |
 | `lib/services/auth_service.dart` | استخدام WhatsApp OTP + Email Magic Link (الـ V2) |
 | `lib/screens/auth/login_screen.dart` | شاشة تسجيل الدخول بتبويبتين (واتساب/إيميل) |
