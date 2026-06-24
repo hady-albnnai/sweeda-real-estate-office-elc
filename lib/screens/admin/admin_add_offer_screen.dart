@@ -252,6 +252,8 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
         created = OfferModel.fromSupabase(row, row['id'] as String);
       }
     } catch (e) {
+      print("===== ADMIN ADD OFFER ERROR =====");
+      print(e.toString());
       if (mounted) {
         setState(() => _submitting = false);
         _snack('فشل في إنشاء العرض: $e');
