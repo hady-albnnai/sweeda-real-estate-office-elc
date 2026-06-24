@@ -280,7 +280,9 @@ class OfferProvider with ChangeNotifier {
       _offers.insert(0, created);
       notifyListeners();
       return created;
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('[OFFER PROVIDER ERROR] Failed to create offer: $e');
+      print('[OFFER PROVIDER STACKTRACE] $stackTrace');
       _setError(e);
       return null;
     }
