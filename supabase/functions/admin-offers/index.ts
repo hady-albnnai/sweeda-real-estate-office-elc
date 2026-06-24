@@ -87,6 +87,19 @@ serve(async (req) => {
 
     const adminUid = actor.adminUid;
 
+    if (action === "create_for_user") {
+      const userId = (body.user_id ?? body.userId)?.toString() ?? "";
+      const offer = body.offer as Record<string, unknown>;
+      if (!userId || !offer) return json({ success: false, error: "USER_ID_AND_OFFER_REQUIRED" }, 400);
+
+      const { data, error } = await supabaseAdmin.rpc("create_offer_internal", {
+        p_user_uid: userId,
+        p_offer: offer,
+      });
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json({ success: true, offer_id: data });
+    }
+
     if (action === "list_pending") {
       const { data, error } = await supabaseAdmin.rpc("get_admin_pending_offers_internal", {
         p_admin_uid: adminUid,
