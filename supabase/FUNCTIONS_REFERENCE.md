@@ -1504,7 +1504,7 @@ await client.rpc('send_appointment_reminders');
 | `supabase/migrations/2026_06_11_drop_obsolete_verification_rpcs.sql` 🧹 | حذف RPCs التوثيق القديمة غير المستخدمة — **مطبّق ✅** |
 | `supabase/migrations/2026_06_11_drop_obsolete_unused_rpcs.sql` 🧹 | حذف `admin_update_user_permissions` و `verify_otp_safe` بعد التحقق من عدم استخدامهما — **مطبّق ✅** |
 | `supabase/migrations/2026_06_11_real_test_stabilization_internal_rpcs.sql` 🛠️ | دفعة RPCs إضافية لتثبيت ما قبل الاختبار الحقيقي — **جاهز للتطبيق** |
-| `supabase/migrations/2026_06_24_offer_images_storage_policies.sql` 📁🔒 | إنشاء bucket `offer_images` + RLS policies مقفلة (INSERT owner-only، DELETE owner|admin، لا SELECT policy) — **مطبّق ✅** |
+| `supabase/migrations/2026_06_24_offer_images_storage_policies.sql` 📁🔒 | إنشاء bucket `offer_images` + RLS policies مقفلة (INSERT owner OR admin (role>=4)، UPDATE owner OR admin (role>=4)، DELETE owner OR admin (role>=4)، لا SELECT policy) — **مطبّق ✅** |
 | `supabase/functions/send-push-notification/index.ts` 🆕🆕🆕🆕🆕 | Edge Function لإرسال FCM Push عبر Service Account |
 | `lib/services/fcm_service.dart` 🆕🆕🆕🆕🆕 | خدمة FCM Flutter (تهيئة + token + معالجات الإشعارات) |
 | `lib/screens/user/boost_offer_screen.dart` 🆕🆕🆕 | شاشة شراء ترقيات العروض (5 خيارات: ren/pin/bst/dsc5/fms) |
