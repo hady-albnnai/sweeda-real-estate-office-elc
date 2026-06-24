@@ -101,9 +101,10 @@ class StorageService {
 
   /// يبني رابط Edge Function (يفترض نفس الدومين أو supabase.functions.url)
   String get _edgeUrl {
-    final supabase = SupabaseService().client;
-    // إذا كان Supabase Edge Functions مفعل
-    return '${supabase.supabaseUrl}/functions/v1/upload-offer-images';
+    if (SupabaseService.url == null || SupabaseService.publishableKey == null) {
+      throw 'Supabase not initialized';
+    }
+    return '${SupabaseService.url!}/functions/v1/upload-offer-images';
   }
 
   /// رفع ملفات عبر Edge Function `upload-offer-images`.
@@ -121,14 +122,14 @@ class StorageService {
       final request = http.MultipartRequest('POST', Uri.parse(_edgeUrl));
 
       // Headers
-      final supabase = SupabaseService().client;
+      final url = SupabaseService.url;
       final headers = <String, String>{
-        'apikey': supabase.supabaseKey,
-        'Authorization': 'Bearer ${supabase.supabaseKey}',
+        'apikey': SupabaseService.publishableKey!,
+        'Authorization': 'Bearer ${SupabaseService.publishableKey!}',
       };
 
       // إذا كان المستخدم مسجل دخول بـ Supabase Auth (JWT) نضيفه
-      final session = supabase.auth.currentSession;
+      final session = SupabaseService().client.auth.currentSession;
       if (session != null) {
         headers['Authorization'] = 'Bearer ${session.accessToken}';
       }
