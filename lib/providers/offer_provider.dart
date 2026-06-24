@@ -274,7 +274,7 @@ class OfferProvider with ChangeNotifier {
   Future<OfferModel?> addOffer(OfferModel offer) async {
     try {
       final res = await SupabaseService().client.functions.invoke('user-offers', body: {'action': 'create', 'offer': offer.toMap()}); final data = res.data as Map; final response = data['offer_id'];
-      if (response == null || (response as List).isEmpty) return null;
+      if (response == null || (response is! List) || response.isEmpty) return null;
       final row = Map<String, dynamic>.from(response.first as Map);
       final created = OfferModel.fromSupabase(row, row['id'] as String);
       _offers.insert(0, created);
