@@ -62,7 +62,7 @@
 | ✅ **مكتمل** | Edge Function `admin-reports` — تنقل إدارة التبليغات خلف `staff_session_token/service_role`، وبعد اختبارها يطبق `2026_06_20_lock_admin_reports_rpcs.sql` |
 | ✅ **مكتمل** | Edge Function `admin-deals` — تنقل إدارة الصفقات خلف `staff_session_token/service_role`، وبعد اختبارها يطبق `2026_06_20_lock_admin_deals_rpcs.sql` |
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_lock_legacy_admin_rpcs.sql` — إغلاق direct execute للدوال الإدارية القديمة الحساسة بعد نقلها إلى Edge Functions |
-| ✅ **مُطبّق على السيرفر** | Storage policies لـ `offer_images` — INSERT/UPDATE/DELETE مقفلة (owner OR admin OR service_role)، لا SELECT policy (public URLs لا تحتاجها) |
+| ✅ **مُطبّق على السيرفر** | `2026_06_24_offer_images_storage_policies.sql` — bucket `offer_images` + RLS مقفلة (owner OR admin OR service_role)، لا SELECT policy. Edge Function `upload-offer-images` تتجاوز RLS عبر service_role |
 | 📝 **جاهز للتطبيق (لم يُنفّذ بعد)** | `2026_06_13_auth_username_password.sql` — اسم مستخدم `usr` + كلمة مرور مشفّرة `pwd` + 6 RPCs (`register_password`, `login_with_password`, `reset_password_with_otp`, `change_password_internal`, `check_username_available`, `get_staff_stats_internal`) + تحديث `users_public` (إضافة `usr`) + تحديث `get_user_full_by_id` (إضافة `usr` + إخفاء `pwd` خلف flag) |
 
 ---
@@ -253,6 +253,7 @@ SELECT * FROM cron.job_run_details ORDER BY start_time DESC LIMIT 10;
 | 9 | `reset-user-password` 🆕 | توليد كلمة سر جديدة وتحديث `users.pwd` | `{ admin_uid, staff_session_token?, user_id }` | `{ success, new_password }` | ✅ منشور |
 | 10 | `delete-user` 🆕 | حذف منطقي لموظف داخلي | `{ admin_uid, staff_session_token?, user_id }` | `{ success }` | ✅ منشور |
 | 11 | `update-user-permissions` 🆕 | تحديث صلاحيات مستخدم عبر جلسة موظف | `{ admin_uid, staff_session_token?, user_id, permissions }` | `{ success }` | ✅ منشور |
+| 12 | `upload-offer-images` 🆕🔒 | رفع صور العروض بأمان عبر service_role (يتحقق من staff_session_token أو JWT) | `multipart/form-data: files, user_id, offer_id?, folder?, admin_uid?` | `{ success, urls, count }` | ✅ منشور — يحتاج إعادة نشر بعد آخر تعديل |
 
 > ⚠️ **`generate_otp` / `verify_otp` القديمة** ما زالت موجودة للتوافق الخلفي فقط — استخدم النسخة V2 في الكود الجديد.
 > 📖 لخطوات تفعيل WhatsApp + Email Magic Link: راجع `docs/AUTH_SETUP.md`
@@ -1854,6 +1855,26 @@ NOW() > pkg_grace          → expire_packages     → b_pkg = 0
 1. **`executor-tasks`**: تدير مهام المنفذ، تتطلب صلاحية `>= 2` (منفذ أو أعلى).  
 2. **`photographer-tasks`**: تدير مهام المصور، تتطلب صلاحية `>= 2` (مصور أو أعلى).  
 3. **`admin-photography`**: تدير مهام التصوير من طرف الإدارة، تتطلب صلاحية `>= 3` (مكتب أو أعلى).
+
+## 🛡️ Edge Function — `upload-offer-images`
+**الحالة:** ✅ منشور — يحتاج إعادة نشر (`supabase functions deploy upload-offer-images`) بعد آخر تعديل (استخدام `upload()` بدلاً من `uploadBinary()`)
+**الأذونات:** `service_role` للـ Supabase client (داخل السيرفر)، ويتطلب `staff_session_token` (من x-staff-session-token header) أو JWT auth.
+**الغرض:** رفع صور العروض بأمان بدون الاعتماد على `auth.uid()` في RLS (لأن التطبيق يستخدم custom auth).
+**المدخلات (multipart/form-data):**
+- `files` — ملفات الصور (متعددة)
+- `user_id` — مجلد المستخدم (uid)
+- `offer_id` — مجلد العرض (default: draft)
+- `folder` — offers | images | videos (default: offers)
+- `admin_uid` — مطلوب مع `staff_session_token` للموظفين
+**العملية:**
+1. إذا وجد `x-staff-session-token` → تتحقق من `validate_staff_session(admin_uid, token)`.
+2. وإلا → تتحقق من JWT auth.
+3. ترفع بـ `service_role` داخل `offer_images` bucket.
+4. تُرجع `public URLs`.
+
+**الملاحظة:** `upload-offer-images` تستخدم `upload()` (Supabase JS v2) وليس `uploadBinary()`.
+
+---
 
 ## 🛡️ Edge Function — `user-offers`
 **الحالة:** ✅ مكتمل  
