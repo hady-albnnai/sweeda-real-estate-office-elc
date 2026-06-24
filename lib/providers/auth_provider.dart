@@ -46,7 +46,7 @@ class AuthProvider with ChangeNotifier {
       final result = await SupabaseService().client.functions.invoke('user-account', body: {'action': 'login_with_password', 'identifier': identifier, 'password': password});
 
       final respData = result.data is Map ? Map<String, dynamic>.from(result.data) : null;
-      final data = respData?['result'] is Map ? Map<String, dynamic>.from(respData!['result']) : null;
+      final data = respData?['result'] is Map ? Map<String, dynamic>.from(respData!['result']) : respData;
       if (data == null || data['success'] != true) {
         _lastError = 'فشل تسجيل الدخول';
         return false;
@@ -236,8 +236,10 @@ class AuthProvider with ChangeNotifier {
       // (تطبيقنا يستخدم OTP محلي لا يمر بـSupabase Auth → auth.uid()=NULL)
       final response = await SupabaseService().client.functions.invoke('user-account', body: {'action': 'get_full_profile', 'user_uid': userId});
       final data = response.data as Map;
-      if (data['success'] != true || data['profile'] == null || (data['profile'] as List).isEmpty) return;
-      final row = Map<String, dynamic>.from((data['profile'] as List).first);
+      if (data['success'] != true || data['profile'] == null) return;
+      final profileList = data['profile'];
+      if (profileList is! List || profileList.isEmpty) return;
+      final row = Map<String, dynamic>.from(profileList.first as Map);
       _userModel = UserModel.fromSupabase(row, userId);
       notifyListeners();
       DeviceService().registerWithServer();
