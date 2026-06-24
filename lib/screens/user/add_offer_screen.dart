@@ -442,6 +442,8 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       createdOffer = await offerProv.addOffer(offer);
       // النقاط تُمنح بعد موافقة الإدارة — ليس عند الإنشاء
     } catch (e) {
+      print("===== USER ADD OFFER ERROR =====");
+      print(e.toString());
       if (!mounted) return;
       setState(() => _submitting = false);
       _snack('فشل في النشر بعد تحميل الصور: $e');
