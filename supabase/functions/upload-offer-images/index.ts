@@ -23,27 +23,14 @@ function json(body: Record<string, unknown>, status = 200): Response {
   });
 }
 
-// التحقق من الموظف عبر staff_session_token
+// التحقق من الموظف عبر staff_session_token + admin_uid (من form data)
 async function validateStaff(
-  req: Request,
   supabaseAdmin: ReturnType<typeof createClient>,
+  adminUid: string,
+  staffToken: string,
 ): Promise<{ ok: true; uid: string; role: number } | { ok: false; response: Response }> {
-  const staffToken = req.headers.get("x-staff-session-token") ?? "";
-  const authHeader = req.headers.get("Authorization") ?? "";
-  const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
-
-  if (!staffToken) {
-    return { ok: false, response: json({ success: false, error: "STAFF_TOKEN_REQUIRED" }, 401) };
-  }
-
-  let adminUid = "";
-  if (bearer && bearer !== "undefined" && bearer !== "null" && bearer !== "anon_key_here") {
-    const { data: userData } = await supabaseAdmin.auth.getUser(bearer);
-    adminUid = userData?.user?.id ?? "";
-  }
-
-  if (!adminUid) {
-    return { ok: false, response: json({ success: false, error: "ADMIN_UID_REQUIRED" }, 401) };
+  if (!adminUid || !staffToken) {
+    return { ok: false, response: json({ success: false, error: "ADMIN_UID_AND_TOKEN_REQUIRED" }, 401) };
   }
 
   const { data, error } = await supabaseAdmin.rpc("validate_staff_session", {
@@ -96,8 +83,11 @@ serve(async (req) => {
     let actorUid = "";
     let isStaff = false;
 
+    const form = await req.formData();
+    const adminUid = form.get("admin_uid")?.toString() ?? "";
+
     if (staffToken) {
-      const staff = await validateStaff(req, supabaseAdmin);
+      const staff = await validateStaff(supabaseAdmin, adminUid, staffToken);
       if (!staff.ok) return staff.response;
       actorUid = staff.uid;
       isStaff = true;
@@ -107,7 +97,6 @@ serve(async (req) => {
       actorUid = user.uid;
     }
 
-    const form = await req.formData();
     const files = form.getAll("files") as File[];
     const userId = form.get("user_id")?.toString() ?? actorUid;
     const offerId = form.get("offer_id")?.toString() ?? "draft";
@@ -117,6 +106,7 @@ serve(async (req) => {
       return json({ success: false, error: "NO_FILES" }, 400);
     }
 
+    // التحقق: الموظف يرفع لأي مجلد، المستخدم العادي فقط لمجلده
     if (!isStaff && userId !== actorUid) {
       return json({ success: false, error: "UNAUTHORIZED_FOLDER" }, 403);
     }
