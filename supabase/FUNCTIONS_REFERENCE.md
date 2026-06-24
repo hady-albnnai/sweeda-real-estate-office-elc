@@ -62,7 +62,7 @@
 | ✅ **مكتمل** | Edge Function `admin-reports` — تنقل إدارة التبليغات خلف `staff_session_token/service_role`، وبعد اختبارها يطبق `2026_06_20_lock_admin_reports_rpcs.sql` |
 | ✅ **مكتمل** | Edge Function `admin-deals` — تنقل إدارة الصفقات خلف `staff_session_token/service_role`، وبعد اختبارها يطبق `2026_06_20_lock_admin_deals_rpcs.sql` |
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_lock_legacy_admin_rpcs.sql` — إغلاق direct execute للدوال الإدارية القديمة الحساسة بعد نقلها إلى Edge Functions |
-| ✅ **مُطبّق على السيرفر** | Storage policies لـ `offer_images` — INSERT/SELECT/UPDATE/DELETE مفتوحة |
+| ✅ **مُطبّق على السيرفر** | Storage policies لـ `offer_images` — INSERT/UPDATE/DELETE مقفلة (owner-only + role>=4)، لا SELECT policy (public URLs لا تحتاجها) |
 | 📝 **جاهز للتطبيق (لم يُنفّذ بعد)** | `2026_06_13_auth_username_password.sql` — اسم مستخدم `usr` + كلمة مرور مشفّرة `pwd` + 6 RPCs (`register_password`, `login_with_password`, `reset_password_with_otp`, `change_password_internal`, `check_username_available`, `get_staff_stats_internal`) + تحديث `users_public` (إضافة `usr`) + تحديث `get_user_full_by_id` (إضافة `usr` + إخفاء `pwd` خلف flag) |
 
 ---
@@ -1504,6 +1504,7 @@ await client.rpc('send_appointment_reminders');
 | `supabase/migrations/2026_06_11_drop_obsolete_verification_rpcs.sql` 🧹 | حذف RPCs التوثيق القديمة غير المستخدمة — **مطبّق ✅** |
 | `supabase/migrations/2026_06_11_drop_obsolete_unused_rpcs.sql` 🧹 | حذف `admin_update_user_permissions` و `verify_otp_safe` بعد التحقق من عدم استخدامهما — **مطبّق ✅** |
 | `supabase/migrations/2026_06_11_real_test_stabilization_internal_rpcs.sql` 🛠️ | دفعة RPCs إضافية لتثبيت ما قبل الاختبار الحقيقي — **جاهز للتطبيق** |
+| `supabase/migrations/2026_06_24_offer_images_storage_policies.sql` 📁🔒 | إنشاء bucket `offer_images` + RLS policies مقفلة (INSERT owner-only، DELETE owner|admin، لا SELECT policy) — **مطبّق ✅** |
 | `supabase/functions/send-push-notification/index.ts` 🆕🆕🆕🆕🆕 | Edge Function لإرسال FCM Push عبر Service Account |
 | `lib/services/fcm_service.dart` 🆕🆕🆕🆕🆕 | خدمة FCM Flutter (تهيئة + token + معالجات الإشعارات) |
 | `lib/screens/user/boost_offer_screen.dart` 🆕🆕🆕 | شاشة شراء ترقيات العروض (5 خيارات: ren/pin/bst/dsc5/fms) |
