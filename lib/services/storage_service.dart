@@ -42,6 +42,8 @@ class StorageService {
         maxWidth: 1920,
       );
     } catch (e) {
+      print('==== IMAGE UPLOAD ERROR ====');
+      print(e.toString());
       _setError(e);
       return null;
     }
@@ -116,6 +118,8 @@ class StorageService {
           );
       return _storage.from(offerBucket).getPublicUrl(fullPath);
     } catch (e) {
+      print('==== IMAGE UPLOAD ERROR ====');
+      print(e.toString());
       _setError(e);
       return null;
     }
@@ -184,6 +188,8 @@ class StorageService {
         maxDuration: maxDuration,
       );
     } catch (e) {
+      print('==== IMAGE UPLOAD ERROR ====');
+      print(e.toString());
       _setError(e);
       return null;
     }
@@ -216,6 +222,8 @@ class StorageService {
           );
       return _storage.from(offerBucket).getPublicUrl(fullPath);
     } catch (e) {
+      print('==== IMAGE UPLOAD ERROR ====');
+      print(e.toString());
       _setError(e);
       return null;
     }
