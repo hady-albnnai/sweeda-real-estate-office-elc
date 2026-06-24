@@ -144,6 +144,7 @@ class StorageService {
 
       // Fields
       request.fields['user_id'] = userId;
+      request.fields['admin_uid'] = userId;
       request.fields['offer_id'] = offerId ?? 'draft';
       request.fields['folder'] = folder;
 
