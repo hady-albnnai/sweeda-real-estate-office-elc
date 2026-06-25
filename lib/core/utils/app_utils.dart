@@ -46,6 +46,26 @@ class AppUtils {
   static String offerTypeText(int type) => type == 0 ? 'عقار' : 'سيارة';
   static String transactionText(int type) => type == 0 ? 'بيع' : 'إيجار';
 
+  static String deedTypeText(int type, int offerType) {
+    if (offerType == 0) { // عقار
+      switch (type) {
+        case 1: return 'طابو أخضر';
+        case 2: return 'كاتب عدل';
+        case 3: return 'حكم محكمة';
+        case 4: return 'إقرار خطي';
+        default: return 'غير محدد';
+      }
+    } else { // سيارة
+      switch (type) {
+        case 1: return 'وكالة قابلة للعزل';
+        case 2: return 'وكالة غير قابلة للعزل';
+        case 3: return 'عقد بيع';
+        case 4: return 'ميكانيك باسم البائع';
+        default: return 'غير محدد';
+      }
+    }
+  }
+
   static bool isValidPhone(String phone) {
     return RegExp(r'^09\d{8}$').hasMatch(phone);
   }

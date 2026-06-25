@@ -50,6 +50,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   bool _agreePledge = false; // الإقرار والتعهد
   bool _shareOnSocial = true; // نشر على وسائل التواصل الاجتماعي للمكتب
   bool _submitting = false;
+  bool _anytimeReady = false; // خيار جاهز في أي وقت للمواعيد
 
   // حقول السيارة
   final _carBrandCtrl = TextEditingController();
@@ -96,6 +97,9 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
 
   /// يبني Map<String, List<String>> لإرساله في avl
   Map<String, List<String>> _buildAvl() {
+    if (_anytimeReady) {
+      return {'any': ['00:00-23:59']};
+    }
     final result = <String, List<String>>{};
     for (final day in _weekDays) {
       final key = day.$1;
@@ -805,21 +809,6 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
                 (v) => setState(() => _carTransmission = v)),
           ],
           const SizedBox(height: 8),
-          if (_selectedTrans != null)
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppTheme.surfaceBlack,
-                border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                _selectedTrans == 0
-                    ? 'المكتب يتقاضى عمولة 3% عند إتمام عملية البيع.'
-                    : 'المكتب يتقاضى أجرة نصف شهر عند إتمام عملية الإيجار أو الاستئجار.',
-                style: const TextStyle(color: AppTheme.textWhite, fontSize: 14),
-              ),
-            ),
         ]),
       ),
       isActive: _currentStep >= 0,
@@ -901,8 +890,17 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              _dd('اتجاه العقار', ['شمالي', 'جنوبي', 'شرقي', 'غربي', 'شمالي شرقي', 'شمالي غربي', 'جنوبي شرقي', 'جنوبي غربي'],
-                  (v) => setState(() => _direction = v)),
+              _dd('اتجاه العقار', [
+                'شمالي',
+                'جنوبي',
+                'شرقي',
+                'غربي',
+                'شمالي شرقي',
+                'شمالي غربي',
+                'جنوبي شرقي',
+                'جنوبي غربي',
+                'مفتوح - أربع اتجاهات'
+              ], (v) => setState(() => _direction = v)),
               const SizedBox(height: 12),
               TextField(
                 controller: _legalNotesCtrl,
@@ -1062,17 +1060,32 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'حدد الأيام والفترات الزمنية التي يمكن فيها معاينة العرض.',
-            style: TextStyle(color: AppTheme.textGrey, fontSize: 13),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            'مثال: الأربعاء من 10:00 إلى 13:00',
-            style: TextStyle(color: AppTheme.primaryGold, fontSize: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppTheme.primaryGold.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.3)),
+            ),
+            child: SwitchListTile(
+              value: _anytimeReady,
+              onChanged: (v) => setState(() => _anytimeReady = v),
+              title: const Text('أنا جاهز للمعاينة في أي وقت',
+                  style: TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold, fontSize: 14)),
+              subtitle: const Text('سيتمكن الزبائن من طلب موعد في أي وقت تراه الإدارة مناسباً',
+                  style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+              activeColor: AppTheme.primaryGold,
+              contentPadding: EdgeInsets.zero,
+            ),
           ),
           const SizedBox(height: 16),
-          ..._weekDays.map((day) {
+          if (!_anytimeReady) ...[
+            const Text(
+              'أو حدد الأيام والفترات الزمنية التي تفضلها:',
+              style: TextStyle(color: AppTheme.textGrey, fontSize: 13),
+            ),
+            const SizedBox(height: 12),
+            ..._weekDays.map((day) {
             final key = day.$1;
             final label = day.$2;
             final enabled = _avlDaysEnabled[key] ?? false;
@@ -1180,6 +1193,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
               ),
             );
           }),
+          ], // نهاية if (!_anytimeReady)
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.all(10),
@@ -1389,6 +1403,39 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
             ),
           ),
           const SizedBox(height: 12),
+          // 💰 تنويه عمولة المكتب (منقول ومحسن)
+          if (_selectedTrans != null)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryGold.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.5), width: 1.5),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.monetization_on, color: AppTheme.primaryGold, size: 28),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('تنبيه بخصوص عمولة المكتب',
+                            style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 15)),
+                        const SizedBox(height: 4),
+                        Text(
+                          _selectedTrans == 0
+                              ? 'يتقاضى المكتب عمولة قدرها 3% من القيمة الإجمالية عند إتمام عملية البيع.'
+                              : 'يتقاضى المكتب عمولة تعادل أجرة نصف شهر عند إتمام عملية الإيجار.',
+                          style: const TextStyle(color: AppTheme.textWhite, fontSize: 13, height: 1.4),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 16),
           // خيار النشر على وسائل التواصل الاجتماعي
           Material(
             color: Colors.transparent,
