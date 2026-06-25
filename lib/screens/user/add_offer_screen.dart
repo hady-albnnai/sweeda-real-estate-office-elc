@@ -72,21 +72,14 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   String _progressMsg = '';
 
   static const _weekDays = [
-    ('mon', 'الاثنين'),
-    ('tue', 'الثلاثاء'),
-    ('wed', 'الأربعاء'),
-    ('thu', 'الخميس'),
-    ('fri', 'الجمعة'),
-    ('sat', 'السبت'),
-    ('sun', 'الأحد'),
+    ('mon', 'الاثنين'), ('tue', 'الثلاثاء'), ('wed', 'الأربعاء'),
+    ('thu', 'الخميس'), ('fri', 'الجمعة'), ('sat', 'السبت'), ('sun', 'الأحد'),
   ];
   final Map<String, bool> _avlDaysEnabled = {
-    'mon': false, 'tue': false, 'wed': false, 'thu': false,
-    'fri': false, 'sat': false, 'sun': false,
+    'mon': false, 'tue': false, 'wed': false, 'thu': false, 'fri': false, 'sat': false, 'sun': false,
   };
   final Map<String, List<Map<String, String>>> _avlSlots = {
-    'mon': [], 'tue': [], 'wed': [], 'thu': [],
-    'fri': [], 'sat': [], 'sun': [],
+    'mon': [], 'tue': [], 'wed': [], 'thu': [], 'fri': [], 'sat': [], 'sun': [],
   };
 
   Map<String, List<String>> _buildAvl() {
@@ -145,7 +138,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
 
   void _showPledgeDialog() {
     final config = context.read<ConfigProvider>().config;
-    const defaultPledge = 'إقرار وتعهد إلكتروني — المكتب العقاري الالكتروني\n\nأقر أنا الموقع أدناه بموجب هذا الإقرار والتعهد بما يلي:\n1. أن جميع البيانات والمعلومات المقدمة صالحة وصحيحة وغير مضللة.\n2. أنني المالك الشرعي للعقار/السيارة أو مفوض قانونياً.\n3. أن تقديم أي بيانات كاذبة يعرضني للمسؤولية القانونية الكاملة.';
+    const defaultPledge = 'إقرار وتعهد إلكتروني — المكتب العقاري الالكتروني\n\nأقر أنا الموقع أدناه بموجب هذا الإقرار والتعهد بما يلي:\n1. أن جميع البيانات والمعلومات المقدمة صحيحة ودقيقة.\n2. أنني المالك الشرعي للعقار/السيارة أو مفوض قانوناً.\n3. أن تقديم أي بيانات كاذبة يعرضني للمسؤولية القانونية.';
     final pledgeText = config?.data?['txts']?['plg']?.toString() ?? defaultPledge;
     showDialog(context: context, builder: (_) => AlertDialog(backgroundColor: AppTheme.surfaceBlack, title: const Text('الإقرار والتعهد', style: TextStyle(color: AppTheme.textWhite)), content: SingleChildScrollView(child: Text(pledgeText, style: const TextStyle(color: AppTheme.textGrey, fontSize: 14, height: 1.6))), actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('إغلاق'))]));
   }
@@ -171,8 +164,12 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     final user = auth.userModel;
     if (user == null) { _snack('يجب تسجيل الدخول'); return; }
 
-    if (_selectedType == null || _selectedTrans == null || _selectedMainCat == null) {
-      _snack('يرجى إكمال التصنيفات الأساسية'); return;
+    if (_selectedType == null || _selectedTrans == null || _selectedMainCat == null || _selectedDocType == null) {
+      _snack('يرجى إكمال البيانات الأساسية واختيار نوع السند'); return;
+    }
+    
+    if (_docImage == null) {
+      _snack('يرجى رفع صورة سند الملكية لتعزيز مصداقية العرض'); return;
     }
 
     final effectivePhone = _contactPhoneCtrl.text.trim().isNotEmpty ? _contactPhoneCtrl.text.trim() : user.ph.trim();
@@ -206,9 +203,9 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
 
     try {
       await offerProv.addOffer(offer);
-      if (mounted) { Navigator.pop(context); _snack('تم إرسال العرض للمراجعة ✅'); }
+      if (mounted) { Navigator.pop(context); _snack('تم إرسال العرض للمراجعة بنجاح ✅'); }
     } catch (e) {
-      if (mounted) { setState(() => _submitting = false); _snack('خطأ: $e'); }
+      if (mounted) { setState(() => _submitting = false); _snack('خطأ في النشر: $e'); }
     }
   }
 
@@ -235,9 +232,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     final cityItems = (config?.data?['locs'] as List? ?? []).map((e) => DropdownMenuItem<String>(value: e.toString(), child: Text(e.toString()))).toList();
     cityItems.add(const DropdownMenuItem(value: _customCityOption, child: Text('آخر (إدخال حر)')));
 
-    final Map<String, dynamic> catsSource = _selectedType == 1 
-        ? (config?.data?['catVeh'] ?? {}) 
-        : (config?.data?['catProp'] ?? {});
+    final Map<String, dynamic> catsSource = _selectedType == 1 ? (config?.data?['catVeh'] ?? {}) : (config?.data?['catProp'] ?? {});
     final mainCatItems = catsSource.entries.map((e) => DropdownMenuItem<int>(value: int.tryParse(e.key), child: Text(e.value['nm']?.toString() ?? ''))).toList();
 
     return Step(
@@ -283,12 +278,12 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   Step _step2() => Step(
     title: const Text('التفاصيل والمواصفات', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
     content: Column(children: [
-      TextField(controller: _ttlCtrl, maxLength: 80, decoration: const InputDecoration(labelText: 'عنوان العرض (اختياري)', hintText: 'شقة فاخرة، سيارة نظيفة، أرض زراعية...', border: OutlineInputBorder())),
+      TextField(controller: _ttlCtrl, maxLength: 80, decoration: const InputDecoration(labelText: 'عنوان العرض بالتطبيق (اختياري)', hintText: 'شقة فاخرة، سيارة نظيفة، أرض زراعية...', border: OutlineInputBorder())),
       const SizedBox(height: 10),
       Row(children: [
-        Expanded(flex: 2, child: TextField(controller: _priceCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'السعر المتوقع (إلزامي)', border: OutlineInputBorder()))),
+        Expanded(flex: 3, child: TextField(controller: _priceCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'السعر المتوقع (إلزامي)', border: OutlineInputBorder()))),
         const SizedBox(width: 8),
-        Expanded(flex: 2, child: DropdownButtonFormField<int>(value: _cur, isExpanded: true, items: const [DropdownMenuItem(value: 0, child: Text('دولار أمريكي', overflow: TextOverflow.ellipsis)), DropdownMenuItem(value: 1, child: Text('ليرة سورية', overflow: TextOverflow.ellipsis))], onChanged: (v) => setState(() => _cur = v ?? 1), decoration: const InputDecoration(border: OutlineInputBorder()))),
+        Expanded(flex: 3, child: DropdownButtonFormField<int>(value: _cur, isExpanded: true, items: const [DropdownMenuItem(value: 0, child: Text('دولار أمريكي', overflow: TextOverflow.ellipsis)), DropdownMenuItem(value: 1, child: Text('ليرة سورية', overflow: TextOverflow.ellipsis))], onChanged: (v) => setState(() => _cur = v ?? 1), decoration: const InputDecoration(border: OutlineInputBorder()))),
       ]),
       const SizedBox(height: 15),
       if (_selectedType == 0) ...[
@@ -369,10 +364,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
               ListTile(
                 leading: Icon(enabled ? Icons.check_box : Icons.check_box_outline_blank, color: enabled ? AppTheme.primaryGold : AppTheme.textGrey),
                 title: Text(label, style: TextStyle(color: enabled ? AppTheme.textWhite : AppTheme.textGrey, fontWeight: FontWeight.bold)),
-                onTap: () => setState(() {
-                  _avlDaysEnabled[key] = !enabled;
-                  if (!enabled && slots.isEmpty) _avlSlots[key]!.add({'from': '', 'to': ''});
-                }),
+                onTap: () => setState(() { _avlDaysEnabled[key] = !enabled; if (!enabled && slots.isEmpty) _avlSlots[key]!.add({'from': '', 'to': ''}); }),
                 trailing: enabled ? IconButton(icon: const Icon(Icons.add, color: AppTheme.primaryGold, size: 20), onPressed: () => setState(() => _avlSlots[key]!.add({'from': '', 'to': ''}))) : null,
               ),
               if (enabled) ...slots.asMap().entries.map((entry) {
@@ -415,7 +407,11 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     final Map<String, dynamic> rawCarDocTp = config?.data?['carDocTp'] ?? {};
     final Map<String, dynamic> rawPlateTp = config?.data?['plateTp'] ?? {};
 
-    final propertyDocs = rawDocTp.entries.where((e) => int.tryParse(e.key) != null && int.parse(e.key) < 6).map((e) => DropdownMenuItem<int>(value: int.parse(e.key), child: Text(e.value.toString()))).toList();
+    // فلترة السندات لمنع تداخل السيارات بالعقارات
+    final propertyDocs = rawDocTp.entries
+        .where((e) => int.tryParse(e.key) != null && int.parse(e.key) < 6)
+        .map((e) => DropdownMenuItem<int>(value: int.parse(e.key), child: Text(e.value.toString())))
+        .toList();
 
     return Step(
       title: const Text('السند والعمولة', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
@@ -434,7 +430,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           DropdownButtonFormField<int>(value: _selectedDocType, items: propertyDocs, onChanged: (v) => setState(() => _selectedDocType = v), decoration: const InputDecoration(border: OutlineInputBorder())),
         ],
         const SizedBox(height: 15),
-        const Text('صورة سند الملكية (اختياري حالياً)', style: TextStyle(color: AppTheme.primaryGold, fontSize: 13, fontWeight: FontWeight.bold)),
+        const Text('صورة سند الملكية (إلزامي للمراجعة)', style: TextStyle(color: AppTheme.primaryGold, fontSize: 13, fontWeight: FontWeight.bold)),
         const SizedBox(height: 6),
         GestureDetector(onTap: _pickDocImage, child: Container(height: 120, width: double.infinity, decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(10), border: Border.all(color: _docImage != null ? Colors.green : AppTheme.primaryGold.withValues(alpha: 0.5))), child: _docImage == null ? const Center(child: Icon(Icons.upload_file, size: 40, color: AppTheme.primaryGold)) : ClipRRect(borderRadius: BorderRadius.circular(10), child: kIsWeb ? Image.network(_docImage!.path, fit: BoxFit.cover) : Image.file(File(_docImage!.path), fit: BoxFit.cover, cacheWidth: 800)))),
         const SizedBox(height: 20),
