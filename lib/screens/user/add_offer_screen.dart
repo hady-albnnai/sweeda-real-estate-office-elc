@@ -294,10 +294,14 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     final effectiveContactPhone = _contactPhoneCtrl.text.trim().isNotEmpty
         ? _contactPhoneCtrl.text.trim()
         : (user.ph.trim());
-    if (effectiveContactPhone.isEmpty) {
-      _snack('رقم الهاتف للتواصل إلزامي لإرسال العرض');
+
+    // تأكيد صيغة الرقم السوري 09xxxxxxxx لتجنب خطأ PHONE_INVALID
+    final phoneRegex = RegExp(r'^09[3-9]\d{7}$');
+    if (!phoneRegex.hasMatch(effectiveContactPhone)) {
+      _snack('يرجى إدخال رقم هاتف سوري صحيح (09xxxxxxxx)');
       return;
     }
+
     final price = double.tryParse(_priceCtrl.text) ?? 0.0;
     if (price <= 0) {
       _snack('يرجى إدخال سعر صالح');
@@ -698,6 +702,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
               padding: const EdgeInsets.only(top: 12),
               child: TextField(
                 controller: _customSubCtrl,
+                style: const TextStyle(color: AppTheme.textWhite),
                 decoration: const InputDecoration(
                   labelText: 'اكتب التصنيف الفرعي يدوياً',
                   hintText: 'مثال: فيلا فاخرة أو سيارة كهربائية مخصصة',
@@ -706,15 +711,18 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
               ),
             ),
           const SizedBox(height: 20),
-          // رقم الهاتف الآن في الأساسيات + إلزامي + نص واضح
+          // رقم الهاتف للتواصل
           TextField(
             controller: _contactPhoneCtrl,
             keyboardType: TextInputType.phone,
+            style: const TextStyle(color: AppTheme.textWhite),
             decoration: const InputDecoration(
               labelText: 'رقم الهاتف للتواصل (إلزامي)',
-              hintText: 'مثال: 0938862469 أو +963938862469',
+              hintText: 'مثال: 0938862469',
               filled: true,
               fillColor: AppTheme.surfaceBlack,
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.phone, color: AppTheme.primaryGold),
             ),
           ),
           const SizedBox(height: 20),
@@ -1246,8 +1254,12 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
 
   Step _step4() {
     final config = context.watch<ConfigProvider>().config;
-    final docTypes = config?.documentTypes ?? {};
-    // pledgeText غير مستخدم هنا — النص يُعرض في _showPledgeDialog فقط
+    
+    // جلب القوائم الصحيحة من ملف الإعدادات المدمج
+    final Map<String, dynamic> rawDocTp = config?.data['docTp'] ?? {};
+    final Map<String, dynamic> rawCarDocTp = config?.data['carDocTp'] ?? {};
+    final Map<String, dynamic> rawPlateTp = config?.data['plateTp'] ?? {};
+
     return Step(
       title: const Text('السند والإقرار',
           style: TextStyle(
@@ -1258,16 +1270,16 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           // ─── نوع السند — حسب نوع العرض ───
           if (_selectedType == 1) ...[
             // سيارة: سند ملكية السيارة
-            const Text('نوع سند الملكية (إلزامي)',
+            const Text('نوع سند ملكية السيارة (إلزامي)',
                 style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
             DropdownButtonFormField<int>(
-              initialValue: _selectedCarDocType,
+              value: _selectedCarDocType,
               dropdownColor: AppTheme.surfaceBlack,
               style: const TextStyle(color: AppTheme.textWhite),
               decoration: const InputDecoration(border: OutlineInputBorder()),
               hint: const Text('اختر نوع السند', style: TextStyle(color: AppTheme.textGrey)),
-              items: (config?.carDocumentTypes ?? {}).entries
+              items: rawCarDocTp.entries
                   .map((e) => DropdownMenuItem(value: int.tryParse(e.key) ?? 0, child: Text(e.value.toString())))
                   .toList(),
               onChanged: (v) => setState(() { _selectedCarDocType = v; _selectedDocType = v; }),
@@ -1278,26 +1290,33 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
                 style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
             DropdownButtonFormField<int>(
-              initialValue: _selectedPlateType,
+              value: _selectedPlateType,
               dropdownColor: AppTheme.surfaceBlack,
               style: const TextStyle(color: AppTheme.textWhite),
               decoration: const InputDecoration(border: OutlineInputBorder()),
               hint: const Text('اختر نوع النمرة', style: TextStyle(color: AppTheme.textGrey)),
-              items: (config?.plateTypes ?? {}).entries
+              items: rawPlateTp.entries
                   .map((e) => DropdownMenuItem(value: int.tryParse(e.key) ?? 0, child: Text(e.value.toString())))
                   .toList(),
               onChanged: (v) => setState(() => _selectedPlateType = v),
             ),
           ] else ...[
             // عقار: سند ملكية العقار
-            const Text('نوع سند الملكية (إلزامي)',
+            const Text('نوع سند ملكية العقار (إلزامي)',
                 style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
             DropdownButtonFormField<int>(
-              initialValue: _selectedDocType,
+              value: _selectedDocType,
               dropdownColor: AppTheme.surfaceBlack,
               style: const TextStyle(color: AppTheme.textWhite),
               decoration: const InputDecoration(border: OutlineInputBorder()),
+              hint: const Text('اختر نوع السند', style: TextStyle(color: AppTheme.textGrey)),
+              items: rawDocTp.entries
+                  .map((e) => DropdownMenuItem(value: int.tryParse(e.key) ?? 0, child: Text(e.value.toString())))
+                  .toList(),
+              onChanged: (v) => setState(() => _selectedDocType = v),
+            ),
+          ],
               hint: const Text('اختر نوع السند', style: TextStyle(color: AppTheme.textGrey)),
               items: docTypes.entries
                   .map((e) => DropdownMenuItem(value: int.tryParse(e.key) ?? 0, child: Text(e.value.toString())))
@@ -1344,7 +1363,13 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
                           ? Image.network(_docImage!.path,
                               fit: BoxFit.cover, width: double.infinity)
                           : Image.file(File(_docImage!.path),
-                              fit: BoxFit.cover, width: double.infinity),
+                              fit: BoxFit.cover, 
+                              width: double.infinity,
+                              cacheWidth: 800, // تقليل دقة العرض المصغر لتجنب أخطاء الذاكرة
+                              errorBuilder: (context, error, stackTrace) => const Center(
+                                child: Icon(Icons.broken_image, color: Colors.red),
+                              ),
+                            ),
                     ),
             ),
           ),
