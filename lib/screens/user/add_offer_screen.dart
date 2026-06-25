@@ -31,50 +31,46 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   int? _selectedType;
   int? _selectedTrans;
   int? _selectedMainCat;
-  int? _selectedSubCat; // التصنيف الفرعي (index داخل sub array للمجموعة الرئيسية)
-  String? _selectedCityArea; // تُقرأ من config.locations مع دعم إدخال حر
+  int? _selectedSubCat; 
+  String? _selectedCityArea; 
   int _cur = Currency.lbp;
   final _priceCtrl = TextEditingController();
-  final _locCtrl = TextEditingController();   // الوصف الدقيق للموقع (step1)
-  final _descCtrl = TextEditingController();  // الوصف التفصيلي للعرض (step2)
-  final _specCtrl = TextEditingController();  // المواصفات (step2)
-  final _ttlCtrl  = TextEditingController();  // عنوان حر اختياري (step1)
-  final _customSubCtrl = TextEditingController(); // للتصنيف الفرعي الحر (غير موجود في القائمة)
-  final _contactPhoneCtrl = TextEditingController(); // رقم التواصل مع العارض (إلزامي في الأساسيات)
-  final _customCityCtrl = TextEditingController(); // حقل حر للمنطقة الرئيسية (آخر)
+  final _locCtrl = TextEditingController();   
+  final _descCtrl = TextEditingController();  
+  final _specCtrl = TextEditingController();  
+  final _ttlCtrl  = TextEditingController();  
+  final _customSubCtrl = TextEditingController(); 
+  final _contactPhoneCtrl = TextEditingController(); 
+  final _customCityCtrl = TextEditingController(); 
 
   final List<XFile> _pickedImages = [];
-  XFile? _docImage; // صورة سند الملكية
-  LatLng? _pickedLocation; // الموقع الدقيق على الخريطة (اختياري)
-  int? _selectedDocType; // نوع السند من config.docTp
-  bool _agreePledge = false; // الإقرار والتعهد
-  bool _shareOnSocial = true; // نشر على وسائل التواصل الاجتماعي للمكتب
+  XFile? _docImage; 
+  LatLng? _pickedLocation; 
+  int? _selectedDocType; 
+  bool _agreePledge = false; 
+  bool _shareOnSocial = true; 
   bool _submitting = false;
-  bool _anytimeReady = false; // خيار جاهز في أي وقت للمواعيد
+  bool _anytimeReady = false; 
 
-  // حقول السيارة
   final _carBrandCtrl = TextEditingController();
   final _carModelCtrl = TextEditingController();
   final _carYearCtrl = TextEditingController();
   final _carColorCtrl = TextEditingController();
   final _carKmCtrl = TextEditingController();
-  final _carPlateCtrl = TextEditingController(); // لوحة السيارة
+  final _carPlateCtrl = TextEditingController(); 
   String? _carFuel;
   String? _carTransmission;
-  String? _carGovernorate; // محافظة السيارة
-  int? _selectedCarDocType;  // نوع سند ملكية السيارة
-  int? _selectedPlateType;   // نوع النمرة
+  String? _carGovernorate; 
+  int? _selectedCarDocType;  
+  int? _selectedPlateType;   
 
-  // حقول العقار الإضافية
-  final _areaCtrl = TextEditingController();    // المساحة (م²)
-  final _floorCtrl = TextEditingController();   // الطابق
-  final _legalNotesCtrl = TextEditingController(); // ملاحظات قانونية
-  String? _finishing;   // الإكساء
-  String? _direction;   // الاتجاه
+  final _areaCtrl = TextEditingController();    
+  final _floorCtrl = TextEditingController();   
+  final _legalNotesCtrl = TextEditingController(); 
+  String? _finishing;   
+  String? _direction;   
   String _progressMsg = '';
 
-  // المواعيد المتاحة — avl
-  // البنية: {"mon": ["09:00-12:00", "15:00-17:00"], "wed": ["10:00-13:00"]}
   static const _weekDays = [
     ('mon', 'الاثنين'),
     ('tue', 'الثلاثاء'),
@@ -84,18 +80,15 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     ('sat', 'السبت'),
     ('sun', 'الأحد'),
   ];
-  // أيام مفعّلة
   final Map<String, bool> _avlDaysEnabled = {
     'mon': false, 'tue': false, 'wed': false, 'thu': false,
     'fri': false, 'sat': false, 'sun': false,
   };
-  // فترات لكل يوم: [{"from": "09:00", "to": "12:00"}, ...]
   final Map<String, List<Map<String, String>>> _avlSlots = {
     'mon': [], 'tue': [], 'wed': [], 'thu': [],
     'fri': [], 'sat': [], 'sun': [],
   };
 
-  /// يبني Map<String, List<String>> لإرساله في avl
   Map<String, List<String>> _buildAvl() {
     if (_anytimeReady) {
       return {'any': ['00:00-23:59']};
@@ -148,15 +141,6 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
 
   int get _totalSteps => _selectedType == 1 ? 4 : 5;
 
-  // ignore: unused_element
-  void _next() => setState(() {
-        if (_currentStep < _totalSteps - 1) _currentStep++;
-      });
-  // ignore: unused_element
-  void _prev() => setState(() {
-        if (_currentStep > 0) _currentStep--;
-      });
-
   Future<void> _pickDocImage() async {
     final file = await _storage.pickImage(fromCamera: false);
     if (file != null) setState(() => _docImage = file);
@@ -177,13 +161,11 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
             fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
           );
       return storage.from(StorageService.offerBucket).getPublicUrl(path);
-    } catch (e) {return null;
-    }
+    } catch (e) {return null; }
   }
 
   void _showPledgeDialog() {
     final config = context.read<ConfigProvider>().config;
-    // النص الافتراضي باسم المكتب العقاري الالكتروني (يُستبدل بالنص من config إذا وُجد)
     const defaultPledge =
         'إقرار وتعهد إلكتروني — المكتب العقاري الالكتروني\n\n'
         'أقر أنا الموقع أدناه بموجب هذا الإقرار والتعهد بما يلي:\n'
@@ -263,7 +245,6 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       _snack('يجب تسجيل الدخول أولاً');
       return;
     }
-    // فحص الحقول الإلزامية المشتركة
     if (_selectedType == null || _selectedTrans == null || _selectedMainCat == null ||
         (_selectedSubCat == null && _customSubCtrl.text.trim().isEmpty) ||
         (_selectedSubCat == -1 && _customSubCtrl.text.trim().isEmpty) ||
@@ -271,7 +252,6 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       _snack('يرجى إكمال البيانات الأساسية (التصنيف الرئيسي + فرعي + نوع السند)');
       return;
     }
-    // فحص حقول العقار
     if (_selectedType == 0) {
       if (_selectedCityArea == null ||
           (_selectedCityArea == _customCityOption && _customCityCtrl.text.trim().isEmpty) ||
@@ -280,7 +260,6 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         return;
       }
     }
-    // فحص حقول السيارة
     if (_selectedType == 1) {
       if (_carPlateCtrl.text.trim().isEmpty) {
         _snack('يرجى إدخال لوحة السيارة');
@@ -295,7 +274,6 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         ? _contactPhoneCtrl.text.trim()
         : (user.ph.trim());
 
-    // تأكيد صيغة الرقم السوري 09xxxxxxxx لتجنب خطأ PHONE_INVALID
     final phoneRegex = RegExp(r'^09[3-9]\d{7}$');
     if (!phoneRegex.hasMatch(effectiveContactPhone)) {
       _snack('يرجى إدخال رقم هاتف سوري صحيح (09xxxxxxxx)');
@@ -317,7 +295,6 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       _progressMsg = 'جارٍ التحقق من الحصة...';
     });
 
-    // 1) فحص الحصة/الباقة
     final quota = await _biz.canPublishOffer(
       uid: user.uid,
       role: user.role,
@@ -332,7 +309,6 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       return;
     }
 
-    // 2) رفع الصور (مع ضغط)
     List<String> imageUrls = [];
     if (_pickedImages.isNotEmpty) {
       setState(() => _progressMsg = 'جارٍ رفع الصور (0/${_pickedImages.length})...');
@@ -347,14 +323,9 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       );
     }
 
-    // 2.5) الفيديو لن يُرفع للسيرفر حالياً. يتم مشاركة رابط واتساب لاحقاً.
-    const String videoUrl = '';
-
-    // 3) رفع صورة سند الملكية
     setState(() => _progressMsg = 'جارٍ رفع سند الملكية...');
     final docUrl = await _uploadDocImage(user.uid) ?? '';
 
-    // 4) إنشاء العرض
     setState(() => _progressMsg = 'جارٍ إنشاء العرض...');
     String cityName;
     if (_selectedCityArea == _customCityOption) {
@@ -371,7 +342,6 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         ? customSub
         : (_selectedSubCat != null ? _catLabel() : 'عرض');
 
-    // العنوان: يُستخدم ما كتبه المستخدم إن وُجد، وإلا يُبنى آلياً
     String autoTitle;
     if (_selectedType == 1) {
       final brand = _carBrandCtrl.text.trim();
@@ -398,15 +368,12 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       prc: price,
       cur: _cur,
       loc: loc,
-      // الوصف التفصيلي: ما كتبه المستخدم في حقل الوصف (step2)
-      // يختلف عن الوصف الدقيق للموقع (_locCtrl) الذي يُحفظ في loc['d']
       descript: _descCtrl.text.trim().isNotEmpty
           ? _descCtrl.text.trim()
           : _locCtrl.text.trim(),
       specs: {
         'details': _specCtrl.text,
         if (customSub.isNotEmpty) 'custom_sub': customSub,
-        // حقول العقار
         if (_selectedType == 0) ...{
           if (_areaCtrl.text.trim().isNotEmpty) 'area': _areaCtrl.text.trim(),
           if (_floorCtrl.text.trim().isNotEmpty) 'floor': _floorCtrl.text.trim(),
@@ -414,7 +381,6 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           if (_direction != null) 'direction': _direction!,
           if (_legalNotesCtrl.text.trim().isNotEmpty) 'legal_notes': _legalNotesCtrl.text.trim(),
         },
-        // حقول السيارة
         if (_selectedType == 1) ...{
           'plate': _carPlateCtrl.text.trim(),
           'governorate': _carGovernorate ?? '',
@@ -429,15 +395,13 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         },
       },
       imgs: imageUrls,
-      vdo: videoUrl,
+      vdo: '',
       exactLoc: _pickedLocation != null
           ? '${_pickedLocation!.latitude},${_pickedLocation!.longitude}'
           : '',
       docTp: _selectedDocType ?? 0,
       docImg: docUrl,
-      // avl: المواعيد المتاحة التي أدخلها صاحب العرض
       avl: _buildAvl(),
-      // brk_id: إذا كان صاحب الحساب وسيطاً يُحفظ uid تلقائياً
       brkId: user.role == UserRole.broker ? user.uid : '',
       sts: OfferStatus.review,
       iPub: 0,
@@ -445,30 +409,19 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       tsCrt: DateTime.now(),
     );
 
-    OfferModel? createdOffer;
     try {
-      createdOffer = await offerProv.addOffer(offer);
-      // النقاط تُمنح بعد موافقة الإدارة — ليس عند الإنشاء
+      await offerProv.addOffer(offer);
     } catch (e) {
-      print("===== USER ADD OFFER ERROR =====");
-      print(e.toString());
       if (!mounted) return;
       setState(() => _submitting = false);
-      _snack('فشل في النشر بعد تحميل الصور: $e');
+      _snack('فشل في النشر: $e');
       return;
     }
 
     if (!mounted) return;
     setState(() => _submitting = false);
-
-    if (createdOffer != null) {
-      // لا يتم فتح واتساب أو منح نقاط — العرض بانتظار موافقة الإدارة
-      if (!mounted) return;
-      Navigator.pop(context);
-      _snack('تم إرسال العرض للمراجعة بنجاح ✅ سيتم إشعارك عند الموافقة');
-    } else {
-      _snack('فشل إنشاء العرض، حاول مجدداً');
-    }
+    Navigator.pop(context);
+    _snack('تم إرسال العرض للمراجعة بنجاح ✅');
   }
 
   void _snack(String m) {
@@ -503,16 +456,8 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              Navigator.pop(context); // close add offer
-              // open packages
-              Future.microtask(() {
-                // ignore: use_build_context_synchronously
-                final ctx = context;
-                if (ctx.mounted) {
-                  // ignore: use_build_context_synchronously
-                  Navigator.of(ctx).pushNamed('/user/packages');
-                }
-              });
+              Navigator.pop(context); 
+              Navigator.of(context).pushNamed('/user/packages');
             },
             child: const Text('ترقية الباقة'),
           ),
@@ -538,7 +483,6 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         children: [
           Column(
             children: [
-              // شريط معلومات الحصة
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(10),
@@ -546,20 +490,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
                 child: Text(
                   isInternalAccount
                       ? 'حساب إداري — إضافة العروض غير محدودة'
-                      : () {
-                          final u = user;
-                          String pkgLabel;
-                          if (u == null || u.bPkg == 0) {
-                            pkgLabel = '(باقة مجانية)';
-                          } else if (u.isPkgActive) {
-                            pkgLabel = '(باقة مدفوعة)';
-                          } else if (u.isInGracePeriod) {
-                            pkgLabel = '(فترة السماح — ${u.graceDaysLeft} يوم متبقي)';
-                          } else {
-                            pkgLabel = '(باقة منتهية)';
-                          }
-                          return 'حصّتك: حتى $limit عرض فعّال $pkgLabel';
-                        }(),
+                      : 'حصّتك: حتى $limit عرض فعّال',
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: AppTheme.textGrey, fontSize: 12),
                 ),
@@ -569,7 +500,6 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
                   type: StepperType.vertical,
                   currentStep: _currentStep,
                   onStepTapped: (s) => setState(() => _currentStep = s),
-                  // إزالة أزرار "Continue/Cancel" المزعجة (التنقل عبر النقر على عناوين الخطوات كافٍ)
                   controlsBuilder: (context, details) => const SizedBox.shrink(),
                   steps: [_step1(), _step2(), _step3(), if (_selectedType != 1) _stepAvl(), _step4()],
                 ),
@@ -597,105 +527,58 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   }
 
   Step _step1() {
+    final config = context.read<ConfigProvider>().config;
     final mainCategories = _categoryGroupMap();
     final subCategories = _selectedMainCat != null
         ? _subCategoryMap(_selectedMainCat!)
         : <int, String>{};
 
-    final mainCatItems = mainCategories.entries
-        .map((e) => DropdownMenuItem(value: e.key, child: Text(e.value)))
-        .toList();
-    final subCatItems = subCategories.entries
-        .map((e) => DropdownMenuItem(value: e.key, child: Text(e.value)))
-        .toList();
-
-    // إضافة خيار "آخر" داخل قائمة التصنيفات الفرعية
-    final allSubItems = List<DropdownMenuItem<int>>.from(subCatItems);
-    allSubItems.add(
-      const DropdownMenuItem<int>(
-        value: -1,
-        child: Text('آخر (إدخال يدوي)'),
-      ),
-    );
-
-    // قائمة المناطق تُقرأ من config.locations مع دعم إدخال حر
     final cityItems = _cityOptions()
         .map((city) => DropdownMenuItem<String>(
               value: city,
               child: Text(city, overflow: TextOverflow.ellipsis),
             ))
         .toList();
-    cityItems.add(
-      const DropdownMenuItem<String>(
-        value: _customCityOption,
-        child: Text('آخر (إدخال حر)'),
-      ),
-    );
+    cityItems.add(const DropdownMenuItem<String>(value: _customCityOption, child: Text('آخر (إدخال حر)')));
 
     return Step(
-      title: const Text('الأساسيات',
-          style: TextStyle(
-              color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
+      title: const Text('الأساسيات', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
       content: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
           _dd('نوع العرض', ['عقار', 'سيارة'], (v) => setState(() {
             _selectedType = v == 'عقار' ? 0 : 1;
-            _currentStep = 0; // إعادة للخطوة الأولى عند تبديل النوع
-            _selectedMainCat = null;
-            _selectedSubCat = null;
-            _selectedCityArea = null;
-            _customSubCtrl.clear();
-            _customCityCtrl.clear();
+            _currentStep = 0;
+            _selectedMainCat = null; _selectedSubCat = null; _selectedCityArea = null;
           })),
           const SizedBox(height: 20),
-          _dd('نوع المعاملة', ['بيع', 'إيجار'],
-              (v) => setState(() => _selectedTrans = v == 'بيع' ? 0 : 1)),
+          _dd('نوع المعاملة', ['بيع', 'إيجار'], (v) => setState(() => _selectedTrans = v == 'بيع' ? 0 : 1)),
           const SizedBox(height: 20),
           DropdownButtonFormField<int>(
-            initialValue: _selectedMainCat,
+            value: _selectedMainCat,
             dropdownColor: AppTheme.surfaceBlack,
             style: const TextStyle(color: AppTheme.textWhite),
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              labelText: 'التصنيف الرئيسي',
-            ),
-            items: mainCatItems,
+            decoration: const InputDecoration(border: OutlineInputBorder(), labelText: 'التصنيف الرئيسي'),
+            items: mainCategories.entries.map((e) => DropdownMenuItem(value: e.key, child: Text(e.value))).toList(),
             onChanged: (v) => setState(() {
-              _selectedMainCat = v;
-              _selectedSubCat = null;
-              _customSubCtrl.clear();
-              if (v != null) {
-                final subs = _subCategoryMap(v);
-                if (subs.length == 1) {
-                  _selectedSubCat = subs.keys.first;
-                }
-              }
+              _selectedMainCat = v; _selectedSubCat = null;
             }),
-            hint: const Text('اختر التصنيف الرئيسي',
-                style: TextStyle(color: AppTheme.textGrey)),
+            hint: const Text('اختر التصنيف الرئيسي', style: TextStyle(color: AppTheme.textGrey)),
           ),
           const SizedBox(height: 20),
           if (_selectedMainCat != null)
             DropdownButtonFormField<int>(
-              initialValue: _selectedSubCat,
+              value: _selectedSubCat,
               dropdownColor: AppTheme.surfaceBlack,
               style: const TextStyle(color: AppTheme.textWhite, fontSize: 14),
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                labelText: 'التصنيف الفرعي',
-                contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                isDense: true,
-              ),
-              items: allSubItems,
-              onChanged: (v) => setState(() {
-                _selectedSubCat = v;
-                if (v != -1) _customSubCtrl.clear();
-              }),
-              hint: const Text('اختر التصنيف الفرعي',
-                  style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
-              menuMaxHeight: 300,
+              decoration: const InputDecoration(border: OutlineInputBorder(), labelText: 'التصنيف الفرعي'),
+              items: [
+                ...subCategories.entries.map((e) => DropdownMenuItem(value: e.key, child: Text(e.value))),
+                const DropdownMenuItem<int>(value: -1, child: Text('آخر (إدخال يدوي)')),
+              ],
+              onChanged: (v) => setState(() => _selectedSubCat = v),
+              hint: const Text('اختر التصنيف الفرعي', style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
             ),
           if (_selectedSubCat == -1)
             Padding(
@@ -703,15 +586,10 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
               child: TextField(
                 controller: _customSubCtrl,
                 style: const TextStyle(color: AppTheme.textWhite),
-                decoration: const InputDecoration(
-                  labelText: 'اكتب التصنيف الفرعي يدوياً',
-                  hintText: 'مثال: فيلا فاخرة أو سيارة كهربائية مخصصة',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(labelText: 'اكتب التصنيف الفرعي يدوياً', border: OutlineInputBorder()),
               ),
             ),
           const SizedBox(height: 20),
-          // رقم الهاتف للتواصل
           TextField(
             controller: _contactPhoneCtrl,
             keyboardType: TextInputType.phone,
@@ -726,95 +604,43 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          // ─── حقول العقار (المنطقة + الموقع) ───
           if (_selectedType == 0 || _selectedType == null) ...[
-            // المنطقة الرئيسية + حقل حر
             DropdownButtonFormField<String>(
-              initialValue: _selectedCityArea,
+              value: _selectedCityArea,
               dropdownColor: AppTheme.surfaceBlack,
               style: const TextStyle(color: AppTheme.textWhite),
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                labelText: 'المنطقة الرئيسية',
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              ),
+              decoration: const InputDecoration(border: OutlineInputBorder(), labelText: 'المنطقة الرئيسية'),
               items: cityItems,
-              onChanged: (v) => setState(() {
-                _selectedCityArea = v;
-                if (v != _customCityOption) _customCityCtrl.clear();
-              }),
-              hint: const Text('اختر المنطقة الرئيسية أو آخر للإدخال الحر',
-                  style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
-              menuMaxHeight: 320,
+              onChanged: (v) => setState(() => _selectedCityArea = v),
+              hint: const Text('اختر المنطقة الرئيسية', style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
             ),
             if (_selectedCityArea == _customCityOption)
               Padding(
                 padding: const EdgeInsets.only(top: 12),
                 child: TextField(
                   controller: _customCityCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'اكتب المنطقة الرئيسية يدوياً',
-                    hintText: 'اكتب اسم المنطقة أو الحي',
-                    border: OutlineInputBorder(),
-                  ),
+                  decoration: const InputDecoration(labelText: 'اكتب المنطقة يدوياً', border: OutlineInputBorder()),
                 ),
               ),
             const SizedBox(height: 20),
-            // الوصف الدقيق للموقع (إلزامي) — يُحفظ في loc['d'] وليس في descript
             _buildLocationAutocomplete(),
           ],
-
-          // ─── حقول السيارة ───
           if (_selectedType == 1) ...[
-            // لوحة السيارة
-            TextField(
-              controller: _carPlateCtrl,
-              decoration: const InputDecoration(labelText: 'لوحة السيارة *', border: OutlineInputBorder(), hintText: 'مثال: 123456'),
-            ),
+            TextField(controller: _carPlateCtrl, decoration: const InputDecoration(labelText: 'لوحة السيارة *', border: OutlineInputBorder())),
             const SizedBox(height: 12),
-            // المحافظة
-            _dd('المحافظة', ['السويداء', 'دمشق', 'ريف دمشق', 'حمص', 'حماة', 'حلب', 'اللاذقية', 'طرطوس', 'إدلب', 'دير الزور', 'الرقة', 'الحسكة', 'درعا', 'القنيطرة'],
-                (v) => setState(() => _carGovernorate = v)),
+            _dd('المحافظة', ['السويداء', 'دمشق', 'ريف دمشق', 'حمص', 'حماة', 'حلب', 'اللاذقية', 'طرطوس', 'إدلب', 'دير الزور', 'الرقة', 'الحسكة', 'درعا', 'القنيطرة'], (v) => setState(() => _carGovernorate = v)),
             const SizedBox(height: 12),
-            // الماركة
-            TextField(
-              controller: _carBrandCtrl,
-              decoration: const InputDecoration(labelText: 'الماركة *', border: OutlineInputBorder(), hintText: 'مثال: كيا، هيونداي، تويوتا...'),
-            ),
+            TextField(controller: _carBrandCtrl, decoration: const InputDecoration(labelText: 'الماركة *', border: OutlineInputBorder())),
             const SizedBox(height: 12),
-            // الموديل
-            TextField(
-              controller: _carModelCtrl,
-              decoration: const InputDecoration(labelText: 'الموديل *', border: OutlineInputBorder(), hintText: 'مثال: سيراتو، أكسنت...'),
-            ),
+            TextField(controller: _carModelCtrl, decoration: const InputDecoration(labelText: 'الموديل *', border: OutlineInputBorder())),
             const SizedBox(height: 12),
-            // سنة الصنع
-            TextField(
-              controller: _carYearCtrl,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'سنة الصنع *', border: OutlineInputBorder(), hintText: 'مثال: 2020'),
-            ),
+            TextField(controller: _carYearCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'سنة الصنع *', border: OutlineInputBorder())),
             const SizedBox(height: 12),
-            // اللون
-            TextField(
-              controller: _carColorCtrl,
-              decoration: const InputDecoration(labelText: 'اللون', border: OutlineInputBorder(), hintText: 'مثال: أبيض، أسود، فضي...'),
-            ),
+            TextField(controller: _carColorCtrl, decoration: const InputDecoration(labelText: 'اللون', border: OutlineInputBorder())),
             const SizedBox(height: 12),
-            // عدد الكيلومترات
-            TextField(
-              controller: _carKmCtrl,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'عدد الكيلومترات', border: OutlineInputBorder(), hintText: 'مثال: 50000'),
-            ),
+            _dd('نوع الوقود', ['بنزين', 'ديزل', 'هجين', 'كهربائي', 'غاز'], (v) => setState(() => _carFuel = v)),
             const SizedBox(height: 12),
-            // نوع الوقود
-            _dd('نوع الوقود', ['بنزين', 'ديزل', 'هجين', 'كهربائي', 'غاز'],
-                (v) => setState(() => _carFuel = v)),
-            const SizedBox(height: 12),
-            // ناقل الحركة
-            _dd('ناقل الحركة', ['عادي', 'أوتوماتيك', 'نصف أوتوماتيك'],
-                (v) => setState(() => _carTransmission = v)),
+            _dd('ناقل الحركة', ['عادي', 'أوتوماتيك', 'نصف أوتوماتيك'], (v) => setState(() => _carTransmission = v)),
           ],
           const SizedBox(height: 8),
         ]),
@@ -824,670 +650,216 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   }
 
   Step _step2() => Step(
-        title: const Text('التفاصيل',
-            style: TextStyle(
-                color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
+        title: const Text('التفاصيل', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
         content: SingleChildScrollView(
           child: Column(children: [
-            // عنوان حر (اختياري — يُكمّل العنوان الآلي إذا تُرك فارغاً)
             TextField(
               controller: _ttlCtrl,
               maxLength: 80,
-              decoration: InputDecoration(
-                labelText: 'عنوان العرض بالتطبيق (اختياري)',
-                hintText: _selectedType == 1
-                    ? 'مثال: كيا سيراتو 2020 فل — إذا تُرك فارغاً يُبنى تلقائياً'
-                    : 'مثال: شقة فاخرة مع حديقة — إذا تُرك فارغاً يُبنى تلقائياً',
-                helperText: 'هذا العنوان سيظهر للجمهور كاسم لعرضك',
-                helperStyle: const TextStyle(color: AppTheme.primaryGold, fontSize: 11),
-                border: const OutlineInputBorder(),
-                counterStyle: const TextStyle(color: AppTheme.textGrey),
-              ),
+              decoration: const InputDecoration(labelText: 'عنوان العرض بالتطبيق (اختياري)', border: OutlineInputBorder()),
             ),
             const SizedBox(height: 15),
             Row(children: [
-              Expanded(
-                flex: 3,
-                child: TextField(
-                  controller: _priceCtrl,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'السعر المتوقع (إلزامي)',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              ),
+              Expanded(flex: 3, child: TextField(controller: _priceCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'السعر المتوقع (إلزامي)', border: OutlineInputBorder()))),
               const SizedBox(width: 10),
-              Expanded(
-                flex: 2,
-                child: DropdownButtonFormField<int>(
-                  initialValue: _cur,
-                  dropdownColor: AppTheme.surfaceBlack,
-                  style: const TextStyle(color: AppTheme.textWhite),
-                  decoration: const InputDecoration(border: OutlineInputBorder()),
-                  items: const [
-                    DropdownMenuItem(value: Currency.dollar, child: Text('دولار')),
-                    DropdownMenuItem(value: Currency.lbp, child: Text('ل.س')),
-                  ],
-                  onChanged: (v) => setState(() => _cur = v ?? Currency.lbp),
-                ),
-              ),
+              Expanded(flex: 2, child: DropdownButtonFormField<int>(value: _cur, dropdownColor: AppTheme.surfaceBlack, style: const TextStyle(color: AppTheme.textWhite), decoration: const InputDecoration(border: OutlineInputBorder()), items: const [DropdownMenuItem(value: Currency.dollar, child: Text('دولار')), DropdownMenuItem(value: Currency.lbp, child: Text('ل.س'))], onChanged: (v) => setState(() => _cur = v ?? Currency.lbp))),
             ]),
             const SizedBox(height: 15),
-            // ─── حقول العقار الإضافية ───
             if (_selectedType == 0 || _selectedType == null) ...[
-              TextField(
-                controller: _areaCtrl,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'المساحة (م²)',
-                  border: OutlineInputBorder(),
-                ),
-              ),
+              TextField(controller: _areaCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'المساحة (م²)', border: OutlineInputBorder())),
               const SizedBox(height: 12),
-              _dd('الإكساء', ['ملكي', 'سوبر ديلوكس', 'ديلوكس', 'كسوة عادية', 'هيكل', 'آخر'],
-                  (v) => setState(() => _finishing = v)),
+              _dd('الإكساء', ['ملكي', 'سوبر ديلوكس', 'ديلوكس', 'كسوة عادية', 'هيكل', 'آخر'], (v) => setState(() => _finishing = v)),
               const SizedBox(height: 12),
-              TextField(
-                controller: _floorCtrl,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'الطابق',
-                  hintText: 'مثال: 3',
-                  border: OutlineInputBorder(),
-                ),
-              ),
+              TextField(controller: _floorCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'الطابق', border: OutlineInputBorder())),
               const SizedBox(height: 12),
-              _dd('اتجاه العقار', [
-                'شمالي',
-                'جنوبي',
-                'شرقي',
-                'غربي',
-                'شمالي شرقي',
-                'شمالي غربي',
-                'جنوبي شرقي',
-                'جنوبي غربي',
-                'مفتوح - أربع اتجاهات'
-              ], (v) => setState(() => _direction = v)),
+              _dd('اتجاه العقار', ['شمالي', 'جنوبي', 'شرقي', 'غربي', 'شمالي شرقي', 'شمالي غربي', 'جنوبي شرقي', 'جنوبي غربي', 'مفتوح - أربع اتجاهات'], (v) => setState(() => _direction = v)),
               const SizedBox(height: 12),
-              TextField(
-                controller: _legalNotesCtrl,
-                maxLines: 2,
-                decoration: const InputDecoration(
-                  labelText: 'ملاحظات قانونية (اختياري)',
-                  hintText: 'مثال: منطقة تنظيمية، أو ملاحظة عن السند...',
-                  border: OutlineInputBorder(),
-                ),
-              ),
+              TextField(controller: _legalNotesCtrl, maxLines: 2, decoration: const InputDecoration(labelText: 'ملاحظات قانونية', border: OutlineInputBorder())),
               const SizedBox(height: 15),
             ],
-            // الوصف التفصيلي للعرض
-            TextField(
-              controller: _descCtrl,
-              maxLines: 4,
-              decoration: InputDecoration(
-                labelText: 'وصف تفصيلي للعرض (اختياري)',
-                hintText: _selectedType == 1
-                    ? 'اذكر مميزات السيارة، حالتها، أي تفاصيل مهمة...'
-                    : 'اذكر مميزات العقار، حالته، عدد الغرف، أي تفاصيل مهمة...',
-                border: const OutlineInputBorder(),
-              ),
-            ),
+            TextField(controller: _descCtrl, maxLines: 4, decoration: const InputDecoration(labelText: 'وصف تفصيلي للعرض', border: OutlineInputBorder())),
             const SizedBox(height: 15),
-            TextField(
-                controller: _specCtrl,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  labelText: 'مواصفات إضافية (اختيارية)',
-                  hintText: _selectedType == 1
-                      ? 'مثال: فتحة سقف، جلد، كاميرا...'
-                      : 'مثال: 3 غرف، 2 حمام، بلكون، موقف...',
-                  border: const OutlineInputBorder(),
-                )),
+            TextField(controller: _specCtrl, maxLines: 3, decoration: const InputDecoration(labelText: 'مواصفات إضافية', border: OutlineInputBorder())),
             const SizedBox(height: 20),
-            // الموقع الدقيق على الخريطة (للعقار فقط)
             if (_selectedType == 0 || _selectedType == null) ...[
-            const Row(children: [
-              Icon(Icons.map, color: AppTheme.primaryGold, size: 18),
-              SizedBox(width: 6),
-              Text('الموقع الدقيق على الخريطة (اختياري)',
-                  style: TextStyle(
-                      color: AppTheme.primaryGold,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14)),
-            ]),
-            const SizedBox(height: 4),
-            const Text('اضغط على الخريطة لتحديد موقع العقار بدقة',
-                style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
-            const SizedBox(height: 8),
-            LocationPicker(
-              initial: _pickedLocation,
-              onPicked: (loc) => setState(() => _pickedLocation = loc),
-              height: 250,
-            ),
-            if (_pickedLocation != null) ...[
-              const SizedBox(height: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color.fromRGBO(76, 175, 80, 0.15),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Row(children: [
-                  const Icon(Icons.check_circle, color: Colors.green, size: 14),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      'تم تحديد الموقع: ${_pickedLocation!.latitude.toStringAsFixed(4)}, ${_pickedLocation!.longitude.toStringAsFixed(4)}',
-                      style: const TextStyle(
-                          color: Colors.green, fontSize: 14),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.red, size: 16),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    onPressed: () => setState(() => _pickedLocation = null),
-                  ),
-                ]),
-              ),
+              const Text('الموقع الدقيق على الخريطة (اختياري)', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 14)),
+              const SizedBox(height: 8),
+              LocationPicker(initial: _pickedLocation, onPicked: (loc) => setState(() => _pickedLocation = loc), height: 250),
             ],
-            ], // إغلاق if (_selectedType == 0) للخريطة
           ]),
         ),
         isActive: _currentStep >= 1,
       );
 
   Step _step3() => Step(
-        title: const Text('الصور والفيديو',
-            style: TextStyle(
-                color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
+        title: const Text('الصور والفيديو', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
         content: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          // الصور
-          ElevatedButton.icon(
-            onPressed: _pickImages,
-            icon: const Icon(Icons.add_photo_alternate),
-            label: Text('إضافة صور (${_pickedImages.length}/${StorageService.maxImages})'),
-          ),
+          ElevatedButton.icon(onPressed: _pickImages, icon: const Icon(Icons.add_photo_alternate), label: Text('إضافة صور (${_pickedImages.length}/${StorageService.maxImages})')),
           const SizedBox(height: 10),
           if (_pickedImages.isNotEmpty)
             Wrap(
-              spacing: 8,
-              runSpacing: 8,
+              spacing: 8, runSpacing: 8,
               children: _pickedImages.asMap().entries.map((e) {
-                return Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: _thumb(e.value),
-                    ),
-                    Positioned(
-                      top: -8,
-                      left: -8,
-                      child: IconButton(
-                        icon: const Icon(Icons.cancel, color: AppTheme.errorRed),
-                        onPressed: () =>
-                            setState(() => _pickedImages.removeAt(e.key)),
-                      ),
-                    ),
-                  ],
-                );
+                return Stack(children: [
+                  ClipRRect(borderRadius: BorderRadius.circular(8), child: _thumb(e.value)),
+                  Positioned(top: -8, left: -8, child: IconButton(icon: const Icon(Icons.cancel, color: AppTheme.errorRed), onPressed: () => setState(() => _pickedImages.removeAt(e.key)))),
+                ]);
               }).toList(),
             ),
           const SizedBox(height: 20),
-          const Divider(color: AppTheme.textGrey),
-          const SizedBox(height: 10),
-          // الفيديو (اختياري)
-          const Text('🎬 فيديو العرض (اختياري)',
-              style: TextStyle(
-                  color: AppTheme.primaryGold,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13)),
-          const SizedBox(height: 4),
-          const Text('لن يُرفع الفيديو للسيرفر حالياً. اضغط الزر لفتح واتساب ومشاركة الرابط لاحقاً.',
-              style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
-          const SizedBox(height: 8),
-          OutlinedButton.icon(
-            onPressed: _openWhatsAppVideoGroup,
-            icon: const Icon(Icons.message, color: AppTheme.primaryGold),
-            label: const Text('مشاركة فيديو عبر واتساب',
-                style: TextStyle(color: AppTheme.primaryGold)),
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: AppTheme.primaryGold),
-            ),
-          ),
+          OutlinedButton.icon(onPressed: _openWhatsAppVideoGroup, icon: const Icon(Icons.message, color: AppTheme.primaryGold), label: const Text('مشاركة فيديو عبر واتساب', style: TextStyle(color: AppTheme.primaryGold))),
         ]),
         isActive: _currentStep >= 2,
       );
 
   Step _stepAvl() {
     return Step(
-      title: const Text('المواعيد المتاحة',
-          style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
+      title: const Text('المواعيد المتاحة', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppTheme.primaryGold.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.3)),
-            ),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: AppTheme.primaryGold.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10), border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.3))),
             child: SwitchListTile(
               value: _anytimeReady,
               onChanged: (v) => setState(() => _anytimeReady = v),
-              title: const Text('أنا جاهز للمعاينة في أي وقت',
-                  style: TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold, fontSize: 14)),
-              subtitle: const Text('سيتمكن الزبائن من طلب موعد في أي وقت تراه الإدارة مناسباً',
-                  style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+              title: const Text('أنا جاهز للمعاينة في أي وقت', style: TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold, fontSize: 14)),
               activeColor: AppTheme.primaryGold,
               contentPadding: EdgeInsets.zero,
             ),
           ),
           const SizedBox(height: 16),
           if (!_anytimeReady) ...[
-            const Text(
-              'أو حدد الأيام والفترات الزمنية التي تفضلها:',
-              style: TextStyle(color: AppTheme.textGrey, fontSize: 13),
-            ),
-            const SizedBox(height: 12),
             ..._weekDays.map((day) {
-            final key = day.$1;
-            final label = day.$2;
-            final enabled = _avlDaysEnabled[key] ?? false;
-            final slots = _avlSlots[key] ?? [];
-
-            return Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              decoration: BoxDecoration(
-                color: AppTheme.surfaceBlack,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: enabled
-                      ? AppTheme.primaryGold.withValues(alpha: 0.5)
-                      : AppTheme.textGrey.withValues(alpha: 0.2),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // رأس اليوم
-                  InkWell(
+              final key = day.$1; final label = day.$2; final enabled = _avlDaysEnabled[key] ?? false; final slots = _avlSlots[key] ?? [];
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(10), border: Border.all(color: enabled ? AppTheme.primaryGold.withValues(alpha: 0.5) : AppTheme.textGrey.withValues(alpha: 0.2))),
+                child: Column(children: [
+                  ListTile(
+                    leading: Icon(enabled ? Icons.check_box : Icons.check_box_outline_blank, color: enabled ? AppTheme.primaryGold : AppTheme.textGrey),
+                    title: Text(label, style: TextStyle(color: enabled ? AppTheme.textWhite : AppTheme.textGrey, fontWeight: FontWeight.bold)),
                     onTap: () => setState(() {
                       _avlDaysEnabled[key] = !enabled;
-                      if (!enabled && slots.isEmpty) {
-                        _avlSlots[key]!.add({'from': '', 'to': ''});
-                      }
+                      if (!enabled && slots.isEmpty) _avlSlots[key]!.add({'from': '', 'to': ''});
                     }),
-                    borderRadius: BorderRadius.circular(10),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      child: Row(
-                        children: [
-                          Icon(
-                            enabled ? Icons.check_box : Icons.check_box_outline_blank,
-                            color: enabled ? AppTheme.primaryGold : AppTheme.textGrey,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 10),
-                          Text(label,
-                              style: TextStyle(
-                                color: enabled ? AppTheme.textWhite : AppTheme.textGrey,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                              )),
-                          const Spacer(),
-                          if (enabled)
-                            TextButton.icon(
-                              onPressed: () => setState(() {
-                                _avlSlots[key]!.add({'from': '', 'to': ''});
-                              }),
-                              icon: const Icon(Icons.add, size: 16, color: AppTheme.primaryGold),
-                              label: const Text('فترة', style: TextStyle(color: AppTheme.primaryGold, fontSize: 12)),
-                              style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                            ),
-                        ],
-                      ),
-                    ),
+                    trailing: enabled ? IconButton(icon: const Icon(Icons.add, color: AppTheme.primaryGold), onPressed: () => setState(() => _avlSlots[key]!.add({'from': '', 'to': ''}))) : null,
                   ),
-                  // الفترات
-                  if (enabled)
-                    ...slots.asMap().entries.map((entry) {
-                      final i = entry.key;
-                      final slot = entry.value;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        child: Row(
-                          children: [
-                            const Text('من', style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: _timeField(
-                                value: slot['from'] ?? '',
-                                hint: '09:00',
-                                onChanged: (v) => setState(() => _avlSlots[key]![i]['from'] = v),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            const Text('إلى', style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: _timeField(
-                                value: slot['to'] ?? '',
-                                hint: '12:00',
-                                onChanged: (v) => setState(() => _avlSlots[key]![i]['to'] = v),
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            IconButton(
-                              icon: const Icon(Icons.remove_circle, color: Colors.red, size: 20),
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                              onPressed: () => setState(() {
-                                _avlSlots[key]!.removeAt(i);
-                                if (_avlSlots[key]!.isEmpty) {
-                                  _avlDaysEnabled[key] = false;
-                                }
-                              }),
-                            ),
-                          ],
-                        ),
-                      );
-                    }),
-                  if (enabled) const SizedBox(height: 8),
-                ],
-              ),
-            );
-          }),
-          ], // نهاية if (!_anytimeReady)
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: AppTheme.primaryGold.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.3)),
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.info_outline, color: AppTheme.primaryGold, size: 16),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'المواعيد المتاحة اختيارية. إذا تركتها فارغة لن يتمكن أحد من حجز موعد على هذا العرض.',
-                    style: TextStyle(color: AppTheme.textGrey, fontSize: 12, height: 1.4),
-                  ),
-                ),
-              ],
-            ),
-          ),
+                  if (enabled) ...slots.asMap().entries.map((entry) {
+                    final i = entry.key; final slot = entry.value;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      child: Row(children: [
+                        const Text('من', style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                        const SizedBox(width: 4),
+                        Expanded(child: _timeField(value: slot['from'] ?? '', hint: '09:00', onChanged: (v) => setState(() => _avlSlots[key]![i]['from'] = v))),
+                        const SizedBox(width: 8),
+                        const Text('إلى', style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                        const SizedBox(width: 4),
+                        Expanded(child: _timeField(value: slot['to'] ?? '', hint: '12:00', onChanged: (v) => setState(() => _avlSlots[key]![i]['to'] = v))),
+                        IconButton(icon: const Icon(Icons.remove_circle, color: Colors.red, size: 20), onPressed: () => setState(() => _avlSlots[key]!.removeAt(i))),
+                      ]),
+                    );
+                  }),
+                ]),
+              );
+            }),
+          ],
         ],
       ),
       isActive: _currentStep >= 3,
     );
   }
 
-  Widget _timeField({
-    required String value,
-    required String hint,
-    required void Function(String) onChanged,
-  }) {
-    final ctrl = TextEditingController(text: value);
-    ctrl.selection = TextSelection.collapsed(offset: ctrl.text.length);
+  Widget _timeField({required String value, required String hint, required void Function(String) onChanged}) {
     return TextField(
-      controller: ctrl,
+      controller: TextEditingController(text: value)..selection = TextSelection.collapsed(offset: value.length),
       keyboardType: TextInputType.datetime,
-      textAlign: TextAlign.center,
       style: const TextStyle(color: AppTheme.textWhite, fontSize: 14),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: const TextStyle(color: AppTheme.textGrey, fontSize: 13),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        isDense: true,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-      ),
+      decoration: InputDecoration(hintText: hint, contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6), isDense: true, border: const OutlineInputBorder()),
       onChanged: onChanged,
     );
   }
 
   Step _step4() {
     final config = context.watch<ConfigProvider>().config;
-    
-    // جلب القوائم الصحيحة من ملف الإعدادات المدمج
     final Map<String, dynamic> rawDocTp = config?.data['docTp'] ?? {};
     final Map<String, dynamic> rawCarDocTp = config?.data['carDocTp'] ?? {};
     final Map<String, dynamic> rawPlateTp = config?.data['plateTp'] ?? {};
 
     return Step(
-      title: const Text('السند والإقرار',
-          style: TextStyle(
-              color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
+      title: const Text('السند والإقرار', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ─── نوع السند — حسب نوع العرض ───
           if (_selectedType == 1) ...[
-            // سيارة: سند ملكية السيارة
-            const Text('نوع سند ملكية السيارة (إلزامي)',
-                style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
+            const Text('نوع سند ملكية السيارة (إلزامي)', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
             DropdownButtonFormField<int>(
               value: _selectedCarDocType,
               dropdownColor: AppTheme.surfaceBlack,
               style: const TextStyle(color: AppTheme.textWhite),
               decoration: const InputDecoration(border: OutlineInputBorder()),
-              hint: const Text('اختر نوع السند', style: TextStyle(color: AppTheme.textGrey)),
-              items: rawCarDocTp.entries
-                  .map((e) => DropdownMenuItem(value: int.tryParse(e.key) ?? 0, child: Text(e.value.toString())))
-                  .toList(),
+              items: rawCarDocTp.entries.map((e) => DropdownMenuItem(value: int.tryParse(e.key) ?? 0, child: Text(e.value.toString()))).toList(),
               onChanged: (v) => setState(() { _selectedCarDocType = v; _selectedDocType = v; }),
             ),
             const SizedBox(height: 14),
-            // نوع النمرة
-            const Text('نوع النمرة (إلزامي)',
-                style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
+            const Text('نوع النمرة (إلزامي)', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
             DropdownButtonFormField<int>(
               value: _selectedPlateType,
               dropdownColor: AppTheme.surfaceBlack,
               style: const TextStyle(color: AppTheme.textWhite),
               decoration: const InputDecoration(border: OutlineInputBorder()),
-              hint: const Text('اختر نوع النمرة', style: TextStyle(color: AppTheme.textGrey)),
-              items: rawPlateTp.entries
-                  .map((e) => DropdownMenuItem(value: int.tryParse(e.key) ?? 0, child: Text(e.value.toString())))
-                  .toList(),
+              items: rawPlateTp.entries.map((e) => DropdownMenuItem(value: int.tryParse(e.key) ?? 0, child: Text(e.value.toString()))).toList(),
               onChanged: (v) => setState(() => _selectedPlateType = v),
             ),
           ] else ...[
-            // عقار: سند ملكية العقار
-            const Text('نوع سند ملكية العقار (إلزامي)',
-                style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
+            const Text('نوع سند ملكية العقار (إلزامي)', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
             DropdownButtonFormField<int>(
               value: _selectedDocType,
               dropdownColor: AppTheme.surfaceBlack,
               style: const TextStyle(color: AppTheme.textWhite),
               decoration: const InputDecoration(border: OutlineInputBorder()),
-              hint: const Text('اختر نوع السند', style: TextStyle(color: AppTheme.textGrey)),
-              items: rawDocTp.entries
-                  .map((e) => DropdownMenuItem(value: int.tryParse(e.key) ?? 0, child: Text(e.value.toString())))
-                  .toList(),
-              onChanged: (v) => setState(() => _selectedDocType = v),
-            ),
-          ],
-              hint: const Text('اختر نوع السند', style: TextStyle(color: AppTheme.textGrey)),
-              items: docTypes.entries
-                  .map((e) => DropdownMenuItem(value: int.tryParse(e.key) ?? 0, child: Text(e.value.toString())))
-                  .toList(),
+              items: rawDocTp.entries.map((e) => DropdownMenuItem(value: int.tryParse(e.key) ?? 0, child: Text(e.value.toString()))).toList(),
               onChanged: (v) => setState(() => _selectedDocType = v),
             ),
           ],
           const SizedBox(height: 14),
-
-          // صورة سند الملكية (اختيارية)
-          const Text('صورة سند الملكية (اختيارية)',
-              style: TextStyle(
-                  color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
+          const Text('صورة سند الملكية (اختيارية)', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
           GestureDetector(
             onTap: _pickDocImage,
             child: Container(
               height: 140,
-              decoration: BoxDecoration(
-                color: AppTheme.surfaceBlack,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                    color: _docImage != null
-                        ? const Color.fromRGBO(76, 175, 80, 0.4)
-                        : const Color.fromRGBO(212, 175, 55, 0.4)),
-              ),
+              decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(10), border: Border.all(color: _docImage != null ? Colors.green : AppTheme.primaryGold)),
               child: _docImage == null
-                  ? const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.upload_file,
-                              color: AppTheme.primaryGold, size: 36),
-                          SizedBox(height: 4),
-                          Text('اضغط لرفع صورة السند',
-                              style: TextStyle(
-                                  color: AppTheme.textGrey, fontSize: 12)),
-                        ],
-                      ),
-                    )
-                  : ClipRRect(
-                      borderRadius: BorderRadius.circular(9),
-                      child: kIsWeb
-                          ? Image.network(_docImage!.path,
-                              fit: BoxFit.cover, width: double.infinity)
-                          : Image.file(File(_docImage!.path),
-                              fit: BoxFit.cover, 
-                              width: double.infinity,
-                              cacheWidth: 800, // تقليل دقة العرض المصغر لتجنب أخطاء الذاكرة
-                              errorBuilder: (context, error, stackTrace) => const Center(
-                                child: Icon(Icons.broken_image, color: Colors.red),
-                              ),
-                            ),
-                    ),
+                  ? const Center(child: Icon(Icons.upload_file, color: AppTheme.primaryGold, size: 36))
+                  : ClipRRect(borderRadius: BorderRadius.circular(9), child: kIsWeb ? Image.network(_docImage!.path, fit: BoxFit.cover) : Image.file(File(_docImage!.path), fit: BoxFit.cover, cacheWidth: 800)),
             ),
           ),
-          const SizedBox(height: 6),
-          const Text('رفع صورة السند اختياري عند النشر (سيتم طلبها لاحقاً عند حجز أي موعد). يُفضل اصطحاب سند الملكية الأصلي عند المعاينة لتعزيز ثقة المشتري/المستأجر.',
-              style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
           const SizedBox(height: 16),
-
-          // الإقرار والتعهد - زر يفتح dialog مع النص الكامل (كما طلبت) + checkbox دائماً ظاهر
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: AppTheme.surfaceBlack,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                  color: _agreePledge
-                      ? const Color.fromRGBO(76, 175, 80, 0.3)
-                      : const Color.fromRGBO(212, 175, 55, 0.3)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                OutlinedButton.icon(
-                  onPressed: _showPledgeDialog,
-                  icon: const Icon(Icons.gavel, color: AppTheme.primaryGold),
-                  label: const Text('عرض نص الإقرار والتعهد الكامل',
-                      style: TextStyle(color: AppTheme.primaryGold, fontSize: 14)),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: AppTheme.primaryGold),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'الموافقة على الإقرار والتعهد إلزامية للنشر.',
-                  style: TextStyle(color: AppTheme.textGrey, fontSize: 14),
-                ),
-                const SizedBox(height: 8),
-                // إصلاح تحذير ListTile: wrap بـ Material لتجنب الـ ink splash invisible
-                Material(
-                  color: Colors.transparent,
-                  child: CheckboxListTile(
-                    value: _agreePledge,
-                    onChanged: (v) =>
-                        setState(() => _agreePledge = v ?? false),
-                    title: const Text('أوافق على الإقرار والتعهد',
-                        style: TextStyle(
-                            color: AppTheme.textWhite, fontSize: 14)),
-                    activeColor: AppTheme.primaryGold,
-                    checkColor: Colors.black,
-                    contentPadding: EdgeInsets.zero,
-                    controlAffinity: ListTileControlAffinity.leading,
-                    dense: true,
-                  ),
-                ),
-              ],
-            ),
+            decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(8), border: Border.all(color: _agreePledge ? Colors.green : AppTheme.primaryGold)),
+            child: Column(children: [
+              OutlinedButton.icon(onPressed: _showPledgeDialog, icon: const Icon(Icons.gavel, color: AppTheme.primaryGold), label: const Text('عرض الإقرار والتعهد الكامل')),
+              Material(color: Colors.transparent, child: CheckboxListTile(value: _agreePledge, onChanged: (v) => setState(() => _agreePledge = v ?? false), title: const Text('أوافق على الإقرار والتعهد', style: TextStyle(color: AppTheme.textWhite, fontSize: 14)), activeColor: AppTheme.primaryGold)),
+            ]),
           ),
           const SizedBox(height: 12),
-          // 💰 تنويه عمولة المكتب (منقول ومحسن)
           if (_selectedTrans != null)
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryGold.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.5), width: 1.5),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.monetization_on, color: AppTheme.primaryGold, size: 28),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('تنبيه بخصوص عمولة المكتب',
-                            style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 15)),
-                        const SizedBox(height: 4),
-                        Text(
-                          _selectedTrans == 0
-                              ? 'يتقاضى المكتب عمولة قدرها 3% من القيمة الإجمالية عند إتمام عملية البيع.'
-                              : 'يتقاضى المكتب عمولة تعادل أجرة نصف شهر عند إتمام عملية الإيجار.',
-                          style: const TextStyle(color: AppTheme.textWhite, fontSize: 13, height: 1.4),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+              decoration: BoxDecoration(color: AppTheme.primaryGold.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12), border: Border.all(color: AppTheme.primaryGold)),
+              child: Text(_selectedTrans == 0 ? 'عمولة المكتب 3% عند البيع' : 'عمولة المكتب أجرة نصف شهر عند الإيجار', style: const TextStyle(color: AppTheme.textWhite)),
             ),
           const SizedBox(height: 16),
-          // خيار النشر على وسائل التواصل الاجتماعي
-          Material(
-            color: Colors.transparent,
-            child: CheckboxListTile(
-              value: _shareOnSocial,
-              onChanged: (v) => setState(() => _shareOnSocial = v ?? true),
-              title: const Text('أرغب بنشر العرض على وسائل التواصل الاجتماعي الخاصة بالمكتب',
-                  style: TextStyle(color: AppTheme.textWhite, fontSize: 13)),
-              subtitle: const Text('يساعد في زيادة فرص البيع/الإيجار',
-                  style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
-              activeColor: AppTheme.primaryGold,
-              checkColor: Colors.black,
-              contentPadding: EdgeInsets.zero,
-              controlAffinity: ListTileControlAffinity.leading,
-              dense: true,
-            ),
-          ),
+          Material(color: Colors.transparent, child: CheckboxListTile(value: _shareOnSocial, onChanged: (v) => setState(() => _shareOnSocial = v ?? true), title: const Text('نشر على وسائل التواصل', style: TextStyle(color: AppTheme.textWhite, fontSize: 13)))),
           const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: ElevatedButton(
-              onPressed: _submitting ? null : _submit,
-              child: const Text('نشر العرض الآن',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-          ),
+          SizedBox(width: double.infinity, height: 52, child: ElevatedButton(onPressed: _submitting ? null : _submit, child: const Text('نشر العرض الآن'))),
         ],
       ),
       isActive: _currentStep >= _totalSteps - 1,
@@ -1495,166 +867,57 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   }
 
   String _catLabel() {
-    if (_selectedMainCat == null) return 'عرض';
     final config = context.read<ConfigProvider>().config;
-    final source = _selectedType == 1
-        ? config?.vehicleCategories
-        : config?.propertyCategories;
-    if (source != null && source.isNotEmpty) {
-      final mainItem = source['${_selectedMainCat}'];
-      if (mainItem is Map) {
-        final subsList = mainItem['sub'] ?? mainItem['children'];
-        if (subsList is List && _selectedSubCat != null && _selectedSubCat! >= 0 && _selectedSubCat! < subsList.length) {
-          return subsList[_selectedSubCat!].toString();
-        }
-        return mainItem['nm']?.toString() ?? mainItem.toString();
-      }
+    final source = _selectedType == 1 ? config?.vehicleCategories : config?.propertyCategories;
+    final mainItem = source?['$_selectedMainCat'];
+    if (mainItem is Map) {
+      final subs = mainItem['sub'] ?? mainItem['children'];
+      if (subs is List && _selectedSubCat != null && _selectedSubCat! >= 0 && _selectedSubCat! < subs.length) return subs[_selectedSubCat!].toString();
+      return mainItem['nm']?.toString() ?? 'عرض';
     }
-    return _selectedType == 1 ? 'مركبة' : 'عقار';
+    return 'عرض';
   }
 
   Map<int, String> _mapFromDynamic(dynamic data) {
     final result = <int, String>{};
-    if (data is Map) {
-      data.forEach((key, value) {
-        final id = int.tryParse(key.toString());
-        if (id == null) return;
-        if (value is String) {
-          result[id] = value;
-        } else if (value is Map) {
-          result[id] = value['nm']?.toString() ??
-              value['name']?.toString() ??
-              value.toString();
-        } else {
-          result[id] = value.toString();
-        }
-      });
-    } else if (data is List) {
-      // دعم مصفوفات التصنيفات الفرعية في config (sub: ["اسم1", "اسم2", ...])
-      // نستخدم الـ index كـ id للحقل sub في offers (cat = main group id, sub = index داخل المجموعة)
-      for (int i = 0; i < data.length; i++) {
-        final value = data[i];
-        if (value is String) {
-          result[i] = value;
-        } else if (value is Map) {
-          result[i] = value['nm']?.toString() ??
-              value['name']?.toString() ??
-              value.toString();
-        } else {
-          result[i] = value.toString();
-        }
-      }
-    }
+    if (data is Map) { data.forEach((k, v) { final id = int.tryParse(k.toString()); if (id != null) result[id] = (v is Map ? v['nm'] : v).toString(); });
+    } else if (data is List) { for (int i=0; i<data.length; i++) result[i] = data[i].toString(); }
     return result;
   }
 
   Map<int, String> _categoryGroupMap() {
     final config = context.read<ConfigProvider>().config;
-    final categories = _selectedType == 1
-        ? config?.vehicleCategories
-        : config?.propertyCategories;
-    if (categories != null && categories.isNotEmpty) {
-      return _mapFromDynamic(categories);
-    }
-    return {0: _selectedType == 1 ? 'مركبة' : 'عقار'};
+    final categories = _selectedType == 1 ? config?.vehicleCategories : config?.propertyCategories;
+    return categories != null ? _mapFromDynamic(categories) : {0: 'عرض'};
   }
 
   Map<int, String> _subCategoryMap(int mainId) {
     final config = context.read<ConfigProvider>().config;
-    final categories = _selectedType == 1
-        ? config?.vehicleCategories
-        : config?.propertyCategories;
+    final categories = _selectedType == 1 ? config?.vehicleCategories : config?.propertyCategories;
     final mainItem = categories?['$mainId'];
     if (mainItem is Map) {
       final subSource = mainItem['sub'] ?? mainItem['children'] ?? mainItem;
-      final subMap = _mapFromDynamic(subSource);
-      if (subMap.isNotEmpty) {
-        return subMap;
-      }
+      return _mapFromDynamic(subSource);
     }
-    final label = _categoryGroupMap()[mainId] ?? 'غير معروف';
-    return {mainId: label};
+    return {mainId: 'عرض'};
   }
 
   Widget _buildLocationAutocomplete() {
-    return TextField(
-      controller: _locCtrl,
-      maxLines: 2,
-      decoration: const InputDecoration(
-        labelText: 'وصف دقيق للموقع (إلزامي)',
-        hintText: 'مثال: بجانب مدرسة الفارابي — شارع الجلاء — الطابق الثالث',
-        border: OutlineInputBorder(),
-      ),
-    );
+    return TextField(controller: _locCtrl, maxLines: 2, decoration: const InputDecoration(labelText: 'وصف دقيق للموقع (إلزامي)', border: OutlineInputBorder()));
   }
 
   List<String> _cityOptions() {
     final config = context.read<ConfigProvider>().config;
-    final options = (config?.locations ?? [])
-        .map((item) {
-          if (item is String) return item.trim();
-          if (item is Map) {
-            return item['name']?.toString().trim() ??
-                item['d']?.toString().trim() ??
-                item.toString().trim();
-          }
-          return item.toString().trim();
-        })
-        .where((item) => item.isNotEmpty)
-        .toSet()
-        .toList()
-      ..sort();
-    return options;
-  }
-
-  // ignore: unused_element
-  Future<void> _triggerWhatsAppVideoShare(OfferModel offer, dynamic user) async {
-    final config = context.read<ConfigProvider>().config;
-    final groupUrl = config?.texts['videoWhatsAppGroup']?.toString();
-    final ownerName = (user?.nm ?? user?.uid ?? '');
-    final message = 'عرض رقم ${offer.id} للمستخدم $ownerName';
-    final uri = groupUrl != null && groupUrl.isNotEmpty
-        ? Uri.parse(groupUrl)
-        : Uri.parse('https://wa.me/?text=${Uri.encodeComponent(message)}');
-
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
+    return (config?.locations ?? []).map((e) => (e is Map ? e['name'] : e).toString()).toList();
   }
 
   Widget _thumb(XFile file) {
-    final errBox = Container(
-      width: 70,
-      height: 70,
-      color: AppTheme.surfaceBlack,
-      child: const Icon(Icons.image, color: AppTheme.primaryGold),
-    );
-    if (kIsWeb) {
-      return Image.network(file.path,
-          width: 70,
-          height: 70,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => errBox);
-    }
-    return Image.file(File(file.path),
-        width: 70,
-        height: 70,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => errBox);
+    return kIsWeb ? Image.network(file.path, width: 70, height: 70, fit: BoxFit.cover) : Image.file(File(file.path), width: 70, height: 70, fit: BoxFit.cover);
   }
 
-  Widget _dd(String label, List<String> items, Function(String) on) => Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+  Widget _dd(String label, List<String> items, Function(String) on) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(label, style: const TextStyle(color: AppTheme.textGrey)),
         const SizedBox(height: 5),
-        DropdownButtonFormField<String>(
-            initialValue: null,
-            items: items
-                .map((i) => DropdownMenuItem(value: i, child: Text(i)))
-                .toList(),
-            onChanged: (v) => on(v!),
-            decoration: const InputDecoration(border: OutlineInputBorder()))
+        DropdownButtonFormField<String>(items: items.map((i) => DropdownMenuItem(value: i, child: Text(i))).toList(), onChanged: (v) => on(v!), decoration: const InputDecoration(border: OutlineInputBorder()))
       ]);
 }
-
