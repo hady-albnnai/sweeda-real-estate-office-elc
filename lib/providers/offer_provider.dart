@@ -249,6 +249,7 @@ class OfferProvider with ChangeNotifier {
 
   Future<OfferModel?> fetchOfferById(String offerId, {String? userId}) async {
     try {
+      // محاولة الجلب عبر الدالة (للمستخدمين العاديين)
       final response = await SupabaseService().client.functions.invoke(
         'user-offers',
         body: {
@@ -258,13 +259,28 @@ class OfferProvider with ChangeNotifier {
         },
       );
       final data = response.data;
-      if (data == null || data['success'] != true) return null;
-      final offerData = data['offer'];
-      if (offerData == null) return null;
-      final row = Map<String, dynamic>.from(offerData as Map);
-      final offer = OfferModel.fromSupabase(row, row['id'] as String);
-      await _enrichOwnerLabels([offer]);
-      return offer;
+      if (data != null && data['success'] == true && data['offer'] != null) {
+        final row = Map<String, dynamic>.from(data['offer'] as Map);
+        final offer = OfferModel.fromSupabase(row, row['id'] as String);
+        await _enrichOwnerLabels([offer]);
+        return offer;
+      }
+
+      // 🛡️ Fallback للإدارة أو صاحب العرض: إذا لم تجده الدالة (لأنه غير منشور)
+      // نقوم بجذبه مباشرة من الجدول إذا كان المستخدم يملك الصلاحية
+      final directRow = await SupabaseService().client
+          .from(DbTables.offers)
+          .select()
+          .eq('id', offerId)
+          .maybeSingle();
+
+      if (directRow != null) {
+        final offer = OfferModel.fromSupabase(Map<String, dynamic>.from(directRow), directRow['id'] as String);
+        await _enrichOwnerLabels([offer]);
+        return offer;
+      }
+      
+      return null;
     } catch (e) {
       _setError(e);
       return null;
