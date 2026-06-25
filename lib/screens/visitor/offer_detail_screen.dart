@@ -799,15 +799,9 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                                 color: AppTheme.primaryGold,
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold)),
-                        if (auth.userModel != null && auth.userModel!.isAdmin)
+                        if (auth.userModel != null && auth.userModel!.role >= UserRole.employee && offer.docImg.isNotEmpty)
                           GestureDetector(
                             onTap: () {
-                              if (offer.docImg.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('صاحب العرض لم يرفق صورة للسند')),
-                                );
-                                return;
-                              }
                               if (offer.docImg.toLowerCase().endsWith('.pdf')) {
                                 launchUrl(Uri.parse(offer.docImg), mode: LaunchMode.externalApplication);
                               } else {
@@ -817,18 +811,15 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                               decoration: BoxDecoration(
-                                color: (offer.docImg.isEmpty ? Colors.grey : Colors.blue).withValues(alpha: 0.1),
+                                color: Colors.blue.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: (offer.docImg.isEmpty ? Colors.grey : Colors.blue).withValues(alpha: 0.3)),
+                                border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
                               ),
-                              child: Row(
+                              child: const Row(
                                 children: [
-                                  Icon(Icons.file_present, color: offer.docImg.isEmpty ? Colors.grey : Colors.blue, size: 16),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    offer.docImg.isEmpty ? 'لا يوجد سند مرفق' : 'معاينة السند (إدارة)',
-                                    style: TextStyle(color: offer.docImg.isEmpty ? Colors.grey : Colors.blue, fontSize: 12, fontWeight: FontWeight.bold),
-                                  ),
+                                  Icon(Icons.file_present, color: Colors.blue, size: 16),
+                                  SizedBox(width: 4),
+                                  Text('معاينة السند (إدارة)', style: TextStyle(color: Colors.blue, fontSize: 12, fontWeight: FontWeight.bold)),
                                 ],
                               ),
                             ),
