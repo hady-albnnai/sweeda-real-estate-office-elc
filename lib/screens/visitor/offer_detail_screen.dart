@@ -800,7 +800,13 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                                 fontWeight: FontWeight.bold)),
                         if (auth.userModel != null && auth.userModel!.role >= UserRole.minInternal && offer.docImg.isNotEmpty)
                           GestureDetector(
-                            onTap: () => _openImageViewer([offer.docImg], 0),
+                            onTap: () {
+                              if (offer.docImg.toLowerCase().endsWith('.pdf')) {
+                                launchUrl(Uri.parse(offer.docImg), mode: LaunchMode.externalApplication);
+                              } else {
+                                _openImageViewer([offer.docImg], 0);
+                              }
+                            },
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                               decoration: BoxDecoration(

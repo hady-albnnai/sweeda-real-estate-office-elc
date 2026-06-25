@@ -49,18 +49,22 @@ class AppUtils {
   static String deedTypeText(int type, int offerType) {
     if (offerType == 0) { // عقار
       switch (type) {
-        case 1: return 'طابو أخضر';
-        case 2: return 'كاتب عدل';
-        case 3: return 'حكم محكمة';
-        case 4: return 'إقرار خطي';
+        case 0: return 'طابو أخضر';
+        case 1: return 'حصة سهمية-حكم محكمة';
+        case 2: return 'حصة سهمية-كاتب بالعدل';
+        case 3: return 'مستملك';
+        case 4: return 'تسلسل عقود';
+        case 5: return 'جمعيات سكنية';
+        case 6: return 'نمرة قديمة';
+        case 7: return 'نمرة جديدة';
+        case 8: return 'وارد';
         default: return 'غير محدد';
       }
     } else { // سيارة
       switch (type) {
-        case 1: return 'وكالة قابلة للعزل';
-        case 2: return 'وكالة غير قابلة للعزل';
-        case 3: return 'عقد بيع';
-        case 4: return 'ميكانيك باسم البائع';
+        case 0: return 'مواصلات نظامي';
+        case 1: return 'حكم محكمة';
+        case 2: return 'وارد مع تسلسل ملكية حصراً';
         default: return 'غير محدد';
       }
     }
