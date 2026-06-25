@@ -235,7 +235,9 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     final cityItems = (config?.data?['locs'] as List? ?? []).map((e) => DropdownMenuItem<String>(value: e.toString(), child: Text(e.toString()))).toList();
     cityItems.add(const DropdownMenuItem(value: _customCityOption, child: Text('آخر (إدخال حر)')));
 
-    final Map<String, dynamic> catsSource = (_selectedType == 1 ? config?.data?['catVeh'] : config?.data?['catProp']) ?? {};
+    final Map<String, dynamic> catsSource = _selectedType == 1 
+        ? (config?.data?['catVeh'] ?? {}) 
+        : (config?.data?['catProp'] ?? {});
     final mainCatItems = catsSource.entries.map((e) => DropdownMenuItem<int>(value: int.tryParse(e.key), child: Text(e.value['nm']?.toString() ?? ''))).toList();
 
     return Step(
