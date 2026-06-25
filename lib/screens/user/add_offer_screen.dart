@@ -168,10 +168,8 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       _snack('يرجى إكمال البيانات الأساسية واختيار نوع السند'); return;
     }
     
-    if (_docImage == null) {
-      _snack('يرجى رفع صورة سند الملكية لتعزيز مصداقية العرض'); return;
-    }
-
+    // إزالة شرط إلزامية الصورة (أصبحت اختيارية كما طلبت)
+    
     final effectivePhone = _contactPhoneCtrl.text.trim().isNotEmpty ? _contactPhoneCtrl.text.trim() : user.ph.trim();
     if (!RegExp(r'^09[3-9]\d{7}$').hasMatch(effectivePhone)) { _snack('يرجى إدخال رقم هاتف سوري صحيح (09xxxxxxxx)'); return; }
 
@@ -430,7 +428,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           DropdownButtonFormField<int>(value: _selectedDocType, items: propertyDocs, onChanged: (v) => setState(() => _selectedDocType = v), decoration: const InputDecoration(border: OutlineInputBorder())),
         ],
         const SizedBox(height: 15),
-        const Text('صورة سند الملكية (إلزامي للمراجعة)', style: TextStyle(color: AppTheme.primaryGold, fontSize: 13, fontWeight: FontWeight.bold)),
+        const Text('صورة سند الملكية (اختياري)', style: TextStyle(color: AppTheme.primaryGold, fontSize: 13, fontWeight: FontWeight.bold)),
         const SizedBox(height: 6),
         GestureDetector(onTap: _pickDocImage, child: Container(height: 120, width: double.infinity, decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(10), border: Border.all(color: _docImage != null ? Colors.green : AppTheme.primaryGold.withValues(alpha: 0.5))), child: _docImage == null ? const Center(child: Icon(Icons.upload_file, size: 40, color: AppTheme.primaryGold)) : ClipRRect(borderRadius: BorderRadius.circular(10), child: kIsWeb ? Image.network(_docImage!.path, fit: BoxFit.cover) : Image.file(File(_docImage!.path), fit: BoxFit.cover, cacheWidth: 800)))),
         const SizedBox(height: 20),
