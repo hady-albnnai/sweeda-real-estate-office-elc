@@ -90,9 +90,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   };
 
   Map<String, List<String>> _buildAvl() {
-    if (_anytimeReady) {
-      return {'any': ['00:00-23:59']};
-    }
+    if (_anytimeReady) return {'any': ['00:00-23:59']};
     final result = <String, List<String>>{};
     for (final day in _weekDays) {
       final key = day.$1;
@@ -147,8 +145,8 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
 
   void _showPledgeDialog() {
     final config = context.read<ConfigProvider>().config;
-    const defaultPledge = 'إقرار وتعهد إلكتروني — المكتب العقاري الالكتروني\n\nأقر أنا الموقع أدناه بموجب هذا الإقرار والتعهد بما يلي:\n1. أن جميع البيانات والمعلومات المقدمة صحيحة ودقيقة.\n2. أنني المالك الشرعي أو وكيل مفوض.\n3. أن تقديم أي بيانات كاذبة يعرضني للمسؤولية القانونية.';
-    final pledgeText = config?.data['txts']?['plg']?.toString() ?? defaultPledge;
+    const defaultPledge = 'إقرار وتعهد إلكتروني — المكتب العقاري الالكتروني\n\nأقر أنا الموقع أدناه بموجب هذا الإقرار والتعهد بما يلي:\n1. أن جميع البيانات والمعلومات المقدمة صالحة وصحيحة وغير مضللة.\n2. أنني المالك الشرعي للعقار/السيارة أو مفوض قانونياً.\n3. أن تقديم أي بيانات كاذبة يعرضني للمسؤولية القانونية الكاملة.';
+    final pledgeText = config?.data?['txts']?['plg']?.toString() ?? defaultPledge;
     showDialog(context: context, builder: (_) => AlertDialog(backgroundColor: AppTheme.surfaceBlack, title: const Text('الإقرار والتعهد', style: TextStyle(color: AppTheme.textWhite)), content: SingleChildScrollView(child: Text(pledgeText, style: const TextStyle(color: AppTheme.textGrey, fontSize: 14, height: 1.6))), actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('إغلاق'))]));
   }
 
@@ -161,7 +159,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
 
   Future<void> _openWhatsAppVideoGroup() async {
     final config = context.read<ConfigProvider>().config;
-    final groupUrl = config?.data['txts']?['videoWhatsAppGroup']?.toString();
+    final groupUrl = config?.data?['txts']?['videoWhatsAppGroup']?.toString();
     final uri = Uri.parse(groupUrl ?? 'https://wa.me/');
     if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
@@ -173,10 +171,14 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     final user = auth.userModel;
     if (user == null) { _snack('يجب تسجيل الدخول'); return; }
 
+    if (_selectedType == null || _selectedTrans == null || _selectedMainCat == null) {
+      _snack('يرجى إكمال التصنيفات الأساسية'); return;
+    }
+
     final effectivePhone = _contactPhoneCtrl.text.trim().isNotEmpty ? _contactPhoneCtrl.text.trim() : user.ph.trim();
     if (!RegExp(r'^09[3-9]\d{7}$').hasMatch(effectivePhone)) { _snack('يرجى إدخال رقم هاتف سوري صحيح (09xxxxxxxx)'); return; }
 
-    setState(() { _submitting = true; _progressMsg = 'جاري التحقق من الحصة...'; });
+    setState(() { _submitting = true; _progressMsg = 'جاري رفع البيانات...'; });
     final docUrl = await _uploadDocImage(user.uid) ?? '';
     
     List<String> imageUrls = [];
@@ -230,8 +232,11 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
 
   Step _step1() {
     final config = context.read<ConfigProvider>().config;
-    final cityItems = (config?.data['locs'] as List? ?? []).map((e) => DropdownMenuItem<String>(value: e.toString(), child: Text(e.toString()))).toList();
+    final cityItems = (config?.data?['locs'] as List? ?? []).map((e) => DropdownMenuItem<String>(value: e.toString(), child: Text(e.toString()))).toList();
     cityItems.add(const DropdownMenuItem(value: _customCityOption, child: Text('آخر (إدخال حر)')));
+
+    final Map<String, dynamic> catsSource = (_selectedType == 1 ? config?.data?['catVeh'] : config?.data?['catProp']) ?? {};
+    final mainCatItems = catsSource.entries.map((e) => DropdownMenuItem<int>(value: int.tryParse(e.key), child: Text(e.value['nm']?.toString() ?? ''))).toList();
 
     return Step(
       title: const Text('الأساسيات', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
@@ -240,20 +245,33 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         const SizedBox(height: 15),
         _dd('نوع المعاملة', ['بيع', 'إيجار'], (v) => setState(() => _selectedTrans = v == 'بيع' ? 0 : 1)),
         const SizedBox(height: 15),
+        DropdownButtonFormField<int>(value: _selectedMainCat, items: mainCatItems, onChanged: (v) => setState(() { _selectedMainCat = v; _selectedSubCat = null; }), decoration: const InputDecoration(labelText: 'التصنيف الرئيسي', border: OutlineInputBorder())),
+        const SizedBox(height: 15),
+        if (_selectedMainCat != null)
+           DropdownButtonFormField<int>(
+             value: _selectedSubCat,
+             items: [
+               ...((catsSource[_selectedMainCat.toString()]?['sub'] as List? ?? []).asMap().entries.map((e) => DropdownMenuItem<int>(value: e.key, child: Text(e.value.toString())))),
+               const DropdownMenuItem(value: -1, child: Text('آخر'))
+             ],
+             onChanged: (v) => setState(() => _selectedSubCat = v),
+             decoration: const InputDecoration(labelText: 'التصنيف الفرعي', border: OutlineInputBorder()),
+           ),
+        const SizedBox(height: 15),
         TextField(controller: _contactPhoneCtrl, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'رقم الهاتف للتواصل (إلزامي)', hintText: 'مثال: 09xxxxxxxx', border: OutlineInputBorder(), prefixIcon: Icon(Icons.phone))),
         const SizedBox(height: 15),
         if (_selectedType == 0) ...[
           DropdownButtonFormField<String>(value: _selectedCityArea, items: cityItems, onChanged: (v) => setState(() => _selectedCityArea = v), decoration: const InputDecoration(labelText: 'المنطقة الرئيسية', border: OutlineInputBorder())),
           if (_selectedCityArea == _customCityOption) Padding(padding: const EdgeInsets.only(top: 10), child: TextField(controller: _customCityCtrl, decoration: const InputDecoration(labelText: 'اكتب المنطقة يدوياً', border: OutlineInputBorder()))),
           const SizedBox(height: 15),
-          TextField(controller: _locCtrl, maxLines: 2, decoration: const InputDecoration(labelText: 'وصف دقيق للموقع (إلزامي)', hintText: 'بجانب مدرسة... شارع...', border: OutlineInputBorder())),
+          TextField(controller: _locCtrl, maxLines: 2, decoration: const InputDecoration(labelText: 'وصف دقيق للموقع (إلزامي)', hintText: 'بجانب مدرسة... شارع... الطابق...', border: OutlineInputBorder())),
         ],
         if (_selectedType == 1) ...[
           TextField(controller: _carPlateCtrl, decoration: const InputDecoration(labelText: 'لوحة السيارة (إلزامي)', hintText: 'مثال: 123456', border: OutlineInputBorder())),
           const SizedBox(height: 10),
-          TextField(controller: _carBrandCtrl, decoration: const InputDecoration(labelText: 'الماركة (إلزامي)', hintText: 'كيا، تويوتا...', border: OutlineInputBorder())),
+          TextField(controller: _carBrandCtrl, decoration: const InputDecoration(labelText: 'الماركة (إلزامي)', hintText: 'كيا، تويوتا، مرسيدس...', border: OutlineInputBorder())),
           const SizedBox(height: 10),
-          TextField(controller: _carModelCtrl, decoration: const InputDecoration(labelText: 'الموديل (إلزامي)', hintText: 'سيراتو، لاندكروزر...', border: OutlineInputBorder())),
+          TextField(controller: _carModelCtrl, decoration: const InputDecoration(labelText: 'الموديل (إلزامي)', hintText: 'سيراتو، لاندكروزر، أكسنت...', border: OutlineInputBorder())),
         ],
       ]),
       isActive: _currentStep >= 0,
@@ -263,29 +281,46 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   Step _step2() => Step(
     title: const Text('التفاصيل والمواصفات', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
     content: Column(children: [
-      TextField(controller: _ttlCtrl, maxLength: 80, decoration: const InputDecoration(labelText: 'عنوان العرض (اختياري)', hintText: 'شقة فاخرة، سيارة نظيفة...', border: OutlineInputBorder())),
+      TextField(controller: _ttlCtrl, maxLength: 80, decoration: const InputDecoration(labelText: 'عنوان العرض (اختياري)', hintText: 'شقة فاخرة، سيارة نظيفة، أرض زراعية...', border: OutlineInputBorder())),
+      const SizedBox(height: 10),
       Row(children: [
-        Expanded(flex: 2, child: TextField(controller: _priceCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'السعر (إلزامي)', border: OutlineInputBorder()))),
-        const SizedBox(width: 10),
-        Expanded(child: DropdownButtonFormField<int>(value: _cur, items: const [DropdownMenuItem(value: 0, child: Text('دولار')), DropdownMenuItem(value: 1, child: Text('ل.س'))], onChanged: (v) => setState(() => _cur = v ?? 1), decoration: const InputDecoration(border: OutlineInputBorder()))),
+        Expanded(flex: 2, child: TextField(controller: _priceCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'السعر المتوقع (إلزامي)', border: OutlineInputBorder()))),
+        const SizedBox(width: 8),
+        Expanded(flex: 2, child: DropdownButtonFormField<int>(value: _cur, isExpanded: true, items: const [DropdownMenuItem(value: 0, child: Text('دولار أمريكي', overflow: TextOverflow.ellipsis)), DropdownMenuItem(value: 1, child: Text('ليرة سورية', overflow: TextOverflow.ellipsis))], onChanged: (v) => setState(() => _cur = v ?? 1), decoration: const InputDecoration(border: OutlineInputBorder()))),
       ]),
       const SizedBox(height: 15),
       if (_selectedType == 0) ...[
         TextField(controller: _areaCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'المساحة م² (اختياري)', border: OutlineInputBorder())),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
         _dd('الإكساء (اختياري)', ['ملكي', 'سوبر ديلوكس', 'ديلوكس', 'عادي', 'هيكل'], (v) => setState(() => _finishing = v)),
-        const SizedBox(height: 10),
-        _dd('اتجاه العقار (اختياري)', ['شمالي', 'جنوبي', 'شرقي', 'غربي', 'مفتوح - 4 اتجاهات'], (v) => setState(() => _direction = v)),
-        const SizedBox(height: 10),
-        TextField(controller: _legalNotesCtrl, decoration: const InputDecoration(labelText: 'ملاحظات قانونية (اختياري)', hintText: 'طابو، كاتب عدل...', border: OutlineInputBorder())),
+        const SizedBox(height: 12),
+        TextField(controller: _floorCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'الطابق (اختياري)', hintText: 'مثال: 3', border: OutlineInputBorder())),
+        const SizedBox(height: 12),
+        _dd('اتجاه العقار (اختياري)', ['شمالي', 'جنوبي', 'شرقي', 'غربي', 'شمالي شرقي', 'شمالي غربي', 'جنوبي شرقي', 'جنوبي غربي', 'مفتوح - 4 اتجاهات'], (v) => setState(() => _direction = v)),
+        const SizedBox(height: 12),
+        TextField(controller: _legalNotesCtrl, decoration: const InputDecoration(labelText: 'ملاحظات قانونية (اختياري)', hintText: 'طابو أخضر، كاتب عدل، حكم محكمة...', border: OutlineInputBorder())),
       ],
       if (_selectedType == 1) ...[
         TextField(controller: _carYearCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'سنة الصنع (إلزامي)', border: OutlineInputBorder())),
         const SizedBox(height: 10),
-        _dd('نوع الوقود (اختياري)', ['بنزين', 'ديزل', 'كهرباء'], (v) => setState(() => _carFuel = v)),
+        _dd('نوع الوقود (اختياري)', ['بنزين', 'ديزل', 'هجين', 'كهرباء'], (v) => setState(() => _carFuel = v)),
+        const SizedBox(height: 10),
+        _dd('ناقل الحركة (اختياري)', ['عادي', 'أوتوماتيك', 'نصف أوتوماتيك'], (v) => setState(() => _carTransmission = v)),
+        const SizedBox(height: 10),
+        TextField(controller: _carColorCtrl, decoration: const InputDecoration(labelText: 'اللون (اختياري)', border: OutlineInputBorder())),
+        const SizedBox(height: 10),
+        TextField(controller: _carKmCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'عدد الكيلومترات (اختياري)', border: OutlineInputBorder())),
       ],
-      const SizedBox(height: 10),
-      TextField(controller: _descCtrl, maxLines: 3, decoration: const InputDecoration(labelText: 'وصف إضافي (اختياري)', hintText: 'أي تفاصيل أخرى تود ذكرها...', border: OutlineInputBorder())),
+      const SizedBox(height: 15),
+      TextField(controller: _descCtrl, maxLines: 3, decoration: const InputDecoration(labelText: 'وصف إضافي (اختياري)', hintText: 'أي مميزات أو تفاصيل أخرى تود ذكرها للزبائن...', border: OutlineInputBorder())),
+      const SizedBox(height: 15),
+      TextField(controller: _specCtrl, maxLines: 2, decoration: const InputDecoration(labelText: 'مواصفات إضافية (اختياري)', hintText: 'مثال: 3 غرف، 2 حمام، بلكون، مصعد...', border: OutlineInputBorder())),
+      const SizedBox(height: 20),
+      if (_selectedType == 0) ...[
+        const Text('الموقع الدقيق على الخريطة (اختياري)', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 14)),
+        const SizedBox(height: 8),
+        LocationPicker(initial: _pickedLocation, onPicked: (loc) => setState(() => _pickedLocation = loc), height: 250),
+      ],
     ]),
     isActive: _currentStep >= 1,
   );
@@ -295,66 +330,130 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     content: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       ElevatedButton.icon(onPressed: _pickImages, icon: const Icon(Icons.add_a_photo), label: Text('إضافة صور العرض (${_pickedImages.length}/${StorageService.maxImages})')),
       const SizedBox(height: 10),
-      if (_pickedImages.isNotEmpty) Wrap(spacing: 8, children: _pickedImages.map((e) => Stack(children: [ClipRRect(borderRadius: BorderRadius.circular(8), child: _thumb(e)), Positioned(top: -5, left: -5, child: IconButton(icon: const Icon(Icons.cancel, color: Colors.red), onPressed: () => setState(() => _pickedImages.remove(e))))])).toList()),
-      const SizedBox(height: 15),
+      if (_pickedImages.isNotEmpty) Wrap(spacing: 8, children: _pickedImages.asMap().entries.map((e) => Stack(children: [ClipRRect(borderRadius: BorderRadius.circular(8), child: _thumb(e.value)), Positioned(top: -5, left: -5, child: IconButton(icon: const Icon(Icons.cancel, color: Colors.red), onPressed: () => setState(() => _pickedImages.removeAt(e.key))))])).toList()),
+      const SizedBox(height: 20),
+      const Text('🎬 فيديو العرض (اختياري)', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 13)),
+      const SizedBox(height: 8),
       OutlinedButton.icon(onPressed: _openWhatsAppVideoGroup, icon: const Icon(Icons.video_library), label: const Text('إرسال فيديو عبر واتساب المكتب')),
     ]),
     isActive: _currentStep >= 2,
   );
 
   Step _stepAvl() => Step(
-    title: const Text('المواعيد', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
-    content: Column(children: [
-      SwitchListTile(value: _anytimeReady, onChanged: (v) => setState(() => _anytimeReady = v), title: const Text('أنا جاهز للمعاينة في أي وقت', style: TextStyle(color: Colors.white, fontSize: 14)), activeColor: AppTheme.primaryGold),
-      if (!_anytimeReady) const Text('يمكنك تحديد أيام محددة لاحقاً، حالياً خيار "جاهز دائماً" هو المفعل للمعاينة السريعة.', style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+    title: const Text('المواعيد المتاحة للمعاينة', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
+    content: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(color: AppTheme.primaryGold.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10), border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.3))),
+        child: SwitchListTile(
+          value: _anytimeReady,
+          onChanged: (v) => setState(() => _anytimeReady = v),
+          title: const Text('أنا جاهز للمعاينة في أي وقت', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+          subtitle: const Text('سيتمكن الزبائن من طلب موعد في أي وقت تراه الإدارة مناسباً', style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+          activeColor: AppTheme.primaryGold,
+          contentPadding: EdgeInsets.zero,
+        ),
+      ),
+      const SizedBox(height: 16),
+      if (!_anytimeReady) ...[
+        const Text('أو حدد أياماً وفترات زمنية محددة:', style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+        const SizedBox(height: 12),
+        ..._weekDays.map((day) {
+          final key = day.$1; final label = day.$2; final enabled = _avlDaysEnabled[key] ?? false; final slots = _avlSlots[key] ?? [];
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(10), border: Border.all(color: enabled ? AppTheme.primaryGold.withValues(alpha: 0.5) : AppTheme.textGrey.withValues(alpha: 0.2))),
+            child: Column(children: [
+              ListTile(
+                leading: Icon(enabled ? Icons.check_box : Icons.check_box_outline_blank, color: enabled ? AppTheme.primaryGold : AppTheme.textGrey),
+                title: Text(label, style: TextStyle(color: enabled ? AppTheme.textWhite : AppTheme.textGrey, fontWeight: FontWeight.bold)),
+                onTap: () => setState(() {
+                  _avlDaysEnabled[key] = !enabled;
+                  if (!enabled && slots.isEmpty) _avlSlots[key]!.add({'from': '', 'to': ''});
+                }),
+                trailing: enabled ? IconButton(icon: const Icon(Icons.add, color: AppTheme.primaryGold, size: 20), onPressed: () => setState(() => _avlSlots[key]!.add({'from': '', 'to': ''}))) : null,
+              ),
+              if (enabled) ...slots.asMap().entries.map((entry) {
+                final i = entry.key; final slot = entry.value;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  child: Row(children: [
+                    const Text('من', style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+                    const SizedBox(width: 4),
+                    Expanded(child: _timeField(value: slot['from'] ?? '', hint: '09:00', onChanged: (v) => setState(() => _avlSlots[key]![i]['from'] = v))),
+                    const SizedBox(width: 8),
+                    const Text('إلى', style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+                    const SizedBox(width: 4),
+                    Expanded(child: _timeField(value: slot['to'] ?? '', hint: '12:00', onChanged: (v) => setState(() => _avlSlots[key]![i]['to'] = v))),
+                    IconButton(icon: const Icon(Icons.remove_circle_outline, color: Colors.red, size: 18), onPressed: () => setState(() => _avlSlots[key]!.removeAt(i))),
+                  ]),
+                );
+              }),
+            ]),
+          );
+        }),
+      ],
     ]),
     isActive: _currentStep >= 3,
   );
 
+  Widget _timeField({required String value, required String hint, required void Function(String) onChanged}) {
+    return TextField(
+      controller: TextEditingController(text: value)..selection = TextSelection.collapsed(offset: value.length),
+      keyboardType: TextInputType.datetime,
+      style: const TextStyle(color: AppTheme.textWhite, fontSize: 13),
+      decoration: InputDecoration(hintText: hint, contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5), isDense: true, border: const OutlineInputBorder()),
+      onChanged: onChanged,
+    );
+  }
+
   Step _step4() {
     final config = context.watch<ConfigProvider>().config;
-    final Map<String, dynamic> rawDocTp = config?.data['docTp'] ?? {};
-    final Map<String, dynamic> rawCarDocTp = config?.data['carDocTp'] ?? {};
-    final Map<String, dynamic> rawPlateTp = config?.data['plateTp'] ?? {};
+    final Map<String, dynamic> rawDocTp = config?.data?['docTp'] ?? {};
+    final Map<String, dynamic> rawCarDocTp = config?.data?['carDocTp'] ?? {};
+    final Map<String, dynamic> rawPlateTp = config?.data?['plateTp'] ?? {};
 
-    // فلترة سندات العقار (إزالة خيارات السيارات 6، 7، 8)
-    final propertyDocs = rawDocTp.entries.where((e) => int.parse(e.key) < 6).map((e) => DropdownMenuItem<int>(value: int.parse(e.key), child: Text(e.value.toString()))).toList();
+    final propertyDocs = rawDocTp.entries.where((e) => int.tryParse(e.key) != null && int.parse(e.key) < 6).map((e) => DropdownMenuItem<int>(value: int.parse(e.key), child: Text(e.value.toString()))).toList();
 
     return Step(
       title: const Text('السند والعمولة', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
       content: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         if (_selectedType == 1) ...[
-          const Text('سند ملكية السيارة (إلزامي)', style: TextStyle(color: AppTheme.primaryGold, fontSize: 13)),
+          const Text('سند ملكية السيارة (إلزامي)', style: TextStyle(color: AppTheme.primaryGold, fontSize: 13, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 6),
           DropdownButtonFormField<int>(value: _selectedCarDocType, items: rawCarDocTp.entries.map((e) => DropdownMenuItem(value: int.parse(e.key), child: Text(e.value.toString()))).toList(), onChanged: (v) => setState(() { _selectedCarDocType = v; _selectedDocType = v; }), decoration: const InputDecoration(border: OutlineInputBorder())),
-          const SizedBox(height: 10),
-          const Text('نوع النمرة (إلزامي)', style: TextStyle(color: AppTheme.primaryGold, fontSize: 13)),
+          const SizedBox(height: 12),
+          const Text('نوع النمرة (إلزامي)', style: TextStyle(color: AppTheme.primaryGold, fontSize: 13, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 6),
           DropdownButtonFormField<int>(value: _selectedPlateType, items: rawPlateTp.entries.map((e) => DropdownMenuItem(value: int.parse(e.key), child: Text(e.value.toString()))).toList(), onChanged: (v) => setState(() => _selectedPlateType = v), decoration: const InputDecoration(border: OutlineInputBorder())),
         ] else ...[
-          const Text('سند ملكية العقار (إلزامي)', style: TextStyle(color: AppTheme.primaryGold, fontSize: 13)),
+          const Text('سند ملكية العقار (إلزامي)', style: TextStyle(color: AppTheme.primaryGold, fontSize: 13, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 6),
           DropdownButtonFormField<int>(value: _selectedDocType, items: propertyDocs, onChanged: (v) => setState(() => _selectedDocType = v), decoration: const InputDecoration(border: OutlineInputBorder())),
         ],
         const SizedBox(height: 15),
-        const Text('صورة سند الملكية (اختياري حالياً)', style: TextStyle(color: AppTheme.primaryGold, fontSize: 13)),
-        GestureDetector(onTap: _pickDocImage, child: Container(height: 120, width: double.infinity, decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(10), border: Border.all(color: _docImage != null ? Colors.green : AppTheme.primaryGold.withOpacity(0.5))), child: _docImage == null ? const Center(child: Icon(Icons.upload_file, size: 40, color: AppTheme.primaryGold)) : ClipRRect(borderRadius: BorderRadius.circular(10), child: kIsWeb ? Image.network(_docImage!.path, fit: BoxFit.cover) : Image.file(File(_docImage!.path), fit: BoxFit.cover)))),
+        const Text('صورة سند الملكية (اختياري حالياً)', style: TextStyle(color: AppTheme.primaryGold, fontSize: 13, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 6),
+        GestureDetector(onTap: _pickDocImage, child: Container(height: 120, width: double.infinity, decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(10), border: Border.all(color: _docImage != null ? Colors.green : AppTheme.primaryGold.withValues(alpha: 0.5))), child: _docImage == null ? const Center(child: Icon(Icons.upload_file, size: 40, color: AppTheme.primaryGold)) : ClipRRect(borderRadius: BorderRadius.circular(10), child: kIsWeb ? Image.network(_docImage!.path, fit: BoxFit.cover) : Image.file(File(_docImage!.path), fit: BoxFit.cover, cacheWidth: 800)))),
         const SizedBox(height: 20),
         Container(
-          padding: const EdgeInsets.all(15),
-          decoration: BoxDecoration(color: AppTheme.primaryGold.withOpacity(0.1), borderRadius: BorderRadius.circular(12), border: Border.all(color: AppTheme.primaryGold)),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(color: AppTheme.primaryGold.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12), border: Border.all(color: AppTheme.primaryGold, width: 1.5)),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Row(children: [Icon(Icons.monetization_on, color: AppTheme.primaryGold), SizedBox(width: 8), Text('تنبيه عمولة المكتب', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold))]),
+            const Row(children: [Icon(Icons.monetization_on, color: AppTheme.primaryGold, size: 28), SizedBox(width: 10), Text('تنبيه بخصوص عمولة المكتب', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 15))]),
             const SizedBox(height: 8),
-            Text(_selectedTrans == 0 ? 'يتقاضى المكتب عمولة قدرها 3% من قيمة العقار/السيارة عند إتمام البيع.' : 'يتقاضى المكتب عمولة تعادل أجرة نصف شهر عند إتمام الإيجار.', style: const TextStyle(color: Colors.white, fontSize: 13)),
+            Text(_selectedTrans == 0 ? 'يتقاضى المكتب عمولة قدرها 3% من القيمة الإجمالية عند إتمام عملية البيع.' : 'يتقاضى المكتب عمولة تعادل أجرة نصف شهر عند إتمام عملية الإيجار.', style: const TextStyle(color: Colors.white, fontSize: 13, height: 1.4)),
           ]),
         ),
         const SizedBox(height: 15),
-        CheckboxListTile(value: _agreePledge, onChanged: (v) => setState(() => _agreePledge = v ?? false), title: const Text('أوافق على الإقرار والتعهد وصحة البيانات', style: TextStyle(color: Colors.white, fontSize: 13)), activeColor: AppTheme.primaryGold, contentPadding: EdgeInsets.zero),
+        CheckboxListTile(value: _agreePledge, onChanged: (v) => setState(() => _agreePledge = v ?? false), title: const Text('أوافق على الإقرار والتعهد وصحة البيانات المقدمة', style: TextStyle(color: Colors.white, fontSize: 13)), activeColor: AppTheme.primaryGold, contentPadding: EdgeInsets.zero, controlAffinity: ListTileControlAffinity.leading),
         const SizedBox(height: 10),
-        SizedBox(width: double.infinity, height: 50, child: ElevatedButton(onPressed: _submitting ? null : _submit, child: const Text('نشر العرض للمراجعة الآن'))),
+        SizedBox(width: double.infinity, height: 55, child: ElevatedButton(onPressed: _submitting ? null : _submit, child: const Text('نشر العرض للمراجعة الآن', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)))),
       ]),
       isActive: _currentStep >= 4,
     );
   }
 
-  Widget _thumb(XFile file) => kIsWeb ? Image.network(file.path, width: 70, height: 70, fit: BoxFit.cover) : Image.file(File(file.path), width: 70, height: 70, fit: BoxFit.cover);
+  Widget _thumb(XFile file) => kIsWeb ? Image.network(file.path, width: 70, height: 70, fit: BoxFit.cover) : Image.file(File(file.path), width: 70, height: 70, fit: BoxFit.cover, cacheWidth: 200);
   Widget _dd(String label, List<String> items, Function(String) on) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(label, style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)), const SizedBox(height: 5), DropdownButtonFormField<String>(items: items.map((i) => DropdownMenuItem(value: i, child: Text(i))).toList(), onChanged: (v) => on(v!), decoration: const InputDecoration(border: OutlineInputBorder()))]);
 }
