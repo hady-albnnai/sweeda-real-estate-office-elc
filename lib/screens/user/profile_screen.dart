@@ -69,12 +69,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _handleLogin() async {
     final user = _loginUserCtrl.text.trim();
     final pass = _loginPassCtrl.text;
-    if (user.isEmpty || pass.isEmpty) { _snack('يرجى إدخال كافة البيانات'); return; }
+    if (user.isEmpty || pass.isEmpty) {
+      _snack('يرجى إدخال كافة البيانات');
+      return;
+    }
     setState(() => _isBusy = true);
     final auth = context.read<AuthProvider>();
     final ok = await auth.loginWithPassword(user, pass);
     if (mounted) setState(() => _isBusy = false);
-    if (!ok) _snack('فشل تسجيل الدخول، تأكد من بياناتك');
+    if (!ok) {
+      _snack('فشل تسجيل الدخول، تأكد من بياناتك');
+    } else {
+      // 🚀 توجيه ذكي بعد تسجيل الدخول (LOGIC_SPEC)
+      if (auth.isSenior) {
+        context.go('/admin/dashboard');
+      } else if (auth.isEmployee) {
+        context.go('/employee/home');
+      } else if (auth.isSupervisor) {
+        context.go('/executor/tasks');
+      } else if (auth.isPhotographer) {
+        context.go('/photographer/tasks');
+      } else if (auth.isBroker) {
+        context.go('/broker/dashboard');
+      } else {
+        context.go('/user/home');
+      }
+    }
   }
 
   Future<void> _handleForgotPassword() async {

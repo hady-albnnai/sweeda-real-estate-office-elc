@@ -23,9 +23,12 @@ class UserHomeScreen extends StatefulWidget {
 }
 
 class _UserHomeScreenState extends State<UserHomeScreen> {
-  int _selectedCategory = 0; // 0=الكل, 1=عقارات, 2=سيارات
+  final _searchCtrl = TextEditingController();
+  int? _filterType; // null=الكل, 0=عقار, 1=سيارة
+  int? _filterTrx;  // null=الكل, 0=بيع, 1=إيجار
+  bool _isSearching = false;
+
   // 🔒 Fix: نحتفظ بمرجع OfferProvider لاستخدامه في dispose بأمان
-  // (لا يمكن استدعاء Provider.of في dispose بعد deactivation)
   OfferProvider? _offerProvRef;
 
   @override
@@ -40,35 +43,49 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       offerProv.fetchOffers();
       offerProv.subscribeRealtime(); // تحديث فوري للعروض
 
-      // تسجيل سلسلة الدخول اليومي (Streak) + منح النقاط + جلب الإشعارات
       final auth = Provider.of<AuthProvider>(context, listen: false);
-        if (auth.isLoggedIn) {
-          final uid = auth.userModel?.uid ?? '';
-          if (uid.isNotEmpty) {
-            Provider.of<NotificationProvider>(context, listen: false)
-                .fetchNotifications(uid);
-          }
-
-          // تسجيل streak اليومي — الـ guard الكامل موجود في auth_provider.registerStreak
-          // (يفحص strkDt من DB + in-memory guard) فلا حاجة لفحص مكرر هنا
-          final res = await auth.registerStreak(config.config);
-          if (mounted && res['awarded'] == true) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('🔥 سلسلة دخولك: ${res['streak']} يوم — حصلت على نقاط!'),
-                duration: const Duration(seconds: 2),
-              ),
-            );
-          }
+      if (auth.isLoggedIn) {
+        final uid = auth.userModel?.uid ?? '';
+        if (uid.isNotEmpty) {
+          Provider.of<NotificationProvider>(context, listen: false)
+              .fetchNotifications(uid);
         }
+        await auth.registerStreak(config.config);
+      }
     });
   }
 
   @override
   void dispose() {
-    // 🔒 Fix: نستخدم المرجع المحفوظ بدل Provider.of (الذي يفشل في dispose)
+    _searchCtrl.dispose();
     _offerProvRef?.unsubscribeRealtime();
     super.dispose();
+  }
+
+  Future<void> _doSearch() async {
+    final query = _searchCtrl.text.trim();
+    if (query.isEmpty && _filterType == null && _filterTrx == null) {
+      await context.read<OfferProvider>().fetchOffers();
+      if (mounted) setState(() => _isSearching = false);
+      return;
+    }
+    setState(() => _isSearching = true);
+    await context.read<OfferProvider>().searchOffers(
+          query: query.isEmpty ? null : query,
+          type: _filterType,
+          transaction: _filterTrx,
+        );
+    if (mounted) setState(() {});
+  }
+
+  void _clearSearch() {
+    _searchCtrl.clear();
+    setState(() {
+      _filterType = null;
+      _filterTrx  = null;
+      _isSearching = false;
+    });
+    context.read<OfferProvider>().fetchOffers();
   }
 
   @override
@@ -159,13 +176,22 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
             child: TextField(
+              controller: _searchCtrl,
+              style: const TextStyle(color: AppTheme.textWhite),
+              textInputAction: TextInputAction.search,
+              onSubmitted: (_) => _doSearch(),
               decoration: InputDecoration(
                 hintText: 'ابحث عن عقار أو سيارة...',
                 prefixIcon: const Icon(Icons.search, color: AppTheme.primaryGold),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.tune, color: AppTheme.primaryGold),
-                  onPressed: () => context.push('/search'),
-                ),
+                suffixIcon: _searchCtrl.text.isNotEmpty || _isSearching
+                    ? IconButton(
+                        icon: const Icon(Icons.close, color: AppTheme.textGrey),
+                        onPressed: _clearSearch,
+                      )
+                    : IconButton(
+                        icon: const Icon(Icons.tune, color: AppTheme.primaryGold),
+                        onPressed: () => context.push('/search'),
+                      ),
                 filled: true,
                 fillColor: AppTheme.surfaceBlack,
                 border: OutlineInputBorder(
@@ -173,21 +199,41 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                   borderSide: BorderSide.none,
                 ),
               ),
+              onChanged: (_) => setState(() {}),
             ),
           ),
 
-          // فئات العروض
+          // فئات العروض (فلاتر متزامنة مع الجميع)
           SizedBox(
-            height: 40,
+            height: 44,
             child: ListView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 15),
               children: [
-                _buildChip('الكل', _selectedCategory == 0),
+                _buildChip('الكل', _filterType == null && _filterTrx == null, () {
+                  setState(() { _filterType = null; _filterTrx = null; });
+                  _doSearch();
+                }),
                 const SizedBox(width: 8),
-                _buildChip('🏠 عقارات', _selectedCategory == 1),
+                _buildChip('🏠 عقار', _filterType == 0, () {
+                  setState(() => _filterType = _filterType == 0 ? null : 0);
+                  _doSearch();
+                }),
                 const SizedBox(width: 8),
-                _buildChip('🚗 سيارات', _selectedCategory == 2),
+                _buildChip('🚗 سيارة', _filterType == 1, () {
+                  setState(() => _filterType = _filterType == 1 ? null : 1);
+                  _doSearch();
+                }),
+                const SizedBox(width: 8),
+                _buildChip('بيع', _filterTrx == 0, () {
+                  setState(() => _filterTrx = _filterTrx == 0 ? null : 0);
+                  _doSearch();
+                }),
+                const SizedBox(width: 8),
+                _buildChip('إيجار', _filterTrx == 1, () {
+                  setState(() => _filterTrx = _filterTrx == 1 ? null : 1);
+                  _doSearch();
+                }),
               ],
             ),
           ),
@@ -290,12 +336,13 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     return 'لوحتي';
   }
 
-  List<dynamic> _filteredOffers(List<dynamic> offers) {
-    if (_selectedCategory == 0) return offers;
-    return offers.where((o) => o.typ == (_selectedCategory - 1)).toList();
+  List<OfferModel> _filteredOffers(List<OfferModel> offers) {
+    // التصفية تتم الآن عبر دالة searchOffers في OfferProvider لتكون متزامنة
+    // نرجع القائمة كما هي لأنها مفلترة مسبقاً من الـ provider
+    return offers;
   }
 
-  Widget _buildChip(String label, bool isSelected) {
+  Widget _buildChip(String label, bool isSelected, VoidCallback onTap) {
     return FilterChip(
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       visualDensity: VisualDensity.compact,
@@ -314,8 +361,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       checkmarkColor: AppTheme.deepBlack,
       side: BorderSide(color: AppTheme.primaryGold.withValues(alpha: 0.45)),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      onSelected: (_) => setState(() => _selectedCategory =
-          label == 'الكل' ? 0 : label.contains('عقار') ? 1 : 2),
+      onSelected: (_) => onTap(),
     );
   }
 }

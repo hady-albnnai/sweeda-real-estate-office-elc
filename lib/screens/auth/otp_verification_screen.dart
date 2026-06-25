@@ -62,10 +62,19 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     if (!mounted) return;
     setState(() => _loading = false);
     if (ok) {
-      // بعد التحقق، نتوجه دائماً لإعداد الحساب لضمان تعيين بيانات الدخول الإلزامية
-      // أو للرئيسية إذا كان مستخدماً قديماً أتمّ إعداداته.
+      // 🚀 توجيه ذكي بعد التحقق (LOGIC_SPEC)
       if (auth.isNewUser || auth.userModel?.usr == null) {
         context.go('/setup-profile');
+      } else if (auth.isSenior) {
+        context.go('/admin/dashboard');
+      } else if (auth.isEmployee) {
+        context.go('/employee/home');
+      } else if (auth.isSupervisor) {
+        context.go('/executor/tasks');
+      } else if (auth.isPhotographer) {
+        context.go('/photographer/tasks');
+      } else if (auth.isBroker) {
+        context.go('/broker/dashboard');
       } else {
         context.go('/user/home');
       }
