@@ -161,7 +161,10 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
             fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
           );
       return storage.from(StorageService.offerBucket).getPublicUrl(path);
-    } catch (e) {return null; }
+    } catch (e) {
+      print('UPLOAD DOC ERROR: $e');
+      return null;
+    }
   }
 
   void _showPledgeDialog() {
@@ -527,7 +530,6 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   }
 
   Step _step1() {
-    final config = context.read<ConfigProvider>().config;
     final mainCategories = _categoryGroupMap();
     final subCategories = _selectedMainCat != null
         ? _subCategoryMap(_selectedMainCat!)
@@ -623,24 +625,24 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
                 ),
               ),
             const SizedBox(height: 20),
-            _buildLocationAutocomplete(),
+            TextField(controller: _locCtrl, maxLines: 2, decoration: const InputDecoration(labelText: 'وصف دقيق للموقع (إلزامي)', hintText: 'مثال: بجانب مدرسة الفارابي — شارع الجلاء — الطابق الثالث', border: OutlineInputBorder())),
           ],
           if (_selectedType == 1) ...[
-            TextField(controller: _carPlateCtrl, decoration: const InputDecoration(labelText: 'لوحة السيارة *', border: OutlineInputBorder())),
+            TextField(controller: _carPlateCtrl, decoration: const InputDecoration(labelText: 'لوحة السيارة (إلزامي)', border: OutlineInputBorder(), hintText: 'مثال: 123456')),
             const SizedBox(height: 12),
             _dd('المحافظة', ['السويداء', 'دمشق', 'ريف دمشق', 'حمص', 'حماة', 'حلب', 'اللاذقية', 'طرطوس', 'إدلب', 'دير الزور', 'الرقة', 'الحسكة', 'درعا', 'القنيطرة'], (v) => setState(() => _carGovernorate = v)),
             const SizedBox(height: 12),
-            TextField(controller: _carBrandCtrl, decoration: const InputDecoration(labelText: 'الماركة *', border: OutlineInputBorder())),
+            TextField(controller: _carBrandCtrl, decoration: const InputDecoration(labelText: 'الماركة (إلزامي)', border: OutlineInputBorder(), hintText: 'مثال: كيا، هيونداي...')),
             const SizedBox(height: 12),
-            TextField(controller: _carModelCtrl, decoration: const InputDecoration(labelText: 'الموديل *', border: OutlineInputBorder())),
+            TextField(controller: _carModelCtrl, decoration: const InputDecoration(labelText: 'الموديل (إلزامي)', border: OutlineInputBorder(), hintText: 'مثال: سيراتو، أكسنت...')),
             const SizedBox(height: 12),
-            TextField(controller: _carYearCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'سنة الصنع *', border: OutlineInputBorder())),
+            TextField(controller: _carYearCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'سنة الصنع (إلزامي)', border: OutlineInputBorder(), hintText: 'مثال: 2020')),
             const SizedBox(height: 12),
-            TextField(controller: _carColorCtrl, decoration: const InputDecoration(labelText: 'اللون', border: OutlineInputBorder())),
+            TextField(controller: _carColorCtrl, decoration: const InputDecoration(labelText: 'اللون (اختياري)', border: OutlineInputBorder(), hintText: 'مثال: أبيض، أسود...')),
             const SizedBox(height: 12),
-            _dd('نوع الوقود', ['بنزين', 'ديزل', 'هجين', 'كهربائي', 'غاز'], (v) => setState(() => _carFuel = v)),
+            _dd('نوع الوقود (اختياري)', ['بنزين', 'ديزل', 'هجين', 'كهربائي', 'غاز'], (v) => setState(() => _carFuel = v)),
             const SizedBox(height: 12),
-            _dd('ناقل الحركة', ['عادي', 'أوتوماتيك', 'نصف أوتوماتيك'], (v) => setState(() => _carTransmission = v)),
+            _dd('ناقل الحركة (اختياري)', ['عادي', 'أوتوماتيك', 'نصف أوتوماتيك'], (v) => setState(() => _carTransmission = v)),
           ],
           const SizedBox(height: 8),
         ]),
@@ -656,7 +658,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
             TextField(
               controller: _ttlCtrl,
               maxLength: 80,
-              decoration: const InputDecoration(labelText: 'عنوان العرض بالتطبيق (اختياري)', border: OutlineInputBorder()),
+              decoration: const InputDecoration(labelText: 'عنوان العرض بالتطبيق (اختياري)', hintText: 'مثال: شقة فاخرة مع حديقة', border: OutlineInputBorder()),
             ),
             const SizedBox(height: 15),
             Row(children: [
@@ -666,20 +668,20 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
             ]),
             const SizedBox(height: 15),
             if (_selectedType == 0 || _selectedType == null) ...[
-              TextField(controller: _areaCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'المساحة (م²)', border: OutlineInputBorder())),
+              TextField(controller: _areaCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'المساحة م² (اختياري)', border: OutlineInputBorder())),
               const SizedBox(height: 12),
-              _dd('الإكساء', ['ملكي', 'سوبر ديلوكس', 'ديلوكس', 'كسوة عادية', 'هيكل', 'آخر'], (v) => setState(() => _finishing = v)),
+              _dd('الإكساء (اختياري)', ['ملكي', 'سوبر ديلوكس', 'ديلوكس', 'كسوة عادية', 'هيكل', 'آخر'], (v) => setState(() => _finishing = v)),
               const SizedBox(height: 12),
-              TextField(controller: _floorCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'الطابق', border: OutlineInputBorder())),
+              TextField(controller: _floorCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'الطابق (اختياري)', hintText: 'مثال: 3', border: OutlineInputBorder())),
               const SizedBox(height: 12),
-              _dd('اتجاه العقار', ['شمالي', 'جنوبي', 'شرقي', 'غربي', 'شمالي شرقي', 'شمالي غربي', 'جنوبي شرقي', 'جنوبي غربي', 'مفتوح - أربع اتجاهات'], (v) => setState(() => _direction = v)),
+              _dd('اتجاه العقار (اختياري)', ['شمالي', 'جنوبي', 'شرقي', 'غربي', 'شمالي شرقي', 'شمالي غربي', 'جنوبي شرقي', 'جنوبي غربي', 'مفتوح - أربع اتجاهات'], (v) => setState(() => _direction = v)),
               const SizedBox(height: 12),
-              TextField(controller: _legalNotesCtrl, maxLines: 2, decoration: const InputDecoration(labelText: 'ملاحظات قانونية', border: OutlineInputBorder())),
+              TextField(controller: _legalNotesCtrl, maxLines: 2, decoration: const InputDecoration(labelText: 'ملاحظات قانونية (اختياري)', hintText: 'مثال: طابو أخضر نظامي، أو حصة سهمية...', border: OutlineInputBorder())),
               const SizedBox(height: 15),
             ],
-            TextField(controller: _descCtrl, maxLines: 4, decoration: const InputDecoration(labelText: 'وصف تفصيلي للعرض', border: OutlineInputBorder())),
+            TextField(controller: _descCtrl, maxLines: 4, decoration: const InputDecoration(labelText: 'وصف تفصيلي للعرض (اختياري)', hintText: 'اذكر مميزات العقار، حالته، أي تفاصيل مهمة...', border: OutlineInputBorder())),
             const SizedBox(height: 15),
-            TextField(controller: _specCtrl, maxLines: 3, decoration: const InputDecoration(labelText: 'مواصفات إضافية', border: OutlineInputBorder())),
+            TextField(controller: _specCtrl, maxLines: 3, decoration: const InputDecoration(labelText: 'مواصفات إضافية (اختياري)', hintText: 'مثال: 3 غرف، 2 حمام، بلكون...', border: OutlineInputBorder())),
             const SizedBox(height: 20),
             if (_selectedType == 0 || _selectedType == null) ...[
               const Text('الموقع الدقيق على الخريطة (اختياري)', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 14)),
@@ -725,6 +727,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
               value: _anytimeReady,
               onChanged: (v) => setState(() => _anytimeReady = v),
               title: const Text('أنا جاهز للمعاينة في أي وقت', style: TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold, fontSize: 14)),
+              subtitle: const Text('سيتمكن الزبائن من طلب موعد في أي وقت تراه الإدارة مناسباً', style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
               activeColor: AppTheme.primaryGold,
               contentPadding: EdgeInsets.zero,
             ),
@@ -845,7 +848,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(8), border: Border.all(color: _agreePledge ? Colors.green : AppTheme.primaryGold)),
             child: Column(children: [
-              OutlinedButton.icon(onPressed: _showPledgeDialog, icon: const Icon(Icons.gavel, color: AppTheme.primaryGold), label: const Text('عرض الإقرار والتعهد الكامل')),
+              OutlinedButton.icon(onPressed: _showPledgeDialog, icon: const Icon(Icons.gavel, color: AppTheme.primaryGold), label: const Text('عرض الإقرار والتعهد الكامل', style: TextStyle(color: AppTheme.primaryGold))),
               Material(color: Colors.transparent, child: CheckboxListTile(value: _agreePledge, onChanged: (v) => setState(() => _agreePledge = v ?? false), title: const Text('أوافق على الإقرار والتعهد', style: TextStyle(color: AppTheme.textWhite, fontSize: 14)), activeColor: AppTheme.primaryGold)),
             ]),
           ),
@@ -853,11 +856,36 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           if (_selectedTrans != null)
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: AppTheme.primaryGold.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12), border: Border.all(color: AppTheme.primaryGold)),
-              child: Text(_selectedTrans == 0 ? 'عمولة المكتب 3% عند البيع' : 'عمولة المكتب أجرة نصف شهر عند الإيجار', style: const TextStyle(color: AppTheme.textWhite)),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryGold.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.5), width: 1.5),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.monetization_on, color: AppTheme.primaryGold, size: 28),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('تنبيه بخصوص عمولة المكتب',
+                            style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 15)),
+                        const SizedBox(height: 4),
+                        Text(
+                          _selectedTrans == 0
+                              ? 'يتقاضى المكتب عمولة قدرها 3% من القيمة الإجمالية عند إتمام عملية البيع.'
+                              : 'يتقاضى المكتب عمولة تعادل أجرة نصف شهر عند إتمام عملية الإيجار.',
+                          style: const TextStyle(color: AppTheme.textWhite, fontSize: 13, height: 1.4),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           const SizedBox(height: 16),
-          Material(color: Colors.transparent, child: CheckboxListTile(value: _shareOnSocial, onChanged: (v) => setState(() => _shareOnSocial = v ?? true), title: const Text('نشر على وسائل التواصل', style: TextStyle(color: AppTheme.textWhite, fontSize: 13)))),
+          Material(color: Colors.transparent, child: CheckboxListTile(value: _shareOnSocial, onChanged: (v) => setState(() => _shareOnSocial = v ?? true), title: const Text('نشر على وسائل التواصل الاجتماعية للمكتب', style: TextStyle(color: AppTheme.textWhite, fontSize: 13)))),
           const SizedBox(height: 16),
           SizedBox(width: double.infinity, height: 52, child: ElevatedButton(onPressed: _submitting ? null : _submit, child: const Text('نشر العرض الآن'))),
         ],
@@ -903,7 +931,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   }
 
   Widget _buildLocationAutocomplete() {
-    return TextField(controller: _locCtrl, maxLines: 2, decoration: const InputDecoration(labelText: 'وصف دقيق للموقع (إلزامي)', border: OutlineInputBorder()));
+    return TextField(controller: _locCtrl, maxLines: 2, decoration: const InputDecoration(labelText: 'وصف دقيق للموقع (إلزامي)', border: OutlineInputBorder(), hintText: 'مثال: بجانب مدرسة الفارابي — شارع الجلاء — الطابق الثالث'));
   }
 
   List<String> _cityOptions() {
