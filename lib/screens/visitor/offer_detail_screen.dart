@@ -789,7 +789,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                   ],
                   
                   // تفاصيل سند الملكية (للكل كمعلومة نصية، وللموظفين كمعاينة)
-                  if (offer.docTp > 0) ...[
+                  if (offer.docTp >= 0) ...[
                     const SizedBox(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -799,7 +799,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                                 color: AppTheme.primaryGold,
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold)),
-                        if (auth.userModel != null && auth.userModel!.role >= UserRole.minInternal && offer.docImg.isNotEmpty)
+                        if (auth.userModel != null && auth.userModel!.role >= UserRole.employee && offer.docImg.isNotEmpty)
                           GestureDetector(
                             onTap: () {
                               if (offer.docImg.toLowerCase().endsWith('.pdf')) {
