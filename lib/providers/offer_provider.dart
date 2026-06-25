@@ -279,9 +279,6 @@ class OfferProvider with ChangeNotifier {
       final created = OfferModel.fromSupabase(row, row['id'] as String);
       _offers.insert(0, created);
       
-      // 🔔 إخطار الإدارة بعرض جديد بانتظار المراجعة (LOGIC_SPEC §1)
-      _notifyStaffNewOffer(created);
-
       notifyListeners();
       return created;
     } catch (e, stackTrace) {
@@ -378,46 +375,5 @@ class OfferProvider with ChangeNotifier {
 
   OfferModel? getOfferById(String id) {
     try { return _offers.firstWhere((o) => o.id == id); } catch (_) { return null; }
-  }
-
-  /// 🔔 إرسال إشعارات لجميع الموظفين والإدارة عند إضافة عرض جديد
-  Future<void> _notifyStaffNewOffer(OfferModel offer) async {
-    try {
-      final sb = SupabaseService().client;
-      // 1. جلب كل الموظفين (Role >= 4)
-      // ملاحظة: نستخدم rpc لأننا نحتاج صلاحيات لقراءة جدول الموظفين أو نستخدم الدالة المتاحة
-      final res = await sb.from(DbTables.users)
-          .select('id')
-          .gte('rl', UserRole.employee) // موظف مكتب فما فوق
-          .eq('sts', 0); // النشطين فقط
-
-      final staffIds = (res as List).map((row) => row['id'] as String).toList();
-      if (staffIds.isEmpty) return;
-
-      final title = 'عرض جديد: ${offer.ttl}';
-      final body = 'قام مستخدم بإضافة عرض جديد بانتظار المراجعة والموافقة.';
-
-      for (final staffId in staffIds) {
-        // إضافة إشعار داخلي
-        await sb.rpc(DbFunctions.notifyUser, params: {
-          'p_uid': staffId,
-          'p_type': NotificationType.offers,
-          'p_title': title,
-          'p_body': body,
-          'p_ref_id': offer.id,
-          'p_action': '/admin/offers/${offer.id}',
-        });
-
-        // إرسال Push Notification
-        await sb.rpc(DbFunctions.sendPushNotification, params: {
-          'p_uid': staffId,
-          'p_title': title,
-          'p_body': body,
-          'p_data': {'type': 'new_offer', 'id': offer.id},
-        });
-      }
-    } catch (e) {
-      print('[OFFER PROVIDER] Notification error: $e');
-    }
   }
 }
