@@ -787,6 +787,43 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                     const SizedBox(height: 20),
                   ],
                   
+                  // تفاصيل سند الملكية (للكل كمعلومة نصية، وللموظفين كمعاينة)
+                  if (offer.docTp > 0) ...[
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('سند الملكية',
+                            style: TextStyle(
+                                color: AppTheme.primaryGold,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold)),
+                        if (auth.userModel != null && auth.userModel!.role >= UserRole.minInternal && offer.docImg.isNotEmpty)
+                          GestureDetector(
+                            onTap: () => _openImageViewer([offer.docImg], 0),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+                              ),
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.file_present, color: Colors.blue, size: 16),
+                                  SizedBox(width: 4),
+                                  Text('معاينة السند (إدارة)', style: TextStyle(color: Colors.blue, fontSize: 12, fontWeight: FontWeight.bold)),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    _spec(Icons.description, 'نوع السند', AppUtils.deedTypeText(offer.docTp, offer.typ)),
+                    const SizedBox(height: 10),
+                  ],
+
                   GridView.count(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
