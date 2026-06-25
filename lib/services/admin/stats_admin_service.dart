@@ -26,11 +26,11 @@ class StatsAdminService {
           'staff_session_token': token,
         },
       );
-      final data = response.data;
+            final data = response.data;
       if (data == null || data['success'] != true) throw Exception(data?['error'] ?? 'Error');
-      final res = data['stats'];
+      final stats = data['stats'] as Map? ?? {};
       clearError();
-      return Map<String, dynamic>.from(response as Map);
+      return Map<String, dynamic>.from(stats);
     } catch (e) {
       _setError(e);
       return {};

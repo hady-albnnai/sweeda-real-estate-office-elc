@@ -108,7 +108,8 @@ class RequestProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> cancelRequest(String userId, String reqId, {String reason = ''}) async {
+  Future<bool> cancelRequest(String userId, String reqId,
+      {String reason = ''}) async {
     try {
       final response = await SupabaseService().client.functions.invoke(
         'user-requests',

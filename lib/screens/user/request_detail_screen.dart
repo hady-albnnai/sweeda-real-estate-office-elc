@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/request_provider.dart';
@@ -37,7 +37,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _load());
   }
 
-  Future<void> _load() async {
+    Future<void> _load() async {
     setState(() => _loading = true);
     try {
       final auth = context.read<AuthProvider>();
@@ -47,6 +47,8 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
         return;
       }
 
+      // استخدام Edge Function بدل RPC المباشر لأن الدالة مقفولة (service_role only)
+      // Edge Function only: internal RPC is service_role.
       final response = await SupabaseService().client.functions.invoke(
         'user-requests',
         body: {
@@ -59,9 +61,10 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
         if (mounted) setState(() => _loading = false);
         return;
       }
+      final rows = data['requests'] as List;
 
       Map<String, dynamic>? match;
-      for (final row in (data['requests'] as List)) {
+      for (final row in rows) {
         final map = Map<String, dynamic>.from(row as Map);
         if (map['id'] == widget.requestId) {
           match = map;
@@ -577,3 +580,4 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
     }
   }
 }
+
