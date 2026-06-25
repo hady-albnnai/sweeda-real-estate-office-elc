@@ -16,7 +16,7 @@ class NotificationProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      final res = await SupabaseService().client.functions.invoke('user-notifications', body: {'action': 'list'}); final data = res.data as Map; final response = data['notifications'];
+      final res = await SupabaseService().client.functions.invoke('user-notifications', body: {'action': 'list', 'user_uid': userId}); final data = res.data as Map; final response = data['notifications'];
       _notifications = (response as List)
           .map((d) => NotificationModel.fromSupabase(
               Map<String, dynamic>.from(d), d['id'] as String))

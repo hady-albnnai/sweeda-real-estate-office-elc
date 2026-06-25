@@ -176,22 +176,13 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
     }
 
     setState(() => _progressMsg = 'جارٍ رفع السند...');
-    String docUrl = '';
+        String docUrl = '';
     if (_docImage != null) {
-      try {
-        final storage = SupabaseService().storage;
-        final path = 'docs/${_selectedOwner!.uid}/doc_${DateTime.now().millisecondsSinceEpoch}.jpg';
-        final bytes = kIsWeb
-            ? await _docImage!.readAsBytes()
-            : await (await _storage.compressImage(File(_docImage!.path)) ??
-                    File(_docImage!.path))
-                .readAsBytes();
-        await storage.from(StorageService.offerBucket).uploadBinary(path, bytes,
-            fileOptions: const FileOptions(cacheControl: '3600', upsert: true));
-        docUrl = storage.from(StorageService.offerBucket).getPublicUrl(path);
-      } catch (_) {
-      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
-    }
+      docUrl = (await _storage.uploadOfferImage(
+        xfile: _docImage!,
+        userId: _selectedOwner!.uid,
+        offerId: null,
+      )) ?? '';
     }
 
     setState(() => _progressMsg = 'جارٍ إنشاء العرض...');

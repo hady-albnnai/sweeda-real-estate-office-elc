@@ -277,6 +277,152 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
     );
   }
 
+  Future<void> _approveOffer(OfferModel offer) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppTheme.surfaceBlack,
+        title: const Text('تأكيد القبول',
+            style: TextStyle(color: AppTheme.textWhite)),
+        content: const Text(
+            'سيتم نشر العرض ليصبح مرئياً للجميع. هل أنت متأكد؟',
+            style: TextStyle(color: AppTheme.textGrey)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('إلغاء',
+                style: TextStyle(color: AppTheme.textGrey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            child: const Text('نشر',
+                style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+
+    final admin = context.read<AdminProvider>();
+    final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
+    final ok = await admin.reviewOffer(adminUid, offer.id, true);
+    if (!mounted) return;
+    if (ok) {
+      try {
+        final config = context.read<ConfigProvider>().config;
+        await BusinessService().awardEvent(offer.usrId, config, 'addO', fallback: 500);
+      } catch (_) {}
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('✅ تم نشر العرض'), backgroundColor: Colors.green),
+      );
+      _load();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('فشل النشر: ${admin.error ?? "خطأ غير معروف"}'), backgroundColor: AppTheme.errorRed),
+      );
+    }
+  }
+
+  Future<void> _rejectOffer(OfferModel offer) async {
+    final reason = await _askRejectReason();
+    if (reason == null || !mounted) return;
+
+    final admin = context.read<AdminProvider>();
+    final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
+    final ok = await admin.reviewOffer(adminUid, offer.id, false, reason: reason);
+    if (!mounted) return;
+    if (ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم رفض العرض'), backgroundColor: Colors.orange),
+      );
+      _load();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('فشل الرفض: ${admin.error ?? "خطأ غير معروف"}'), backgroundColor: AppTheme.errorRed),
+      );
+    }
+  }
+
+  Future<String?> _askRejectReason() async {
+    final ctrl = TextEditingController();
+    String? selected;
+    final presets = [
+      'صور غير واضحة',
+      'بيانات ناقصة',
+      'سعر غير منطقي',
+      'عرض مكرر',
+      'محتوى مخالف',
+      'سبب آخر',
+    ];
+
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setS) => AlertDialog(
+          backgroundColor: AppTheme.surfaceBlack,
+          title: const Text('سبب الرفض',
+              style: TextStyle(color: AppTheme.textWhite)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                RadioGroup<String>(
+                  groupValue: selected,
+                  onChanged: (value) => setS(() => selected = value),
+                  child: Column(
+                    children: presets
+                        .map((p) => RadioListTile<String>(
+                              title: Text(p,
+                                  style: const TextStyle(
+                                      color: AppTheme.textWhite)),
+                              value: p,
+                              activeColor: AppTheme.primaryGold,
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
+                            ))
+                        .toList(),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: ctrl,
+                  maxLines: 2,
+                  style: const TextStyle(color: AppTheme.textWhite),
+                  decoration: const InputDecoration(
+                    hintText: 'تفاصيل إضافية (اختياري)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('إلغاء',
+                  style: TextStyle(color: AppTheme.textGrey)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (selected == null) return;
+                final extra = ctrl.text.trim();
+                final result =
+                    extra.isEmpty ? selected! : '$selected — $extra';
+                Navigator.pop(ctx, result);
+              },
+              style:
+                  ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text('رفض',
+                  style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _reportOffer() async {
     if (_offer == null) return;
     final auth = context.read<AuthProvider>();
@@ -887,6 +1033,42 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                       ),
                     ),
                   
+                                    // أزرار مراجعة العرض — للإدارة فقط للعروض غير المنشورة
+                  if (auth.isAdmin && offer.iPub == 0) ...[
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextButton.icon(
+                              onPressed: () => _rejectOffer(offer),
+                              icon: const Icon(Icons.cancel, color: Colors.red, size: 20),
+                              label: const Text('رفض',
+                                  style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 14)),
+                              style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
+                            ),
+                          ),
+                          Container(width: 1, height: 32, color: Colors.orange.withValues(alpha: 0.3)),
+                          Expanded(
+                            child: TextButton.icon(
+                              onPressed: () => _approveOffer(offer),
+                              icon: const Icon(Icons.check_circle, color: Colors.green, size: 20),
+                              label: const Text('قبول',
+                                  style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 14)),
+                              style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
                   // خيار أولوية النشر للإدارة + زر الحذف
                   if (auth.isAdmin) ...[
                     const SizedBox(height: 10),

@@ -125,14 +125,14 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     if (file != null) setState(() => _docImage = file);
   }
 
-  Future<String?> _uploadDocImage(String userId) async {
+    Future<String?> _uploadDocImage(String userId) async {
     if (_docImage == null) return null;
     try {
-      final storage = SupabaseService().storage;
-      final path = 'docs/$userId/doc_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      final bytes = kIsWeb ? await _docImage!.readAsBytes() : await (await _storage.compressImage(File(_docImage!.path)) ?? File(_docImage!.path)).readAsBytes();
-      await storage.from(StorageService.offerBucket).uploadBinary(path, bytes, fileOptions: const FileOptions(cacheControl: '3600', upsert: true));
-      return storage.from(StorageService.offerBucket).getPublicUrl(path);
+      return await _storage.uploadOfferImage(
+        xfile: _docImage!,
+        userId: userId,
+        offerId: null, // سيتم تعيينه لاحقًا في Edge Function
+      );
     } catch (e) { return null; }
   }
 

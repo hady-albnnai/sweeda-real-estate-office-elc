@@ -247,44 +247,76 @@ class OfferProvider with ChangeNotifier {
     }
   }
 
-  Future<OfferModel?> fetchOfferById(String offerId, {String? userId}) async {
-    try {
-      // محاولة الجلب عبر الدالة (للمستخدمين العاديين)
-      final response = await SupabaseService().client.functions.invoke(
-        'user-offers',
-        body: {
-          'action': 'get_by_id',
-          'offer_id': offerId,
-          'user_uid': userId,
-        },
-      );
-      final data = response.data;
-      if (data != null && data['success'] == true && data['offer'] != null) {
-        final row = Map<String, dynamic>.from(data['offer'] as Map);
-        final offer = OfferModel.fromSupabase(row, row['id'] as String);
-        await _enrichOwnerLabels([offer]);
-        return offer;
-      }
+        Future<OfferModel?> fetchOfferById(String offerId, {String? userId}) async {
+        try {
+          /// 🛡️ المحاولة الأولى: مباشرة من الجدول (لأي مستخدم مسجل)
+          /// RLS يسمح للمنشور و لأصحاب العرض و للإدارة (role >= 2)
+          if (userId != null && userId.isNotEmpty) {
+            final directRow = await SupabaseService().client
+                .from(DbTables.offers)
+                .select()
+                .eq('id', offerId)
+                .maybeSingle();
+            if (directRow != null) {
+              final offer = OfferModel.fromSupabase(Map<String, dynamic>.from(directRow), directRow['id'] as String);
+              await _enrichOwnerLabels([offer]);
+              return offer;
+            }
+          }
 
-      // 🛡️ Fallback للإدارة أو صاحب العرض: إذا لم تجده الدالة (لأنه غير منشور)
-      // نقوم بجذبه مباشرة من الجدول إذا كان المستخدم يملك الصلاحية
-      final directRow = await SupabaseService().client
-          .from(DbTables.offers)
-          .select()
-          .eq('id', offerId)
-          .maybeSingle();
+          /// 🛡️ المحاولة الثانية: عبر Edge Function (للمستخدمين العاديين)
+          /// الدالة get_offer_by_id_internal ترجع SETOF offers (مصفوفة)
+          final response = await SupabaseService().client.functions.invoke(
+            'user-offers',
+            body: {
+              'action': 'get_by_id',
+              'offer_id': offerId,
+              'user_uid': userId,
+            },
+          );
+          final data = response.data;
+          if (data != null && data['success'] == true) {
+            final offerRaw = data['offer'];
+            // الدالة ترجع مصفوفة (SETOF) — نأخذ أول عنصر
+            if (offerRaw is List) {
+              if (offerRaw.isNotEmpty) {
+                final row = Map<String, dynamic>.from(offerRaw.first as Map);
+                final offer = OfferModel.fromSupabase(row, row['id'] as String);
+                await _enrichOwnerLabels([offer]);
+                return offer;
+              }
+            } else if (offerRaw is Map) {
+              // في حال غيّرنا Edge Function لترجع كائن مباشرة
+              final row = Map<String, dynamic>.from(offerRaw as Map);
+              final offer = OfferModel.fromSupabase(row, row['id'] as String);
+              await _enrichOwnerLabels([offer]);
+              return offer;
+            }
+          }
 
-      if (directRow != null) {
-        final offer = OfferModel.fromSupabase(Map<String, dynamic>.from(directRow), directRow['id'] as String);
-        await _enrichOwnerLabels([offer]);
-        return offer;
-      }
-      
-      return null;
-    } catch (e) {
-      _setError(e);
-      return null;
-    }
+          // 🛡️ Fallback أخير — لأي حالة
+          try {
+            final q = SupabaseService().client
+                .from(DbTables.offers)
+                .select()
+                .eq('id', offerId)
+                .eq('i_del', 0);
+            if (userId == null || userId.isEmpty) {
+              q.eq('i_pub', 1);
+            }
+            final fallbackRow = await q.maybeSingle();
+            if (fallbackRow != null) {
+              final offer = OfferModel.fromSupabase(Map<String, dynamic>.from(fallbackRow), fallbackRow['id'] as String);
+              await _enrichOwnerLabels([offer]);
+              return offer;
+            }
+          } catch (_) {}
+
+          return null;
+        } catch (e) {
+          _setError(e);
+          return null;
+        }
   }
 
   Future<OfferModel?> addOffer(OfferModel offer) async {
