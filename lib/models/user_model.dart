@@ -127,7 +127,8 @@ class UserModel {
       ph: data['ph'] ?? '',
       eml: data['eml'] as String?,
       ad: data['ad'] ?? '',
-      role: data['role'] ?? 0,
+      // تصحيح: القراءة من العمود rl وليس role ليتوافق مع السيرفر
+      role: data['rl'] ?? data['role'] ?? 0,
       sid: data['sid'] ?? '',
       img: data['img'] ?? '',
       pt: data['pt'] ?? 0,
