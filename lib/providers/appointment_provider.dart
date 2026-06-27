@@ -60,7 +60,12 @@ class AppointmentProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      final res = await SupabaseService().client.functions.invoke('user-appointments', body: {'action': 'list_user_appointments'}); final data = res.data as Map; final response = data['appointments'];
+      final res = await SupabaseService().client.functions.invoke(
+        'user-appointments',
+        body: {'action': 'list_user_appointments', 'user_uid': userId},
+      );
+      final data = res.data as Map;
+      final response = data['appointments'];
       _myAppointments = (response as List)
           .map((d) => AppointmentModel.fromSupabase(
               Map<String, dynamic>.from(d), d['id'] as String))
@@ -75,7 +80,12 @@ class AppointmentProvider with ChangeNotifier {
 
   Future<List<AppointmentModel>> fetchAppointmentsForMyOffers(String userId) async {
     try {
-      final res = await SupabaseService().client.functions.invoke('user-appointments', body: {'action': 'list_owner_appointments'}); final data = res.data as Map; final response = data['appointments'];
+      final res = await SupabaseService().client.functions.invoke(
+        'user-appointments',
+        body: {'action': 'list_owner_appointments', 'user_uid': userId},
+      );
+      final data = res.data as Map;
+      final response = data['appointments'];
       return (response as List)
           .map((d) => AppointmentModel.fromSupabase(
               Map<String, dynamic>.from(d), d['id'] as String))
@@ -88,7 +98,15 @@ class AppointmentProvider with ChangeNotifier {
   Future<bool> cancelAppointment(
       String appointmentId, String userId, String reason) async {
     try {
-      await SupabaseService().client.functions.invoke('user-appointments', body: {'action': 'cancel', 'appointmentId': appointmentId, 'reason': reason});
+      await SupabaseService().client.functions.invoke(
+        'user-appointments',
+        body: {
+          'action': 'cancel',
+          'user_uid': userId,
+          'appointmentId': appointmentId,
+          'reason': reason,
+        },
+      );
       await fetchMyAppointments(userId);
       notifyListeners();
       return true;

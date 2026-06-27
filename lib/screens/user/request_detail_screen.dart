@@ -47,13 +47,21 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
         return;
       }
 
-      final rows = await SupabaseService().client.rpc(
-        'get_user_requests_internal',
-        params: {'p_user_uid': userId},
+      final response = await SupabaseService().client.functions.invoke(
+        'user-requests',
+        body: {
+          'action': 'list',
+          'user_uid': userId,
+        },
       );
+      final data = response.data;
+      if (data == null || data['success'] != true || data['requests'] is! List) {
+        if (mounted) setState(() => _loading = false);
+        return;
+      }
 
       Map<String, dynamic>? match;
-      for (final row in (rows as List)) {
+      for (final row in (data['requests'] as List)) {
         final map = Map<String, dynamic>.from(row as Map);
         if (map['id'] == widget.requestId) {
           match = map;
