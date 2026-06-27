@@ -66,7 +66,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (_) { if (mounted) setState(() => _loadingStats = false); }
   }
 
-  Future<void> _handleLogin() async {
+    Future<void> _handleLogin() async {
     final user = _loginUserCtrl.text.trim();
     final pass = _loginPassCtrl.text;
     if (user.isEmpty || pass.isEmpty) {
@@ -76,23 +76,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() => _isBusy = true);
     final auth = context.read<AuthProvider>();
     final ok = await auth.loginWithPassword(user, pass);
-    if (mounted) setState(() => _isBusy = false);
     if (!ok) {
+      if (mounted) setState(() => _isBusy = false);
       _snack('فشل تسجيل الدخول، تأكد من بياناتك');
     } else {
-      // 🚀 توجيه ذكي بعد تسجيل الدخول (LOGIC_SPEC)
-      if (auth.isSenior) {
-        context.go('/admin/dashboard');
-      } else if (auth.isEmployee) {
-        context.go('/employee/home');
-      } else if (auth.isSupervisor) {
-        context.go('/executor/tasks');
-      } else if (auth.isPhotographer) {
-        context.go('/photographer/tasks');
-      } else if (auth.isBroker) {
-        context.go('/broker/dashboard');
-      } else {
-        context.go('/user/home');
+      // 🚀 توجيه فوري - لا ننتظر rebuild كي لا تظهر شاشة الحساب للحظة
+      if (mounted) {
+        if (auth.isSenior) {
+          context.go('/admin/dashboard');
+        } else if (auth.isEmployee) {
+          context.go('/employee/home');
+        } else if (auth.isSupervisor) {
+          context.go('/executor/tasks');
+        } else if (auth.isPhotographer) {
+          context.go('/photographer/tasks');
+        } else if (auth.isBroker) {
+          context.go('/broker/dashboard');
+        } else {
+          context.go('/user/home');
+        }
       }
     }
   }

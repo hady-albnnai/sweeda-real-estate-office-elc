@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/request_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/config_provider.dart';
 import '../../models/request_model.dart';
 import '../../models/offer_model.dart';
 import '../../core/services/business_service.dart';
@@ -20,12 +21,25 @@ class RequestDetailScreen extends StatefulWidget {
 }
 
 class _RequestDetailScreenState extends State<RequestDetailScreen> {
-  RequestModel? _request;
+    RequestModel? _request;
   List<OfferModel> _matches = [];
-  // فلتر العروض المطابقة
+  // فلتر العروض المطابقة — أساسية
   double? _filterMinPrice;
   double? _filterMaxPrice;
   String? _filterLocation;
+  // فلتر العروض المطابقة — عقارات
+  int? _filterCat;
+  int? _filterDocType;
+  String? _filterFinishing;
+  String? _filterDirection;
+  double? _filterMinArea;
+  double? _filterMaxArea;
+  int? _filterFloor;
+  // فلتر العروض المطابقة — سيارات
+  String? _filterBrand;
+  int? _filterYear;
+  String? _filterFuel;
+  String? _filterTransmission;
   bool _loading = true;
   bool _deleting = false;
   bool _renewing = false;
@@ -34,10 +48,13 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ConfigProvider>().loadConfig();
+      _load();
+    });
   }
 
-    Future<void> _load() async {
+  Future<void> _load() async {
     setState(() => _loading = true);
     try {
       final auth = context.read<AuthProvider>();
@@ -331,20 +348,84 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
     );
   }
 
-  List<OfferModel> get _filteredMatches {
+    List<OfferModel> get _filteredMatches {
     var list = _matches;
+    // أساسية
     if (_filterMinPrice != null) list = list.where((o) => o.prc >= _filterMinPrice!).toList();
     if (_filterMaxPrice != null) list = list.where((o) => o.prc <= _filterMaxPrice!).toList();
     if (_filterLocation != null && _filterLocation!.isNotEmpty) {
       list = list.where((o) => (o.loc['city'] ?? o.loc['d'] ?? '').toString().contains(_filterLocation!)).toList();
     }
+    // عقارات
+    if (_filterCat != null) list = list.where((o) => o.cat == _filterCat!).toList();
+    if (_filterDocType != null) list = list.where((o) => o.docTp == _filterDocType!).toList();
+    if (_filterFinishing != null && _filterFinishing!.isNotEmpty) {
+      list = list.where((o) => (o.specs['finishing']?.toString() ?? '') == _filterFinishing!).toList();
+    }
+    if (_filterDirection != null && _filterDirection!.isNotEmpty) {
+      list = list.where((o) => (o.specs['direction']?.toString() ?? '') == _filterDirection!).toList();
+    }
+    if (_filterMinArea != null) {
+      list = list.where((o) {
+        final area = double.tryParse(o.specs['area']?.toString() ?? '');
+        return area != null && area >= _filterMinArea!;
+      }).toList();
+    }
+    if (_filterMaxArea != null) {
+      list = list.where((o) {
+        final area = double.tryParse(o.specs['area']?.toString() ?? '');
+        return area != null && area <= _filterMaxArea!;
+      }).toList();
+    }
+    if (_filterFloor != null) {
+      list = list.where((o) => int.tryParse(o.specs['floor']?.toString() ?? '') == _filterFloor!).toList();
+    }
+    // سيارات
+    if (_filterBrand != null && _filterBrand!.isNotEmpty) {
+      list = list.where((o) => (o.specs['brand']?.toString() ?? '').toLowerCase().contains(_filterBrand!.toLowerCase())).toList();
+    }
+    if (_filterYear != null) {
+      list = list.where((o) => int.tryParse(o.specs['year']?.toString() ?? '') == _filterYear!).toList();
+    }
+    if (_filterFuel != null && _filterFuel!.isNotEmpty) {
+      list = list.where((o) => (o.specs['fuel']?.toString() ?? '') == _filterFuel!).toList();
+    }
+    if (_filterTransmission != null && _filterTransmission!.isNotEmpty) {
+      list = list.where((o) => (o.specs['transmission']?.toString() ?? '') == _filterTransmission!).toList();
+    }
     return list;
   }
 
-  Widget _filterBar() {
+    Widget _filterBar() {
+    final config = context.watch<ConfigProvider>().config;
+    final isProperty = _request?.elm == 0;
+        final catsSource = isProperty
+        ? ((config?.data['catProp'] ?? {}) as Map<String, dynamic>)
+        : ((config?.data['catVeh'] ?? {}) as Map<String, dynamic>);
+    final docTpSource = isProperty
+        ? ((config?.data['docTp'] ?? {}) as Map<String, dynamic>)
+        : ((config?.data['carDocTp'] ?? {}) as Map<String, dynamic>);
+
+    // بناء خيارات التصنيف
+    final catItems = catsSource.entries
+        .where((e) => int.tryParse(e.key) != null)
+        .map((e) => DropdownMenuItem<int>(
+              value: int.parse(e.key),
+              child: Text(e.value is Map ? (e.value['nm'] ?? e.value.toString()) : e.value.toString(), overflow: TextOverflow.ellipsis),
+            ))
+        .toList();
+    final docItems = docTpSource.entries
+        .where((e) => int.tryParse(e.key) != null)
+        .map((e) => DropdownMenuItem<int>(
+              value: int.parse(e.key),
+              child: Text(e.value.toString(), overflow: TextOverflow.ellipsis),
+            ))
+        .toList();
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(children: [
+        // ── السعر + الموقع ──
         Row(children: [
           Expanded(child: TextField(
             keyboardType: TextInputType.number,
@@ -363,6 +444,123 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
           decoration: const InputDecoration(labelText: 'فلتر الموقع', hintText: 'اكتب اسم المنطقة...', border: OutlineInputBorder(), isDense: true, prefixIcon: Icon(Icons.location_on, size: 18)),
           onChanged: (v) => setState(() => _filterLocation = v.trim()),
         ),
+        const SizedBox(height: 8),
+        // ── التصنيف الرئيسي ──
+        DropdownButtonFormField<int>(
+          value: _filterCat,
+          isExpanded: true,
+          items: [const DropdownMenuItem(value: null, child: Text('كل التصنيفات', overflow: TextOverflow.ellipsis)), ...catItems],
+          onChanged: (v) => setState(() => _filterCat = v),
+          decoration: const InputDecoration(labelText: 'التصنيف', border: OutlineInputBorder(), isDense: true),
+        ),
+        const SizedBox(height: 8),
+        // ── نوع السند ──
+        if (docItems.isNotEmpty)
+          DropdownButtonFormField<int>(
+            value: _filterDocType,
+            isExpanded: true,
+            items: [const DropdownMenuItem(value: null, child: Text('كل أنواع السند', overflow: TextOverflow.ellipsis)), ...docItems],
+            onChanged: (v) => setState(() => _filterDocType = v),
+            decoration: const InputDecoration(labelText: 'نوع السند', border: OutlineInputBorder(), isDense: true),
+          ),
+        // ── فلاتر العقارات ──
+        if (isProperty) ...[
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            value: _filterFinishing,
+            isExpanded: true,
+            items: [
+              const DropdownMenuItem(value: null, child: Text('كل الإكساءات', overflow: TextOverflow.ellipsis)),
+              const DropdownMenuItem(value: 'ملكي', child: Text('ملكي')),
+              const DropdownMenuItem(value: 'سوبر ديلوكس', child: Text('سوبر ديلوكس')),
+              const DropdownMenuItem(value: 'ديلوكس', child: Text('ديلوكس')),
+              const DropdownMenuItem(value: 'عادي', child: Text('عادي')),
+              const DropdownMenuItem(value: 'هيكل', child: Text('هيكل')),
+            ],
+            onChanged: (v) => setState(() => _filterFinishing = v),
+            decoration: const InputDecoration(labelText: 'الإكساء', border: OutlineInputBorder(), isDense: true),
+          ),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            value: _filterDirection,
+            isExpanded: true,
+            items: [
+              const DropdownMenuItem(value: null, child: Text('كل الاتجاهات', overflow: TextOverflow.ellipsis)),
+              const DropdownMenuItem(value: 'شمالي', child: Text('شمالي')),
+              const DropdownMenuItem(value: 'جنوبي', child: Text('جنوبي')),
+              const DropdownMenuItem(value: 'شرقي', child: Text('شرقي')),
+              const DropdownMenuItem(value: 'غربي', child: Text('غربي')),
+              const DropdownMenuItem(value: 'شمالي شرقي', child: Text('شمالي شرقي')),
+              const DropdownMenuItem(value: 'شمالي غربي', child: Text('شمالي غربي')),
+              const DropdownMenuItem(value: 'جنوبي شرقي', child: Text('جنوبي شرقي')),
+              const DropdownMenuItem(value: 'جنوبي غربي', child: Text('جنوبي غربي')),
+              const DropdownMenuItem(value: 'مفتوح - 4 اتجاهات', child: Text('مفتوح - 4 اتجاهات')),
+            ],
+            onChanged: (v) => setState(() => _filterDirection = v),
+            decoration: const InputDecoration(labelText: 'اتجاه العقار', border: OutlineInputBorder(), isDense: true),
+          ),
+          const SizedBox(height: 8),
+          Row(children: [
+            Expanded(child: TextField(
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: 'المساحة من', border: OutlineInputBorder(), isDense: true),
+              onChanged: (v) => setState(() => _filterMinArea = double.tryParse(v)),
+            )),
+            const SizedBox(width: 8),
+            Expanded(child: TextField(
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: 'المساحة إلى', border: OutlineInputBorder(), isDense: true),
+              onChanged: (v) => setState(() => _filterMaxArea = double.tryParse(v)),
+            )),
+          ]),
+          const SizedBox(height: 8),
+          TextField(
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(labelText: 'الطابق', border: OutlineInputBorder(), isDense: true),
+            onChanged: (v) => setState(() => _filterFloor = int.tryParse(v)),
+          ),
+        ],
+        // ── فلاتر السيارات ──
+        if (!isProperty) ...[
+          const SizedBox(height: 8),
+          TextField(
+            decoration: const InputDecoration(labelText: 'الماركة', hintText: 'مثال: تويوتا، كيا...', border: OutlineInputBorder(), isDense: true),
+            onChanged: (v) => setState(() => _filterBrand = v.trim()),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(labelText: 'سنة الصنع', border: OutlineInputBorder(), isDense: true),
+            onChanged: (v) => setState(() => _filterYear = int.tryParse(v)),
+          ),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            value: _filterFuel,
+            isExpanded: true,
+            items: [
+              const DropdownMenuItem(value: null, child: Text('كل أنواع الوقود', overflow: TextOverflow.ellipsis)),
+              const DropdownMenuItem(value: 'بنزين', child: Text('بنزين')),
+              const DropdownMenuItem(value: 'ديزل', child: Text('ديزل')),
+              const DropdownMenuItem(value: 'هجين', child: Text('هجين')),
+              const DropdownMenuItem(value: 'كهرباء', child: Text('كهرباء')),
+            ],
+            onChanged: (v) => setState(() => _filterFuel = v),
+            decoration: const InputDecoration(labelText: 'الوقود', border: OutlineInputBorder(), isDense: true),
+          ),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            value: _filterTransmission,
+            isExpanded: true,
+            items: [
+              const DropdownMenuItem(value: null, child: Text('كل أنواع الحركة', overflow: TextOverflow.ellipsis)),
+              const DropdownMenuItem(value: 'عادي', child: Text('عادي')),
+              const DropdownMenuItem(value: 'أوتوماتيك', child: Text('أوتوماتيك')),
+              const DropdownMenuItem(value: 'نصف أوتوماتيك', child: Text('نصف أوتوماتيك')),
+            ],
+            onChanged: (v) => setState(() => _filterTransmission = v),
+            decoration: const InputDecoration(labelText: 'ناقل الحركة', border: OutlineInputBorder(), isDense: true),
+          ),
+        ],
       ]),
     );
   }
