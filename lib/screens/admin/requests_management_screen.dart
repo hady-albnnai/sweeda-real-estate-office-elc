@@ -25,14 +25,16 @@ class _RequestsManagementScreenState extends State<RequestsManagementScreen> {
   static const _statusLabels = {
     0: 'نشط',
     1: 'قيد المعالجة',
-    2: 'مغلق',
+    2: 'تمت تلبيته',
     3: 'ملغي',
+    4: 'منتهي الصلاحية',
   };
   static const _statusColors = {
     0: Colors.green,
     1: Colors.orange,
     2: Colors.blue,
     3: Colors.grey,
+    4: Colors.deepOrange,
   };
 
   @override
@@ -258,8 +260,86 @@ class _RequestsManagementScreenState extends State<RequestsManagementScreen> {
           'تاريخ الطلب: ${AppUtils.formatTimestamp(r.tsCrt)}',
           style: const TextStyle(color: AppTheme.textGrey, fontSize: 11),
         ),
+        if (r.tsEnd != null)
+          _infoRow(Icons.hourglass_bottom, 'ينتهي في',
+              AppUtils.formatTimestamp(r.tsEnd!)),
+        if (r.closedAt != null) ...[
+          const Divider(color: Colors.white12, height: 14),
+          _infoRow(Icons.lock_clock, 'أُغلق في',
+              AppUtils.formatTimestamp(r.closedAt!)),
+          _infoRow(Icons.verified_user_outlined, 'أغلقه',
+              r.closedByName.isEmpty ? (r.closedBy.isEmpty ? 'النظام' : r.closedBy) : r.closedByName),
+          if (r.closedReason.isNotEmpty)
+            _infoRow(Icons.info_outline, 'سبب الإغلاق', r.closedReason),
+          if (r.closedNote.isNotEmpty)
+            _infoRow(Icons.notes, 'ملاحظة الإغلاق', r.closedNote),
+        ],
+        if (r.isOpen || r.isExpired) ...[
+          const SizedBox(height: 10),
+          Row(children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () => _closeRequest(r, 3),
+                icon: const Icon(Icons.cancel_outlined, color: AppTheme.errorRed, size: 18),
+                label: const Text('إغلاق/إلغاء', style: TextStyle(color: AppTheme.errorRed)),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: () => _closeRequest(r, 2),
+                icon: const Icon(Icons.check_circle_outline, size: 18),
+                label: const Text('تمت تلبيته'),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+              ),
+            ),
+          ]),
+        ],
       ]),
     );
+  }
+
+  Future<void> _closeRequest(RequestModel r, int status) async {
+    final ctrl = TextEditingController();
+    final note = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surfaceBlack,
+        title: Text(
+          status == 2 ? 'تمييز الطلب كتمت تلبيته' : 'إغلاق الطلب',
+          style: const TextStyle(color: AppTheme.primaryGold),
+        ),
+        content: TextField(
+          controller: ctrl,
+          maxLines: 3,
+          style: const TextStyle(color: AppTheme.textWhite),
+          decoration: const InputDecoration(hintText: 'سبب/ملاحظة الإغلاق...'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء')),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
+            child: const Text('تأكيد'),
+          ),
+        ],
+      ),
+    );
+    ctrl.dispose();
+    if (note == null) return;
+
+    final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
+    final ok = await context.read<AdminProvider>().closeRequest(
+          adminUid,
+          r.id,
+          status,
+          reason: status == 2 ? 'fulfilled_by_admin' : 'closed_by_admin',
+          note: note,
+        );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(ok ? 'تم تحديث حالة الطلب' : 'فشل تحديث حالة الطلب')),
+    );
+    if (ok) _load();
   }
 
   Widget _infoRow(IconData icon, String label, String value,

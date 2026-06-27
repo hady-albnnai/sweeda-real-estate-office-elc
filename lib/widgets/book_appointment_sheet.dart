@@ -8,7 +8,8 @@ import '../core/theme/app_theme.dart';
 
 class BookAppointmentSheet extends StatefulWidget {
   final OfferModel offer;
-  const BookAppointmentSheet({super.key, required this.offer});
+  final String? requestId;
+  const BookAppointmentSheet({super.key, required this.offer, this.requestId});
 
   @override
   State<BookAppointmentSheet> createState() => _BookAppointmentSheetState();
@@ -122,6 +123,7 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
       selectedTime:
           '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
       brokerId: widget.offer.brkId.isNotEmpty ? widget.offer.brkId : null,
+      requestId: widget.requestId,
     );
 
     if (!mounted) return;

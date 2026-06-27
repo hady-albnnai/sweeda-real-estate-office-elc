@@ -30,7 +30,18 @@ class AppointmentProvider with ChangeNotifier {
       );
       if (dateTime == null) return false;
 
-      final resultRes = await SupabaseService().client.functions.invoke('user-appointments', body: {'action': 'book', 'offerId': offerId, 'dt': dateTime.toIso8601String(), 'brokerId': brokerId, 'requestId': requestId}); final result = resultRes.data;
+      final resultRes = await SupabaseService().client.functions.invoke(
+        'user-appointments',
+        body: {
+          'action': 'book',
+          'user_uid': userId,
+          'offerId': offerId,
+          'dt': dateTime.toIso8601String(),
+          'brokerId': brokerId,
+          'requestId': requestId,
+        },
+      );
+      final result = resultRes.data;
 
       // السيرفر يرجع JSONB: {success, active_appointments, supervisor_uid}
       if (result is Map) {

@@ -90,8 +90,8 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
   Widget _requestCard(dynamic req) {
     final typeText = req.typ == 0 ? 'شراء' : 'استئجار';
     final elementText = req.elm == 0 ? 'عقار' : 'سيارة';
-    final statusColors = {0: Colors.green, 1: Colors.orange, 2: Colors.blue, 3: Colors.red};
-    final statusTexts = {0: 'نشط', 1: 'قيد المعالجة', 2: 'مغلق/تمت المطابقة', 3: 'ملغي'};
+    final statusColors = {0: Colors.green, 1: Colors.orange, 2: Colors.blue, 3: Colors.grey, 4: Colors.deepOrange};
+    final statusTexts = {0: 'نشط', 1: 'قيد المعالجة', 2: 'تمت تلبيته', 3: 'ملغي', 4: 'منتهي الصلاحية'};
 
     return Card(
       color: AppTheme.surfaceBlack,
@@ -113,8 +113,8 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
           children: [
             const SizedBox(height: 4),
             Text('$typeText — $elementText', style: const TextStyle(color: AppTheme.textGrey)),
-            if (req.prc != null)
-              Text('الميزانية: ${AppUtils.formatPrice(req.prc!, currency: req.cur ?? 1)}',
+            if (req.prc > 0)
+              Text('الميزانية: ${AppUtils.formatPrice(req.prc, currency: req.cur)}',
                   style: const TextStyle(color: AppTheme.primaryGold)),
           ],
         ),

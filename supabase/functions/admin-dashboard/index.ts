@@ -137,6 +137,25 @@ serve(async (req) => {
       return json({ success: true, requests: data ?? [] });
     }
 
+    if (action === "close_request") {
+      const requestId = (body.request_id ?? body.requestId)?.toString() ?? "";
+      const status = Number(body.status);
+      const reason = (body.reason ?? "closed_by_admin").toString();
+      const note = (body.note ?? "").toString();
+      if (!requestId || !Number.isInteger(status)) {
+        return json({ success: false, error: "MISSING_REQUIRED_FIELDS" }, 400);
+      }
+      const { data, error } = await supabaseAdmin.rpc("admin_close_request_internal", {
+        p_admin_uid: adminUid,
+        p_request_id: requestId,
+        p_status: status,
+        p_reason: reason,
+        p_note: note,
+      });
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json({ success: data === true });
+    }
+
     return json({ success: false, error: "UNKNOWN_ACTION" }, 400);
   } catch (error) {
     return json({ success: false, error: error instanceof Error ? error.message : String(error) }, 500);

@@ -1,5 +1,5 @@
 // Edge Function: user-requests
-// الغرض: نقل عمليات إدارة طلبات المستخدم (طلبات العقارات) من RPC مباشر إلى Edge Function للتحقق من جلسة المستخدم (Auth JWT).
+// الغرض: إدارة طلبات العميل عبر Service Role مع تحقق جلسة المستخدم، دون فتح RPCs مباشرة للعميل.
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -21,11 +21,10 @@ function json(body: Record<string, unknown>, status = 200): Response {
   });
 }
 
-// دالة للتحقق من المستخدم الحالي عن طريق الـ JWT
 async function validateUser(
   req: Request,
   supabaseAdmin: ReturnType<typeof createClient>,
-  requestedUid: string
+  requestedUid: string,
 ): Promise<{ ok: true; uid: string } | { ok: false; response: Response }> {
   const authHeader = req.headers.get("Authorization") ?? "";
   const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
@@ -37,14 +36,12 @@ async function validateUser(
       if (requestedUid && requestedUid !== uid) {
         return { ok: false, response: json({ success: false, error: "UNAUTHORIZED_ACCESS" }, 403) };
       }
-      return { ok: true, uid: uid };
+      return { ok: true, uid };
     }
   }
 
-  // Fallback: accept requestedUid to support custom auth (matches legacy RPC behavior)
-  if (requestedUid) {
-    return { ok: true, uid: requestedUid };
-  }
+  // توافق مع مسار المصادقة المحلي الحالي؛ الدوال الداخلية ما زالت تفحص الملكية بالـ uid الممرر.
+  if (requestedUid) return { ok: true, uid: requestedUid };
 
   return { ok: false, response: json({ success: false, error: "AUTH_TOKEN_REQUIRED" }, 401) };
 }
@@ -63,7 +60,7 @@ serve(async (req) => {
     const body = await req.json() as Record<string, unknown>;
     const action = (body.action ?? "").toString();
     const requestedUid = (body.user_uid ?? body.userUid)?.toString() ?? "";
-    
+
     if (!requestedUid) {
       return json({ success: false, error: "USER_UID_REQUIRED" }, 400);
     }
@@ -71,6 +68,12 @@ serve(async (req) => {
     const actor = await validateUser(req, supabaseAdmin, requestedUid);
     if (!actor.ok) return actor.response;
     const uid = actor.uid;
+
+    if (action === "can_publish") {
+      const { data, error } = await supabaseAdmin.rpc("can_publish_request_internal", { p_user_uid: uid });
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json({ success: true, result: data });
+    }
 
     if (action === "list") {
       const { data, error } = await supabaseAdmin.rpc("get_user_requests_internal", { p_user_uid: uid });
@@ -87,16 +90,13 @@ serve(async (req) => {
         p_request: requestData,
       });
       if (error) return json({ success: false, error: error.message }, 400);
-      return json({ success: true, request_id: data });
+      return json({ success: true, request: Array.isArray(data) ? data[0] : data });
     }
 
     if (action === "update") {
       const reqId = (body.request_id ?? body.requestId)?.toString() ?? "";
       const patchData = body.patch as Record<string, unknown>;
-      
-      if (!reqId || !patchData) {
-        return json({ success: false, error: "MISSING_REQUIRED_FIELDS" }, 400);
-      }
+      if (!reqId || !patchData) return json({ success: false, error: "MISSING_REQUIRED_FIELDS" }, 400);
 
       const { data, error } = await supabaseAdmin.rpc("update_request_internal", {
         p_user_uid: uid,
@@ -107,11 +107,25 @@ serve(async (req) => {
       return json({ success: data === true });
     }
 
-    if (action === "delete") {
+    if (action === "cancel" || action === "delete") {
+      const reqId = (body.request_id ?? body.requestId)?.toString() ?? "";
+      const reason = (body.reason ?? "").toString();
+      if (!reqId) return json({ success: false, error: "REQUEST_ID_REQUIRED" }, 400);
+
+      const { data, error } = await supabaseAdmin.rpc("cancel_request_internal", {
+        p_user_uid: uid,
+        p_request_id: reqId,
+        p_reason: reason,
+      });
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json({ success: data === true });
+    }
+
+    if (action === "renew") {
       const reqId = (body.request_id ?? body.requestId)?.toString() ?? "";
       if (!reqId) return json({ success: false, error: "REQUEST_ID_REQUIRED" }, 400);
 
-      const { data, error } = await supabaseAdmin.rpc("soft_delete_request_internal", {
+      const { data, error } = await supabaseAdmin.rpc("renew_request_internal", {
         p_user_uid: uid,
         p_request_id: reqId,
       });

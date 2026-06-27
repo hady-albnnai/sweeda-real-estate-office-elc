@@ -28,6 +28,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
   String? _filterLocation;
   bool _loading = true;
   bool _deleting = false;
+  bool _renewing = false;
   final _biz = BusinessService();
 
   @override
@@ -85,15 +86,15 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
     }
   }
 
-  Future<void> _delete() async {
+  Future<void> _cancelRequest() async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
-        title: const Text('حذف الطلب',
+        title: const Text('إلغاء الطلب',
             style: TextStyle(color: AppTheme.textWhite)),
         content: const Text(
-            'هل أنت متأكد من حذف هذا الطلب؟ سيتوقف ظهوره للوسطاء.',
+            'هل أنت متأكد من إلغاء هذا الطلب؟ سيبقى محفوظاً لدى الإدارة لأغراض المسؤولية والمتابعة.',
             style: TextStyle(color: AppTheme.textGrey)),
         actions: [
           TextButton(
@@ -104,7 +105,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child:
-                const Text('حذف', style: TextStyle(color: Colors.white)),
+                const Text('إلغاء الطلب', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -116,16 +117,34 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
       final auth = context.read<AuthProvider>();
       final reqProv = context.read<RequestProvider>();
       final userId = auth.userModel?.uid ?? '';
-      final ok = await reqProv.softDeleteRequest(userId, widget.requestId);
-      if (!ok) throw Exception('DELETE_FAILED');
+      final ok = await reqProv.cancelRequest(userId, widget.requestId);
+      if (!ok) throw Exception('CANCEL_FAILED');
 
       if (!mounted) return;
-      _snack('تم حذف الطلب');
+      _snack('تم إلغاء الطلب');
       if (mounted) Navigator.pop(context, true);
     } catch (e) {if (mounted) {
         setState(() => _deleting = false);
-        _snack('فشل الحذف');
+        _snack('فشل إلغاء الطلب');
       }
+    }
+  }
+
+
+  Future<void> _renewRequest() async {
+    if (_renewing) return;
+    setState(() => _renewing = true);
+    try {
+      final auth = context.read<AuthProvider>();
+      final userId = auth.userModel?.uid ?? '';
+      final ok = await context.read<RequestProvider>().renewRequest(userId, widget.requestId);
+      if (!ok) throw Exception('RENEW_FAILED');
+      await _load();
+      if (mounted) _snack('تم تجديد الطلب بنجاح');
+    } catch (_) {
+      if (mounted) _snack('فشل تجديد الطلب');
+    } finally {
+      if (mounted) setState(() => _renewing = false);
     }
   }
 
@@ -160,8 +179,8 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.delete_outline, color: Colors.red),
-            onPressed: _deleting ? null : _delete,
+            icon: const Icon(Icons.cancel_outlined, color: Colors.red),
+            onPressed: (r.canCancel && !_deleting) ? _cancelRequest : null,
           ),
         ],
       ),
@@ -174,6 +193,10 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
             _summaryCard(r),
             const SizedBox(height: 20),
             _detailsCard(r),
+            if (r.canRenew) ...[
+              const SizedBox(height: 12),
+              _renewButton(),
+            ],
             const SizedBox(height: 20),
             _matchesHeader(),
             if (_matches.isNotEmpty) _filterBar(),
@@ -333,6 +356,27 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
     );
   }
 
+  Widget _renewButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: _renewing ? null : _renewRequest,
+        icon: _renewing
+            ? const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : const Icon(Icons.refresh),
+        label: const Text('تجديد الطلب'),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppTheme.primaryGold,
+          side: const BorderSide(color: AppTheme.primaryGold),
+        ),
+      ),
+    );
+  }
+
   Widget _matchesHeader() {
     return Row(
       children: [
@@ -480,7 +524,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => BookAppointmentSheet(offer: offer),
+      builder: (_) => BookAppointmentSheet(offer: offer, requestId: widget.requestId),
     );
   }
 
@@ -515,9 +559,11 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
       case 1:
         return ('قيد المعالجة', Colors.orange, Icons.search);
       case 2:
-        return ('مغلق / تمت المطابقة', Colors.blue, Icons.done_all);
+        return ('تمت تلبيته', Colors.blue, Icons.done_all);
       case 3:
         return ('ملغي', Colors.grey, Icons.lock);
+      case 4:
+        return ('منتهي الصلاحية', Colors.deepOrange, Icons.hourglass_disabled);
       default:
         return ('غير معروف', Colors.grey, Icons.help);
     }
