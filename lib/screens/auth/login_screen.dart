@@ -41,27 +41,29 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   // ── العمليات الوظيفية ──
-  Future<void> _login() async {
+    Future<void> _login() async {
     if (_userCtrl.text.isEmpty || _passCtrl.text.isEmpty) { _snack('أدخل بيانات الدخول'); return; }
     setState(() => _loading = true);
     final auth = context.read<AuthProvider>();
     final ok = await auth.loginWithPassword(_userCtrl.text.trim(), _passCtrl.text);
-    if (mounted) setState(() => _loading = false);
     if (!ok) {
+      if (mounted) setState(() => _loading = false);
       _snack(auth.lastError ?? 'خطأ في الاسم أو كلمة المرور');
     } else {
-      if (auth.isSenior) {
-        context.go('/admin/dashboard');
-      } else if (auth.isEmployee) {
-        context.go('/employee/home');
-      } else if (auth.isSupervisor) {
-        context.go('/executor/tasks');
-      } else if (auth.isPhotographer) {
-        context.go('/photographer/tasks');
-      } else if (auth.isBroker) {
-        context.go('/broker/dashboard');
-      } else {
-        context.go('/user/home');
+      if (mounted) {
+        if (auth.isSenior) {
+          context.go('/admin/dashboard');
+        } else if (auth.isEmployee) {
+          context.go('/employee/home');
+        } else if (auth.isSupervisor) {
+          context.go('/executor/tasks');
+        } else if (auth.isPhotographer) {
+          context.go('/photographer/tasks');
+        } else if (auth.isBroker) {
+          context.go('/broker/dashboard');
+        } else {
+          context.go('/user/home');
+        }
       }
     }
   }
