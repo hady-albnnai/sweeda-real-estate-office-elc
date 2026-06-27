@@ -74,6 +74,40 @@ class AppointmentsAdminService {
     }
   }
 
+  Future<bool> closeRequest({
+    required String adminUid,
+    required String requestId,
+    required int status,
+    String reason = 'closed_by_admin',
+    String note = '',
+  }) async {
+    try {
+      final token = await AuthService().getStaffSessionToken();
+      final response = await SupabaseService().client.functions.invoke(
+        'admin-dashboard',
+        body: {
+          'action': 'close_request',
+          'admin_uid': adminUid,
+          'staff_session_token': token,
+          'request_id': requestId,
+          'status': status,
+          'reason': reason,
+          'note': note,
+        },
+      );
+      final data = response.data;
+      if (data == null || data['success'] != true) {
+        _setError(data is Map ? data['error'] : 'CLOSE_REQUEST_FAILED');
+        return false;
+      }
+      clearError();
+      return true;
+    } catch (e) {
+      _setError(e);
+      return false;
+    }
+  }
+
   Future<List<AppointmentModel>> getAllAppointments(String adminUid) async {
     final data = await _invokeAdminAppointments('list', {'admin_uid': adminUid});
     if (data['success'] != true || data['appointments'] is! List) return [];

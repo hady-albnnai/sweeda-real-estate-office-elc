@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/request_provider.dart';
 import '../../providers/auth_provider.dart';
-import '../../providers/config_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/services/business_service.dart';
 import '../../core/constants/db_constants.dart';
@@ -38,14 +37,6 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
   void _prev() => setState(() { if (_currentStep > 0) _currentStep--; });
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ConfigProvider>().loadConfig();
-    });
-  }
-
-  @override
   void dispose() {
     _clientNameCtrl.dispose();
     _clientPhoneCtrl.dispose();
@@ -69,21 +60,19 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
 
     final auth      = context.read<AuthProvider>();
     final reqProv   = context.read<RequestProvider>();
-    final configProv = context.read<ConfigProvider>();
     final user      = auth.userModel;
     if (user == null) return;
 
     setState(() => _submitting = true);
 
-    // فحص الحصة (الإدارة معفاة تلقائياً)
-    final quota = await BusinessService().canPublishRequest(
-      uid:    user.uid,
-      role:   user.role,
-      config: configProv.config,
-    );
+    // فحص الحصة عبر Edge Function حتى لا نفتح RPC مباشرة من العميل.
+    final quota = await reqProv.canPublishRequest(user.uid);
     if (quota['allowed'] != true) {
       if (mounted) setState(() => _submitting = false);
-      _snack(quota['reason'] as String);
+      final reason = quota['reason']?.toString();
+      _snack(reason == 'QUOTA_EXCEEDED'
+          ? 'وصلت للحد الأقصى (${quota['limit']} طلب).'
+          : (reason?.isNotEmpty == true ? reason! : 'تعذّر التحقق من حصتك، حاول لاحقاً.'));
       return;
     }
 

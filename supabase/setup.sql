@@ -59,11 +59,20 @@ CREATE TABLE IF NOT EXISTS requests (
   prc NUMERIC(15,2), cur INTEGER DEFAULT 1 CHECK (cur IN (0,1)),
   notes TEXT DEFAULT '', specs JSONB DEFAULT '{}'::jsonb,
   usr_id UUID REFERENCES users(id) ON DELETE SET NULL,
-  sts INTEGER DEFAULT 0 CHECK (sts BETWEEN 0 AND 3), matches JSONB DEFAULT '{}'::jsonb,
-  i_del INTEGER DEFAULT 0 CHECK (i_del IN (0,1)), ts_crt TIMESTAMPTZ DEFAULT NOW()
+  sts INTEGER DEFAULT 0 CHECK (sts BETWEEN 0 AND 4), matches JSONB DEFAULT '{}'::jsonb,
+  i_del INTEGER DEFAULT 0 CHECK (i_del IN (0,1)), ts_crt TIMESTAMPTZ DEFAULT NOW(),
+  ts_end TIMESTAMPTZ, ts_ren TIMESTAMPTZ,
+  rmnd_ren INTEGER DEFAULT 0 CHECK (rmnd_ren IN (0,1)),
+  closed_at TIMESTAMPTZ,
+  closed_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  closed_reason TEXT DEFAULT '', closed_note TEXT DEFAULT '',
+  closed_offer_id UUID REFERENCES offers(id) ON DELETE SET NULL,
+  closed_appointment_id UUID,
+  closed_completion_request_id UUID
 );
 CREATE INDEX IF NOT EXISTS idx_requests_usr ON requests(usr_id, i_del);
 CREATE INDEX IF NOT EXISTS idx_requests_sts ON requests(sts, i_del);
+CREATE INDEX IF NOT EXISTS idx_requests_lifecycle ON requests(sts, i_del, ts_end);
 
 CREATE TABLE IF NOT EXISTS appointments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1139,6 +1148,10 @@ SET value = jsonb_set(
 )
 WHERE key = 'main'
   AND NOT (value ? 'locs');
+
+UPDATE app_config
+SET value = jsonb_set(value, '{req}', COALESCE(value->'req', '{"d":30,"warn":3,"ren":30,"purge":180}'::jsonb), true)
+WHERE key = 'main';
 
 
 -- ============================================================================

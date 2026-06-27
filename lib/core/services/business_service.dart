@@ -243,19 +243,31 @@ class BusinessService {
       return {'allowed': true, 'used': 0, 'limit': 999999, 'reason': ''};
     }
     try {
-      // نستخدم RPC بدل direct query لتجنب مشاكل RLS
-      final existing = await _sb.client.rpc(
-        'get_user_requests_internal',
-        params: {'p_user_uid': uid},
+      final response = await _sb.client.functions.invoke(
+        'user-requests',
+        body: {
+          'action': 'can_publish',
+          'user_uid': uid,
+        },
       );
-      final used  = (existing as List).length;
-      final limit = requestQuota(config, role: role);
-      final allowed = used < limit;
+      final data = response.data;
+      if (data is Map && data['success'] == true && data['result'] is Map) {
+        final result = Map<String, dynamic>.from(data['result'] as Map);
+        final reason = result['reason']?.toString() ?? '';
+        return {
+          'allowed': result['allowed'] == true,
+          'used': result['used'] ?? 0,
+          'limit': result['limit'] ?? requestQuota(config, role: role),
+          'reason': reason == 'QUOTA_EXCEEDED'
+              ? 'وصلت للحد الأقصى (${result['limit']} طلب).'
+              : reason,
+        };
+      }
       return {
-        'allowed': allowed,
-        'used':    used,
-        'limit':   limit,
-        'reason':  allowed ? '' : 'وصلت للحد الأقصى ($limit طلب).',
+        'allowed': false,
+        'used': 0,
+        'limit': 0,
+        'reason': 'تعذّر التحقق من حصتك، حاول لاحقاً.',
       };
     } catch (e) {
       return {

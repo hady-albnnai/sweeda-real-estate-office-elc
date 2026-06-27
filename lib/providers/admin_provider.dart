@@ -255,6 +255,25 @@ class AdminProvider with ChangeNotifier {
     return list;
   }
 
+  Future<bool> closeRequest(
+    String adminUid,
+    String requestId,
+    int status, {
+    String reason = 'closed_by_admin',
+    String note = '',
+  }) async {
+    final ok = await _appointmentsAdmin.closeRequest(
+      adminUid: adminUid,
+      requestId: requestId,
+      status: status,
+      reason: reason,
+      note: note,
+    );
+    _syncAppointmentsError();
+    if (ok) notifyListeners();
+    return ok;
+  }
+
   Future<List<AppointmentModel>> getAllAppointments(String adminUid) async {
     final list = await _appointmentsAdmin.getAllAppointments(adminUid);
     _syncAppointmentsError();
