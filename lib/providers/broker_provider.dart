@@ -64,12 +64,15 @@ class BrokerProvider with ChangeNotifier {
               ? 'reject'
               : 'pending';
       if (action == 'pending') return false;
-      await SupabaseService().client.rpc(
-        'broker_handle_appointment_internal',
-        params: {
-          'p_broker_uid': brokerUid,
-          'p_appointment_id': apptId,
-          'p_action': action,
+
+      // ✅ Secure via broker-actions Edge Function
+      await SupabaseService().client.functions.invoke(
+        'broker-actions',
+        body: {
+          'action': 'handle_appointment',
+          'broker_uid': brokerUid,
+          'appointment_id': apptId,
+          'sub_action': action,
         },
       );
       notifyListeners();
@@ -81,12 +84,14 @@ class BrokerProvider with ChangeNotifier {
 
   Future<bool> completeAppointment(String brokerUid, String apptId) async {
     try {
-      await SupabaseService().client.rpc(
-        'broker_handle_appointment_internal',
-        params: {
-          'p_broker_uid': brokerUid,
-          'p_appointment_id': apptId,
-          'p_action': 'complete',
+      // ✅ Secure via broker-actions Edge Function
+      await SupabaseService().client.functions.invoke(
+        'broker-actions',
+        body: {
+          'action': 'handle_appointment',
+          'broker_uid': brokerUid,
+          'appointment_id': apptId,
+          'sub_action': 'complete',
         },
       );
       notifyListeners();

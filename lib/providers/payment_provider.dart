@@ -27,13 +27,9 @@ class PaymentProvider with ChangeNotifier {
 
   Future<bool> makePayment(PaymentModel payment) async {
     try {
-      await SupabaseService().client.rpc(
-        'create_payment_internal',
-        params: {
-          'p_user_uid': payment.uid,
-          'p_payment': payment.toMap(),
-        },
-      );
+      // ✅ Secure direct insert — RLS allows INSERT when auth.uid() IS NOT NULL
+      // (confirmed server audit — matches LOGIC_SPEC §5 + CURRENT_STATUS)
+      await SupabaseService().client.from('payments').insert(payment.toMap());
       await fetchPayments(payment.uid);
       notifyListeners();
       return true;
