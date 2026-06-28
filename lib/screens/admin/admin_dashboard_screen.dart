@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../providers/admin_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/services/permission_service.dart';
 import '../../widgets/app_back_button.dart';
 
 /// 🛡️ لوحة الإدارة الرئيسية
@@ -278,54 +277,5 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  Widget _navCard(IconData icon, String title, String route, {int badge = 0}) {
-    return InkWell(
-      onTap: () => context.push(route),
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppTheme.surfaceBlack,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.15)),
-        ),
-        child: Stack(
-          children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Icon(icon, color: AppTheme.primaryGold, size: 34),
-                const SizedBox(height: 10),
-                Text(title,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                        color: AppTheme.textWhite,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600)),
-              ],
-            ),
-            if (badge > 0)
-              Positioned(
-                top: 0,
-                left: 0,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: AppTheme.errorRed,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text('$badge',
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold)),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
+
 }

@@ -226,35 +226,10 @@ class FCMService {
       final uid = prefs.getString('user_id');
       if (uid == null) return;
 
-      final typeStr = data?['type']?.toString() ?? '';
-      // mapping من النص للرقم حسب schema notifications.tp
-      final typeNum = _typeStringToInt(typeStr);
-
       // Phase 8: RPC 'notify_user' is locked. Local messages shouldn't duplicate DB triggers.
       // await SupabaseService().client.rpc('notify_user', params: {...});
     } catch (e) {
       _setError(e);
-    }
-  }
-
-  int _typeStringToInt(String t) {
-    switch (t) {
-      case 'offer':
-        return 0;
-      case 'request':
-        return 1;
-      case 'appointment':
-        return 2;
-      case 'payment':
-        return 3;
-      case 'account':
-      case 'broker':
-      case 'admin':
-        return 4;
-      case 'rating':
-        return 5;
-      default:
-        return 4;
     }
   }
 

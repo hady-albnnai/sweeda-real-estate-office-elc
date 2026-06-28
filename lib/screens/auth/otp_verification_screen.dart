@@ -41,8 +41,12 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   @override
   void dispose() {
     _timer?.cancel();
-    for (var c in _ctrls) c.dispose();
-    for (var n in _nodes) n.dispose();
+    for (var c in _ctrls) {
+      c.dispose();
+    }
+    for (var n in _nodes) {
+      n.dispose();
+    }
     super.dispose();
   }
 
@@ -121,9 +125,14 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     style: const TextStyle(color: AppTheme.primaryGold, fontSize: 24, fontWeight: FontWeight.bold),
                     decoration: InputDecoration(counterText: '', filled: true, fillColor: AppTheme.surfaceBlack, enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Colors.white10)), focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2))),
                     onChanged: (v) {
-                      if (v.isNotEmpty && i < 5) _nodes[i + 1].requestFocus();
-                      else if (v.isEmpty && i > 0) _nodes[i - 1].requestFocus();
-                      if (i == 5 && v.isNotEmpty && _otp.length == 6) _verify();
+                      if (v.isNotEmpty && i < 5) {
+                        _nodes[i + 1].requestFocus();
+                      } else if (v.isEmpty && i > 0) {
+                        _nodes[i - 1].requestFocus();
+                      }
+                      if (i == 5 && v.isNotEmpty && _otp.length == 6) {
+                        _verify();
+                      }
                     },
                   ),
                 )),
