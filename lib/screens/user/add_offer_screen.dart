@@ -44,7 +44,6 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   LatLng? _pickedLocation; 
   int? _selectedDocType; 
   bool _agreePledge = false; 
-  bool _shareOnSocial = true; 
   bool _submitting = false;
   bool _anytimeReady = false; 
 
@@ -113,14 +112,13 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     super.dispose();
   }
 
-  int get _totalSteps => _selectedType == 1 ? 4 : 5;
 
   Future<void> _pickDocImage() async {
     final file = await _storage.pickImage(fromCamera: false);
     if (file != null) setState(() => _docImage = file);
   }
 
-    Future<String?> _uploadDocImage(String userId) async {
+  Future<String?> _uploadDocImage(String userId) async {
     if (_docImage == null) return null;
     try {
       return await _storage.uploadOfferImage(
@@ -128,20 +126,17 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         userId: userId,
         offerId: null, // سيتم تعيينه لاحقًا في Edge Function
       );
-    } catch (e) { return null; }
-  }
-
-  void _showPledgeDialog() {
-    final config = context.read<ConfigProvider>().config;
-    final texts = config?.texts ?? const <String, dynamic>{};
-    const defaultPledge = 'إقرار وتعهد إلكتروني — المكتب العقاري الالكتروني\n\nأقر أنا الموقع أدناه بموجب هذا الإقرار والتعهد بما يلي:\n1. أن جميع البيانات والمعلومات المقدمة صحيحة ودقيقة.\n2. أنني المالك الشرعي للعقار/السيارة أو مفوض قانوناً.\n3. أن تقديم أي بيانات كاذبة يعرضني للمسؤولية القانونية.';
-    final pledgeText = texts['plg']?.toString() ?? defaultPledge;
-    showDialog(context: context, builder: (_) => AlertDialog(backgroundColor: AppTheme.surfaceBlack, title: const Text('الإقرار والتعهد', style: TextStyle(color: AppTheme.textWhite)), content: SingleChildScrollView(child: Text(pledgeText, style: const TextStyle(color: AppTheme.textGrey, fontSize: 14, height: 1.6))), actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('إغلاق'))]));
+    } catch (e) {
+      return null;
+    }
   }
 
   Future<void> _pickImages() async {
     final remaining = StorageService.maxImages - _pickedImages.length;
-    if (remaining <= 0) { _snack('الحد الأقصى ${StorageService.maxImages} صور'); return; }
+    if (remaining <= 0) {
+      _snack('الحد الأقصى ${StorageService.maxImages} صور');
+      return;
+    }
     final files = await _storage.pickMultiImages(limit: remaining);
     if (files.isNotEmpty) setState(() => _pickedImages.addAll(files));
   }

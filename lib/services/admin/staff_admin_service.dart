@@ -68,7 +68,7 @@ class StaffAdminService {
       if (data == null || data['success'] != true) throw Exception(data?['error'] ?? 'Error');
       final res = data['staff'] as List;
       clearError();
-      return (response as List)
+      return res
           .map((d) => UserModel.fromSupabase(
               Map<String, dynamic>.from(d), d['id'] as String))
           .toList();

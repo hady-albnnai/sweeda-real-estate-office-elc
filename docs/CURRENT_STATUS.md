@@ -288,3 +288,9 @@
 - إضافة اعتمادات `http` و`http_parser` مباشرة لأن `StorageService` يستخدمها في الرفع عبر Edge Function.
 - تصحيح `purchase_offer_boost` لإزالة الاعتماد على `offers.ts_upd` غير الموجود، واستخدام `activity_log(act, det)` حسب بنية الجدول الحالية.
 - بقيت ترقية العرض عبر Edge Function `user-offers` فقط، ودالة `purchase_offer_boost` ممنوعة عن `anon/authenticated` وممنوحة لـ `service_role` فقط.
+
+## تحديث 2026-06-28 — تنظيف Analyzer إضافي
+
+- إزالة بقايا imports ودوال/حقول غير مستخدمة في شاشات الإدارة وإضافة العرض وخدمات FCM.
+- تحسين تنسيق شروط OTP/Profile المطلوبة من linter بدون تغيير منطق التوجيه أو المصادقة.
+- تصحيح قراءة قائمة الموظفين في `StaffAdminService` لاستخدام نتيجة `data['staff']` مباشرة.
