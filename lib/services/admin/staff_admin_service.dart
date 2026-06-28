@@ -174,12 +174,22 @@ class StaffAdminService {
 
   Future<Map<String, dynamic>> getStaffStatsInternal(String userUid) async {
     try {
-      final response = await SupabaseService().client.rpc(
-        'get_staff_stats_internal',
-        params: {'p_user_uid': userUid},
+      final token = await AuthService().getStaffSessionToken();
+      final response = await SupabaseService().client.functions.invoke(
+        'admin-dashboard',
+        body: {
+          'action': 'staff_stats',
+          'user_uid': userUid,
+          'staff_session_token': token,
+        },
       );
+      final data = response.data;
+      if (data == null || data['success'] != true) {
+        _setError(data?['error'] ?? 'UNKNOWN');
+        return {};
+      }
       clearError();
-      return Map<String, dynamic>.from(response as Map);
+      return Map<String, dynamic>.from(data['stats'] ?? {});
     } catch (e) {
       _setError(e);
       return {};
