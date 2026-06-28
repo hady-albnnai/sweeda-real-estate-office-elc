@@ -79,15 +79,17 @@ class _RatingDialogState extends State<RatingDialog> {
     setState(() => _sending = true);
     final auth = context.read<AuthProvider>();
     try {
-      await SupabaseService().client.rpc(
-        'create_rating_internal',
-        params: {
-          'p_reviewer_uid': auth.userModel!.uid,
-          'p_target_uid': widget.targetUid,
-          'p_stars': _stars,
-          'p_comment': _commentCtrl.text.trim(),
-        },
-      );
+      // ✅ Secure direct insert — RLS allows when auth.uid() = reviewer_uid
+      // (confirmed in server audit — matches LOGIC_SPEC §5.3)
+      await SupabaseService().client.from('ratings').insert({
+        'reviewer_uid': auth.userModel!.uid,
+        'target_uid': widget.targetUid,
+        'stars': _stars,
+        'comment': _commentCtrl.text.trim().isEmpty
+            ? null
+            : _commentCtrl.text.trim(),
+      });
+
       if (!mounted) return;
       Navigator.pop(context, true);
       ScaffoldMessenger.of(context).showSnackBar(
