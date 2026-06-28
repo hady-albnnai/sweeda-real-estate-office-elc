@@ -85,20 +85,23 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
 
     setState(() => _processing = true);
     try {
-      final res = await SupabaseService().client.rpc(
-        'purchase_offer_boost',
-        params: {
-          'p_uid': user.uid,
-          'p_offer_id': _offer!.id,
-          'p_boost_type': boostType,
+      // ✅ Secure via Edge Function (user-offers) — purchase_offer_boost is locked to service_role
+      final res = await SupabaseService().client.functions.invoke(
+        'user-offers',
+        body: {
+          'action': 'boost',
+          'user_uid': user.uid,
+          'offer_id': _offer!.id,
+          'boost_type': boostType,
         },
       );
 
       if (!mounted) return;
       setState(() => _processing = false);
 
-      final result = res as Map<String, dynamic>?;
-      if (result?['success'] == true) {
+      final data = res.data as Map<String, dynamic>?;
+      final result = data?['result'] as Map<String, dynamic>? ?? data;
+      if (result?['success'] == true || data?['success'] == true) {
         await auth.refreshUser();
         await context.read<OfferProvider>().fetchOffers();
         _snack('✅ تم تفعيل "$label" بنجاح');

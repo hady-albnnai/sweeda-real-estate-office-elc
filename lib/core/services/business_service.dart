@@ -415,12 +415,14 @@ class BusinessService {
       {String? userId}) async {
     try {
       if (userId == null || userId.isEmpty) return false;
-      await _sb.client.rpc('mark_social_published_internal', params: {
-        'p_user_uid': userId,
-        'p_offer_id': offerId,
-        'p_text': text,
+      // ✅ Via user-offers Edge (social_published action)
+      final res = await _sb.client.functions.invoke('user-offers', body: {
+        'action': 'social_published',
+        'user_uid': userId,
+        'offer_id': offerId,
+        'text': text,
       });
-      return true;
+      return res.data?['success'] == true;
     } catch (e) {return false;
     }
   }
@@ -435,13 +437,15 @@ class BusinessService {
     required String uid,
   }) async {
     try {
-      final res = await _sb.client.rpc('check_offer_duplicate', params: {
-        'p_ttl': title,
-        'p_prc': price,
-        'p_loc': loc,
-        'p_usr_id': uid,
+      // ✅ Via user-offers Edge (check_duplicate action)
+      final res = await _sb.client.functions.invoke('user-offers', body: {
+        'action': 'check_duplicate',
+        'user_uid': uid,
+        'title': title,
+        'price': price,
+        'loc': loc,
       });
-      return res == true;
+      return res.data?['is_duplicate'] == true;
     } catch (e) {return false;
     }
   }

@@ -65,14 +65,16 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
     setState(() => _submitting = true);
 
     try {
-      await SupabaseService().client.rpc(
-        'submit_broker_request_internal',
-        params: {
-          'p_user_uid': user.uid,
-          'p_business_name': _businessNameCtrl.text.trim(),
-          'p_category': _category,
-          'p_experience': _experienceCtrl.text.trim(),
-          'p_about': _aboutCtrl.text.trim(),
+      // ✅ Secure via broker-actions Edge Function (submit_request)
+      await SupabaseService().client.functions.invoke(
+        'broker-actions',
+        body: {
+          'action': 'submit_request',
+          'user_uid': user.uid,
+          'business_name': _businessNameCtrl.text.trim(),
+          'category': _category,
+          'experience': _experienceCtrl.text.trim(),
+          'about': _aboutCtrl.text.trim(),
         },
       );
 
