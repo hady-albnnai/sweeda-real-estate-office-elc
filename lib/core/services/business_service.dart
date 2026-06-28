@@ -78,7 +78,19 @@ class BusinessService {
     }
     final pts = _ptsFromConfig(config, eventKey, fallback);
     if (pts == 0) return false;
-    return awardPointsSafe(uid, eventKey, pts);
+
+    // ✅ Via user-rewards Edge Function
+    try {
+      final res = await _sb.client.functions.invoke('user-rewards', body: {
+        'action': 'award_points',
+        'user_uid': uid,
+        'event_key': eventKey,
+        'points': pts,
+      });
+      return res.data?['success'] == true;
+    } catch (_) {
+      return false;
+    }
   }
 
   int _ptsFromConfig(ConfigModel? config, String key, int fallback) {
@@ -353,14 +365,14 @@ class BusinessService {
       String uid, ConfigModel? config) async {
     try {
       final strkPts = _ptsFromConfig(config, 'strk', 50);
-      final result = await _sb.client.rpc(
-        'register_daily_streak_internal',
-        params: {
-          'p_user_uid': uid,
-          'p_points': strkPts,
-        },
-      );
-      return Map<String, dynamic>.from(result as Map);
+      // ✅ Via user-rewards Edge Function (safe)
+      final res = await _sb.client.functions.invoke('user-rewards', body: {
+        'action': 'daily_streak',
+        'user_uid': uid,
+        'points': strkPts,
+      });
+      final data = res.data as Map<String, dynamic>?;
+      return data?['data'] ?? {'streak': 0, 'changed': false, 'awarded': false};
     } catch (e) {
       return {'streak': 0, 'changed': false, 'awarded': false};
     }
