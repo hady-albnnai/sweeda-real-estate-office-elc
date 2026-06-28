@@ -101,32 +101,59 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _handleForgotPassword() async {
     final phone = _loginUserCtrl.text.trim();
-    if (phone.length != 10 || !phone.startsWith('09')) { _snack('أدخل رقم هاتفك في خانة المستخدم أولاً'); return; }
+    if (phone.length != 10 || !phone.startsWith('09')) {
+      _snack('أدخل رقم هاتفك في خانة المستخدم أولاً');
+      return;
+    }
     setState(() => _isBusy = true);
     final ok = await context.read<AuthProvider>().sendSMSOTP(phone);
-    if (mounted) setState(() => _isBusy = false);
-    if (ok) { _snack('تم إرسال كود الاستعادة SMS'); context.push('/otp'); }
-    else _snack('فشل إرسال رسالة الاستعادة');
+    if (mounted) {
+      setState(() => _isBusy = false);
+    }
+    if (ok) {
+      _snack('تم إرسال كود الاستعادة SMS');
+      context.push('/otp');
+    } else {
+      _snack('فشل إرسال رسالة الاستعادة');
+    }
   }
 
   Future<void> _handleSignupPhone() async {
     final phone = _signupPhoneCtrl.text.trim();
-    if (phone.length != 10 || !phone.startsWith('09')) { _snack('أدخل رقم هاتف صحيح'); return; }
+    if (phone.length != 10 || !phone.startsWith('09')) {
+      _snack('أدخل رقم هاتف صحيح');
+      return;
+    }
     setState(() => _isBusy = true);
     final ok = await context.read<AuthProvider>().sendSMSOTP(phone);
-    if (mounted) setState(() => _isBusy = false);
-    if (ok) { _snack('تم إرسال رمز التفعيل SMS'); context.push('/otp'); }
-    else _snack('فشل إرسال SMS التفعيل');
+    if (mounted) {
+      setState(() => _isBusy = false);
+    }
+    if (ok) {
+      _snack('تم إرسال رمز التفعيل SMS');
+      context.push('/otp');
+    } else {
+      _snack('فشل إرسال SMS التفعيل');
+    }
   }
 
   Future<void> _handleSignupEmail() async {
     final email = _signupEmailCtrl.text.trim();
-    if (email.isEmpty || !email.contains('@')) { _snack('أدخل بريداً صحيحاً'); return; }
+    if (email.isEmpty || !email.contains('@')) {
+      _snack('أدخل بريداً صحيحاً');
+      return;
+    }
     setState(() => _isBusy = true);
     final ok = await context.read<AuthProvider>().sendEmailMagicLink(email);
-    if (mounted) setState(() => _isBusy = false);
-    if (ok) { _snack('تم إرسال رابط التفعيل لبريدك'); context.push('/check-email'); }
-    else _snack('فشل إرسال رابط الإيميل');
+    if (mounted) {
+      setState(() => _isBusy = false);
+    }
+    if (ok) {
+      _snack('تم إرسال رابط التفعيل لبريدك');
+      context.push('/check-email');
+    } else {
+      _snack('فشل إرسال رابط الإيميل');
+    }
   }
 
   @override
@@ -359,8 +386,107 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildStatTile({required IconData icon, required String value, required String label, required Color color}) => Container(padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12), decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(16), border: Border.all(color: color.withValues(alpha: 0.2))), child: Row(children: [Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)), child: Icon(icon, color: color, size: 22)), const SizedBox(width: 10), Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(value, style: const TextStyle(color: AppTheme.textWhite, fontSize: 18, fontWeight: FontWeight.bold)), Text(label, style: TextStyle(color: AppTheme.textGrey.withValues(alpha: 0.7), fontSize: 11))])]));
   Widget _buildActivityStats(UserModel u) => Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.15))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(children: [Icon(Icons.analytics_outlined, color: AppTheme.primaryGold.withValues(alpha: 0.8), size: 18), const SizedBox(width: 8), const Text('إحصائيات النشاط', style: TextStyle(color: AppTheme.primaryGold, fontSize: 14, fontWeight: FontWeight.w600))]), const SizedBox(height: 14), Row(children: [_buildMiniStat('عروض', u.stats['off'] ?? 0, Icons.home_work_outlined), _buildMiniStat('طلبات', u.stats['req'] ?? 0, Icons.assignment_outlined), _buildMiniStat('مواعيد', u.stats['app'] ?? 0, Icons.calendar_today_outlined), _buildMiniStat('صفقات', u.stats['dl'] ?? 0, Icons.handshake_outlined)])]));
   Widget _buildMiniStat(String l, int c, IconData i) => Expanded(child: Column(children: [Icon(i, color: AppTheme.primaryGold.withValues(alpha: 0.7), size: 20), const SizedBox(height: 6), Text('$c', style: const TextStyle(color: AppTheme.textWhite, fontSize: 16, fontWeight: FontWeight.bold)), const SizedBox(height: 2), Text(l, style: TextStyle(color: AppTheme.textGrey.withValues(alpha: 0.6), fontSize: 10))]));
-  Widget _buildStaffStats(UserModel user) { if (_loadingStats) return const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator(color: AppTheme.primaryGold))); if (_staffStats == null) return const SizedBox.shrink(); List<_StaffStatItem> items = []; if (user.isPhotographer) items = [_StaffStatItem(Icons.check_circle_outline, 'مهام مكتملة', _staffStats!['completed_tasks'] ?? 0, Colors.green)]; else if (user.isSupervisor) items = [_StaffStatItem(Icons.check_circle_outline, 'زيارات منفذة', _staffStats!['completed_visits'] ?? 0, Colors.green)]; else if (user.isEmployee) items = [_StaffStatItem(Icons.rate_review_outlined, 'عروض مراجَعة', _staffStats!['reviewed_offers'] ?? 0, Colors.blue)]; else if (user.isSenior || user.isManager) items = [_StaffStatItem(Icons.handshake_outlined, 'صفقات', _staffStats!['total_deals'] ?? 0, Colors.green), _StaffStatItem(Icons.payments_outlined, 'مدفوعات', _staffStats!['approved_payments'] ?? 0, Colors.blue), _StaffStatItem(Icons.verified_user_outlined, 'موثقون', _staffStats!['verified_users'] ?? 0, Colors.teal)]; return Wrap(spacing: 10, runSpacing: 10, children: items.map((it) => Container(width: (MediaQuery.of(context).size.width - 60) / 2, padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: it.color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12), border: Border.all(color: it.color.withValues(alpha: 0.2))), child: Row(children: [Icon(it.icon, color: it.color, size: 18), const SizedBox(width: 8), Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('${it.value}', style: const TextStyle(color: AppTheme.textWhite, fontSize: 16, fontWeight: FontWeight.bold)), Text(it.label, style: const TextStyle(color: AppTheme.textGrey, fontSize: 10))])]))).toList()); }
-  Widget _buildMenuSection(UserModel u) => Column(children: [_buildMenuItem(i: Icons.person_outline, t: u.isAdmin ? 'بياناتي الوظيفية' : 'معلومات الحساب', s: u.isAdmin ? 'بيانات التعيين والتحقق الوظيفي ✅' : 'معلوماتك الشخصية والتوثيق', o: () => context.push('/user/account-info')), _buildMenuItem(i: Icons.star_outline, t: 'تقييماتي المستلمة', s: 'شاهد تقييمات العملاء لك', o: () => context.push('/user/my-ratings')), if (u.isAdmin) _buildMenuItem(i: Icons.dashboard_outlined, t: 'لوحة التحكم الإدارية', s: 'الانتقال لواجهة العمليات', o: () { if (u.isPhotographer) context.go('/photographer/tasks'); else if (u.isSupervisor) context.go('/executor/tasks'); else if (u.isEmployee) context.go('/employee/home'); else context.go('/admin/dashboard'); })]);
+  Widget _buildStaffStats(UserModel user) {
+    if (_loadingStats) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: CircularProgressIndicator(color: AppTheme.primaryGold),
+        ),
+      );
+    }
+    if (_staffStats == null) {
+      return const SizedBox.shrink();
+    }
+
+    List<_StaffStatItem> items = [];
+    if (user.isPhotographer) {
+      items = [
+        _StaffStatItem(Icons.check_circle_outline, 'مهام مكتملة',
+            _staffStats!['completed_tasks'] ?? 0, Colors.green),
+      ];
+    } else if (user.isSupervisor) {
+      items = [
+        _StaffStatItem(Icons.check_circle_outline, 'زيارات منفذة',
+            _staffStats!['completed_visits'] ?? 0, Colors.green),
+      ];
+    } else if (user.isEmployee) {
+      items = [
+        _StaffStatItem(Icons.rate_review_outlined, 'عروض مراجَعة',
+            _staffStats!['reviewed_offers'] ?? 0, Colors.blue),
+      ];
+    } else if (user.isSenior || user.isManager) {
+      items = [
+        _StaffStatItem(Icons.handshake_outlined, 'صفقات',
+            _staffStats!['total_deals'] ?? 0, Colors.green),
+        _StaffStatItem(Icons.payments_outlined, 'مدفوعات',
+            _staffStats!['approved_payments'] ?? 0, Colors.blue),
+        _StaffStatItem(Icons.verified_user_outlined, 'موثقون',
+            _staffStats!['verified_users'] ?? 0, Colors.teal),
+      ];
+    }
+
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: items
+          .map((it) => Container(
+                width: (MediaQuery.of(context).size.width - 60) / 2,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: it.color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: it.color.withValues(alpha: 0.2)),
+                ),
+                child: Row(children: [
+                  Icon(it.icon, color: it.color, size: 18),
+                  const SizedBox(width: 8),
+                  Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('${it.value}',
+                        style: const TextStyle(
+                            color: AppTheme.textWhite,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold)),
+                    Text(it.label,
+                        style: const TextStyle(
+                            color: AppTheme.textGrey, fontSize: 10)),
+                  ]),
+                ]),
+              ))
+          .toList(),
+    );
+  }
+
+  Widget _buildMenuSection(UserModel u) => Column(children: [
+        _buildMenuItem(
+            i: Icons.person_outline,
+            t: u.isAdmin ? 'بياناتي الوظيفية' : 'معلومات الحساب',
+            s: u.isAdmin
+                ? 'بيانات التعيين والتحقق الوظيفي ✅'
+                : 'معلوماتك الشخصية والتوثيق',
+            o: () => context.push('/user/account-info')),
+        _buildMenuItem(
+            i: Icons.star_outline,
+            t: 'تقييماتي المستلمة',
+            s: 'شاهد تقييمات العملاء لك',
+            o: () => context.push('/user/my-ratings')),
+        if (u.isAdmin)
+          _buildMenuItem(
+              i: Icons.dashboard_outlined,
+              t: 'لوحة التحكم الإدارية',
+              s: 'الانتقال لواجهة العمليات',
+              o: () {
+                if (u.isPhotographer) {
+                  context.go('/photographer/tasks');
+                } else if (u.isSupervisor) {
+                  context.go('/executor/tasks');
+                } else if (u.isEmployee) {
+                  context.go('/employee/home');
+                } else {
+                  context.go('/admin/dashboard');
+                }
+              }),
+      ]);
   Widget _buildMenuItem({required IconData i, required String t, required String s, required VoidCallback o}) => ListTile(onTap: o, leading: Icon(i, color: AppTheme.primaryGold), title: Text(t, style: const TextStyle(color: AppTheme.textWhite, fontSize: 14, fontWeight: FontWeight.bold)), subtitle: Text(s, style: const TextStyle(color: AppTheme.textGrey, fontSize: 11)), trailing: const Icon(Icons.chevron_right, color: AppTheme.textGrey, size: 18));
   Widget _buildLogoutButton(AuthProvider a) => OutlinedButton.icon(onPressed: () { a.logout(); context.go('/user/profile'); }, icon: const Icon(Icons.logout, color: Colors.red), label: const Text('تسجيل الخروج', style: TextStyle(color: Colors.red)), style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.red), minimumSize: const Size(double.infinity, 50)));
 }
