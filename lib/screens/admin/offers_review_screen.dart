@@ -146,66 +146,60 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
     return showDialog<String>(
       context: context,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setS) => AlertDialog(
-          backgroundColor: AppTheme.surfaceBlack,
-          title: const Text('سبب الرفض',
-              style: TextStyle(color: AppTheme.textWhite)),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                
-                  groupValue: selected,
-                  onChanged: (value) => setS(() => selected = value),
-                  child: Column(
-                    children: presets
-                        .map((p) => RadioListTile<String>(
-                              title: Text(p,
-                                  style: const TextStyle(
-                                      color: AppTheme.textWhite)),
-                              value: p,
-                              activeColor: AppTheme.primaryGold,
-                              dense: true,
-                              contentPadding: EdgeInsets.zero,
-                            ))
-                        .toList(),
+        builder: (ctx, setS) {
+          return AlertDialog(
+            backgroundColor: AppTheme.surfaceBlack,
+            title: const Text('سبب الرفض',
+                style: TextStyle(color: AppTheme.textWhite)),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ...presets.map((p) => RadioListTile<String>(
+                        title: Text(p,
+                            style: const TextStyle(color: AppTheme.textWhite)),
+                        value: p,
+                        groupValue: selected,
+                        onChanged: (value) => setS(() => selected = value),
+                        activeColor: AppTheme.primaryGold,
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                      )),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: ctrl,
+                    maxLines: 2,
+                    style: const TextStyle(color: AppTheme.textWhite),
+                    decoration: const InputDecoration(
+                      hintText: 'تفاصيل إضافية (اختياري)',
+                      border: OutlineInputBorder(),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: ctrl,
-                  maxLines: 2,
-                  style: const TextStyle(color: AppTheme.textWhite),
-                  decoration: const InputDecoration(
-                    hintText: 'تفاصيل إضافية (اختياري)',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('إلغاء',
-                  style: TextStyle(color: AppTheme.textGrey)),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (selected == null) return;
-                final extra = ctrl.text.trim();
-                final result =
-                    extra.isEmpty ? selected! : '$selected — $extra';
-                Navigator.pop(ctx, result);
-              },
-              style:
-                  ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: const Text('رفض',
-                  style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('إلغاء',
+                    style: TextStyle(color: AppTheme.textGrey)),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  if (selected == null) return;
+                  final extra = ctrl.text.trim();
+                  final result =
+                      extra.isEmpty ? selected! : '$selected — $extra';
+                  Navigator.pop(ctx, result);
+                },
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                child: const Text('رفض',
+                    style: TextStyle(color: Colors.white)),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
