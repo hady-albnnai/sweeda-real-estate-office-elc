@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/request_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/config_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/services/business_service.dart';
 import '../../core/constants/db_constants.dart';
