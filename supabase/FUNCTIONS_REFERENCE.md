@@ -347,19 +347,24 @@ final ok = await client.rpc('apply_referral', params: {
 ```
 
 ```dart
-// Flutter
-final res = await client.rpc('purchase_offer_boost', params: {
-  'p_uid': uid,
-  'p_offer_id': offerId,
-  'p_boost_type': 'pin',
+// Flutter يجب أن يمر عبر Edge Function user-offers وليس RPC مباشر.
+final res = await Supabase.instance.client.functions.invoke('user-offers', body: {
+  'action': 'purchase_boost',
+  'user_uid': uid,
+  'offer_id': offerId,
+  'boost_type': 'pin',
 });
-if (res['success'] == true) {
-  print('New balance: ${res['new_balance']}');
+final data = res.data as Map;
+if (data['success'] == true) {
+  // data['new_balance'] يحوي الرصيد الجديد
 }
 ```
 
-**ملاحظات منطقية:**
+**ملاحظات منطقية وأمنية:**
 - الكلفة لا تُقبل من العميل؛ السيرفر يحسبها من `app_config.spd`.
+- الدالة ممنوعة عن `anon/authenticated` وممنوحة لـ `service_role` فقط؛ التطبيق يصل إليها عبر Edge Function `user-offers`.
+- تم حذف أي اعتماد على `offers.ts_upd` لأن العمود غير موجود في جدول `offers`.
+- يتم التسجيل في `activity_log` بصيغة الجدول الحالية: `act=20` و`det` نصي.
 - إذا كانت `auth.uid()` متاحة، يجب أن تطابق `p_uid`.
 - تجديد عرض مرفوض (`sts=3`) مرفوض من السيرفر.
 

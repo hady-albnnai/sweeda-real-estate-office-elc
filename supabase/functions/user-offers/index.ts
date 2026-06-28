@@ -144,7 +144,8 @@ serve(async (req) => {
         p_boost_type: boostType,
       });
       if (error) return json({ success: false, error: error.message }, 400);
-      return json({ success: data === true });
+      const result = (data ?? {}) as Record<string, unknown>;
+      return json({ ...result, success: result.success === true });
     }
 
     if (action === "broker_offers") {

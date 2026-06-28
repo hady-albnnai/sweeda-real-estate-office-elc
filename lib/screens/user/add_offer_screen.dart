@@ -1,18 +1,14 @@
-import '../../models/user_model.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../providers/offer_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/config_provider.dart';
 import '../../core/constants/db_constants.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/services/business_service.dart';
-import '../../core/network/supabase_service.dart';
 import '../../models/offer_model.dart';
 import '../../services/storage_service.dart';
 import '../../widgets/location_picker.dart';
@@ -98,7 +94,6 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   }
 
   final _storage = StorageService();
-  final _biz = BusinessService();
 
   @override
   void initState() {
@@ -138,8 +133,9 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
 
   void _showPledgeDialog() {
     final config = context.read<ConfigProvider>().config;
+    final texts = config?.texts ?? const <String, dynamic>{};
     const defaultPledge = 'إقرار وتعهد إلكتروني — المكتب العقاري الالكتروني\n\nأقر أنا الموقع أدناه بموجب هذا الإقرار والتعهد بما يلي:\n1. أن جميع البيانات والمعلومات المقدمة صحيحة ودقيقة.\n2. أنني المالك الشرعي للعقار/السيارة أو مفوض قانوناً.\n3. أن تقديم أي بيانات كاذبة يعرضني للمسؤولية القانونية.';
-    final pledgeText = config?.data?['txts']?['plg']?.toString() ?? defaultPledge;
+    final pledgeText = texts['plg']?.toString() ?? defaultPledge;
     showDialog(context: context, builder: (_) => AlertDialog(backgroundColor: AppTheme.surfaceBlack, title: const Text('الإقرار والتعهد', style: TextStyle(color: AppTheme.textWhite)), content: SingleChildScrollView(child: Text(pledgeText, style: const TextStyle(color: AppTheme.textGrey, fontSize: 14, height: 1.6))), actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('إغلاق'))]));
   }
 
@@ -152,7 +148,8 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
 
   Future<void> _openWhatsAppVideoGroup() async {
     final config = context.read<ConfigProvider>().config;
-    final groupUrl = config?.data?['txts']?['videoWhatsAppGroup']?.toString();
+    final texts = config?.texts ?? const <String, dynamic>{};
+    final groupUrl = texts['videoWhatsAppGroup']?.toString();
     final uri = Uri.parse(groupUrl ?? 'https://wa.me/');
     if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
@@ -160,7 +157,6 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   Future<void> _submit() async {
     final auth = context.read<AuthProvider>();
     final offerProv = context.read<OfferProvider>();
-    final configProv = context.read<ConfigProvider>();
     final user = auth.userModel;
     if (user == null) { _snack('يجب تسجيل الدخول'); return; }
 
@@ -227,10 +223,10 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
 
   Step _step1() {
     final config = context.read<ConfigProvider>().config;
-    final cityItems = (config?.data?['locs'] as List? ?? []).map((e) => DropdownMenuItem<String>(value: e.toString(), child: Text(e.toString()))).toList();
+    final cityItems = (config?.locations ?? const []).map((e) => DropdownMenuItem<String>(value: e.toString(), child: Text(e.toString()))).toList();
     cityItems.add(const DropdownMenuItem(value: _customCityOption, child: Text('آخر (إدخال حر)')));
 
-    final Map<String, dynamic> catsSource = _selectedType == 1 ? (config?.data?['catVeh'] ?? {}) : (config?.data?['catProp'] ?? {});
+    final Map<String, dynamic> catsSource = _selectedType == 1 ? (config?.vehicleCategories ?? const {}) : (config?.propertyCategories ?? const {});
     final mainCatItems = catsSource.entries.map((e) => DropdownMenuItem<int>(value: int.tryParse(e.key), child: Text(e.value['nm']?.toString() ?? ''))).toList();
 
     return Step(
@@ -401,9 +397,9 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
 
   Step _step4() {
     final config = context.watch<ConfigProvider>().config;
-    final Map<String, dynamic> rawDocTp = config?.data?['docTp'] ?? {};
-    final Map<String, dynamic> rawCarDocTp = config?.data?['carDocTp'] ?? {};
-    final Map<String, dynamic> rawPlateTp = config?.data?['plateTp'] ?? {};
+    final Map<String, dynamic> rawDocTp = config?.documentTypes ?? const {};
+    final Map<String, dynamic> rawCarDocTp = config?.carDocumentTypes ?? const {};
+    final Map<String, dynamic> rawPlateTp = config?.plateTypes ?? const {};
 
     // فلترة السندات لمنع تداخل السيارات بالعقارات
     final propertyDocs = rawDocTp.entries

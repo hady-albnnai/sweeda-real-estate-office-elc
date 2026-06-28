@@ -279,3 +279,12 @@
 - ربط الحجز من تفاصيل الطلب بـ `appointments.req_id` ثم إغلاق الطلب تلقائياً عند موافقة الإدارة على إتمام معاملة مرتبطة.
 - تم الحفاظ على إغلاق RPCs الحساسة: الدوال الجديدة/المعدلة ممنوعة عن `anon/authenticated` وتعمل عبر Edge Functions فقط.
 - تم تصحيح حساب حصة الطلبات ليشمل الطلبات المفتوحة فقط، وتصحيح مطابقة العرض المنشور مع الطلب (`requests.elm = offers.typ` و`requests.typ = offers.trx`).
+
+---
+
+## تحديث 2026-06-28 — تنظيف وتحسينات بعد دورة حياة الطلب
+
+- تنظيف كود Flutter من أوامر الطباعة النهائية `print/debugPrint` وإزالة imports/متغيرات غير مستخدمة واضحة.
+- إضافة اعتمادات `http` و`http_parser` مباشرة لأن `StorageService` يستخدمها في الرفع عبر Edge Function.
+- تصحيح `purchase_offer_boost` لإزالة الاعتماد على `offers.ts_upd` غير الموجود، واستخدام `activity_log(act, det)` حسب بنية الجدول الحالية.
+- بقيت ترقية العرض عبر Edge Function `user-offers` فقط، ودالة `purchase_offer_boost` ممنوعة عن `anon/authenticated` وممنوحة لـ `service_role` فقط.
