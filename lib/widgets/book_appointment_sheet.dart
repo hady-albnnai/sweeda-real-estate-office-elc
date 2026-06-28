@@ -233,9 +233,9 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
-              color: AppTheme.primaryGold.withValues(alpha: 0.1),
+              color: AppTheme.primaryGold.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.4)),
+              border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
             ),
             child: const Row(children: [
               Icon(Icons.business_center, color: AppTheme.primaryGold, size: 18),
@@ -313,13 +313,13 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
                         color: selected
-                            ? AppTheme.primaryGold.withValues(alpha: 0.2)
+                            ? AppTheme.primaryGold.withOpacity(0.2)
                             : AppTheme.surfaceBlack,
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: selected
                               ? AppTheme.primaryGold
-                              : AppTheme.textGrey.withValues(alpha: 0.4),
+                              : AppTheme.textGrey.withOpacity(0.4),
                         ),
                       ),
                       child: Text(

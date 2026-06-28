@@ -65,14 +65,14 @@ class _DealsManagementScreenState extends State<DealsManagementScreen> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppTheme.primaryGold.withValues(alpha: 0.25),
+                  AppTheme.primaryGold.withOpacity(0.25),
                   AppTheme.surfaceBlack
                 ],
                 begin: Alignment.topRight,
                 end: Alignment.bottomLeft,
               ),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.4)),
+              border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
             ),
             child: Row(
               children: [
@@ -143,7 +143,7 @@ class _DealsManagementScreenState extends State<DealsManagementScreen> {
         selectedColor: AppTheme.primaryGold,
         backgroundColor: AppTheme.surfaceBlack,
         checkmarkColor: AppTheme.deepBlack,
-        side: BorderSide(color: AppTheme.primaryGold.withValues(alpha: 0.3)),
+        side: BorderSide(color: AppTheme.primaryGold.withOpacity(0.3)),
         onSelected: (_) => setState(() => _filter = value),
       ),
     );
@@ -157,7 +157,7 @@ class _DealsManagementScreenState extends State<DealsManagementScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.15)),
+        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -171,10 +171,10 @@ class _DealsManagementScreenState extends State<DealsManagementScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                 decoration: BoxDecoration(
-                  color: (done ? Colors.green : Colors.orange).withValues(alpha: 0.15),
+                  color: (done ? Colors.green : Colors.orange).withOpacity(0.15),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                      color: (done ? Colors.green : Colors.orange).withValues(alpha: 0.5)),
+                      color: (done ? Colors.green : Colors.orange).withOpacity(0.5)),
                 ),
                 child: Text(done ? 'مكتملة' : 'نشطة',
                     style: TextStyle(

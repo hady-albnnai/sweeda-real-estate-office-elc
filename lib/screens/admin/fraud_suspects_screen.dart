@@ -140,7 +140,7 @@ class _FraudSuspectsScreenState extends State<FraudSuspectsScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: tone.withValues(alpha: 0.5)),
+        border: Border.all(color: tone.withOpacity(0.5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -497,7 +497,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
             Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: AppTheme.primaryGold.withValues(alpha: 0.2),
+                  backgroundColor: AppTheme.primaryGold.withOpacity(0.2),
                   child: Text(
                     user.nm.isNotEmpty ? user.nm[0] : '?',
                     style: const TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold),
@@ -520,7 +520,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: roleColor.withValues(alpha: 0.2),
+                          color: roleColor.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -594,8 +594,8 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: isActive 
-                    ? Colors.green.withValues(alpha: 0.2) 
-                    : Colors.red.withValues(alpha: 0.2),
+                    ? Colors.green.withOpacity(0.2) 
+                    : Colors.red.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(

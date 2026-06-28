@@ -45,7 +45,7 @@ class PasswordResultDialog extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppTheme.deepBlack,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.45)),
+              border: Border.all(color: AppTheme.primaryGold.withOpacity(0.45)),
             ),
             child: SelectableText(
               password,

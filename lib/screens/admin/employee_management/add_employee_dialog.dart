@@ -178,7 +178,7 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
                   decoration: BoxDecoration(
                     color: AppTheme.surfaceBlack,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppTheme.textGrey.withValues(alpha: 0.3)),
+                    border: Border.all(color: AppTheme.textGrey.withOpacity(0.3)),
                   ),
                   child: Row(
                     children: [
@@ -245,9 +245,9 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryGold.withValues(alpha: 0.08),
+                  color: AppTheme.primaryGold.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.25)),
+                  border: Border.all(color: AppTheme.primaryGold.withOpacity(0.25)),
                 ),
                 child: const Text(
                   'سيتم توليد كلمة سر تلقائياً وعرضها مرة واحدة بعد الإضافة.',

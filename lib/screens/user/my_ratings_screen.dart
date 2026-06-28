@@ -105,7 +105,7 @@ class _MyRatingsScreenState extends State<MyRatingsScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.star_outline,
-              color: AppTheme.textGrey.withValues(alpha: 0.4), size: 80),
+              color: AppTheme.textGrey.withOpacity(0.4), size: 80),
           const SizedBox(height: 12),
           const Text('لم تستلم أي تقييم بعد',
               style: TextStyle(color: AppTheme.textGrey, fontSize: 16)),
@@ -207,7 +207,7 @@ class _MyRatingsScreenState extends State<MyRatingsScreen> {
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-            color: AppTheme.primaryGold.withValues(alpha: 0.2), width: 1),
+            color: AppTheme.primaryGold.withOpacity(0.2), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

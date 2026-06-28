@@ -111,13 +111,13 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.15)),
+        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.15)),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         onTap: () => context.push('/admin/user/${u.uid}'),
         leading: CircleAvatar(
-          backgroundColor: AppTheme.primaryGold.withValues(alpha: 0.15),
+          backgroundColor: AppTheme.primaryGold.withOpacity(0.15),
           child: Text(u.nm.isNotEmpty ? u.nm[0] : '؟',
               style: const TextStyle(color: AppTheme.primaryGold)),
         ),
@@ -184,7 +184,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
       decoration: BoxDecoration(
-        color: c.withValues(alpha: 0.15),
+        color: c.withOpacity(0.15),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(t, style: TextStyle(color: c, fontSize: 10)),
@@ -237,7 +237,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
         title: const Text('تغيير الدور', style: TextStyle(color: AppTheme.primaryGold)),
-        content: RadioGroup<int>(
+        content: 
           groupValue: u.role,
           onChanged: (val) async {
             if (val == null) return;

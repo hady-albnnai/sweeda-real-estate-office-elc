@@ -133,7 +133,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
         selectedColor: AppTheme.primaryGold,
         backgroundColor: AppTheme.surfaceBlack,
         checkmarkColor: AppTheme.deepBlack,
-        side: BorderSide(color: AppTheme.primaryGold.withValues(alpha: 0.3)),
+        side: BorderSide(color: AppTheme.primaryGold.withOpacity(0.3)),
         onSelected: (_) => setState(() => _filter = value),
       ),
     );
@@ -157,7 +157,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.15)),
+        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -173,9 +173,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                 decoration: BoxDecoration(
-                  color: _stsColor(p.sts).withValues(alpha: 0.15),
+                  color: _stsColor(p.sts).withOpacity(0.15),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: _stsColor(p.sts).withValues(alpha: 0.5)),
+                  border: Border.all(color: _stsColor(p.sts).withOpacity(0.5)),
                 ),
                 child: Text(_stsNames[p.sts] ?? '—',
                     style: TextStyle(color: _stsColor(p.sts), fontSize: 11)),

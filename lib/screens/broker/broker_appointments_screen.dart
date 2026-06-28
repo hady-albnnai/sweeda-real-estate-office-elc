@@ -263,7 +263,7 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: status.$2.withValues(alpha: 0.3)),
+        border: Border.all(color: status.$2.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -272,7 +272,7 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: status.$2.withValues(alpha: 0.15),
+              color: status.$2.withOpacity(0.15),
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(13)),
             ),
@@ -355,10 +355,10 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryGold.withValues(alpha: 0.07),
+                    color: AppTheme.primaryGold.withOpacity(0.07),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                        color: AppTheme.primaryGold.withValues(alpha: 0.3)),
+                        color: AppTheme.primaryGold.withOpacity(0.3)),
                   ),
                   child: const Row(children: [
                     Icon(Icons.business_center,

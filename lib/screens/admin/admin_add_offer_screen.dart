@@ -323,7 +323,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: Colors.green.withValues(alpha: 0.15),
+              color: Colors.green.withOpacity(0.15),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
@@ -341,9 +341,9 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
             padding: const EdgeInsets.all(10),
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
-              color: Colors.amber.withValues(alpha: 0.1),
+              color: Colors.amber.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+              border: Border.all(color: Colors.amber.withOpacity(0.4)),
             ),
             child: const Row(children: [
               Icon(Icons.admin_panel_settings, color: Colors.amber, size: 16),
@@ -382,7 +382,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
                               dense: true,
                               selected: selected,
                               selectedTileColor:
-                                  AppTheme.primaryGold.withValues(alpha: 0.1),
+                                  AppTheme.primaryGold.withOpacity(0.1),
                               leading: CircleAvatar(
                                 backgroundColor: AppTheme.primaryGold,
                                 radius: 16,
@@ -461,7 +461,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
               (v) => setState(() => _selectedTrans = v == 'بيع' ? 0 : 1)),
           const SizedBox(height: 16),
           DropdownButtonFormField<int>(
-            initialValue: _selectedMainCat,
+            value: _selectedMainCat,
             dropdownColor: AppTheme.surfaceBlack,
             style: const TextStyle(color: AppTheme.textWhite),
             decoration: const InputDecoration(
@@ -480,7 +480,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
           if (_selectedMainCat != null) ...[
             const SizedBox(height: 12),
             DropdownButtonFormField<int>(
-              initialValue: _selectedSubCat,
+              value: _selectedSubCat,
               dropdownColor: AppTheme.surfaceBlack,
               style: const TextStyle(color: AppTheme.textWhite, fontSize: 14),
               decoration: const InputDecoration(
@@ -520,7 +520,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
-            initialValue: _selectedCityArea,
+            value: _selectedCityArea,
             dropdownColor: AppTheme.surfaceBlack,
             style: const TextStyle(color: AppTheme.textWhite),
             decoration: const InputDecoration(
@@ -592,7 +592,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
             Expanded(
               flex: 2,
               child: DropdownButtonFormField<int>(
-                initialValue: _cur,
+                value: _cur,
                 dropdownColor: AppTheme.surfaceBlack,
                 style: const TextStyle(color: AppTheme.textWhite),
                 decoration: const InputDecoration(border: OutlineInputBorder()),
@@ -718,7 +718,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
                     color: enabled
-                        ? AppTheme.primaryGold.withValues(alpha: 0.5)
+                        ? AppTheme.primaryGold.withOpacity(0.5)
                         : Colors.white12,
                   ),
                 ),
@@ -854,7 +854,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
                 color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
         const SizedBox(height: 6),
         DropdownButtonFormField<int>(
-          initialValue: _selectedDocType,
+          value: _selectedDocType,
           dropdownColor: AppTheme.surfaceBlack,
           style: const TextStyle(color: AppTheme.textWhite),
           decoration: const InputDecoration(border: OutlineInputBorder()),
@@ -882,8 +882,8 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
                 color: _docImage != null
-                    ? Colors.green.withValues(alpha: 0.4)
-                    : AppTheme.primaryGold.withValues(alpha: 0.3),
+                    ? Colors.green.withOpacity(0.4)
+                    : AppTheme.primaryGold.withOpacity(0.3),
               ),
             ),
             child: _docImage == null
@@ -915,9 +915,9 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Colors.amber.withValues(alpha: 0.08),
+            color: Colors.amber.withOpacity(0.08),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+            border: Border.all(color: Colors.amber.withOpacity(0.3)),
           ),
           child: Row(children: [
             const Icon(Icons.info_outline, color: Colors.amber, size: 16),
@@ -1061,7 +1061,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
   Widget _buildLocationAutocomplete() {
     final locs = _cityOptions();
     return Autocomplete<String>(
-      initialValue: TextEditingValue(text: _locCtrl.text),
+      value: TextEditingValue(text: _locCtrl.text),
       optionsBuilder: (v) {
         if (locs.isEmpty) return const Iterable<String>.empty();
         if (v.text.isEmpty) return locs.take(20);
@@ -1090,7 +1090,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
         Text(label, style: const TextStyle(color: AppTheme.textGrey)),
         const SizedBox(height: 5),
         DropdownButtonFormField<String>(
-          initialValue: null,
+          value: null,
           items: items
               .map((i) => DropdownMenuItem(value: i, child: Text(i)))
               .toList(),

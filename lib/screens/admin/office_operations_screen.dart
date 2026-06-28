@@ -114,7 +114,6 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
                     physics: const NeverScrollableScrollPhysics(),
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
-                    mainAxisExtent: 118,
                     children: [
                       if (PermissionService.has(auth.userModel, PermissionKeys.manageAppointments))
                         _shortcut(Icons.calendar_month_outlined, 'المواعيد', '/admin/appointments'),
@@ -134,7 +133,6 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
                     physics: const NeverScrollableScrollPhysics(),
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
-                    mainAxisExtent: 112,
                     children: [
                       _stat('المستخدمون', _stats['totalUsers'] ?? 0, Icons.people_outline),
                       _stat('العروض', _stats['totalOffers'] ?? 0, Icons.home_work_outlined),
@@ -154,7 +152,7 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.25)),
+        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.25)),
       ),
       child: Row(
         children: [
@@ -162,7 +160,7 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
             width: 54,
             height: 54,
             decoration: BoxDecoration(
-              color: AppTheme.primaryGold.withValues(alpha: 0.12),
+              color: AppTheme.primaryGold.withOpacity(0.12),
               borderRadius: BorderRadius.circular(16),
             ),
             child: const Icon(Icons.support_agent, color: AppTheme.primaryGold, size: 30),
@@ -213,18 +211,18 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withValues(alpha: 0.25)),
+        border: Border.all(color: color.withOpacity(0.25)),
       ),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: color.withValues(alpha: 0.12),
+          backgroundColor: color.withOpacity(0.12),
           child: Icon(icon, color: color),
         ),
         title: Text(title, style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.w600)),
         trailing: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.15),
+            color: color.withOpacity(0.15),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text('$count', style: TextStyle(color: color, fontWeight: FontWeight.bold)),
@@ -243,7 +241,7 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
         decoration: BoxDecoration(
           color: AppTheme.surfaceBlack,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.18)),
+          border: Border.all(color: AppTheme.primaryGold.withOpacity(0.18)),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -263,7 +261,7 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.16)),
+        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.16)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

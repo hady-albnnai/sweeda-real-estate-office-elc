@@ -78,7 +78,7 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
         mainAxisSize: MainAxisSize.min,
         children: [
           DropdownButtonFormField<int>(
-            initialValue: _selectedRole,
+            value: _selectedRole,
             dropdownColor: AppTheme.surfaceBlack,
             style: const TextStyle(color: AppTheme.textWhite),
             decoration: const InputDecoration(

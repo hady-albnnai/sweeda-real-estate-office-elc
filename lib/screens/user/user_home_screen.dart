@@ -114,7 +114,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             Text(
               'شو بدك اليوم؟',
               style: TextStyle(
-                color: AppTheme.primaryGold.withValues(alpha: 0.7),
+                color: AppTheme.primaryGold.withOpacity(0.7),
                 fontSize: 12,
               ),
             ),
@@ -246,7 +246,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
           if (offerProv.fromCache && offerProv.offers.isNotEmpty)
             Container(
               width: double.infinity,
-              color: Colors.orange.withValues(alpha: 0.15),
+              color: Colors.orange.withOpacity(0.15),
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: const Text('📡 وضع دون اتصال — عرض بيانات محفوظة',
                   textAlign: TextAlign.center,
@@ -267,7 +267,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                               children: [
                                 Icon(Icons.home_work,
                                     size: 80,
-                                    color: AppTheme.textGrey.withValues(alpha: 0.3)),
+                                    color: AppTheme.textGrey.withOpacity(0.3)),
                                 const SizedBox(height: 20),
                                 const Text(
                                   'لا توجد عروض متاحة حالياً',
@@ -360,7 +360,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       selectedColor: AppTheme.primaryGold,
       backgroundColor: AppTheme.surfaceBlack,
       checkmarkColor: AppTheme.deepBlack,
-      side: BorderSide(color: AppTheme.primaryGold.withValues(alpha: 0.45)),
+      side: BorderSide(color: AppTheme.primaryGold.withOpacity(0.45)),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       onSelected: (_) => onTap(),
     );

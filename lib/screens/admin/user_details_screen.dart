@@ -517,7 +517,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
       itemBuilder: (_, i) {
         final r = _reports[i];
         return Card(
-          color: Colors.red.withValues(alpha: 0.1),
+          color: Colors.red.withOpacity(0.1),
           margin: const EdgeInsets.only(bottom: 8),
           child: ListTile(
             leading: const Icon(Icons.flag, color: Colors.red),
@@ -571,9 +571,9 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
+        color: color.withOpacity(0.15),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
+        border: Border.all(color: color.withOpacity(0.4)),
       ),
       child: Text(text,
           style: TextStyle(

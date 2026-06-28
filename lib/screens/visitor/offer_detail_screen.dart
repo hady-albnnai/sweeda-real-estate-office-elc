@@ -368,7 +368,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                RadioGroup<String>(
+                
                   groupValue: selected,
                   onChanged: (value) => setS(() => selected = value),
                   child: Column(
@@ -471,7 +471,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                 const Text('اختر سبب التبليغ:',
                     style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
                 const SizedBox(height: 6),
-                RadioGroup<String>(
+                
                   groupValue: selected,
                   onChanged: (value) => setS(() => selected = value),
                   child: Column(
@@ -624,7 +624,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                           decoration: BoxDecoration(
                             color: _currentImg == i
                                 ? AppTheme.primaryGold
-                                : Colors.white.withValues(alpha: 0.5),
+                                : Colors.white.withOpacity(0.5),
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),
@@ -683,7 +683,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.5),
+                        color: Colors.black.withOpacity(0.5),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
@@ -733,15 +733,15 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                             children: [
                               if (offer.offerNumber != null)
                                 Text('عرض رقم #${offer.offerNumber}',
-                                    style: TextStyle(color: AppTheme.primaryGold.withValues(alpha: 0.7), fontSize: 12)),
+                                    style: TextStyle(color: AppTheme.primaryGold.withOpacity(0.7), fontSize: 12)),
                               if (isOwner || auth.isAdmin)
                                 Container(
                                   margin: const EdgeInsets.only(top: 4, bottom: 4),
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: offer.daysUntilExpiration <= 3 ? AppTheme.errorRed.withValues(alpha: 0.1) : Colors.green.withValues(alpha: 0.1),
+                                    color: offer.daysUntilExpiration <= 3 ? AppTheme.errorRed.withOpacity(0.1) : Colors.green.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: offer.daysUntilExpiration <= 3 ? AppTheme.errorRed.withValues(alpha: 0.3) : Colors.green.withValues(alpha: 0.3)),
+                                    border: Border.all(color: offer.daysUntilExpiration <= 3 ? AppTheme.errorRed.withOpacity(0.3) : Colors.green.withOpacity(0.3)),
                                   ),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
@@ -783,10 +783,10 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryGold.withValues(alpha: 0.08),
+                      color: AppTheme.primaryGold.withOpacity(0.08),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                          color: AppTheme.primaryGold.withValues(alpha: 0.3)),
+                          color: AppTheme.primaryGold.withOpacity(0.3)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -957,9 +957,9 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                               decoration: BoxDecoration(
-                                color: Colors.blue.withValues(alpha: 0.1),
+                                color: Colors.blue.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+                                border: Border.all(color: Colors.blue.withOpacity(0.3)),
                               ),
                               child: const Row(
                                 children: [
@@ -1039,9 +1039,9 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.orange.withValues(alpha: 0.08),
+                        color: Colors.orange.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                        border: Border.all(color: Colors.orange.withOpacity(0.3)),
                       ),
                       child: Row(
                         children: [
@@ -1054,7 +1054,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                               style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
                             ),
                           ),
-                          Container(width: 1, height: 32, color: Colors.orange.withValues(alpha: 0.3)),
+                          Container(width: 1, height: 32, color: Colors.orange.withOpacity(0.3)),
                           Expanded(
                             child: TextButton.icon(
                               onPressed: () => _approveOffer(offer),
@@ -1093,7 +1093,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                         ElevatedButton(
                           onPressed: () => _showAdminDeleteDialog(context, offer),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.errorRed.withValues(alpha: 0.8),
+                            backgroundColor: AppTheme.errorRed.withOpacity(0.8),
                             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
                           ),
                           child: const Icon(Icons.delete_forever, color: AppTheme.textWhite),
@@ -1210,7 +1210,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
       decoration: BoxDecoration(
           color: AppTheme.surfaceBlack,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.2))),
+          border: Border.all(color: AppTheme.primaryGold.withOpacity(0.2))),
       child: Row(children: [
         Icon(icon, color: AppTheme.primaryGold, size: 18),
         const SizedBox(width: 8),

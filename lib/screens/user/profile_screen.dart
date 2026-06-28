@@ -214,7 +214,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     boxShadow: [
-                      BoxShadow(color: AppTheme.primaryGold.withValues(alpha: 0.2), blurRadius: 100, spreadRadius: 30),
+                      BoxShadow(color: AppTheme.primaryGold.withOpacity(0.2), blurRadius: 100, spreadRadius: 30),
                     ],
                   ),
                   child: Stack(
@@ -222,7 +222,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       Container(
                         width: logoSize * 0.72, height: logoSize * 0.72,
-                        decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.4), width: 4)),
+                        decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4), width: 4)),
                       ),
                       Container(
                         width: logoSize * 0.65, height: logoSize * 0.65,
@@ -289,7 +289,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       decoration: BoxDecoration(
         color: isGold ? AppTheme.primaryGold : AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.5), width: 2),
+        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.5), width: 2),
       ),
       child: Column(children: [
         InkWell(
@@ -311,7 +311,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildInnerOption({required int id, required String title, required IconData icon, required Widget child}) {
     final sel = _signupMethod == id;
     return Container(
-      decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(color: Colors.black.withOpacity(0.1), borderRadius: BorderRadius.circular(16)),
       child: Column(children: [
         ListTile(
           onTap: () => setState(() => _signupMethod = sel ? 0 : id),
@@ -330,7 +330,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       style: TextStyle(color: dark ? Colors.black : AppTheme.textWhite, fontWeight: FontWeight.bold),
       decoration: InputDecoration(
         hintText: h, prefixIcon: Icon(i, color: dark ? Colors.black45 : AppTheme.primaryGold),
-        fillColor: dark ? Colors.white.withValues(alpha: 0.8) : AppTheme.surfaceBlack,
+        fillColor: dark ? Colors.white.withOpacity(0.8) : AppTheme.surfaceBlack,
         suffixIcon: isPass ? IconButton(icon: Icon(obscure! ? Icons.visibility_off : Icons.visibility, color: AppTheme.textGrey), onPressed: onToggle) : null,
       ),
     );
@@ -347,7 +347,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildHeader(UserModel user) {
     return Container(
       padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 16, bottom: 24, left: 20, right: 20),
-      decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [AppTheme.primaryGold.withValues(alpha: 0.2), AppTheme.deepBlack])),
+      decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [AppTheme.primaryGold.withOpacity(0.2), AppTheme.deepBlack])),
       child: Column(children: [
         Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
           Text(user.isAdmin ? 'الملف الوظيفي' : 'حسابي', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 22, fontWeight: FontWeight.bold)),
@@ -356,7 +356,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const SizedBox(height: 16),
         Container(
           width: 88, height: 88,
-          decoration: BoxDecoration(shape: BoxShape.circle, gradient: const LinearGradient(colors: [AppTheme.primaryGold, AppTheme.lightGold]), boxShadow: [BoxShadow(color: AppTheme.primaryGold.withValues(alpha: 0.25), blurRadius: 20, spreadRadius: 2)]),
+          decoration: BoxDecoration(shape: BoxShape.circle, gradient: const LinearGradient(colors: [AppTheme.primaryGold, AppTheme.lightGold]), boxShadow: [BoxShadow(color: AppTheme.primaryGold.withOpacity(0.25), blurRadius: 20, spreadRadius: 2)]),
           child: Container(margin: const EdgeInsets.all(3), decoration: const BoxDecoration(shape: BoxShape.circle, color: AppTheme.surfaceBlack), child: Center(child: Text(user.nm.isNotEmpty ? user.nm[0] : '؟', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 36, fontWeight: FontWeight.bold)))),
         ),
         const SizedBox(height: 12),
@@ -368,24 +368,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
           if (user.sid.isNotEmpty) Text('الرقم الوطني: ${user.sid}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
           if (user.ad.isNotEmpty) Text('العنوان: ${user.ad}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
         ] else if (user.usr != null)
-          Text('@${user.usr}', style: TextStyle(color: AppTheme.textGrey.withValues(alpha: 0.8), fontSize: 14)),
+          Text('@${user.usr}', style: TextStyle(color: AppTheme.textGrey.withOpacity(0.8), fontSize: 14)),
         const SizedBox(height: 12),
         if (!user.isInternal)
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            _buildChip(user.roleName, AppTheme.primaryGold.withValues(alpha: 0.15), AppTheme.primaryGold),
+            _buildChip(user.roleName, AppTheme.primaryGold.withOpacity(0.15), AppTheme.primaryGold),
             const SizedBox(width: 8),
-            _buildChip(user.badgeName, Colors.white.withValues(alpha: 0.08), AppTheme.textWhite),
-            if (user.isVerifiedOfficial) ...[const SizedBox(width: 8), _buildChip('✓ موثق', Colors.green.withValues(alpha: 0.15), Colors.green)],
+            _buildChip(user.badgeName, Colors.white.withOpacity(0.08), AppTheme.textWhite),
+            if (user.isVerifiedOfficial) ...[const SizedBox(width: 8), _buildChip('✓ موثق', Colors.green.withOpacity(0.15), Colors.green)],
           ]),
       ]),
     );
   }
 
-  Widget _buildChip(String t, Color b, Color f) => Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5), decoration: BoxDecoration(color: b, borderRadius: BorderRadius.circular(16), border: Border.all(color: f.withValues(alpha: 0.3))), child: Text(t, style: TextStyle(color: f, fontSize: 12, fontWeight: FontWeight.w600)));
+  Widget _buildChip(String t, Color b, Color f) => Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5), decoration: BoxDecoration(color: b, borderRadius: BorderRadius.circular(16), border: Border.all(color: f.withOpacity(0.3))), child: Text(t, style: TextStyle(color: f, fontSize: 12, fontWeight: FontWeight.w600)));
   Widget _buildUserStats(UserModel u) => Row(children: [Expanded(child: _buildStatTile(icon: Icons.star_rounded, value: '${u.pt}', label: 'النقاط', color: const Color(0xFFFFD700))), const SizedBox(width: 12), Expanded(child: _buildStatTile(icon: Icons.local_fire_department_rounded, value: '${u.strk}', label: 'أيام متتالية', color: const Color(0xFFFF6B35)))]);
-  Widget _buildStatTile({required IconData icon, required String value, required String label, required Color color}) => Container(padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12), decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(16), border: Border.all(color: color.withValues(alpha: 0.2))), child: Row(children: [Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)), child: Icon(icon, color: color, size: 22)), const SizedBox(width: 10), Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(value, style: const TextStyle(color: AppTheme.textWhite, fontSize: 18, fontWeight: FontWeight.bold)), Text(label, style: TextStyle(color: AppTheme.textGrey.withValues(alpha: 0.7), fontSize: 11))])]));
-  Widget _buildActivityStats(UserModel u) => Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.15))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(children: [Icon(Icons.analytics_outlined, color: AppTheme.primaryGold.withValues(alpha: 0.8), size: 18), const SizedBox(width: 8), const Text('إحصائيات النشاط', style: TextStyle(color: AppTheme.primaryGold, fontSize: 14, fontWeight: FontWeight.w600))]), const SizedBox(height: 14), Row(children: [_buildMiniStat('عروض', u.stats['off'] ?? 0, Icons.home_work_outlined), _buildMiniStat('طلبات', u.stats['req'] ?? 0, Icons.assignment_outlined), _buildMiniStat('مواعيد', u.stats['app'] ?? 0, Icons.calendar_today_outlined), _buildMiniStat('صفقات', u.stats['dl'] ?? 0, Icons.handshake_outlined)])]));
-  Widget _buildMiniStat(String l, int c, IconData i) => Expanded(child: Column(children: [Icon(i, color: AppTheme.primaryGold.withValues(alpha: 0.7), size: 20), const SizedBox(height: 6), Text('$c', style: const TextStyle(color: AppTheme.textWhite, fontSize: 16, fontWeight: FontWeight.bold)), const SizedBox(height: 2), Text(l, style: TextStyle(color: AppTheme.textGrey.withValues(alpha: 0.6), fontSize: 10))]));
+  Widget _buildStatTile({required IconData icon, required String value, required String label, required Color color}) => Container(padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12), decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(16), border: Border.all(color: color.withOpacity(0.2))), child: Row(children: [Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(10)), child: Icon(icon, color: color, size: 22)), const SizedBox(width: 10), Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(value, style: const TextStyle(color: AppTheme.textWhite, fontSize: 18, fontWeight: FontWeight.bold)), Text(label, style: TextStyle(color: AppTheme.textGrey.withOpacity(0.7), fontSize: 11))])]));
+  Widget _buildActivityStats(UserModel u) => Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppTheme.primaryGold.withOpacity(0.15))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(children: [Icon(Icons.analytics_outlined, color: AppTheme.primaryGold.withOpacity(0.8), size: 18), const SizedBox(width: 8), const Text('إحصائيات النشاط', style: TextStyle(color: AppTheme.primaryGold, fontSize: 14, fontWeight: FontWeight.w600))]), const SizedBox(height: 14), Row(children: [_buildMiniStat('عروض', u.stats['off'] ?? 0, Icons.home_work_outlined), _buildMiniStat('طلبات', u.stats['req'] ?? 0, Icons.assignment_outlined), _buildMiniStat('مواعيد', u.stats['app'] ?? 0, Icons.calendar_today_outlined), _buildMiniStat('صفقات', u.stats['dl'] ?? 0, Icons.handshake_outlined)])]));
+  Widget _buildMiniStat(String l, int c, IconData i) => Expanded(child: Column(children: [Icon(i, color: AppTheme.primaryGold.withOpacity(0.7), size: 20), const SizedBox(height: 6), Text('$c', style: const TextStyle(color: AppTheme.textWhite, fontSize: 16, fontWeight: FontWeight.bold)), const SizedBox(height: 2), Text(l, style: TextStyle(color: AppTheme.textGrey.withOpacity(0.6), fontSize: 10))]));
   Widget _buildStaffStats(UserModel user) {
     if (_loadingStats) {
       return const Center(
@@ -434,9 +434,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 width: (MediaQuery.of(context).size.width - 60) / 2,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: it.color.withValues(alpha: 0.1),
+                  color: it.color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: it.color.withValues(alpha: 0.2)),
+                  border: Border.all(color: it.color.withOpacity(0.2)),
                 ),
                 child: Row(children: [
                   Icon(it.icon, color: it.color, size: 18),

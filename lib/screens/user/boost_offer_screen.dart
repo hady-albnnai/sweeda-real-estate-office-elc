@@ -241,7 +241,7 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
           ),
           if (_processing)
             Container(
-              color: Colors.black.withValues(alpha: 0.7),
+              color: Colors.black.withOpacity(0.7),
               child: const Center(
                 child: CircularProgressIndicator(color: AppTheme.primaryGold),
               ),
@@ -353,7 +353,7 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: active ? Colors.green : color.withValues(alpha: 0.3),
+          color: active ? Colors.green : color.withOpacity(0.3),
           width: active ? 2 : 1,
         ),
       ),
@@ -365,7 +365,7 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.15),
+                  color: color.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, color: color, size: 22),
@@ -407,7 +407,7 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
               padding: const EdgeInsets.symmetric(
                   horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.green.withValues(alpha: 0.15),
+                color: Colors.green.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Row(

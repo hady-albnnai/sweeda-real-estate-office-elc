@@ -151,13 +151,13 @@ class _PermissionsManagementScreenState extends State<PermissionsManagementScree
               return Container(
                 margin: const EdgeInsets.only(bottom: 10),
                 decoration: BoxDecoration(
-                  color: selected ? AppTheme.primaryGold.withValues(alpha: 0.10) : AppTheme.surfaceBlack,
+                  color: selected ? AppTheme.primaryGold.withOpacity(0.10) : AppTheme.surfaceBlack,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: selected ? AppTheme.primaryGold : AppTheme.primaryGold.withValues(alpha: 0.14)),
+                  border: Border.all(color: selected ? AppTheme.primaryGold : AppTheme.primaryGold.withOpacity(0.14)),
                 ),
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: AppTheme.primaryGold.withValues(alpha: 0.15),
+                    backgroundColor: AppTheme.primaryGold.withOpacity(0.15),
                     child: Text(user.nm.isNotEmpty ? user.nm[0] : '؟', style: const TextStyle(color: AppTheme.primaryGold)),
                   ),
                   title: Text(user.nm.isEmpty ? 'بدون اسم' : user.nm, style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold)),
@@ -190,7 +190,7 @@ class _PermissionsManagementScreenState extends State<PermissionsManagementScree
           decoration: BoxDecoration(
             color: AppTheme.surfaceBlack,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.20)),
+            border: Border.all(color: AppTheme.primaryGold.withOpacity(0.20)),
           ),
           child: Row(
             children: [
@@ -272,7 +272,7 @@ class _PermissionsManagementScreenState extends State<PermissionsManagementScree
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.14)),
+        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.14)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

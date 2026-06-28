@@ -117,7 +117,7 @@ class _SplashScreenState extends State<SplashScreen>
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppTheme.primaryGold.withValues(alpha: 0.08),
+                    AppTheme.primaryGold.withOpacity(0.08),
                     Colors.transparent,
                   ],
                 ),
@@ -144,7 +144,7 @@ class _SplashScreenState extends State<SplashScreen>
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: AppTheme.primaryGold.withValues(alpha: 0.15),
+                                color: AppTheme.primaryGold.withOpacity(0.15),
                                 blurRadius: 40,
                                 spreadRadius: 10,
                               ),
@@ -160,7 +160,7 @@ class _SplashScreenState extends State<SplashScreen>
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: AppTheme.primaryGold.withValues(alpha: 0.4),
+                                    color: AppTheme.primaryGold.withOpacity(0.4),
                                     width: 1.5,
                                   ),
                                 ),
@@ -204,7 +204,7 @@ class _SplashScreenState extends State<SplashScreen>
                           Text(
                             'SWEEDA REAL ESTATE',
                             style: GoogleFonts.montserrat(
-                              color: AppTheme.primaryGold.withValues(alpha: 0.5),
+                              color: AppTheme.primaryGold.withOpacity(0.5),
                               fontSize: 10,
                               letterSpacing: 6,
                               fontWeight: FontWeight.w600,
@@ -217,12 +217,12 @@ class _SplashScreenState extends State<SplashScreen>
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(color: Colors.white10),
-                              color: Colors.white.withValues(alpha: 0.03),
+                              color: Colors.white.withOpacity(0.03),
                             ),
                             child: Text(
                               'وجهتك الموثوقة لعقارات وسيارات السويداء',
                               style: GoogleFonts.cairo(
-                                color: AppTheme.textGrey.withValues(alpha: 0.8),
+                                color: AppTheme.textGrey.withOpacity(0.8),
                                 fontSize: 11,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -243,7 +243,7 @@ class _SplashScreenState extends State<SplashScreen>
                             borderRadius: BorderRadius.circular(10),
                             child: LinearProgressIndicator(
                               minHeight: 3,
-                              backgroundColor: Colors.white.withValues(alpha: 0.05),
+                              backgroundColor: Colors.white.withOpacity(0.05),
                               valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primaryGold),
                             ),
                           ),
@@ -251,7 +251,7 @@ class _SplashScreenState extends State<SplashScreen>
                           Text(
                             'جاري تهيئة النظام...',
                             style: GoogleFonts.cairo(
-                              color: AppTheme.textGrey.withValues(alpha: 0.5),
+                              color: AppTheme.textGrey.withOpacity(0.5),
                               fontSize: 10,
                             ),
                           ),

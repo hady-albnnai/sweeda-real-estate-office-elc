@@ -273,7 +273,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
                   decoration: BoxDecoration(
                     color: isSelected ? AppTheme.primaryGold : AppTheme.deepBlack,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.4)),
+                    border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
                   ),
                   child: Text(
                     '${date.day}/${date.month} ($count)',
@@ -337,7 +337,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
           // رأس البطاقة
           Row(children: [
             CircleAvatar(
-              backgroundColor: color.withValues(alpha: 0.14),
+              backgroundColor: color.withOpacity(0.14),
               child: Icon(Icons.camera_alt, color: color),
             ),
             const SizedBox(width: 10),
@@ -349,7 +349,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
+                color: color.withOpacity(0.12),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text('${task.media.length} وسائط',
@@ -364,9 +364,9 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
               width: double.infinity,
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppTheme.primaryGold.withValues(alpha: 0.08),
+                color: AppTheme.primaryGold.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.2)),
+                border: Border.all(color: AppTheme.primaryGold.withOpacity(0.2)),
               ),
               child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 const Icon(Icons.description, size: 14, color: AppTheme.primaryGold),
@@ -422,7 +422,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
                       width: 70, height: 70,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.3)),
+                        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3)),
                         color: AppTheme.deepBlack,
                       ),
                       child: const Center(child: Icon(Icons.image, color: AppTheme.textGrey)),
@@ -508,7 +508,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
       margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: color.withValues(alpha: 0.14),
+          backgroundColor: color.withOpacity(0.14),
           child: Icon(
             task.isApproved ? Icons.check : (task.isRejected ? Icons.close : Icons.schedule),
             color: color,

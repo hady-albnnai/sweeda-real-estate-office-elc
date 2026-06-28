@@ -55,7 +55,7 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
                     fontWeight: FontWeight.bold)),
             Text('أهلاً، $name 🤝',
                 style: TextStyle(
-                    color: AppTheme.primaryGold.withValues(alpha: 0.8), fontSize: 12)),
+                    color: AppTheme.primaryGold.withOpacity(0.8), fontSize: 12)),
           ],
         ),
         actions: [
@@ -150,7 +150,7 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.25)),
+        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.25)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -189,11 +189,11 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.15)),
+        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.15)),
       ),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: AppTheme.primaryGold.withValues(alpha: 0.15),
+          backgroundColor: AppTheme.primaryGold.withOpacity(0.15),
           child: Icon(icon, color: AppTheme.primaryGold),
         ),
         title: Text(title,

@@ -120,7 +120,7 @@ class _AdminSectionsScreenState extends State<AdminSectionsScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.14)),
+        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.14)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -137,7 +137,7 @@ class _AdminSectionsScreenState extends State<AdminSectionsScreen> {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: CircleAvatar(
-        backgroundColor: AppTheme.primaryGold.withValues(alpha: 0.12),
+        backgroundColor: AppTheme.primaryGold.withOpacity(0.12),
         child: Icon(icon, color: AppTheme.primaryGold),
       ),
       title: Text(title, style: const TextStyle(color: AppTheme.textWhite, fontSize: 13)),

@@ -22,7 +22,7 @@ class AppErrorWidget extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 64, color: AppTheme.errorRed.withValues(alpha: 0.8)),
+            Icon(icon, size: 64, color: AppTheme.errorRed.withOpacity(0.8)),
             const SizedBox(height: 16),
             Text(
               message,

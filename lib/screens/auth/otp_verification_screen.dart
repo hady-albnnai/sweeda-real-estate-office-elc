@@ -111,7 +111,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
             ),
             if (auth.currentOtp != null) ...[
               const SizedBox(height: 16),
-              Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), decoration: BoxDecoration(color: Colors.orange.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.orange.withValues(alpha: 0.5))), child: Text('🔧 وضع التطوير — الرمز: ${auth.currentOtp}', style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold))),
+              Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), decoration: BoxDecoration(color: Colors.orange.withOpacity(0.1), borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.orange.withOpacity(0.5))), child: Text('🔧 وضع التطوير — الرمز: ${auth.currentOtp}', style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold))),
             ],
             const SizedBox(height: 40),
             Directionality(

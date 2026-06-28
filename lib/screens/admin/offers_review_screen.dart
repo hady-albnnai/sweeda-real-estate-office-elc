@@ -155,7 +155,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                RadioGroup<String>(
+                
                   groupValue: selected,
                   onChanged: (value) => setS(() => selected = value),
                   child: Column(
@@ -238,7 +238,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                     children: [
                       Icon(Icons.check_circle_outline,
                           size: 80,
-                          color: Colors.green.withValues(alpha: 0.6)),
+                          color: Colors.green.withOpacity(0.6)),
                       const SizedBox(height: 20),
                       const Text(
                         'لا توجد عروض بانتظار المراجعة 🎉',
@@ -271,7 +271,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: isDup ? Colors.orange : AppTheme.primaryGold.withValues(alpha: 0.3),
+          color: isDup ? Colors.orange : AppTheme.primaryGold.withOpacity(0.3),
           width: isDup ? 1.5 : 1,
         ),
       ),
@@ -283,7 +283,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.2),
+                color: Colors.orange.withOpacity(0.2),
                 borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(13)),
               ),
@@ -404,9 +404,9 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.amber.withValues(alpha: 0.08),
+                      color: Colors.amber.withOpacity(0.08),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                      border: Border.all(color: Colors.amber.withOpacity(0.3)),
                     ),
                     child: Row(children: [
                       const Icon(Icons.admin_panel_settings,
@@ -468,7 +468,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryGold.withValues(alpha: 0.15),
+                          color: AppTheme.primaryGold.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -550,9 +550,9 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
+        color: color.withOpacity(0.15),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
+        border: Border.all(color: color.withOpacity(0.4)),
       ),
       child: Text(label,
           style: TextStyle(

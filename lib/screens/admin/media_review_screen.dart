@@ -105,7 +105,7 @@ class _MediaReviewScreenState extends State<MediaReviewScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.20)),
+        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.20)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -138,7 +138,7 @@ class _MediaReviewScreenState extends State<MediaReviewScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.10),
+        color: color.withOpacity(0.10),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -172,7 +172,7 @@ class _MediaReviewScreenState extends State<MediaReviewScreen> {
               selectedColor: AppTheme.primaryGold,
               backgroundColor: AppTheme.surfaceBlack,
               labelStyle: TextStyle(color: selected ? AppTheme.deepBlack : AppTheme.textWhite),
-              side: BorderSide(color: AppTheme.primaryGold.withValues(alpha: 0.25)),
+              side: BorderSide(color: AppTheme.primaryGold.withOpacity(0.25)),
               onSelected: (_) => setState(() => _filter = filter.$2),
             ),
           );
@@ -191,7 +191,7 @@ class _MediaReviewScreenState extends State<MediaReviewScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.14)),
+        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.14)),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.all(12),
@@ -245,9 +245,9 @@ class _MediaReviewScreenState extends State<MediaReviewScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.13),
+        color: color.withOpacity(0.13),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withValues(alpha: 0.30)),
+        border: Border.all(color: color.withOpacity(0.30)),
       ),
       child: Text(text, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w600)),
     );
