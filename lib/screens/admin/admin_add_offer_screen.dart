@@ -1061,7 +1061,6 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
   Widget _buildLocationAutocomplete() {
     final locs = _cityOptions();
     return Autocomplete<String>(
-      value: TextEditingValue(text: _locCtrl.text),
       optionsBuilder: (v) {
         if (locs.isEmpty) return const Iterable<String>.empty();
         if (v.text.isEmpty) return locs.take(20);

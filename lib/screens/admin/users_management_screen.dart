@@ -231,35 +231,49 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
       UserRole.user: UserRole.nameOf(UserRole.user),
       UserRole.broker: UserRole.nameOf(UserRole.broker),
     };
-    final admin = context.read<AdminProvider>();
+    int? selectedRole = u.role;
+
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.surfaceBlack,
-        title: const Text('تغيير الدور', style: TextStyle(color: AppTheme.primaryGold)),
-        content: 
-          groupValue: u.role,
-          onChanged: (val) async {
-            if (val == null) return;
-            Navigator.pop(ctx);
-            final adminId = context.read<AuthProvider>().userModel?.uid ?? '';
-            if (await admin.updateUserRole(adminId, u.uid, val)) {
-              _snack('تم تغيير دور ${u.nm} إلى ${roles[val]}');
-              _load();
-            }
-          },
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: roles.entries
-                .map((e) => RadioListTile<int>(
-                      value: e.key,
-                      activeColor: AppTheme.primaryGold,
-                      title: Text(e.value,
-                          style: const TextStyle(color: AppTheme.textWhite)),
-                    ))
-                .toList(),
-          ),
-        ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setState) {
+          return AlertDialog(
+            backgroundColor: AppTheme.surfaceBlack,
+            title: const Text('تغيير الدور', style: TextStyle(color: AppTheme.primaryGold)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: roles.entries.map((e) => RadioListTile<int>(
+                    title: Text(e.value,
+                        style: const TextStyle(color: AppTheme.textWhite)),
+                    value: e.key,
+                    groupValue: selectedRole,
+                    onChanged: (val) {
+                      setState(() => selectedRole = val);
+                    },
+                    activeColor: AppTheme.primaryGold,
+                  )).toList(),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('إلغاء'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (selectedRole == null) return;
+                  Navigator.pop(ctx);
+                  final admin = context.read<AdminProvider>();
+                  final adminId = context.read<AuthProvider>().userModel?.uid ?? '';
+                  if (await admin.updateUserRole(adminId, u.uid, selectedRole!)) {
+                    _snack('تم تغيير دور ${u.nm} إلى ${roles[selectedRole]}');
+                    _load();
+                  }
+                },
+                child: const Text('تأكيد'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

@@ -190,24 +190,17 @@ class _ReportsScreenState extends State<ReportsScreen> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              
-                groupValue: selectedAction,
-                onChanged: (value) => setSt(() {
-                  selectedAction = value ?? 0;
-                }),
-                child: Column(
-                  children: _actions.entries
-                      .map((e) => RadioListTile<int>(
-                            value: e.key,
-                            activeColor: AppTheme.primaryGold,
-                            dense: true,
-                            title: Text(e.value,
-                                style:
-                                    const TextStyle(color: AppTheme.textWhite)),
-                          ))
-                      .toList(),
-                ),
-              ),
+              ..._actions.entries.map((e) => RadioListTile<int>(
+                    title: Text(e.value,
+                        style: const TextStyle(color: AppTheme.textWhite)),
+                    value: e.key,
+                    groupValue: selectedAction,
+                    onChanged: (value) => setSt(() {
+                      selectedAction = value ?? 0;
+                    }),
+                    activeColor: AppTheme.primaryGold,
+                    dense: true,
+                  )),
               const SizedBox(height: 8),
               TextField(
                 controller: noteCtrl,
