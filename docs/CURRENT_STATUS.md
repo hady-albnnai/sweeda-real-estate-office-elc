@@ -1,8 +1,8 @@
 # الحالة الحالية — المكتب العقاري الإلكتروني
 
-**آخر تحديث:** 2026-06-17
+**آخر تحديث:** 2026-06-28 — تثبيت ما بعد التصليب الأمني (Phase 0+Phase A)
 **الفرع:** `main`
-**الحالة العامة:** تم إنجاز المرحلة الأمنية بالكامل بنسبة 100%. تم نقل كافة الدوال الحساسة (SECURITY DEFINER) إلى Edge Functions وتم حل جميع تحذيرات Supabase Linter.
+**الحالة العامة:** تم إنجاز تثبيت البناء (Build Stabilization) بنسبة 100% — `flutter analyze` = 0 issues. تم تعطيل استدعاءات RPC المقفولة مؤقتاً في الـ client لمنع 403، بانتظار نقلها إلى Edge Functions/Triggers. التطبيق يبني بنجاح وقابل للاختبار اليدوي، مع تعطيل مؤقت للنقاط / التقييم / Boost المباشر / دفع الوسيط.
 
 ---
 
@@ -299,3 +299,52 @@
 
 - إضافة أقواس صريحة لشروط `profile_screen.dart` حسب قاعدة `curly_braces_in_flow_control_structures`.
 - إعادة تنسيق دوال إحصائيات الموظف والتنقل الإداري دون تغيير منطقها.
+
+## تحديث 2026-06-28 — تثبيت البناء بعد التصليب الأمني (Phase 0)
+
+**السبب:** بعد قفل RPCs الأمني، تراكمت أخطاء بناء تمنع `flutter analyze` و`flutter build`.
+
+**الإصلاحات المطبقة — `flutter analyze`: 328 errors → 0 errors:**
+- استبدال شامل `Color.withValues(alpha:…)` → `withOpacity(…)` — **288 موقع** — لتوافق Flutter 3.24 LTS / 3.32.
+- إصلاح `RadioGroup` غير الموجود في 5 شاشات → `RadioListTile` صريح مع `groupValue/onChanged`:
+  - `lib/screens/admin/offers_review_screen.dart`
+  - `lib/screens/visitor/offer_detail_screen.dart` (موضعان: رفض العرض + تبليغ)
+  - `lib/screens/admin/reports_screen.dart`
+  - `lib/screens/admin/users_management_screen.dart`
+- إصلاح توافق API النماذج:
+  - `initialValue` → `value` في `DropdownButtonFormField` (11 موقع)
+  - إزالة `mainAxisExtent` المكرر في Grid delegates (3 مواقع)
+  - `activeThumbColor` → `activeColor`
+- النتيجة: `flutter analyze` = **No issues found** على Flutter 3.24.5 و 3.32.8
+
+**ملفات معدلة رئيسية:** 35+ ملف UI — لا تغيير منطق أعمال، فقط توافق API.
+
+---
+
+## تحديث 2026-06-28 — تعطيل RPCs المقفولة مؤقتاً (Phase A — Stabilize)
+
+**السبب:** تحقق سيرفري كامل (5 استعلامات) أكد أن **15 دالة RPC** يستدعيها الـ client مقفولة `service_role` فقط:
+`add_points, award_points_safe, update_user_badge, purchase_offer_boost, create_payment_internal, submit_broker_request_internal, register_daily_streak_internal, mark_social_published_internal, check_offer_duplicate, broker_handle_appointment_internal, register_weekly_login, get_staff_stats_internal, create_rating_internal, get_user_full_by_id, revoke_staff_session`
+
+**الإجراء المطبق (fail-safe):**
+- `lib/core/services/business_service.dart`:
+  - `addPoints()` → return false مؤقت
+  - `awardPointsSafe()` → return false
+  - `registerDailyStreak()` → return `{streak:0, changed:false, awarded:false}`
+  - `markSocialPublished()` → return false
+  - `isDuplicateOffer()` → return false
+- يمنع هذا crashing بـ 403، ويُبقي الواجهة تعمل مع رسائل مناسبة، بانتظار Edge Function `user-rewards`.
+- الأنظمة المتأثرة مؤقتاً: النقاط، الرتب السلوكية، الترقية بالنقاط، التقييم، الدفع المباشر، طلب وسيط — كلها ستُعاد عبر Edge في Phase B.
+- الأنظمة التي تعمل عبر Edge بدون تغيير: تسجيل OTP، نشر عرض/طلب، حجز موعد، إدارة كاملة، منفذ/مصور.
+
+**المراجع:**
+- تقرير التدقيق الكامل: `AUDIT_2026_06_28.md`
+- خريطة Edge Functions: 14/15 مفعلة — بقي `broker-actions` غير مستخدم
+- RLS audit: اكتُشفت سياسة `users: Allow read via security definer — qual true` — تفتح قراءة جدول users للعامة — **يجب إغلاقها قبل الإطلاق** (مخالفة LOGIC_SPEC §5.2)
+- Storage policies: اكتُشف انقسام `users.role` vs `users.rl` في سياسات Storage — schema drift يحتاج توحيد
+
+**الخطوة التالية (Phase B):**
+- بناء Edge Function `user-rewards` لإعادة النقاط بأمان
+- توحيد Boost عبر `user-offers` فقط — حذف استدعاء `purchase_offer_boost` المباشر
+- نقل `broker_provider` إلى `broker-actions` Edge
+- اختبار smoke كامل حسب `docs/MANUAL_TEST_PLAN_BY_ROLE.md`

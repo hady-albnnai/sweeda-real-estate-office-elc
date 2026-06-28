@@ -152,7 +152,7 @@ class _MyTasksScreenState extends State<MyTasksScreen>
             margin: const EdgeInsets.only(bottom: 10),
             child: ListTile(
               leading: CircleAvatar(
-                backgroundColor: color.withValues(alpha: 0.18),
+                backgroundColor: color.withOpacity(0.18),
                 child: Icon(_decisionIcon(decision), color: color),
               ),
               title: Text(r['display_title'] ?? '', style: const TextStyle(color: AppTheme.textWhite)),
@@ -184,7 +184,7 @@ class _MyTasksScreenState extends State<MyTasksScreen>
           children: [
             Row(children: [
               CircleAvatar(
-                backgroundColor: AppTheme.primaryGold.withValues(alpha: 0.15),
+                backgroundColor: AppTheme.primaryGold.withOpacity(0.15),
                 child: Icon(
                   task.taskType == 'property' ? Icons.home_work : Icons.directions_car,
                   color: AppTheme.primaryGold,
@@ -230,7 +230,7 @@ class _MyTasksScreenState extends State<MyTasksScreen>
       margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: color.withValues(alpha: 0.15),
+          backgroundColor: color.withOpacity(0.15),
           child: Icon(
             task.isAccepted ? Icons.check : (task.isRejected ? Icons.close : Icons.schedule),
             color: color,

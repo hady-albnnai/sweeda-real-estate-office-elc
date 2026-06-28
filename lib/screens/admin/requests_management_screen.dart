@@ -165,7 +165,7 @@ class _RequestsManagementScreenState extends State<RequestsManagementScreen> {
         backgroundColor: AppTheme.surfaceBlack,
         checkmarkColor: AppTheme.deepBlack,
         side: BorderSide(
-            color: AppTheme.primaryGold.withValues(alpha: 0.3)),
+            color: AppTheme.primaryGold.withOpacity(0.3)),
         onSelected: (_) {
           _filterSts = value;
           _applyFilter();
@@ -187,7 +187,7 @@ class _RequestsManagementScreenState extends State<RequestsManagementScreen> {
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-            color: AppTheme.primaryGold.withValues(alpha: 0.15)),
+            color: AppTheme.primaryGold.withOpacity(0.15)),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         // الرأس
@@ -210,10 +210,10 @@ class _RequestsManagementScreenState extends State<RequestsManagementScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: stsColor.withValues(alpha: 0.15),
+              color: stsColor.withOpacity(0.15),
               borderRadius: BorderRadius.circular(8),
               border:
-                  Border.all(color: stsColor.withValues(alpha: 0.5)),
+                  Border.all(color: stsColor.withOpacity(0.5)),
             ),
             child: Text(stsLabel,
                 style: TextStyle(

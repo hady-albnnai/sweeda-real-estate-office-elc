@@ -75,16 +75,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       decoration: BoxDecoration(
         color: n.isRead
             ? AppTheme.surfaceBlack
-            : AppTheme.primaryGold.withValues(alpha: 0.08),
+            : AppTheme.primaryGold.withOpacity(0.08),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
             color: n.isRead
                 ? Colors.white12
-                : AppTheme.primaryGold.withValues(alpha: 0.4)),
+                : AppTheme.primaryGold.withOpacity(0.4)),
       ),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: AppTheme.primaryGold.withValues(alpha: 0.15),
+          backgroundColor: AppTheme.primaryGold.withOpacity(0.15),
           child: Icon(_iconForType(n.tp), color: AppTheme.primaryGold),
         ),
         title: Text(n.ttl,
@@ -100,7 +100,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             const SizedBox(height: 4),
             Text(AppUtils.formatTimestamp(n.tsCrt),
                 style: TextStyle(
-                    color: AppTheme.textGrey.withValues(alpha: 0.7), fontSize: 11)),
+                    color: AppTheme.textGrey.withOpacity(0.7), fontSize: 11)),
           ],
         ),
         trailing: n.isRead

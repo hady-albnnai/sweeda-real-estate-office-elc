@@ -113,7 +113,7 @@ class DeputyDashboardScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.2)),
+        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -137,7 +137,7 @@ class DeputyDashboardScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppTheme.surfaceBlack,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.15)),
+          border: Border.all(color: AppTheme.primaryGold.withOpacity(0.15)),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

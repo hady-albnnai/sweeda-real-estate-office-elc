@@ -53,7 +53,7 @@ class _OfferCardState extends State<OfferCard> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, color: AppTheme.primaryGold.withValues(alpha: 0.7), size: 14),
+        Icon(icon, color: AppTheme.primaryGold.withOpacity(0.7), size: 14),
         const SizedBox(width: 4),
         Text(
           text,
@@ -75,10 +75,10 @@ class _OfferCardState extends State<OfferCard> {
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
-            color: AppTheme.primaryGold.withValues(alpha: 0.15), width: 1),
+            color: AppTheme.primaryGold.withOpacity(0.15), width: 1),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withValues(alpha: 0.4),
+              color: Colors.black.withOpacity(0.4),
               blurRadius: 15,
               offset: const Offset(0, 8))
         ],
@@ -115,14 +115,14 @@ class _OfferCardState extends State<OfferCard> {
                           end: Alignment.bottomCenter,
                           colors: [
                             Colors.transparent,
-                            Colors.black.withValues(alpha: 0.6),
+                            Colors.black.withOpacity(0.6),
                           ],
                         ),
                       ),
                       child: offer.imgs.isEmpty
                           ? Center(
                               child: Icon(Icons.apartment_outlined,
-                                  color: AppTheme.primaryGold.withValues(alpha: 0.2),
+                                  color: AppTheme.primaryGold.withOpacity(0.2),
                                   size: 64),
                             )
                           : null,
@@ -183,7 +183,7 @@ class _OfferCardState extends State<OfferCard> {
                   child: Text(
                     AppUtils.formatTimestamp(offer.tsCrt.toIso8601String()),
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.8),
+                      color: Colors.white.withOpacity(0.8),
                       fontSize: 10,
                       fontWeight: FontWeight.w500,
                     ),
@@ -215,7 +215,7 @@ class _OfferCardState extends State<OfferCard> {
                         Text(
                           '#${offer.offerNumber}',
                           style: TextStyle(
-                              color: AppTheme.primaryGold.withValues(alpha: 0.6),
+                              color: AppTheme.primaryGold.withOpacity(0.6),
                               fontSize: 12,
                               fontFamily: 'monospace'),
                         ),
@@ -260,9 +260,9 @@ class _OfferCardState extends State<OfferCard> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryGold.withValues(alpha: 0.08),
+                          color: AppTheme.primaryGold.withOpacity(0.08),
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.2)),
+                          border: Border.all(color: AppTheme.primaryGold.withOpacity(0.2)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -287,7 +287,7 @@ class _OfferCardState extends State<OfferCard> {
                         child: Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: _isFav ? Colors.red.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.05),
+                            color: _isFav ? Colors.red.withOpacity(0.1) : Colors.white.withOpacity(0.05),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(

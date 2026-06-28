@@ -157,7 +157,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.4)),
+        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
       ),
       child: Column(
         children: [

@@ -94,7 +94,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           // إصدار التطبيق
           Center(
-            child: Text('الإصدار 1.0.0', style: TextStyle(color: AppTheme.textGrey.withValues(alpha: 0.5), fontSize: 12)),
+            child: Text('الإصدار 1.0.0', style: TextStyle(color: AppTheme.textGrey.withOpacity(0.5), fontSize: 12)),
           ),
         ],
       ),
@@ -107,7 +107,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       padding: const EdgeInsets.only(bottom: 10, top: 5),
       child: Row(
         children: [
-          Icon(icon, color: AppTheme.primaryGold.withValues(alpha: 0.8), size: 18),
+          Icon(icon, color: AppTheme.primaryGold.withOpacity(0.8), size: 18),
           const SizedBox(width: 8),
           Text(title, style: const TextStyle(color: AppTheme.primaryGold, fontSize: 15, fontWeight: FontWeight.w600)),
         ],
@@ -125,7 +125,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         value: value,
         onChanged: onChanged,
         activeColor: AppTheme.primaryGold,
-        activeTrackColor: AppTheme.primaryGold.withValues(alpha: 0.3),
+        activeTrackColor: AppTheme.primaryGold.withOpacity(0.3),
       ),
     );
   }

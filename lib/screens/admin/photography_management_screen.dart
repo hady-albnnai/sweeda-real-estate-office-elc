@@ -114,7 +114,7 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
               selectedColor: AppTheme.primaryGold,
               backgroundColor: AppTheme.surfaceBlack,
               labelStyle: TextStyle(color: selected ? AppTheme.deepBlack : AppTheme.textWhite),
-              side: BorderSide(color: AppTheme.primaryGold.withValues(alpha: 0.25)),
+              side: BorderSide(color: AppTheme.primaryGold.withOpacity(0.25)),
               onSelected: (_) {
                 setState(() => _filter = item.$2);
                 _load();
@@ -133,7 +133,7 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.30)),
+        border: Border.all(color: color.withOpacity(0.30)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -142,7 +142,7 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
           children: [
             Row(
               children: [
-                CircleAvatar(backgroundColor: color.withValues(alpha: 0.14), child: Icon(Icons.camera_alt, color: color)),
+                CircleAvatar(backgroundColor: color.withOpacity(0.14), child: Icon(Icons.camera_alt, color: color)),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
@@ -356,9 +356,9 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.13),
+        color: color.withOpacity(0.13),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withValues(alpha: 0.30)),
+        border: Border.all(color: color.withOpacity(0.30)),
       ),
       child: Text(text, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w600)),
     );

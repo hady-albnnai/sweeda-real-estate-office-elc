@@ -179,7 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           Icon(Icons.home_work_outlined,
                               size: 80,
-                              color: AppTheme.textGrey.withValues(alpha: 0.3)),
+                              color: AppTheme.textGrey.withOpacity(0.3)),
                           const SizedBox(height: 16),
                           Text(
                             _isSearching
@@ -265,7 +265,7 @@ class _HomeScreenState extends State<HomeScreen> {
       selectedColor: AppTheme.primaryGold,
       backgroundColor: AppTheme.surfaceBlack,
       checkmarkColor: AppTheme.deepBlack,
-      side: BorderSide(color: AppTheme.primaryGold.withValues(alpha: 0.5)),
+      side: BorderSide(color: AppTheme.primaryGold.withOpacity(0.5)),
       onSelected: (_) => onTap(),
       visualDensity: VisualDensity.compact,
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,

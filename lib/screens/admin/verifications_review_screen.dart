@@ -226,7 +226,7 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-            color: AppTheme.primaryGold.withValues(alpha: 0.3), width: 1),
+            color: AppTheme.primaryGold.withOpacity(0.3), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -312,7 +312,7 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
               padding:
                   const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.red.withValues(alpha: 0.1),
+                color: Colors.red.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Colors.red),
               ),

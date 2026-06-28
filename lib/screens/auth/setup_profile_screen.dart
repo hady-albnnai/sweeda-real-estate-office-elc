@@ -181,7 +181,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                     width: 72,
                     height: 72,
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryGold.withValues(alpha: 0.15),
+                      color: AppTheme.primaryGold.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: const Icon(Icons.lock_person_outlined,

@@ -157,7 +157,7 @@ class _SetupIdentityScreenState extends State<SetupIdentityScreen> {
                   color: AppTheme.surfaceBlack,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                      color: AppTheme.primaryGold.withValues(alpha: 0.3)),
+                      color: AppTheme.primaryGold.withOpacity(0.3)),
                 ),
                 child: const Row(children: [
                   Icon(Icons.shield_outlined,
@@ -210,7 +210,7 @@ class _SetupIdentityScreenState extends State<SetupIdentityScreen> {
                     border: Border.all(
                       color: _idImage != null
                           ? Colors.green
-                          : AppTheme.primaryGold.withValues(alpha: 0.4),
+                          : AppTheme.primaryGold.withOpacity(0.4),
                       width: 1.5,
                     ),
                   ),

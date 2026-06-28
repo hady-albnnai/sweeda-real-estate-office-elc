@@ -186,7 +186,7 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
         decoration: BoxDecoration(
           color: AppTheme.surfaceBlack,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: item.color.withValues(alpha: 0.25)),
+          border: Border.all(color: item.color.withOpacity(0.25)),
         ),
         padding: const EdgeInsets.all(14),
         child: Column(

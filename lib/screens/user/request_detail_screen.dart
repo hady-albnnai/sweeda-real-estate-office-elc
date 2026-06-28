@@ -248,7 +248,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: status.$2.withValues(alpha: 0.4)),
+        border: Border.all(color: status.$2.withOpacity(0.4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -270,7 +270,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                 padding: const EdgeInsets.symmetric(
                     horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: status.$2.withValues(alpha: 0.15),
+                  color: status.$2.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -598,7 +598,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(
-            color: AppTheme.primaryGold.withValues(alpha: 0.15),
+            color: AppTheme.primaryGold.withOpacity(0.15),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text('${_matches.length}',
@@ -707,9 +707,9 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryGold.withValues(alpha: 0.15),
+                        color: AppTheme.primaryGold.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.4)),
+                        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
                       ),
                       child: const Text('📅 حجز', style: TextStyle(color: AppTheme.primaryGold, fontSize: 11, fontWeight: FontWeight.bold)),
                     ),

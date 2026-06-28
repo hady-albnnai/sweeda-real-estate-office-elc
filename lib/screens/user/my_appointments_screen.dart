@@ -150,7 +150,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: (statusColors[sts] ?? Colors.grey).withValues(alpha: 0.2),
+                  color: (statusColors[sts] ?? Colors.grey).withOpacity(0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -176,9 +176,9 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withValues(alpha: 0.1),
+                  color: Colors.orange.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange.withValues(alpha: 0.4)),
+                  border: Border.all(color: Colors.orange.withOpacity(0.4)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -304,7 +304,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
         borderRadius: BorderRadius.circular(15),
         side: BorderSide(
           color: myTurn
-              ? AppTheme.primaryGold.withValues(alpha: 0.6)
+              ? AppTheme.primaryGold.withOpacity(0.6)
               : Colors.white12,
         ),
       ),
@@ -359,7 +359,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
                 color: AppTheme.deepBlack,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                    color: AppTheme.primaryGold.withValues(alpha: 0.2)),
+                    color: AppTheme.primaryGold.withOpacity(0.2)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -708,9 +708,9 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
+        color: color.withOpacity(0.15),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.5)),
+        border: Border.all(color: color.withOpacity(0.5)),
       ),
       child: Text(texts[sts] ?? '—',
           style: TextStyle(
@@ -724,7 +724,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
           children: [
             Icon(Icons.calendar_today_outlined,
                 size: 80,
-                color: AppTheme.textGrey.withValues(alpha: 0.3)),
+                color: AppTheme.textGrey.withOpacity(0.3)),
             const SizedBox(height: 20),
             Text(msg,
                 style:

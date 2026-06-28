@@ -189,7 +189,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
                     color: AppTheme.deepBlack,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                        color: AppTheme.primaryGold.withValues(alpha: 0.2)),
+                        color: AppTheme.primaryGold.withOpacity(0.2)),
                   ),
                   child: ListTile(
                     leading: ClipRRect(
@@ -385,7 +385,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
         const SizedBox(height: 16),
         if (_selectedElement != null) ...[
           DropdownButtonFormField<int>(
-            initialValue: _selectedMainCat,
+            value: _selectedMainCat,
             dropdownColor: AppTheme.surfaceBlack,
             style: const TextStyle(color: AppTheme.textWhite),
             decoration: const InputDecoration(
@@ -406,7 +406,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
           if (_selectedMainCat != null) ...[
             const SizedBox(height: 12),
             DropdownButtonFormField<int>(
-              initialValue: _selectedSubCat,
+              value: _selectedSubCat,
               dropdownColor: AppTheme.surfaceBlack,
               style: const TextStyle(color: AppTheme.textWhite, fontSize: 14),
               decoration: const InputDecoration(
@@ -444,7 +444,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
             decoration: BoxDecoration(
               color: AppTheme.surfaceBlack,
               border: Border.all(
-                  color: AppTheme.primaryGold.withValues(alpha: 0.4)),
+                  color: AppTheme.primaryGold.withOpacity(0.4)),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
@@ -507,7 +507,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
             Expanded(
               flex: 2,
               child: DropdownButtonFormField<int>(
-                initialValue: _cur,
+                value: _cur,
                 dropdownColor: AppTheme.surfaceBlack,
                 style: const TextStyle(color: AppTheme.textWhite),
                 decoration: const InputDecoration(
@@ -528,10 +528,10 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppTheme.primaryGold.withValues(alpha: 0.06),
+              color: AppTheme.primaryGold.withOpacity(0.06),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                  color: AppTheme.primaryGold.withValues(alpha: 0.2)),
+                  color: AppTheme.primaryGold.withOpacity(0.2)),
             ),
             child: const Row(children: [
               Icon(Icons.lock_outline,
@@ -603,7 +603,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
 
   Widget _dd(String label, List<String> items, Function(String) onSelected) =>
       DropdownButtonFormField<String>(
-        initialValue: null,
+        value: null,
         items: items
             .map((i) => DropdownMenuItem(value: i, child: Text(i)))
             .toList(),

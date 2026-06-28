@@ -70,7 +70,7 @@ class AccountInfoScreen extends StatelessWidget {
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-            color: AppTheme.primaryGold.withValues(alpha: 0.12)),
+            color: AppTheme.primaryGold.withOpacity(0.12)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -78,7 +78,7 @@ class AccountInfoScreen extends StatelessWidget {
           Row(
             children: [
               Icon(Icons.info_outline_rounded,
-                  color: AppTheme.primaryGold.withValues(alpha: 0.8),
+                  color: AppTheme.primaryGold.withOpacity(0.8),
                   size: 18),
               const SizedBox(width: 8),
               const Text(
@@ -147,12 +147,12 @@ class AccountInfoScreen extends StatelessWidget {
       child: Row(
         children: [
           Icon(icon,
-              color: AppTheme.primaryGold.withValues(alpha: 0.6), size: 18),
+              color: AppTheme.primaryGold.withOpacity(0.6), size: 18),
           const SizedBox(width: 10),
           Text(
             label,
             style: TextStyle(
-              color: AppTheme.textGrey.withValues(alpha: 0.7),
+              color: AppTheme.textGrey.withOpacity(0.7),
               fontSize: 13,
             ),
           ),
@@ -226,7 +226,7 @@ class AccountInfoScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.25)),
+        border: Border.all(color: color.withOpacity(0.25)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -376,7 +376,7 @@ class AccountInfoScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        border: Border.all(color: Colors.white.withOpacity(0.06)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -384,7 +384,7 @@ class AccountInfoScreen extends StatelessWidget {
           Row(
             children: [
               Icon(Icons.lock_outline_rounded,
-                  color: AppTheme.primaryGold.withValues(alpha: 0.8),
+                  color: AppTheme.primaryGold.withOpacity(0.8),
                   size: 18),
               const SizedBox(width: 8),
               const Text(
@@ -421,7 +421,7 @@ class AccountInfoScreen extends StatelessWidget {
               ),
               style: OutlinedButton.styleFrom(
                 side: BorderSide(
-                    color: AppTheme.primaryGold.withValues(alpha: 0.3)),
+                    color: AppTheme.primaryGold.withOpacity(0.3)),
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),

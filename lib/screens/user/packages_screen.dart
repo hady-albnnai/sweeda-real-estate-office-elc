@@ -120,9 +120,9 @@ class _PackagesScreenState extends State<PackagesScreen> {
     final isInGrace        = user.isInGracePeriod;
     final isExpired        = user.bPkg > 0 && !isPkgActive && !isInGrace;
 
-    Color borderColor = AppTheme.primaryGold.withValues(alpha: 0.4);
-    if (isInGrace)  borderColor = Colors.orange.withValues(alpha: 0.6);
-    if (isExpired)  borderColor = Colors.red.withValues(alpha: 0.5);
+    Color borderColor = AppTheme.primaryGold.withOpacity(0.4);
+    if (isInGrace)  borderColor = Colors.orange.withOpacity(0.6);
+    if (isExpired)  borderColor = Colors.red.withOpacity(0.5);
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -201,9 +201,9 @@ class _PackagesScreenState extends State<PackagesScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.blue.withValues(alpha: 0.1),
+        color: Colors.blue.withOpacity(0.1),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.blue.withValues(alpha: 0.4)),
+        border: Border.all(color: Colors.blue.withOpacity(0.4)),
       ),
       child: Row(children: [
         const Icon(Icons.pending_actions, color: Colors.blue, size: 20),
@@ -251,7 +251,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
             end: Alignment.bottomRight),
         boxShadow: [
           BoxShadow(
-              color: gradient[0].withValues(alpha: 0.3),
+              color: gradient[0].withOpacity(0.3),
               blurRadius: 12,
               offset: const Offset(0, 4)),
         ],
@@ -322,7 +322,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
                     context, pkg, isCurrent, isFree, isPending, price),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: isPending
-                      ? Colors.blue.withValues(alpha: 0.3)
+                      ? Colors.blue.withOpacity(0.3)
                       : gradient[1],
                   foregroundColor: Colors.black,
                   disabledBackgroundColor: AppTheme.surfaceBlack,
@@ -361,7 +361,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
         margin: const EdgeInsets.only(top: 4),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.2),
+          color: color.withOpacity(0.2),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(label,
@@ -387,7 +387,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
           color: AppTheme.surfaceBlack,
           borderRadius: BorderRadius.circular(12),
           border:
-              Border.all(color: AppTheme.textGrey.withValues(alpha: 0.3)),
+              Border.all(color: AppTheme.textGrey.withOpacity(0.3)),
         ),
                 child: Row(children: [
           const Icon(Icons.info_outline, color: AppTheme.primaryGold, size: 20),

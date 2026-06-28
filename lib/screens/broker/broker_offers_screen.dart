@@ -99,7 +99,7 @@ class _BrokerOffersScreenState extends State<BrokerOffersScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.home_work,
-                size: 72, color: AppTheme.textGrey.withValues(alpha: 0.3)),
+                size: 72, color: AppTheme.textGrey.withOpacity(0.3)),
             const SizedBox(height: 16),
             const Text('لا توجد عروض مرتبطة بك',
                 style: TextStyle(color: AppTheme.textGrey, fontSize: 15)),
@@ -119,7 +119,7 @@ class _BrokerOffersScreenState extends State<BrokerOffersScreen> {
       selectedColor: AppTheme.primaryGold,
       backgroundColor: AppTheme.surfaceBlack,
       checkmarkColor: AppTheme.deepBlack,
-      side: BorderSide(color: AppTheme.primaryGold.withValues(alpha: 0.3)),
+      side: BorderSide(color: AppTheme.primaryGold.withOpacity(0.3)),
       onSelected: (_) => setState(() => _filter = value),
     );
   }
@@ -130,7 +130,7 @@ class _BrokerOffersScreenState extends State<BrokerOffersScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.15)),
+        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.15)),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.all(10),
@@ -161,14 +161,14 @@ class _BrokerOffersScreenState extends State<BrokerOffersScreen> {
                 _statusBadge(o.sts),
                 const SizedBox(width: 8),
                 Icon(Icons.visibility,
-                    size: 13, color: AppTheme.textGrey.withValues(alpha: 0.7)),
+                    size: 13, color: AppTheme.textGrey.withOpacity(0.7)),
                 const SizedBox(width: 2),
                 Text('${o.vws}',
                     style: const TextStyle(
                         color: AppTheme.textGrey, fontSize: 11)),
                 const SizedBox(width: 8),
                 Icon(Icons.favorite,
-                    size: 13, color: AppTheme.textGrey.withValues(alpha: 0.7)),
+                    size: 13, color: AppTheme.textGrey.withOpacity(0.7)),
                 const SizedBox(width: 2),
                 Text('${o.fvs}',
                     style: const TextStyle(
@@ -228,9 +228,9 @@ class _BrokerOffersScreenState extends State<BrokerOffersScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
+        color: color.withOpacity(0.15),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withValues(alpha: 0.5)),
+        border: Border.all(color: color.withOpacity(0.5)),
       ),
       child: Text(label, style: TextStyle(color: color, fontSize: 10)),
     );

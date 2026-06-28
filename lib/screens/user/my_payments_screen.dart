@@ -86,7 +86,7 @@ class _MyPaymentsScreenState extends State<MyPaymentsScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: stsColor.withValues(alpha: 0.3)),
+        border: Border.all(color: stsColor.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -105,9 +105,9 @@ class _MyPaymentsScreenState extends State<MyPaymentsScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: stsColor.withValues(alpha: 0.15),
+                  color: stsColor.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: stsColor.withValues(alpha: 0.5)),
+                  border: Border.all(color: stsColor.withOpacity(0.5)),
                 ),
                 child: Text(stsLabel,
                     style: TextStyle(
@@ -131,7 +131,7 @@ class _MyPaymentsScreenState extends State<MyPaymentsScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: stsColor.withValues(alpha: 0.07),
+              color: stsColor.withOpacity(0.07),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(children: [
@@ -202,7 +202,7 @@ class _MyPaymentsScreenState extends State<MyPaymentsScreen> {
           children: [
             Icon(Icons.receipt_long_outlined,
                 size: 80,
-                color: AppTheme.textGrey.withValues(alpha: 0.3)),
+                color: AppTheme.textGrey.withOpacity(0.3)),
             const SizedBox(height: 20),
             const Text('لا توجد دفعات بعد',
                 style: TextStyle(color: AppTheme.textGrey, fontSize: 16)),

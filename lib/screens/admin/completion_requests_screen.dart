@@ -154,7 +154,7 @@ class _CompletionRequestsScreenState extends State<CompletionRequestsScreen> {
           children: [
             Row(children: [
               CircleAvatar(
-                backgroundColor: Colors.blue.withValues(alpha: 0.15),
+                backgroundColor: Colors.blue.withOpacity(0.15),
                 child: const Icon(Icons.assignment_turned_in, color: Colors.blue),
               ),
               const SizedBox(width: 10),

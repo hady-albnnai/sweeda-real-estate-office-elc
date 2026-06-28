@@ -118,7 +118,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.2)),
+        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.2)),
       ),
       child: Column(
         children: [
@@ -175,7 +175,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-            color: gold ? AppTheme.primaryGold.withValues(alpha: 0.5) : Colors.white12),
+            color: gold ? AppTheme.primaryGold.withOpacity(0.5) : Colors.white12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

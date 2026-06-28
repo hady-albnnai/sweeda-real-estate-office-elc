@@ -112,7 +112,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         selectedColor: AppTheme.primaryGold,
         backgroundColor: AppTheme.surfaceBlack,
         checkmarkColor: AppTheme.deepBlack,
-        side: BorderSide(color: AppTheme.primaryGold.withValues(alpha: 0.3)),
+        side: BorderSide(color: AppTheme.primaryGold.withOpacity(0.3)),
         onSelected: (_) => setState(() => _filter = value),
       ),
     );
@@ -128,8 +128,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
             color: handled
-                ? AppTheme.primaryGold.withValues(alpha: 0.15)
-                : AppTheme.errorRed.withValues(alpha: 0.35)),
+                ? AppTheme.primaryGold.withOpacity(0.15)
+                : AppTheme.errorRed.withOpacity(0.35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,7 +190,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              RadioGroup<int>(
+              
                 groupValue: selectedAction,
                 onChanged: (value) => setSt(() {
                   selectedAction = value ?? 0;

@@ -110,9 +110,9 @@ class _LoginScreenState extends State<LoginScreen> {
             // 🔥 شعار السبلاش الضخم جداً
             Hero(tag: 'logo', child: Container(
               width: logoSize, height: logoSize * 0.72,
-              decoration: BoxDecoration(shape: BoxShape.circle, boxShadow: [BoxShadow(color: AppTheme.primaryGold.withValues(alpha: 0.2), blurRadius: 100, spreadRadius: 25)]),
+              decoration: BoxDecoration(shape: BoxShape.circle, boxShadow: [BoxShadow(color: AppTheme.primaryGold.withOpacity(0.2), blurRadius: 100, spreadRadius: 25)]),
               child: Stack(alignment: Alignment.center, children: [
-                Container(width: logoSize * 0.72, height: logoSize * 0.72, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.4), width: 3.5))),
+                Container(width: logoSize * 0.72, height: logoSize * 0.72, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4), width: 3.5))),
                 Container(width: logoSize * 0.65, height: logoSize * 0.65, decoration: const BoxDecoration(shape: BoxShape.circle, color: AppTheme.surfaceBlack), padding: const EdgeInsets.all(35), child: Image.asset('assets/images/logo_app.png', fit: BoxFit.contain)),
               ]),
             )),
@@ -175,7 +175,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final open = _activeSection == id;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
-      decoration: BoxDecoration(color: isGold ? AppTheme.primaryGold : AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(24), border: Border.all(color: AppTheme.primaryGold.withValues(alpha: 0.5), width: 2)),
+      decoration: BoxDecoration(color: isGold ? AppTheme.primaryGold : AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(24), border: Border.all(color: AppTheme.primaryGold.withOpacity(0.5), width: 2)),
       child: Column(children: [
         InkWell(
           onTap: () => setState(() { _activeSection = open ? 0 : id; if (id == 1) _signupMethod = 0; }),
@@ -196,7 +196,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildOption({required int id, required String title, required IconData icon, required Widget child}) {
     final sel = _signupMethod == id;
     return Container(
-      decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(color: Colors.black.withOpacity(0.1), borderRadius: BorderRadius.circular(16)),
       child: Column(children: [
         ListTile(
           onTap: () => setState(() => _signupMethod = sel ? 0 : id),
@@ -215,7 +215,7 @@ class _LoginScreenState extends State<LoginScreen> {
       style: TextStyle(color: dark ? Colors.black : AppTheme.textWhite, fontWeight: FontWeight.bold),
       decoration: InputDecoration(
         hintText: h, prefixIcon: Icon(i, color: dark ? Colors.black45 : AppTheme.primaryGold),
-        fillColor: dark ? Colors.white.withValues(alpha: 0.8) : AppTheme.surfaceBlack,
+        fillColor: dark ? Colors.white.withOpacity(0.8) : AppTheme.surfaceBlack,
         suffixIcon: isPass ? IconButton(icon: Icon(obs! ? Icons.visibility_off : Icons.visibility, color: AppTheme.textGrey), onPressed: onT) : null,
       ),
     );
