@@ -287,7 +287,7 @@ class OfferProvider with ChangeNotifier {
               }
             } else if (offerRaw is Map) {
               // في حال غيّرنا Edge Function لترجع كائن مباشرة
-              final row = Map<String, dynamic>.from(offerRaw as Map);
+              final row = Map<String, dynamic>.from(offerRaw);
               final offer = OfferModel.fromSupabase(row, row['id'] as String);
               await _enrichOwnerLabels([offer]);
               return offer;
@@ -329,9 +329,7 @@ class OfferProvider with ChangeNotifier {
       
       notifyListeners();
       return created;
-    } catch (e, stackTrace) {
-      print('[OFFER PROVIDER ERROR] Failed to create offer: $e');
-      print('[OFFER PROVIDER STACKTRACE] $stackTrace');
+    } catch (e) {
       _setError(e);
       return null;
     }

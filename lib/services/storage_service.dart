@@ -50,8 +50,6 @@ class StorageService {
         maxWidth: 1920,
       );
     } catch (e) {
-      print('==== IMAGE PICK ERROR ====');
-      print(e.toString());
       _setError(e);
       return null;
     }
@@ -122,7 +120,6 @@ class StorageService {
       final request = http.MultipartRequest('POST', Uri.parse(_edgeUrl));
 
       // Headers
-      final url = SupabaseService.url;
       final headers = <String, String>{
         'apikey': SupabaseService.publishableKey!,
         'Authorization': 'Bearer ${SupabaseService.publishableKey!}',
@@ -172,8 +169,6 @@ class StorageService {
 
       return (data['urls'] as List<dynamic>).cast<String>();
     } catch (e) {
-      print('==== EDGE UPLOAD ERROR ====');
-      print(e.toString());
       _setError(e);
       rethrow;
     }
@@ -206,8 +201,6 @@ class StorageService {
       );
       return urls.isNotEmpty ? urls.first : null;
     } catch (e) {
-      print('==== IMAGE UPLOAD ERROR ====');
-      print(e.toString());
       _setError(e);
       return null;
     }
@@ -289,8 +282,6 @@ class StorageService {
         maxDuration: maxDuration,
       );
     } catch (e) {
-      print('==== VIDEO PICK ERROR ====');
-      print(e.toString());
       _setError(e);
       return null;
     }
@@ -320,8 +311,6 @@ class StorageService {
       );
       return urls.isNotEmpty ? urls.first : null;
     } catch (e) {
-      print('==== VIDEO UPLOAD ERROR ====');
-      print(e.toString());
       _setError(e);
       return null;
     }

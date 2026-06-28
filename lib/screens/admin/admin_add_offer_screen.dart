@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show FileOptions;
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
@@ -243,8 +242,6 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
         created = OfferModel.fromSupabase(row, row['id'] as String);
       }
     } catch (e) {
-      print("===== ADMIN ADD OFFER ERROR =====");
-      print(e.toString());
       if (mounted) {
         setState(() => _submitting = false);
         _snack('فشل في إنشاء العرض: $e');
