@@ -91,6 +91,19 @@ class _RatingDialogState extends State<RatingDialog> {
       });
 
       if (!mounted) return;
+
+      // ✅ Award bonus points via user-rewards (5 stars = 200 pts)
+      if (_stars == 5) {
+        try {
+          await SupabaseService().client.functions.invoke('user-rewards', body: {
+            'action': 'rating_bonus',
+            'user_uid': auth.userModel!.uid,
+            'target_uid': widget.targetUid,
+            'stars': _stars,
+          });
+        } catch (_) {}
+      }
+
       Navigator.pop(context, true);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
