@@ -125,6 +125,18 @@ class RequestModel {
   bool get canRenew => sts == 0 || sts == 1 || sts == 4;
   bool get canCancel => sts == 0 || sts == 1 || sts == 4;
 
+  /// تاريخ انتهاء الطلب الفعلي
+  DateTime get expirationDate {
+    if (tsEnd != null) return tsEnd!;
+    return tsCrt.add(const Duration(days: 30));
+  }
+
+  /// عدد الأيام المتبقية حتى انتهاء الطلب
+  int get daysUntilExpiration {
+    final diff = expirationDate.difference(DateTime.now()).inDays;
+    return diff < 0 ? 0 : diff;
+  }
+
   String get statusLabel {
     switch (sts) {
       case 0:
