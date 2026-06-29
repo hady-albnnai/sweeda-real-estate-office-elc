@@ -561,7 +561,10 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
                         context: context,
                         isScrollControlled: true,
                         backgroundColor: Colors.transparent,
-                        builder: (context) => BookAppointmentSheet(offer: offer),
+                        builder: (context) => BookAppointmentSheet(
+                          offer: offer,
+                          requestId: widget.requestData['id'],
+                        ),
                       );
                     },
                     child: const Text('حجز موعد'),
