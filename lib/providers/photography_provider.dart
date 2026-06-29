@@ -39,7 +39,7 @@ class PhotographyProvider with ChangeNotifier {
   Future<List<PhotographyTaskModel>> getPhotographerTasks(String photographerId) async {
     try {
       final token = await AuthService().getStaffSessionToken();
-      final res = await SupabaseService().client.functions.invoke(
+      final res = await SupabaseService().invokeFunction(
         'photographer-tasks',
         body: {
           'action': 'list',
@@ -67,7 +67,7 @@ class PhotographyProvider with ChangeNotifier {
   Future<bool> startTask(String photographerUid, String taskId) async {
     try {
       final token = await AuthService().getStaffSessionToken();
-      final res = await SupabaseService().client.functions.invoke(
+      final res = await SupabaseService().invokeFunction(
         'photographer-tasks',
         body: {
           'action': 'start',
@@ -99,7 +99,7 @@ class PhotographyProvider with ChangeNotifier {
     _setLoading(true);
     try {
       final token = await AuthService().getStaffSessionToken();
-      final res = await SupabaseService().client.functions.invoke(
+      final res = await SupabaseService().invokeFunction(
         'admin-photography',
         body: {
           'action': 'create',
@@ -129,7 +129,7 @@ class PhotographyProvider with ChangeNotifier {
   Future<bool> updateStatus(String adminUid, String taskId, int status, {String officeNote = ''}) async {
     try {
       final token = await AuthService().getStaffSessionToken();
-      final res = await SupabaseService().client.functions.invoke(
+      final res = await SupabaseService().invokeFunction(
         'admin-photography',
         body: {
           'action': 'update_status',
@@ -161,7 +161,7 @@ class PhotographyProvider with ChangeNotifier {
   }) async {
     try {
       final token = await AuthService().getStaffSessionToken();
-      final res = await SupabaseService().client.functions.invoke(
+      final res = await SupabaseService().invokeFunction(
         'photographer-tasks',
         body: {
           'action': 'submit',
@@ -189,7 +189,7 @@ class PhotographyProvider with ChangeNotifier {
     if (task.media.isEmpty) return false;
     try {
       final token = await AuthService().getStaffSessionToken();
-      final res = await SupabaseService().client.functions.invoke(
+      final res = await SupabaseService().invokeFunction(
         'admin-photography',
         body: {
           'action': 'attach_media',

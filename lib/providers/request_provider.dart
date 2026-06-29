@@ -11,7 +11,7 @@ class RequestProvider with ChangeNotifier {
 
   Future<Map<String, dynamic>> canPublishRequest(String userId) async {
     try {
-      final response = await SupabaseService().client.functions.invoke(
+      final response = await SupabaseService().invokeFunction(
         'user-requests',
         body: {
           'action': 'can_publish',
@@ -40,7 +40,7 @@ class RequestProvider with ChangeNotifier {
 
   Future<bool> addRequest(RequestModel request) async {
     try {
-      final response = await SupabaseService().client.functions.invoke(
+      final response = await SupabaseService().invokeFunction(
         'user-requests',
         body: {
           'action': 'create',
@@ -63,7 +63,7 @@ class RequestProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      final response = await SupabaseService().client.functions.invoke(
+      final response = await SupabaseService().invokeFunction(
         'user-requests',
         body: {
           'action': 'list',
@@ -88,7 +88,7 @@ class RequestProvider with ChangeNotifier {
   Future<bool> updateRequest(
       String userId, String reqId, Map<String, dynamic> data) async {
     try {
-      final response = await SupabaseService().client.functions.invoke(
+      final response = await SupabaseService().invokeFunction(
         'user-requests',
         body: {
           'action': 'update',
@@ -111,7 +111,7 @@ class RequestProvider with ChangeNotifier {
   Future<bool> cancelRequest(String userId, String reqId,
       {String reason = ''}) async {
     try {
-      final response = await SupabaseService().client.functions.invoke(
+      final response = await SupabaseService().invokeFunction(
         'user-requests',
         body: {
           'action': 'cancel',
@@ -133,7 +133,7 @@ class RequestProvider with ChangeNotifier {
 
   Future<bool> renewRequest(String userId, String reqId) async {
     try {
-      final response = await SupabaseService().client.functions.invoke(
+      final response = await SupabaseService().invokeFunction(
         'user-requests',
         body: {
           'action': 'renew',

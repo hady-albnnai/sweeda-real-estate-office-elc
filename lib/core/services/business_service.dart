@@ -26,7 +26,7 @@ class BusinessService {
   Future<bool> addPoints(String uid, int points) async {
     if (uid.isEmpty || points == 0) return false;
     try {
-      final res = await _sb.client.functions.invoke('user-account', body: {
+      final res = await _sb.invokeFunction('user-account', body: {
         'action': 'award_points',
         'user_uid': uid,
         'event_type': 'manual_add',
@@ -42,7 +42,7 @@ class BusinessService {
   Future<bool> awardPointsSafe(String uid, String eventType, int points) async {
     if (uid.isEmpty || points == 0) return false;
     try {
-      final res = await _sb.client.functions.invoke('user-account', body: {
+      final res = await _sb.invokeFunction('user-account', body: {
         'action': 'award_points',
         'user_uid': uid,
         'event_type': eventType,
@@ -73,7 +73,7 @@ class BusinessService {
 
     // ✅ Via user-rewards Edge Function
     try {
-      final res = await _sb.client.functions.invoke('user-rewards', body: {
+      final res = await _sb.invokeFunction('user-rewards', body: {
         'action': 'award_points',
         'user_uid': uid,
         'event_key': eventKey,
@@ -247,7 +247,7 @@ class BusinessService {
       return {'allowed': true, 'used': 0, 'limit': 999999, 'reason': ''};
     }
     try {
-      final response = await _sb.client.functions.invoke(
+      final response = await _sb.invokeFunction(
         'user-requests',
         body: {
           'action': 'can_publish',
@@ -358,7 +358,7 @@ class BusinessService {
     try {
       final strkPts = _ptsFromConfig(config, 'strk', 50);
       // ✅ Via user-rewards Edge Function (safe)
-      final res = await _sb.client.functions.invoke('user-rewards', body: {
+      final res = await _sb.invokeFunction('user-rewards', body: {
         'action': 'daily_streak',
         'user_uid': uid,
         'points': strkPts,
@@ -420,7 +420,7 @@ class BusinessService {
     try {
       if (userId == null || userId.isEmpty) return false;
       // ✅ Via user-offers Edge (social_published action)
-      final res = await _sb.client.functions.invoke('user-offers', body: {
+      final res = await _sb.invokeFunction('user-offers', body: {
         'action': 'social_published',
         'user_uid': userId,
         'offer_id': offerId,
@@ -442,7 +442,7 @@ class BusinessService {
   }) async {
     try {
       // ✅ Via user-offers Edge (check_duplicate action)
-      final res = await _sb.client.functions.invoke('user-offers', body: {
+      final res = await _sb.invokeFunction('user-offers', body: {
         'action': 'check_duplicate',
         'user_uid': uid,
         'title': title,

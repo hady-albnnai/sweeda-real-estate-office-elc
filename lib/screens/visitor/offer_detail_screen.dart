@@ -512,7 +512,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
 
     try {
       final rsnIndex = reasons.indexOf(selected!);
-      final response = await SupabaseService().client.functions.invoke(
+      final response = await SupabaseService().invokeFunction(
         'user-account',
         body: {
           'action': 'create_report',

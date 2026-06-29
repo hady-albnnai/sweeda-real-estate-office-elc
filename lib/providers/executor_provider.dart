@@ -13,7 +13,7 @@ class ExecutorProvider with ChangeNotifier {
   Future<List<ExecutorTaskModel>> getMyTasks(String userId) async {
     try {
       final token = await AuthService().getStaffSessionToken();
-      final res = await SupabaseService().client.functions.invoke(
+      final res = await SupabaseService().invokeFunction(
         'executor-tasks',
         body: {
           'action': 'get_my_tasks',
@@ -32,7 +32,7 @@ class ExecutorProvider with ChangeNotifier {
   Future<List<ExecutorTaskModel>> getPostponedTasks(String userId) async {
     try {
       final token = await AuthService().getStaffSessionToken();
-      final res = await SupabaseService().client.functions.invoke(
+      final res = await SupabaseService().invokeFunction(
         'executor-tasks',
         body: {
           'action': 'get_postponed_tasks',
@@ -51,7 +51,7 @@ class ExecutorProvider with ChangeNotifier {
   Future<List<ExecutorTaskModel>> getCompletedTasks(String userId) async {
     try {
       final token = await AuthService().getStaffSessionToken();
-      final res = await SupabaseService().client.functions.invoke(
+      final res = await SupabaseService().invokeFunction(
         'executor-tasks',
         body: {
           'action': 'get_completed_tasks',
@@ -70,7 +70,7 @@ class ExecutorProvider with ChangeNotifier {
   Future<ExecutorTaskModel?> getTaskByAppointment(String userId, String appointmentId) async {
     try {
       final token = await AuthService().getStaffSessionToken();
-      final res = await SupabaseService().client.functions.invoke(
+      final res = await SupabaseService().invokeFunction(
         'executor-tasks',
         body: {
           'action': 'get_task_by_appointment',
@@ -97,7 +97,7 @@ class ExecutorProvider with ChangeNotifier {
       DateTime newDate, String notes) async {
     try {
       final token = await AuthService().getStaffSessionToken();
-      final res = await SupabaseService().client.functions.invoke(
+      final res = await SupabaseService().invokeFunction(
         'executor-tasks',
         body: {
           'action': 'update_task_outcome',
@@ -121,7 +121,7 @@ class ExecutorProvider with ChangeNotifier {
       String reason, String notes) async {
     try {
       final token = await AuthService().getStaffSessionToken();
-      final res = await SupabaseService().client.functions.invoke(
+      final res = await SupabaseService().invokeFunction(
         'executor-tasks',
         body: {
           'action': 'update_task_outcome',
@@ -145,7 +145,7 @@ class ExecutorProvider with ChangeNotifier {
       String userId, String appointmentId, String notes) async {
     try {
       final token = await AuthService().getStaffSessionToken();
-      final res = await SupabaseService().client.functions.invoke(
+      final res = await SupabaseService().invokeFunction(
         'executor-tasks',
         body: {
           'action': 'request_completion',
@@ -169,7 +169,7 @@ class ExecutorProvider with ChangeNotifier {
   Future<List<Map<String, dynamic>>> getMyCompletionRequests(String userId) async {
     try {
       final token = await AuthService().getStaffSessionToken();
-      final res = await SupabaseService().client.functions.invoke(
+      final res = await SupabaseService().invokeFunction(
         'executor-tasks',
         body: {
           'action': 'get_my_completion_requests',
@@ -188,7 +188,7 @@ class ExecutorProvider with ChangeNotifier {
   Future<List<Map<String, dynamic>>> getPendingRequests(String adminUid) async {
     try {
       final token = await AuthService().getStaffSessionToken();
-      final res = await SupabaseService().client.functions.invoke(
+      final res = await SupabaseService().invokeFunction(
         'executor-tasks',
         body: {
           'action': 'get_pending_requests',
@@ -213,7 +213,7 @@ class ExecutorProvider with ChangeNotifier {
       String decision, String officeNotes) async {
     try {
       final token = await AuthService().getStaffSessionToken();
-      final res = await SupabaseService().client.functions.invoke(
+      final res = await SupabaseService().invokeFunction(
         'executor-tasks',
         body: {
           'action': 'process_completion_request',

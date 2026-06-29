@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// نقطة الوصول المركزية لـ Supabase
 class SupabaseService {
@@ -54,4 +55,31 @@ class SupabaseService {
 
   /// هل التطبيق جاهز؟
   bool get isReady => _initialized;
+
+  /// استدعاء Edge Function مع إضافة توكن الجلسة المخصص إذا لزم الأمر
+  Future<FunctionsHttpResponse> invokeFunction(
+    String functionName, {
+    dynamic body,
+    Map<String, String>? headers,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final sessionToken = prefs.getString('staff_session_token');
+    final jwt = auth.currentSession?.accessToken;
+
+    final finalHeaders = Map<String, String>.from(headers ?? {});
+    
+    if (jwt != null) {
+      // JWT is primary
+      finalHeaders['Authorization'] = 'Bearer $jwt';
+    } else if (sessionToken != null && sessionToken.isNotEmpty) {
+      // Fallback to custom session token
+      finalHeaders['Authorization'] = sessionToken;
+    }
+
+    return await client.functions.invoke(
+      functionName,
+      body: body,
+      headers: finalHeaders,
+    );
+  }
 }

@@ -32,7 +32,7 @@ class AppointmentsAdminService {
         body['staff_session_token'] = sessionToken;
       }
       body['action'] = action;
-      final res = await SupabaseService().client.functions.invoke('admin-appointments', body: body);
+      final res = await SupabaseService().invokeFunction('admin-appointments', body: body);
       final data = _asMap(res.data);
       if (data == null) {
         _setError('EMPTY_RESPONSE');
@@ -53,7 +53,7 @@ class AppointmentsAdminService {
   Future<List<RequestModel>> getAllRequests(String adminUid) async {
     try {
       final token = await AuthService().getStaffSessionToken();
-      final response = await SupabaseService().client.functions.invoke(
+      final response = await SupabaseService().invokeFunction(
         'admin-dashboard',
         body: {
           'action': 'admin_requests',
@@ -83,7 +83,7 @@ class AppointmentsAdminService {
   }) async {
     try {
       final token = await AuthService().getStaffSessionToken();
-      final response = await SupabaseService().client.functions.invoke(
+      final response = await SupabaseService().invokeFunction(
         'admin-dashboard',
         body: {
           'action': 'close_request',

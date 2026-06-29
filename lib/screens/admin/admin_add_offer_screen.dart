@@ -236,7 +236,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
     OfferModel? created;
     try {
       // نستخدم RPC مخصصة للإدارة لتمرير added_by
-      final res = await SupabaseService().client.functions.invoke('admin-offers', body: {'action': 'create_for_user', 'user_id': _selectedOwner!.uid, 'offer': {...offer.toMap(), 'added_by': admin.uid}, 'admin_uid': admin.uid}); final data = res.data as Map; final response = data['offer_id'];
+      final res = await SupabaseService().invokeFunction('admin-offers', body: {'action': 'create_for_user', 'user_id': _selectedOwner!.uid, 'offer': {...offer.toMap(), 'added_by': admin.uid}, 'admin_uid': admin.uid}); final data = res.data as Map; final response = data['offer_id'];
       if (response != null && (response is List) && response.isNotEmpty) {
         final row = Map<String, dynamic>.from(response.first as Map);
         created = OfferModel.fromSupabase(row, row['id'] as String);

@@ -56,7 +56,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() => _loadingStats = true);
     try {
       final token = await AuthService().getStaffSessionToken();
-      final response = await SupabaseService().client.functions.invoke('admin-dashboard', body: {
+      final response = await SupabaseService().invokeFunction('admin-dashboard', body: {
         'action': 'staff_stats',
         'user_uid': auth.userModel!.uid,
         'staff_session_token': token,

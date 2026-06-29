@@ -225,7 +225,7 @@ class OfferProvider with ChangeNotifier {
 
   Future<List<OfferModel>> fetchUserOffers(String userId) async {
     try {
-      final response = await SupabaseService().client.functions.invoke(
+      final response = await SupabaseService().invokeFunction(
         'user-offers',
         body: {
           'action': 'list',
@@ -266,7 +266,7 @@ class OfferProvider with ChangeNotifier {
 
           /// 🛡️ المحاولة الثانية: عبر Edge Function (للمستخدمين العاديين)
           /// الدالة get_offer_by_id_internal ترجع SETOF offers (مصفوفة)
-          final response = await SupabaseService().client.functions.invoke(
+          final response = await SupabaseService().invokeFunction(
             'user-offers',
             body: {
               'action': 'get_by_id',
@@ -321,7 +321,7 @@ class OfferProvider with ChangeNotifier {
 
   Future<OfferModel?> addOffer(OfferModel offer) async {
     try {
-      final res = await SupabaseService().client.functions.invoke('user-offers', body: {'action': 'create', 'user_uid': offer.usrId, 'offer': offer.toMap()}); final data = res.data as Map; final response = data['offer_id'];
+      final res = await SupabaseService().invokeFunction('user-offers', body: {'action': 'create', 'user_uid': offer.usrId, 'offer': offer.toMap()}); final data = res.data as Map; final response = data['offer_id'];
       if (response == null || (response is! List) || response.isEmpty) return null;
       final row = Map<String, dynamic>.from(response.first as Map);
       final created = OfferModel.fromSupabase(row, row['id'] as String);
@@ -364,7 +364,7 @@ class OfferProvider with ChangeNotifier {
 
   Future<void> incrementViews(String offerId) async {
     try {
-      await SupabaseService().client.functions.invoke(
+      await SupabaseService().invokeFunction(
         'user-offers',
         body: {
           'action': 'increment_views',
