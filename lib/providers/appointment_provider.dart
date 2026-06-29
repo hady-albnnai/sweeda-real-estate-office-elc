@@ -17,7 +17,7 @@ class AppointmentProvider with ChangeNotifier {
 
   Future<List<String>> fetchBookedSlots(String offerId, DateTime date) async {
     try {
-      final response = await SupabaseService().client.functions.invoke(
+      final response = await SupabaseService().invokeFunction(
         'user-appointments',
         body: {
           'action': 'get_booked_slots',
@@ -54,7 +54,7 @@ class AppointmentProvider with ChangeNotifier {
       );
       if (dateTime == null) return false;
 
-      final resultRes = await SupabaseService().client.functions.invoke(
+      final resultRes = await SupabaseService().invokeFunction(
         'user-appointments',
         body: {
           'action': 'book',
@@ -84,7 +84,7 @@ class AppointmentProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      final res = await SupabaseService().client.functions.invoke(
+      final res = await SupabaseService().invokeFunction(
         'user-appointments',
         body: {'action': 'list_user_appointments', 'user_uid': userId},
       );
@@ -104,7 +104,7 @@ class AppointmentProvider with ChangeNotifier {
 
   Future<List<AppointmentModel>> fetchAppointmentsForMyOffers(String userId) async {
     try {
-      final res = await SupabaseService().client.functions.invoke(
+      final res = await SupabaseService().invokeFunction(
         'user-appointments',
         body: {'action': 'list_owner_appointments', 'user_uid': userId},
       );
@@ -122,7 +122,7 @@ class AppointmentProvider with ChangeNotifier {
   Future<bool> cancelAppointment(
       String appointmentId, String userId, String reason) async {
     try {
-      await SupabaseService().client.functions.invoke(
+      await SupabaseService().invokeFunction(
         'user-appointments',
         body: {
           'action': 'cancel',
@@ -146,7 +146,7 @@ class AppointmentProvider with ChangeNotifier {
     try {
       // نستخدم RPC الإدارية إذا توفر adminUid، وإلا نستخدم broker_handle
       if (adminUid.isNotEmpty) {
-        await SupabaseService().client.functions.invoke('admin-appointments', body: {'action': 'update_status', 'appointmentId': appointmentId, 'status': newStatus, 'adminNote': ''});
+        await SupabaseService().invokeFunction('admin-appointments', body: {'action': 'update_status', 'appointmentId': appointmentId, 'status': newStatus, 'adminNote': ''});
       } else {
         // fallback: direct update محدود للحالات التي لا تحتاج uid
         final data = <String, dynamic>{'sts': newStatus};
@@ -178,7 +178,7 @@ class AppointmentProvider with ChangeNotifier {
     DateTime? proposedDt,
   }) async {
     try {
-      final response = await SupabaseService().client.functions.invoke(
+      final response = await SupabaseService().invokeFunction(
         'user-appointments',
         body: {
           'action': 'owner_respond',
@@ -207,7 +207,7 @@ class AppointmentProvider with ChangeNotifier {
     DateTime? proposedDt,
   }) async {
     try {
-      final response = await SupabaseService().client.functions.invoke(
+      final response = await SupabaseService().invokeFunction(
         'user-appointments',
         body: {
           'action': 'requester_counter',

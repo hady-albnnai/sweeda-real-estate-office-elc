@@ -66,7 +66,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
 
       // استخدام Edge Function بدل RPC المباشر لأن الدالة مقفولة (service_role only)
       // Edge Function only: internal RPC is service_role.
-      final response = await SupabaseService().client.functions.invoke(
+      final response = await SupabaseService().invokeFunction(
         'user-requests',
         body: {
           'action': 'list',

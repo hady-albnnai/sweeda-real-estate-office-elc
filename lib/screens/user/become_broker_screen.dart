@@ -66,7 +66,7 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
 
     try {
       // ✅ Secure via broker-actions Edge Function (submit_request)
-      await SupabaseService().client.functions.invoke(
+      await SupabaseService().invokeFunction(
         'broker-actions',
         body: {
           'action': 'submit_request',

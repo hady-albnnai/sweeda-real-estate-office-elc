@@ -41,7 +41,7 @@ class _FraudSuspectsScreenState extends State<FraudSuspectsScreen> {
       final adminId = auth.userModel?.uid;
       
       final res =
-          await SupabaseService().client.functions.invoke('admin-dashboard', body: {
+          await SupabaseService().invokeFunction('admin-dashboard', body: {
             'action': 'fraud_suspects',
             'admin_uid': adminId,
             'staff_session_token': await AuthService().getStaffSessionToken(),

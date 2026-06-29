@@ -17,7 +17,7 @@ class ReportsAdminService {
   Future<List<ReportModel>> getAllReports(String adminUid, {int? status}) async {
     try {
       final token = await AuthService().getStaffSessionToken();
-      final response = await SupabaseService().client.functions.invoke(
+      final response = await SupabaseService().invokeFunction(
         'admin-reports',
         body: {
           'action': 'list',
@@ -60,7 +60,7 @@ class ReportsAdminService {
   }) async {
     try {
       final token = await AuthService().getStaffSessionToken();
-      final response = await SupabaseService().client.functions.invoke(
+      final response = await SupabaseService().invokeFunction(
         'admin-reports',
         body: {
           'action': 'handle',

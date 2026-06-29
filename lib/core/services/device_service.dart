@@ -36,7 +36,7 @@ class DeviceService {
   Future<bool> registerWithServer({String? ipHint}) async {
     try {
       final id = await getDeviceId();
-      await SupabaseService().client.functions.invoke('user-account', body: {'action': 'register_device', 'device_id': id, 'ip_hint': ipHint});
+      await SupabaseService().invokeFunction('user-account', body: {'action': 'register_device', 'device_id': id, 'ip_hint': ipHint});
       return true;
     } catch (e) {return false;
     }

@@ -154,7 +154,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ntf[key] = value ? 0 : 1;
 
     try {
-      await SupabaseService().client.functions.invoke('user-notifications', body: {'action': 'update_settings', 'ntf': ntf}); //
+      await SupabaseService().invokeFunction('user-notifications', body: {'action': 'update_settings', 'ntf': ntf}); //
 
       await auth.refreshUser();
 

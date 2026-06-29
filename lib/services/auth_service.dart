@@ -17,7 +17,7 @@ class AuthService {
   Future<Map<String, dynamic>> sendSMSOTP(String phone) async {
     final fullPhone = _normalizePhone(phone);
     try {
-      final res = await _client.functions.invoke(
+      final res = await SupabaseService().invokeFunction(
         'send-sms-otp',
         body: {'phone': fullPhone},
       );
@@ -47,7 +47,7 @@ class AuthService {
   Future<Map<String, dynamic>> verifySMSOTP(String phone, String code) async {
     final fullPhone = _normalizePhone(phone);
     try {
-      final res = await _client.functions.invoke(
+      final res = await SupabaseService().invokeFunction(
         'verify-sms-otp',
         body: {'phone': fullPhone, 'code': code.trim()},
       );
@@ -106,7 +106,7 @@ class AuthService {
         return {'success': false, 'error': 'NO_SESSION'};
       }
 
-      final result = await _client.functions.invoke(
+      final result = await SupabaseService().invokeFunction(
         'user-account',
         body: {
           'action': 'handle_email_auth',
@@ -142,7 +142,7 @@ class AuthService {
 
       if (userId != null && staffToken != null && staffToken.isNotEmpty) {
         try {
-          await _client.functions.invoke(
+          await SupabaseService().invokeFunction(
             'user-account',
             body: {
               'action': 'revoke_staff_session',

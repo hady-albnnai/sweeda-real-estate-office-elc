@@ -17,7 +17,7 @@ class DealsAdminService {
   Future<List<DealModel>> getAllDeals(String adminUid) async {
     try {
       final token = await AuthService().getStaffSessionToken();
-      final response = await SupabaseService().client.functions.invoke(
+      final response = await SupabaseService().invokeFunction(
         'admin-deals',
         body: {
           'action': 'list',
@@ -46,7 +46,7 @@ class DealsAdminService {
   Future<bool> createDeal(String adminUid, DealModel deal) async {
     try {
       final token = await AuthService().getStaffSessionToken();
-      final response = await SupabaseService().client.functions.invoke(
+      final response = await SupabaseService().invokeFunction(
         'admin-deals',
         body: {
           'action': 'create',
@@ -78,7 +78,7 @@ class DealsAdminService {
   }) async {
     try {
       final token = await AuthService().getStaffSessionToken();
-      final response = await SupabaseService().client.functions.invoke(
+      final response = await SupabaseService().invokeFunction(
         'admin-deals',
         body: {
           'action': 'complete',

@@ -18,7 +18,7 @@ class StatsAdminService {
   Future<Map<String, dynamic>> getStats(String adminUid) async {
     try {
       final token = await AuthService().getStaffSessionToken();
-      final response = await SupabaseService().client.functions.invoke(
+      final response = await SupabaseService().invokeFunction(
         'admin-dashboard',
         body: {
           'action': 'dashboard_stats',

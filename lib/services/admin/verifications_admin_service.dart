@@ -29,7 +29,7 @@ class VerificationsAdminService {
         body['staff_session_token'] = sessionToken;
       }
       body['action'] = action;
-      final res = await SupabaseService().client.functions.invoke('admin-verifications', body: body);
+      final res = await SupabaseService().invokeFunction('admin-verifications', body: body);
       final data = _asMap(res.data);
       if (data == null) {
         _setError('EMPTY_RESPONSE');

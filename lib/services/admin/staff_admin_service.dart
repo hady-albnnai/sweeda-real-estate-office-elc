@@ -34,7 +34,7 @@ class StaffAdminService {
         body['staff_session_token'] = sessionToken;
       }
 
-      final res = await SupabaseService().client.functions.invoke(name, body: body);
+      final res = await SupabaseService().invokeFunction(name, body: body);
       final data = _asMap(res.data);
       if (data == null) {
         _setError('EMPTY_RESPONSE');
@@ -56,7 +56,7 @@ class StaffAdminService {
   Future<List<UserModel>> getAllStaffUsers(String adminUid) async {
     try {
       final token = await AuthService().getStaffSessionToken();
-      final response = await SupabaseService().client.functions.invoke(
+      final response = await SupabaseService().invokeFunction(
         'admin-dashboard',
         body: {
           'action': 'all_staff',
@@ -175,7 +175,7 @@ class StaffAdminService {
   Future<Map<String, dynamic>> getStaffStatsInternal(String userUid) async {
     try {
       final token = await AuthService().getStaffSessionToken();
-      final response = await SupabaseService().client.functions.invoke(
+      final response = await SupabaseService().invokeFunction(
         'admin-dashboard',
         body: {
           'action': 'staff_stats',

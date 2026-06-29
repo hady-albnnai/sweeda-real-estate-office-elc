@@ -86,7 +86,7 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
     setState(() => _processing = true);
     try {
       // ✅ Secure via Edge Function (user-offers) — purchase_offer_boost is locked to service_role
-      final res = await SupabaseService().client.functions.invoke(
+      final res = await SupabaseService().invokeFunction(
         'user-offers',
         body: {
           'action': 'boost',

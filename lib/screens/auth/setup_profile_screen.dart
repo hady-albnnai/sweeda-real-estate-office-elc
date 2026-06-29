@@ -48,7 +48,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
     }
     setState(() => _checkingUsername = true);
     try {
-      final res = await SupabaseService().client.functions.invoke('user-account', body: {'action': 'check_username', 'username': usr}); final data = res.data as Map; final ok = data['success'] == true && data['available'] == true;
+      final res = await SupabaseService().invokeFunction('user-account', body: {'action': 'check_username', 'username': usr}); final data = res.data as Map; final ok = data['success'] == true && data['available'] == true;
       if (mounted) {
         setState(() {
           _usernameAvailable = ok == true;
@@ -112,7 +112,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
     }
 
     try {
-      await SupabaseService().client.functions.invoke('user-account', body: {'action': 'register_password', 'p_user_uid': user.uid, 'p_username': username, 'p_password': password});
+      await SupabaseService().invokeFunction('user-account', body: {'action': 'register_password', 'p_user_uid': user.uid, 'p_username': username, 'p_password': password});
 
       await auth.refreshUser();
       if (!mounted) return;

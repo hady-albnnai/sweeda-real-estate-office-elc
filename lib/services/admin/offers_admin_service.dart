@@ -31,7 +31,7 @@ class OffersAdminService {
       }
       body['action'] = action;
 
-      final res = await SupabaseService().client.functions.invoke('admin-offers', body: body);
+      final res = await SupabaseService().invokeFunction('admin-offers', body: body);
       final data = _asMap(res.data);
       if (data == null) {
         _setError('EMPTY_RESPONSE');

@@ -30,6 +30,7 @@ async function validateUser(
   const authHeader = req.headers.get("Authorization") ?? "";
   const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
 
+  // 1. Try JWT validation first
   if (bearer && bearer !== "undefined" && bearer !== "null" && bearer !== "anon_key_here") {
     const { data: userData, error } = await supabaseAdmin.auth.getUser(bearer);
     const uid = userData?.user?.id;
@@ -41,11 +42,21 @@ async function validateUser(
     }
   }
 
-  // Fallback: accept requestedUid to support custom auth (matches legacy RPC behavior)
-  if (requestedUid) {
-    return { ok: true, uid: requestedUid };
+  // 2. Try Custom Session Token validation (for custom password login)
+  // If the header is not a Bearer JWT, we treat it as a session token
+  const sessionToken = authHeader.trim();
+  if (sessionToken && !authHeader.startsWith("Bearer ")) {
+    const { data, error } = await supabaseAdmin.rpc("validate_staff_session", {
+      p_token: sessionToken,
+      p_user_uid: requestedUid, // Pass requestedUid to ensure the token belongs to the requested user
+    });
+
+    if (!error && data && data.success === true) {
+      return { ok: true, uid: data.user_id };
+    }
   }
 
+  // FALLBACK REMOVED: No longer accepting requestedUid blindly.
   return { ok: false, response: json({ success: false, error: "AUTH_TOKEN_REQUIRED" }, 401) };
 }
 

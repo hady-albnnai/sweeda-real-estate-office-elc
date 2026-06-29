@@ -45,7 +45,7 @@ class PaymentProvider with ChangeNotifier {
     notifyListeners();
     try {
       _clearError();
-      final response = await SupabaseService().client.functions.invoke(
+      final response = await SupabaseService().invokeFunction(
         'user-account',
         body: {
           'action': 'user_payments',

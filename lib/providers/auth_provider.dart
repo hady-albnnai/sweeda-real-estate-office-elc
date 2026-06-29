@@ -43,7 +43,7 @@ class AuthProvider with ChangeNotifier {
   Future<bool> loginWithPassword(String identifier, String password) async {
     try {
       _lastError = null;
-      final result = await SupabaseService().client.functions.invoke('user-account', body: {'action': 'login_with_password', 'identifier': identifier, 'password': password});
+      final result = await SupabaseService().invokeFunction('user-account', body: {'action': 'login_with_password', 'identifier': identifier, 'password': password});
 
       final respData = result.data is Map ? Map<String, dynamic>.from(result.data) : null;
       final data = respData?['result'] is Map ? Map<String, dynamic>.from(respData!['result']) : respData;
@@ -234,7 +234,7 @@ class AuthProvider with ChangeNotifier {
     try {
       // 🔒 Phase 8 fix: نستخدم RPC SECURITY DEFINER لتجاوز RLS
       // (تطبيقنا يستخدم OTP محلي لا يمر بـSupabase Auth → auth.uid()=NULL)
-      final response = await SupabaseService().client.functions.invoke('user-account', body: {'action': 'get_full_profile', 'user_uid': userId});
+      final response = await SupabaseService().invokeFunction('user-account', body: {'action': 'get_full_profile', 'user_uid': userId});
       final data = response.data as Map;
       if (data['success'] != true || data['profile'] == null) return;
       final profileList = data['profile'];
@@ -251,7 +251,7 @@ class AuthProvider with ChangeNotifier {
   Future<bool> completeProfile({required String name, required String sid}) async {
     try {
       if (_userModel == null) return false;
-      await SupabaseService().client.functions.invoke('user-account', body: {'action': 'update_profile', 'p_user_uid': _userModel!.uid, 'p_payload': {'nm': name, 'sid': sid}});
+      await SupabaseService().invokeFunction('user-account', body: {'action': 'update_profile', 'p_user_uid': _userModel!.uid, 'p_payload': {'nm': name, 'sid': sid}});
       await _loadUserData(_userModel!.uid);
       return true;
     } catch (e) {return false;
@@ -323,7 +323,7 @@ class AuthProvider with ChangeNotifier {
     if (_userModel == null) return;
     try {
       final pts = config?.weeklyLoginPoints ?? 100;
-      final granted = await SupabaseService().client.functions.invoke(
+      final granted = await SupabaseService().invokeFunction(
         'user-account',
         body: {
           'action': 'register_weekly_login',

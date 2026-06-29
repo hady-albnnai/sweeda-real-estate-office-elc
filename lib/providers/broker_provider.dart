@@ -37,7 +37,7 @@ class BrokerProvider with ChangeNotifier {
 
   Future<List<AppointmentModel>> getBrokerAppointments(String brokerId) async {
     try {
-      final response = await SupabaseService().client.functions.invoke(
+      final response = await SupabaseService().invokeFunction(
         'user-appointments',
         body: {
           'action': 'list_broker_appointments',
@@ -66,7 +66,7 @@ class BrokerProvider with ChangeNotifier {
       if (action == 'pending') return false;
 
       // ✅ Secure via broker-actions Edge Function
-      await SupabaseService().client.functions.invoke(
+      await SupabaseService().invokeFunction(
         'broker-actions',
         body: {
           'action': 'handle_appointment',
@@ -85,7 +85,7 @@ class BrokerProvider with ChangeNotifier {
   Future<bool> completeAppointment(String brokerUid, String apptId) async {
     try {
       // ✅ Secure via broker-actions Edge Function
-      await SupabaseService().client.functions.invoke(
+      await SupabaseService().invokeFunction(
         'broker-actions',
         body: {
           'action': 'handle_appointment',
@@ -106,7 +106,7 @@ class BrokerProvider with ChangeNotifier {
     _error = null;
     notifyListeners();
     try {
-      final response = await SupabaseService().client.functions.invoke(
+      final response = await SupabaseService().invokeFunction(
         'user-offers',
         body: {
           'action': 'broker_offers',
@@ -131,7 +131,7 @@ class BrokerProvider with ChangeNotifier {
     _error = null;
     notifyListeners();
     try {
-      final response = await SupabaseService().client.functions.invoke(
+      final response = await SupabaseService().invokeFunction(
         'user-offers',
         body: {
           'action': 'broker_deals',
@@ -156,7 +156,7 @@ class BrokerProvider with ChangeNotifier {
     _error = null;
     notifyListeners();
     try {
-      final offersRes = await SupabaseService().client.functions.invoke(
+      final offersRes = await SupabaseService().invokeFunction(
         'user-offers',
         body: {
           'action': 'broker_offers',
@@ -174,7 +174,7 @@ class BrokerProvider with ChangeNotifier {
       final totalFavs = offersList.fold<int>(
           0, (sum, o) => sum + ((o['fvs'] as int?) ?? 0));
 
-      final apptRes = await SupabaseService().client.functions.invoke(
+      final apptRes = await SupabaseService().invokeFunction(
         'user-appointments',
         body: {
           'action': 'list_broker_appointments',
@@ -188,7 +188,7 @@ class BrokerProvider with ChangeNotifier {
       final completedAppointments =
           apptList.where((a) => (a['sts'] ?? 0) == 2).length;
 
-      final dealsRes = await SupabaseService().client.functions.invoke(
+      final dealsRes = await SupabaseService().invokeFunction(
         'user-offers',
         body: {
           'action': 'broker_deals',

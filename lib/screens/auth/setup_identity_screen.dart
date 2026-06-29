@@ -108,7 +108,7 @@ class _SetupIdentityScreenState extends State<SetupIdentityScreen> {
     }
 
     try {
-      await SupabaseService().client.functions.invoke('user-account', body: {'action': 'update_profile', 'p_user_uid': user.uid, 'p_payload': {'sid': sid, 'img': idPath ?? user.img}});
+      await SupabaseService().invokeFunction('user-account', body: {'action': 'update_profile', 'p_user_uid': user.uid, 'p_payload': {'sid': sid, 'img': idPath ?? user.img}});
 
       await auth.refreshUser();
       if (!mounted) return;
