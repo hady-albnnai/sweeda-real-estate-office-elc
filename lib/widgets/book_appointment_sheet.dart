@@ -19,6 +19,8 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
   String? _selectedDayKey;
   String? _selectedSlot; // "HH:MM-HH:MM"
   String? _selectedTime; // "HH:MM"
+  List<String> _bookedSlots = [];
+  int _activeCount = 0;
 
   String _dayName(String d) => {
         'mon': 'الاثنين',
@@ -30,6 +32,28 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
         'sun': 'الأحد',
       }[d] ??
       d;
+
+  Future<void> _loadBookedSlots() async {
+    if (_selectedDayKey == null) return;
+
+    final keys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+    final targetWeekday = keys.indexOf(_selectedDayKey!) + 1;
+    final now = DateTime.now();
+    var daysAhead = (targetWeekday - now.weekday) % 7;
+    if (daysAhead < 0) daysAhead += 7;
+    final date = DateTime(now.year, now.month, now.day + daysAhead);
+
+    final slots = await context.read<AppointmentProvider>().fetchBookedSlots(
+      widget.offer.id,
+      date,
+    );
+
+    if (mounted) {
+      setState(() {
+        _bookedSlots = slots;
+      });
+    }
+  }
 
   /// توليد فترات زمنية (كل 30 دقيقة) بناءً على النطاق المختار
   List<String> _generateTimeSlots(String slotStr) {
@@ -180,7 +204,7 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
                   fontSize: 20,
                   fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-          // توضيح المكتب
+          // تنبيه الدور والمكتب
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
@@ -189,11 +213,11 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
               border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
             ),
             child: const Row(children: [
-              Icon(Icons.business_center, color: AppTheme.primaryGold, size: 18),
+              Icon(Icons.info_outline, color: AppTheme.primaryGold, size: 18),
               SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'الحجز يتم عبر إدارة المكتب لضمان جدية الطرفين وحماية خصوصية المالك.',
+                  'الحجز يتم عبر إدارة المكتب لضمان الجدية. يرجى ملاحظة أنه قد يكون هناك طلبات أخرى تسبقك في الدور.',
                   style: TextStyle(
                       color: AppTheme.primaryGold, fontSize: 12, height: 1.4),
                 ),
@@ -226,6 +250,7 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
                         _selectedSlot = null;
                         _selectedTime = null;
                       });
+                      _loadBookedSlots();
                     },
                     borderRadius: BorderRadius.circular(20),
                     child: Container(
@@ -302,29 +327,53 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
                 spacing: 8,
                 runSpacing: 8,
                 children: _generateTimeSlots(_selectedSlot!).map((time) {
+                  final isBooked = _bookedSlots.contains(time);
                   final selected = _selectedTime == time;
-                  return GestureDetector(
-                    onTap: () => setState(() => _selectedTime = time),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: selected ? AppTheme.primaryGold : AppTheme.surfaceBlack,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: selected ? AppTheme.primaryGold : AppTheme.textGrey.withOpacity(0.3),
+                  return Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: isBooked 
+                        ? null 
+                        : () => setState(() => _selectedTime = time),
+                      borderRadius: BorderRadius.circular(10),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: isBooked 
+                              ? AppTheme.textGrey.withOpacity(0.1) 
+                              : (selected ? AppTheme.primaryGold : AppTheme.surfaceBlack),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: isBooked 
+                                ? AppTheme.textGrey.withOpacity(0.2) 
+                                : (selected ? AppTheme.primaryGold : AppTheme.textGrey.withOpacity(0.3)),
+                          ),
                         ),
-                      ),
-                      child: Text(
-                        time,
-                        style: TextStyle(
-                          color: selected ? AppTheme.deepBlack : AppTheme.textWhite,
-                          fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                        child: Text(
+                          time,
+                          style: TextStyle(
+                            color: isBooked 
+                                ? AppTheme.textGrey 
+                                : (selected ? AppTheme.deepBlack : AppTheme.textWhite),
+                            fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                          ),
                         ),
                       ),
                     ),
                   );
                 }).toList(),
               ),
+              if (_bookedSlots.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                const Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 14, color: AppTheme.textGrey),
+                    SizedBox(width: 4),
+                    Text('الساعات المظللة بالرمادي محجوزة مسبقاً', 
+                        style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+                  ],
+                ),
+              ],
               const SizedBox(height: 20),
             ],
 

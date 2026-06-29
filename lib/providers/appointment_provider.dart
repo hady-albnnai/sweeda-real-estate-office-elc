@@ -6,12 +6,36 @@ import '../core/constants/db_constants.dart';
 class AppointmentProvider with ChangeNotifier {
   List<AppointmentModel> _myAppointments = [];
   bool _isLoading = false;
+  List<String> _bookedSlots = [];
 
   List<AppointmentModel> get myAppointments => _myAppointments;
   bool get isLoading => _isLoading;
+  List<String> get bookedSlots => _bookedSlots;
 
   /// نتيجة آخر حجز — تتضمن عدد المواعيد النشطة
   int lastBookingActiveCount = 0;
+
+  Future<List<String>> fetchBookedSlots(String offerId, DateTime date) async {
+    try {
+      final response = await SupabaseService().client.functions.invoke(
+        'user-appointments',
+        body: {
+          'action': 'get_booked_slots',
+          'offer_id': offerId,
+          'date': date.toIso8601String().split('T')[0],
+        },
+      );
+      final data = response.data;
+      if (data is Map && data['success'] == true) {
+        _bookedSlots = List<String>.from(data['booked_slots'] ?? []);
+        notifyListeners();
+        return _bookedSlots;
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
 
   Future<bool> bookAppointment({
     required String userId,
