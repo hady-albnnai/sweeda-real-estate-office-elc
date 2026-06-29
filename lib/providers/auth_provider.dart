@@ -42,6 +42,9 @@ class AuthProvider with ChangeNotifier {
   /// تسجيل الدخول باسم مستخدم/رقم هاتف + كلمة مرور
   Future<bool> loginWithPassword(String identifier, String password) async {
     try {
+      // تنظيف أي جلسات قديمة لضمان عدم تعارض التوكنات
+      await AuthService().signOut();
+      
       _lastError = null;
       final result = await SupabaseService().invokeFunction('user-account', body: {'action': 'login_with_password', 'identifier': identifier, 'password': password});
 
@@ -130,6 +133,9 @@ class AuthProvider with ChangeNotifier {
 
   Future<bool> verifySMSOTP(String code) async {
     try {
+      // تنظيف أي جلسات قديمة قبل بدء جلسة جديدة عبر OTP
+      await AuthService().signOut();
+      
       if (_currentPhone == null) return false;
       final result = await AuthService().verifySMSOTP(_currentPhone!, code);
       if (result['success'] == true) {
@@ -205,6 +211,9 @@ class AuthProvider with ChangeNotifier {
   /// يُستدعى تلقائياً عند فتح التطبيق من deep link الماجيك لينك
   Future<bool> handleEmailSession() async {
     try {
+      // تنظيف أي جلسات قديمة قبل تفعيل جلسة الماجيك لينك
+      await AuthService().signOut();
+      
       final result = await AuthService().handleEmailSession();
       if (result['success'] == true) {
         _isNewUser = result['isNewUser'] as bool? ?? false;
