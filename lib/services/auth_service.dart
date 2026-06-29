@@ -234,10 +234,14 @@ class AuthService {
 
       if (userId != null && staffToken != null && staffToken.isNotEmpty) {
         try {
-          await _client.rpc('revoke_staff_session', params: {
-            'p_user_uid': userId,
-            'p_token': staffToken,
-          });
+          await _client.functions.invoke(
+            'user-account',
+            body: {
+              'action': 'revoke_staff_session',
+              'user_uid': userId,
+              'session_token': staffToken,
+            },
+          );
         } catch (e) {
       // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
     }
