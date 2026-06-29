@@ -52,6 +52,10 @@ class OfferModel {
   final DateTime? tsEnd;
   final DateTime? tsRen;
 
+  // حقول مؤقتة لنسبة التطابق (لا تُحفظ في قاعدة البيانات)
+  int? matchScore;
+  Map<String, int>? matchBreakdown;
+
   /// تاريخ انتهاء العرض الفعلي
   DateTime get expirationDate {
     if (tsEnd != null) return tsEnd!;
