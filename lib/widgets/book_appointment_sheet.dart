@@ -217,26 +217,32 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
               runSpacing: 8,
               children: avl.keys.map((key) {
                 final selected = _selectedDayKey == key;
-                return GestureDetector(
-                  onTap: () => setState(() {
-                    _selectedDayKey = key;
-                    _selectedSlot   = null;
-                    _selectedTime   = null;
-                  }),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: selected
-                          ? AppTheme.primaryGold
-                          : AppTheme.surfaceBlack,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppTheme.primaryGold),
-                    ),
-                    child: Text(
-                      _dayName(key),
-                      style: TextStyle(
-                        color: selected ? AppTheme.deepBlack : AppTheme.primaryGold,
-                        fontWeight: FontWeight.bold,
+                return Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      setState(() {
+                        _selectedDayKey = key;
+                        _selectedSlot = null;
+                        _selectedTime = null;
+                      });
+                    },
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: selected
+                            ? AppTheme.primaryGold
+                            : AppTheme.surfaceBlack,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppTheme.primaryGold),
+                      ),
+                      child: Text(
+                        _dayName(key),
+                        style: TextStyle(
+                          color: selected ? AppTheme.deepBlack : AppTheme.primaryGold,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
