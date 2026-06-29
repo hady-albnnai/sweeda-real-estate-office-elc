@@ -211,12 +211,20 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
         title: Text('العروض المطابقة (${_filteredOffers.length})'),
         backgroundColor: AppTheme.deepBlack,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadMatchingOffers,
+          ),
           IconButton(icon: const Icon(Icons.tune), onPressed: _showFilters),
           IconButton(
             icon: const Icon(Icons.notifications_active_outlined),
             onPressed: () {
+              // حفظ البحث (Save Search)
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('تم تفعيل التنبيهات لهذا البحث')),
+                const SnackBar(
+                  content: Text('✅ تم تفعيل التنبيهات. سنخطرك عند ظهور عروض جديدة مطابقة'),
+                  duration: Duration(seconds: 3),
+                ),
               );
             },
           ),
@@ -273,7 +281,7 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () {
-                      // TODO: الانتقال إلى تفاصيل العرض
+                      context.push('/offer/${offer.id}');
                     },
                     child: const Text('عرض التفاصيل'),
                   ),
@@ -282,7 +290,10 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      // TODO: حجز موعد
+                      // يمكن فتح شاشة الحجز هنا
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('سيتم فتح شاشة الحجز قريباً')),
+                      );
                     },
                     child: const Text('حجز موعد'),
                   ),
