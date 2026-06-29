@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:async';
 import '../../models/offer_model.dart';
 import '../../core/services/business_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/offer_provider.dart';
+import 'package:go_router/go_router.dart';
 
 class MatchingOffersScreen extends StatefulWidget {
   final Map<String, dynamic> requestData;
@@ -26,6 +28,51 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
   String? _selectedCity;
   int? _minRooms;
   int? _maxKm;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
+  bool _hasImagesOnly = false;
   bool _hasImagesOnly = false;
 
   Timer? _refreshTimer;
@@ -157,6 +204,16 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
       filtered = filtered.where((o) => o.imgs.isNotEmpty).toList();
     }
 
+    // فلتر "عروض تحتوي على صور فقط"
+    if (_hasImagesOnly) {
+      filtered = filtered.where((o) => o.imgs.isNotEmpty).toList();
+    }
+
+    // فلتر "عروض تحتوي على صور فقط"
+    if (_hasImagesOnly) {
+      filtered = filtered.where((o) => o.imgs.isNotEmpty).toList();
+    }
+
     // ترتيب
     if (_sortBy == 'match_score') {
       filtered.sort((a, b) => (b.matchScore ?? 0).compareTo(a.matchScore ?? 0));
@@ -202,6 +259,16 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
             const SizedBox(height: 16),
             _buildKmFilter(),
           ],
+
+          const SizedBox(height: 16),
+          SwitchListTile(
+            title: const Text('عروض تحتوي على صور فقط', style: TextStyle(color: AppTheme.textWhite)),
+            value: _hasImagesOnly,
+            onChanged: (val) {
+              setState(() => _hasImagesOnly = val);
+            },
+            activeColor: AppTheme.primaryGold,
+          ),
 
           const SizedBox(height: 16),
           SwitchListTile(
@@ -377,7 +444,8 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      context.push('/user/my-appointments');
+                      // فتح شاشة الحجز مع تمرير العرض
+                      context.push('/user/my-appointments', extra: offer);
                     },
                     child: const Text('حجز موعد'),
                   ),
@@ -437,4 +505,3 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
     );
   }
 }
-```
