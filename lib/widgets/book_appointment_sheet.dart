@@ -18,7 +18,7 @@ class BookAppointmentSheet extends StatefulWidget {
 class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
   String? _selectedDayKey;
   String? _selectedSlot; // "HH:MM-HH:MM"
-  TimeOfDay? _selectedTime; // الوقت المختار داخل الفترة
+  String? _selectedTime; // "HH:MM"
 
   String _dayName(String d) => {
         'mon': 'الاثنين',
@@ -31,74 +31,29 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
       }[d] ??
       d;
 
-  /// يحوّل "HH:MM" إلى TimeOfDay
-  TimeOfDay? _parseTime(String raw) {
-    final parts = raw.trim().split(':');
-    if (parts.length != 2) return null;
-    final h = int.tryParse(parts[0]);
-    final m = int.tryParse(parts[1]);
-    if (h == null || m == null) return null;
-    return TimeOfDay(hour: h, minute: m);
-  }
-
-  /// يحسب تاريخ الموعد القادم لليوم المختار
-  DateTime? _resolveDate(String dayKey, TimeOfDay time) {
-    const keys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-    final targetWeekday = keys.indexOf(dayKey) + 1; // 1=Mon..7=Sun
-    if (targetWeekday == 0) return null;
-
-    final now = DateTime.now();
-    var daysAhead = (targetWeekday - now.weekday) % 7;
-    if (daysAhead == 0 &&
-        (time.hour < now.hour ||
-            (time.hour == now.hour && time.minute <= now.minute))) {
-      daysAhead = 7;
-    }
-    if (daysAhead < 0) daysAhead += 7;
-
-    return DateTime(
-      now.year, now.month, now.day + daysAhead,
-      time.hour, time.minute,
-    );
-  }
-
-  Future<void> _pickTime(String slotStr) async {
+  /// توليد فترات زمنية (كل 30 دقيقة) بناءً على النطاق المختار
+  List<String> _generateTimeSlots(String slotStr) {
     final parts = slotStr.split('-');
-    if (parts.length != 2) return;
-    final fromT = _parseTime(parts[0]);
-    final toT   = _parseTime(parts[1]);
-    if (fromT == null || toT == null) return;
+    if (parts.length != 2) return [];
 
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: fromT,
-      helpText: 'اختر الوقت المناسب',
-      builder: (context, child) => Directionality(
-        textDirection: TextDirection.rtl,
-        child: child!,
-      ),
-    );
-    if (picked == null) return;
+    final fromParts = parts[0].trim().split(':');
+    final toParts = parts[1].trim().split(':');
 
-    // تحقق أن الوقت ضمن الفترة
-    final pickedMins = picked.hour * 60 + picked.minute;
-    final fromMins   = fromT.hour * 60 + fromT.minute;
-    final toMins     = toT.hour * 60 + toT.minute;
+    int startHour = int.tryParse(fromParts[0]) ?? 0;
+    int startMin = int.tryParse(fromParts[1]) ?? 0;
+    int endHour = int.tryParse(toParts[0]) ?? 0;
+    int endMin = int.tryParse(toParts[1]) ?? 0;
 
-    if (pickedMins < fromMins || pickedMins >= toMins) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'الرجاء اختيار وقت بين ${parts[0]} و${parts[1]}',
-            ),
-          ),
-        );
-      }
-      return;
+    final startTotalMins = startHour * 60 + startMin;
+    final endTotalMins = endHour * 60 + endMin;
+
+    final List<String> slots = [];
+    for (int total = startTotalMins; total < endTotalMins; total += 30) {
+      final h = (total ~/ 60).toString().padLeft(2, '0');
+      final m = (total % 60).toString().padLeft(2, '0');
+      slots.add('$h:$m');
     }
-
-    setState(() => _selectedTime = picked);
+    return slots;
   }
 
   Future<void> _confirm() async {
@@ -109,9 +64,6 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
       return;
     }
 
-    final dt = _resolveDate(_selectedDayKey!, _selectedTime!);
-    if (dt == null) return;
-
     final auth = context.read<AuthProvider>();
     final provider = context.read<AppointmentProvider>();
     final userId = auth.userModel?.uid ?? '';
@@ -120,8 +72,7 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
       userId: userId,
       offerId: widget.offer.id,
       selectedDayKey: _selectedDayKey!,
-      selectedTime:
-          '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
+      selectedTime: _selectedTime!,
       brokerId: widget.offer.brkId.isNotEmpty ? widget.offer.brkId : null,
       requestId: widget.requestId,
     );
@@ -341,26 +292,32 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
                   style: TextStyle(
                       color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
-              Row(children: [
-                ElevatedButton.icon(
-                  onPressed: () => _pickTime(_selectedSlot!),
-                  icon: const Icon(Icons.access_time),
-                  label: Text(
-                    _selectedTime == null
-                        ? 'اختر الوقت'
-                        : '${_selectedTime!.hour.toString().padLeft(2, '0')}:'
-                            '${_selectedTime!.minute.toString().padLeft(2, '0')}',
-                  ),
-                ),
-                if (_selectedTime != null) ...[
-                  const SizedBox(width: 10),
-                  const Icon(Icons.check_circle, color: Colors.green, size: 20),
-                ],
-              ]),
-              const SizedBox(height: 6),
-              Text(
-                'ضمن الفترة: ${_selectedSlot!.replaceAll('-', ' إلى ')}',
-                style: const TextStyle(color: AppTheme.textGrey, fontSize: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _generateTimeSlots(_selectedSlot!).map((time) {
+                  final selected = _selectedTime == time;
+                  return GestureDetector(
+                    onTap: () => setState(() => _selectedTime = time),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: selected ? AppTheme.primaryGold : AppTheme.surfaceBlack,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: selected ? AppTheme.primaryGold : AppTheme.textGrey.withOpacity(0.3),
+                        ),
+                      ),
+                      child: Text(
+                        time,
+                        style: TextStyle(
+                          color: selected ? AppTheme.deepBlack : AppTheme.textWhite,
+                          fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
               const SizedBox(height: 20),
             ],
