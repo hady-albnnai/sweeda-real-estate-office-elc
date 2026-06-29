@@ -27,10 +27,66 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
   int? _minRooms;
   int? _maxKm;
 
+  Timer? _refreshTimer;
+
   @override
   void initState() {
     super.initState();
     _loadMatchingOffers();
+
+    // تحديث تلقائي كل 30 ثانية
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      if (mounted) {
+        _checkForNewOffers();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _checkForNewOffers() async {
+    final offerProvider = context.read<OfferProvider>();
+    await offerProvider.fetchOffers();
+
+    final List<OfferModel> newMatches = [];
+
+    for (final offer in offerProvider.offers) {
+      final scoreData = BusinessService().calculateMatchScore(
+        request: widget.requestData,
+        offer: offer,
+      );
+
+      if (scoreData['score'] >= 35) {
+        final exists = _matchingOffers.any((o) => o.id == offer.id);
+        if (!exists) {
+          offer.matchScore = scoreData['score'];
+          offer.matchBreakdown = scoreData['breakdown'];
+          newMatches.add(offer);
+        }
+      }
+    }
+
+    if (newMatches.isNotEmpty && mounted) {
+      setState(() {
+        _matchingOffers.addAll(newMatches);
+        _filteredOffers = List.from(_matchingOffers);
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('🎉 ظهر ${newMatches.length} عرض جديد مطابق!'),
+          backgroundColor: Colors.green,
+          action: SnackBarAction(
+            label: 'عرض',
+            onPressed: () {},
+          ),
+        ),
+      );
+    }
   }
 
   Future<void> _loadMatchingOffers() async {
@@ -258,13 +314,18 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
           children: [
             Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryGold.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(20),
+                GestureDetector(
+                  onTap: () {
+                    _showMatchBreakdown(offer);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryGold.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text('$score% مطابق', style: const TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
                   ),
-                  child: Text('$score% مطابق', style: const TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
                 ),
                 const Spacer(),
                 Text('${offer.prc.toStringAsFixed(0)} ${offer.cur == 0 ? '\$' : 'ل.س'}',
@@ -290,10 +351,8 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      // يمكن فتح شاشة الحجز هنا
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('سيتم فتح شاشة الحجز قريباً')),
-                      );
+                      // فتح شاشة الحجز
+                      context.push('/user/my-appointments');
                     },
                     child: const Text('حجز موعد'),
                   ),
@@ -302,6 +361,39 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showMatchBreakdown(OfferModel offer) {
+    final breakdown = offer.matchBreakdown ?? {};
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surfaceBlack,
+        title: const Text('تفصيل نسبة التطابق', style: TextStyle(color: AppTheme.primaryGold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: breakdown.entries.map((entry) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  Text('${entry.key}: ', style: const TextStyle(color: AppTheme.textWhite)),
+                  Text('${entry.value}%', style: const TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('إغلاق'),
+          ),
+        ],
       ),
     );
   }
