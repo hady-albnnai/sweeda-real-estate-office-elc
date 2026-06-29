@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/network/supabase_service.dart';
 
 /// قنوات تسجيل الدخول المدعومة
-enum AuthChannel { whatsapp, email, sms }
+enum AuthChannel { email, sms }
 
 class AuthService {
   final GoTrueClient _auth = SupabaseService().auth;
@@ -82,84 +82,6 @@ class AuthService {
   }
 
   // ════════════════════════════════════════════════════════════════════════
-  // 📱 WhatsApp OTP — عبر Edge Function (Meta WhatsApp Cloud API)
-  // ════════════════════════════════════════════════════════════════════════
-
-  /// إرسال رمز OTP عبر واتساب.
-  /// [phone] رقم محلي بدون مفتاح (مثلاً 09XXXXXXXX) أو بصيغة دولية كاملة.
-  Future<Map<String, dynamic>> sendWhatsAppOTP(String phone) async {
-    final fullPhone = _normalizePhone(phone);
-    try {
-      final res = await _client.functions.invoke(
-        'send-whatsapp-otp',
-        body: {'phone': fullPhone},
-      );
-
-      final data = res.data as Map<String, dynamic>?;
-      if (data == null) {
-        return {'success': false, 'error': 'EMPTY_RESPONSE'};
-      }
-
-      if (data['success'] == true) {
-        // وضع التطوير: يرجّع الـ OTP لو ما إعدّاد Meta
-        final devOtp = data['otp']?.toString();
-        if (devOtp != null) {}
-        return {
-          'success': true,
-          'channel': 'whatsapp',
-          if (devOtp != null) 'fallbackOtp': devOtp,
-        };
-      }
-
-      return {'success': false, 'error': data['error'] ?? 'UNKNOWN'};
-    } catch (e) {
-      return {'success': false, 'error': e.toString()};
-    }
-  }
-
-  /// التحقق من رمز OTP الواتساب.
-  Future<Map<String, dynamic>> verifyWhatsAppOTP(
-      String phone, String code) async {
-    final fullPhone = _normalizePhone(phone);
-    try {
-      final res = await _client.functions.invoke(
-        'verify-whatsapp-otp',
-        body: {'phone': fullPhone, 'code': code},
-      );
-
-      final data = res.data as Map<String, dynamic>?;
-      if (data == null || data['success'] != true) {
-        return {
-          'success': false,
-          'error': data?['error'] ?? 'VERIFICATION_FAILED',
-        };
-      }
-
-      // استرجاع session من token_hash المعاد
-      final session = data['session'] as Map<String, dynamic>?;
-      if (session != null && session['token_hash'] != null) {
-        try {
-          await _auth.verifyOTP(
-            type: OtpType.magiclink,
-            tokenHash: session['token_hash'] as String,
-          );
-        } catch (e) {
-      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
-    }
-      }
-
-      final userId = data['userId'] as String;
-      final isNew = data['isNew'] as bool? ?? false;
-
-      await _persistSession(userId, phone: fullPhone);
-
-      return {'success': true, 'userId': userId, 'isNewUser': isNew};
-    } catch (e) {
-      return {'success': false, 'error': e.toString()};
-    }
-  }
-
-  // ════════════════════════════════════════════════════════════════════════
   // 📧 Email Magic Link — Supabase Auth المدمج
   // ════════════════════════════════════════════════════════════════════════
 
@@ -207,20 +129,6 @@ class AuthService {
     } catch (e) {return {'success': false, 'error': e.toString()};
     }
   }
-
-  // ════════════════════════════════════════════════════════════════════════
-  // 🔁 طرق توافقية مع الكود القديم (تم إبقاؤها)
-  // ════════════════════════════════════════════════════════════════════════
-
-  /// طريقة قديمة — توجّه الآن إلى WhatsApp (للتوافق فقط)
-  @Deprecated('استخدم sendWhatsAppOTP بدلاً من ذلك')
-  Future<Map<String, dynamic>> sendOTP(String phone) =>
-      sendWhatsAppOTP(phone);
-
-  /// طريقة قديمة — توجّه الآن إلى WhatsApp (للتوافق فقط)
-  @Deprecated('استخدم verifyWhatsAppOTP بدلاً من ذلك')
-  Future<Map<String, dynamic>> verifyOTP(String phone, String code) =>
-      verifyWhatsAppOTP(phone, code);
 
   // ════════════════════════════════════════════════════════════════════════
   // 🚪 خروج + Session helpers
@@ -301,8 +209,6 @@ class AuthService {
     if (phone != null) await prefs.setString('user_phone', phone);
     if (email != null) await prefs.setString('user_email', email);
     await prefs.setString(
-        'auth_channel', email != null ? 'email' : 'whatsapp');
+        'auth_channel', email != null ? 'email' : 'sms');
   }
-
-
 }
