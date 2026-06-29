@@ -47,13 +47,13 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
       ),
       body: reqProv.isLoading
           ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryGold))
-          : reqProv.myRequests.isEmpty
+          : reqProv.myRequests.where((req) => req.sts != 3).isEmpty
               ? _emptyState(context)
               : ListView.builder(
                   padding: const EdgeInsets.all(15),
-                  itemCount: reqProv.myRequests.length,
+                  itemCount: reqProv.myRequests.where((req) => req.sts != 3).length,
                   itemBuilder: (context, index) {
-                    final req = reqProv.myRequests[index];
+                    final req = reqProv.myRequests.where((req) => req.sts != 3).toList()[index];
                     return _requestCard(req);
                   },
                 ),
