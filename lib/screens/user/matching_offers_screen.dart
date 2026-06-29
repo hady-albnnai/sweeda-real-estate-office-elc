@@ -60,6 +60,9 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
     final List<OfferModel> newMatches = [];
 
     for (final offer in offerProvider.offers) {
+      // فلتر العروض المحذوفة/الملغاة
+      if (offer.iDel == 1) continue;
+
       final scoreData = BusinessService().calculateMatchScore(
         request: widget.requestData,
         offer: offer,
@@ -105,6 +108,9 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
     final int? reqTrx = widget.requestData['trx'] as int?;
 
     for (final offer in offerProvider.offers) {
+      // فلتر العروض المحذوفة/الملغاة
+      if (offer.iDel == 1) continue;
+
       // فلتر نوع المعاملة (شراء / إيجار)
       if (reqTrx != null && offer.trx != reqTrx) continue;
 

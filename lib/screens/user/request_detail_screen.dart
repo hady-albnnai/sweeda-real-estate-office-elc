@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/request_provider.dart';
@@ -298,9 +298,25 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                   fontWeight: FontWeight.bold),
             ),
           const SizedBox(height: 4),
-          Text(
-            'تاريخ الإنشاء: ${r.tsCrt.day}/${r.tsCrt.month}/${r.tsCrt.year}',
-            style: const TextStyle(color: AppTheme.textGrey, fontSize: 12),
+          Row(
+            children: [
+              Text(
+                'تاريخ الإنشاء: ${r.tsCrt.day}/${r.tsCrt.month}/${r.tsCrt.year}',
+                style: const TextStyle(color: AppTheme.textGrey, fontSize: 12),
+              ),
+              const Spacer(),
+              if (r.isOpen) ...[
+                const Icon(Icons.timer, size: 14, color: AppTheme.primaryGold),
+                const SizedBox(width: 4),
+                Text(
+                  'متبقي ${r.daysUntilExpiration} يوم',
+                  style: const TextStyle(
+                      color: AppTheme.primaryGold,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold),
+                ),
+              ],
+            ],
           ),
         ],
       ),
@@ -566,10 +582,16 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
   }
 
   Widget _renewButton() {
+    final user = context.watch<AuthProvider>().userModel;
+    final r = _request!;
+    
+    // تجديد الطلب: متاح للحسابات المدفوعة دائماً، وللمجانية قبل يومين فقط من الانتهاء
+    final bool canRenewNow = (user?.bPkg != 0) || (r.daysUntilExpiration <= 2);
+
     return SizedBox(
       width: double.infinity,
       child: OutlinedButton.icon(
-        onPressed: _renewing ? null : _renewRequest,
+        onPressed: (!canRenewNow || _renewing) ? null : _renewRequest,
         icon: _renewing
             ? const SizedBox(
                 width: 16,
@@ -577,10 +599,11 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
             : const Icon(Icons.refresh),
-        label: const Text('تجديد الطلب'),
+        label: Text(canRenewNow ? 'تجديد الطلب' : 'التجديد متاح قبل يومين من الانتهاء',
+            style: TextStyle(color: canRenewNow ? AppTheme.primaryGold : AppTheme.textGrey)),
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppTheme.primaryGold,
-          side: const BorderSide(color: AppTheme.primaryGold),
+          foregroundColor: canRenewNow ? AppTheme.primaryGold : AppTheme.textGrey,
+          side: BorderSide(color: canRenewNow ? AppTheme.primaryGold : AppTheme.textGrey),
         ),
       ),
     );

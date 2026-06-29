@@ -347,7 +347,17 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
     required String boostType,
     required Color color,
   }) {
-    final canAfford = (context.watch<AuthProvider>().userModel?.pt ?? 0) >= cost;
+    final user = context.watch<AuthProvider>().userModel;
+    final canAfford = (user?.pt ?? 0) >= cost;
+
+    // تقييد التجديد (ren): متاح للمدفوع دائماً، وللمجاني قبل يومين من الانتهاء فقط
+    bool isEnabled = true;
+    if (boostType == 'ren' && user?.bPkg == 0) {
+      final daysLeft = _offer?.daysUntilExpiration ?? 30;
+      if (daysLeft > 2) {
+        isEnabled = false;
+      }
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -434,16 +444,20 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
               width: double.infinity,
               height: 38,
               child: ElevatedButton.icon(
-                onPressed: canAfford ? () => _purchase(boostType, cost, title) : null,
-                icon: Icon(canAfford ? Icons.shopping_cart : Icons.lock,
-                    color: Colors.black, size: 16),
-                label: Text(canAfford ? 'شراء بـ $cost نقطة' : 'نقاطك غير كافية',
+                onPressed: (isEnabled && canAfford) ? () => _purchase(boostType, cost, title) : null,
+                icon: (isEnabled && canAfford)
+                    ? Icon(Icons.shopping_cart, color: Colors.black, size: 16)
+                    : Icon(isEnabled ? Icons.money_off : Icons.lock,
+                        color: Colors.black, size: 16),
+                label: Text(!isEnabled
+                    ? 'التجديد متاح قبل يومين من الانتهاء'
+                    : (canAfford ? 'شراء بـ $cost نقطة' : 'نقاطك غير كافية'),
                     style: const TextStyle(
                         color: Colors.black,
                         fontWeight: FontWeight.bold,
                         fontSize: 13)),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: canAfford ? color : Colors.grey,
+                  backgroundColor: (isEnabled && canAfford) ? color : Colors.grey,
                 ),
               ),
             ),
