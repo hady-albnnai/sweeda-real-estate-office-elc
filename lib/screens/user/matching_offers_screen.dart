@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
+import 'package:share_plus/share_plus.dart';
 import '../../models/offer_model.dart';
 import '../../core/services/business_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/offer_provider.dart';
 import 'package:go_router/go_router.dart';
+import '../../widgets/book_appointment_sheet.dart';
 
 class MatchingOffersScreen extends StatefulWidget {
   final Map<String, dynamic> requestData;
@@ -100,7 +102,12 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
 
     final List<OfferModel> matches = [];
 
+    final int? reqTrx = widget.requestData['trx'] as int?;
+
     for (final offer in offerProvider.offers) {
+      // فلتر نوع المعاملة (شراء / إيجار)
+      if (reqTrx != null && offer.trx != reqTrx) continue;
+
       final scoreData = BusinessService().calculateMatchScore(
         request: widget.requestData,
         offer: offer,
@@ -399,8 +406,12 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      // فتح شاشة الحجز مع تمرير العرض
-                      context.push('/user/my-appointments', extra: offer);
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) => BookAppointmentSheet(offer: offer),
+                      );
                     },
                     child: const Text('حجز موعد'),
                   ),
@@ -411,11 +422,9 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
             SizedBox(
               width: double.infinity,
               child: TextButton.icon(
-                onPressed: () {
-                  // مشاركة العرض
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('تم نسخ رابط العرض')),
-                  );
+                onPressed: () async {
+                  final text = BusinessService().generateSocialPost(offer);
+                  await Share.share(text, subject: offer.ttl);
                 },
                 icon: const Icon(Icons.share, size: 18),
                 label: const Text('مشاركة'),
