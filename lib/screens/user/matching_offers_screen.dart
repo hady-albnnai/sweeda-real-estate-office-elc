@@ -6,6 +6,7 @@ import '../../models/offer_model.dart';
 import '../../core/services/business_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/offer_provider.dart';
+import '../../providers/config_provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../widgets/book_appointment_sheet.dart';
 
