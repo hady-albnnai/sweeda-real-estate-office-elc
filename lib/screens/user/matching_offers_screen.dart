@@ -28,8 +28,25 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
   double _maxPrice = 1000000;
   String _sortBy = 'match_score';
   String? _selectedCity;
+  
+  // فلاتر عقارات
+  int? _selectedCat;
+  int? _selectedDocTp;
+  String? _selectedFinishing;
+  String? _selectedDirection;
+  double? _minArea;
+  double? _maxArea;
+  int? _selectedFloor;
   int? _minRooms;
+  
+  // فلاتر سيارات
+  String? _selectedBrand;
+  String? _selectedModel;
+  int? _selectedYear;
+  String? _selectedFuel;
+  String? _selectedTransmission;
   int? _maxKm;
+  
   bool _hasImagesOnly = false;
 
   Timer? _refreshTimer;
@@ -143,41 +160,75 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
     // فلتر السعر
     filtered = filtered.where((o) => o.prc >= _minPrice && o.prc <= _maxPrice).toList();
 
-    // فلتر الموقع (للعقارات)
-    if (_selectedCity != null && widget.requestData['typ'] == 0) {
+    // فلتر الموقع
+    if (_selectedCity != null) {
       filtered = filtered.where((o) {
-        final city = o.loc['city']?.toString().toLowerCase();
-        return city == _selectedCity!.toLowerCase();
+        final city = (o.loc['city'] ?? o.loc['d'] ?? '').toString().toLowerCase();
+        return city.contains(_selectedCity!.toLowerCase());
       }).toList();
     }
 
-    // فلتر عدد الغرف (للعقارات)
-    if (_minRooms != null && widget.requestData['typ'] == 0) {
-      filtered = filtered.where((o) {
-        final rooms = (o.specs['rooms'] as num?)?.toInt() ?? 0;
-        return rooms >= _minRooms!;
-      }).toList();
+    if (widget.requestData['typ'] == 0) {
+      // فلاتر عقارات
+      if (_selectedCat != null) {
+        filtered = filtered.where((o) => o.cat == _selectedCat).toList();
+      }
+      if (_selectedDocTp != null) {
+        filtered = filtered.where((o) => o.docTp == _selectedDocTp).toList();
+      }
+      if (_selectedFinishing != null) {
+        filtered = filtered.where((o) => (o.specs['finishing']?.toString() ?? '') == _selectedFinishing).toList();
+      }
+      if (_selectedDirection != null) {
+        filtered = filtered.where((o) => (o.specs['direction']?.toString() ?? '') == _selectedDirection).toList();
+      }
+      if (_minArea != null) {
+        filtered = filtered.where((o) {
+          final area = double.tryParse(o.specs['area']?.toString() ?? '');
+          return area != null && area >= _minArea!;
+        }).toList();
+      }
+      if (_maxArea != null) {
+        filtered = filtered.where((o) {
+          final area = double.tryParse(o.specs['area']?.toString() ?? '');
+          return area != null && area <= _maxArea!;
+        }).toList();
+      }
+      if (_selectedFloor != null) {
+        filtered = filtered.where((o) => int.tryParse(o.specs['floor']?.toString() ?? '') == _selectedFloor).toList();
+      }
+      if (_minRooms != null) {
+        filtered = filtered.where((o) {
+          final rooms = (o.specs['rooms'] as num?)?.toInt() ?? 0;
+          return rooms >= _minRooms!;
+        }).toList();
+      }
+    } else if (widget.requestData['typ'] == 1) {
+      // فلاتر سيارات
+      if (_selectedBrand != null) {
+        filtered = filtered.where((o) => (o.specs['brand']?.toString() ?? '').toLowerCase().contains(_selectedBrand!.toLowerCase())).toList();
+      }
+      if (_selectedModel != null) {
+        filtered = filtered.where((o) => (o.specs['model']?.toString() ?? '').toLowerCase().contains(_selectedModel!.toLowerCase())).toList();
+      }
+      if (_selectedYear != null) {
+        filtered = filtered.where((o) => int.tryParse(o.specs['year']?.toString() ?? '') == _selectedYear).toList();
+      }
+      if (_selectedFuel != null) {
+        filtered = filtered.where((o) => (o.specs['fuel']?.toString() ?? '') == _selectedFuel).toList();
+      }
+      if (_selectedTransmission != null) {
+        filtered = filtered.where((o) => (o.specs['transmission']?.toString() ?? '') == _selectedTransmission).toList();
+      }
+      if (_maxKm != null) {
+        filtered = filtered.where((o) {
+          final km = (o.specs['km'] as num?)?.toInt() ?? 999999;
+          return km <= _maxKm!;
+        }).toList();
+      }
     }
 
-    // فلتر الكيلومترات (للسيارات)
-    if (_maxKm != null && widget.requestData['typ'] == 1) {
-      filtered = filtered.where((o) {
-        final km = (o.specs['km'] as num?)?.toInt() ?? 999999;
-        return km <= _maxKm!;
-      }).toList();
-    }
-
-    // فلتر "عروض تحتوي على صور فقط"
-    if (_hasImagesOnly) {
-      filtered = filtered.where((o) => o.imgs.isNotEmpty).toList();
-    }
-
-    // فلتر "عروض تحتوي على صور فقط"
-    if (_hasImagesOnly) {
-      filtered = filtered.where((o) => o.imgs.isNotEmpty).toList();
-    }
-
-    // فلتر "عروض تحتوي على صور فقط"
+    // فلتر الصور
     if (_hasImagesOnly) {
       filtered = filtered.where((o) => o.imgs.isNotEmpty).toList();
     }
@@ -206,57 +257,150 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
   }
 
   Widget _buildFilterSheet() {
+    final config = context.watch<ConfigProvider>().config;
     final isProperty = widget.requestData['typ'] == 0;
+    final catsSource = isProperty
+        ? ((config?.data['catProp'] ?? {}) as Map<String, dynamic>)
+        : ((config?.data['catVeh'] ?? {}) as Map<String, dynamic>);
+    final docTpSource = isProperty
+        ? ((config?.data['docTp'] ?? {}) as Map<String, dynamic>)
+        : ((config?.data['carDocTp'] ?? {}) as Map<String, dynamic>);
+
+    final catItems = catsSource.entries
+        .where((e) => int.tryParse(e.key) != null)
+        .map((e) => DropdownMenuItem<int>(
+              value: int.parse(e.key),
+              child: Text(e.value is Map ? (e.value['nm'] ?? e.value.toString()) : e.value.toString(), overflow: TextOverflow.ellipsis),
+            ))
+        .toList();
+    final docItems = docTpSource.entries
+        .where((e) => int.tryParse(e.key) != null)
+        .map((e) => DropdownMenuItem<int>(
+              value: int.parse(e.key),
+              child: Text(e.value.toString(), overflow: TextOverflow.ellipsis),
+            ))
+        .toList();
 
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text('فلاتر البحث', style: TextStyle(color: AppTheme.primaryGold, fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 20),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('فلاتر البحث', style: TextStyle(color: AppTheme.primaryGold, fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
 
-          _buildPriceSlider(),
+            _buildPriceSlider(),
 
-          if (isProperty) ...[
             const SizedBox(height: 16),
             _buildCityFilter(),
-            const SizedBox(height: 12),
-            _buildRoomsFilter(),
-          ] else ...[
+
+            if (isProperty) ...[
+              const SizedBox(height: 12),
+              DropdownButtonFormField<int>(
+                value: _selectedCat,
+                decoration: const InputDecoration(labelText: 'التصنيف', border: OutlineInputBorder()),
+                items: [const DropdownMenuItem(value: null, child: Text('كل التصنيفات')), ...catItems],
+                onChanged: (v) => setState(() => _selectedCat = v),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<int>(
+                value: _selectedDocTp,
+                decoration: const InputDecoration(labelText: 'نوع السند', border: OutlineInputBorder()),
+                items: [const DropdownMenuItem(value: null, child: Text('كل أنواع السند')), ...docItems],
+                onChanged: (v) => setState(() => _selectedDocTp = v),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                value: _selectedFinishing,
+                decoration: const InputDecoration(labelText: 'الإكساء', border: OutlineInputBorder()),
+                items: ['ملكي', 'سوبر ديلوكس', 'ديلوكس', 'عادي', 'هيكل'].map((f) => DropdownMenuItem(value: f, child: Text(f))).toList(),
+                onChanged: (v) => setState(() => _selectedFinishing = v),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                value: _selectedDirection,
+                decoration: const InputDecoration(labelText: 'الاتجاه', border: OutlineInputBorder()),
+                items: ['شمالي', 'جنوبي', 'شرقي', 'غربي', 'شمالي شرقي', 'شمالي غربي', 'جنوبي شرقي', 'جنوبي غربي', 'مفتوح'].map((d) => DropdownMenuItem(value: d, child: Text(d))).toList(),
+                onChanged: (v) => setState(() => _selectedDirection = v),
+              ),
+              const SizedBox(height: 12),
+              Row(children: [
+                Expanded(child: TextField(
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'المساحة من', border: OutlineInputBorder()),
+                  onChanged: (v) => setState(() => _minArea = double.tryParse(v)),
+                )),
+                const SizedBox(width: 8),
+                Expanded(child: TextField(
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'المساحة إلى', border: OutlineInputBorder()),
+                  onChanged: (v) => setState(() => _maxArea = double.tryParse(v)),
+                )),
+              ]),
+              const SizedBox(height: 12),
+              TextField(
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'الطابق', border: OutlineInputBorder()),
+                onChanged: (v) => setState(() => _selectedFloor = int.tryParse(v)),
+              ),
+              const SizedBox(height: 12),
+              _buildRoomsFilter(),
+            ] else ...[
+              const SizedBox(height: 12),
+              TextField(
+                decoration: const InputDecoration(labelText: 'الماركة', border: OutlineInputBorder()),
+                onChanged: (v) => setState(() => _selectedBrand = v),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                decoration: const InputDecoration(labelText: 'الموديل', border: OutlineInputBorder()),
+                onChanged: (v) => setState(() => _selectedModel = v),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'سنة الصنع', border: OutlineInputBorder()),
+                onChanged: (v) => setState(() => _selectedYear = int.tryParse(v)),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                value: _selectedFuel,
+                decoration: const InputDecoration(labelText: 'نوع الوقود', border: OutlineInputBorder()),
+                items: ['بنزين', 'ديزل', 'هجين', 'كهرباء'].map((f) => DropdownMenuItem(value: f, child: Text(f))).toList(),
+                onChanged: (v) => setState(() => _selectedFuel = v),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                value: _selectedTransmission,
+                decoration: const InputDecoration(labelText: 'ناقل الحركة', border: OutlineInputBorder()),
+                items: ['عادي', 'أوتوماتيك', 'نصف أوتوماتيك'].map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+                onChanged: (v) => setState(() => _selectedTransmission = v),
+              ),
+              const SizedBox(height: 12),
+              _buildKmFilter(),
+            ],
+
             const SizedBox(height: 16),
-            _buildKmFilter(),
+            SwitchListTile(
+              title: const Text('عروض تحتوي على صور فقط', style: TextStyle(color: AppTheme.textWhite)),
+              value: _hasImagesOnly,
+              onChanged: (val) {
+                setState(() => _hasImagesOnly = val);
+              },
+              activeColor: AppTheme.primaryGold,
+            ),
+
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _applyFilters();
+              },
+              child: const Text('تطبيق الفلاتر'),
+            ),
           ],
-
-          const SizedBox(height: 16),
-          SwitchListTile(
-            title: const Text('عروض تحتوي على صور فقط', style: TextStyle(color: AppTheme.textWhite)),
-            value: _hasImagesOnly,
-            onChanged: (val) {
-              setState(() => _hasImagesOnly = val);
-            },
-            activeColor: AppTheme.primaryGold,
-          ),
-
-          const SizedBox(height: 16),
-          SwitchListTile(
-            title: const Text('عروض تحتوي على صور فقط', style: TextStyle(color: AppTheme.textWhite)),
-            value: _hasImagesOnly,
-            onChanged: (val) {
-              setState(() => _hasImagesOnly = val);
-            },
-            activeColor: AppTheme.primaryGold,
-          ),
-
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _applyFilters();
-            },
-            child: const Text('تطبيق الفلاتر'),
-          ),
-        ],
+        ),
       ),
     );
   }
