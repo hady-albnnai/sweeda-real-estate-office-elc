@@ -535,4 +535,69 @@ class BusinessService {
   String getStaffInternalLabel(UserModel user) {
     return '${user.nm} (${user.roleName})';
   }
+
+  // ═══════════════════════════════════════
+  // 4.9 نظام المطابقة المتقدم (Match Score)
+  // ═══════════════════════════════════════
+
+  /// يحسب نسبة التطابق بين الطلب والعرض
+  /// يرجع:
+  /// - score: النسبة العامة (0-100)
+  /// - breakdown: تفصيل النسب لكل عامل
+  /// - details: نص توضيحي للعرض
+  Map<String, dynamic> calculateMatchScore({
+    required Map<String, dynamic> request,
+    required OfferModel offer,
+  }) {
+    int totalScore = 0;
+    final Map<String, int> breakdown = {};
+
+    // 1. نوع العنصر (30%)
+    if (request['typ'] == offer.typ) {
+      totalScore += 30;
+      breakdown['type'] = 30;
+    }
+
+    // 2. نوع المعاملة (20%)
+    if (request['trx'] == offer.trx) {
+      totalScore += 20;
+      breakdown['transaction'] = 20;
+    }
+
+    // 3. السعر (±20%) (25%)
+    final double? reqPrice = (request['price'] as num?)?.toDouble();
+    if (reqPrice != null && reqPrice > 0) {
+      final double diff = (offer.prc - reqPrice).abs() / reqPrice;
+      if (diff <= 0.20) {
+        final int priceScore = (25 * (1 - diff)).round();
+        totalScore += priceScore;
+        breakdown['price'] = priceScore;
+      }
+    }
+
+    // 4. المنطقة (15%)
+    final String? reqCity = request['city']?.toString().toLowerCase();
+    final String? offerCity = offer.loc['city']?.toString().toLowerCase();
+    if (reqCity != null && offerCity != null && reqCity == offerCity) {
+      totalScore += 15;
+      breakdown['location'] = 15;
+    }
+
+    // 5. المسافة (10%) - حالياً ثابتة (يمكن تطويرها لاحقاً)
+    // يمكن إضافة حساب المسافة باستخدام الإحداثيات
+
+    final int finalScore = totalScore.clamp(0, 100);
+
+    return {
+      'score': finalScore,
+      'breakdown': breakdown,
+      'details': _buildScoreDetails(breakdown),
+    };
+  }
+
+  String _buildScoreDetails(Map<String, int> breakdown) {
+    if (breakdown.isEmpty) return 'لا يوجد تطابق كافٍ';
+    final parts = breakdown.entries.map((e) => '${e.key}: ${e.value}%').toList();
+    return parts.join(' • ');
+  }
 }

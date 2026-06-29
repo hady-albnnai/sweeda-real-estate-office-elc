@@ -208,6 +208,13 @@ class AppRouter {
       GoRoute(path: '/user/add-offer', builder: (context, state) => const AddOfferScreen()),
       GoRoute(path: '/user/my-requests', builder: (context, state) => const MyRequestsScreen()),
       GoRoute(path: '/user/add-request', builder: (context, state) => const AddRequestScreen()),
+      GoRoute(
+        path: '/matching-offers',
+        builder: (context, state) {
+          final requestData = state.extra as Map<String, dynamic>? ?? {};
+          return MatchingOffersScreen(requestData: requestData);
+        },
+      ),
       GoRoute(path: '/user/my-appointments', builder: (context, state) => const MyAppointmentsScreen()),
       GoRoute(path: '/user/favorites', builder: (context, state) => const FavoritesScreen()),
       GoRoute(path: '/user/profile', builder: (context, state) => const ProfileScreen()),
