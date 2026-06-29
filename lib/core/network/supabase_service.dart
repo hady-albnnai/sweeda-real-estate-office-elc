@@ -57,7 +57,7 @@ class SupabaseService {
   bool get isReady => _initialized;
 
   /// استدعاء Edge Function مع إضافة توكن الجلسة المخصص إذا لزم الأمر
-  Future<FunctionsHttpResponse> invokeFunction(
+  Future<dynamic> invokeFunction(
     String functionName, {
     dynamic body,
     Map<String, String>? headers,

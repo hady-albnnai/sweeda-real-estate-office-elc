@@ -374,7 +374,7 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
                       ),
                     );
                   }).toList(),
-                  ),
+                ),
               if (_bookedSlots.isNotEmpty && !_loadingSlots) ...[
                 const SizedBox(height: 8),
                 const Row(
