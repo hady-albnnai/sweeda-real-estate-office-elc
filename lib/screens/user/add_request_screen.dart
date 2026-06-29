@@ -126,23 +126,11 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
       return;
     }
 
-    // المطابقة التلقائية
-    final matches = await BusinessService().matchOffersForRequest(
-      elementType:     element,
-      transactionType: _selectedType!,
-      targetPrice:     budget,
-      currency:        _cur,
-    );
-
     if (!mounted) return;
     setState(() => _submitting = false);
 
-    if (matches.isNotEmpty) await _showMatchesSheet(matches);
-    if (!mounted) return;
-    Navigator.pop(context);
-    _snack(matches.isEmpty
-        ? 'تم إرسال طلبك بنجاح ✅'
-        : 'تم إرسال طلبك ✅ — وجدنا ${matches.length} عرض مطابق!');
+    // الانتقال إلى شاشة العروض المطابقة المتقدمة (Phase C)
+    context.push('/matching-offers', extra: request.toMap());
   }
 
   Future<void> _showMatchesSheet(List<OfferModel> matches) async {
