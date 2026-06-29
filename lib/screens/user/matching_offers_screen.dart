@@ -37,11 +37,11 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
     setState(() => _loading = true);
 
     final offerProvider = context.read<OfferProvider>();
-    final allOffers = await offerProvider.fetchOffers();
+    await offerProvider.fetchOffers();
 
     final List<OfferModel> matches = [];
 
-    for (final offer in allOffers) {
+    for (final offer in offerProvider.offers) {
       final scoreData = BusinessService().calculateMatchScore(
         request: widget.requestData,
         offer: offer,
