@@ -90,6 +90,23 @@ serve(async (req) => {
       return json({ success: true, appointments: data ?? [] });
     }
 
+    if (action === "get_booked_slots") {
+      const offerId = (body.offer_id ?? body.offerId)?.toString() ?? "";
+      const date = (body.date ?? "").toString();
+
+      if (!offerId || !date) {
+        return json({ success: false, error: "OFFER_ID_AND_DATE_REQUIRED" }, 400);
+      }
+
+      const { data, error } = await supabaseAdmin.rpc("get_booked_slots_internal", {
+        p_offer_id: offerId,
+        p_date: date,
+      });
+
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json({ success: true, booked_slots: data ?? [] });
+    }
+
     if (action === "book") {
       const offerId = (body.offer_id ?? body.offerId)?.toString() ?? null;
       const dt = body.dt?.toString() ?? "";
