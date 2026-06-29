@@ -28,6 +28,7 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
   String? _selectedCity;
   int? _minRooms;
   int? _maxKm;
+  bool _hasImagesOnly = false;
 
   Timer? _refreshTimer;
 
