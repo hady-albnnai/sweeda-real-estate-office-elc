@@ -34,7 +34,7 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
   }
 
   Future<void> _loadMatchingOffers() async {
-    setState(() => _loading = true);
+    if (!mounted) return;
 
     final offerProvider = context.read<OfferProvider>();
     await offerProvider.fetchOffers();
@@ -47,7 +47,7 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
         offer: offer,
       );
 
-      if (scoreData['score'] >= 40) {
+      if (scoreData['score'] >= 35) {
         offer.matchScore = scoreData['score'];
         offer.matchBreakdown = scoreData['breakdown'];
         matches.add(offer);
@@ -56,11 +56,13 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
 
     matches.sort((a, b) => (b.matchScore ?? 0).compareTo(a.matchScore ?? 0));
 
-    setState(() {
-      _matchingOffers = matches;
-      _filteredOffers = List.from(matches);
-      _loading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _matchingOffers = matches;
+        _filteredOffers = List.from(matches);
+        _loading = false;
+      });
+    }
   }
 
   void _applyFilters() {
@@ -293,3 +295,4 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
     );
   }
 }
+```

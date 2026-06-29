@@ -129,8 +129,16 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
     if (!mounted) return;
     setState(() => _submitting = false);
 
-    // الانتقال إلى شاشة العروض المطابقة المتقدمة (Phase C)
-    context.push('/matching-offers', extra: request.toMap());
+    // تجهيز بيانات الطلب بشكل صحيح لشاشة المطابقة
+    final requestData = {
+      'typ': request.elm,           // 0 = عقار, 1 = سيارة
+      'trx': request.typ,           // 0 = بيع, 1 = إيجار
+      'price': request.prc,
+      'city': request.notes,        // مؤقتاً (يمكن تحسينه لاحقاً)
+      'currency': request.cur,
+    };
+
+    context.push('/matching-offers', extra: requestData);
   }
 
   Future<void> _showMatchesSheet(List<OfferModel> matches) async {

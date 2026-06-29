@@ -552,27 +552,35 @@ class BusinessService {
     int totalScore = 0;
     final Map<String, int> breakdown = {};
 
-    // 1. نوع العنصر (30%)
-    if (request['typ'] == offer.typ) {
-      totalScore += 30;
-      breakdown['type'] = 30;
+    // 1. نوع العنصر (25%)
+    final int? reqTyp = request['typ'] as int?;
+    if (reqTyp != null && reqTyp == offer.typ) {
+      totalScore += 25;
+      breakdown['type'] = 25;
+    } else {
+      totalScore += 12;
     }
 
     // 2. نوع المعاملة (20%)
-    if (request['trx'] == offer.trx) {
+    final int? reqTrx = request['trx'] as int?;
+    if (reqTrx != null && reqTrx == offer.trx) {
       totalScore += 20;
       breakdown['transaction'] = 20;
+    } else {
+      totalScore += 10;
     }
 
-    // 3. السعر (±20%) (25%)
+    // 3. السعر (±35%) (30%)
     final double? reqPrice = (request['price'] as num?)?.toDouble();
     if (reqPrice != null && reqPrice > 0) {
       final double diff = (offer.prc - reqPrice).abs() / reqPrice;
-      if (diff <= 0.20) {
-        final int priceScore = (25 * (1 - diff)).round();
+      if (diff <= 0.35) {
+        final int priceScore = (30 * (1 - diff)).round();
         totalScore += priceScore;
         breakdown['price'] = priceScore;
       }
+    } else {
+      totalScore += 15;
     }
 
     // 4. المنطقة (15%)
@@ -581,10 +589,13 @@ class BusinessService {
     if (reqCity != null && offerCity != null && reqCity == offerCity) {
       totalScore += 15;
       breakdown['location'] = 15;
+    } else if (reqCity == null) {
+      totalScore += 8;
     }
 
-    // 5. المسافة (10%) - حالياً ثابتة (يمكن تطويرها لاحقاً)
-    // يمكن إضافة حساب المسافة باستخدام الإحداثيات
+    // 5. نقاط إضافية (10%)
+    if (offer.imgs.isNotEmpty) totalScore += 5;
+    if (offer.descript.length > 20) totalScore += 5;
 
     final int finalScore = totalScore.clamp(0, 100);
 
