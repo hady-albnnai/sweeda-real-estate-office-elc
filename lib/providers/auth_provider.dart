@@ -108,7 +108,7 @@ class AuthProvider with ChangeNotifier {
   }
 
   // ════════════════════════════════════════════════════════════════════
-  // 📱 WhatsApp
+  // 📱 SMS OTP
   // ════════════════════════════════════════════════════════════════════
 
   Future<bool> sendSMSOTP(String phone) async {
@@ -154,3 +154,161 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  // ════════════════════════════════════════════════════════════════════
+  // 📧 Email Magic Link
+  // ════════════════════════════════════════════════════════════════════
+
+  Future<bool> sendEmailMagicLink(String email) async {
+    try {
+      _currentEmail = email;
+      _channel = AuthChannel.email;
+      final result = await AuthService().sendEmailMagicLink(email);
+      notifyListeners();
+      return result['success'] == true;
+    } catch (e) {
+      _lastError = ErrorUtils.arabicMessage(e);
+      return false;
+    }
+  }
+
+  /// يُستدعى تلقائياً عند فتح التطبيق من deep link الماجيك لينك
+  Future<bool> handleEmailSession() async {
+    try {
+      // تنظيف أي جلسات قديمة قبل تفعيل جلسة الماجيك لينك
+      await AuthService().signOut();
+      
+      final result = await AuthService().handleEmailSession();
+      if (result['success'] == true) {
+        _isNewUser = result['isNewUser'] as bool? ?? false;
+        await _loadUserData(result['userId'] as String);
+        return true;
+      }
+      return false;
+    } catch (e) {return false;
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════════════
+  // المستخدم
+  // ════════════════════════════════════════════════════════════════════
+
+  Future<void> _loadUserData(String userId) async {
+    try {
+      final response = await SupabaseService().invokeFunction('user-account', body: {'action': 'get_full_profile', 'user_uid': userId});
+      final data = response.data as Map;
+      if (data['success'] != true || data['profile'] == null) return;
+      final profileList = data['profile'];
+      if (profileList is! List || profileList.isEmpty) return;
+      final row = Map<String, dynamic>.from(profileList.first as Map);
+      _userModel = UserModel.fromSupabase(row, userId);
+      notifyListeners();
+      DeviceService().registerWithServer();
+    } catch (e) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
+  }
+
+  Future<bool> completeProfile({required String name, required String sid}) async {
+    try {
+      if (_userModel == null) return false;
+      await SupabaseService().invokeFunction('user-account', body: {'action': 'update_profile', 'p_user_uid': _userModel!.uid, 'p_payload': {'nm': name, 'sid': sid}});
+      await _loadUserData(_userModel!.uid);
+      return true;
+    } catch (e) {return false;
+    }
+  }
+
+  Future<void> refreshUser() async {
+    final userId = await AuthService().getSavedUserId();
+    if (userId != null) await _loadUserData(userId);
+  }
+
+  String? _lastDailyStreakCheckDate;
+
+  String _getSyriaDateString(DateTime dt) {
+    final syria = dt.toUtc().add(const Duration(hours: 3));
+    return '${syria.year.toString().padLeft(4, '0')}-'
+        '${syria.month.toString().padLeft(2, '0')}-'
+        '${syria.day.toString().padLeft(2, '0')}';
+  }
+
+  Future<Map<String, dynamic>> registerStreak(dynamic config) async {
+    if (_userModel == null) return {'streak': 0, 'changed': false};
+    if (_userModel!.isAdmin) return {'streak': 0, 'changed': false, 'awarded': false};
+
+    final todayStr = _getSyriaDateString(DateTime.now());
+
+    if (_userModel!.strkDt != null) {
+      final lastStr = _getSyriaDateString(_userModel!.strkDt!);
+      if (lastStr == todayStr) {
+        _lastDailyStreakCheckDate = todayStr;
+        return {
+          'streak': _userModel!.strk,
+          'changed': false,
+          'awarded': false,
+        };
+      }
+    }
+
+    if (_lastDailyStreakCheckDate == todayStr) {
+      return {
+        'streak': _userModel!.strk,
+        'changed': false,
+        'awarded': false,
+      };
+    }
+
+    final result =
+        await BusinessService().registerDailyStreak(_userModel!.uid, config);
+
+    _lastDailyStreakCheckDate = todayStr;
+
+    if (result['changed'] == true) {
+      await _loadUserData(_userModel!.uid);
+    }
+
+    await _checkWeeklyLogin(config);
+    return result;
+  }
+
+  Future<void> _checkWeeklyLogin(dynamic config) async {
+    if (_userModel == null) return;
+    try {
+      final pts = config?.weeklyLoginPoints ?? 100;
+      final granted = await SupabaseService().invokeFunction(
+        'user-account',
+        body: {
+          'action': 'register_weekly_login',
+          'user_uid': _userModel!.uid,
+          'pts': pts,
+        },
+      );
+      if (granted.data is Map && (granted.data as Map)['success'] == true) {
+        await _loadUserData(_userModel!.uid);
+      }
+    } catch (e) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
+  }
+
+  Future<void> logout() async {
+    await FCMService().unregisterDevice();
+    await AuthService().signOut();
+    _userModel = null;
+    _currentPhone = null;
+    _currentEmail = null;
+    _currentOtp = null;
+    _isNewUser = false;
+    _lastDailyStreakCheckDate = null;
+    notifyListeners();
+  }
+
+  Future<void> checkAuthStatus() async {
+    try {
+      final userId = await AuthService().getSavedUserId();
+      if (userId != null) await _loadUserData(userId);
+    } catch (e) {
+      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+    }
+  }
+}
