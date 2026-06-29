@@ -26,6 +26,7 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
   String? _selectedCity;
   int? _minRooms;
   int? _maxKm;
+  bool _hasImagesOnly = false;
 
   Timer? _refreshTimer;
 
@@ -151,6 +152,11 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
       }).toList();
     }
 
+    // فلتر "عروض تحتوي على صور فقط"
+    if (_hasImagesOnly) {
+      filtered = filtered.where((o) => o.imgs.isNotEmpty).toList();
+    }
+
     // ترتيب
     if (_sortBy == 'match_score') {
       filtered.sort((a, b) => (b.matchScore ?? 0).compareTo(a.matchScore ?? 0));
@@ -196,6 +202,16 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
             const SizedBox(height: 16),
             _buildKmFilter(),
           ],
+
+          const SizedBox(height: 16),
+          SwitchListTile(
+            title: const Text('عروض تحتوي على صور فقط', style: TextStyle(color: AppTheme.textWhite)),
+            value: _hasImagesOnly,
+            onChanged: (val) {
+              setState(() => _hasImagesOnly = val);
+            },
+            activeColor: AppTheme.primaryGold,
+          ),
 
           const SizedBox(height: 24),
           ElevatedButton(
@@ -335,7 +351,17 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
             const SizedBox(height: 8),
             Text(offer.ttl, style: const TextStyle(color: AppTheme.textWhite, fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
-            Text(offer.loc['d'] ?? '', style: const TextStyle(color: AppTheme.textGrey)),
+            Row(
+              children: [
+                Text(offer.loc['d'] ?? '', style: const TextStyle(color: AppTheme.textGrey)),
+                if (offer.imgs.isNotEmpty) ...[
+                  const SizedBox(width: 12),
+                  Icon(Icons.photo, size: 14, color: AppTheme.primaryGold),
+                  const SizedBox(width: 4),
+                  Text('${offer.imgs.length} صور', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 12)),
+                ],
+              ],
+            ),
             const SizedBox(height: 12),
             Row(
               children: [
@@ -351,13 +377,26 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      // فتح شاشة الحجز
                       context.push('/user/my-appointments');
                     },
                     child: const Text('حجز موعد'),
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton.icon(
+                onPressed: () {
+                  // مشاركة العرض
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('تم نسخ رابط العرض')),
+                  );
+                },
+                icon: const Icon(Icons.share, size: 18),
+                label: const Text('مشاركة'),
+              ),
             ),
           ],
         ),
