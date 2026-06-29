@@ -293,4 +293,3 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
     );
   }
 }
-```
