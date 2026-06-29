@@ -22,17 +22,19 @@ class BusinessService {
   // 4.3 نظام النقاط (عبر RPC add_points)
   // ═══════════════════════════════════════
 
-  /// إضافة نقاط لمستخدم (تستدعي RPC التي تحدّث البادج تلقائياً)
+  /// إضافة نقاط لمستخدم (تستدعي Edge Function التي تحدّث البادج تلقائياً)
   Future<bool> addPoints(String uid, int points) async {
     if (uid.isEmpty || points == 0) return false;
     try {
-      await _sb.client.rpc(DbFunctions.addPoints, params: {
-        'p_uid': uid,
-        'p_pts': points,
+      final res = await _sb.client.functions.invoke('user-account', body: {
+        'action': 'award_points',
+        'user_uid': uid,
+        'event_type': 'manual_add',
+        'points': points,
       });
-      return true;
-    } catch (e) {// fallback: تحديث مباشر إن فشلت RPC
-      return _addPointsFallback(uid, points);
+      return res.data?['success'] == true;
+    } catch (e) {
+      return false;
     }
   }
 
@@ -40,30 +42,20 @@ class BusinessService {
   Future<bool> awardPointsSafe(String uid, String eventType, int points) async {
     if (uid.isEmpty || points == 0) return false;
     try {
-      final res = await _sb.client.rpc(DbFunctions.awardPointsSafe, params: {
-        'p_uid': uid,
-        'p_event_type': eventType,
-        'p_points': points,
+      final res = await _sb.client.functions.invoke('user-account', body: {
+        'action': 'award_points',
+        'user_uid': uid,
+        'event_type': eventType,
+        'points': points,
       });
-      if (res['success'] == true) return true;return false;
-    } catch (e) {return false;
+      return res.data?['success'] == true;
+    } catch (e) {
+      return false;
     }
   }
 
-  Future<bool> _addPointsFallback(String uid, int points) async {
-    try {
-      final row =
-          await _sb.client.from(DbTables.users).select('pt').eq('id', uid).single();
-      final current = (row['pt'] as int?) ?? 0;
-      await _sb.client.from(DbTables.users).update({
-        'pt': current + points,
-        'ts_upd': DateTime.now().toIso8601String(),
-      }).eq('id', uid);
-      await _sb.client.rpc('update_user_badge', params: {'p_uid': uid});
-      return true;
-    } catch (e) {return false;
-    }
-  }
+  // تم حذف _addPointsFallback لأن التحديثات المباشرة للـ users محظورة أمنياً
+  // والاعتماد الآن كلياً على Edge Functions.
 
   /// منح نقاط حدث معيّن باستخدام مفاتيح الـ Config (pts.*)
   /// أمثلة المفاتيح: 'sgn','wkL','addO','dlD','strk','soc','att','ref'

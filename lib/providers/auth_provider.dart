@@ -323,11 +323,16 @@ class AuthProvider with ChangeNotifier {
     if (_userModel == null) return;
     try {
       final pts = config?.weeklyLoginPoints ?? 100;
-      final granted = await SupabaseService().client.rpc(
-        'register_weekly_login',
-        params: {'p_uid': _userModel!.uid, 'p_pts': pts},
+      final granted = await SupabaseService().client.functions.invoke(
+        'user-account',
+        body: {
+          'action': 'register_weekly_login',
+          'user_uid': _userModel!.uid,
+          'pts': pts,
+        },
       );
-      if (granted == true) {await _loadUserData(_userModel!.uid);
+      if (granted.data is Map && (granted.data as Map)['success'] == true) {
+        await _loadUserData(_userModel!.uid);
       }
     } catch (e) {
       // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.

@@ -114,6 +114,47 @@ serve(async (req) => {
     if (!actor.ok) return actor.response;
     const uid = actor.uid;
 
+    if (action === "revoke_staff_session") {
+      const sessionToken = (body.session_token ?? body.sessionToken)?.toString() ?? "";
+      if (!sessionToken) return json({ success: false, error: "SESSION_TOKEN_REQUIRED" }, 400);
+
+      const { data, error } = await supabaseAdmin.rpc("revoke_staff_session", {
+        p_token: sessionToken,
+      });
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json({ success: data === true });
+    }
+
+    if (action === "register_weekly_login") {
+      const pts = (body.pts ?? 100);
+      const { data, error } = await supabaseAdmin.rpc("register_weekly_login", {
+        p_uid: uid,
+        p_pts: pts,
+      });
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json({ success: data === true });
+    }
+
+    if (action === "award_points") {
+      const eventType = (body.event_type ?? "").toString();
+      const points = (body.points ?? 0);
+      if (!eventType) return json({ success: false, error: "EVENT_TYPE_REQUIRED" }, 400);
+
+      const { data, error } = await supabaseAdmin.rpc("award_points_safe", {
+        p_uid: uid,
+        p_event: eventType,
+        p_pts: points,
+      });
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json({ success: data === true });
+    }
+
+    if (action === "update_badge") {
+      const { data, error } = await supabaseAdmin.rpc("update_user_badge", { p_uid: uid });
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json({ success: data === true });
+    }
+
     if (action === "get_full_profile") {
       const { data, error } = await supabaseAdmin.rpc("get_user_full_by_id", { p_uid: uid });
       if (error) return json({ success: false, error: error.message }, 400);
