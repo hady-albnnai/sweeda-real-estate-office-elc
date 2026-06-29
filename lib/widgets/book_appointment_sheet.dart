@@ -327,47 +327,47 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
                   style: TextStyle(
                       color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
-              _loadingSlots 
-                ? const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(20.0),
-                      child: CircularProgressIndicator(color: AppTheme.primaryGold),
-                    ),
-                  )
-                : Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: _generateTimeSlots(_selectedSlot!).map((time) {
-                      final isBooked = _bookedSlots.contains(time);
-                      final selected = _selectedTime == time;
-                      return Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: isBooked 
-                            ? null 
-                            : () => setState(() => _selectedTime = time),
-                          borderRadius: BorderRadius.circular(10),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            decoration: BoxDecoration(
+              if (_loadingSlots)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(20.0),
+                    child: CircularProgressIndicator(color: AppTheme.primaryGold),
+                  ),
+                )
+              else
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _generateTimeSlots(_selectedSlot!).map((time) {
+                    final isBooked = _bookedSlots.contains(time);
+                    final selected = _selectedTime == time;
+                    return Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: isBooked 
+                          ? null 
+                          : () => setState(() => _selectedTime = time),
+                        borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isBooked 
+                                ? AppTheme.textGrey.withOpacity(0.1) 
+                                : (selected ? AppTheme.primaryGold : AppTheme.surfaceBlack),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
                               color: isBooked 
-                                  ? AppTheme.textGrey.withOpacity(0.1) 
-                                  : (selected ? AppTheme.primaryGold : AppTheme.surfaceBlack),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: isBooked 
-                                    ? AppTheme.textGrey.withOpacity(0.2) 
-                                    : (selected ? AppTheme.primaryGold : AppTheme.textGrey.withOpacity(0.3)),
-                              ),
+                                  ? AppTheme.textGrey.withOpacity(0.2) 
+                                  : (selected ? AppTheme.primaryGold : AppTheme.textGrey.withOpacity(0.3)),
                             ),
-                            child: Text(
-                              time,
-                              style: TextStyle(
-                                color: isBooked 
-                                    ? AppTheme.textGrey 
-                                    : (selected ? AppTheme.deepBlack : AppTheme.textWhite),
-                                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-                              ),
+                          ),
+                          child: Text(
+                            time,
+                            style: TextStyle(
+                              color: isBooked 
+                                  ? AppTheme.textGrey 
+                                  : (selected ? AppTheme.deepBlack : AppTheme.textWhite),
+                              fontWeight: selected ? FontWeight.bold : FontWeight.normal,
                             ),
                           ),
                         ),
