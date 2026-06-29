@@ -37,6 +37,9 @@ import '../../screens/user/referral_screen.dart';
 import '../../screens/user/my_ratings_screen.dart';
 import '../../screens/user/my_payments_screen.dart';
 import '../../screens/user/boost_offer_screen.dart';
+import '../../screens/user/matching_offers_screen.dart';
+import '../../screens/user/matching_offers_screen.dart';
+import '../../screens/user/matching_offers_screen.dart';
 
 // === Broker ===
 import '../../screens/broker/broker_dashboard_screen.dart';
