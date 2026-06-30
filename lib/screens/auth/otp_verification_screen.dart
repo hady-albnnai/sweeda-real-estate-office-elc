@@ -13,13 +13,14 @@ class OtpVerificationScreen extends StatefulWidget {
   State<OtpVerificationScreen> createState() => _OtpVerificationScreenState();
 }
 
-class _OtpVerificationScreenState extends State<OtpVerificationScreen> with SmsAutoFill {
+class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   final _ctrls = List.generate(6, (_) => TextEditingController());
   final _nodes = List.generate(6, (_) => FocusNode());
   Timer? _timer;
   int _start = 60;
   bool _canResend = false;
   bool _loading = false;
+  StreamSubscription? _smsSubscription;
 
   // جدول تحويل الأحرف العربية إلى أرقام (نفس جدول السيرفر)
   static const Map<String, String> _charToDigit = {
@@ -31,15 +32,16 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> with SmsA
   void initState() {
     super.initState();
     startTimer();
-    _listenForOTP(); // تفعيل الاستماع التلقائي للرسائل
+    _initSmsListener(); // تفعيل الاستماع التلقائي للرسائل
   }
 
-  void _listenForOTP() async {
-    // استدعاء نافذة "سماح" الخاصة بجوجل (User Consent API)
-    String? code = await SmsAutoFill().getAppSmsCode();
-    if (code != null) {
-      _fillOtpFields(code);
-    }
+  void _initSmsListener() {
+    // استخدام listenForCode بدلاً من mixin
+    _smsSubscription = SmsAutoFill().listenForCode().listen((code) {
+      if (code != null) {
+        _fillOtpFields(code);
+      }
+    });
   }
 
   void _fillOtpFields(String receivedSms) {
@@ -58,7 +60,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> with SmsA
         _ctrls[i].text = filteredCode[i];
         if (i < 5) _nodes[i + 1].requestFocus();
       }
-      // التحقق تلقائياً بعد التعبئة
       _verify();
     }
   }
@@ -78,6 +79,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> with SmsA
   @override
   void dispose() {
     _timer?.cancel();
+    _smsSubscription?.cancel();
     for (var c in _ctrls) {
       c.dispose();
     }
@@ -109,11 +111,12 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> with SmsA
       } else if (auth.isEmployee) {
         context.go('/employee/home');
       } else if (auth.isSupervisor) {
-        context.// la suite du code précédent...
         context.go('/executor/tasks');
-      } else if (auth.isPhotographer) {
+      } else if (// la suite du code précédent...
+        auth.isPhotographer) {
         context.go('/photographer/tasks');
       } else if (auth.isBroker) {
+        context.// la suite du code précédent...
         context.go('/broker/dashboard');
       } else {
         context.go('/user/home');
