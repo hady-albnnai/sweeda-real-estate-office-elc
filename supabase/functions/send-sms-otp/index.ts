@@ -17,7 +17,6 @@ function normalizeSyPhone(input: string): string {
   return `+963${raw}`;
 }
 
-// جدول تحويل الأرقام إلى أحرف عربية لتجاوز فلاتر شركة الاتصالات
 const OTP_MAP: Record<string, string> = {
   '0': 'أ', '1': 'ب', '2': 'ت', '3': 'ث', '4': 'ج',
   '5': 'ح', '6': 'خ', '7': 'د', '8': 'ذ', '9': 'ر'
@@ -34,6 +33,7 @@ serve(async (req) => {
 
   try {
     const { phone } = await req.json()
+    if (!// la suite du code précédent...
     if (!phone) throw new Error("Phone number is required")
 
     const normalizedPhone = normalizeSyPhone(phone)
@@ -61,9 +61,19 @@ serve(async (req) => {
       )
     }
 
-    // تحويل الرمز الرقمي إلى سلسلة أحرف عربية
     const maskedOtp = encodeOtp(otp);
-    const message = `كودك: ${maskedOtp}`;
+
+    // نماذج رسائل "بشرية" بلهجة عامية لتجاوز الفلاتر تماماً
+    const templates = [
+      `لا تهون حط هالكلمة او عطي موافقة ليتم نسخها تلقائيا: ${maskedOtp}`,
+      `بدنا نكلفك تحط هالاحرف او قلو موافق ولحالها رح تنزل: ${maskedOtp}`,
+      `يا غالي بس عطي موافقة لهالكلمات لحتى تنزل عندك: ${maskedOtp}`,
+      `مرحبا، بس وافق على الرسالة لحتى يوصلك الكود: ${maskedOtp}`,
+      `تفضل هدول الاحرف، بس وافق ليتم نسخهم: ${maskedOtp}`,
+      `${maskedOtp}` // إبقاء خيار الرمز المجرد كاحتياط
+    ];
+
+    const randomTemplate = templates[Math.floor(Math.random() * templates.length)];
 
     const response = await fetch(`https://api.textbee.dev/api/v1/gateway/devices/${TEXTBEE_DEVICE_ID}/send-sms`, {
       method: 'POST',
@@ -73,7 +83,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         recipients: [normalizedPhone],
-        message: message
+        message: randomTemplate
       })
     })
 
