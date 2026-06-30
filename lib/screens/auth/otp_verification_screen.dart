@@ -20,7 +20,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   int _start = 60;
   bool _canResend = false;
   bool _loading = false;
-  StreamSubscription? _smsSubscription;
 
   // جدول تحويل الأحرف العربية إلى أرقام (نفس جدول السيرفر)
   static const Map<String, String> _charToDigit = {
@@ -32,20 +31,23 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   void initState() {
     super.initState();
     startTimer();
-    _initSmsListener(); // تفعيل الاستماع التلقائي للرسائل
+    _listenForOTP(); // تفعيل الاستماع التلقائي للرسائل
   }
 
-  void _initSmsListener() {
-    // استخدام listenForCode بدلاً من mixin
-    _smsSubscription = SmsAutoFill().listenForCode().listen((code) {
+  void _listenForOTP() async {
+    // استخدام الطريقة الصحيحة والموثقة لمكتبة sms_autofill
+    // هذه الدالة تفتح نافذة Consent API الخاصة بجوجل وتنتظر الرد
+    try {
+      String? code = await SmsAutoFill().getAppSmsCode();
       if (code != null) {
         _fillOtpFields(code);
       }
-    });
+    } catch (e) {
+      debugPrint("SMS AutoFill Error: $e");
+    }
   }
 
   void _fillOtpFields(String receivedSms) {
-    // استخراج الأحرف التي تنتمي لجدول التحويل فقط من الرسالة
     String filteredCode = "";
     for (var char in receivedSms.runes) {
       String sChar = String.fromCharCode(char);
@@ -54,7 +56,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       }
     }
 
-    // إذا وجدنا 6 أحرف، نقوم بتوزيعها على الخانات
     if (filteredCode.length >= 6) {
       for (int i = 0; i < 6; i++) {
         _ctrls[i].text = filteredCode[i];
@@ -79,7 +80,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   @override
   void dispose() {
     _timer?.cancel();
-    _smsSubscription?.cancel();
     for (var c in _ctrls) {
       c.dispose();
     }
@@ -97,13 +97,14 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       return;
     }
     setState(() => _loading = true);
-    final auth = context.read<AuthProvider>();
+    final auth = Provider.of<AuthProvider>(context, listen: false);
     
     final ok = await auth.verifySMSOTP(_otp);
     
     if (!mounted) return;
     setState(() => _loading = false);
     if (ok) {
+      // استخدام GoRouter للتوجيه الصحيح
       if (auth.isNewUser || auth.userModel?.usr == null) {
         context.go('/setup-profile');
       } else if (auth.isSenior) {
@@ -112,13 +113,12 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         context.go('/employee/home');
       } else if (auth.isSupervisor) {
         context.go('/executor/tasks');
-      } else if (// la suite du code précédent...
-        auth.isPhotographer) {
+      } else if (auth.isPhotographer) {
         context.go('/photographer/tasks');
       } else if (auth.isBroker) {
-        context.// la suite du code précédent...
         context.go('/broker/dashboard');
       } else {
+        // استخدام context المباشر للتوجيه
         context.go('/user/home');
       }
     } else {
@@ -142,7 +142,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
             const Icon(Icons.sms_outlined, color: AppTheme.primaryGold, size: 72),
             const SizedBox(height: 24),
             const Text('تحقق من الرمز', style: TextStyle(color: AppTheme.textWhite, fontSize: 28, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
+            constHizedBox(height: 12),
             Text(
               'أدخل الرمز المكون من 6 أحرف المرسل عبر رسالة نصية SMS إلى\n${auth.currentPhone ?? ''}',
               textAlign: TextAlign.center,
