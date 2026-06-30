@@ -11,6 +11,7 @@ function normalizeSyPhone(input: string): string {
   if (raw.startsWith("+963")) return raw;
   if (raw.startsWith("00963")) return `+963${raw.slice(5)}`;
   if (raw.startsWith("963")) return `+${raw}`;
+  if (// la suite du code précédent...
   if (raw.startsWith("0")) return `+963${raw.slice(1)}`;
   if (raw.startsWith("9")) return `+963${raw}`;
   if (raw.startsWith("+")) return raw;
@@ -33,7 +34,6 @@ serve(async (req) => {
 
   try {
     const { phone } = await req.json()
-    if (!// la suite du code précédent...
     if (!phone) throw new Error("Phone number is required")
 
     const normalizedPhone = normalizeSyPhone(phone)
@@ -63,14 +63,12 @@ serve(async (req) => {
 
     const maskedOtp = encodeOtp(otp);
 
-    // نماذج رسائل "بشرية" بلهجة عامية لتجاوز الفلاتر تماماً
+    // النماذج المعتمدة والمصقولة لتناسب مجتمع السويداء وتتجاوز الفلاتر
     const templates = [
       `لا تهون حط هالكلمة او عطي موافقة ليتم نسخها تلقائيا: ${maskedOtp}`,
       `بدنا نكلفك تحط هالاحرف او قلو موافق ولحالها رح تنزل: ${maskedOtp}`,
-      `يا غالي بس عطي موافقة لهالكلمات لحتى تنزل عندك: ${maskedOtp}`,
-      `مرحبا، بس وافق على الرسالة لحتى يوصلك الكود: ${maskedOtp}`,
-      `تفضل هدول الاحرف، بس وافق ليتم نسخهم: ${maskedOtp}`,
-      `${maskedOtp}` // إبقاء خيار الرمز المجرد كاحتياط
+      `حبيب القلب هاي الكلمة المطلوبة وافق بتروح لحالها: ${maskedOtp}`,
+      `يا حي الله هي كلمتك: ${maskedOtp}`
     ];
 
     const randomTemplate = templates[Math.floor(Math.random() * templates.length)];
