@@ -13,6 +13,7 @@ function normalizeSyPhone(input: string): string {
   if (raw.startsWith("963")) return `+${raw}`;
   if (raw.startsWith("0")) return `+963${raw.slice(1)}`;
   if (raw.startsWith("9")) return `+963${raw}`;
+  if (// la suite du code précédent...
   if (raw.startsWith("+")) return raw;
   return `+963${raw}`;
 }
@@ -51,17 +52,18 @@ serve(async (req) => {
       )
     }
 
+    // مصفوفة النماذج: الخيار الأول هو الرمز مجرداً لتجاوز الفلاتر تماماً
     const templates = [
-      `كود التفعيل الخاص بك هو: ${otp}`,
-      `مرحباً، رمز التحقق: ${otp}`,
-      `رمز الدخول الخاص بك: ${otp}`,
-      `تفعيل الحساب: ${otp}`,
-      `رمز التحقق من الهوية: ${otp}`,
-      `الرمز المطلوب هو ${otp}`,
+      `${otp}`, 
+      `كود التفعيل: ${otp}`,
       `رمز التحقق: ${otp}`,
+      `تفعيل الحساب: ${otp}`,
+      `الرمز المطلوب: ${otp}`,
+      `رمز الدخول: ${otp}`,
       `تأكيد الرقم: ${otp}`,
       `كود الدخول: ${otp}`,
-      `رمز التحقق الخاص بك: ${otp}`
+      `رمز التحقق الخاص بك: ${otp}`,
+      `مرحباً، رمزك هو: ${otp}`
     ];
 
     const randomTemplate = templates[Math.floor(Math.random() * templates.length)];
@@ -80,8 +82,6 @@ serve(async (req) => {
 
     const result = await response.json()
 
-    // التحقق الصارم من استجابة Textbee
-    // إذا كانت الاستجابة تحتوي على خطأ أو الحالة ليست 'success' / 'dispatched'
     if (!response.ok || (result && result.status === 'failed')) {
       throw new Error(result?.message || "Textbee API failed to dispatch SMS")
     }
