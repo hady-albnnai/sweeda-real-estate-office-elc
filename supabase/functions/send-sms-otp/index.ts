@@ -51,7 +51,6 @@ serve(async (req) => {
       )
     }
 
-    // مصفوفة النماذج العشوائية لتجاوز فلاتر شركة الاتصالات
     const templates = [
       `كود التفعيل الخاص بك هو: ${otp}`,
       `مرحباً، رمز التحقق: ${otp}`,
@@ -65,7 +64,6 @@ serve(async (req) => {
       `رمز التحقق الخاص بك: ${otp}`
     ];
 
-    // اختيار نموذج عشوائي
     const randomTemplate = templates[Math.floor(Math.random() * templates.length)];
 
     const response = await fetch(`https://api.textbee.dev/api/v1/gateway/devices/${TEXTBEE_DEVICE_ID}/send-sms`, {
@@ -81,6 +79,12 @@ serve(async (req) => {
     })
 
     const result = await response.json()
+
+    // التحقق الصارم من استجابة Textbee
+    // إذا كانت الاستجابة تحتوي على خطأ أو الحالة ليست 'success' / 'dispatched'
+    if (!response.ok || (result && result.status === 'failed')) {
+      throw new Error(result?.message || "Textbee API failed to dispatch SMS")
+    }
 
     return new Response(
       JSON.stringify({ success: true, result }),
