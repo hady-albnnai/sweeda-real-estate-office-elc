@@ -13,7 +13,6 @@ function normalizeSyPhone(input: string): string {
   if (raw.startsWith("963")) return `+${raw}`;
   if (raw.startsWith("0")) return `+963${raw.slice(1)}`;
   if (raw.startsWith("9")) return `+963${raw}`;
-  if (// la suite du code précédent...
   if (raw.startsWith("+")) return raw;
   return `+963${raw}`;
 }
@@ -52,21 +51,8 @@ serve(async (req) => {
       )
     }
 
-    // مصفوفة النماذج: الخيار الأول هو الرمز مجرداً لتجاوز الفلاتر تماماً
-    const templates = [
-      `${otp}`, 
-      `كود التفعيل: ${otp}`,
-      `رمز التحقق: ${otp}`,
-      `تفعيل الحساب: ${otp}`,
-      `الرمز المطلوب: ${otp}`,
-      `رمز الدخول: ${otp}`,
-      `تأكيد الرقم: ${otp}`,
-      `كود الدخول: ${otp}`,
-      `رمز التحقق الخاص بك: ${otp}`,
-      `مرحباً، رمزك هو: ${otp}`
-    ];
-
-    const randomTemplate = templates[Math.floor(Math.random() * templates.length)];
+    // الاختبار الأول: إرسال الرمز مجرداً تماماً (بدون أي نص) لتجاوز كافة الفلاتر
+    const message = `${otp}`;
 
     const response = await fetch(`https://api.textbee.dev/api/v1/gateway/devices/${TEXTBEE_DEVICE_ID}/send-sms`, {
       method: 'POST',
@@ -76,7 +62,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         recipients: [normalizedPhone],
-        message: randomTemplate
+        message: message
       })
     })
 
