@@ -113,10 +113,15 @@ class AuthProvider with ChangeNotifier {
 
   Future<bool> sendSMSOTP(String phone) async {
     try {
+      _currentPhone = phone;
+      _channel = AuthChannel.sms;
       final result = await AuthService().sendSMSOTP(phone);
       if (result['success'] == true) {
         if (result['fallbackOtp'] != null) {
           _lastError = 'DEBUG: ${result['fallbackOtp']}';
+          _currentOtp = result['fallbackOtp']?.toString();
+        } else {
+          _currentOtp = null;
         }
         notifyListeners();
         return true;
