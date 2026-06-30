@@ -6,6 +6,17 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+function normalizeSyPhone(input: string): string {
+  const raw = String(input ?? "").trim().replace(/[^0-9+]/g, "");
+  if (raw.startsWith("+963")) return raw;
+  if (raw.startsWith("00963")) return `+963${raw.slice(5)}`;
+  if (raw.startsWith("963")) return `+${raw}`;
+  if (raw.startsWith("0")) return `+963${raw.slice(1)}`;
+  if (raw.startsWith("9")) return `+963${raw}`;
+  if (raw.startsWith("+")) return raw;
+  return `+963${raw}`;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -15,14 +26,16 @@ serve(async (req) => {
     const { phone } = await req.json()
     if (!phone) throw new Error("Phone number is required")
 
+    const normalizedPhone = normalizeSyPhone(phone)
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // 1. Generate OTP in DB
+    // 1. Generate OTP in DB using normalized phone
     const { data: otp, error: otpError } = await supabase.rpc('generate_otp_v2', {
-      p_identifier: phone,
+      p_identifier: normalizedPhone,
       p_channel: 'sms'
     })
 
@@ -47,7 +60,7 @@ serve(async (req) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        recipients: [phone],
+        recipients: [normalizedPhone],
         message: `رمز التحقق الخاص بك لمكتب عقارات السويداء هو: ${otp}`
       })
     })
