@@ -51,8 +51,22 @@ serve(async (req) => {
       )
     }
 
-    // تغيير صيغة الرسالة لتكون "بشرية" أكثر وتجنب فلاتر شركة الاتصالات
-    const stealthMessage = `كود التفعيل الخاص بك هو: ${otp}`;
+    // مصفوفة النماذج العشوائية لتجاوز فلاتر شركة الاتصالات
+    const templates = [
+      `كود التفعيل الخاص بك هو: ${otp}`,
+      `مرحباً، رمز التحقق: ${otp}`,
+      `رمز الدخول الخاص بك: ${otp}`,
+      `تفعيل الحساب: ${otp}`,
+      `رمز التحقق من الهوية: ${otp}`,
+      `الرمز المطلوب هو ${otp}`,
+      `رمز التحقق: ${otp}`,
+      `تأكيد الرقم: ${otp}`,
+      `كود الدخول: ${otp}`,
+      `رمز التحقق الخاص بك: ${otp}`
+    ];
+
+    // اختيار نموذج عشوائي
+    const randomTemplate = templates[Math.floor(Math.random() * templates.length)];
 
     const response = await fetch(`https://api.textbee.dev/api/v1/gateway/devices/${TEXTBEE_DEVICE_ID}/send-sms`, {
       method: 'POST',
@@ -62,7 +76,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         recipients: [normalizedPhone],
-        message: stealthMessage
+        message: randomTemplate
       })
     })
 
