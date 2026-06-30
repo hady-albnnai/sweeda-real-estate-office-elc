@@ -17,6 +17,16 @@ function normalizeSyPhone(input: string): string {
   return `+963${raw}`;
 }
 
+// جدول تحويل الأرقام إلى أحرف عربية لتجاوز فلاتر شركة الاتصالات
+const OTP_MAP: Record<string, string> = {
+  '0': 'أ', '1': 'ب', '2': 'ت', '3': 'ث', '4': 'ج',
+  '5': 'ح', '6': 'خ', '7': 'د', '8': 'ذ', '9': 'ر'
+};
+
+function encodeOtp(otp: string): string {
+  return otp.split('').map(digit => OTP_MAP[digit] || digit).join(' ');
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -51,8 +61,9 @@ serve(async (req) => {
       )
     }
 
-    // الاختبار الأول: إرسال الرمز مجرداً تماماً (بدون أي نص) لتجاوز كافة الفلاتر
-    const message = `${otp}`;
+    // تحويل الرمز الرقمي إلى سلسلة أحرف عربية
+    const maskedOtp = encodeOtp(otp);
+    const message = `كودك: ${maskedOtp}`;
 
     const response = await fetch(`https://api.textbee.dev/api/v1/gateway/devices/${TEXTBEE_DEVICE_ID}/send-sms`, {
       method: 'POST',

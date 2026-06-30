@@ -1,10 +1,3 @@
-// ════════════════════════════════════════════════════════════════════════════
-// Edge Function: verify-sms-otp
-// يستقبل: { phone: "+963XXXXXXXXX", code: "123456" }
-// يتحقق عبر verify_otp_v2 و upsert_user_after_otp باستخدام service_role فقط.
-// يعيد userId/isNew ويحاول إصدار Supabase Auth session عبر magiclink لحساب pseudo.
-// ════════════════════════════════════════════════════════════════════════════
-
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -32,6 +25,17 @@ function normalizeSyPhone(input: string): string {
   return `+963${raw}`;
 }
 
+// جدول عكسي لتحويل الأحرف العربية إلى أرقام
+const REVERSE_OTP_MAP: Record<string, string> = {
+  'أ': '0', 'ب': '1', 'ت': '2', 'ث': '3', 'ج': '4',
+  'ح': '5', 'خ': '6', 'د': '7', 'ذ': '8', 'ر': '9'
+};
+
+function decodeOtp(code: string): string {
+  const cleanCode = code.replace(/\s+/g, ''); // إزالة أي مسافات
+  return cleanCode.split('').map(char => REVERSE_OTP_MAP[char] || char).join('');
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ success: false, error: "METHOD_NOT_ALLOWED" }, 405);
@@ -39,15 +43,17 @@ serve(async (req) => {
   try {
     const { phone, code } = await req.json();
     const normalizedPhone = normalizeSyPhone(phone ?? "");
-    const otpCode = String(code ?? "").trim();
+    
+    // فك تشفير الكود إذا كان يحتوي على أحرف عربية
+    const decodedCode = decodeOtp(String(code ?? "").trim());
 
-    if (!normalizedPhone || !otpCode) {
+    if (!normalizedPhone || !decodedCode) {
       return json({ success: false, error: "MISSING_FIELDS" }, 400);
     }
     if (!/^\+9639\d{8}$/.test(normalizedPhone)) {
       return json({ success: false, error: "INVALID_PHONE" }, 400);
     }
-    if (!/^\d{4,8}$/.test(otpCode)) {
+    if (!/^\d{4,8}$/.test(decodedCode)) {
       return json({ success: false, error: "INVALID_CODE_FORMAT" }, 400);
     }
 
@@ -59,7 +65,7 @@ serve(async (req) => {
 
     const { data: ok, error: verifyError } = await supabase.rpc("verify_otp_v2", {
       p_identifier: normalizedPhone,
-      p_code: otpCode,
+      p_code: decodedCode,
     });
 
     if (verifyError || ok !== true) {
