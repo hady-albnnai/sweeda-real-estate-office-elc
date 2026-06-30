@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sms_autofill/sms_autofill.dart'; 
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
+import 'package:go_router/go_// la suite du code précédent...
 import 'package:go_router/go_router.dart';
 
 /// شاشة التحقق من رمز OTP عبر SMS (تحويل الأحرف العربية إلى أرقام)
@@ -15,6 +15,7 @@ class OtpVerificationScreen extends StatefulWidget {
 
 class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   final _ctrls = List.generate(6, (_) => TextEditingController());
+  final _nodes = List.// la suite du code précédent...
   final _nodes = List.generate(6, (_) => FocusNode());
   Timer? _timer;
   int _start = 60;
@@ -31,43 +32,12 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   void initState() {
     super.initState();
     startTimer();
-    _listenForOTP(); // تفعيل الاستماع التلقائي للرسائل
-  }
-
-  void _listenForOTP() async {
-    // استخدام الطريقة الصحيحة والموثقة لمكتبة sms_autofill
-    // هذه الدالة تفتح نافذة Consent API الخاصة بجوجل وتنتظر الرد
-    try {
-      String? code = await SmsAutoFill().getAppSmsCode();
-      if (code != null) {
-        _fillOtpFields(code);
-      }
-    } catch (e) {
-      debugPrint("SMS AutoFill Error: $e");
-    }
-  }
-
-  void _fillOtpFields(String receivedSms) {
-    String filteredCode = "";
-    for (var char in receivedSms.runes) {
-      String sChar = String.fromCharCode(char);
-      if (_charToDigit.containsKey(sChar)) {
-        filteredCode += sChar;
-      }
-    }
-
-    if (filteredCode.length >= 6) {
-      for (int i = 0; i < 6; i++) {
-        _ctrls[i].text = filteredCode[i];
-        if (i < 5) _nodes[i + 1].requestFocus();
-      }
-      _verify();
-    }
   }
 
   void startTimer() {
     setState(() { _start = 60; _canResend = false; });
     _timer?.cancel();
+    _// la suite du code précédent...
     _timer = Timer.periodic(const Duration(seconds: 1), (t) {
       if (_start == 0) {
         setState(() { _timer?.cancel(); _canResend = true; });
@@ -97,28 +67,27 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       return;
     }
     setState(() => _loading = true);
-    final auth = Provider.of<AuthProvider>(context, listen: false);
     
-    final ok = await auth.verifySMSOTP(_otp);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final ok = await authProvider.verifySMSOTP(_otp);
     
     if (!mounted) return;
     setState(() => _loading = false);
     if (ok) {
-      // استخدام GoRouter للتوجيه الصحيح
-      if (auth.isNewUser || auth.userModel?.usr == null) {
+      if (authProvider.isNewUser || authProvider.userModel?.usr == null) {
         context.go('/setup-profile');
-      } else if (auth.isSenior) {
+      } else if (authProvider.isSenior) {
         context.go('/admin/dashboard');
-      } else if (auth.isEmployee) {
+      } else if (// la suite du code précédent...
+        authProvider.isEmployee) {
         context.go('/employee/home');
-      } else if (auth.isSupervisor) {
+      } else if (authProvider.isSupervisor) {
         context.go('/executor/tasks');
-      } else if (auth.isPhotographer) {
+      } else if (authProvider.isPhotographer) {
         context.go('/photographer/tasks');
-      } else if (auth.isBroker) {
+      } else if (authProvider.isBroker) {
         context.go('/broker/dashboard');
       } else {
-        // استخدام context المباشر للتوجيه
         context.go('/user/home');
       }
     } else {
@@ -142,7 +111,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
             const Icon(Icons.sms_outlined, color: AppTheme.primaryGold, size: 72),
             const SizedBox(height: 24),
             const Text('تحقق من الرمز', style: TextStyle(color: AppTheme.textWhite, fontSize: 28, fontWeight: FontWeight.bold)),
-            constHizedBox(height: 12),
+            const SizedBox(height: 12),
             Text(
               'أدخل الرمز المكون من 6 أحرف المرسل عبر رسالة نصية SMS إلى\n${auth.currentPhone ?? ''}',
               textAlign: TextAlign.center,
@@ -183,7 +152,11 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
             SizedBox(width: double.infinity, height: 56, child: ElevatedButton(onPressed: _loading ? null : _verify, style: ElevatedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))), child: _loading ? const CircularProgressIndicator(color: Colors.black) : const Text('تحقق الآن', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)))),
             const SizedBox(height: 20),
             TextButton(
-              onPressed: _canResend ? () { auth.sendSMSOTP(auth.currentPhone ?? ''); startTimer(); } : null,
+              onPressed: _canResend ? () { 
+                // نستخدم Provider هنا للوصول إلى auth provider
+                Provider.of<AuthProvider>(context, listen: false).sendSMSOTP(auth.currentPhone ?? ''); 
+                startTimer(); 
+              } : null,
               child: Text(_canResend ? 'إعادة إرسال رمز الـ SMS' : 'إعادة الإرسال خلال $_start ثانية', style: TextStyle(color: _canResend ? AppTheme.primaryGold : AppTheme.textGrey, fontWeight: FontWeight.bold)),
             ),
           ]),
