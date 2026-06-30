@@ -1,18 +1,19 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sms_autofill/sms_autofill.dart'; 
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 
-/// شاشة التحقق من رمز OTP عبر SMS (6 أرقام).
+/// شاشة التحقق من رمز OTP عبر SMS (تحويل الأحرف العربية إلى أرقام)
 class OtpVerificationScreen extends StatefulWidget {
   const OtpVerificationScreen({super.key});
   @override
   State<OtpVerificationScreen> createState() => _OtpVerificationScreenState();
 }
 
-class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
+class _OtpVerificationScreenState extends State<OtpVerificationScreen> with SmsAutoFill() {
   final _ctrls = List.generate(6, (_) => TextEditingController());
   final _nodes = List.generate(6, (_) => FocusNode());
   Timer? _timer;
@@ -20,10 +21,46 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   bool _canResend = false;
   bool _loading = false;
 
+  // جدول تحويل الأحرف العربية إلى أرقام (نفس جدول السيرفر)
+  static const Map<String, String> _charToDigit = {
+    'أ': '0', 'ب': '1', 'ت': '2', 'ث': '3', 'ج': '4',
+    'ح': '5', 'خ': '6', 'د': '7', 'ذ': '8', 'ر': '9'
+  };
+
   @override
   void initState() {
     super.initState();
     startTimer();
+    _listenForOTP(); // تفعيل الاستماع التلقائي للرسائل
+  }
+
+  void _listenForOTP() async {
+    // استدعاء نافذة "سماح" الخاصة بجوجل (User Consent API)
+    String? code = await SmsAutoFill().getAppSmsCode();
+    if (code != null) {
+      _fillOtpFields(code);
+    }
+  }
+
+  void _fillOtpFields(String receivedSms) {
+    // استخراج الأحرف التي تنتمي لجدول التحويل فقط من الرسالة
+    String filteredCode = "";
+    for (var char in receivedSms.runes) {
+      String sChar = String.fromCharCode(char);
+      if (_charToDigit.containsKey(sChar)) {
+        filteredCode += sChar;
+      }
+    }
+
+    // إذا وجدنا 6 أحرف، نقوم بتوزيعها على الخانات
+    if (filteredCode.length >= 6) {
+      for (int i = 0; i < 6; i++) {
+        _ctrls[i].text = filteredCode[i];
+        if (i < 5) _nodes[i + 1].requestFocus();
+      }
+      // التحقق تلقائياً بعد التعبئة
+      _verify();
+    }
   }
 
   void startTimer() {
@@ -60,13 +97,12 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     setState(() => _loading = true);
     final auth = context.read<AuthProvider>();
     
-    // استخدام دالة الـ SMS حصراً كما طلب العميل
+    // السيرفر الآن يستقبل الأحرف العربية ويفك تشفيرها داخلياً
     final ok = await auth.verifySMSOTP(_otp);
     
     if (!mounted) return;
     setState(() => _loading = false);
     if (ok) {
-      // 🚀 توجيه ذكي بعد التحقق (LOGIC_SPEC)
       if (auth.isNewUser || auth.userModel?.usr == null) {
         context.go('/setup-profile');
       } else if (auth.isSenior) {
@@ -105,7 +141,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
             const Text('تحقق من الرمز', style: TextStyle(color: AppTheme.textWhite, fontSize: 28, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             Text(
-              'أدخل الرمز المكوّن من 6 أرقام المرسل عبر رسالة نصية SMS إلى\n${auth.currentPhone ?? ''}',
+              'أدخل الرمز المكون من 6 أحرف المرسل عبر رسالة نصية SMS إلى\n${auth.currentPhone ?? ''}',
               textAlign: TextAlign.center,
               style: const TextStyle(color: AppTheme.textGrey, fontSize: 14, height: 1.5),
             ),
@@ -121,7 +157,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 children: List.generate(6, (i) => SizedBox(
                   width: 48,
                   child: TextField(
-                    controller: _ctrls[i], focusNode: _nodes[i], textAlign: TextAlign.center, keyboardType: TextInputType.number, maxLength: 1,
+                    controller: _ctrls[i], focusNode: _nodes[i], textAlign: TextAlign.center, 
+                    keyboardType: TextInputType.text, 
+                    maxLength: 1,
                     style: const TextStyle(color: AppTheme.primaryGold, fontSize: 24, fontWeight: FontWeight.bold),
                     decoration: InputDecoration(counterText: '', filled: true, fillColor: AppTheme.surfaceBlack, enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Colors.white10)), focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2))),
                     onChanged: (v) {
