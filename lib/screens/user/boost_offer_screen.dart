@@ -89,7 +89,7 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
       final res = await SupabaseService().invokeFunction(
         'user-offers',
         body: {
-          'action': 'boost',
+          'action': 'purchase_boost',
           'user_uid': user.uid,
           'offer_id': _offer!.id,
           'boost_type': boostType,

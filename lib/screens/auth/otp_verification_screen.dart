@@ -5,7 +5,6 @@ import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 
-/// شاشة التحقق من رمز OTP عبر SMS (تحويل الأحرف العربية إلى أرقام)
 class OtpVerificationScreen extends StatefulWidget {
   const OtpVerificationScreen({super.key});
   @override
@@ -20,7 +19,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   bool _canResend = false;
   bool _loading = false;
 
-  // جدول تحويل الأحرف العربية إلى أرقام (نفس جدول السيرفر)
   static const Map<String, String> _charToDigit = {
     'أ': '0', 'ب': '1', 'ت': '2', 'ث': '3', 'ج': '4',
     'ح': '5', 'خ': '6', 'د': '7', 'ذ': '8', 'ر': '9'
@@ -73,14 +71,16 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     if (ok) {
       if (authProvider.isNewUser || authProvider.userModel?.usr == null) {
         context.go('/setup-profile');
-      } else if (// la suite du code précédent...
-        authProvider.isSenior) {
+      } else if (authProvider.isSenior) {
         context.go('/admin/dashboard');
-      } else if (authProvider.isEmployee) {
+      } else if (// la suite du code précédent...
+        authProvider.isEmployee) {
+        context.// la suite du code précédent...
         context.go('/employee/home');
       } else if (authProvider.isSupervisor) {
         context.go('/executor/tasks');
       } else if (authProvider.isPhotographer) {
+        // la suite du code précédent...
         context.go('/photographer/tasks');
       } else if (authProvider.isBroker) {
         context.go('/broker/dashboard');
