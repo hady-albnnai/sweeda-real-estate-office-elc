@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sms_autofill/sms_autofill.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
   const OtpVerificationScreen({super.key});
@@ -11,7 +12,7 @@ class OtpVerificationScreen extends StatefulWidget {
   State<OtpVerificationScreen> createState() => _OtpVerificationScreenState();
 }
 
-class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
+class _OtpVerificationScreenState extends State<OtpVerificationScreen> with CodeAutoFill {
   final _ctrls = List.generate(6, (_) => TextEditingController());
   final _nodes = List.generate(6, (_) => FocusNode());
   Timer? _timer;
@@ -28,6 +29,29 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   void initState() {
     super.initState();
     startTimer();
+    listenForCode();
+  }
+
+  @override
+  void codeUpdated() {
+    if (code != null) {
+      _parseAndFillOtp(code!);
+    }
+  }
+
+  void _parseAndFillOtp(String smsMessage) {
+    final regExp = RegExp(r'[أبتثجحخدرذ](?:\s*[أبتثجحخدرذ]){5}');
+    final match = regExp.firstMatch(smsMessage);
+    if (match != null) {
+      final otpText = match.group(0)!;
+      final cleanOtp = otpText.replaceAll(RegExp(r'\s+'), '');
+      if (cleanOtp.length == 6) {
+        for (int i = 0; i < 6; i++) {
+          _ctrls[i].text = cleanOtp[i];
+        }
+        _verify();
+      }
+    }
   }
 
   void startTimer() {
@@ -44,6 +68,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
   @override
   void dispose() {
+    cancel();
+    unregisterListener();
     _timer?.cancel();
     for (var c in _ctrls) {
       c.dispose();
