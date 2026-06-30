@@ -13,7 +13,7 @@ class OtpVerificationScreen extends StatefulWidget {
   State<OtpVerificationScreen> createState() => _OtpVerificationScreenState();
 }
 
-class _OtpVerificationScreenState extends State<OtpVerificationScreen> with SmsAutoFill() {
+class _OtpVerificationScreenState extends State<OtpVerificationScreen> with SmsAutoFill {
   final _ctrls = List.generate(6, (_) => TextEditingController());
   final _nodes = List.generate(6, (_) => FocusNode());
   Timer? _timer;
@@ -97,7 +97,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> with SmsA
     setState(() => _loading = true);
     final auth = context.read<AuthProvider>();
     
-    // السيرفر الآن يستقبل الأحرف العربية ويفك تشفيرها داخلياً
     final ok = await auth.verifySMSOTP(_otp);
     
     if (!mounted) return;
@@ -110,6 +109,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> with SmsA
       } else if (auth.isEmployee) {
         context.go('/employee/home');
       } else if (auth.isSupervisor) {
+        context.// la suite du code précédent...
         context.go('/executor/tasks');
       } else if (auth.isPhotographer) {
         context.go('/photographer/tasks');
