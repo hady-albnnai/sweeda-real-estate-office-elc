@@ -1,12 +1,13 @@
 -- ══════════════════════════════════════════════════════════════════════
 -- Migration: Fix secure purchase_offer_boost lifecycle
--- Date: 2026-06-28
+-- Date: 2026-06-28 (Updated 2026-06-30)
 -- Purpose:
 --   - Remove references to offers.ts_upd because offers has no ts_upd column.
 --   - Keep boost cost server-calculated from app_config.main.spd.
 --   - Keep the function callable by service_role only; app access stays through
 --     the user-offers Edge Function.
 --   - Write activity_log using the current schema: act INT + det TEXT.
+--   - Enforcement: Free users (b_pkg=0) can only renew ('ren') if offer expires within 2 days.
 -- ══════════════════════════════════════════════════════════════════════
 
 CREATE OR REPLACE FUNCTION public.purchase_offer_boost(
@@ -25,6 +26,8 @@ DECLARE
   v_result JSONB;
   v_cost INTEGER;
   v_offer_status INTEGER;
+  v_offer_end TIMESTAMPTZ;
+  v_user_pkg INTEGER;
   v_config JSONB;
   v_new_balance INTEGER;
 BEGIN
@@ -32,8 +35,8 @@ BEGIN
     RETURN jsonb_build_object('success', false, 'error', 'AUTH_UID_MISMATCH');
   END IF;
 
-  SELECT usr_id, sts
-  INTO v_owner_id, v_offer_status
+  SELECT usr_id, sts, ts_end
+  INTO v_owner_id, v_offer_status, v_offer_end
   FROM public.offers
   WHERE id = p_offer_id
     AND i_del = 0;
@@ -45,6 +48,9 @@ BEGIN
   IF v_owner_id <> p_uid THEN
     RETURN jsonb_build_object('success', false, 'error', 'NOT_OWNER');
   END IF;
+
+  -- 1. Fetch User Package to enforce renewal rules
+  SELECT b_pkg INTO v_user_pkg FROM public.users WHERE id = p_uid AND i_del = 0;
 
   SELECT value
   INTO v_config
@@ -64,8 +70,18 @@ BEGIN
     RETURN jsonb_build_object('success', false, 'error', 'INVALID_BOOST_TYPE');
   END IF;
 
-  IF p_boost_type = 'ren' AND v_offer_status = 3 THEN
-    RETURN jsonb_build_object('success', false, 'error', 'REJECTED_OFFER');
+  -- 2. Renewal-specific validations
+  IF p_boost_type = 'ren' THEN
+    -- Cannot renew rejected offers
+    IF v_offer_status = 3 THEN
+      RETURN jsonb_build_object('success', false, 'error', 'REJECTED_OFFER');
+    END IF;
+
+    -- Free users (b_pkg=0) can only renew if the offer is close to expiring (<= 2 days)
+    -- If ts_end is NULL or in the past, it's allowed.
+    IF v_user_pkg = 0 AND v_offer_end > (v_now + INTERVAL '2 days') THEN
+      RETURN jsonb_build_object('success', false, 'error', 'RENEWAL_TOO_EARLY');
+    END IF;
   END IF;
 
   -- Atomic points deduction prevents race conditions and forged/negative costs.

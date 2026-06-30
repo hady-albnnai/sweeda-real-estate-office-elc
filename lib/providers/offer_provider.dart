@@ -223,6 +223,33 @@ class OfferProvider with ChangeNotifier {
     super.dispose();
   }
 
+  /// فحص ما إذا كان العرض مكرراً (يُستخدم عند الإضافة أو التعديل)
+  Future<bool> checkDuplicate({
+    required String title,
+    required double price,
+    required Map<String, dynamic> loc,
+    required String userId,
+  }) async {
+    try {
+      final response = await SupabaseService().invokeFunction(
+        'user-offers',
+        body: {
+          'action': 'check_duplicate',
+          'title': title,
+          'price': price,
+          'loc': loc,
+          'usr_id': userId,
+        },
+      );
+      final data = response.data as Map<String, dynamic>?;
+      if (data == null || data['success'] != true) return false;
+      return data['is_duplicate'] == true;
+    } catch (e) {
+      _setError(e);
+      return false;
+    }
+  }
+
   Future<List<OfferModel>> fetchUserOffers(String userId) async {
     try {
       final response = await SupabaseService().invokeFunction(

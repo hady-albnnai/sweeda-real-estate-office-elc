@@ -20,19 +20,18 @@ function normalizeSyPhone(input: string): string {
   if (raw.startsWith("00963")) return `+963${raw.slice(5)}`;
   if (raw.startsWith("963")) return `+${raw}`;
   if (raw.startsWith("0")) return `+963${raw.slice(1)}`;
-  if (raw.startsWith("9")) return `+963${raw}`;
+  if (raw.startsWith("9")) return `+963${// la suite du code précédent...
   if (raw.startsWith("+")) return raw;
   return `+963${raw}`;
 }
 
-// جدول عكسي لتحويل الأحرف العربية إلى أرقام
 const REVERSE_OTP_MAP: Record<string, string> = {
   'أ': '0', 'ب': '1', 'ت': '2', 'ث': '3', 'ج': '4',
   'ح': '5', 'خ': '6', 'د': '7', 'ذ': '8', 'ر': '9'
 };
 
 function decodeOtp(code: string): string {
-  const cleanCode = code.replace(/\s+/g, ''); // إزالة أي مسافات
+  const cleanCode = code.replace(/\s+/g, '');
   return cleanCode.split('').map(char => REVERSE_OTP_MAP[char] || char).join('');
 }
 
@@ -43,8 +42,6 @@ serve(async (req) => {
   try {
     const { phone, code } = await req.json();
     const normalizedPhone = normalizeSyPhone(phone ?? "");
-    
-    // فك تشفير الكود إذا كان يحتوي على أحرف عربية
     const decodedCode = decodeOtp(String(code ?? "").trim());
 
     if (!normalizedPhone || !decodedCode) {
