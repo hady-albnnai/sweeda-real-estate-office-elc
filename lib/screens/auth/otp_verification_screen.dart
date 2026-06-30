@@ -30,6 +30,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> with Code
     super.initState();
     startTimer();
     listenForCode();
+    SmsAutoFill().listenForCode;
   }
 
   @override
