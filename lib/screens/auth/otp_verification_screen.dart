@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
-import 'package:go_router/go_// la suite du code précédent...
 import 'package:go_router/go_router.dart';
 
 /// شاشة التحقق من رمز OTP عبر SMS (تحويل الأحرف العربية إلى أرقام)
@@ -15,7 +14,6 @@ class OtpVerificationScreen extends StatefulWidget {
 
 class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   final _ctrls = List.generate(6, (_) => TextEditingController());
-  final _nodes = List.// la suite du code précédent...
   final _nodes = List.generate(6, (_) => FocusNode());
   Timer? _timer;
   int _start = 60;
@@ -37,7 +35,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   void startTimer() {
     setState(() { _start = 60; _canResend = false; });
     _timer?.cancel();
-    _// la suite du code précédent...
     _timer = Timer.periodic(const Duration(seconds: 1), (t) {
       if (_start == 0) {
         setState(() { _timer?.cancel(); _canResend = true; });
@@ -76,10 +73,10 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     if (ok) {
       if (authProvider.isNewUser || authProvider.userModel?.usr == null) {
         context.go('/setup-profile');
-      } else if (authProvider.isSenior) {
-        context.go('/admin/dashboard');
       } else if (// la suite du code précédent...
-        authProvider.isEmployee) {
+        authProvider.isSenior) {
+        context.go('/admin/dashboard');
+      } else if (authProvider.isEmployee) {
         context.go('/employee/home');
       } else if (authProvider.isSupervisor) {
         context.go('/executor/tasks');
@@ -153,7 +150,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
             const SizedBox(height: 20),
             TextButton(
               onPressed: _canResend ? () { 
-                // نستخدم Provider هنا للوصول إلى auth provider
                 Provider.of<AuthProvider>(context, listen: false).sendSMSOTP(auth.currentPhone ?? ''); 
                 startTimer(); 
               } : null,
