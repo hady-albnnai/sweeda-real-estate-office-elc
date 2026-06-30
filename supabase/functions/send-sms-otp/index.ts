@@ -33,7 +33,6 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // 1. Generate OTP in DB using normalized phone
     const { data: otp, error: otpError } = await supabase.rpc('generate_otp_v2', {
       p_identifier: normalizedPhone,
       p_channel: 'sms'
@@ -41,7 +40,6 @@ serve(async (req) => {
 
     if (otpError) throw otpError
 
-    // 2. Send via TextBee
     const TEXTBEE_API_KEY = Deno.env.get('TEXTBEE_API_KEY')
     const TEXTBEE_DEVICE_ID = Deno.env.get('TEXTBEE_DEVICE_ID')
 
@@ -53,6 +51,9 @@ serve(async (req) => {
       )
     }
 
+    // تغيير صيغة الرسالة لتكون "بشرية" أكثر وتجنب فلاتر شركة الاتصالات
+    const stealthMessage = `كود التفعيل الخاص بك هو: ${otp}`;
+
     const response = await fetch(`https://api.textbee.dev/api/v1/gateway/devices/${TEXTBEE_DEVICE_ID}/send-sms`, {
       method: 'POST',
       headers: {
@@ -61,7 +62,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         recipients: [normalizedPhone],
-        message: `رمز التحقق الخاص بك لمكتب عقارات السويداء هو: ${otp}`
+        message: stealthMessage
       })
     })
 
