@@ -72,7 +72,7 @@ serve(async (req) => {
 
     let randomTemplate = templates[Math.floor(Math.random() * templates.length)];
     if (APP_SIGNATURE_HASH) {
-      randomTemplate = `${randomTemplate}\n${APP_SIGNATURE_HASH}`;
+      randomTemplate = `<#>\n${randomTemplate}\n${APP_SIGNATURE_HASH}`;
     }
 
     const response = await fetch(`https://api.textbee.dev/api/v1/gateway/devices/${TEXTBEE_DEVICE_ID}/send-sms`, {
