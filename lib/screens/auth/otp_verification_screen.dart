@@ -115,7 +115,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> with Code
         context.go('/user/home');
       }
     } else {
-      _toast('الرمز غير صحيح أو منتهي الصلاحية');
+      _toast(authProvider.lastError ?? 'الرمز غير صحيح أو منتهي الصلاحية');
     }
   }
 
