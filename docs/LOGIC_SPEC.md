@@ -368,3 +368,17 @@
   الوقت مستقبلي، لا حجز مزدوج لنفس المستخدم (`DUPLICATE_APPOINTMENT`)،
   ولا حجز مع طلب إتمام معلق (`OFFER_HAS_PENDING_COMPLETION`).
 - الموعد يُنشأ `sts=0` والتأكيد عبر إدارة المكتب حصراً.
+
+### امتداد القواعد لمسار التراشق (اقتراح وقت بديل) — 2026-07-02
+`owner_respond_appointment` و `requester_counter_appointment` تُعيدان الآن **JSONB**
+(بدل BOOLEAN) وتفرضان على أي `proposed_dt`:
+1. **وقت مستقبلي** — وإلا `{success:false, error:'INVALID_APPOINTMENT_TIME'}`.
+2. **قاعدة فارق الساعة على العرض** (مع استثناء الموعد الجاري تعديله نفسه)
+   — وإلا `{success:false, error:'TIME_CONFLICT_ON_OFFER'}`.
+3. **توفر مشرف** ضمن فارق الساعة (عبر `get_available_supervisor` الموحّدة):
+   عند عدم التوفر → فشل مُدار `{success:false, error:'NO_SUPERVISOR_AVAILABLE', suggested_dt}`
+   + إشعار للمقترِح بالبديل — **الإشعار يبقى محفوظاً** لأن الفشل يُعاد كقيمة
+   لا كـ EXCEPTION (الـ EXCEPTION كانت تعمل rollback وتُفقِد الإشعار).
+4. عند نجاح تغيير الوقت يُحدَّث `supervisor_uid` بالمشرف المتاح الجديد.
+- فحص `avl` **غير مطبق عمداً** في التراشق (تقويم حر — حسب العقد الأصلي للتفاوض).
+- الواجهة (`my_appointments_screen`) تعرض رسالة مخصصة لكل رمز خطأ مع الوقت البديل المقترح.

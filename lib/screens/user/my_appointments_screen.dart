@@ -428,20 +428,43 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
   // إجراءات صاحب العرض
   // ─────────────────────────────────────
 
+  /// رسالة فشل التفاوض حسب رمز الخطأ من السيرفر (LOGIC_SPEC §7)
+  String _negotiationError(BookingResult result) {
+    switch (result.errorCode) {
+      case 'NO_SUPERVISOR_AVAILABLE':
+        if (result.suggestedDt != null) {
+          final s = AppUtils.formatTimestamp(
+            result.suggestedDt,
+            pattern: 'yyyy/MM/dd — HH:mm',
+          );
+          return 'لا يوجد مشرف متاح للوقت المقترح.\nأقرب وقت متاح: $s — اقترحه أو اختر وقتاً آخر.';
+        }
+        return 'لا يوجد مشرف متاح للوقت المقترح حالياً. اقترح وقتاً آخر.';
+      case 'TIME_CONFLICT_ON_OFFER':
+        return 'يوجد موعد آخر على هذا العرض قريب من الوقت المقترح — يجب فارق ساعة على الأقل. اقترح وقتاً آخر.';
+      case 'INVALID_APPOINTMENT_TIME':
+        return 'الوقت المقترح أصبح في الماضي. اختر وقتاً لاحقاً.';
+      case 'NETWORK':
+        return 'تعذّر الاتصال بالخادم. تحقق من الشبكة وأعد المحاولة.';
+      default:
+        return 'حدث خطأ، حاول مجدداً';
+    }
+  }
+
   Future<void> _ownerAccept(AppointmentModel appt) async {
     final uid = context.read<AuthProvider>().userModel?.uid ?? '';
-    final ok = await context.read<AppointmentProvider>()
+    final result = await context.read<AppointmentProvider>()
         .ownerRespondAppointment(
           ownerUid: uid,
           appointmentId: appt.id,
           accept: true,
         );
     if (!mounted) return;
-    if (ok) {
+    if (result.success) {
       _snack('✅ تمت الموافقة على الموعد');
       _load();
     } else {
-      _snack('حدث خطأ، حاول مجدداً');
+      _snack(_negotiationError(result));
     }
   }
 
@@ -551,7 +574,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
     }
 
     final uid = context.read<AuthProvider>().userModel?.uid ?? '';
-    final ok = await context.read<AppointmentProvider>()
+    final result = await context.read<AppointmentProvider>()
         .ownerRespondAppointment(
           ownerUid: uid,
           appointmentId: appt.id,
@@ -560,11 +583,11 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
           rejectText: reason == 2 ? textCtrl.text.trim() : '',
         );
     if (!mounted) return;
-    if (ok) {
+    if (result.success) {
       _snack(reason == 1 ? 'تم الرفض وإزالة العرض' : 'تم إرسال الرفض');
       _load();
     } else {
-      _snack('حدث خطأ، حاول مجدداً');
+      _snack(_negotiationError(result));
     }
   }
 
@@ -574,7 +597,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
     if (proposed == null || !mounted) return;
 
     final uid = context.read<AuthProvider>().userModel?.uid ?? '';
-    final ok = await context.read<AppointmentProvider>()
+    final result = await context.read<AppointmentProvider>()
         .ownerRespondAppointment(
           ownerUid: uid,
           appointmentId: appt.id,
@@ -583,11 +606,11 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
           proposedDt: proposed,
         );
     if (!mounted) return;
-    if (ok) {
+    if (result.success) {
       _snack('🔄 تم إرسال الوقت البديل لطالب الموعد');
       _load();
     } else {
-      _snack('حدث خطأ، حاول مجدداً');
+      _snack(_negotiationError(result));
     }
   }
 
@@ -597,18 +620,18 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
 
   Future<void> _requesterAccept(AppointmentModel appt) async {
     final uid = context.read<AuthProvider>().userModel?.uid ?? '';
-    final ok = await context.read<AppointmentProvider>()
+    final result = await context.read<AppointmentProvider>()
         .requesterCounterAppointment(
           userUid: uid,
           appointmentId: appt.id,
           accept: true,
         );
     if (!mounted) return;
-    if (ok) {
+    if (result.success) {
       _snack('✅ تم قبول الوقت البديل — الموعد مؤكد');
       _load();
     } else {
-      _snack('حدث خطأ، حاول مجدداً');
+      _snack(_negotiationError(result));
     }
   }
 
@@ -617,7 +640,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
     if (proposed == null || !mounted) return;
 
     final uid = context.read<AuthProvider>().userModel?.uid ?? '';
-    final ok = await context.read<AppointmentProvider>()
+    final result = await context.read<AppointmentProvider>()
         .requesterCounterAppointment(
           userUid: uid,
           appointmentId: appt.id,
@@ -625,11 +648,11 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
           proposedDt: proposed,
         );
     if (!mounted) return;
-    if (ok) {
+    if (result.success) {
       _snack('🔄 تم إرسال وقتك البديل لصاحب العرض');
       _load();
     } else {
-      _snack('حدث خطأ، حاول مجدداً');
+      _snack(_negotiationError(result));
     }
   }
 
