@@ -25,6 +25,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
   bool _loading = false;
   bool _usernameAvailable = false;
   bool _checkingUsername = false;
+  bool _checkFailed = false;
 
   @override
   void dispose() {
@@ -41,22 +42,35 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
       if (mounted) {
         setState(() {
           _usernameAvailable = false;
+          _checkFailed = false;
           _checkingUsername = false;
         });
       }
       return;
     }
-    setState(() => _checkingUsername = true);
+    setState(() {
+      _checkingUsername = true;
+      _checkFailed = false;
+    });
     try {
-      final res = await SupabaseService().invokeFunction('user-account', body: {'action': 'check_username', 'username': usr}); final data = res.data as Map; final ok = data['success'] == true && data['available'] == true;
+      final res = await SupabaseService().invokeFunction('user-account', body: {'action': 'check_username', 'username': usr});
+      final data = res.data is Map ? Map<String, dynamic>.from(res.data) : null;
+      final ok = data != null && data['success'] == true && data['available'] == true;
       if (mounted) {
         setState(() {
-          _usernameAvailable = ok == true;
+          _usernameAvailable = ok;
+          _checkFailed = false;
           _checkingUsername = false;
         });
       }
     } catch (_) {
-      if (mounted) setState(() => _checkingUsername = false);
+      if (mounted) {
+        setState(() {
+          _usernameAvailable = false;
+          _checkFailed = true;
+          _checkingUsername = false;
+        });
+      }
     }
   }
 
@@ -69,8 +83,12 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
       _snack(usernameError);
       return;
     }
+    if (_checkFailed) {
+      _snack('تعذر التحقق من توفر اسم المستخدم، يرجى فحص الاتصال بالإنترنت');
+      return;
+    }
     if (!_usernameAvailable) {
-      _snack('اسم المستخدم محجوز، اختر اسماً آخر');
+      _snack('اسم المستخدم محجوز أو غير صالح، اختر اسماً آخر');
       return;
     }
     final passwordError = InputValidators.validatePassword(password);
@@ -107,17 +125,23 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
     final user = auth.userModel;
     if (user == null) {
       setState(() => _loading = false);
-      _snack('انتهت الجلسة، أعد تسجيل الدخول');
+      _snack('انتهت صلاحية الجلسة، أعد تسجيل الدخول');
       return;
     }
 
     try {
-      await SupabaseService().invokeFunction('user-account', body: {
+      final res = await SupabaseService().invokeFunction('user-account', body: {
         'action': 'register_password',
         'user_uid': user.uid,
         'username': username,
         'password': password,
       });
+
+      final data = res.data is Map ? Map<String, dynamic>.from(res.data) : null;
+      if (data == null || data['success'] == false) {
+        final err = data?['error']?.toString() ?? 'REGISTRATION_FAILED';
+        throw Exception(err);
+      }
 
       await auth.refreshUser();
       if (!mounted) return;
@@ -132,12 +156,21 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
 
       _navigateByRole(auth);
     } catch (e) {
+      if (!mounted) return;
       setState(() => _loading = false);
       final msg = e.toString();
       if (msg.contains('USERNAME_TAKEN')) {
         _snack('اسم المستخدم محجوز، اختر اسماً آخر');
+      } else if (msg.contains('PASSWORD_TOO_SHORT') || msg.contains('6') || msg.contains('8')) {
+        _snack('كلمة المرور قصيرة، يجب أن تكون 8 أحرف على الأقل');
+      } else if (msg.contains('USERNAME_INVALID_CHARS')) {
+        _snack('اسم المستخدم يحتوي أحرفاً غير مسموحة (أحرف إنجليزية وأرقام فقط)');
+      } else if (msg.contains('USERNAME_LENGTH')) {
+        _snack('اسم المستخدم يجب أن يكون بين 3 و 30 حرفاً');
+      } else if (msg.contains('AUTH_TOKEN_REQUIRED') || msg.contains('UNAUTHORIZED_ACCESS') || msg.contains('401') || msg.contains('403')) {
+        _snack('انتهت صلاحية الجلسة، الرجاء إعادة تسجيل الدخول');
       } else {
-        _snack('حدث خطأ، حاول مرة أخرى');
+        _snack('حدث خطأ أثناء إعداد الحساب، حاول مرة أخرى');
       }
     }
   }
@@ -244,12 +277,16 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                         )
                       : _usernameController.text.trim().length >= 3
                           ? Icon(
-                              _usernameAvailable
-                                  ? Icons.check_circle
-                                  : Icons.cancel,
-                              color: _usernameAvailable
-                                  ? Colors.green
-                                  : Colors.red,
+                              _checkFailed
+                                  ? Icons.error_outline
+                                  : _usernameAvailable
+                                      ? Icons.check_circle
+                                      : Icons.cancel,
+                              color: _checkFailed
+                                  ? Colors.orange
+                                  : _usernameAvailable
+                                      ? Colors.green
+                                      : Colors.red,
                               size: 20)
                           : null,
                 ),
@@ -271,7 +308,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                 textDirection: TextDirection.ltr,
                 style: const TextStyle(color: AppTheme.textWhite),
                 decoration: InputDecoration(
-                  hintText: '6 أحرف على الأقل',
+                  hintText: '8 أحرف على الأقل',
                   prefixIcon: const Icon(Icons.lock_outline,
                       color: AppTheme.primaryGold),
                   suffixIcon: IconButton(

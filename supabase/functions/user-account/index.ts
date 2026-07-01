@@ -130,6 +130,7 @@ serve(async (req) => {
       if (!sessionToken) return json({ success: false, error: "SESSION_TOKEN_REQUIRED" }, 400);
 
       const { data, error } = await supabaseAdmin.rpc("revoke_staff_session", {
+        p_user_uid: uid,
         p_token: sessionToken,
       });
       if (error) return json({ success: false, error: error.message }, 400);
@@ -153,17 +154,17 @@ serve(async (req) => {
 
       const { data, error } = await supabaseAdmin.rpc("award_points_safe", {
         p_uid: uid,
-        p_event: eventType,
-        p_pts: points,
+        p_event_type: eventType,
+        p_points: points,
       });
       if (error) return json({ success: false, error: error.message }, 400);
-      return json({ success: data === true });
+      return json(typeof data === "object" && data !== null ? data : { success: data === true });
     }
 
     if (action === "update_badge") {
       const { data, error } = await supabaseAdmin.rpc("update_user_badge", { p_uid: uid });
       if (error) return json({ success: false, error: error.message }, 400);
-      return json({ success: data === true });
+      return json({ success: true });
     }
 
     if (action === "get_full_profile") {
@@ -201,7 +202,7 @@ serve(async (req) => {
         p_password: password,
       });
       if (error) return json({ success: false, error: error.message }, 400);
-      return json({ success: data === true });
+      return json(typeof data === "object" && data !== null ? data : { success: data === true });
     }
 
     if (action === "change_password") {
@@ -215,7 +216,7 @@ serve(async (req) => {
         p_new_password: newPassword,
       });
       if (error) return json({ success: false, error: error.message }, 400);
-      return json({ success: data === true });
+      return json(typeof data === "object" && data !== null ? data : { success: data === true });
     }
 
     if (action === "create_report") {
@@ -257,7 +258,7 @@ serve(async (req) => {
         p_new_password: newPassword,
       });
       if (error) return json({ success: false, error: error.message }, 400);
-      return json({ success: data === true });
+      return json(typeof data === "object" && data !== null ? data : { success: data === true });
     }
 
     return json({ success: false, error: "UNKNOWN_ACTION" }, 400);
