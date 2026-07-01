@@ -63,7 +63,7 @@
 | ✅ **مكتمل** | Edge Function `admin-deals` — تنقل إدارة الصفقات خلف `staff_session_token/service_role`، وبعد اختبارها يطبق `2026_06_20_lock_admin_deals_rpcs.sql` |
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_lock_legacy_admin_rpcs.sql` — إغلاق direct execute للدوال الإدارية القديمة الحساسة بعد نقلها إلى Edge Functions |
 | ✅ **مُطبّق على السيرفر** | `2026_06_24_offer_images_storage_policies.sql` — bucket `offer_images` + RLS مقفلة (owner OR admin OR service_role)، لا SELECT policy. Edge Function `upload-offer-images` تتجاوز RLS عبر service_role |
-| 📝 **جاهز للتطبيق (لم يُنفّذ بعد)** | `2026_06_13_auth_username_password.sql` — اسم مستخدم `usr` + كلمة مرور مشفّرة `pwd` + 6 RPCs (`register_password`, `login_with_password`, `reset_password_with_otp`, `change_password_internal`, `check_username_available`, `get_staff_stats_internal`) + تحديث `users_public` (إضافة `usr`) + تحديث `get_user_full_by_id` (إضافة `usr` + إخفاء `pwd` خلف flag) |
+| ✅ **مُطبّق على السيرفر** | `2026_06_13_auth_username_password.sql` — اسم مستخدم `usr` + كلمة مرور مشفّرة `pwd` + 6 RPCs (`register_password`, `login_with_password`, `reset_password_with_otp`, `change_password_internal`, `check_username_available`, `get_staff_stats_internal`) + تحديث `users_public` (إضافة `usr`) + تحديث `get_user_full_by_id` (إضافة `usr` + إخفاء `pwd` خلف flag) |
 | 🆕 **جاهز للتطبيق (بانتظار تنفيذه على السيرفر + إعادة نشر `user-appointments`)** | `2026_07_02_appointment_booking_rules.sql` — قواعد الحجز الثلاث: (1) دعم `avl.any` عبر دوام `app_config.appt` + رفض `avl` الفارغة بـ `NO_AVAILABILITY` (2) مشرف الأقل حمولة مع فارق الساعة + عند عدم التوفر إشعار الطالب واقتراح بديل عبر `suggest_appointment_slot` (3) قاعدة فارق الساعة `TIME_CONFLICT_ON_OFFER` على العرض والمشرف + دوال جديدة: `appt_booking_config`, `get_booked_slots_internal`, `suggest_appointment_slot` + توحيد `get_available_supervisor` + **تحويلات توقيع تستلزم DROP** (مثبتة بالفحص الحي للسيرفر 2026-07-02): `get_booked_slots_internal` من `TABLE(booked_time text)` إلى `TEXT[]` (النسخة القديمة كانت تكسر تظليل الأوقات في التطبيق + فلترة تاريخ بـ UTC بدل دمشق)، و`owner_respond_appointment`/`requester_counter_appointment` من `BOOLEAN` إلى `JSONB` مع فرض قواعد فارق الساعة والوقت المستقبلي ومعالجة غياب المشرف على مسار التراشق (LOGIC_SPEC §7) |
 
 ---
@@ -1893,24 +1893,29 @@ NOW() > pkg_grace          → expire_packages     → b_pkg = 0
 ---
 
 ## 🛡️ Edge Function — `user-offers`
-**الحالة:** ✅ مكتمل  
+**الحالة:** ✅ مكتمل (تم تشديد الأمن وإطاحة الـ Fallback في 2026-07-02 لفرض مطابقة توكن JWT مع الـ `user_uid`).  
 **الأذونات:** `service_role` للـ Supabase client، وتتحقق من `JWT Token` الخاص بالمستخدم العادي، باستثناء دالة زيادة المشاهدات التي يمكن استدعاؤها من الزوار.
 
 ## 🛡️ Edge Function — `user-requests`
-**الحالة:** ✅ مكتمل  
+**الحالة:** ✅ مكتمل (تم إطاحة الـ Fallback الانتحالي).  
 **الأذونات:** `service_role` للـ Supabase client، وتتحقق من `JWT Token` الخاص بالمستخدم العادي، وتضمن أن الـ `user_uid` المطلوب مطابق لصاحب الجلسة.
 
 ## 🛡️ Edge Function — `user-appointments`
-**الحالة:** ✅ مكتمل  
+**الحالة:** ✅ مكتمل (تم إطاحة الـ Fallback الانتحالي).  
 **الأذونات:** `service_role` للـ Supabase client، وتتحقق من `JWT Token`، وتضمن أن الـ `user_uid` المطلوب مطابق لصاحب الجلسة (سواء كان المستخدم كطالب للموعد، أو مالكاً، أو وسيطاً).
 
 ## 🛡️ Edge Function — `user-notifications`
-**الحالة:** ✅ مكتمل  
+**الحالة:** ✅ مكتمل (تم إطاحة الـ Fallback الانتحالي).  
 **الأذونات:** `service_role` للـ Supabase client، وتتحقق من `JWT Token` وتضمن المطابقة.
 
 ## 🛡️ Edge Function — `user-account`
-**الحالة:** ✅ مكتمل  
+**الحالة:** ✅ مكتمل (تمت معالجة التوافق Adaptive Handling لردود الـ JSONB والـ BOOLEAN في دوال إعداد كلمة المرور وتغييرها ومنح النقاط وإبطال جلسة الموظف).  
 **الأذونات:** `service_role` للـ Supabase client، تدعم دوال لا تتطلب توثيق كالتسجيل، وتدعم دوال تتطلب `JWT Token` ومطابقة الـ UID لحماية الملف الشخصي.
+
+## 🛡️ Edge Function — `user-rewards` 🆕
+**الحالة:** ✅ مكتمل (تم إضافة دالة `validateUser` وتشديد الأمن في 2026-07-02 لمنع استدعاء مكافآت التقييم والستريك والإحالات بدون توكن مصادقة مطابق).  
+**الأذونات:** يتطلب `JWT Token` صالح ومطابق للـ `user_uid`.  
+**الغرض:** إدارة المكافآت والنقاط اليومية والإحالات ومكافآت التقييم 5 نجوم.
 
 ## 🛡️ Edge Function — `admin-dashboard`
 **الحالة:** ✅ مكتمل  

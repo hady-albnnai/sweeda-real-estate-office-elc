@@ -40,9 +40,7 @@ async function validateUser(
     }
   }
 
-  // توافق مع مسار المصادقة المحلي الحالي؛ الدوال الداخلية ما زالت تفحص الملكية بالـ uid الممرر.
-  if (requestedUid) return { ok: true, uid: requestedUid };
-
+  // FALLBACK REMOVED: No longer accepting requestedUid blindly.
   return { ok: false, response: json({ success: false, error: "AUTH_TOKEN_REQUIRED" }, 401) };
 }
 

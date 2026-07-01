@@ -276,6 +276,7 @@
 - Migration: `supabase/migrations/2026_06_13_auth_username_password.sql`.
 - RPCs: `register_password`, `login_with_password`, `reset_password_with_otp`,
   `change_password_internal`, `check_username_available`, `get_staff_stats_internal`.
+- **(تحديث 2026-07-02):** تم إطاحة أي Fallbacks غير آمنة في دوال Edge Functions الست (`user-account`، `user-appointments`، `user-notifications`، `user-offers`، `user-requests`، `user-rewards`) لفرض التحقق الإلزامي من توكن الـ JWT ومطابقة الـ `user_uid`، مع معالجة مرنة Adaptive لردود الـ JSONB والـ BOOLEAN في دوال كلمات المرور والنقاط.
 
 ---
 

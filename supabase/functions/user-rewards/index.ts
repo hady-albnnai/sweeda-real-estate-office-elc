@@ -7,6 +7,40 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+async function validateUser(
+  req: Request,
+  supabaseAdmin: ReturnType<typeof createClient>,
+  requestedUid: string
+): Promise<{ ok: true; uid: string } | { ok: false; response: Response }> {
+  const authHeader = req.headers.get("Authorization") ?? "";
+  const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+
+  if (bearer && bearer !== "undefined" && bearer !== "null" && bearer !== "anon_key_here") {
+    const { data: userData, error } = await supabaseAdmin.auth.getUser(bearer);
+    const uid = userData?.user?.id;
+    if (!error && uid) {
+      if (requestedUid && requestedUid !== uid) {
+        return {
+          ok: false,
+          response: new Response(
+            JSON.stringify({ success: false, error: "UNAUTHORIZED_ACCESS" }),
+            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          ),
+        };
+      }
+      return { ok: true, uid: uid };
+    }
+  }
+
+  return {
+    ok: false,
+    response: new Response(
+      JSON.stringify({ success: false, error: "AUTH_TOKEN_REQUIRED" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    ),
+  };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -26,6 +60,9 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    const actor = await validateUser(req, supabase, user_uid);
+    if (!actor.ok) return actor.response;
 
     let result: any = { success: false };
 

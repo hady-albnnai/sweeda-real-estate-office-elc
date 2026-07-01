@@ -41,11 +41,7 @@ async function validateUser(
     }
   }
 
-  // Fallback: accept requestedUid to support custom auth (matches legacy RPC behavior)
-  if (requestedUid) {
-    return { ok: true, uid: requestedUid };
-  }
-
+  // FALLBACK REMOVED: No longer accepting requestedUid blindly.
   return { ok: false, response: json({ success: false, error: "AUTH_TOKEN_REQUIRED" }, 401) };
 }
 
