@@ -517,7 +517,12 @@ class AccountInfoScreen extends StatelessWidget {
                 if (hasOld) {
                   await SupabaseService().invokeFunction('user-account', body: {'action': 'change_password', 'p_user_uid': user.uid, 'p_old_password': oldCtrl.text, 'p_new_password': newCtrl.text});
                 } else {
-                  await SupabaseService().invokeFunction('user-account', body: {'action': 'register_password', 'p_user_uid': user.uid, 'p_username': user.usr ?? user.ph, 'p_password': newCtrl.text});
+                  await SupabaseService().invokeFunction('user-account', body: {
+                    'action': 'register_password',
+                    'user_uid': user.uid,
+                    'username': user.usr ?? user.ph,
+                    'password': newCtrl.text,
+                  });
                 }
 
                 await auth.refreshUser();

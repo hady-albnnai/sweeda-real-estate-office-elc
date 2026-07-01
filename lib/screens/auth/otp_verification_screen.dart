@@ -31,9 +31,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> with Code
     startTimer();
     listenForCode();
     SmsAutoFill().listenForCode;
-    SmsAutoFill().getAppSignature.then((signature) {
-      print("🔥🔥 MY_APP_SIGNATURE: $signature 🔥🔥");
-    });
   }
 
   @override

@@ -112,7 +112,12 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
     }
 
     try {
-      await SupabaseService().invokeFunction('user-account', body: {'action': 'register_password', 'p_user_uid': user.uid, 'p_username': username, 'p_password': password});
+      await SupabaseService().invokeFunction('user-account', body: {
+        'action': 'register_password',
+        'user_uid': user.uid,
+        'username': username,
+        'password': password,
+      });
 
       await auth.refreshUser();
       if (!mounted) return;
