@@ -138,13 +138,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> with Code
               textAlign: TextAlign.center,
               style: const TextStyle(color: AppTheme.textGrey, fontSize: 14, height: 1.5),
             ),
-            if (auth.currentOtp != null) ...[
-              const SizedBox(height: 16),
-              Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), decoration: BoxDecoration(color: Colors.orange.withOpacity(0.1), borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.orange.withOpacity(0.5))), child: Text('🔧 وضع التطوير — الرمز: ${auth.currentOtp}', style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold))),
-            ],
             const SizedBox(height: 40),
             Directionality(
-              textDirection: TextDirection.ltr,
+              textDirection: TextDirection.rtl,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: List.generate(6, (i) => SizedBox(

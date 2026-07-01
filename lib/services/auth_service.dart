@@ -64,7 +64,7 @@ class AuthService {
       if (session != null && session['token_hash'] != null) {
         try {
           await _auth.verifyOTP(
-            type: OtpType.magiclink,
+            type: OtpType.email,
             tokenHash: session['token_hash'] as String,
           );
         } catch (_) {
