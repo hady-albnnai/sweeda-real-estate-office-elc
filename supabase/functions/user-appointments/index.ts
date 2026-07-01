@@ -183,6 +183,11 @@ serve(async (req) => {
       });
 
       if (error) return json({ success: false, error: error.message }, 400);
+      // الدالة تعيد JSONB (2026-07-02): نجاح {success:true}
+      // أو فشل مُدار {success:false, error, suggested_dt?}
+      if (data && typeof data === "object") {
+        return json(data as Record<string, unknown>);
+      }
       return json({ success: data === true });
     }
 
@@ -201,6 +206,11 @@ serve(async (req) => {
       });
 
       if (error) return json({ success: false, error: error.message }, 400);
+      // الدالة تعيد JSONB (2026-07-02): نجاح {success:true}
+      // أو فشل مُدار {success:false, error, suggested_dt?}
+      if (data && typeof data === "object") {
+        return json(data as Record<string, unknown>);
+      }
       return json({ success: data === true });
     }
 

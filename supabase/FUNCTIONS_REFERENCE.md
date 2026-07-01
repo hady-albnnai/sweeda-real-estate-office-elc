@@ -64,7 +64,7 @@
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_lock_legacy_admin_rpcs.sql` — إغلاق direct execute للدوال الإدارية القديمة الحساسة بعد نقلها إلى Edge Functions |
 | ✅ **مُطبّق على السيرفر** | `2026_06_24_offer_images_storage_policies.sql` — bucket `offer_images` + RLS مقفلة (owner OR admin OR service_role)، لا SELECT policy. Edge Function `upload-offer-images` تتجاوز RLS عبر service_role |
 | 📝 **جاهز للتطبيق (لم يُنفّذ بعد)** | `2026_06_13_auth_username_password.sql` — اسم مستخدم `usr` + كلمة مرور مشفّرة `pwd` + 6 RPCs (`register_password`, `login_with_password`, `reset_password_with_otp`, `change_password_internal`, `check_username_available`, `get_staff_stats_internal`) + تحديث `users_public` (إضافة `usr`) + تحديث `get_user_full_by_id` (إضافة `usr` + إخفاء `pwd` خلف flag) |
-| 🆕 **جاهز للتطبيق (بانتظار تنفيذه على السيرفر + إعادة نشر `user-appointments`)** | `2026_07_02_appointment_booking_rules.sql` — قواعد الحجز الثلاث: (1) دعم `avl.any` عبر دوام `app_config.appt` + رفض `avl` الفارغة بـ `NO_AVAILABILITY` (2) مشرف الأقل حمولة مع فارق الساعة + عند عدم التوفر إشعار الطالب واقتراح بديل عبر `suggest_appointment_slot` (3) قاعدة فارق الساعة `TIME_CONFLICT_ON_OFFER` على العرض والمشرف + دوال جديدة: `appt_booking_config`, `get_booked_slots_internal`, `suggest_appointment_slot` + توحيد `get_available_supervisor` |
+| 🆕 **جاهز للتطبيق (بانتظار تنفيذه على السيرفر + إعادة نشر `user-appointments`)** | `2026_07_02_appointment_booking_rules.sql` — قواعد الحجز الثلاث: (1) دعم `avl.any` عبر دوام `app_config.appt` + رفض `avl` الفارغة بـ `NO_AVAILABILITY` (2) مشرف الأقل حمولة مع فارق الساعة + عند عدم التوفر إشعار الطالب واقتراح بديل عبر `suggest_appointment_slot` (3) قاعدة فارق الساعة `TIME_CONFLICT_ON_OFFER` على العرض والمشرف + دوال جديدة: `appt_booking_config`, `get_booked_slots_internal`, `suggest_appointment_slot` + توحيد `get_available_supervisor` + **تحويلات توقيع تستلزم DROP** (مثبتة بالفحص الحي للسيرفر 2026-07-02): `get_booked_slots_internal` من `TABLE(booked_time text)` إلى `TEXT[]` (النسخة القديمة كانت تكسر تظليل الأوقات في التطبيق + فلترة تاريخ بـ UTC بدل دمشق)، و`owner_respond_appointment`/`requester_counter_appointment` من `BOOLEAN` إلى `JSONB` مع فرض قواعد فارق الساعة والوقت المستقبلي ومعالجة غياب المشرف على مسار التراشق (LOGIC_SPEC §7) |
 
 ---
 
@@ -144,8 +144,8 @@
 | 30 | `trg_appointment_status_changed` 🆕🔔 | TRIGGER على `appointments.sts` | `TRIGGER` | ✅ |
 | **— نظام المواعيد الجديد —** | | | | |
 | 74 | `get_available_supervisor` 🆕 | `p_dt TIMESTAMPTZ` | `UUID` | ✅ |
-| 75 | `owner_respond_appointment` 🆕 | `p_owner_uid, p_appointment_id, p_accept, p_reject_reason, p_reject_text, p_proposed_dt` | `BOOLEAN` | ✅ |
-| 76 | `requester_counter_appointment` 🆕 | `p_user_uid, p_appointment_id, p_accept, p_proposed_dt` | `BOOLEAN` | ✅ |
+| 75 | `owner_respond_appointment` 🆕 | `p_owner_uid, p_appointment_id, p_accept, p_reject_reason, p_reject_text, p_proposed_dt` | `JSONB` (2026-07-02، كانت BOOLEAN) | ✅ |
+| 76 | `requester_counter_appointment` 🆕 | `p_user_uid, p_appointment_id, p_accept, p_proposed_dt` | `JSONB` (2026-07-02، كانت BOOLEAN) | ✅ |
 | **— إدارة الطلبات (2026-06-11 Batch 3) —** | | | | |
 | 77 | `get_admin_requests_internal` 🆕 | `p_admin_uid UUID` | `TABLE(id, typ, elm, cl_nm, cl_ph, prc, cur, notes, specs, usr_id, sts, matches, i_del, ts_crt)` | ✅ |
 | **— إصلاحات نظام الباقات والـ Streak (2026-06-12) —** | | | | |
@@ -203,8 +203,8 @@
 | 73 | `increment_offer_views_internal` | `p_offer_id UUID` | `BOOLEAN` | ✅ |
 | **— نظام المواعيد الجديد (2026-06-11 Batch 2) —** | | | | |
 | 74 | `get_available_supervisor` | `p_dt TIMESTAMPTZ` | `UUID` | ✅ |
-| 75 | `owner_respond_appointment` | `p_owner_uid UUID, p_appointment_id UUID, p_accept BOOLEAN, p_reject_reason INT, p_reject_text TEXT, p_proposed_dt TIMESTAMPTZ` | `BOOLEAN` | ✅ |
-| 76 | `requester_counter_appointment` | `p_user_uid UUID, p_appointment_id UUID, p_accept BOOLEAN, p_proposed_dt TIMESTAMPTZ` | `BOOLEAN` | ✅ |
+| 75 | `owner_respond_appointment` | `p_owner_uid UUID, p_appointment_id UUID, p_accept BOOLEAN, p_reject_reason INT, p_reject_text TEXT, p_proposed_dt TIMESTAMPTZ` | `JSONB` (2026-07-02، كانت BOOLEAN) | ✅ |
+| 76 | `requester_counter_appointment` | `p_user_uid UUID, p_appointment_id UUID, p_accept BOOLEAN, p_proposed_dt TIMESTAMPTZ` | `JSONB` (2026-07-02، كانت BOOLEAN) | ✅ |
 
 ### 🔗 Triggers Active على الجداول:
 

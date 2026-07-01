@@ -214,9 +214,30 @@ class AppointmentProvider with ChangeNotifier {
     }
   }
 
+  /// تحويل رد السيرفر (JSONB) لنتيجة مهيكلة — مشترك لمسارَي التراشق
+  BookingResult _parseNegotiationResponse(dynamic data) {
+    if (data is Map) {
+      if (data['success'] == true) {
+        notifyListeners();
+        return const BookingResult(success: true);
+      }
+      DateTime? suggested;
+      final rawSuggested = data['suggested_dt'];
+      if (rawSuggested is String && rawSuggested.isNotEmpty) {
+        suggested = DateTime.tryParse(rawSuggested)?.toLocal();
+      }
+      return BookingResult(
+        success: false,
+        errorCode: (data['error'] ?? 'UNKNOWN').toString(),
+        suggestedDt: suggested,
+      );
+    }
+    return const BookingResult(success: false, errorCode: 'UNKNOWN');
+  }
+
   /// رد صاحب العرض على طلب الحجز
-  /// p_rejectReason: 0=الوقت لا يناسب، 1=غير مهتم، 2=آخر
-  Future<bool> ownerRespondAppointment({
+  /// rejectReason: 0=الوقت لا يناسب، 1=غير مهتم، 2=آخر
+  Future<BookingResult> ownerRespondAppointment({
     required String ownerUid,
     required String appointmentId,
     required bool accept,
@@ -234,20 +255,25 @@ class AppointmentProvider with ChangeNotifier {
           'accept': accept,
           'reject_reason': rejectReason,
           'reject_text': rejectText,
-          'proposed_dt': proposedDt?.toIso8601String(),
+          // UTC مع لاحقة Z — كما في bookAppointment
+          'proposed_dt': proposedDt?.toUtc().toIso8601String(),
         },
       );
-      final data = response.data;
-      if (data == null || data['success'] != true) return false;
-      notifyListeners();
-      return true;
+      return _parseNegotiationResponse(response.data);
+    } on FunctionException catch (e) {
+      final details = e.details;
+      String code = 'UNKNOWN';
+      if (details is Map && details['error'] != null) {
+        code = details['error'].toString();
+      }
+      return BookingResult(success: false, errorCode: code);
     } catch (e) {
-      return false;
+      return const BookingResult(success: false, errorCode: 'NETWORK');
     }
   }
 
   /// رد طالب الحجز على الوقت البديل المقترح
-  Future<bool> requesterCounterAppointment({
+  Future<BookingResult> requesterCounterAppointment({
     required String userUid,
     required String appointmentId,
     required bool accept,
@@ -261,15 +287,20 @@ class AppointmentProvider with ChangeNotifier {
           'user_uid': userUid,
           'appointment_id': appointmentId,
           'accept': accept,
-          'proposed_dt': proposedDt?.toIso8601String(),
+          // UTC مع لاحقة Z — كما في bookAppointment
+          'proposed_dt': proposedDt?.toUtc().toIso8601String(),
         },
       );
-      final data = response.data;
-      if (data == null || data['success'] != true) return false;
-      notifyListeners();
-      return true;
+      return _parseNegotiationResponse(response.data);
+    } on FunctionException catch (e) {
+      final details = e.details;
+      String code = 'UNKNOWN';
+      if (details is Map && details['error'] != null) {
+        code = details['error'].toString();
+      }
+      return BookingResult(success: false, errorCode: code);
     } catch (e) {
-      return false;
+      return const BookingResult(success: false, errorCode: 'NETWORK');
     }
   }
 

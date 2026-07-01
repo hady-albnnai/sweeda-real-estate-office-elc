@@ -45,8 +45,19 @@ GRANT EXECUTE ON FUNCTION public.appt_booking_config() TO service_role;
 -- 2) get_booked_slots_internal — أوقات المواعيد النشطة (sts 0/1) ليوم محدد
 --    تُعيد الأوقات الفعلية HH24:MI بتوقيت دمشق، والعميل يطبّق فارق الساعة
 --    لتظليل كل وقت يقع ضمن أقل من gap_mins من موعد نشط.
+--
+--    ⚠️ DROP إلزامي: النسخة القائمة على السيرفر تُعيد TABLE(booked_time text)
+--    وتغيير نوع الإرجاع إلى TEXT[] غير ممكن عبر CREATE OR REPLACE.
+--    سبب التحويل إلى TEXT[]:
+--      1) صيغة TABLE تصل للتطبيق كمصفوفة كائنات [{booked_time:"10:00"}]
+--         بينما AppointmentProvider يتوقع ["10:00"] عبر List<String>.from
+--         → كانت ميزة تظليل الأوقات المحجوزة مكسورة بصمت.
+--      2) النسخة القديمة كانت تفلتر بـ dt::date (تاريخ UTC) بينما تعرض
+--         الوقت بتوقيت دمشق → مواعيد ما بعد منتصف الليل تظهر في يوم خاطئ.
 -- ---------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION public.get_booked_slots_internal(
+DROP FUNCTION IF EXISTS public.get_booked_slots_internal(UUID, DATE);
+
+CREATE FUNCTION public.get_booked_slots_internal(
   p_offer_id UUID,
   p_date DATE
 ) RETURNS TEXT[]
@@ -381,3 +392,415 @@ REVOKE ALL ON FUNCTION public.book_appointment_internal(UUID, UUID, TIMESTAMPTZ,
 REVOKE ALL ON FUNCTION public.book_appointment_internal(UUID, UUID, TIMESTAMPTZ, UUID, UUID) FROM anon;
 REVOKE ALL ON FUNCTION public.book_appointment_internal(UUID, UUID, TIMESTAMPTZ, UUID, UUID) FROM authenticated;
 GRANT EXECUTE ON FUNCTION public.book_appointment_internal(UUID, UUID, TIMESTAMPTZ, UUID, UUID) TO service_role;
+
+-- ---------------------------------------------------------------------
+-- 6) دوال التراشق (اقتراح وقت بديل) — فرض القواعد على مسار إعادة الجدولة
+--
+--    الثغرات المكتشفة بالفحص الحي للسيرفر (2026-07-02):
+--      أ) قاعدة فارق الساعة لم تكن مفروضة على الوقت المقترح (يمكن اقتراح
+--         وقت ضمن أقل من ساعة من موعد نشط آخر على نفس العرض).
+--      ب) لا فحص أن الوقت المقترح مستقبلي.
+--      ج) get_available_supervisor ترمي EXCEPTION عند غياب المشرف —
+--         فكان أي اقتراح بديل ينفجر بخطأ خام، وكود
+--         COALESCE(v_supervisor, supervisor_uid) ميتاً لا يُنفَّذ أبداً.
+--
+--    المعالجة: تحويل الإرجاع إلى JSONB (مثل book_appointment_internal)
+--    لإرجاع فشل مُدار {success:false, error, suggested_dt} مع إشعار
+--    يبقى محفوظاً (لا rollback)، بدل EXCEPTION يفقد كل شيء.
+--    ⚠️ تغيير نوع الإرجاع BOOLEAN → JSONB يستلزم DROP أولاً.
+--    ملاحظة: عدم فحص avl في التراشق مقصود (تقويم حر) حسب FUNCTIONS_REFERENCE.
+-- ---------------------------------------------------------------------
+DROP FUNCTION IF EXISTS public.owner_respond_appointment(UUID, UUID, BOOLEAN, INT, TEXT, TIMESTAMPTZ);
+
+CREATE FUNCTION public.owner_respond_appointment(
+  p_owner_uid UUID,
+  p_appointment_id UUID,
+  p_accept BOOLEAN,
+  p_reject_reason INT DEFAULT 0,
+  p_reject_text TEXT DEFAULT '',
+  p_proposed_dt TIMESTAMPTZ DEFAULT NULL
+) RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO public, extensions, pg_temp
+AS $$
+DECLARE
+  v_appt       public.appointments%ROWTYPE;
+  v_rounds     INT;
+  v_neog       JSONB;
+  v_supervisor UUID;
+  v_suggest    TIMESTAMPTZ;
+  v_gap        INT := (public.appt_booking_config()->>'gap_mins')::INT;
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_owner_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
+  SELECT * INTO v_appt
+  FROM public.appointments
+  WHERE id = p_appointment_id
+    AND own_id = p_owner_uid
+    AND sts = 0;
+
+  IF v_appt.id IS NULL THEN
+    RAISE EXCEPTION 'APPOINTMENT_NOT_FOUND_OR_NOT_ALLOWED';
+  END IF;
+
+  -- ─── موافقة ───
+  IF p_accept THEN
+    UPDATE public.appointments
+    SET sts        = 1,
+        fbk_own    = 1,
+        fbk_own_dt = NOW()
+    WHERE id = p_appointment_id;
+
+    PERFORM public.notify_user(
+      v_appt.req_uid, 2,
+      '✅ تم قبول طلب موعدك',
+      'وافق صاحب العرض على موعد المعاينة. سيتواصل معك المكتب لتأكيد التفاصيل.',
+      p_appointment_id::text, 'appointment'
+    );
+    PERFORM public.notify_user(
+      (SELECT id FROM public.users WHERE role >= 2 AND sts = 0 AND i_del = 0
+       ORDER BY ts_crt ASC LIMIT 1),
+      2,
+      '📅 موعد مؤكد',
+      'وافق صاحب العرض على موعد معاينة — المشرف معيَّن تلقائياً.',
+      p_appointment_id::text, 'appointment'
+    );
+    RETURN jsonb_build_object('success', true);
+  END IF;
+
+  -- ─── رفض ───
+  v_neog   := COALESCE(v_appt.neog, '[]'::jsonb);
+  v_rounds := jsonb_array_length(v_neog);
+
+  -- p_reject_reason: 0=الوقت لا يناسب، 1=غير مهتم، 2=آخر
+
+  -- رفض نهائي (غير مهتم أو آخر)
+  IF p_reject_reason = 1 OR p_reject_reason = 2 THEN
+    UPDATE public.appointments
+    SET sts     = 4,
+        cnl_rsn = COALESCE(NULLIF(p_reject_text,''), CASE p_reject_reason WHEN 1 THEN 'لم يعد مهتماً' ELSE 'سبب آخر' END),
+        dt_end  = NOW()
+    WHERE id = p_appointment_id;
+
+    IF p_reject_reason = 1 THEN
+      UPDATE public.offers SET i_del = 1 WHERE id = v_appt.off_id AND usr_id = p_owner_uid;
+    END IF;
+
+    PERFORM public.notify_user(
+      v_appt.req_uid, 2,
+      '❌ تم رفض طلب موعدك',
+      CASE p_reject_reason
+        WHEN 1 THEN 'أفاد صاحب العرض بأنه لم يعد مهتماً بالبيع/الإيجار.'
+        ELSE 'تم رفض طلب موعدك. السبب: ' || COALESCE(NULLIF(p_reject_text,''), 'غير محدد')
+      END,
+      p_appointment_id::text, 'appointment'
+    );
+    PERFORM public.notify_user(
+      (SELECT id FROM public.users WHERE role >= 2 AND sts = 0 AND i_del = 0
+       ORDER BY ts_crt ASC LIMIT 1),
+      2,
+      '⚠️ رفض موعد' || CASE p_reject_reason WHEN 1 THEN ' — العرض أُزيل' ELSE '' END,
+      'رفض صاحب العرض الموعد. السبب: ' || CASE p_reject_reason WHEN 1 THEN 'غير مهتم — تم حذف العرض تلقائياً' ELSE COALESCE(NULLIF(p_reject_text,''), 'آخر') END,
+      p_appointment_id::text, 'appointment'
+    );
+    RETURN jsonb_build_object('success', true);
+  END IF;
+
+  -- ─── رفض بسبب الوقت — اقتراح بديل (تراشق) ───
+  IF p_reject_reason = 0 THEN
+    IF p_proposed_dt IS NULL THEN
+      RAISE EXCEPTION 'PROPOSED_DT_REQUIRED';
+    END IF;
+
+    -- ✅ فحص جديد: الوقت المقترح يجب أن يكون مستقبلياً
+    IF p_proposed_dt <= NOW() THEN
+      RETURN jsonb_build_object('success', false, 'error', 'INVALID_APPOINTMENT_TIME');
+    END IF;
+
+    IF v_rounds >= 5 THEN
+      UPDATE public.appointments
+      SET sts     = 4,
+          cnl_rsn = 'انتهت جولات التفاوض بدون توافق',
+          dt_end  = NOW()
+      WHERE id = p_appointment_id;
+
+      PERFORM public.notify_user(v_appt.req_uid, 2,
+        '❌ انتهت جولات التفاوض',
+        'لم يتم التوافق على موعد بعد 5 جولات. يمكنك المحاولة لاحقاً.',
+        p_appointment_id::text, 'appointment');
+      PERFORM public.notify_user(
+        (SELECT id FROM public.users WHERE role >= 2 AND sts = 0 AND i_del = 0
+         ORDER BY ts_crt ASC LIMIT 1),
+        2,
+        '⚠️ انتهت جولات التفاوض',
+        'تم إلغاء الموعد تلقائياً بعد 5 جولات بدون توافق.',
+        p_appointment_id::text, 'appointment');
+      RETURN jsonb_build_object('success', true, 'auto_cancelled', true);
+    END IF;
+
+    -- ✅ فحص جديد (القاعدة 3): فارق الساعة على مواعيد نفس العرض
+    -- (مع استثناء الموعد الجاري تعديله نفسه)
+    IF EXISTS (
+      SELECT 1 FROM public.appointments
+      WHERE off_id = v_appt.off_id
+        AND id <> p_appointment_id
+        AND sts IN (0, 1)
+        AND dt > p_proposed_dt - make_interval(mins => v_gap)
+        AND dt < p_proposed_dt + make_interval(mins => v_gap)
+    ) THEN
+      RETURN jsonb_build_object('success', false, 'error', 'TIME_CONFLICT_ON_OFFER');
+    END IF;
+
+    -- ✅ معالجة غياب المشرف بدل الانفجار بخطأ خام:
+    -- get_available_supervisor ترمي EXCEPTION — نلتقطها في block داخلي
+    BEGIN
+      v_supervisor := public.get_available_supervisor(p_proposed_dt);
+    EXCEPTION WHEN OTHERS THEN
+      v_supervisor := NULL;
+    END;
+
+    IF v_supervisor IS NULL THEN
+      v_suggest := public.suggest_appointment_slot(v_appt.off_id, p_proposed_dt);
+      PERFORM public.notify_user(
+        p_owner_uid, 2,
+        'لا يوجد مشرف متاح للوقت المقترح',
+        CASE WHEN v_suggest IS NOT NULL
+          THEN 'تعذّر اعتماد الوقت البديل لعدم توفر مشرف. أقرب وقت متاح: '
+               || to_char(v_suggest AT TIME ZONE 'Asia/Damascus', 'YYYY/MM/DD HH24:MI')
+               || ' — يمكنك اقتراحه أو اختيار وقت آخر.'
+          ELSE 'تعذّر اعتماد الوقت البديل لعدم توفر مشرف. يرجى اقتراح وقت آخر.'
+        END,
+        p_appointment_id::text, 'appointment_suggest'
+      );
+      RETURN jsonb_build_object(
+        'success', false,
+        'error', 'NO_SUPERVISOR_AVAILABLE',
+        'suggested_dt', v_suggest
+      );
+    END IF;
+
+    v_neog := v_neog || jsonb_build_object(
+      'round',    v_rounds + 1,
+      'by',       'owner',
+      'at',       NOW(),
+      'action',   'counter',
+      'proposed', p_proposed_dt
+    );
+
+    UPDATE public.appointments
+    SET dt             = p_proposed_dt,
+        supervisor_uid = v_supervisor,
+        neog           = v_neog,
+        fbk_own        = 2,
+        fbk_own_dt     = NOW()
+    WHERE id = p_appointment_id;
+
+    PERFORM public.notify_user(
+      v_appt.req_uid, 2,
+      '🔄 اقتراح وقت بديل',
+      'اقترح صاحب العرض وقتاً بديلاً للمعاينة: ' ||
+        TO_CHAR(p_proposed_dt AT TIME ZONE 'Asia/Damascus', 'YYYY/MM/DD HH24:MI') ||
+        '. يمكنك القبول أو اقتراح وقت آخر.',
+      p_appointment_id::text, 'appointment'
+    );
+    PERFORM public.notify_user(
+      (SELECT id FROM public.users WHERE role >= 2 AND sts = 0 AND i_del = 0
+       ORDER BY ts_crt ASC LIMIT 1),
+      2,
+      '🔄 جولة تفاوض جديدة (' || (v_rounds + 1)::text || '/5)',
+      'صاحب العرض اقترح وقتاً بديلاً — بانتظار رد الطالب.',
+      p_appointment_id::text, 'appointment'
+    );
+    RETURN jsonb_build_object('success', true);
+  END IF;
+
+  RAISE EXCEPTION 'INVALID_REJECT_REASON';
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.owner_respond_appointment(UUID, UUID, BOOLEAN, INT, TEXT, TIMESTAMPTZ) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.owner_respond_appointment(UUID, UUID, BOOLEAN, INT, TEXT, TIMESTAMPTZ) FROM anon;
+REVOKE ALL ON FUNCTION public.owner_respond_appointment(UUID, UUID, BOOLEAN, INT, TEXT, TIMESTAMPTZ) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.owner_respond_appointment(UUID, UUID, BOOLEAN, INT, TEXT, TIMESTAMPTZ) TO service_role;
+
+-- ---------------------------------------------------------------------
+-- 7) requester_counter_appointment — نفس القواعد لمسار رد الطالب
+-- ---------------------------------------------------------------------
+DROP FUNCTION IF EXISTS public.requester_counter_appointment(UUID, UUID, BOOLEAN, TIMESTAMPTZ);
+
+CREATE FUNCTION public.requester_counter_appointment(
+  p_user_uid UUID,
+  p_appointment_id UUID,
+  p_accept BOOLEAN,
+  p_proposed_dt TIMESTAMPTZ DEFAULT NULL
+) RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO public, extensions, pg_temp
+AS $$
+DECLARE
+  v_appt       public.appointments%ROWTYPE;
+  v_rounds     INT;
+  v_neog       JSONB;
+  v_supervisor UUID;
+  v_suggest    TIMESTAMPTZ;
+  v_gap        INT := (public.appt_booking_config()->>'gap_mins')::INT;
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
+  SELECT * INTO v_appt
+  FROM public.appointments
+  WHERE id      = p_appointment_id
+    AND req_uid = p_user_uid
+    AND sts     = 0;
+
+  IF v_appt.id IS NULL THEN
+    RAISE EXCEPTION 'APPOINTMENT_NOT_FOUND_OR_NOT_ALLOWED';
+  END IF;
+
+  v_neog   := COALESCE(v_appt.neog, '[]'::jsonb);
+  v_rounds := jsonb_array_length(v_neog);
+
+  -- ─── قبول الوقت البديل ───
+  IF p_accept THEN
+    UPDATE public.appointments
+    SET sts        = 1,
+        fbk_req    = 1,
+        fbk_req_dt = NOW()
+    WHERE id = p_appointment_id;
+
+    PERFORM public.notify_user(
+      v_appt.own_id, 2,
+      '✅ قبل الطالب الوقت البديل',
+      'تم تأكيد موعد المعاينة في الوقت المقترح. سيتواصل معك المكتب.',
+      p_appointment_id::text, 'appointment'
+    );
+    PERFORM public.notify_user(
+      (SELECT id FROM public.users WHERE role >= 2 AND sts = 0 AND i_del = 0
+       ORDER BY ts_crt ASC LIMIT 1),
+      2,
+      '📅 موعد مؤكد بعد تفاوض',
+      'قبل الطالب الوقت البديل — الموعد مؤكد والمشرف معيَّن.',
+      p_appointment_id::text, 'appointment'
+    );
+    RETURN jsonb_build_object('success', true);
+  END IF;
+
+  -- ─── رفض + اقتراح وقت آخر ───
+  IF p_proposed_dt IS NULL THEN
+    RAISE EXCEPTION 'PROPOSED_DT_REQUIRED';
+  END IF;
+
+  -- ✅ فحص جديد: الوقت المقترح يجب أن يكون مستقبلياً
+  IF p_proposed_dt <= NOW() THEN
+    RETURN jsonb_build_object('success', false, 'error', 'INVALID_APPOINTMENT_TIME');
+  END IF;
+
+  IF v_rounds >= 5 THEN
+    UPDATE public.appointments
+    SET sts     = 4,
+        cnl_rsn = 'انتهت جولات التفاوض بدون توافق',
+        dt_end  = NOW()
+    WHERE id = p_appointment_id;
+
+    PERFORM public.notify_user(
+      v_appt.own_id, 2,
+      '❌ انتهت جولات التفاوض',
+      'لم يتم التوافق على موعد بعد 5 جولات.',
+      p_appointment_id::text, 'appointment'
+    );
+    PERFORM public.notify_user(
+      (SELECT id FROM public.users WHERE role >= 2 AND sts = 0 AND i_del = 0
+       ORDER BY ts_crt ASC LIMIT 1),
+      2,
+      '⚠️ انتهت جولات التفاوض',
+      'تم إلغاء الموعد تلقائياً بعد 5 جولات بدون توافق.',
+      p_appointment_id::text, 'appointment'
+    );
+    RETURN jsonb_build_object('success', true, 'auto_cancelled', true);
+  END IF;
+
+  -- ✅ فحص جديد (القاعدة 3): فارق الساعة على مواعيد نفس العرض
+  IF EXISTS (
+    SELECT 1 FROM public.appointments
+    WHERE off_id = v_appt.off_id
+      AND id <> p_appointment_id
+      AND sts IN (0, 1)
+      AND dt > p_proposed_dt - make_interval(mins => v_gap)
+      AND dt < p_proposed_dt + make_interval(mins => v_gap)
+  ) THEN
+    RETURN jsonb_build_object('success', false, 'error', 'TIME_CONFLICT_ON_OFFER');
+  END IF;
+
+  -- ✅ معالجة غياب المشرف بدل الانفجار بخطأ خام
+  BEGIN
+    v_supervisor := public.get_available_supervisor(p_proposed_dt);
+  EXCEPTION WHEN OTHERS THEN
+    v_supervisor := NULL;
+  END;
+
+  IF v_supervisor IS NULL THEN
+    v_suggest := public.suggest_appointment_slot(v_appt.off_id, p_proposed_dt);
+    PERFORM public.notify_user(
+      p_user_uid, 2,
+      'لا يوجد مشرف متاح للوقت المقترح',
+      CASE WHEN v_suggest IS NOT NULL
+        THEN 'تعذّر اعتماد الوقت البديل لعدم توفر مشرف. أقرب وقت متاح: '
+             || to_char(v_suggest AT TIME ZONE 'Asia/Damascus', 'YYYY/MM/DD HH24:MI')
+             || ' — يمكنك اقتراحه أو اختيار وقت آخر.'
+        ELSE 'تعذّر اعتماد الوقت البديل لعدم توفر مشرف. يرجى اقتراح وقت آخر.'
+      END,
+      p_appointment_id::text, 'appointment_suggest'
+    );
+    RETURN jsonb_build_object(
+      'success', false,
+      'error', 'NO_SUPERVISOR_AVAILABLE',
+      'suggested_dt', v_suggest
+    );
+  END IF;
+
+  v_neog := v_neog || jsonb_build_object(
+    'round',    v_rounds + 1,
+    'by',       'requester',
+    'at',       NOW(),
+    'action',   'counter',
+    'proposed', p_proposed_dt
+  );
+
+  UPDATE public.appointments
+  SET dt             = p_proposed_dt,
+      supervisor_uid = v_supervisor,
+      neog           = v_neog,
+      fbk_req        = 2,
+      fbk_req_dt     = NOW()
+  WHERE id = p_appointment_id;
+
+  PERFORM public.notify_user(
+    v_appt.own_id, 2,
+    '🔄 اقتراح وقت بديل من الطالب',
+    'اقترح طالب الموعد وقتاً بديلاً: ' ||
+      TO_CHAR(p_proposed_dt AT TIME ZONE 'Asia/Damascus', 'YYYY/MM/DD HH24:MI') ||
+      '. يمكنك القبول أو اقتراح وقت آخر.',
+    p_appointment_id::text, 'appointment'
+  );
+  PERFORM public.notify_user(
+    (SELECT id FROM public.users WHERE role >= 2 AND sts = 0 AND i_del = 0
+     ORDER BY ts_crt ASC LIMIT 1),
+    2,
+    '🔄 جولة تفاوض جديدة (' || (v_rounds + 1)::text || '/5)',
+    'الطالب اقترح وقتاً بديلاً — بانتظار رد صاحب العرض.',
+    p_appointment_id::text, 'appointment'
+  );
+  RETURN jsonb_build_object('success', true);
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.requester_counter_appointment(UUID, UUID, BOOLEAN, TIMESTAMPTZ) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.requester_counter_appointment(UUID, UUID, BOOLEAN, TIMESTAMPTZ) FROM anon;
+REVOKE ALL ON FUNCTION public.requester_counter_appointment(UUID, UUID, BOOLEAN, TIMESTAMPTZ) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.requester_counter_appointment(UUID, UUID, BOOLEAN, TIMESTAMPTZ) TO service_role;
