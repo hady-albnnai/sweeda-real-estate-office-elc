@@ -1,7 +1,23 @@
 import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/appointment_model.dart';
 import '../core/network/supabase_service.dart';
 import '../core/constants/db_constants.dart';
+
+/// نتيجة محاولة حجز موعد — تحمل رمز الخطأ والاقتراح البديل إن وُجد
+class BookingResult {
+  final bool success;
+  final String? errorCode;
+  final DateTime? suggestedDt;
+  final int activeCount;
+
+  const BookingResult({
+    required this.success,
+    this.errorCode,
+    this.suggestedDt,
+    this.activeCount = 0,
+  });
+}
 
 class AppointmentProvider with ChangeNotifier {
   List<AppointmentModel> _myAppointments = [];
@@ -37,7 +53,7 @@ class AppointmentProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> bookAppointment({
+  Future<BookingResult> bookAppointment({
     required String userId,
     required String offerId,
     required String selectedDayKey,
@@ -46,13 +62,17 @@ class AppointmentProvider with ChangeNotifier {
     String? requestId,
   }) async {
     try {
-      if (userId.isEmpty || offerId.isEmpty) return false;
+      if (userId.isEmpty || offerId.isEmpty) {
+        return const BookingResult(success: false, errorCode: 'INVALID_INPUT');
+      }
 
       final dateTime = _resolveNextAppointmentDate(
         selectedDayKey,
         selectedTime,
       );
-      if (dateTime == null) return false;
+      if (dateTime == null) {
+        return const BookingResult(success: false, errorCode: 'INVALID_INPUT');
+      }
 
       final resultRes = await SupabaseService().invokeFunction(
         'user-appointments',
@@ -60,23 +80,50 @@ class AppointmentProvider with ChangeNotifier {
           'action': 'book',
           'user_uid': userId,
           'offerId': offerId,
-          'dt': dateTime.toIso8601String(),
+          // إرسال بصيغة UTC مع لاحقة Z — بدونها يفسّر السيرفر الوقت خطأً
+          // وينزاح عن اختيار المستخدم (يكسر فحص avl)
+          'dt': dateTime.toUtc().toIso8601String(),
           'brokerId': brokerId,
           'requestId': requestId,
         },
       );
       final result = resultRes.data;
 
-      // السيرفر يرجع JSONB: {success, active_appointments, supervisor_uid}
+      // السيرفر يرجع JSONB:
+      // نجاح: {success:true, appointment_id, active_appointments, supervisor_uid}
+      // فشل مُدار: {success:false, error:'NO_SUPERVISOR_AVAILABLE', suggested_dt}
       if (result is Map) {
-        lastBookingActiveCount = (result['active_appointments'] ?? 0) as int;
+        if (result['success'] == true) {
+          lastBookingActiveCount = (result['active_appointments'] ?? 0) as int;
+          await fetchMyAppointments(userId);
+          notifyListeners();
+          return BookingResult(
+            success: true,
+            activeCount: lastBookingActiveCount,
+          );
+        }
+        DateTime? suggested;
+        final rawSuggested = result['suggested_dt'];
+        if (rawSuggested is String && rawSuggested.isNotEmpty) {
+          suggested = DateTime.tryParse(rawSuggested)?.toLocal();
+        }
+        return BookingResult(
+          success: false,
+          errorCode: (result['error'] ?? 'UNKNOWN').toString(),
+          suggestedDt: suggested,
+        );
       }
-
-      await fetchMyAppointments(userId);
-      notifyListeners();
-      return true;
+      return const BookingResult(success: false, errorCode: 'UNKNOWN');
+    } on FunctionException catch (e) {
+      // أخطاء RPC المرفوعة كـ EXCEPTION تصل هنا برمزها من الـ Edge Function
+      final details = e.details;
+      String code = 'UNKNOWN';
+      if (details is Map && details['error'] != null) {
+        code = details['error'].toString();
+      }
+      return BookingResult(success: false, errorCode: code);
     } catch (e) {
-      return false;
+      return const BookingResult(success: false, errorCode: 'NETWORK');
     }
   }
 

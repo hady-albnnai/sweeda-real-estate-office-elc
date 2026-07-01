@@ -56,6 +56,8 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
     'mon': [], 'tue': [], 'wed': [], 'thu': [],
     'fri': [], 'sat': [], 'sun': [],
   };
+  // "جاهز للمعاينة في أي وقت" — نفس منطق add_offer_screen (avl = {any: [...]})
+  bool _anytimeReady = false;
 
   final _storage = StorageService();
 
@@ -73,6 +75,7 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
   }
 
   Map<String, List<String>> _buildAvl() {
+    if (_anytimeReady) return {'any': ['00:00-23:59']};
     final result = <String, List<String>>{};
     for (final day in _weekDays) {
       final key = day.$1;
@@ -87,6 +90,10 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
   }
 
   void _loadAvl(Map<String, List<String>> avl) {
+    if (avl.containsKey('any')) {
+      _anytimeReady = true;
+      return;
+    }
     for (final entry in avl.entries) {
       final key = entry.key;
       if (_avlDaysEnabled.containsKey(key) && entry.value.isNotEmpty) {
@@ -403,7 +410,27 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
             const Text('حدد الأيام والفترات الزمنية المتاحة',
                 style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
             const SizedBox(height: 10),
-            ..._weekDays.map((day) => _avlDayWidget(day.$1, day.$2)),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryGold.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3)),
+              ),
+              child: SwitchListTile(
+                value: _anytimeReady,
+                onChanged: (v) => setState(() => _anytimeReady = v),
+                title: const Text('أنا جاهز للمعاينة في أي وقت',
+                    style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                subtitle: const Text('سيتمكن الزبائن من طلب موعد في أي وقت تراه الإدارة مناسباً',
+                    style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+                activeColor: AppTheme.primaryGold,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+            const SizedBox(height: 10),
+            if (!_anytimeReady)
+              ..._weekDays.map((day) => _avlDayWidget(day.$1, day.$2)),
             const SizedBox(height: 20),
 
             // ── الصور ──

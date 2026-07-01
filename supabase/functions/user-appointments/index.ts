@@ -124,6 +124,11 @@ serve(async (req) => {
       });
 
       if (error) return json({ success: false, error: error.message }, 400);
+      // الدالة تعيد JSONB: نجاح {success, appointment_id, active_appointments, supervisor_uid}
+      // أو فشل مُدار {success:false, error:'NO_SUPERVISOR_AVAILABLE', suggested_dt}
+      if (data && typeof data === "object") {
+        return json(data as Record<string, unknown>);
+      }
       return json({ success: true, appointment_id: data });
     }
 
