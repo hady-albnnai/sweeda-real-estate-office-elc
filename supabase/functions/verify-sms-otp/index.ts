@@ -20,7 +20,7 @@ function normalizeSyPhone(input: string): string {
   if (raw.startsWith("00963")) return `+963${raw.slice(5)}`;
   if (raw.startsWith("963")) return `+${raw}`;
   if (raw.startsWith("0")) return `+963${raw.slice(1)}`;
-  if (raw.startsWith("9")) return `+963${// la suite du code précédent...
+  if (raw.startsWith("9")) return `+963${raw}`;
   if (raw.startsWith("+")) return raw;
   return `+963${raw}`;
 }
