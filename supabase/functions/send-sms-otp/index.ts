@@ -61,6 +61,7 @@ serve(async (req) => {
     }
 
     const maskedOtp = encodeOtp(otp);
+    const APP_SIGNATURE_HASH = Deno.env.get('APP_SIGNATURE_HASH') ?? '';
 
     const templates = [
       `لا تهون حط هالكلمة او عطي موافقة ليتم نسخها تلقائيا: ${maskedOtp}`,
@@ -69,7 +70,10 @@ serve(async (req) => {
       `يا حي الله هي كلمتك: ${maskedOtp}`
     ];
 
-    const randomTemplate = templates[Math.floor(Math.random() * templates.length)];
+    let randomTemplate = templates[Math.floor(Math.random() * templates.length)];
+    if (APP_SIGNATURE_HASH) {
+      randomTemplate = `${randomTemplate}\n${APP_SIGNATURE_HASH}`;
+    }
 
     const response = await fetch(`https://api.textbee.dev/api/v1/gateway/devices/${TEXTBEE_DEVICE_ID}/send-sms`, {
       method: 'POST',
