@@ -64,6 +64,7 @@
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_lock_legacy_admin_rpcs.sql` — إغلاق direct execute للدوال الإدارية القديمة الحساسة بعد نقلها إلى Edge Functions |
 | ✅ **مُطبّق على السيرفر** | `2026_06_24_offer_images_storage_policies.sql` — bucket `offer_images` + RLS مقفلة (owner OR admin OR service_role)، لا SELECT policy. Edge Function `upload-offer-images` تتجاوز RLS عبر service_role |
 | 📝 **جاهز للتطبيق (لم يُنفّذ بعد)** | `2026_06_13_auth_username_password.sql` — اسم مستخدم `usr` + كلمة مرور مشفّرة `pwd` + 6 RPCs (`register_password`, `login_with_password`, `reset_password_with_otp`, `change_password_internal`, `check_username_available`, `get_staff_stats_internal`) + تحديث `users_public` (إضافة `usr`) + تحديث `get_user_full_by_id` (إضافة `usr` + إخفاء `pwd` خلف flag) |
+| 🆕 **جاهز للتطبيق (بانتظار تنفيذه على السيرفر + إعادة نشر `user-appointments`)** | `2026_07_02_appointment_booking_rules.sql` — قواعد الحجز الثلاث: (1) دعم `avl.any` عبر دوام `app_config.appt` + رفض `avl` الفارغة بـ `NO_AVAILABILITY` (2) مشرف الأقل حمولة مع فارق الساعة + عند عدم التوفر إشعار الطالب واقتراح بديل عبر `suggest_appointment_slot` (3) قاعدة فارق الساعة `TIME_CONFLICT_ON_OFFER` على العرض والمشرف + دوال جديدة: `appt_booking_config`, `get_booked_slots_internal`, `suggest_appointment_slot` + توحيد `get_available_supervisor` |
 
 ---
 
@@ -1728,13 +1729,22 @@ normalize_sy_phone(ph)
 
 ---
 
-## منطق نظام الحجز الجديد (2026-06-11)
+## منطق نظام الحجز الجديد (2026-06-11) — مُحدَّث 2026-07-02
 
-### فحوصات `book_appointment_internal` بالترتيب:
-1. **فحص `avl`** — هل الوقت ضمن الفترات المتاحة لليوم المطلوب؟
-2. **فحص التعارض** — هل يوجد موعد مؤكد لنفس العرض في نفس الوقت؟
-3. **فحص المشرف** — هل يوجد مشرف (role=2) غير مشغول في هذا الوقت؟
+> ⚠️ النسخة المعتمدة حالياً: `2026_07_02_appointment_booking_rules.sql` — المرجع: `LOGIC_SPEC.md §7`.
+
+### فحوصات `book_appointment_internal` بالترتيب (نسخة 2026-07-02):
+1. **فحص `avl`** — الحجز حصراً ضمن أيام/فترات صاحب العرض. `avl` فارغة → `NO_AVAILABILITY`. مفتاح `any` = كل الأيام ضمن دوام `app_config.appt` (`any_from`–`any_to`، افتراضياً 09:00–21:00).
+2. **فحص التعارض (قاعدة الساعة)** — لا موعد نشط (sts 0/1) على نفس العرض ضمن أقل من `appt.gap_mins` (60 دقيقة) من الوقت المطلوب → `TIME_CONFLICT_ON_OFFER`.
+3. **فحص المشرف** — الأقل مواعيد نشطة، مع استبعاد المشغول ضمن فارق الساعة، وانتقال تلقائي للتالي. لا مشرف متاح → تعيد `{success:false, error:'NO_SUPERVISOR_AVAILABLE', suggested_dt}` + إشعار للطالب (`notify_user`, tp=2) مع اقتراح أقرب موعد عبر `suggest_appointment_slot` (بحث 14 يوماً).
 4. **الإنشاء** — ينشأ الموعد بـ `sts=0` مع `supervisor_uid` محجوز مبدئياً
+
+### دوال مساعدة جديدة (2026-07-02):
+| الدالة | الوظيفة |
+|---|---|
+| `appt_booking_config()` | قراءة `app_config.main.appt` مع افتراضيات آمنة |
+| `get_booked_slots_internal(p_offer_id UUID, p_date DATE)` | أوقات المواعيد النشطة (HH24:MI بتوقيت دمشق) ليوم محدد — لتظليل الأوقات في الواجهة |
+| `suggest_appointment_slot(p_offer_id UUID, p_from TIMESTAMPTZ)` | أقرب موعد متاح فعلياً (avl + لا تعارض + مشرف متاح) خلال 14 يوماً |
 
 ### دورة التراشق (`owner_respond_appointment` + `requester_counter_appointment`):
 - **5 جولات كحد أقصى** — بعدها يُلغى تلقائياً
@@ -1743,10 +1753,11 @@ normalize_sy_phone(ph)
 - **رفض "آخر" (reason=2)** → حقل نص حر + إشعار الإدارة للمراجعة
 - **القاعدة الذهبية**: لا تظهر أي معلومة عن طالب الحجز لصاحب العرض أو الوسيط
 
-### تعيين المشرف (`get_available_supervisor`):
-- يختار مشرف (role=2) ليس لديه موعد مؤكد (sts=1) في نفس الوقت
-- الأولوية: الأقل مواعيداً → الأقدم تسجيلاً (ts_crt)
+### تعيين المشرف (`get_available_supervisor`) — موحَّد 2026-07-02:
+- يختار مشرف (role=3) ليس لديه موعد نشط (sts 0/1) ضمن فارق `gap_mins` من الوقت المطلوب
+- الأولوية: الأقل مواعيداً نشطة → الأقدم تسجيلاً (ts_crt)
 - إذا لا يوجد مشرف متاح → `NO_SUPERVISOR_AVAILABLE`
+- ⚠️ منطقها الآن مطابق تماماً للكود داخل `book_appointment_internal` (كان بينهما تضارب sts=1 مقابل sts 0/1)
 
 ---
 

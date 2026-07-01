@@ -1759,6 +1759,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- ⚠️ نسخة تأسيسية قديمة — النسخة المعتمدة حالياً لهذه الدالة في:
+--    supabase/migrations/2026_07_02_appointment_booking_rules.sql
+--    (قواعد avl/any + فارق الساعة + إسناد المشرف + اقتراح البديل)
+--    عند تهيئة قاعدة جديدة يجب تطبيق الـ migrations بعد هذا الملف بالترتيب.
 CREATE OR REPLACE FUNCTION book_appointment_internal(
   p_user_uid UUID,
   p_offer_id UUID,

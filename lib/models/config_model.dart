@@ -41,6 +41,27 @@ class ConfigModel {
   Map<String, dynamic> get texts => _getNestedMap('txts', {});
   int get usdToSypRate => _getNested('fx.usd_syp', 15000);
 
+  /// إعدادات حجز المواعيد (appt) — تُقرأ من app_config
+  /// any_from/any_to: دوام المعاينة عندما يكون العرض "جاهز بأي وقت" (avl = any)
+  /// gap_mins: الفارق الأدنى بين موعدين على نفس العرض/المشرف (قاعدة الساعة)
+  Map<String, dynamic> get appointmentSettings => _getNestedMap('appt', {});
+
+  String get apptAnyFrom {
+    final v = appointmentSettings['any_from'];
+    return (v is String && v.isNotEmpty) ? v : '09:00';
+  }
+
+  String get apptAnyTo {
+    final v = appointmentSettings['any_to'];
+    return (v is String && v.isNotEmpty) ? v : '21:00';
+  }
+
+  int get apptGapMins {
+    final v = appointmentSettings['gap_mins'];
+    if (v is num) return v.toInt();
+    return 60;
+  }
+
   /// قنوات الدفع اليدوية (المرحلة 11)
   /// المفاتيح: haram | sham_cash | balance | bank
   /// كل قناة تحوي: enabled, name, icon, instructions + حقول خاصة بها
