@@ -67,8 +67,11 @@ class AuthService {
             type: OtpType.email,
             tokenHash: session['token_hash'] as String,
           );
-        } catch (_) {
-          // لا نوقف التدفق؛ الجلسة المحلية للتطبيق تُحفظ بالأسفل.
+        } catch (e) {
+          return {
+            'success': false,
+            'error': 'verifyOTP_error: ${e.toString()}',
+          };
         }
       }
 
