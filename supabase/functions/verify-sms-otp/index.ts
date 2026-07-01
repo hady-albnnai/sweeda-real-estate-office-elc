@@ -86,6 +86,7 @@ serve(async (req) => {
     const pseudoEmail = `sms_${normalizedPhone.replace(/\D/g, "")}@whatsapp.local`;
 
     await supabase.auth.admin.createUser({
+      id: userId,
       email: pseudoEmail,
       phone: normalizedPhone,
       email_confirm: true,
