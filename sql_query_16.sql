@@ -116,6 +116,13 @@ BEGIN
 END;
 $$;
 
+-- قفل صريح (لا اعتماداً على وراثة صلاحيات النسخة السابقة عبر OR REPLACE):
+-- نمط الأمان الموحد — service_role فقط، مطابق لحالة السيرفر المفحوصة 2026-07-02
+REVOKE ALL ON FUNCTION public.get_available_supervisor(TIMESTAMPTZ) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.get_available_supervisor(TIMESTAMPTZ) FROM anon;
+REVOKE ALL ON FUNCTION public.get_available_supervisor(TIMESTAMPTZ) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.get_available_supervisor(TIMESTAMPTZ) TO service_role;
+
 -- ---------------------------------------------------------------------
 -- 4) suggest_appointment_slot — أقرب موعد متاح فعلياً خلال 14 يوماً:
 --    ضمن avl (أو دوام any من الإعدادات) + لا تعارض على العرض + مشرف متاح.
