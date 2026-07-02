@@ -174,7 +174,7 @@ serve(async (req) => {
     }
 
     if (action === "update_profile") {
-      const payload = body.payload as Record<string, unknown>;
+      const payload = (body.payload ?? body.p_payload) as Record<string, unknown>;
       if (!payload) return json({ success: false, error: "PAYLOAD_REQUIRED" }, 400);
 
       const { data, error } = await supabaseAdmin.rpc("update_user_profile_internal", {
@@ -182,7 +182,7 @@ serve(async (req) => {
         p_payload: payload,
       });
       if (error) return json({ success: false, error: error.message }, 400);
-      return json({ success: data === true });
+      return json(typeof data === "object" && data !== null ? data : { success: data === true });
     }
 
     if (action === "get_device_tokens") {

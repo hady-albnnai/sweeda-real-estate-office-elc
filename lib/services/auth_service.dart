@@ -1,13 +1,13 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/network/supabase_service.dart';
+import '../core/validation/input_validators.dart';
 
 /// قنوات تسجيل الدخول المدعومة
 enum AuthChannel { email, sms }
 
 class AuthService {
   final GoTrueClient _auth = SupabaseService().auth;
-  final SupabaseClient _client = SupabaseService().client;
 
   // ════════════════════════════════════════════════════════════════════════
   // 📱 SMS OTP — عبر Edge Function (textbee.dev)

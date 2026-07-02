@@ -20,11 +20,6 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> with Code
   bool _canResend = false;
   bool _loading = false;
 
-  static const Map<String, String> _charToDigit = {
-    'أ': '0', 'ب': '1', 'ت': '2', 'ث': '3', 'ج': '4',
-    'ح': '5', 'خ': '6', 'د': '7', 'ذ': '8', 'ر': '9'
-  };
-
   @override
   void initState() {
     super.initState();

@@ -5,7 +5,6 @@ import '../../providers/request_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/config_provider.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/services/business_service.dart';
 import '../../core/constants/db_constants.dart';
 import '../../models/request_model.dart';
 import '../../models/offer_model.dart';
@@ -140,89 +139,6 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
 
     context.push('/matching-offers', extra: requestData);
   }
-
-  Future<void> _showMatchesSheet(List<OfferModel> matches) async {
-    await showModalBottomSheet(
-      context: context,
-      backgroundColor: AppTheme.surfaceBlack,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => DraggableScrollableSheet(
-        expand: false,
-        initialChildSize: 0.6,
-        maxChildSize: 0.9,
-        builder: (ctx, scroll) => Column(children: [
-          const SizedBox(height: 12),
-          Container(
-            width: 40, height: 4,
-            decoration: BoxDecoration(
-                color: AppTheme.textGrey,
-                borderRadius: BorderRadius.circular(2)),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(children: [
-              const Icon(Icons.auto_awesome, color: AppTheme.primaryGold),
-              const SizedBox(width: 8),
-              Text('${matches.length} عرض مطابق لطلبك',
-                  style: const TextStyle(
-                      color: AppTheme.primaryGold,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold)),
-            ]),
-          ),
-          Expanded(
-            child: ListView.builder(
-              controller: scroll,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              itemCount: matches.length,
-              itemBuilder: (_, i) {
-                final o = matches[i];
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 10),
-                  decoration: BoxDecoration(
-                    color: AppTheme.deepBlack,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                        color: AppTheme.primaryGold.withOpacity(0.2)),
-                  ),
-                  child: ListTile(
-                    leading: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: o.imgs.isNotEmpty
-                          ? Image.network(o.imgs[0],
-                              width: 50, height: 50, fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => _imgBox())
-                          : _imgBox(),
-                    ),
-                    title: Text(o.ttl,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: AppTheme.textWhite)),
-                    subtitle: Text(
-                        '${o.prc.toStringAsFixed(0)} ${o.cur == 0 ? '\$' : 'ل.س'}',
-                        style:
-                            const TextStyle(color: AppTheme.primaryGold)),
-                    trailing: const Icon(Icons.arrow_back_ios,
-                        color: AppTheme.primaryGold, size: 14),
-                    onTap: () {
-                      Navigator.pop(ctx);
-                      context.push('/offer/${o.id}');
-                    },
-                  ),
-                );
-              },
-            ),
-          ),
-        ]),
-      ),
-    );
-  }
-
-  Widget _imgBox() => Container(
-        width: 50, height: 50, color: AppTheme.surfaceBlack,
-        child: const Icon(Icons.home_work, color: AppTheme.primaryGold));
 
   void _snack(String m) {
     if (!mounted) return;

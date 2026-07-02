@@ -1910,7 +1910,7 @@ NOW() > pkg_grace          → expire_packages     → b_pkg = 0
 **الأذونات:** `service_role` للـ Supabase client، وتتحقق من `JWT Token` وتضمن المطابقة.
 
 ## 🛡️ Edge Function — `user-account`
-**الحالة:** ✅ مكتمل (تمت معالجة التوافق Adaptive Handling لردود الـ JSONB والـ BOOLEAN في دوال إعداد كلمة المرور وتغييرها ومنح النقاط وإبطال جلسة الموظف).  
+**الحالة:** ✅ مكتمل (تمت معالجة التوافق Adaptive Handling لردود الـ JSONB والـ BOOLEAN وتوحيد أسماء بارامترات الـ payload في دوال إعداد كلمة المرور وتغييرها وتحديث الملف الشخصي ومنح النقاط وإبطال جلسة الموظف).  
 **الأذونات:** `service_role` للـ Supabase client، تدعم دوال لا تتطلب توثيق كالتسجيل، وتدعم دوال تتطلب `JWT Token` ومطابقة الـ UID لحماية الملف الشخصي.
 
 ## 🛡️ Edge Function — `user-rewards` 🆕
