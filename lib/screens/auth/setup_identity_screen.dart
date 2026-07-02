@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' show FileOptions;
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/network/supabase_service.dart';
+import '../../core/validation/input_validators.dart';
 import '../../services/storage_service.dart';
 
 /// ════════════════════════════════════════════════════════════════════
@@ -72,7 +73,7 @@ class _SetupIdentityScreenState extends State<SetupIdentityScreen> {
   }
 
   Future<void> _submit() async {
-    final sid = _sidController.text.trim();
+    final sid = InputValidators.normalizeDigits(_sidController.text.trim());
 
     if (sid.isEmpty) {
       _snack('يرجى إدخال الرقم الوطني');
@@ -108,7 +109,15 @@ class _SetupIdentityScreenState extends State<SetupIdentityScreen> {
     }
 
     try {
-      await SupabaseService().invokeFunction('user-account', body: {'action': 'update_profile', 'p_user_uid': user.uid, 'p_payload': {'sid': sid, 'img': idPath ?? user.img}});
+      final res = await SupabaseService().invokeFunction('user-account', body: {
+        'action': 'update_profile',
+        'user_uid': user.uid,
+        'payload': {'sid': sid, 'img': idPath ?? user.img}
+      });
+      final data = res.data is Map ? Map<String, dynamic>.from(res.data) : null;
+      if (data == null || data['success'] == false) {
+        throw Exception(data?['error']?.toString() ?? 'UPDATE_FAILED');
+      }
 
       await auth.refreshUser();
       if (!mounted) return;
@@ -122,6 +131,7 @@ class _SetupIdentityScreenState extends State<SetupIdentityScreen> {
       );
       context.pop();
     } catch (e) {
+      if (!mounted) return;
       setState(() => _loading = false);
       _snack('فشل حفظ البيانات، حاول مرة أخرى');
     }

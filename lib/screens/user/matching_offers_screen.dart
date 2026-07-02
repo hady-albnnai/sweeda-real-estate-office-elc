@@ -27,7 +27,7 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
   // فلاتر
   double _minPrice = 0;
   double _maxPrice = 1000000;
-  String _sortBy = 'match_score';
+  final String _sortBy = 'match_score';
   String? _selectedCity;
   
   // فلاتر عقارات

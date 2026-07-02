@@ -216,10 +216,17 @@ class AuthProvider with ChangeNotifier {
   Future<bool> completeProfile({required String name, required String sid}) async {
     try {
       if (_userModel == null) return false;
-      await SupabaseService().invokeFunction('user-account', body: {'action': 'update_profile', 'p_user_uid': _userModel!.uid, 'p_payload': {'nm': name, 'sid': sid}});
+      final res = await SupabaseService().invokeFunction('user-account', body: {
+        'action': 'update_profile',
+        'user_uid': _userModel!.uid,
+        'payload': {'nm': name, 'sid': sid}
+      });
+      final data = res.data is Map ? Map<String, dynamic>.from(res.data) : null;
+      if (data == null || data['success'] == false) return false;
       await _loadUserData(_userModel!.uid);
       return true;
-    } catch (e) {return false;
+    } catch (e) {
+      return false;
     }
   }
 
