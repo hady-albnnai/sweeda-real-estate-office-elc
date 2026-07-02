@@ -123,7 +123,8 @@ BEGIN
   );
 END;
 $function$;
-GRANT EXECUTE ON FUNCTION public.check_username_available(TEXT) TO anon, authenticated, service_role;
+REVOKE ALL ON FUNCTION public.check_username_available(TEXT) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.check_username_available(TEXT) TO service_role;
 
 -- 5. تحديث register_password لاعتماد المقارنة الموحدة في فحص التكرار
 CREATE OR REPLACE FUNCTION public.register_password(p_user_uid uuid, p_username text, p_password text)
@@ -164,7 +165,8 @@ BEGIN
   RETURN jsonb_build_object('success', true, 'username', v_usr);
 END;
 $function$;
-GRANT EXECUTE ON FUNCTION public.register_password(UUID, TEXT, TEXT) TO anon, authenticated, service_role;
+REVOKE ALL ON FUNCTION public.register_password(UUID, TEXT, TEXT) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.register_password(UUID, TEXT, TEXT) TO service_role;
 
 -- 6. تحديث login_with_password لاعتماد المقارنة الموحدة في تسجيل الدخول
 CREATE OR REPLACE FUNCTION public.login_with_password(p_identifier text, p_password text)
@@ -221,4 +223,5 @@ BEGIN
   );
 END;
 $function$;
-GRANT EXECUTE ON FUNCTION public.login_with_password(TEXT, TEXT) TO anon, authenticated, service_role;
+REVOKE ALL ON FUNCTION public.login_with_password(TEXT, TEXT) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.login_with_password(TEXT, TEXT) TO service_role;

@@ -156,4 +156,5 @@ BEGIN
   ) RETURNING *;
 END;
 $$;
-GRANT EXECUTE ON FUNCTION public.create_offer_internal(UUID, JSONB) TO anon, authenticated, service_role;
+REVOKE ALL ON FUNCTION public.create_offer_internal(UUID, JSONB) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.create_offer_internal(UUID, JSONB) TO service_role;
