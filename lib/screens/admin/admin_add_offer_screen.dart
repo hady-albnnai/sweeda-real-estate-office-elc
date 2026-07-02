@@ -12,6 +12,7 @@ import '../../core/network/supabase_service.dart';
 import '../../models/offer_model.dart';
 import '../../models/user_model.dart';
 import '../../services/storage_service.dart';
+import '../../core/validation/input_validators.dart';
 import '../../widgets/location_picker.dart';
 
 /// شاشة إضافة عرض من الإدارة
@@ -150,11 +151,12 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
       _snack('يرجى إكمال البيانات الأساسية');
       return;
     }
-    if (_contactPhCtrl.text.trim().isEmpty) {
+    final effectivePhone = InputValidators.normalizeDigits(_contactPhCtrl.text.trim());
+    if (effectivePhone.isEmpty) {
       _snack('رقم الهاتف للتواصل إلزامي');
       return;
     }
-    final price = double.tryParse(_priceCtrl.text) ?? 0.0;
+    final price = double.tryParse(InputValidators.normalizeDigits(_priceCtrl.text).replaceAll(',', '')) ?? 0.0;
     if (price <= 0) { _snack('يرجى إدخال سعر صالح'); return; }
     if (_selectedDocType == null) {
       _snack('يرجى اختيار نوع سند الملكية');
@@ -211,7 +213,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
       trx:       _selectedTrans!,
       cat:       _selectedMainCat!,
       sub:       (_selectedSubCat == null || _selectedSubCat == -1) ? 0 : _selectedSubCat!,
-      contactPh: _contactPhCtrl.text.trim(),
+      contactPh: effectivePhone,
       prc:       price,
       cur:       _cur,
       loc:       loc,
