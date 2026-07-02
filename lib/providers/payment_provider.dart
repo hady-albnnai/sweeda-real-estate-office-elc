@@ -27,16 +27,26 @@ class PaymentProvider with ChangeNotifier {
 
   Future<bool> makePayment(PaymentModel payment) async {
     try {
-      // ✅ Secure direct insert — RLS allows INSERT when auth.uid() IS NOT NULL
-      // (confirmed server audit — matches LOGIC_SPEC §5 + CURRENT_STATUS)
-      await SupabaseService().client.from('payments').insert(payment.toMap());
+      final response = await SupabaseService().invokeFunction(
+        'user-account',
+        body: {
+          'action': 'create_payment',
+          'user_uid': payment.uid,
+          'payment': payment.toMap(),
+        },
+      );
+      final data = response.data is Map ? Map<String, dynamic>.from(response.data) : null;
+      if (data == null || data['success'] != true) {
+        throw Exception(data?['error']?.toString() ?? 'CREATE_PAYMENT_FAILED');
+      }
+
       await fetchPayments(payment.uid);
       notifyListeners();
       return true;
     } catch (e) {
       _setError(e);
       notifyListeners();
-      return false;
+      rethrow;
     }
   }
 

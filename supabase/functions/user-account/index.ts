@@ -230,6 +230,18 @@ serve(async (req) => {
       return json({ success: true, report_id: data });
     }
 
+    if (action === "create_payment") {
+      const paymentData = body.payment as Record<string, unknown>;
+      if (!paymentData) return json({ success: false, error: "PAYMENT_DATA_REQUIRED" }, 400);
+
+      const { data, error } = await supabaseAdmin.rpc("create_payment_internal", {
+        p_user_uid: uid,
+        p_payment: paymentData,
+      });
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json({ success: true, payment: Array.isArray(data) ? data[0] : data });
+    }
+
     if (action === "user_payments") {
       const { data, error } = await supabaseAdmin.rpc("get_user_payments_internal", { p_user_uid: uid });
       if (error) return json({ success: false, error: error.message }, 400);
