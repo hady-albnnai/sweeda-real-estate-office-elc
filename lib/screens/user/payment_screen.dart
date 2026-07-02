@@ -12,6 +12,7 @@ import '../../core/theme/app_theme.dart';
 import '../../models/payment_model.dart';
 import '../../services/storage_service.dart';
 import '../../core/network/supabase_service.dart';
+import '../../core/validation/input_validators.dart';
 
 /// شاشة دفع اشتراك الباقة — Config-Driven (المرحلة 11)
 ///
@@ -127,7 +128,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
       _snack('يرجى رفع إثبات الدفع');
       return;
     }
-    if (_refCtrl.text.trim().isEmpty) {
+    final refNum = InputValidators.normalizeDigits(_refCtrl.text.trim());
+    if (refNum.isEmpty) {
       _snack('يرجى إدخال رقم العملية / المرجع');
       return;
     }
@@ -161,12 +163,27 @@ class _PaymentScreenState extends State<PaymentScreen> {
       mtd: 0, // legacy
       channel: _channel,
       proof: proofUrl,
-      ref: _refCtrl.text.trim(),
+      ref: refNum,
       sts: 0, // قيد المراجعة
       tsCrt: DateTime.now(),
     );
 
-    final ok = await paymentProv.makePayment(payment);
+    bool ok = false;
+    try {
+      ok = await paymentProv.makePayment(payment);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _uploading = false);
+      final msg = e.toString();
+      if (msg.contains('PENDING_PAYMENT_EXISTS') || msg.contains('DUPLICATE_PENDING_PAYMENT')) {
+        _snack('لديك دفعة قيد المراجعة حالياً لنفس الباقة، يرجى انتظار اعتمادها قبل إرسال دفعة جديدة');
+      } else if (msg.contains('MISSING_PAYMENT_PROOF_OR_REFERENCE')) {
+        _snack('يرجى التأكد من رفع إثبات الدفع وإدخال رقم العملية');
+      } else {
+        _snack('فشل تسجيل الدفعة، حاول مجدداً');
+      }
+      return;
+    }
 
     if (!mounted) return;
     setState(() => _uploading = false);
