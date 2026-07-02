@@ -197,7 +197,7 @@
 | 66 | `mark_all_notifications_read_internal` | `p_user_uid UUID` | `BOOLEAN` | ✅ |
 | 67 | `create_rating_internal` | `p_reviewer_uid UUID, p_target_uid UUID, p_stars INT, p_comment TEXT?` | `BOOLEAN` | ✅ |
 | 68 | `register_daily_streak_internal` | `p_user_uid UUID, p_points INT?` | `JSONB` | ✅ |
-| 69 | `update_user_profile_internal` | `p_user_uid UUID, p_payload JSONB` | `BOOLEAN` | ✅ |
+| 69 | `update_user_profile_internal` 🔒 | `p_user_uid UUID, p_payload JSONB` | `BOOLEAN` | 🔒 مقفولة لـ service_role فقط (تم السحب من anon/authenticated) |
 | 70 | `update_user_notification_settings_internal` | `p_user_uid UUID, p_ntf JSONB` | `BOOLEAN` | ✅ |
 | 71 | `submit_broker_request_internal` | `p_user_uid UUID, p_business_name TEXT, p_category INT, p_experience TEXT?, p_about TEXT?` | `BOOLEAN` | ✅ |
 | 72 | `mark_social_published_internal` | `p_user_uid UUID, p_offer_id UUID, p_text TEXT` | `BOOLEAN` | ✅ |
@@ -1601,7 +1601,9 @@ normalize_sy_phone(ph)
 
 ### دوال التوثيق المتوافقة مع وضع التطوير
 
-#### `request_verification_by_uid(p_user_uid UUID)` → `BOOLEAN`
+#### `request_verification_by_uid(p_user_uid UUID)` → `BOOLEAN` 🔒 مقفولة لـ service_role
+
+- تم قفل صلاحياتها على السيرفر الحي حصراً لـ `service_role` (مسحوبة من `anon` و`authenticated` و`PUBLIC`)؛ التطبيق يصل إليها عبر Edge Function `user-account` (`action: request_verification`).
 
 - بديل متوافق مع وضع التطوير الحالي عندما لا تكون `auth.uid()` متاحة.
 - ينفذ نفس منطق RPC التوثيق القديم الذي تم الاستغناء عنه (`request_verification`) مع توافق أفضل مع وضع التطوير الحالي:
