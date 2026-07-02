@@ -66,6 +66,7 @@
 | ✅ **مُطبّق على السيرفر** | `2026_06_13_auth_username_password.sql` — اسم مستخدم `usr` + كلمة مرور مشفّرة `pwd` + 6 RPCs (`register_password`, `login_with_password`, `reset_password_with_otp`, `change_password_internal`, `check_username_available`, `get_staff_stats_internal`) + تحديث `users_public` (إضافة `usr`) + تحديث `get_user_full_by_id` (إضافة `usr` + إخفاء `pwd` خلف flag) |
 | 🆕 **جاهز للتطبيق (بانتظار تنفيذه على السيرفر + إعادة نشر `user-appointments`)** | `2026_07_02_appointment_booking_rules.sql` — قواعد الحجز الثلاث: (1) دعم `avl.any` عبر دوام `app_config.appt` + رفض `avl` الفارغة بـ `NO_AVAILABILITY` (2) مشرف الأقل حمولة مع فارق الساعة + عند عدم التوفر إشعار الطالب واقتراح بديل عبر `suggest_appointment_slot` (3) قاعدة فارق الساعة `TIME_CONFLICT_ON_OFFER` على العرض والمشرف + دوال جديدة: `appt_booking_config`, `get_booked_slots_internal`, `suggest_appointment_slot` + توحيد `get_available_supervisor` + **تحويلات توقيع تستلزم DROP** (مثبتة بالفحص الحي للسيرفر 2026-07-02): `get_booked_slots_internal` من `TABLE(booked_time text)` إلى `TEXT[]` (النسخة القديمة كانت تكسر تظليل الأوقات في التطبيق + فلترة تاريخ بـ UTC بدل دمشق)، و`owner_respond_appointment`/`requester_counter_appointment` من `BOOLEAN` إلى `JSONB` مع فرض قواعد فارق الساعة والوقت المستقبلي ومعالجة غياب المشرف على مسار التراشق (LOGIC_SPEC §7) |
 | 🆕 **جاهز للتطبيق (بانتظار تنفيذه على السيرفر + إعادة نشر `send-sms-otp` و `verify-sms-otp`)** | `2026_07_02_arabic_phone_and_username_support.sql` — دعم الأرقام العربية المشرقية والفارسية (`٠-٩`، `۰-۹`) في أرقام الهواتف عبر `normalize_sy_phone` + دعم أسماء المستخدمين باللغة العربية مع دالة تطبيع موحدة `normalize_arabic_username` (إطاحة التشكيل والكشيدة وتوحيد الألف والتاء المربوطة والياء) ومنع خلط اللغات في الاسم الواحد (Homoglyph prevention) في `app_assert_username` و `check_username_available` و `register_password` و `login_with_password` |
+| 🆕 **جاهز للتطبيق (بانتظار تنفيذه على السيرفر)** | `2026_07_02_fix_create_offer_added_by_and_quota.sql` — تصحيح توثيق عمود `added_by` في جدول العروض ليخزن معرف الموظف الإداري المنفذ عند إضافته العرض بالنيابة عن عميل (مع فحص أن المنفذ `role >= 4`)، وإعفاء العمليات الإدارية من فحص حصص النشر (`QUOTA_EXCEEDED`) |
 
 ---
 
@@ -1106,7 +1107,7 @@ Migration المطبق:
 | `app_assert_phone` | تطبيع وفحص رقم هاتف سوري بصيغة `+9639xxxxxxxx` |
 | `app_assert_price` | رفض السعر غير الموجب أو الكبير جداً |
 
-تم التحقق من عملها على السيرفر، وتم التأكد أن `create_offer_internal` حافظت على منطق الإنتاج: `added_by`, `v_effective_pkg`, وإعفاء الإدارة الداخلية عبر `role < 4`.
+تم التحقق من عملها على السيرفر، وتم تصحيح منطق الإنتاج في `create_offer_internal` بتاريخ 2026-07-02 لضمان تسجيل معرف الموظف الإداري المنفذ في عمود `added_by` عند إضافته العرض بالنيابة عن عميل عادي، مع إعفاء العمليات الإدارية من حصة العميل (`QUOTA_EXCEEDED`).
 
 ---
 

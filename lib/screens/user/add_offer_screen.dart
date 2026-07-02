@@ -11,6 +11,7 @@ import '../../core/constants/db_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/offer_model.dart';
 import '../../services/storage_service.dart';
+import '../../core/validation/input_validators.dart';
 import '../../widgets/location_picker.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -161,7 +162,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     
     // إزالة شرط إلزامية الصورة (أصبحت اختيارية كما طلبت)
     
-    final effectivePhone = _contactPhoneCtrl.text.trim().isNotEmpty ? _contactPhoneCtrl.text.trim() : user.ph.trim();
+    final effectivePhone = InputValidators.normalizeDigits(_contactPhoneCtrl.text.trim().isNotEmpty ? _contactPhoneCtrl.text.trim() : user.ph.trim());
     if (!RegExp(r'^09[3-9]\d{7}$').hasMatch(effectivePhone)) { _snack('يرجى إدخال رقم هاتف سوري صحيح (09xxxxxxxx)'); return; }
 
     setState(() { _submitting = true; _progressMsg = 'جاري رفع البيانات...'; });
@@ -179,12 +180,12 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     final offer = OfferModel(
       id: '', usrId: user.uid, ttl: _ttlCtrl.text.isNotEmpty ? _ttlCtrl.text : 'عرض جديد',
       typ: _selectedType!, trx: _selectedTrans!, cat: _selectedMainCat!, sub: _selectedSubCat ?? 0,
-      contactPh: effectivePhone, prc: double.tryParse(_priceCtrl.text) ?? 0, cur: _cur, loc: loc,
+      contactPh: effectivePhone, prc: double.tryParse(InputValidators.normalizeDigits(_priceCtrl.text).replaceAll(',', '')) ?? 0, cur: _cur, loc: loc,
       descript: _descCtrl.text.isNotEmpty ? _descCtrl.text : _locCtrl.text,
       specs: {
         'details': _specCtrl.text,
-        if (_selectedType == 0) ...{'area': _areaCtrl.text, 'floor': _floorCtrl.text, 'finishing': _finishing, 'direction': _direction, 'legal_notes': _legalNotesCtrl.text},
-        if (_selectedType == 1) ...{'plate': _carPlateCtrl.text, 'brand': _carBrandCtrl.text, 'model': _carModelCtrl.text, 'year': _carYearCtrl.text, 'color': _carColorCtrl.text, 'fuel': _carFuel, 'transmission': _carTransmission, 'plate_type': _selectedPlateType},
+        if (_selectedType == 0) ...{'area': InputValidators.normalizeDigits(_areaCtrl.text), 'floor': InputValidators.normalizeDigits(_floorCtrl.text), 'finishing': _finishing, 'direction': _direction, 'legal_notes': _legalNotesCtrl.text},
+        if (_selectedType == 1) ...{'plate': InputValidators.normalizeDigits(_carPlateCtrl.text), 'brand': _carBrandCtrl.text, 'model': _carModelCtrl.text, 'year': InputValidators.normalizeDigits(_carYearCtrl.text), 'color': _carColorCtrl.text, 'fuel': _carFuel, 'transmission': _carTransmission, 'plate_type': _selectedPlateType},
       },
       imgs: imageUrls, vdo: '', exactLoc: _pickedLocation != null ? '${_pickedLocation!.latitude},${_pickedLocation!.longitude}' : '',
       docTp: _selectedDocType ?? 0, docImg: docUrl, avl: _buildAvl(), sts: OfferStatus.review, tsCrt: DateTime.now(),
