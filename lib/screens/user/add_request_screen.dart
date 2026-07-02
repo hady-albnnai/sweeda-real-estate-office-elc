@@ -6,6 +6,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/config_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/constants/db_constants.dart';
+import '../../core/validation/input_validators.dart';
 import '../../models/request_model.dart';
 import '../../models/offer_model.dart';
 
@@ -52,9 +53,14 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
       _snack('يرجى اختيار نوع الطلب والعنصر');
       return;
     }
-    if (_clientNameCtrl.text.trim().isEmpty ||
-        _clientPhoneCtrl.text.trim().isEmpty) {
+    final clientName = _clientNameCtrl.text.trim();
+    final clientPhone = InputValidators.normalizeDigits(_clientPhoneCtrl.text.trim());
+    if (clientName.isEmpty || clientPhone.isEmpty) {
       _snack('اسم العميل وهاتفه إلزاميان');
+      return;
+    }
+    if (!RegExp(r'^09[3-9]\d{7}$').hasMatch(clientPhone)) {
+      _snack('يرجى إدخال رقم هاتف سوري صحيح للعميل (09xxxxxxxx)');
       return;
     }
 
@@ -76,7 +82,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
       return;
     }
 
-    final budget  = double.tryParse(_priceCtrl.text) ?? 0;
+    final budget  = double.tryParse(InputValidators.normalizeDigits(_priceCtrl.text).replaceAll(',', '')) ?? 0;
     final element = _selectedElement ?? 0;
 
     // بناء specs من حقل المواصفات
@@ -95,8 +101,8 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
       id:    '',
       typ:   _selectedType!,
       elm:   element,
-      clNm:  _clientNameCtrl.text.trim(),
-      clPh:  _clientPhoneCtrl.text.trim(),
+      clNm:  clientName,
+      clPh:  clientPhone,
       prc:   budget,
       cur:   _cur,
       notes: _notesCtrl.text.trim(),
@@ -112,7 +118,16 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _submitting = false);
-        _snack('فشل إرسال الطلب: $e');
+        final msg = e.toString();
+        if (msg.contains('PHONE_INVALID') || msg.contains('PHONE_REQUIRED')) {
+          _snack('رقم هاتف العميل غير صالح، يرجى إدخال رقم سوري صحيح');
+        } else if (msg.contains('QUOTA_EXCEEDED')) {
+          _snack('وصلت للحد الأقصى لعدد الطلبات المسموحة في باقتك');
+        } else if (msg.contains('CLIENT_NAME') || msg.contains('TOO_SHORT')) {
+          _snack('اسم العميل قصير جداً (يجب أن يكون حرفين على الأقل)');
+        } else {
+          _snack('فشل إرسال الطلب، حاول مجدداً');
+        }
       }
       return;
     }

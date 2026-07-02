@@ -1902,7 +1902,7 @@ NOW() > pkg_grace          → expire_packages     → b_pkg = 0
 **الأذونات:** `service_role` للـ Supabase client، وتتحقق من `JWT Token` الخاص بالمستخدم العادي، باستثناء دالة زيادة المشاهدات التي يمكن استدعاؤها من الزوار.
 
 ## 🛡️ Edge Function — `user-requests`
-**الحالة:** ✅ مكتمل (تم إطاحة الـ Fallback الانتحالي).  
+**الحالة:** ✅ مكتمل (تم إطاحة الـ Fallback الانتحالي في 2026-07-02، وتم تحديث المزود والواجهة لمرير وترجمة استثناءات التحقق الصارمة كـ `PHONE_INVALID` و`QUOTA_EXCEEDED` مع تطبيع الأرقام العربية).  
 **الأذونات:** `service_role` للـ Supabase client، وتتحقق من `JWT Token` الخاص بالمستخدم العادي، وتضمن أن الـ `user_uid` المطلوب مطابق لصاحب الجلسة.
 
 ## 🛡️ Edge Function — `user-appointments`

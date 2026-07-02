@@ -48,14 +48,16 @@ class RequestProvider with ChangeNotifier {
           'request': request.toMap(),
         },
       );
-      final data = response.data;
-      if (data == null || data['success'] != true) return false;
+      final data = response.data is Map ? Map<String, dynamic>.from(response.data) : null;
+      if (data == null || data['success'] != true) {
+        throw Exception(data?['error']?.toString() ?? 'CREATE_FAILED');
+      }
 
       await fetchMyRequests(request.usrId);
       notifyListeners();
       return true;
     } catch (e) {
-      return false;
+      rethrow;
     }
   }
 
@@ -97,14 +99,16 @@ class RequestProvider with ChangeNotifier {
           'patch': data,
         },
       );
-      final resData = response.data;
-      if (resData == null || resData['success'] != true) return false;
+      final resData = response.data is Map ? Map<String, dynamic>.from(response.data) : null;
+      if (resData == null || resData['success'] != true) {
+        throw Exception(resData?['error']?.toString() ?? 'UPDATE_FAILED');
+      }
 
       await fetchMyRequests(userId);
       notifyListeners();
       return true;
     } catch (e) {
-      return false;
+      rethrow;
     }
   }
 
@@ -120,14 +124,16 @@ class RequestProvider with ChangeNotifier {
           'reason': reason,
         },
       );
-      final resData = response.data;
-      if (resData == null || resData['success'] != true) return false;
+      final resData = response.data is Map ? Map<String, dynamic>.from(response.data) : null;
+      if (resData == null || resData['success'] != true) {
+        throw Exception(resData?['error']?.toString() ?? 'CANCEL_FAILED');
+      }
 
       await fetchMyRequests(userId);
       notifyListeners();
       return true;
     } catch (e) {
-      return false;
+      rethrow;
     }
   }
 
@@ -141,14 +147,16 @@ class RequestProvider with ChangeNotifier {
           'request_id': reqId,
         },
       );
-      final resData = response.data;
-      if (resData == null || resData['success'] != true) return false;
+      final resData = response.data is Map ? Map<String, dynamic>.from(response.data) : null;
+      if (resData == null || resData['success'] != true) {
+        throw Exception(resData?['error']?.toString() ?? 'RENEW_FAILED');
+      }
 
       await fetchMyRequests(userId);
       notifyListeners();
       return true;
     } catch (e) {
-      return false;
+      rethrow;
     }
   }
 
