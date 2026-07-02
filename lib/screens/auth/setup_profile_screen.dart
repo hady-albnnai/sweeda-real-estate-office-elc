@@ -164,7 +164,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
       } else if (msg.contains('PASSWORD_TOO_SHORT') || msg.contains('6') || msg.contains('8')) {
         _snack('كلمة المرور قصيرة، يجب أن تكون 8 أحرف على الأقل');
       } else if (msg.contains('USERNAME_INVALID_CHARS')) {
-        _snack('اسم المستخدم يحتوي أحرفاً غير مسموحة (أحرف إنجليزية وأرقام فقط)');
+        _snack('اسم المستخدم يحتوي أحرفاً غير مسموحة (أحرف عربية أو إنجليزية دون خلط، وأرقام فقط)');
       } else if (msg.contains('USERNAME_LENGTH')) {
         _snack('اسم المستخدم يجب أن يكون بين 3 و 30 حرفاً');
       } else if (msg.contains('AUTH_TOKEN_REQUIRED') || msg.contains('UNAUTHORIZED_ACCESS') || msg.contains('401') || msg.contains('403')) {
@@ -251,7 +251,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                       fontSize: 13)),
               const SizedBox(height: 4),
               const Text(
-                'أحرف إنجليزية + أرقام + _ + . (3–30 حرف)',
+                'أحرف عربية أو إنجليزية (بدون خلط) + أرقام + _ + . (3–30 حرف)',
                 style: TextStyle(color: AppTheme.textGrey, fontSize: 11),
               ),
               const SizedBox(height: 8),

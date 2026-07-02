@@ -195,7 +195,7 @@ class AuthService {
   // ════════════════════════════════════════════════════════════════════════
 
   String _normalizePhone(String phone) {
-    var value = phone.trim().replaceAll(RegExp(r'[^0-9+]'), '');
+    var value = InputValidators.normalizeDigits(phone).trim().replaceAll(RegExp(r'[^0-9+]'), '');
     if (value.startsWith('+963')) return value;
     if (value.startsWith('00963')) return '+963${value.substring(5)}';
     if (value.startsWith('963')) return '+$value';
