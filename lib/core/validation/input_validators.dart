@@ -33,14 +33,24 @@ class InputValidators {
     return null;
   }
 
+  static String normalizeDigits(String input) {
+    const arabic = '٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹';
+    const latin = '01234567890123456789';
+    var result = input;
+    for (int i = 0; i < arabic.length; i++) {
+      result = result.replaceAll(arabic[i], latin[i % 10]);
+    }
+    return result;
+  }
+
   static String? validateUsername(String? value) {
     final v = (value ?? '').trim().toLowerCase();
     if (v.isEmpty) return null;
     if (v.length < usernameMin || v.length > usernameMax) {
       return 'اسم المستخدم يجب أن يكون بين 3 و 30 حرفاً';
     }
-    if (!RegExp(r'^[a-z0-9_.]+$').hasMatch(v)) {
-      return 'يسمح فقط بالأحرف اللاتينية والأرقام و _ و .';
+    if (!RegExp(r'^([a-z0-9_.]+|[\u0600-\u06FF0-9_.]+)$').hasMatch(v)) {
+      return 'يسمح فقط بالأحرف العربية أو اللاتينية (دون خلط) والأرقام و _ و .';
     }
     return null;
   }
@@ -59,7 +69,7 @@ class InputValidators {
   }
 
   static String? validateSyrianPhone(String? value) {
-    final v = (value ?? '').trim().replaceAll(RegExp(r'[^0-9+]'), '');
+    final v = normalizeDigits(value ?? '').trim().replaceAll(RegExp(r'[^0-9+]'), '');
     if (v.isEmpty) return 'رقم الهاتف مطلوب';
     final local = RegExp(r'^09\d{8}$').hasMatch(v);
     final intl = RegExp(r'^\+9639\d{8}$').hasMatch(v) || RegExp(r'^9639\d{8}$').hasMatch(v);

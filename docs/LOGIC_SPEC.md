@@ -277,6 +277,7 @@
 - RPCs: `register_password`, `login_with_password`, `reset_password_with_otp`,
   `change_password_internal`, `check_username_available`, `get_staff_stats_internal`.
 - **(تحديث 2026-07-02):** تم إطاحة أي Fallbacks غير آمنة في دوال Edge Functions الست (`user-account`، `user-appointments`، `user-notifications`، `user-offers`، `user-requests`، `user-rewards`) لفرض التحقق الإلزامي من توكن الـ JWT ومطابقة الـ `user_uid`، مع معالجة مرنة Adaptive لردود الـ JSONB والـ BOOLEAN في دوال كلمات المرور والنقاط.
+- **(تحديث دعم العربية 2026-07-02):** تم تمييز وتطبيع الأرقام العربية المشرقية (`٠-٩`) والفارسية (`۰-۹`) في أرقام الهاتف عبر `normalize_sy_phone` ودوال `send-sms-otp`/`verify-sms-otp`. كما تم إتاحة أسماء المستخدمين باللغة العربية مع فرض 3 ضوابط أمنية: (1) منع خلط اللغتين اللاتينية والعربية في الاسم الواحد منعاً لثغرات التشابه البصري (Homoglyph) (2) تطبيع المتشابهات البصرية وإطاحة التشكيل والكشيدة وتوحيد الألف والتاء المربوطة والياء عبر `normalize_arabic_username` في مقارنات التكرار والدخول (3) فرض هذه القيود في واجهة Flutter وسيرفر Supabase معاً.
 
 ---
 

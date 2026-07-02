@@ -7,7 +7,14 @@ const corsHeaders = {
 }
 
 function normalizeSyPhone(input: string): string {
-  const raw = String(input ?? "").trim().replace(/[^0-9+]/g, "");
+  const arabicDigits = "٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹";
+  const latinDigits  = "01234567890123456789";
+  let raw = String(input ?? "").trim();
+  raw = raw.replace(/[٠-٩۰-۹]/g, (d) => {
+    const idx = arabicDigits.indexOf(d);
+    return idx !== -1 ? latinDigits[idx % 10] : d;
+  });
+  raw = raw.replace(/[^0-9+]/g, "");
   if (raw.startsWith("+963")) return raw;
   if (raw.startsWith("00963")) return `+963${raw.slice(5)}`;
   if (raw.startsWith("963")) return `+${raw}`;
