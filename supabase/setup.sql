@@ -241,2134 +241,19 @@ CREATE POLICY "Admin can update appointments" ON appointments FOR UPDATE USING (
 CREATE POLICY "Admin can update offers" ON offers FOR UPDATE USING (EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role >= 2) OR auth.uid() = usr_id);
 
 -- Functions
-CREATE OR REPLACE FUNCTION generate_otp(p_phone TEXT)
-RETURNS TEXT AS $$
-DECLARE v_code TEXT;
-BEGIN
-  v_code := LPAD(FLOOR(RANDOM() * 900000 + 100000)::TEXT, 6, '0');
-  INSERT INTO otp_codes (phone, code, expires_at) VALUES (p_phone, v_code, NOW() + INTERVAL '5 minutes');
-  RETURN v_code;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION verify_otp(p_phone TEXT, p_code TEXT)
-RETURNS BOOLEAN AS $$
-DECLARE v_found BOOLEAN;
-BEGIN
-  SELECT EXISTS(SELECT 1 FROM otp_codes WHERE phone = p_phone AND code = p_code AND used = 0 AND expires_at > NOW()) INTO v_found;
-  IF v_found THEN
-    UPDATE otp_codes SET used = 1 WHERE phone = p_phone AND code = p_code AND used = 0 AND expires_at > NOW();
-    DELETE FROM otp_codes WHERE phone = p_phone AND used = 1;
-    RETURN TRUE;
-  END IF;
-  RETURN FALSE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION get_user_by_phone(p_phone TEXT)
-RETURNS SETOF users AS $$
-BEGIN RETURN QUERY SELECT * FROM users WHERE ph = p_phone AND i_del = 0; END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION check_offer_duplicate(p_ttl TEXT, p_prc NUMERIC, p_loc JSONB, p_usr_id UUID)
-RETURNS BOOLEAN AS $$
-DECLARE v_dup BOOLEAN;
-BEGIN SELECT EXISTS(SELECT 1 FROM offers WHERE ttl = p_ttl AND prc = p_prc AND i_del = 0 AND usr_id != p_usr_id) INTO v_dup; RETURN v_dup; END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION calculate_commission(p_prc NUMERIC, p_pct NUMERIC)
-RETURNS NUMERIC AS $$ BEGIN RETURN ROUND(p_prc * p_pct / 100, 2); END; $$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION update_user_badge(p_uid UUID)
-RETURNS VOID AS $$
-DECLARE v_pts INTEGER; v_new_bg INTEGER;
-BEGIN
-  SELECT pt INTO v_pts FROM users WHERE id = p_uid;
-  IF v_pts IS NULL THEN RETURN; END IF;
-  IF v_pts >= 40000 THEN v_new_bg := 4;
-  ELSIF v_pts >= 30000 THEN v_new_bg := 3;
-  ELSIF v_pts >= 20000 THEN v_new_bg := 2;
-  ELSIF v_pts >= 10000 THEN v_new_bg := 1;
-  ELSE v_new_bg := 0; END IF;
-  UPDATE users SET bg = v_new_bg, bg_ts = NOW() WHERE id = p_uid AND bg != v_new_bg;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION get_pending_offers_count()
-RETURNS INTEGER AS $$ DECLARE v_cnt INTEGER; BEGIN SELECT COUNT(*) INTO v_cnt FROM offers WHERE sts = 1 AND i_del = 0; RETURN v_cnt; END; $$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION add_points(p_uid UUID, p_pts INTEGER)
-RETURNS VOID AS $$ BEGIN UPDATE users SET pt = pt + p_pts, ts_upd = NOW() WHERE id = p_uid; PERFORM update_user_badge(p_uid); END; $$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION soft_delete(p_table TEXT, p_id UUID)
-RETURNS VOID AS $$ BEGIN EXECUTE format('UPDATE %I SET i_del = 1 WHERE id = %L', p_table, p_id); END; $$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION expire_offers()
-RETURNS VOID AS $$ BEGIN UPDATE offers SET sts = 4, ts_end = NOW() WHERE sts IN (1, 2) AND i_del = 0 AND ts_crt < NOW() - INTERVAL '30 days'; END; $$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION send_appointment_reminders()
-RETURNS VOID AS $$ BEGIN
-  UPDATE appointments SET rmnd_2 = 1 WHERE sts IN (0, 1) AND i_force = 0 AND dt <= NOW() + INTERVAL '2 hours' AND dt > NOW() AND rmnd_2 = 0;
-  UPDATE appointments SET rmnd_24 = 1 WHERE sts IN (0, 1) AND i_force = 0 AND dt <= NOW() + INTERVAL '24 hours' AND dt > NOW() AND rmnd_24 = 0;
-END; $$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION create_user_from_phone(p_phone TEXT, p_nm TEXT DEFAULT '')
-RETURNS UUID AS $$
-DECLARE v_uid UUID; v_exists BOOLEAN;
-BEGIN
-  SELECT EXISTS(SELECT 1 FROM users WHERE ph = p_phone AND i_del = 0) INTO v_exists;
-  IF v_exists THEN SELECT id INTO v_uid FROM users WHERE ph = p_phone AND i_del = 0 LIMIT 1; RETURN v_uid; END IF;
-  INSERT INTO users (nm, ph, role, sts, i_del, ts_crt) VALUES (p_nm, p_phone, 0, 0, 0, NOW()) RETURNING id INTO v_uid;
-  PERFORM add_points(v_uid, 1000); RETURN v_uid;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Config Data
-INSERT INTO app_config (key, value, description) VALUES ('main', '{"pts":{"sgn":1000,"wkL":100,"addO":500,"att":300,"dlD":2000,"ref":1500,"strk":50,"soc":100,"like":{"p":5,"l":10},"shr":{"p":10,"l":5},"cmt":{"p":20,"l":3},"gft":{"max":500,"pw":1}},"pen":{"noSh":-500,"cnl3":-300,"rej3":-1000,"fRp":-2000,"ban":-40000},"spd":{"ren":500,"pin":2000,"bst":4000,"dsc5":3000,"fms":8000},"bdg":{"0":{"nm":"🔰 جديد","p":0,"d":0},"1":{"nm":"🥉 برونزي","p":10000,"d":10},"2":{"nm":"🥈 فضي","p":20000,"d":15},"3":{"nm":"🥇 ذهبي","p":30000,"d":20,"eS":1},"4":{"nm":"💎 ماسي","p":40000,"d":20,"eS":1,"fA":1}},"pkg":{"0":{"nm":"مجاني","o":5,"d":30,"pr":0},"1":{"nm":"فضي","o":15,"d":45,"pr":10},"2":{"nm":"ذهبي","o":40,"d":60,"pr":25}},"fx":{"usd_syp":15000},"com":{"sl":3,"rn":"hm","ml":2},"qta":{"u":{"o":1,"r":3,"a":3},"b":{"o":5,"r":5,"a":3}},"soc":{"fb":"","ig":"","tk":"","wa":""},"ads":{"mx":5,"dd":7,"pr":null},"rptRsn":["إعلان وهمي / غير موجود","احتيال / نصب","معلومات مضللة","مضايقة / سلوك غير لائق","عرض مكرر","آخر"],"txts":{"plg":"إقرار وتعهد إلكتروني — عقارات السويداء","warnApp":"تحذير: هذا العرض عليه مواعيد سابقة","visBlk":"تسجيل دخول مطلوب","bnRsn":"تم حظر حسابك نهائياً","frzRsn":"تم تجميد حسابك"},"catProp":{"0":{"nm":"سكني","sub":["شقة سكنية","دار عربي","فيلا","مزرعة","بناء كامل","سطح"]},"1":{"nm":"تجاري","sub":["محل تجاري","معرض","مركز تجاري","مكتب","مستودع"]},"2":{"nm":"زراعي","sub":["أرض زراعية","مزرعة دواجن","مزرعة مواشي","مشتل"]},"3":{"nm":"صناعي","sub":["منشأة صناعية","ورشة","مصنع","أرض صناعية"]}},"catVeh":{"0":{"nm":"سيارة","sub":["سيدان","دفع رباعي","هاتشباك","كوبيه","مكشوفة"]},"1":{"nm":"شاحنة","sub":["شاحنة صغيرة","شاحنة كبيرة","نقل عام"]},"2":{"nm":"دراجة نارية","sub":["دراجة عادية","دراجة رياضية","دراجة كهربائية"]},"3":{"nm":"معدات ثقيلة","sub":["جرّار","حفّارة","حصّادة","درّاسة"]},"4":{"nm":"باصات/نقل","sub":["باص سكانيا","باص 24 راكب","ميكروباص","فان"]}},"docTp":{"0":"طابو أخضر","1":"حصة سهمية-حكم محكمة","2":"حصة سهمية-كاتب بالعدل","3":"مستملك","4":"تسلسل عقود","5":"جمعيات سكنية","6":"نمرة قديمة","7":"نمرة جديدة","8":"وارد"},"brnds":["تويوتا","هوندا","نيسان","هيونداي","كيا","مرسيدس","بي إم دبليو","فولكس فاجن","رينو","فورد","شيفروليه","أخرى"],"clrs":["أبيض","أسود","فضي","رمادي","أحمر","أزرق","أخضر","أصفر","بيج","بني","ذهبي","أخرى"],"roles":{"0":{"nm":"مستخدم"},"1":{"nm":"وسيط"},"2":{"nm":"مشرف"},"3":{"nm":"نائب"},"4":{"nm":"مدير"}}}'::jsonb, 'إعدادات التطبيق الرئيسية');
-
--- ============================================================================
--- Internal permissions management (2026-06-10)
--- ============================================================================
-ALTER TABLE users
-ADD COLUMN IF NOT EXISTS perm JSONB NOT NULL DEFAULT '[]'::jsonb;
-
-CREATE OR REPLACE FUNCTION admin_update_user_permissions(
-  p_target_uid UUID,
-  p_perm JSONB DEFAULT '[]'::jsonb
-)
-RETURNS BOOLEAN AS $$
-DECLARE
-  v_admin_role INT;
-  v_item TEXT;
-  v_allowed TEXT[] := ARRAY[
-    'admin_dashboard',
-    'office_operations',
-    'manage_users',
-    'manage_permissions',
-    'review_offers',
-    'review_verifications',
-    'media_review',
-    'photography_management',
-    'photographer_tasks',
-    'fraud_suspects',
-    'manage_appointments',
-    'manage_deals',
-    'manage_payments',
-    'manage_reports',
-    'manage_config',
-    'view_analytics',
-    'broker_dashboard',
-    'broker_offers',
-    'broker_appointments',
-    'broker_deals',
-    'broker_stats',
-    'user_home',
-    'user_offers',
-    'user_requests',
-    'user_appointments',
-    'user_profile'
-  ];
-BEGIN
-  SELECT role INTO v_admin_role FROM users WHERE id = auth.uid();
-
-  IF v_admin_role IS NULL OR v_admin_role < 3 THEN
-    RAISE EXCEPTION 'FORBIDDEN: Deputy/admin role required.';
-  END IF;
-
-  IF p_perm IS NULL THEN
-    p_perm := '[]'::jsonb;
-  END IF;
-
-  IF jsonb_typeof(p_perm) <> 'array' THEN
-    RAISE EXCEPTION 'INVALID_PERMISSIONS: Expected JSON array.';
-  END IF;
-
-  FOR v_item IN SELECT jsonb_array_elements_text(p_perm)
-  LOOP
-    IF NOT (v_item = ANY(v_allowed)) THEN
-      RAISE EXCEPTION 'INVALID_PERMISSION: %', v_item;
-    END IF;
-  END LOOP;
-
-  UPDATE users
-  SET perm = p_perm,
-      ts_upd = NOW()
-  WHERE id = p_target_uid
-    AND i_del = 0;
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'USER_NOT_FOUND';
-  END IF;
-
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-REVOKE EXECUTE ON FUNCTION admin_update_user_permissions FROM anon;
-GRANT EXECUTE ON FUNCTION admin_update_user_permissions TO authenticated;
-
-
--- ============================================================================
--- Photography tasks workflow (2026-06-10)
--- ============================================================================
--- ════════════════════════════════════════════════════════════════════════════
--- Photography tasks workflow
--- Date: 2026-06-10
--- Purpose:
---   Adds a lightweight internal workflow for assigning photographers to offers,
---   uploading media, submitting to office, and approving/rejecting the media.
--- ════════════════════════════════════════════════════════════════════════════
-
-CREATE TABLE IF NOT EXISTS photography_tasks (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  off_id UUID REFERENCES offers(id) ON DELETE CASCADE,
-  photographer_id UUID REFERENCES users(id) ON DELETE SET NULL,
-  requested_by UUID REFERENCES users(id) ON DELETE SET NULL,
-  ttl TEXT NOT NULL DEFAULT '',
-  notes TEXT NOT NULL DEFAULT '',
-  loc JSONB DEFAULT '{}'::jsonb,
-  media JSONB NOT NULL DEFAULT '[]'::jsonb,
-  photographer_note TEXT NOT NULL DEFAULT '',
-  office_note TEXT NOT NULL DEFAULT '',
-  sts INTEGER NOT NULL DEFAULT 0 CHECK (sts BETWEEN 0 AND 5),
-  ts_scheduled TIMESTAMPTZ,
-  ts_submit TIMESTAMPTZ,
-  ts_done TIMESTAMPTZ,
-  ts_crt TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  ts_upd TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_photo_tasks_offer ON photography_tasks(off_id);
-CREATE INDEX IF NOT EXISTS idx_photo_tasks_photographer ON photography_tasks(photographer_id, sts);
-CREATE INDEX IF NOT EXISTS idx_photo_tasks_status ON photography_tasks(sts, ts_crt DESC);
-
-ALTER TABLE photography_tasks ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "Photography tasks read" ON photography_tasks;
-CREATE POLICY "Photography tasks read" ON photography_tasks
-FOR SELECT USING (
-  auth.uid() = photographer_id
-  OR auth.uid() = requested_by
-  OR EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role >= 2 AND i_del = 0)
-);
-
-DROP POLICY IF EXISTS "Admin can insert photography tasks" ON photography_tasks;
-CREATE POLICY "Admin can insert photography tasks" ON photography_tasks
-FOR INSERT WITH CHECK (
-  EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role >= 2 AND i_del = 0)
-);
-
-DROP POLICY IF EXISTS "Admin or photographer can update photography tasks" ON photography_tasks;
-CREATE POLICY "Admin or photographer can update photography tasks" ON photography_tasks
-FOR UPDATE USING (
-  auth.uid() = photographer_id
-  OR EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role >= 2 AND i_del = 0)
-);
-
-
--- ============================================================================
--- Admin user role/status + phone uniqueness hardening (2026-06-10)
--- ============================================================================
--- ════════════════════════════════════════════════════════════════════════════
--- Admin user role/status RPCs + phone uniqueness hardening
--- Date: 2026-06-10
--- Purpose:
---   Fix admin user role/status changes under the current dev auth model and
---   prevent duplicate user accounts for the same phone in different formats.
--- ════════════════════════════════════════════════════════════════════════════
-
-CREATE OR REPLACE FUNCTION normalize_sy_phone(p_phone TEXT)
-RETURNS TEXT AS $$
-DECLARE
-  v TEXT;
-BEGIN
-  v := COALESCE(p_phone, '');
-  v := regexp_replace(v, '[^0-9+]', '', 'g');
-
-  IF v = '' THEN
-    RETURN '';
-  END IF;
-
-  IF left(v, 1) = '+' THEN
-    IF left(v, 4) = '+963' THEN
-      RETURN v;
-    END IF;
-    RETURN v;
-  END IF;
-
-  IF left(v, 4) = '00963' THEN
-    RETURN '+963' || substring(v from 6);
-  END IF;
-
-  IF left(v, 3) = '963' THEN
-    RETURN '+' || v;
-  END IF;
-
-  IF left(v, 1) = '0' THEN
-    RETURN '+963' || substring(v from 2);
-  END IF;
-
-  IF left(v, 1) = '9' THEN
-    RETURN '+963' || v;
-  END IF;
-
-  RETURN v;
-END;
-$$ LANGUAGE plpgsql IMMUTABLE;
-
-UPDATE users
-SET ph = normalize_sy_phone(ph),
-    ts_upd = NOW()
-WHERE ph IS NOT NULL
-  AND ph <> normalize_sy_phone(ph);
-
-CREATE UNIQUE INDEX IF NOT EXISTS ux_users_normalized_phone_active
-ON users (normalize_sy_phone(ph))
-WHERE i_del = 0 AND COALESCE(ph, '') <> '';
-
-CREATE OR REPLACE FUNCTION admin_update_user_role(
-  p_admin_uid UUID,
-  p_target_uid UUID,
-  p_role INT
-)
-RETURNS BOOLEAN AS $$
-DECLARE
-  v_admin_role INT;
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  SELECT role INTO v_admin_role FROM users WHERE id = p_admin_uid AND i_del = 0;
-
-  IF v_admin_role IS NULL OR v_admin_role < 3 THEN
-    RAISE EXCEPTION 'FORBIDDEN: Deputy/admin role required.';
-  END IF;
-
-  IF p_role < 0 OR p_role > 4 THEN
-    RAISE EXCEPTION 'INVALID_ROLE';
-  END IF;
-
-  UPDATE users
-  SET role = p_role,
-      brk = CASE WHEN p_role = 1 THEN 1 ELSE brk END,
-      ts_upd = NOW()
-  WHERE id = p_target_uid
-    AND i_del = 0;
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'USER_NOT_FOUND';
-  END IF;
-
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION admin_set_user_status(
-  p_admin_uid UUID,
-  p_target_uid UUID,
-  p_status INT,
-  p_reason TEXT DEFAULT ''
-)
-RETURNS BOOLEAN AS $$
-DECLARE
-  v_admin_role INT;
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  SELECT role INTO v_admin_role FROM users WHERE id = p_admin_uid AND i_del = 0;
-
-  IF v_admin_role IS NULL OR v_admin_role < 2 THEN
-    RAISE EXCEPTION 'FORBIDDEN: Admin role required.';
-  END IF;
-
-  IF p_status < 0 OR p_status > 2 THEN
-    RAISE EXCEPTION 'INVALID_STATUS';
-  END IF;
-
-  UPDATE users
-  SET sts = p_status,
-      ban_rsn = CASE WHEN p_status = 0 THEN '' ELSE COALESCE(p_reason, '') END,
-      ts_upd = NOW()
-  WHERE id = p_target_uid
-    AND i_del = 0;
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'USER_NOT_FOUND';
-  END IF;
-
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION create_user_from_phone(p_phone TEXT, p_nm TEXT DEFAULT '')
-RETURNS UUID AS $$
-DECLARE
-  v_uid UUID;
-  v_phone TEXT;
-BEGIN
-  v_phone := normalize_sy_phone(p_phone);
-
-  SELECT id INTO v_uid
-  FROM users
-  WHERE normalize_sy_phone(ph) = v_phone
-    AND i_del = 0
-  LIMIT 1;
-
-  IF v_uid IS NOT NULL THEN
-    RETURN v_uid;
-  END IF;
-
-  INSERT INTO users (nm, ph, role, sts, i_del, ts_crt)
-  VALUES (p_nm, v_phone, 0, 0, 0, NOW())
-  RETURNING id INTO v_uid;
-
-  PERFORM add_points(v_uid, 1000);
-  RETURN v_uid;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-GRANT EXECUTE ON FUNCTION normalize_sy_phone(TEXT) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION admin_update_user_role(UUID, UUID, INT) TO authenticated, anon;
-GRANT EXECUTE ON FUNCTION admin_set_user_status(UUID, UUID, INT, TEXT) TO authenticated, anon;
-
-CREATE OR REPLACE FUNCTION admin_update_user_permissions_by_admin(
-  p_admin_uid UUID,
-  p_target_uid UUID,
-  p_perm JSONB DEFAULT '[]'::jsonb
-)
-RETURNS BOOLEAN AS $$
-DECLARE
-  v_admin_role INT;
-  v_item TEXT;
-  v_allowed TEXT[] := ARRAY[
-    'admin_dashboard',
-    'office_operations',
-    'manage_users',
-    'manage_permissions',
-    'review_offers',
-    'review_verifications',
-    'media_review',
-    'photography_management',
-    'photographer_tasks',
-    'fraud_suspects',
-    'manage_appointments',
-    'manage_deals',
-    'manage_payments',
-    'manage_reports',
-    'manage_config',
-    'view_analytics',
-    'broker_dashboard',
-    'broker_offers',
-    'broker_appointments',
-    'broker_deals',
-    'broker_stats',
-    'user_home',
-    'user_offers',
-    'user_requests',
-    'user_appointments',
-    'user_profile'
-  ];
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  SELECT role INTO v_admin_role FROM users WHERE id = p_admin_uid AND i_del = 0;
-
-  IF v_admin_role IS NULL OR v_admin_role < 3 THEN
-    RAISE EXCEPTION 'FORBIDDEN: Deputy/admin role required.';
-  END IF;
-
-  IF p_perm IS NULL THEN
-    p_perm := '[]'::jsonb;
-  END IF;
-
-  IF jsonb_typeof(p_perm) <> 'array' THEN
-    RAISE EXCEPTION 'INVALID_PERMISSIONS: Expected JSON array.';
-  END IF;
-
-  FOR v_item IN SELECT jsonb_array_elements_text(p_perm)
-  LOOP
-    IF NOT (v_item = ANY(v_allowed)) THEN
-      RAISE EXCEPTION 'INVALID_PERMISSION: %', v_item;
-    END IF;
-  END LOOP;
-
-  UPDATE users
-  SET perm = p_perm,
-      ts_upd = NOW()
-  WHERE id = p_target_uid
-    AND i_del = 0;
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'USER_NOT_FOUND';
-  END IF;
-
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-GRANT EXECUTE ON FUNCTION admin_update_user_permissions_by_admin(UUID, UUID, JSONB) TO authenticated, anon;
-
-
--- ============================================================================
--- Offer creation RPC for dev auth model (2026-06-10)
--- ============================================================================
--- ════════════════════════════════════════════════════════════════════════════
--- Offer creation RPC for current dev auth model
--- Date: 2026-06-10
--- Purpose:
---   Avoid direct INSERT failures under RLS when auth.uid() is not available
---   in the WhatsApp dev fallback flow.
--- ════════════════════════════════════════════════════════════════════════════
-
-CREATE OR REPLACE FUNCTION create_offer_internal(
-  p_user_uid UUID,
-  p_offer JSONB
-)
-RETURNS SETOF offers AS $$
-DECLARE
-  v_user users%ROWTYPE;
-  v_config JSONB;
-  v_limit INT;
-  v_used INT;
-  v_recent_deleted INT;
-  v_duplicate BOOLEAN;
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  SELECT * INTO v_user
-  FROM users
-  WHERE id = p_user_uid
-    AND i_del = 0
-    AND sts = 0;
-
-  IF v_user.id IS NULL THEN
-    RAISE EXCEPTION 'USER_NOT_ACTIVE_OR_NOT_FOUND';
-  END IF;
-
-  IF COALESCE(trim(p_offer->>'ttl'), '') = '' THEN
-    RAISE EXCEPTION 'TITLE_REQUIRED';
-  END IF;
-
-  IF COALESCE(trim(p_offer->>'contact_ph'), '') = '' THEN
-    RAISE EXCEPTION 'CONTACT_PHONE_REQUIRED';
-  END IF;
-
-  IF COALESCE((p_offer->>'prc')::NUMERIC, 0) <= 0 THEN
-    RAISE EXCEPTION 'INVALID_PRICE';
-  END IF;
-
-  IF COALESCE(v_user.role, 0) < 2 THEN
-    SELECT value INTO v_config
-    FROM app_config
-    WHERE key = 'main';
-
-    v_limit := COALESCE((v_config->'pkg'->(COALESCE(v_user.b_pkg, 0)::TEXT)->>'o')::INT,
-      CASE WHEN COALESCE(v_user.role, 0) = 1 THEN 5 ELSE 1 END);
-
-    SELECT COUNT(*) INTO v_used
-    FROM offers
-    WHERE usr_id = p_user_uid
-      AND i_del = 0
-      AND sts IN (0, 1, 2, 5);
-
-    SELECT COUNT(*) INTO v_recent_deleted
-    FROM offers
-    WHERE usr_id = p_user_uid
-      AND i_del = 1
-      AND ts_upd >= NOW() - INTERVAL '24 hours';
-
-    v_used := COALESCE(v_used, 0) + COALESCE(v_recent_deleted, 0);
-
-    IF v_used >= v_limit THEN
-      RAISE EXCEPTION 'QUOTA_EXCEEDED';
-    END IF;
-  END IF;
-
-  SELECT check_offer_duplicate(
-    COALESCE(p_offer->>'ttl', ''),
-    COALESCE((p_offer->>'prc')::NUMERIC, 0),
-    COALESCE(p_offer->'loc', '{"r":0,"d":""}'::jsonb),
-    p_user_uid
-  ) INTO v_duplicate;
-
-  IF v_duplicate THEN
-    RAISE EXCEPTION 'DUPLICATE_OFFER';
-  END IF;
-
-  RETURN QUERY
-  INSERT INTO offers (
-    usr_id,
-    brk_id,
-    brk_pct,
-    typ,
-    trx,
-    cat,
-    sub,
-    contact_ph,
-    ttl,
-    prc,
-    cur,
-    loc,
-    descript,
-    imgs,
-    vdo,
-    doc_tp,
-    doc_img,
-    exact_loc,
-    specs,
-    com,
-    sts,
-    rsn,
-    vws,
-    fvs,
-    i_pub,
-    i_soc,
-    soc_pub,
-    soc_txt,
-    i_dup,
-    dup_of,
-    avl,
-    i_del,
-    ts_crt,
-    ts_pub,
-    ts_end,
-    ts_ren
-  ) VALUES (
-    p_user_uid,
-    NULLIF(p_offer->>'brk_id', '')::UUID,
-    COALESCE((p_offer->>'brk_pct')::NUMERIC, 0),
-    COALESCE((p_offer->>'typ')::INT, 0),
-    COALESCE((p_offer->>'trx')::INT, 0),
-    COALESCE((p_offer->>'cat')::INT, 0),
-    COALESCE((p_offer->>'sub')::INT, 0),
-    COALESCE(p_offer->>'contact_ph', ''),
-    COALESCE(p_offer->>'ttl', ''),
-    COALESCE((p_offer->>'prc')::NUMERIC, 0),
-    COALESCE((p_offer->>'cur')::INT, 1),
-    COALESCE(p_offer->'loc', '{"r":0,"d":""}'::jsonb),
-    COALESCE(p_offer->>'descript', ''),
-    COALESCE(p_offer->'imgs', '[]'::jsonb),
-    COALESCE(p_offer->>'vdo', ''),
-    COALESCE((p_offer->>'doc_tp')::INT, 0),
-    COALESCE(p_offer->>'doc_img', ''),
-    COALESCE(p_offer->>'exact_loc', ''),
-    COALESCE(p_offer->'specs', '{}'::jsonb),
-    COALESCE((p_offer->>'com')::NUMERIC, 0),
-    1,
-    '',
-    0,
-    0,
-    0,
-    COALESCE((p_offer->>'i_soc')::INT, 0),
-    0,
-    COALESCE(p_offer->>'soc_txt', ''),
-    0,
-    NULLIF(p_offer->>'dup_of', '')::UUID,
-    COALESCE(p_offer->'avl', '{}'::jsonb),
-    0,
-    NOW(),
-    NULL,
-    NULL,
-    NULL
-  )
-  RETURNING *;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-GRANT EXECUTE ON FUNCTION create_offer_internal(UUID, JSONB) TO anon, authenticated;
-
-
--- ============================================================================
--- Ensure WhatsApp/SMS auth upsert uses normalized phone (2026-06-10)
--- ============================================================================
--- ════════════════════════════════════════════════════════════════════════════
--- Ensure WhatsApp/SMS auth upsert uses normalized phone
--- Date: 2026-06-10
--- Purpose:
---   The dev fallback login path calls upsert_user_after_otp, so it must use
---   normalize_sy_phone to avoid duplicated accounts for the same phone.
--- ════════════════════════════════════════════════════════════════════════════
-
-CREATE OR REPLACE FUNCTION upsert_user_after_otp(
-  p_identifier TEXT,
-  p_channel TEXT
-)
-RETURNS TABLE(user_id UUID, is_new BOOLEAN) AS $$
-DECLARE
-  v_uid UUID;
-  v_new BOOLEAN := FALSE;
-  v_identifier TEXT;
-BEGIN
-  IF p_channel = 'whatsapp' OR p_channel = 'sms' THEN
-    v_identifier := normalize_sy_phone(p_identifier);
-
-    SELECT id INTO v_uid
-    FROM users
-    WHERE normalize_sy_phone(ph) = v_identifier
-      AND i_del = 0
-    LIMIT 1;
-
-    IF v_uid IS NULL THEN
-      INSERT INTO users (nm, ph, eml, role, sts, i_del, ts_crt)
-      VALUES ('', v_identifier, '', 0, 0, 0, NOW())
-      RETURNING id INTO v_uid;
-      v_new := TRUE;
-    END IF;
-  ELSIF p_channel = 'email' THEN
-    v_identifier := LOWER(TRIM(p_identifier));
-
-    SELECT id INTO v_uid
-    FROM users
-    WHERE LOWER(COALESCE(eml, '')) = v_identifier
-      AND i_del = 0
-    LIMIT 1;
-
-    IF v_uid IS NULL THEN
-      INSERT INTO users (nm, ph, eml, role, sts, i_del, ts_crt)
-      VALUES ('', '', v_identifier, 0, 0, 0, NOW())
-      RETURNING id INTO v_uid;
-      v_new := TRUE;
-    END IF;
-  END IF;
-
-  RETURN QUERY SELECT v_uid, v_new;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-GRANT EXECUTE ON FUNCTION upsert_user_after_otp(TEXT, TEXT) TO anon, authenticated;
-
-
--- ============================================================================
--- Photography RPCs compatible with current dev auth model (2026-06-10)
--- ============================================================================
--- ════════════════════════════════════════════════════════════════════════════
--- Photography RPCs compatible with current dev auth model
--- Date: 2026-06-10
--- ════════════════════════════════════════════════════════════════════════════
-
-CREATE OR REPLACE FUNCTION create_photography_task_internal(
-  p_admin_uid UUID,
-  p_offer_id UUID,
-  p_photographer_id UUID,
-  p_notes TEXT DEFAULT '',
-  p_ts_scheduled TIMESTAMPTZ DEFAULT NULL
-)
-RETURNS SETOF photography_tasks AS $$
-DECLARE
-  v_admin_role INT;
-  v_offer offers%ROWTYPE;
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  SELECT role INTO v_admin_role FROM users WHERE id = p_admin_uid AND i_del = 0;
-  IF v_admin_role IS NULL OR v_admin_role < 2 THEN
-    RAISE EXCEPTION 'FORBIDDEN: Admin role required.';
-  END IF;
-
-  SELECT * INTO v_offer FROM offers WHERE id = p_offer_id AND i_del = 0;
-  IF v_offer.id IS NULL THEN
-    RAISE EXCEPTION 'OFFER_NOT_FOUND';
-  END IF;
-
-  RETURN QUERY
-  INSERT INTO photography_tasks (
-    off_id,
-    photographer_id,
-    requested_by,
-    ttl,
-    notes,
-    loc,
-    sts,
-    ts_scheduled,
-    ts_crt,
-    ts_upd
-  ) VALUES (
-    p_offer_id,
-    p_photographer_id,
-    p_admin_uid,
-    v_offer.ttl,
-    COALESCE(p_notes, ''),
-    COALESCE(v_offer.loc, '{}'::jsonb),
-    0,
-    p_ts_scheduled,
-    NOW(),
-    NOW()
-  )
-  RETURNING *;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION submit_photography_task_internal(
-  p_photographer_uid UUID,
-  p_task_id UUID,
-  p_media JSONB,
-  p_photographer_note TEXT DEFAULT ''
-)
-RETURNS BOOLEAN AS $$
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_photographer_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  IF jsonb_typeof(COALESCE(p_media, '[]'::jsonb)) <> 'array' THEN
-    RAISE EXCEPTION 'INVALID_MEDIA_ARRAY';
-  END IF;
-
-  UPDATE photography_tasks
-  SET media = COALESCE(p_media, '[]'::jsonb),
-      photographer_note = COALESCE(p_photographer_note, ''),
-      sts = 2,
-      ts_submit = NOW(),
-      ts_upd = NOW()
-  WHERE id = p_task_id
-    AND photographer_id = p_photographer_uid
-    AND sts IN (0, 1, 4);
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'TASK_NOT_FOUND_OR_NOT_ALLOWED';
-  END IF;
-
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION update_photography_task_status_internal(
-  p_admin_uid UUID,
-  p_task_id UUID,
-  p_status INT,
-  p_office_note TEXT DEFAULT ''
-)
-RETURNS BOOLEAN AS $$
-DECLARE
-  v_admin_role INT;
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  SELECT role INTO v_admin_role FROM users WHERE id = p_admin_uid AND i_del = 0;
-  IF v_admin_role IS NULL OR v_admin_role < 2 THEN
-    RAISE EXCEPTION 'FORBIDDEN: Admin role required.';
-  END IF;
-
-  IF p_status < 0 OR p_status > 5 THEN
-    RAISE EXCEPTION 'INVALID_STATUS';
-  END IF;
-
-  UPDATE photography_tasks
-  SET sts = p_status,
-      office_note = COALESCE(p_office_note, office_note),
-      ts_done = CASE WHEN p_status IN (3, 4, 5) THEN NOW() ELSE ts_done END,
-      ts_upd = NOW()
-  WHERE id = p_task_id;
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'TASK_NOT_FOUND';
-  END IF;
-
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION attach_photography_media_to_offer_internal(
-  p_admin_uid UUID,
-  p_task_id UUID
-)
-RETURNS BOOLEAN AS $$
-DECLARE
-  v_admin_role INT;
-  v_task photography_tasks%ROWTYPE;
-  v_existing JSONB;
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  SELECT role INTO v_admin_role FROM users WHERE id = p_admin_uid AND i_del = 0;
-  IF v_admin_role IS NULL OR v_admin_role < 2 THEN
-    RAISE EXCEPTION 'FORBIDDEN: Admin role required.';
-  END IF;
-
-  SELECT * INTO v_task FROM photography_tasks WHERE id = p_task_id;
-  IF v_task.id IS NULL THEN
-    RAISE EXCEPTION 'TASK_NOT_FOUND';
-  END IF;
-
-  IF jsonb_array_length(COALESCE(v_task.media, '[]'::jsonb)) = 0 THEN
-    RAISE EXCEPTION 'NO_MEDIA';
-  END IF;
-
-  SELECT COALESCE(imgs, '[]'::jsonb) INTO v_existing
-  FROM offers
-  WHERE id = v_task.off_id;
-
-  UPDATE offers
-  SET imgs = (
-    SELECT jsonb_agg(DISTINCT value)
-    FROM jsonb_array_elements(v_existing || v_task.media)
-  )
-  WHERE id = v_task.off_id;
-
-  UPDATE photography_tasks
-  SET sts = 3,
-      office_note = 'تم اعتماد التصوير وربط الوسائط بالعرض',
-      ts_done = NOW(),
-      ts_upd = NOW()
-  WHERE id = p_task_id;
-
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-GRANT EXECUTE ON FUNCTION create_photography_task_internal(UUID, UUID, UUID, TEXT, TIMESTAMPTZ) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION submit_photography_task_internal(UUID, UUID, JSONB, TEXT) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION update_photography_task_status_internal(UUID, UUID, INT, TEXT) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION attach_photography_media_to_offer_internal(UUID, UUID) TO anon, authenticated;
-
-
--- ============================================================================
--- Ensure app_config.main has locs key (2026-06-10)
--- ============================================================================
--- Ensure app_config.main has locs key for QA/config completeness.
-UPDATE app_config
-SET value = jsonb_set(
-  value,
-  '{locs}',
-  COALESCE(value->'locs', '[]'::jsonb),
-  true
-)
-WHERE key = 'main'
-  AND NOT (value ? 'locs');
-
-UPDATE app_config
-SET value = jsonb_set(value, '{req}', COALESCE(value->'req', '{"d":30,"warn":3,"ren":30,"purge":180}'::jsonb), true)
-WHERE key = 'main';
-
-
--- ============================================================================
--- Real-test stabilization internal RPCs (2026-06-11)
--- ============================================================================
--- ════════════════════════════════════════════════════════════════════════════
--- Real test stabilization RPCs and policy fixes
--- Date: 2026-06-11
--- Purpose:
---   Replace remaining fragile direct client writes/reads in core flows with
---   SECURITY DEFINER RPCs compatible with the current auth model.
--- ════════════════════════════════════════════════════════════════════════════
-
--- ─────────────────────────────────────────────────────────────────────────────
--- 1) Appointments read policy aligned with requester field
--- ─────────────────────────────────────────────────────────────────────────────
-DROP POLICY IF EXISTS "Related users can read appointments" ON appointments;
-CREATE POLICY "Related users can read appointments" ON appointments
-  FOR SELECT USING (
-    auth.uid() = own_id
-    OR auth.uid() = bkr_id
-    OR auth.uid() = req_uid
-    OR EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role >= 2)
-  );
-
--- ─────────────────────────────────────────────────────────────────────────────
--- 2) Generic role helpers via inline checks inside RPCs
--- ─────────────────────────────────────────────────────────────────────────────
-
-CREATE OR REPLACE FUNCTION get_offer_by_id_internal(
-  p_offer_id UUID,
-  p_user_uid UUID DEFAULT NULL
-)
-RETURNS SETOF offers AS $$
-DECLARE
-  v_role INT := 0;
-BEGIN
-  IF p_user_uid IS NOT NULL AND auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  IF p_user_uid IS NOT NULL THEN
-    SELECT COALESCE(role, 0) INTO v_role FROM users WHERE id = p_user_uid AND i_del = 0;
-  END IF;
-
-  RETURN QUERY
-  SELECT *
-  FROM offers
-  WHERE id = p_offer_id
-    AND i_del = 0
-    AND (
-      i_pub = 1
-      OR (p_user_uid IS NOT NULL AND usr_id = p_user_uid)
-      OR (p_user_uid IS NOT NULL AND v_role >= 2)
-    )
-  LIMIT 1;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION get_user_offers_internal(p_user_uid UUID)
-RETURNS SETOF offers AS $$
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  RETURN QUERY
-  SELECT * FROM offers
-  WHERE usr_id = p_user_uid
-    AND i_del = 0
-  ORDER BY ts_crt DESC;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION get_user_requests_internal(p_user_uid UUID)
-RETURNS SETOF requests AS $$
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  RETURN QUERY
-  SELECT * FROM requests
-  WHERE usr_id = p_user_uid
-    AND i_del = 0
-  ORDER BY ts_crt DESC;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION get_user_payments_internal(p_user_uid UUID)
-RETURNS SETOF payments AS $$
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  RETURN QUERY
-  SELECT * FROM payments
-  WHERE uid = p_user_uid
-  ORDER BY ts_crt DESC;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION get_user_notifications_internal(p_user_uid UUID)
-RETURNS SETOF notifications AS $$
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  RETURN QUERY
-  SELECT * FROM notifications
-  WHERE uid = p_user_uid
-    AND i_del = 0
-  ORDER BY ts_crt DESC;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION get_user_appointments_internal(p_user_uid UUID)
-RETURNS SETOF appointments AS $$
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  RETURN QUERY
-  SELECT * FROM appointments
-  WHERE req_uid = p_user_uid
-  ORDER BY dt ASC;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION get_owner_appointments_internal(p_owner_uid UUID)
-RETURNS SETOF appointments AS $$
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_owner_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  RETURN QUERY
-  SELECT * FROM appointments
-  WHERE own_id = p_owner_uid
-  ORDER BY dt ASC;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION get_broker_offers_internal(p_broker_uid UUID)
-RETURNS SETOF offers AS $$
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_broker_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  RETURN QUERY
-  SELECT * FROM offers
-  WHERE i_del = 0
-    AND (usr_id = p_broker_uid OR brk_id = p_broker_uid)
-  ORDER BY ts_crt DESC;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION get_broker_appointments_internal(p_broker_uid UUID)
-RETURNS SETOF appointments AS $$
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_broker_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  RETURN QUERY
-  SELECT DISTINCT a.*
-  FROM appointments a
-  LEFT JOIN offers o ON o.id = a.off_id
-  WHERE a.bkr_id = p_broker_uid
-     OR a.own_id = p_broker_uid
-     OR o.usr_id = p_broker_uid
-  ORDER BY dt ASC;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION get_broker_deals_internal(p_broker_uid UUID)
-RETURNS SETOF deals AS $$
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_broker_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  RETURN QUERY
-  SELECT * FROM deals
-  WHERE brk_uid = p_broker_uid
-    AND i_del = 0
-  ORDER BY ts_crt DESC;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION get_admin_pending_offers_internal(p_admin_uid UUID)
-RETURNS SETOF offers AS $$
-DECLARE
-  v_role INT;
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
-  IF v_role IS NULL OR v_role < 2 THEN
-    RAISE EXCEPTION 'FORBIDDEN';
-  END IF;
-
-  RETURN QUERY
-  SELECT * FROM offers
-  WHERE sts = 1
-    AND i_del = 0
-  ORDER BY ts_crt DESC;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION get_admin_offers_internal(p_admin_uid UUID, p_limit INT DEFAULT 100)
-RETURNS SETOF offers AS $$
-DECLARE
-  v_role INT;
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
-  IF v_role IS NULL OR v_role < 2 THEN
-    RAISE EXCEPTION 'FORBIDDEN';
-  END IF;
-
-  RETURN QUERY
-  SELECT * FROM offers
-  WHERE i_del = 0
-  ORDER BY ts_crt DESC
-  LIMIT GREATEST(COALESCE(p_limit, 100), 1);
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION get_admin_appointments_internal(p_admin_uid UUID)
-RETURNS SETOF appointments AS $$
-DECLARE
-  v_role INT;
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
-  IF v_role IS NULL OR v_role < 2 THEN
-    RAISE EXCEPTION 'FORBIDDEN';
-  END IF;
-
-  RETURN QUERY SELECT * FROM appointments ORDER BY dt DESC;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION get_admin_deals_internal(p_admin_uid UUID)
-RETURNS SETOF deals AS $$
-DECLARE
-  v_role INT;
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
-  IF v_role IS NULL OR v_role < 2 THEN
-    RAISE EXCEPTION 'FORBIDDEN';
-  END IF;
-
-  RETURN QUERY SELECT * FROM deals WHERE i_del = 0 ORDER BY ts_crt DESC;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION get_admin_payments_internal(p_admin_uid UUID)
-RETURNS SETOF payments AS $$
-DECLARE
-  v_role INT;
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
-  IF v_role IS NULL OR v_role < 2 THEN
-    RAISE EXCEPTION 'FORBIDDEN';
-  END IF;
-
-  RETURN QUERY SELECT * FROM payments ORDER BY ts_crt DESC;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION get_admin_reports_internal(p_admin_uid UUID)
-RETURNS SETOF reports AS $$
-DECLARE
-  v_role INT;
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
-  IF v_role IS NULL OR v_role < 2 THEN
-    RAISE EXCEPTION 'FORBIDDEN';
-  END IF;
-
-  RETURN QUERY SELECT * FROM reports ORDER BY ts_crt DESC;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- ─────────────────────────────────────────────────────────────────────────────
--- 3) Core write RPCs for stable real testing
--- ─────────────────────────────────────────────────────────────────────────────
-CREATE OR REPLACE FUNCTION admin_review_offer_internal(
-  p_admin_uid UUID,
-  p_offer_id UUID,
-  p_approve BOOLEAN,
-  p_reason TEXT DEFAULT ''
-)
-RETURNS BOOLEAN AS $$
-DECLARE
-  v_role INT;
-  v_owner_uid UUID;
-  v_now TIMESTAMPTZ := NOW();
-  v_rejected_count INT;
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
-  IF v_role IS NULL OR v_role < 2 THEN
-    RAISE EXCEPTION 'FORBIDDEN';
-  END IF;
-
-  SELECT usr_id INTO v_owner_uid FROM offers WHERE id = p_offer_id AND i_del = 0;
-  IF v_owner_uid IS NULL THEN
-    RAISE EXCEPTION 'OFFER_NOT_FOUND';
-  END IF;
-
-  UPDATE offers
-  SET sts = CASE WHEN p_approve THEN 2 ELSE 3 END,
-      i_pub = CASE WHEN p_approve THEN 1 ELSE 0 END,
-      rsn = CASE WHEN p_approve THEN '' ELSE COALESCE(p_reason, '') END,
-      ts_pub = CASE WHEN p_approve THEN v_now ELSE NULL END,
-      ts_upd = v_now
-  WHERE id = p_offer_id;
-
-  IF NOT p_approve THEN
-    SELECT COUNT(*) INTO v_rejected_count
-    FROM offers
-    WHERE usr_id = v_owner_uid
-      AND sts = 3
-      AND ts_upd >= NOW() - INTERVAL '30 days';
-    IF v_rejected_count > 0 AND MOD(v_rejected_count, 3) = 0 THEN
-      PERFORM add_points(v_owner_uid, -1000);
-    END IF;
-  END IF;
-
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION create_request_internal(
-  p_user_uid UUID,
-  p_request JSONB
-)
-RETURNS SETOF requests AS $$
-DECLARE
-  v_user users%ROWTYPE;
-  v_config JSONB;
-  v_limit INT;
-  v_used INT;
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  SELECT * INTO v_user FROM users WHERE id = p_user_uid AND i_del = 0 AND sts = 0;
-  IF v_user.id IS NULL THEN
-    RAISE EXCEPTION 'USER_NOT_ACTIVE_OR_NOT_FOUND';
-  END IF;
-
-  IF COALESCE(trim(p_request->>'cl_nm'), '') = '' OR COALESCE(trim(p_request->>'cl_ph'), '') = '' THEN
-    RAISE EXCEPTION 'MISSING_CLIENT_DATA';
-  END IF;
-
-  IF COALESCE(v_user.role, 0) < 2 THEN
-    SELECT value INTO v_config FROM app_config WHERE key = 'main';
-    v_limit := CASE WHEN COALESCE(v_user.role, 0) = 1
-      THEN COALESCE((v_config->'qta'->'b'->>'r')::INT, 5)
-      ELSE COALESCE((v_config->'qta'->'u'->>'r')::INT, 3)
-    END;
-
-    SELECT COUNT(*) INTO v_used
-    FROM requests
-    WHERE usr_id = p_user_uid AND i_del = 0;
-
-    IF COALESCE(v_used, 0) >= COALESCE(v_limit, 3) THEN
-      RAISE EXCEPTION 'QUOTA_EXCEEDED';
-    END IF;
-  END IF;
-
-  RETURN QUERY
-  INSERT INTO requests (
-    typ, elm, cl_nm, cl_ph, prc, cur, notes, specs,
-    usr_id, sts, matches, i_del, ts_crt
-  ) VALUES (
-    COALESCE((p_request->>'typ')::INT, 0),
-    COALESCE((p_request->>'elm')::INT, 0),
-    COALESCE(p_request->>'cl_nm', ''),
-    COALESCE(p_request->>'cl_ph', ''),
-    COALESCE((p_request->>'prc')::NUMERIC, 0),
-    COALESCE((p_request->>'cur')::INT, 1),
-    COALESCE(p_request->>'notes', ''),
-    COALESCE(p_request->'specs', '{}'::jsonb),
-    p_user_uid,
-    0,
-    COALESCE(p_request->'matches', '{}'::jsonb),
-    0,
-    NOW()
-  ) RETURNING *;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION update_request_internal(
-  p_user_uid UUID,
-  p_request_id UUID,
-  p_patch JSONB
-)
-RETURNS BOOLEAN AS $$
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  UPDATE requests
-  SET typ = COALESCE((p_patch->>'typ')::INT, typ),
-      elm = COALESCE((p_patch->>'elm')::INT, elm),
-      cl_nm = COALESCE(NULLIF(p_patch->>'cl_nm', ''), cl_nm),
-      cl_ph = COALESCE(NULLIF(p_patch->>'cl_ph', ''), cl_ph),
-      prc = COALESCE((p_patch->>'prc')::NUMERIC, prc),
-      cur = COALESCE((p_patch->>'cur')::INT, cur),
-      notes = COALESCE(p_patch->>'notes', notes),
-      specs = COALESCE(p_patch->'specs', specs)
-  WHERE id = p_request_id
-    AND usr_id = p_user_uid
-    AND i_del = 0;
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'REQUEST_NOT_FOUND_OR_NOT_ALLOWED';
-  END IF;
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION soft_delete_request_internal(
-  p_user_uid UUID,
-  p_request_id UUID
-)
-RETURNS BOOLEAN AS $$
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  UPDATE requests
-  SET i_del = 1
-  WHERE id = p_request_id
-    AND usr_id = p_user_uid
-    AND i_del = 0;
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'REQUEST_NOT_FOUND_OR_NOT_ALLOWED';
-  END IF;
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION create_payment_internal(
-  p_user_uid UUID,
-  p_payment JSONB
-)
-RETURNS SETOF payments AS $$
-DECLARE
-  v_user users%ROWTYPE;
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  SELECT * INTO v_user FROM users WHERE id = p_user_uid AND i_del = 0 AND sts = 0;
-  IF v_user.id IS NULL THEN
-    RAISE EXCEPTION 'USER_NOT_ACTIVE_OR_NOT_FOUND';
-  END IF;
-
-  IF COALESCE(trim(p_payment->>'proof'), '') = '' OR COALESCE(trim(p_payment->>'ref'), '') = '' THEN
-    RAISE EXCEPTION 'MISSING_PAYMENT_PROOF_OR_REFERENCE';
-  END IF;
-
-  RETURN QUERY
-  INSERT INTO payments (
-    uid, tp, pkg, amt, cur, mtd, channel, proof, ref, sts, appr_by, ts_crt
-  ) VALUES (
-    p_user_uid,
-    COALESCE((p_payment->>'tp')::INT, 0),
-    COALESCE((p_payment->>'pkg')::INT, 0),
-    COALESCE((p_payment->>'amt')::NUMERIC, 0),
-    COALESCE((p_payment->>'cur')::INT, 1),
-    COALESCE((p_payment->>'mtd')::INT, 0),
-    COALESCE(p_payment->>'channel', ''),
-    COALESCE(p_payment->>'proof', ''),
-    COALESCE(p_payment->>'ref', ''),
-    0,
-    NULL,
-    NOW()
-  ) RETURNING *;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION admin_reject_payment_internal(
-  p_admin_uid UUID,
-  p_payment_id UUID
-)
-RETURNS BOOLEAN AS $$
-DECLARE
-  v_role INT;
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
-  IF v_role IS NULL OR v_role < 2 THEN
-    RAISE EXCEPTION 'FORBIDDEN';
-  END IF;
-
-  UPDATE payments
-  SET sts = 2,
-      appr_by = p_admin_uid,
-      ts_upd = NOW()
-  WHERE id = p_payment_id
-    AND sts = 0;
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'PAYMENT_NOT_PENDING_OR_NOT_FOUND';
-  END IF;
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION create_report_internal(
-  p_reporter_uid UUID,
-  p_report JSONB
-)
-RETURNS SETOF reports AS $$
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_reporter_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  RETURN QUERY
-  INSERT INTO reports (
-    rep_uid, tgt_uid, tgt_tp, tgt_id, rsn, det, sts, act, act_dur, note, act_by, ts_crt
-  ) VALUES (
-    p_reporter_uid,
-    NULLIF(p_report->>'tgt_uid', '')::UUID,
-    COALESCE((p_report->>'tgt_tp')::INT, 0),
-    COALESCE(p_report->>'tgt_id', ''),
-    COALESCE((p_report->>'rsn')::INT, 0),
-    COALESCE(p_report->>'det', ''),
-    0,
-    0,
-    0,
-    '',
-    NULL,
-    NOW()
-  ) RETURNING *;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION admin_handle_report_internal(
-  p_admin_uid UUID,
-  p_report_id UUID,
-  p_action INT,
-  p_note TEXT DEFAULT '',
-  p_duration INT DEFAULT 0
-)
-RETURNS BOOLEAN AS $$
-DECLARE
-  v_role INT;
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
-  IF v_role IS NULL OR v_role < 2 THEN
-    RAISE EXCEPTION 'FORBIDDEN';
-  END IF;
-
-  UPDATE reports
-  SET sts = 1,
-      act = COALESCE(p_action, 0),
-      act_dur = COALESCE(p_duration, 0),
-      note = COALESCE(p_note, ''),
-      act_by = p_admin_uid
-  WHERE id = p_report_id;
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'REPORT_NOT_FOUND';
-  END IF;
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- ⚠️ نسخة تأسيسية قديمة — النسخة المعتمدة حالياً لهذه الدالة في:
---    supabase/migrations/2026_07_02_appointment_booking_rules.sql
---    (قواعد avl/any + فارق الساعة + إسناد المشرف + اقتراح البديل)
---    عند تهيئة قاعدة جديدة يجب تطبيق الـ migrations بعد هذا الملف بالترتيب.
-CREATE OR REPLACE FUNCTION book_appointment_internal(
-  p_user_uid UUID,
-  p_offer_id UUID,
-  p_dt TIMESTAMPTZ,
-  p_broker_id UUID DEFAULT NULL,
-  p_request_id UUID DEFAULT NULL
-)
-RETURNS SETOF appointments AS $$
-DECLARE
-  v_offer offers%ROWTYPE;
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  SELECT * INTO v_offer FROM offers WHERE id = p_offer_id AND i_del = 0;
-  IF v_offer.id IS NULL THEN
-    RAISE EXCEPTION 'OFFER_NOT_FOUND';
-  END IF;
-  IF p_user_uid = v_offer.usr_id THEN
-    RAISE EXCEPTION 'CANNOT_BOOK_OWN_OFFER';
-  END IF;
-  IF p_dt <= NOW() THEN
-    RAISE EXCEPTION 'INVALID_APPOINTMENT_TIME';
-  END IF;
-  IF EXISTS (
-    SELECT 1 FROM appointments
-    WHERE off_id = p_offer_id
-      AND req_uid = p_user_uid
-      AND dt = p_dt
-      AND sts IN (0, 1)
-  ) THEN
-    RAISE EXCEPTION 'DUPLICATE_APPOINTMENT';
-  END IF;
-
-  RETURN QUERY
-  INSERT INTO appointments (
-    off_id, req_id, req_uid, own_id, bkr_id, dt, sts,
-    fbk_own, fbk_req, i_force, rmnd_24, rmnd_2, rmnd_qtr, rmnd_end, ts_crt
-  ) VALUES (
-    p_offer_id,
-    p_request_id,
-    p_user_uid,
-    v_offer.usr_id,
-    COALESCE(p_broker_id, NULLIF(v_offer.brk_id, '')),
-    p_dt,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    NOW()
-  ) RETURNING *;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION cancel_appointment_internal(
-  p_requester_uid UUID,
-  p_appointment_id UUID,
-  p_reason TEXT DEFAULT ''
-)
-RETURNS BOOLEAN AS $$
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_requester_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  UPDATE appointments
-  SET sts = 3,
-      cnl_by = p_requester_uid,
-      cnl_rsn = COALESCE(p_reason, ''),
-      dt_end = NOW()
-  WHERE id = p_appointment_id
-    AND req_uid = p_requester_uid
-    AND sts IN (0, 1);
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'APPOINTMENT_NOT_FOUND_OR_NOT_ALLOWED';
-  END IF;
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION broker_handle_appointment_internal(
-  p_broker_uid UUID,
-  p_appointment_id UUID,
-  p_action TEXT
-)
-RETURNS BOOLEAN AS $$
-DECLARE
-  v_allowed BOOLEAN := FALSE;
-  v_now TIMESTAMPTZ := NOW();
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_broker_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  SELECT EXISTS (
-    SELECT 1 FROM appointments a
-    LEFT JOIN offers o ON o.id = a.off_id
-    WHERE a.id = p_appointment_id
-      AND (a.bkr_id = p_broker_uid OR a.own_id = p_broker_uid OR o.usr_id = p_broker_uid)
-  ) INTO v_allowed;
-
-  IF NOT v_allowed THEN
-    RAISE EXCEPTION 'APPOINTMENT_NOT_FOUND_OR_NOT_ALLOWED';
-  END IF;
-
-  IF p_action = 'confirm' THEN
-    UPDATE appointments
-    SET sts = 1,
-        fbk_own = 1,
-        fbk_own_dt = v_now
-    WHERE id = p_appointment_id;
-  ELSIF p_action = 'reject' THEN
-    UPDATE appointments
-    SET sts = 4,
-        fbk_own = 2,
-        fbk_own_dt = v_now,
-        dt_end = v_now
-    WHERE id = p_appointment_id;
-  ELSIF p_action = 'complete' THEN
-    UPDATE appointments
-    SET sts = 2,
-        dt_end = v_now
-    WHERE id = p_appointment_id;
-  ELSE
-    RAISE EXCEPTION 'INVALID_ACTION';
-  END IF;
-
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION admin_update_appointment_status_internal(
-  p_admin_uid UUID,
-  p_appointment_id UUID,
-  p_status INT,
-  p_admin_note TEXT DEFAULT ''
-)
-RETURNS BOOLEAN AS $$
-DECLARE
-  v_role INT;
-  v_requester_uid UUID;
-  v_cancel_count INT;
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
-  IF v_role IS NULL OR v_role < 2 THEN
-    RAISE EXCEPTION 'FORBIDDEN';
-  END IF;
-
-  SELECT req_uid INTO v_requester_uid FROM appointments WHERE id = p_appointment_id;
-
-  UPDATE appointments
-  SET sts = p_status,
-      admin_nt = CASE WHEN COALESCE(trim(p_admin_note), '') = '' THEN admin_nt ELSE p_admin_note END,
-      dt_end = CASE WHEN p_status >= 2 THEN NOW() ELSE dt_end END
-  WHERE id = p_appointment_id;
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'APPOINTMENT_NOT_FOUND';
-  END IF;
-
-  IF p_status = 5 AND v_requester_uid IS NOT NULL THEN
-    PERFORM add_points(v_requester_uid, -500);
-  ELSIF p_status = 3 AND v_requester_uid IS NOT NULL THEN
-    SELECT COUNT(*) INTO v_cancel_count
-    FROM appointments
-    WHERE req_uid = v_requester_uid
-      AND sts = 3
-      AND ts_crt >= NOW() - INTERVAL '30 days';
-    IF v_cancel_count > 0 AND MOD(v_cancel_count, 3) = 0 THEN
-      PERFORM add_points(v_requester_uid, -300);
-    END IF;
-  END IF;
-
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION admin_force_appointment_internal(
-  p_admin_uid UUID,
-  p_appointment_id UUID
-)
-RETURNS BOOLEAN AS $$
-DECLARE
-  v_role INT;
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
-  IF v_role IS NULL OR v_role < 2 THEN
-    RAISE EXCEPTION 'FORBIDDEN';
-  END IF;
-
-  UPDATE appointments
-  SET i_force = 1,
-      force_by = p_admin_uid,
-      sts = 1
-  WHERE id = p_appointment_id;
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'APPOINTMENT_NOT_FOUND';
-  END IF;
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION create_deal_internal(
-  p_admin_uid UUID,
-  p_deal JSONB
-)
-RETURNS SETOF deals AS $$
-DECLARE
-  v_role INT;
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
-  IF v_role IS NULL OR v_role < 2 THEN
-    RAISE EXCEPTION 'FORBIDDEN';
-  END IF;
-
-  RETURN QUERY
-  INSERT INTO deals (
-    off_id, app_id, sell_uid, buy_uid, brk_uid, fin_prc, cur,
-    com_pct, com_val, com_note, form, sts, cmpl_by, i_del, ts_crt, ts_cmpl
-  ) VALUES (
-    NULLIF(p_deal->>'off_id', '')::UUID,
-    NULLIF(p_deal->>'app_id', '')::UUID,
-    NULLIF(p_deal->>'sell_uid', '')::UUID,
-    NULLIF(p_deal->>'buy_uid', '')::UUID,
-    NULLIF(p_deal->>'brk_uid', '')::UUID,
-    COALESCE((p_deal->>'fin_prc')::NUMERIC, 0),
-    COALESCE((p_deal->>'cur')::INT, 1),
-    COALESCE((p_deal->>'com_pct')::NUMERIC, 0),
-    COALESCE((p_deal->>'com_val')::NUMERIC, 0),
-    NULLIF(p_deal->>'com_note', ''),
-    COALESCE(p_deal->'form', '{}'::jsonb),
-    COALESCE((p_deal->>'sts')::INT, 0),
-    NULL,
-    0,
-    NOW(),
-    NULL
-  ) RETURNING *;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION complete_deal_internal(
-  p_admin_uid UUID,
-  p_deal_id UUID,
-  p_commission NUMERIC DEFAULT NULL,
-  p_note TEXT DEFAULT NULL
-)
-RETURNS BOOLEAN AS $$
-DECLARE
-  v_role INT;
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
-  IF v_role IS NULL OR v_role < 2 THEN
-    RAISE EXCEPTION 'FORBIDDEN';
-  END IF;
-
-  UPDATE deals
-  SET sts = 1,
-      cmpl_by = p_admin_uid,
-      ts_cmpl = NOW(),
-      com_val = COALESCE(p_commission, com_val),
-      com_note = COALESCE(p_note, com_note)
-  WHERE id = p_deal_id
-    AND i_del = 0;
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'DEAL_NOT_FOUND';
-  END IF;
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION mark_notification_read_internal(
-  p_user_uid UUID,
-  p_notification_id UUID
-)
-RETURNS BOOLEAN AS $$
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  UPDATE notifications
-  SET i_rd = 1
-  WHERE id = p_notification_id
-    AND uid = p_user_uid;
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'NOTIFICATION_NOT_FOUND_OR_NOT_ALLOWED';
-  END IF;
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION mark_all_notifications_read_internal(p_user_uid UUID)
-RETURNS BOOLEAN AS $$
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  UPDATE notifications
-  SET i_rd = 1
-  WHERE uid = p_user_uid AND i_rd = 0;
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION create_rating_internal(
-  p_reviewer_uid UUID,
-  p_target_uid UUID,
-  p_stars INT,
-  p_comment TEXT DEFAULT ''
-)
-RETURNS BOOLEAN AS $$
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_reviewer_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  INSERT INTO ratings (reviewer_uid, target_uid, stars, comment)
-  VALUES (p_reviewer_uid, p_target_uid, p_stars, COALESCE(p_comment, ''));
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION register_daily_streak_internal(
-  p_user_uid UUID,
-  p_points INT DEFAULT 50
-)
-RETURNS JSONB AS $$
-DECLARE
-  v_current_streak INT := 0;
-  v_last_ts TIMESTAMPTZ;
-  v_now TIMESTAMPTZ := NOW();
-  v_today TEXT;
-  v_last_day TEXT;
-  v_new_streak INT;
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  SELECT COALESCE(strk, 0), strk_dt INTO v_current_streak, v_last_ts
-  FROM users
-  WHERE id = p_user_uid
-    AND i_del = 0;
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'USER_NOT_FOUND';
-  END IF;
-
-  v_today := to_char((v_now AT TIME ZONE 'UTC' + INTERVAL '3 hours')::date, 'YYYY-MM-DD');
-  IF v_last_ts IS NOT NULL THEN
-    v_last_day := to_char((v_last_ts AT TIME ZONE 'UTC' + INTERVAL '3 hours')::date, 'YYYY-MM-DD');
-  END IF;
-
-  IF v_last_day = v_today THEN
-    RETURN jsonb_build_object('streak', v_current_streak, 'changed', false, 'awarded', false);
-  END IF;
-
-  v_new_streak := CASE WHEN v_last_day IS NULL THEN 1 ELSE v_current_streak + 1 END;
-
-  UPDATE users
-  SET strk = v_new_streak,
-      strk_dt = v_now,
-      ts_upd = v_now
-  WHERE id = p_user_uid;
-
-  PERFORM add_points(p_user_uid, p_points);
-
-  RETURN jsonb_build_object('streak', v_new_streak, 'changed', true, 'awarded', true);
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION update_user_profile_internal(
-  p_user_uid UUID,
-  p_payload JSONB
-)
-RETURNS BOOLEAN AS $$
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  UPDATE users
-  SET nm = COALESCE(p_payload->>'nm', nm),
-      sid = COALESCE(p_payload->>'sid', sid),
-      ad = COALESCE(p_payload->>'ad', ad),
-      img = COALESCE(p_payload->>'img', img),
-      ts_upd = NOW()
-  WHERE id = p_user_uid
-    AND i_del = 0;
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'USER_NOT_FOUND';
-  END IF;
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION update_user_notification_settings_internal(
-  p_user_uid UUID,
-  p_ntf JSONB
-)
-RETURNS BOOLEAN AS $$
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  IF jsonb_typeof(COALESCE(p_ntf, '{}'::jsonb)) <> 'object' THEN
-    RAISE EXCEPTION 'INVALID_NOTIFICATION_SETTINGS';
-  END IF;
-
-  UPDATE users
-  SET ntf = p_ntf,
-      ts_upd = NOW()
-  WHERE id = p_user_uid
-    AND i_del = 0;
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'USER_NOT_FOUND';
-  END IF;
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION submit_broker_request_internal(
-  p_user_uid UUID,
-  p_business_name TEXT,
-  p_category INT,
-  p_experience TEXT DEFAULT '',
-  p_about TEXT DEFAULT ''
-)
-RETURNS BOOLEAN AS $$
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  UPDATE users
-  SET brk_nm = COALESCE(p_business_name, ''),
-      brk_cls = COALESCE(p_category, 0),
-      vrf = CASE WHEN vrf = 0 THEN 1 ELSE vrf END,
-      ts_upd = NOW()
-  WHERE id = p_user_uid
-    AND i_del = 0;
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'USER_NOT_FOUND';
-  END IF;
-
-  INSERT INTO activity_log (uid, action, details, ts_crt)
-  VALUES (
-    p_user_uid,
-    'broker_request',
-    jsonb_build_object(
-      'business_name', COALESCE(p_business_name, ''),
-      'category', COALESCE(p_category, 0),
-      'experience', COALESCE(p_experience, ''),
-      'about', COALESCE(p_about, '')
-    ),
-    NOW()
-  );
-
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION mark_social_published_internal(
-  p_user_uid UUID,
-  p_offer_id UUID,
-  p_text TEXT
-)
-RETURNS BOOLEAN AS $$
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  UPDATE offers
-  SET soc_pub = 1,
-      soc_txt = COALESCE(p_text, ''),
-      ts_upd = NOW()
-  WHERE id = p_offer_id
-    AND usr_id = p_user_uid
-    AND i_del = 0;
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'OFFER_NOT_FOUND_OR_NOT_ALLOWED';
-  END IF;
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION increment_offer_views_internal(p_offer_id UUID)
-RETURNS BOOLEAN AS $$
-BEGIN
-  UPDATE offers
-  SET vws = COALESCE(vws, 0) + 1
-  WHERE id = p_offer_id
-    AND i_del = 0
-    AND i_pub = 1;
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-GRANT EXECUTE ON FUNCTION get_offer_by_id_internal(UUID, UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION get_user_offers_internal(UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION get_user_requests_internal(UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION get_user_payments_internal(UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION get_user_notifications_internal(UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION get_user_appointments_internal(UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION get_owner_appointments_internal(UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION get_broker_offers_internal(UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION get_broker_appointments_internal(UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION get_broker_deals_internal(UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION get_admin_pending_offers_internal(UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION get_admin_offers_internal(UUID, INT) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION get_admin_appointments_internal(UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION get_admin_deals_internal(UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION get_admin_payments_internal(UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION get_admin_reports_internal(UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION admin_review_offer_internal(UUID, UUID, BOOLEAN, TEXT) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION create_request_internal(UUID, JSONB) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION update_request_internal(UUID, UUID, JSONB) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION soft_delete_request_internal(UUID, UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION create_payment_internal(UUID, JSONB) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION admin_reject_payment_internal(UUID, UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION create_report_internal(UUID, JSONB) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION admin_handle_report_internal(UUID, UUID, INT, TEXT, INT) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION book_appointment_internal(UUID, UUID, TIMESTAMPTZ, UUID, UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION cancel_appointment_internal(UUID, UUID, TEXT) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION broker_handle_appointment_internal(UUID, UUID, TEXT) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION admin_update_appointment_status_internal(UUID, UUID, INT, TEXT) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION admin_force_appointment_internal(UUID, UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION create_deal_internal(UUID, JSONB) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION complete_deal_internal(UUID, UUID, NUMERIC, TEXT) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION mark_notification_read_internal(UUID, UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION mark_all_notifications_read_internal(UUID) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION create_rating_internal(UUID, UUID, INT, TEXT) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION register_daily_streak_internal(UUID, INT) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION update_user_profile_internal(UUID, JSONB) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION update_user_notification_settings_internal(UUID, JSONB) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION submit_broker_request_internal(UUID, TEXT, INT, TEXT, TEXT) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION mark_social_published_internal(UUID, UUID, TEXT) TO anon, authenticated;
-GRANT EXECUTE ON FUNCTION increment_offer_views_internal(UUID) TO anon, authenticated;
-
--- ============================================================================
--- Admin Employee Management Final (2026-06-15)
--- Source mirror: supabase/migrations/2026_06_15_admin_employee_management_final.sql
--- ============================================================================
--- ══════════════════════════════════════════════════════════════════════
--- Migration: Admin Employee Management Final
--- Date: 2026-06-15
--- Purpose:
---   Final safe RPC layer for employee management inspired by Final project
---   while respecting Sweeda users table, numeric roles, usr/pwd auth model.
--- ══════════════════════════════════════════════════════════════════════
-
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
-
--- Ensure auth/password fields exist for staff accounts.
-ALTER TABLE users ADD COLUMN IF NOT EXISTS eml TEXT;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS usr TEXT;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS pwd TEXT;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS vrf INT DEFAULT 0;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS pkg_grace TIMESTAMPTZ;
-
--- Ensure final 0..6 role contract.
-ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
-ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role BETWEEN 0 AND 6);
-
-CREATE UNIQUE INDEX IF NOT EXISTS ux_users_username_active
-  ON users (LOWER(usr))
-  WHERE usr IS NOT NULL AND i_del = 0;
-
--- ────────────────────────────────────────────────────────────────────
--- Shared helpers
--- ────────────────────────────────────────────────────────────────────
-CREATE OR REPLACE FUNCTION _admin_employee_assert_actor(
-  p_admin_uid UUID,
-  p_min_role INT DEFAULT 5
-) RETURNS INT
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
+-- =====================================================================
+-- Functions — مُولّدة لمطابقة الخادم الحيّ تمامًا (2026-07-04)
+-- المصدر: functions_dump.sql (pg_get_functiondef + proacl من الكتالوج الحيّ).
+-- كل دالة: تعريف + REVOKE ALL FROM PUBLIC + GRANT بالأدوار المخوّلة فقط.
+-- =====================================================================
+
+CREATE OR REPLACE FUNCTION public._admin_employee_assert_actor(p_admin_uid uuid, p_min_role integer DEFAULT 5)
+ RETURNS integer
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
 DECLARE
   v_role INT;
 BEGIN
@@ -2376,33 +261,41 @@ BEGIN
     RAISE EXCEPTION 'ADMIN_UID_REQUIRED';
   END IF;
 
+  -- عند وجود جلسة Supabase حقيقية، نمنع mismatch.
+  -- في وضع service_role أو dev auth غالباً auth.uid() = NULL.
   IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN
     RAISE EXCEPTION 'AUTH_MISMATCH';
   END IF;
 
   SELECT role INTO v_role
-  FROM users
-  WHERE id = p_admin_uid AND i_del = 0 AND sts = 0;
+  FROM public.users
+  WHERE id = p_admin_uid
+    AND i_del = 0
+    AND sts = 0;
 
-  IF v_role IS NULL OR v_role < p_min_role THEN
+  IF v_role IS NULL THEN
+    RAISE EXCEPTION 'ADMIN_NOT_FOUND_OR_INACTIVE';
+  END IF;
+
+  IF v_role < p_min_role THEN
     RAISE EXCEPTION 'UNAUTHORIZED';
   END IF;
 
   RETURN v_role;
 END;
-$$;
+$function$
 
-CREATE OR REPLACE FUNCTION _admin_employee_log(
-  p_admin_uid UUID,
-  p_action TEXT,
-  p_target_uid UUID DEFAULT NULL,
-  p_payload JSONB DEFAULT '{}'::jsonb
-) RETURNS VOID
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
+REVOKE ALL ON FUNCTION _admin_employee_assert_actor(p_admin_uid uuid, p_min_role integer) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION _admin_employee_assert_actor(p_admin_uid uuid, p_min_role integer) TO service_role;
+
+CREATE OR REPLACE FUNCTION public._admin_employee_log(p_admin_uid uuid, p_action text, p_target_uid uuid DEFAULT NULL::uuid, p_payload jsonb DEFAULT '{}'::jsonb)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
 BEGIN
-  INSERT INTO activity_log (uid, act, det, ref_id, ref_col, ts_crt)
+  INSERT INTO public.activity_log (uid, act, det, ref_id, ref_col, ts_crt)
   VALUES (
     p_admin_uid,
     99,
@@ -2412,82 +305,144 @@ BEGIN
     NOW()
   );
 END;
-$$;
+$function$
 
--- ────────────────────────────────────────────────────────────────────
--- Read staff users for management screen
--- ────────────────────────────────────────────────────────────────────
-CREATE OR REPLACE FUNCTION get_all_staff_users(p_admin_uid UUID)
-RETURNS SETOF JSONB
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
+REVOKE ALL ON FUNCTION _admin_employee_log(p_admin_uid uuid, p_action text, p_target_uid uuid, p_payload jsonb) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION _admin_employee_log(p_admin_uid uuid, p_action text, p_target_uid uuid, p_payload jsonb) TO service_role;
+
+CREATE OR REPLACE FUNCTION public._issue_staff_session(p_user_uid uuid, p_device_id text DEFAULT ''::text, p_ip text DEFAULT ''::text, p_ttl interval DEFAULT '7 days'::interval)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
+AS $function$
+DECLARE
+  v_role INT;
+  v_token TEXT;
+  v_expires_at TIMESTAMPTZ;
+  v_session_id UUID;
+BEGIN
+  SELECT role INTO v_role
+  FROM public.users
+  WHERE id = p_user_uid
+    AND i_del = 0
+    AND sts = 0;
+
+  IF v_role IS NULL THEN
+    RAISE EXCEPTION 'USER_NOT_FOUND_OR_INACTIVE';
+  END IF;
+
+  IF v_role < 2 THEN
+    RETURN jsonb_build_object('success', false, 'error', 'NOT_STAFF');
+  END IF;
+
+  v_token := encode(gen_random_bytes(32), 'hex');
+  v_expires_at := NOW() + p_ttl;
+
+  INSERT INTO public.staff_sessions (
+    user_id,
+    token_hash,
+    role_snapshot,
+    device_id,
+    ip,
+    expires_at
+  ) VALUES (
+    p_user_uid,
+    crypt(v_token, gen_salt('bf', 8)),
+    v_role,
+    COALESCE(p_device_id, ''),
+    COALESCE(p_ip, ''),
+    v_expires_at
+  )
+  RETURNING id INTO v_session_id;
+
+  RETURN jsonb_build_object(
+    'success', true,
+    'session_id', v_session_id,
+    'session_token', v_token,
+    'expires_at', v_expires_at,
+    'role', v_role
+  );
+END;
+$function$
+
+REVOKE ALL ON FUNCTION _issue_staff_session(p_user_uid uuid, p_device_id text, p_ip text, p_ttl interval) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION _issue_staff_session(p_user_uid uuid, p_device_id text, p_ip text, p_ttl interval) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.add_points(p_uid uuid, p_pts integer)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$ BEGIN UPDATE users SET pt = pt + p_pts, ts_upd = NOW() WHERE id = p_uid; PERFORM update_user_badge(p_uid); END; $function$
+
+REVOKE ALL ON FUNCTION add_points(p_uid uuid, p_pts integer) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION add_points(p_uid uuid, p_pts integer) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.admin_create_staff_user(p_admin_uid uuid, p_full_name text, p_phone text, p_email text DEFAULT ''::text, p_username text DEFAULT ''::text, p_password text DEFAULT ''::text, p_role integer DEFAULT 4)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
+AS $function$
 DECLARE
   v_admin_role INT;
+  v_phone TEXT;
+  v_username TEXT;
+  v_name TEXT;
+  v_email TEXT;
+  v_new_id UUID;
 BEGIN
   v_admin_role := _admin_employee_assert_actor(p_admin_uid, 5);
 
-  RETURN QUERY
-    SELECT jsonb_build_object(
-      'id', u.id,
-      'nm', u.nm,
-      'ph', u.ph,
-      'eml', u.eml,
-      'ad', u.ad,
-      'role', u.role,
-      'sid', u.sid,
-      'img', u.img,
-      'pt', u.pt,
-      'bg', u.bg,
-      'bg_ts', u.bg_ts,
-      'b_pkg', u.b_pkg,
-      'pkg_end', u.pkg_end,
-      'pkg_grace', u.pkg_grace,
-      'brk', u.brk,
-      'brk_cls', u.brk_cls,
-      'brk_nm', u.brk_nm,
-      'sts', u.sts,
-      'ban_rsn', u.ban_rsn,
-      'ntf', u.ntf,
-      'stats', u.stats,
-      'wk_lgn', u.wk_lgn,
-      'strk', u.strk,
-      'strk_dt', u.strk_dt,
-      'i_del', u.i_del,
-      'perm', u.perm,
-      'ts_crt', u.ts_crt,
-      'ts_upd', u.ts_upd,
-      'vrf', u.vrf,
-      'usr', u.usr,
-      'pwd', CASE WHEN u.pwd IS NOT NULL THEN 'set' ELSE NULL END
-    )
-    FROM users u
-    WHERE u.i_del = 0
-      AND u.role IN (2, 3, 4, 5, 6)
-    ORDER BY u.role DESC, u.ts_crt DESC;
-END;
-$$;
-GRANT EXECUTE ON FUNCTION get_all_staff_users(UUID) TO anon, authenticated, service_role;
+  IF p_role NOT IN (2, 3, 4, 5) THEN
+    RAISE EXCEPTION 'INVALID_ROLE';
+  END IF;
+  IF v_admin_role < 6 AND p_role >= 5 THEN
+    RAISE EXCEPTION 'ONLY_MANAGER_CAN_CREATE_DEPUTY';
+  END IF;
 
--- ────────────────────────────────────────────────────────────────────
--- Create staff user (called by Edge Function create-user)
--- ────────────────────────────────────────────────────────────────────
-CREATE OR REPLACE FUNCTION admin_create_staff_user(
-  p_admin_uid UUID,
-  p_full_name TEXT,
-  p_phone TEXT,
-  p_email TEXT,
-  p_username TEXT,
-  p_password TEXT,
-  p_role INT,
-  p_address TEXT DEFAULT '',
-  p_sid TEXT DEFAULT '',
-  p_img TEXT DEFAULT ''
-) RETURNS JSONB
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public, extensions
-AS $$
+  v_name := app_assert_text_len(p_full_name, 'name', 2, 60);
+  v_phone := app_assert_phone(p_phone);
+  v_username := app_assert_username(p_username, FALSE);
+  PERFORM app_assert_password(p_password, 8);
+  v_email := NULLIF(app_clean_text(p_email, 120), '');
+
+  IF v_email IS NOT NULL AND v_email !~* '^[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}$' THEN
+    RAISE EXCEPTION 'EMAIL_INVALID';
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM users WHERE normalize_sy_phone(ph) = v_phone AND i_del = 0) THEN
+    RAISE EXCEPTION 'PHONE_EXISTS';
+  END IF;
+  IF v_username IS NOT NULL AND EXISTS (SELECT 1 FROM users WHERE lower(usr) = v_username AND i_del = 0) THEN
+    RAISE EXCEPTION 'USERNAME_TAKEN';
+  END IF;
+
+  INSERT INTO users (nm, ph, eml, usr, pwd, role, sts, vrf, i_del, ts_crt, ts_upd)
+  VALUES (v_name, v_phone, v_email, v_username, crypt(p_password, gen_salt('bf', 8)), p_role, 0, 0, 0, NOW(), NOW())
+  RETURNING id INTO v_new_id;
+
+  PERFORM _admin_employee_log(
+    p_admin_uid,
+    'staff_create',
+    v_new_id,
+    jsonb_build_object('role', p_role, 'phone', v_phone, 'username', v_username)
+  );
+
+  RETURN jsonb_build_object('success', true, 'user_id', v_new_id);
+END;
+$function$
+
+REVOKE ALL ON FUNCTION admin_create_staff_user(p_admin_uid uuid, p_full_name text, p_phone text, p_email text, p_username text, p_password text, p_role integer) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION admin_create_staff_user(p_admin_uid uuid, p_full_name text, p_phone text, p_email text, p_username text, p_password text, p_role integer) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.admin_create_staff_user(p_admin_uid uuid, p_full_name text, p_phone text, p_email text, p_username text, p_password text, p_role integer, p_address text DEFAULT ''::text, p_sid text DEFAULT ''::text, p_img text DEFAULT ''::text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
+AS $function$
 DECLARE
   v_admin_role INT;
   v_phone TEXT;
@@ -2557,674 +512,505 @@ BEGIN
     p_admin_uid,
     'staff_create',
     v_new_id,
-    jsonb_build_object('role', p_role, 'phone', v_phone, 'username', v_username)
+    jsonb_build_object('role', p_role, 'phone', v_phone, 'username', v_username, 'vrf', 2)
   );
 
   RETURN jsonb_build_object('success', true, 'user_id', v_new_id);
 END;
-$$;
-REVOKE ALL ON FUNCTION admin_create_staff_user(UUID, TEXT, TEXT, TEXT, TEXT, TEXT, INT) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION admin_create_staff_user(UUID, TEXT, TEXT, TEXT, TEXT, TEXT, INT) TO service_role;
+$function$
 
--- ────────────────────────────────────────────────────────────────────
--- Update staff role (called by Edge Function update-user-role)
--- ────────────────────────────────────────────────────────────────────
-CREATE OR REPLACE FUNCTION admin_update_staff_role(
-  p_admin_uid UUID,
-  p_target_uid UUID,
-  p_role INT
-) RETURNS JSONB
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
+REVOKE ALL ON FUNCTION admin_create_staff_user(p_admin_uid uuid, p_full_name text, p_phone text, p_email text, p_username text, p_password text, p_role integer, p_address text, p_sid text, p_img text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION admin_create_staff_user(p_admin_uid uuid, p_full_name text, p_phone text, p_email text, p_username text, p_password text, p_role integer, p_address text, p_sid text, p_img text) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.admin_delete_staff_user(p_admin_uid uuid, p_target_uid uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
 DECLARE
   v_admin_role INT;
   v_target_role INT;
 BEGIN
-  v_admin_role := _admin_employee_assert_actor(p_admin_uid, 5);
+  v_admin_role := public._admin_employee_assert_actor(p_admin_uid, 5);
 
-  SELECT role INTO v_target_role FROM users WHERE id = p_target_uid AND i_del = 0;
+  SELECT role INTO v_target_role
+  FROM public.users
+  WHERE id = p_target_uid
+    AND i_del = 0;
+
   IF v_target_role IS NULL THEN
     RAISE EXCEPTION 'USER_NOT_FOUND';
   END IF;
-  IF v_target_role = 6 THEN
-    RAISE EXCEPTION 'CANNOT_MODIFY_MANAGER';
-  END IF;
-  IF p_role NOT IN (2, 3, 4, 5) THEN
-    RAISE EXCEPTION 'INVALID_ROLE';
-  END IF;
-  IF v_admin_role < 6 AND (p_role >= 5 OR v_target_role >= 5) THEN
-    RAISE EXCEPTION 'ONLY_MANAGER_CAN_MANAGE_DEPUTIES';
-  END IF;
 
-  UPDATE users
-  SET role = p_role,
-      brk = CASE WHEN p_role = 1 THEN 1 ELSE brk END,
-      ts_upd = NOW()
-  WHERE id = p_target_uid AND i_del = 0;
-
-  PERFORM _admin_employee_log(
-    p_admin_uid,
-    'staff_role_update',
-    p_target_uid,
-    jsonb_build_object('old_role', v_target_role, 'new_role', p_role)
-  );
-
-  RETURN jsonb_build_object('success', true);
-END;
-$$;
-REVOKE ALL ON FUNCTION admin_update_staff_role(UUID, UUID, INT) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION admin_update_staff_role(UUID, UUID, INT) TO service_role;
-
--- ────────────────────────────────────────────────────────────────────
--- Toggle staff status (called by Edge Function toggle-user-status)
--- ────────────────────────────────────────────────────────────────────
-CREATE OR REPLACE FUNCTION admin_toggle_staff_status(
-  p_admin_uid UUID,
-  p_target_uid UUID,
-  p_status INT,
-  p_reason TEXT DEFAULT ''
-) RETURNS JSONB
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-DECLARE
-  v_admin_role INT;
-  v_target_role INT;
-BEGIN
-  v_admin_role := _admin_employee_assert_actor(p_admin_uid, 5);
-
-  SELECT role INTO v_target_role FROM users WHERE id = p_target_uid AND i_del = 0;
-  IF v_target_role IS NULL THEN
-    RAISE EXCEPTION 'USER_NOT_FOUND';
-  END IF;
-  IF v_target_role = 6 THEN
-    RAISE EXCEPTION 'CANNOT_MODIFY_MANAGER';
-  END IF;
-  IF v_admin_role < 6 AND v_target_role >= 5 THEN
-    RAISE EXCEPTION 'ONLY_MANAGER_CAN_MANAGE_DEPUTIES';
-  END IF;
-  IF p_status NOT IN (0, 1, 2) THEN
-    RAISE EXCEPTION 'INVALID_STATUS';
-  END IF;
-
-  UPDATE users
-  SET sts = p_status,
-      ban_rsn = CASE WHEN p_status IN (1, 2) THEN COALESCE(p_reason, '') ELSE '' END,
-      ts_upd = NOW()
-  WHERE id = p_target_uid AND i_del = 0;
-
-  PERFORM _admin_employee_log(
-    p_admin_uid,
-    'staff_status_update',
-    p_target_uid,
-    jsonb_build_object('status', p_status, 'reason', COALESCE(p_reason, ''))
-  );
-
-  RETURN jsonb_build_object('success', true);
-END;
-$$;
-REVOKE ALL ON FUNCTION admin_toggle_staff_status(UUID, UUID, INT, TEXT) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION admin_toggle_staff_status(UUID, UUID, INT, TEXT) TO service_role;
-
--- ────────────────────────────────────────────────────────────────────
--- Reset staff password (called by Edge Function reset-user-password)
--- ────────────────────────────────────────────────────────────────────
-CREATE OR REPLACE FUNCTION admin_reset_staff_password(
-  p_admin_uid UUID,
-  p_target_uid UUID,
-  p_new_password TEXT
-) RETURNS JSONB
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public, extensions
-AS $$
-DECLARE
-  v_admin_role INT;
-  v_target_role INT;
-BEGIN
-  v_admin_role := _admin_employee_assert_actor(p_admin_uid, 5);
-
-  SELECT role INTO v_target_role FROM users WHERE id = p_target_uid AND i_del = 0;
-  IF v_target_role IS NULL THEN
-    RAISE EXCEPTION 'USER_NOT_FOUND';
-  END IF;
-  IF v_target_role = 6 THEN
-    RAISE EXCEPTION 'CANNOT_MODIFY_MANAGER';
-  END IF;
-  IF v_admin_role < 6 AND v_target_role >= 5 THEN
-    RAISE EXCEPTION 'ONLY_MANAGER_CAN_MANAGE_DEPUTIES';
-  END IF;
-  IF LENGTH(COALESCE(p_new_password, '')) < 8 THEN
-    RAISE EXCEPTION 'PASSWORD_TOO_SHORT';
-  END IF;
-
-  UPDATE users
-  SET pwd = crypt(p_new_password, gen_salt('bf', 8)),
-      ts_upd = NOW()
-  WHERE id = p_target_uid AND i_del = 0;
-
-  PERFORM _admin_employee_log(p_admin_uid, 'staff_password_reset', p_target_uid, '{}'::jsonb);
-
-  RETURN jsonb_build_object('success', true);
-END;
-$$;
-REVOKE ALL ON FUNCTION admin_reset_staff_password(UUID, UUID, TEXT) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION admin_reset_staff_password(UUID, UUID, TEXT) TO service_role;
-
--- ────────────────────────────────────────────────────────────────────
--- Delete staff user (soft delete, called by Edge Function delete-user)
--- ────────────────────────────────────────────────────────────────────
-CREATE OR REPLACE FUNCTION admin_delete_staff_user(
-  p_admin_uid UUID,
-  p_target_uid UUID
-) RETURNS JSONB
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-DECLARE
-  v_admin_role INT;
-  v_target_role INT;
-BEGIN
-  v_admin_role := _admin_employee_assert_actor(p_admin_uid, 5);
-
-  SELECT role INTO v_target_role FROM users WHERE id = p_target_uid AND i_del = 0;
-  IF v_target_role IS NULL THEN
-    RAISE EXCEPTION 'USER_NOT_FOUND';
-  END IF;
   IF v_target_role = 6 THEN
     RAISE EXCEPTION 'CANNOT_DELETE_MANAGER';
   END IF;
+
   IF v_admin_role < 6 AND v_target_role >= 5 THEN
     RAISE EXCEPTION 'ONLY_MANAGER_CAN_MANAGE_DEPUTIES';
   END IF;
 
-  UPDATE users
+  UPDATE public.users
   SET i_del = 1,
       sts = 1,
       ts_upd = NOW()
-  WHERE id = p_target_uid AND i_del = 0;
+  WHERE id = p_target_uid
+    AND i_del = 0;
 
-  PERFORM _admin_employee_log(p_admin_uid, 'staff_delete', p_target_uid, '{}'::jsonb);
+  PERFORM public._admin_employee_log(
+    p_admin_uid,
+    'staff_delete',
+    p_target_uid,
+    '{}'::jsonb
+  );
 
   RETURN jsonb_build_object('success', true);
 END;
-$$;
-REVOKE ALL ON FUNCTION admin_delete_staff_user(UUID, UUID) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION admin_delete_staff_user(UUID, UUID) TO service_role;
+$function$
 
--- ============================================================================
--- Staff Sessions Security (2026-06-15)
--- Source mirror: supabase/migrations/2026_06_15_staff_sessions_security.sql
--- ============================================================================
--- ══════════════════════════════════════════════════════════════════════
--- Migration: Staff Sessions Security
--- Date: 2026-06-15
--- Purpose:
---   Add server-side staff sessions so sensitive employee-management Edge
---   Functions do not rely on admin_uid alone.
--- ══════════════════════════════════════════════════════════════════════
+REVOKE ALL ON FUNCTION admin_delete_staff_user(p_admin_uid uuid, p_target_uid uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION admin_delete_staff_user(p_admin_uid uuid, p_target_uid uuid) TO service_role;
 
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
-
-CREATE TABLE IF NOT EXISTS staff_sessions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  token_hash TEXT NOT NULL,
-  role_snapshot INT NOT NULL,
-  device_id TEXT DEFAULT '',
-  ip TEXT DEFAULT '',
-  revoked INT DEFAULT 0 CHECK (revoked IN (0, 1)),
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  last_used_at TIMESTAMPTZ,
-  expires_at TIMESTAMPTZ NOT NULL
-);
-
-CREATE INDEX IF NOT EXISTS idx_staff_sessions_user_active
-  ON staff_sessions (user_id, expires_at DESC)
-  WHERE revoked = 0;
-
-CREATE INDEX IF NOT EXISTS idx_staff_sessions_expiry
-  ON staff_sessions (expires_at)
-  WHERE revoked = 0;
-
--- Internal helper: creates a session and returns the plain token once.
-CREATE OR REPLACE FUNCTION _issue_staff_session(
-  p_user_uid UUID,
-  p_device_id TEXT DEFAULT '',
-  p_ip TEXT DEFAULT '',
-  p_ttl INTERVAL DEFAULT INTERVAL '7 days'
-) RETURNS JSONB
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public, extensions
-AS $$
-DECLARE
-  v_role INT;
-  v_token TEXT;
-  v_expires_at TIMESTAMPTZ;
-  v_session_id UUID;
-BEGIN
-  SELECT role INTO v_role
-  FROM users
-  WHERE id = p_user_uid
-    AND i_del = 0
-    AND sts = 0;
-
-  IF v_role IS NULL THEN
-    RAISE EXCEPTION 'USER_NOT_FOUND_OR_INACTIVE';
-  END IF;
-
-  IF v_role < 2 THEN
-    RETURN jsonb_build_object('success', false, 'error', 'NOT_STAFF');
-  END IF;
-
-  v_token := encode(gen_random_bytes(32), 'hex');
-  v_expires_at := NOW() + p_ttl;
-
-  INSERT INTO staff_sessions (
-    user_id,
-    token_hash,
-    role_snapshot,
-    device_id,
-    ip,
-    expires_at
-  ) VALUES (
-    p_user_uid,
-    crypt(v_token, gen_salt('bf', 8)),
-    v_role,
-    COALESCE(p_device_id, ''),
-    COALESCE(p_ip, ''),
-    v_expires_at
-  ) RETURNING id INTO v_session_id;
-
-  RETURN jsonb_build_object(
-    'success', true,
-    'session_id', v_session_id,
-    'session_token', v_token,
-    'expires_at', v_expires_at,
-    'role', v_role
-  );
-END;
-$$;
-
-REVOKE ALL ON FUNCTION _issue_staff_session(UUID, TEXT, TEXT, INTERVAL) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION _issue_staff_session(UUID, TEXT, TEXT, INTERVAL) TO service_role;
-
--- Validates a staff/admin session token.
-CREATE OR REPLACE FUNCTION validate_staff_session(
-  p_user_uid UUID,
-  p_token TEXT,
-  p_min_role INT DEFAULT 5
-) RETURNS JSONB
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public, extensions
-AS $$
-DECLARE
-  v_session RECORD;
-  v_user RECORD;
-BEGIN
-  IF p_user_uid IS NULL THEN
-    RETURN jsonb_build_object('success', false, 'error', 'USER_UID_REQUIRED');
-  END IF;
-
-  IF COALESCE(p_token, '') = '' THEN
-    RETURN jsonb_build_object('success', false, 'error', 'SESSION_TOKEN_REQUIRED');
-  END IF;
-
-  SELECT id, role, sts, i_del INTO v_user
-  FROM users
-  WHERE id = p_user_uid
-    AND i_del = 0;
-
-  IF v_user IS NULL THEN
-    RETURN jsonb_build_object('success', false, 'error', 'USER_NOT_FOUND');
-  END IF;
-
-  IF v_user.sts <> 0 THEN
-    RETURN jsonb_build_object('success', false, 'error', 'USER_INACTIVE');
-  END IF;
-
-  IF v_user.role < p_min_role THEN
-    RETURN jsonb_build_object('success', false, 'error', 'UNAUTHORIZED');
-  END IF;
-
-  FOR v_session IN
-    SELECT id, token_hash, expires_at
-    FROM staff_sessions
-    WHERE user_id = p_user_uid
-      AND revoked = 0
-      AND expires_at > NOW()
-    ORDER BY created_at DESC
-  LOOP
-    IF v_session.token_hash = crypt(p_token, v_session.token_hash) THEN
-      UPDATE staff_sessions
-      SET last_used_at = NOW()
-      WHERE id = v_session.id;
-
-      RETURN jsonb_build_object(
-        'success', true,
-        'user_id', p_user_uid,
-        'role', v_user.role,
-        'session_id', v_session.id,
-        'expires_at', v_session.expires_at
-      );
-    END IF;
-  END LOOP;
-
-  RETURN jsonb_build_object('success', false, 'error', 'INVALID_SESSION');
-END;
-$$;
-
-REVOKE ALL ON FUNCTION validate_staff_session(UUID, TEXT, INT) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION validate_staff_session(UUID, TEXT, INT) TO service_role;
-
-CREATE OR REPLACE FUNCTION revoke_staff_session(
-  p_user_uid UUID,
-  p_token TEXT
-) RETURNS BOOLEAN
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public, extensions
-AS $$
-DECLARE
-  v_session RECORD;
-BEGIN
-  IF p_user_uid IS NULL OR COALESCE(p_token, '') = '' THEN
-    RETURN FALSE;
-  END IF;
-
-  FOR v_session IN
-    SELECT id, token_hash
-    FROM staff_sessions
-    WHERE user_id = p_user_uid
-      AND revoked = 0
-  LOOP
-    IF v_session.token_hash = crypt(p_token, v_session.token_hash) THEN
-      UPDATE staff_sessions SET revoked = 1 WHERE id = v_session.id;
-      RETURN TRUE;
-    END IF;
-  END LOOP;
-
-  RETURN FALSE;
-END;
-$$;
-
-REVOKE ALL ON FUNCTION revoke_staff_session(UUID, TEXT) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION revoke_staff_session(UUID, TEXT) TO anon, authenticated, service_role;
-
-CREATE OR REPLACE FUNCTION revoke_all_staff_sessions(
-  p_user_uid UUID
-) RETURNS INT
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public, extensions
-AS $$
-DECLARE
-  v_count INT;
-BEGIN
-  UPDATE staff_sessions
-  SET revoked = 1
-  WHERE user_id = p_user_uid
-    AND revoked = 0;
-
-  GET DIAGNOSTICS v_count = ROW_COUNT;
-  RETURN v_count;
-END;
-$$;
-
-REVOKE ALL ON FUNCTION revoke_all_staff_sessions(UUID) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION revoke_all_staff_sessions(UUID) TO service_role;
-
--- Re-issue login_with_password with optional staff session info.
-CREATE OR REPLACE FUNCTION login_with_password(
-  p_identifier TEXT,
-  p_password TEXT
-) RETURNS JSONB
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public, extensions
-AS $$
-DECLARE
-  v_user RECORD;
-  v_identifier TEXT;
-  v_session JSONB := NULL;
-BEGIN
-  v_identifier := LOWER(TRIM(p_identifier));
-
-  SELECT id, nm, role, pwd, sts, i_del INTO v_user
-  FROM users
-  WHERE (LOWER(usr) = v_identifier
-         OR normalize_sy_phone(ph) = normalize_sy_phone(v_identifier))
-    AND i_del = 0
-  LIMIT 1;
-
-  IF v_user IS NULL THEN
-    RAISE EXCEPTION 'USER_NOT_FOUND' USING HINT = 'لم يتم العثور على حساب بهذا الاسم أو الرقم';
-  END IF;
-
-  IF v_user.pwd IS NULL THEN
-    RAISE EXCEPTION 'NO_PASSWORD_SET' USING HINT = 'لم يتم تعيين كلمة مرور لهذا الحساب، سجّل دخولك عبر واتساب أولاً';
-  END IF;
-
-  IF v_user.sts = 2 THEN
-    RAISE EXCEPTION 'USER_BANNED';
-  END IF;
-
-  IF v_user.sts = 1 THEN
-    RAISE EXCEPTION 'USER_FROZEN';
-  END IF;
-
-  IF v_user.pwd != crypt(p_password, v_user.pwd) THEN
-    RAISE EXCEPTION 'WRONG_PASSWORD' USING HINT = 'كلمة المرور غير صحيحة';
-  END IF;
-
-  IF v_user.role >= 2 THEN
-    v_session := _issue_staff_session(v_user.id, '', '', INTERVAL '7 days');
-  END IF;
-
-  RETURN jsonb_build_object(
-    'success', true,
-    'user_id', v_user.id,
-    'role', v_user.role,
-    'nm', v_user.nm,
-    'staff_session', v_session
-  );
-END;
-$$;
-
-GRANT EXECUTE ON FUNCTION login_with_password(TEXT, TEXT) TO anon, authenticated, service_role;
-
--- ============================================================================
--- Lock Legacy Admin RPCs (2026-06-15)
--- Source mirror: supabase/migrations/2026_06_15_lock_legacy_admin_rpcs.sql
--- ============================================================================
--- ══════════════════════════════════════════════════════════════════════
--- Migration: Lock Legacy Admin RPCs
--- Date: 2026-06-15
--- Purpose:
---   After moving role/status/permission changes to staff-session protected
---   Edge Functions, remove direct client access to legacy sensitive RPCs.
--- ══════════════════════════════════════════════════════════════════════
-
--- These functions remain available to service_role Edge Functions only.
-REVOKE ALL ON FUNCTION admin_update_user_role(UUID, UUID, INT) FROM PUBLIC;
-REVOKE ALL ON FUNCTION admin_update_user_role(UUID, UUID, INT) FROM anon;
-REVOKE ALL ON FUNCTION admin_update_user_role(UUID, UUID, INT) FROM authenticated;
-GRANT EXECUTE ON FUNCTION admin_update_user_role(UUID, UUID, INT) TO service_role;
-
-REVOKE ALL ON FUNCTION admin_set_user_status(UUID, UUID, INT, TEXT) FROM PUBLIC;
-REVOKE ALL ON FUNCTION admin_set_user_status(UUID, UUID, INT, TEXT) FROM anon;
-REVOKE ALL ON FUNCTION admin_set_user_status(UUID, UUID, INT, TEXT) FROM authenticated;
-GRANT EXECUTE ON FUNCTION admin_set_user_status(UUID, UUID, INT, TEXT) TO service_role;
-
-REVOKE ALL ON FUNCTION admin_update_user_permissions_by_admin(UUID, UUID, JSONB) FROM PUBLIC;
-REVOKE ALL ON FUNCTION admin_update_user_permissions_by_admin(UUID, UUID, JSONB) FROM anon;
-REVOKE ALL ON FUNCTION admin_update_user_permissions_by_admin(UUID, UUID, JSONB) FROM authenticated;
-GRANT EXECUTE ON FUNCTION admin_update_user_permissions_by_admin(UUID, UUID, JSONB) TO service_role;
-
--- soft_delete was already locked in previous patch; keep it explicit here.
-REVOKE ALL ON FUNCTION soft_delete(TEXT, UUID) FROM PUBLIC;
-REVOKE ALL ON FUNCTION soft_delete(TEXT, UUID) FROM anon;
-REVOKE ALL ON FUNCTION soft_delete(TEXT, UUID) FROM authenticated;
-GRANT EXECUTE ON FUNCTION soft_delete(TEXT, UUID) TO service_role;
-
--- ============================================================================
--- Admin Dashboard Stats RPC (2026-06-15)
--- Source mirror: supabase/migrations/2026_06_15_admin_dashboard_stats.sql
--- ============================================================================
--- ══════════════════════════════════════════════════════════════════════
--- Migration: Admin Dashboard Stats RPC
--- Date: 2026-06-15
--- Purpose:
---   Replace client-side list loading for admin dashboard counters with one
---   aggregate SECURITY DEFINER RPC.
--- ══════════════════════════════════════════════════════════════════════
-
-CREATE OR REPLACE FUNCTION get_admin_dashboard_stats(p_admin_uid UUID)
-RETURNS JSONB
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public, extensions
-AS $$
+CREATE OR REPLACE FUNCTION public.admin_force_appointment_internal(p_admin_uid uuid, p_appointment_id uuid)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
 DECLARE
   v_role INT;
 BEGIN
   IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN
-    RAISE EXCEPTION 'AUTH_MISMATCH';
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
   END IF;
-
-  SELECT role INTO v_role
-  FROM users
-  WHERE id = p_admin_uid
-    AND i_del = 0
-    AND sts = 0;
-
+  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
   IF v_role IS NULL OR v_role < 4 THEN
-    RAISE EXCEPTION 'UNAUTHORIZED';
+    RAISE EXCEPTION 'FORBIDDEN';
   END IF;
 
-  RETURN jsonb_build_object(
-    'totalOffers', (SELECT COUNT(*) FROM offers WHERE i_del = 0),
-    'pendingOffers', (SELECT COUNT(*) FROM offers WHERE sts = 1 AND i_del = 0),
-    'publishedOffers', (SELECT COUNT(*) FROM offers WHERE sts = 2 AND i_del = 0),
+  UPDATE appointments
+  SET i_force = 1, force_by = p_admin_uid, sts = 1
+  WHERE id = p_appointment_id;
 
-    'totalUsers', (SELECT COUNT(*) FROM users WHERE i_del = 0),
-    'activeUsers', (SELECT COUNT(*) FROM users WHERE sts = 0 AND i_del = 0),
-    'bannedUsers', (SELECT COUNT(*) FROM users WHERE sts = 2 AND i_del = 0),
-    'brokers', (SELECT COUNT(*) FROM users WHERE role = 1 AND i_del = 0),
+  IF NOT FOUND THEN RAISE EXCEPTION 'APPOINTMENT_NOT_FOUND'; END IF;
+  RETURN TRUE;
+END;
+$function$
 
-    'totalDeals', (SELECT COUNT(*) FROM deals WHERE i_del = 0),
-    'completedDeals', (SELECT COUNT(*) FROM deals WHERE sts IN (1, 2) AND i_del = 0),
-    'totalCommission', COALESCE((SELECT SUM(com_val) FROM deals WHERE sts IN (1, 2) AND i_del = 0), 0),
+REVOKE ALL ON FUNCTION admin_force_appointment_internal(p_admin_uid uuid, p_appointment_id uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION admin_force_appointment_internal(p_admin_uid uuid, p_appointment_id uuid) TO service_role;
 
-    'totalAppointments', (SELECT COUNT(*) FROM appointments),
-    'completedAppointments', (SELECT COUNT(*) FROM appointments WHERE sts = 2),
+CREATE OR REPLACE FUNCTION public.admin_handle_report_internal(p_admin_uid uuid, p_report_id uuid, p_action integer, p_note text DEFAULT ''::text, p_duration integer DEFAULT 0)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE
+  v_role INT;
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
+  IF v_role IS NULL OR v_role < 4 THEN
+    RAISE EXCEPTION 'FORBIDDEN';
+  END IF;
 
-    'pendingPayments', (SELECT COUNT(*) FROM payments WHERE sts = 0),
-    'approvedPayments', (SELECT COUNT(*) FROM payments WHERE sts IN (1, 2)),
-    'openReports', (SELECT COUNT(*) FROM reports WHERE sts = 0),
-    'pendingVerifications', (SELECT COUNT(*) FROM users WHERE vrf = 1 AND i_del = 0)
+  UPDATE reports
+  SET sts = 1,
+      act = COALESCE(p_action, 0),
+      act_dur = COALESCE(p_duration, 0),
+      note = COALESCE(p_note, ''),
+      act_by = p_admin_uid
+  WHERE id = p_report_id;
+
+  IF NOT FOUND THEN RAISE EXCEPTION 'REPORT_NOT_FOUND'; END IF;
+  RETURN TRUE;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION admin_handle_report_internal(p_admin_uid uuid, p_report_id uuid, p_action integer, p_note text, p_duration integer) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION admin_handle_report_internal(p_admin_uid uuid, p_report_id uuid, p_action integer, p_note text, p_duration integer) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.admin_reject_payment_internal(p_admin_uid uuid, p_payment_id uuid)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE v_role INT;
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN RAISE EXCEPTION 'AUTH_MISMATCH'; END IF;
+  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
+  IF v_role IS NULL OR v_role < 5 THEN RAISE EXCEPTION 'NOT_AUTHORIZED'; END IF;
+  UPDATE payments SET sts = 2, appr_by = p_admin_uid WHERE id = p_payment_id AND sts = 0;
+  IF FOUND THEN
+    PERFORM public.log_admin_action(p_admin_uid, 106, 'رفض إيصال التحويل البنكي والدفعة', p_payment_id::TEXT, 'payments');
+  END IF;
+  RETURN FOUND;
+END; $function$
+
+REVOKE ALL ON FUNCTION admin_reject_payment_internal(p_admin_uid uuid, p_payment_id uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION admin_reject_payment_internal(p_admin_uid uuid, p_payment_id uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.admin_reset_staff_password(p_admin_uid uuid, p_target_uid uuid, p_new_password text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
+AS $function$
+DECLARE
+  v_admin_role INT;
+  v_target_role INT;
+BEGIN
+  v_admin_role := public._admin_employee_assert_actor(p_admin_uid, 5);
+
+  SELECT role INTO v_target_role
+  FROM public.users
+  WHERE id = p_target_uid
+    AND i_del = 0;
+
+  IF v_target_role IS NULL THEN
+    RAISE EXCEPTION 'USER_NOT_FOUND';
+  END IF;
+
+  IF v_target_role = 6 THEN
+    RAISE EXCEPTION 'CANNOT_MODIFY_MANAGER';
+  END IF;
+
+  IF v_admin_role < 6 AND v_target_role >= 5 THEN
+    RAISE EXCEPTION 'ONLY_MANAGER_CAN_MANAGE_DEPUTIES';
+  END IF;
+
+  IF LENGTH(COALESCE(p_new_password, '')) < 8 THEN
+    RAISE EXCEPTION 'PASSWORD_TOO_SHORT';
+  END IF;
+
+  UPDATE public.users
+  SET pwd = crypt(p_new_password, gen_salt('bf', 8)),
+      ts_upd = NOW()
+  WHERE id = p_target_uid
+    AND i_del = 0;
+
+  PERFORM public._admin_employee_log(
+    p_admin_uid,
+    'staff_password_reset',
+    p_target_uid,
+    '{}'::jsonb
   );
+
+  RETURN jsonb_build_object('success', true);
 END;
-$$;
+$function$
 
-GRANT EXECUTE ON FUNCTION get_admin_dashboard_stats(UUID) TO anon, authenticated, service_role;
+REVOKE ALL ON FUNCTION admin_reset_staff_password(p_admin_uid uuid, p_target_uid uuid, p_new_password text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION admin_reset_staff_password(p_admin_uid uuid, p_target_uid uuid, p_new_password text) TO service_role;
 
-
-
--- ============================================================================
--- Input Validation & Abuse Hardening (2026-06-15)
--- Source mirror: supabase/migrations/2026_06_15_input_validation_hardening.sql
--- ============================================================================
--- ══════════════════════════════════════════════════════════════════════
--- Migration: Input Validation & Abuse Hardening
--- Date: 2026-06-15
--- Purpose:
---   Add server-side input validation/sanitization helpers and patch key RPCs
---   so the server rejects malformed/abusive input even if the client UI is bypassed.
---
--- Notes:
---   This version preserves the current production logic for offer quotas,
---   package grace, and offers.added_by while adding validation.
--- ══════════════════════════════════════════════════════════════════════
-
-CREATE OR REPLACE FUNCTION app_clean_text(p_value TEXT, p_max_len INT DEFAULT 1000)
-RETURNS TEXT
-LANGUAGE plpgsql
-IMMUTABLE
-AS $$
-DECLARE
-  v TEXT;
+CREATE OR REPLACE FUNCTION public.admin_review_offer_internal(p_admin_uid uuid, p_offer_id uuid, p_approve boolean, p_reject_reason text DEFAULT NULL::text)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE v_role INT;
 BEGIN
-  v := COALESCE(p_value, '');
-  v := regexp_replace(v, '[[:cntrl:]]', '', 'g');
-  v := regexp_replace(v, '\s+', ' ', 'g');
-  v := btrim(v);
-  IF p_max_len IS NOT NULL AND p_max_len > 0 AND length(v) > p_max_len THEN
-    v := substring(v from 1 for p_max_len);
-  END IF;
-  RETURN v;
-END;
-$$;
-
-CREATE OR REPLACE FUNCTION app_assert_text_len(
-  p_value TEXT,
-  p_field TEXT,
-  p_min INT DEFAULT 0,
-  p_max INT DEFAULT 1000
-) RETURNS TEXT
-LANGUAGE plpgsql
-IMMUTABLE
-AS $$
-DECLARE
-  v TEXT;
-BEGIN
-  v := app_clean_text(p_value, p_max + 1);
-  IF length(v) < p_min THEN
-    RAISE EXCEPTION '%_TOO_SHORT', upper(p_field);
-  END IF;
-  IF length(v) > p_max THEN
-    RAISE EXCEPTION '%_TOO_LONG', upper(p_field);
-  END IF;
-  IF v ~ '[<>]' THEN
-    RAISE EXCEPTION '%_INVALID_CHARS', upper(p_field);
-  END IF;
-  RETURN v;
-END;
-$$;
-
-CREATE OR REPLACE FUNCTION app_assert_username(p_username TEXT, p_required BOOLEAN DEFAULT TRUE)
-RETURNS TEXT
-LANGUAGE plpgsql
-IMMUTABLE
-AS $$
-DECLARE
-  v TEXT;
-BEGIN
-  v := lower(btrim(COALESCE(p_username, '')));
-  IF v = '' THEN
-    IF p_required THEN
-      RAISE EXCEPTION 'USERNAME_REQUIRED';
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN RAISE EXCEPTION 'AUTH_MISMATCH'; END IF;
+  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
+  IF v_role IS NULL OR v_role < 4 THEN RAISE EXCEPTION 'NOT_AUTHORIZED'; END IF;
+  IF p_approve THEN
+    UPDATE offers SET sts = 2, i_pub = 1, ts_pub = NOW() WHERE id = p_offer_id AND i_del = 0;
+    PERFORM public.log_admin_action(p_admin_uid, 101, 'اعتماد العرض العقاري ونشره للعموم', p_offer_id::TEXT, 'offers');
+  ELSE
+    IF COALESCE(trim(p_reject_reason), '') = '' THEN
+      RAISE EXCEPTION 'REJECTION_REASON_REQUIRED';
     END IF;
-    RETURN NULL;
+    UPDATE offers SET sts = 3, rsn = trim(p_reject_reason), i_pub = 0 WHERE id = p_offer_id AND i_del = 0;
+    PERFORM public.log_admin_action(p_admin_uid, 102, 'رفض العرض العقاري: ' || trim(p_reject_reason), p_offer_id::TEXT, 'offers');
   END IF;
-  IF length(v) < 3 OR length(v) > 30 THEN
-    RAISE EXCEPTION 'USERNAME_LENGTH';
-  END IF;
-  IF NOT v ~ '^[a-z0-9_.]+$' THEN
-    RAISE EXCEPTION 'USERNAME_INVALID_CHARS';
-  END IF;
-  RETURN v;
-END;
-$$;
+  RETURN FOUND;
+END; $function$
 
-CREATE OR REPLACE FUNCTION app_assert_password(p_password TEXT, p_min INT DEFAULT 8)
-RETURNS TEXT
-LANGUAGE plpgsql
-IMMUTABLE
-AS $$
+REVOKE ALL ON FUNCTION admin_review_offer_internal(p_admin_uid uuid, p_offer_id uuid, p_approve boolean, p_reject_reason text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION admin_review_offer_internal(p_admin_uid uuid, p_offer_id uuid, p_approve boolean, p_reject_reason text) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.admin_set_user_status(p_admin_uid uuid, p_target_uid uuid, p_status integer, p_reason text DEFAULT ''::text)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_admin_role INT;
+  v_target_role INT;
+BEGIN
+  v_admin_role := public._admin_employee_assert_actor(p_admin_uid, 4);
+
+  SELECT role INTO v_target_role
+  FROM public.users
+  WHERE id = p_target_uid
+    AND i_del = 0;
+
+  IF v_target_role IS NULL THEN
+    RAISE EXCEPTION 'USER_NOT_FOUND';
+  END IF;
+
+  IF v_target_role = 6 THEN
+    RAISE EXCEPTION 'CANNOT_MODIFY_MANAGER';
+  END IF;
+
+  IF v_admin_role < 6 AND v_target_role >= 5 THEN
+    RAISE EXCEPTION 'ONLY_MANAGER_CAN_MANAGE_DEPUTIES';
+  END IF;
+
+  IF p_status NOT IN (0, 1, 2) THEN
+    RAISE EXCEPTION 'INVALID_STATUS';
+  END IF;
+
+  UPDATE public.users
+  SET sts = p_status,
+      ban_rsn = CASE
+        WHEN p_status IN (1, 2) THEN COALESCE(p_reason, '')
+        ELSE ''
+      END,
+      ts_upd = NOW()
+  WHERE id = p_target_uid
+    AND i_del = 0;
+
+  PERFORM public._admin_employee_log(
+    p_admin_uid,
+    'legacy_user_status_update',
+    p_target_uid,
+    jsonb_build_object(
+      'status', p_status,
+      'reason', COALESCE(p_reason, '')
+    )
+  );
+
+  RETURN FOUND;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION admin_set_user_status(p_admin_uid uuid, p_target_uid uuid, p_status integer, p_reason text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION admin_set_user_status(p_admin_uid uuid, p_target_uid uuid, p_status integer, p_reason text) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.admin_toggle_staff_status(p_admin_uid uuid, p_target_uid uuid, p_status integer, p_reason text DEFAULT ''::text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_admin_role INT;
+  v_target_role INT;
+BEGIN
+  v_admin_role := public._admin_employee_assert_actor(p_admin_uid, 5);
+
+  SELECT role INTO v_target_role
+  FROM public.users
+  WHERE id = p_target_uid
+    AND i_del = 0;
+
+  IF v_target_role IS NULL THEN
+    RAISE EXCEPTION 'USER_NOT_FOUND';
+  END IF;
+
+  IF v_target_role = 6 THEN
+    RAISE EXCEPTION 'CANNOT_MODIFY_MANAGER';
+  END IF;
+
+  IF v_admin_role < 6 AND v_target_role >= 5 THEN
+    RAISE EXCEPTION 'ONLY_MANAGER_CAN_MANAGE_DEPUTIES';
+  END IF;
+
+  IF p_status NOT IN (0, 1, 2) THEN
+    RAISE EXCEPTION 'INVALID_STATUS';
+  END IF;
+
+  UPDATE public.users
+  SET sts = p_status,
+      ban_rsn = CASE
+        WHEN p_status IN (1, 2) THEN COALESCE(p_reason, '')
+        ELSE ''
+      END,
+      ts_upd = NOW()
+  WHERE id = p_target_uid
+    AND i_del = 0;
+
+  PERFORM public._admin_employee_log(
+    p_admin_uid,
+    'staff_status_update',
+    p_target_uid,
+    jsonb_build_object(
+      'status', p_status,
+      'reason', COALESCE(p_reason, '')
+    )
+  );
+
+  RETURN jsonb_build_object('success', true);
+END;
+$function$
+
+REVOKE ALL ON FUNCTION admin_toggle_staff_status(p_admin_uid uuid, p_target_uid uuid, p_status integer, p_reason text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION admin_toggle_staff_status(p_admin_uid uuid, p_target_uid uuid, p_status integer, p_reason text) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.admin_update_appointment_status_internal(p_admin_uid uuid, p_appointment_id uuid, p_status integer, p_admin_note text DEFAULT ''::text)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE v_role INT;
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN RAISE EXCEPTION 'AUTH_MISMATCH'; END IF;
+  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
+  IF v_role IS NULL OR v_role < 3 THEN RAISE EXCEPTION 'NOT_AUTHORIZED'; END IF;
+  UPDATE appointments SET sts = p_status, admin_nt = COALESCE(p_admin_note, '') WHERE id = p_appointment_id;
+  RETURN FOUND;
+END; $function$
+
+REVOKE ALL ON FUNCTION admin_update_appointment_status_internal(p_admin_uid uuid, p_appointment_id uuid, p_status integer, p_admin_note text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION admin_update_appointment_status_internal(p_admin_uid uuid, p_appointment_id uuid, p_status integer, p_admin_note text) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.admin_update_staff_role(p_admin_uid uuid, p_target_uid uuid, p_role integer)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_admin_role INT;
+  v_target_role INT;
+BEGIN
+  v_admin_role := public._admin_employee_assert_actor(p_admin_uid, 5);
+
+  SELECT role INTO v_target_role
+  FROM public.users
+  WHERE id = p_target_uid
+    AND i_del = 0;
+
+  IF v_target_role IS NULL THEN
+    RAISE EXCEPTION 'USER_NOT_FOUND';
+  END IF;
+
+  IF v_target_role = 6 THEN
+    RAISE EXCEPTION 'CANNOT_MODIFY_MANAGER';
+  END IF;
+
+  IF p_role NOT IN (2, 3, 4, 5) THEN
+    RAISE EXCEPTION 'INVALID_ROLE';
+  END IF;
+
+  IF v_admin_role < 6 AND (p_role >= 5 OR v_target_role >= 5) THEN
+    RAISE EXCEPTION 'ONLY_MANAGER_CAN_MANAGE_DEPUTIES';
+  END IF;
+
+  UPDATE public.users
+  SET role = p_role,
+      ts_upd = NOW()
+  WHERE id = p_target_uid
+    AND i_del = 0;
+
+  PERFORM public._admin_employee_log(
+    p_admin_uid,
+    'staff_role_update',
+    p_target_uid,
+    jsonb_build_object(
+      'old_role', v_target_role,
+      'new_role', p_role
+    )
+  );
+
+  RETURN jsonb_build_object('success', true);
+END;
+$function$
+
+REVOKE ALL ON FUNCTION admin_update_staff_role(p_admin_uid uuid, p_target_uid uuid, p_role integer) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION admin_update_staff_role(p_admin_uid uuid, p_target_uid uuid, p_role integer) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.admin_update_user_permissions_by_admin(p_admin_uid uuid, p_target_uid uuid, p_perm jsonb)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE v_admin_role INT;
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN RAISE EXCEPTION 'AUTH_MISMATCH'; END IF;
+  SELECT role INTO v_admin_role FROM users WHERE id = p_admin_uid AND i_del = 0;
+  IF v_admin_role IS NULL OR v_admin_role < 5 THEN RAISE EXCEPTION 'NOT_AUTHORIZED'; END IF;
+  UPDATE users SET perm = p_perm, ts_upd = NOW() WHERE id = p_target_uid AND i_del = 0;
+  RETURN FOUND;
+END; $function$
+
+REVOKE ALL ON FUNCTION admin_update_user_permissions_by_admin(p_admin_uid uuid, p_target_uid uuid, p_perm jsonb) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION admin_update_user_permissions_by_admin(p_admin_uid uuid, p_target_uid uuid, p_perm jsonb) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.admin_update_user_role(p_admin_uid uuid, p_target_uid uuid, p_role integer)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_admin_role INT;
+  v_target_role INT;
+BEGIN
+  v_admin_role := public._admin_employee_assert_actor(p_admin_uid, 5);
+
+  SELECT role INTO v_target_role
+  FROM public.users
+  WHERE id = p_target_uid
+    AND i_del = 0;
+
+  IF v_target_role IS NULL THEN
+    RAISE EXCEPTION 'USER_NOT_FOUND';
+  END IF;
+
+  IF v_target_role = 6 THEN
+    RAISE EXCEPTION 'CANNOT_MODIFY_MANAGER';
+  END IF;
+
+  -- لا نسمح بإنشاء مدير جديد من هذه الدالة القديمة
+  IF p_role < 0 OR p_role > 5 THEN
+    RAISE EXCEPTION 'INVALID_ROLE';
+  END IF;
+
+  IF v_admin_role < 6 AND (p_role >= 5 OR v_target_role >= 5) THEN
+    RAISE EXCEPTION 'ONLY_MANAGER_CAN_MANAGE_DEPUTIES';
+  END IF;
+
+  UPDATE public.users
+  SET role = p_role,
+      brk = CASE WHEN p_role = 1 THEN 1 ELSE brk END,
+      ts_upd = NOW()
+  WHERE id = p_target_uid
+    AND i_del = 0;
+
+  PERFORM public._admin_employee_log(
+    p_admin_uid,
+    'legacy_user_role_update',
+    p_target_uid,
+    jsonb_build_object(
+      'old_role', v_target_role,
+      'new_role', p_role
+    )
+  );
+
+  RETURN FOUND;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION admin_update_user_role(p_admin_uid uuid, p_target_uid uuid, p_role integer) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION admin_update_user_role(p_admin_uid uuid, p_target_uid uuid, p_role integer) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.app_assert_password(p_password text, p_min integer DEFAULT 8)
+ RETURNS text
+ LANGUAGE plpgsql
+ IMMUTABLE
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
 BEGIN
   IF length(COALESCE(p_password, '')) < p_min THEN
     RAISE EXCEPTION 'PASSWORD_TOO_SHORT';
@@ -3234,13 +1020,17 @@ BEGIN
   END IF;
   RETURN p_password;
 END;
-$$;
+$function$
 
-CREATE OR REPLACE FUNCTION app_assert_phone(p_phone TEXT)
-RETURNS TEXT
-LANGUAGE plpgsql
-STABLE
-AS $$
+REVOKE ALL ON FUNCTION app_assert_password(p_password text, p_min integer) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app_assert_password(p_password text, p_min integer) TO anon, authenticated, PUBLIC, service_role;
+
+CREATE OR REPLACE FUNCTION public.app_assert_phone(p_phone text)
+ RETURNS text
+ LANGUAGE plpgsql
+ STABLE
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
 DECLARE
   v TEXT;
 BEGIN
@@ -3253,13 +1043,17 @@ BEGIN
   END IF;
   RETURN v;
 END;
-$$;
+$function$
 
-CREATE OR REPLACE FUNCTION app_assert_price(p_value NUMERIC, p_required BOOLEAN DEFAULT TRUE)
-RETURNS NUMERIC
-LANGUAGE plpgsql
-IMMUTABLE
-AS $$
+REVOKE ALL ON FUNCTION app_assert_phone(p_phone text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app_assert_phone(p_phone text) TO anon, authenticated, PUBLIC, service_role;
+
+CREATE OR REPLACE FUNCTION public.app_assert_price(p_value numeric, p_required boolean DEFAULT true)
+ RETURNS numeric
+ LANGUAGE plpgsql
+ IMMUTABLE
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
 BEGIN
   IF p_value IS NULL THEN
     IF p_required THEN
@@ -3275,283 +1069,514 @@ BEGIN
   END IF;
   RETURN p_value;
 END;
-$$;
+$function$
 
--- Harden register_password username/password validation.
-CREATE OR REPLACE FUNCTION register_password(
-  p_user_uid UUID,
-  p_username TEXT,
-  p_password TEXT
-) RETURNS JSONB
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public, extensions
-AS $$
+REVOKE ALL ON FUNCTION app_assert_price(p_value numeric, p_required boolean) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app_assert_price(p_value numeric, p_required boolean) TO anon, authenticated, PUBLIC, service_role;
+
+CREATE OR REPLACE FUNCTION public.app_assert_text_len(p_value text, p_field text, p_min integer DEFAULT 0, p_max integer DEFAULT 1000)
+ RETURNS text
+ LANGUAGE plpgsql
+ IMMUTABLE
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
 DECLARE
-  v_usr TEXT;
-  v_existing UUID;
+  v TEXT;
 BEGIN
-  v_usr := app_assert_username(p_username, TRUE);
-  PERFORM app_assert_password(p_password, 8);
-
-  SELECT id INTO v_existing
-  FROM users
-  WHERE lower(usr) = v_usr
-    AND i_del = 0
-    AND id <> p_user_uid;
-
-  IF v_existing IS NOT NULL THEN
-    RAISE EXCEPTION 'USERNAME_TAKEN';
+  v := app_clean_text(p_value, p_max + 1);
+  IF length(v) < p_min THEN
+    RAISE EXCEPTION '%_TOO_SHORT', upper(p_field);
   END IF;
-
-  IF NOT EXISTS (SELECT 1 FROM users WHERE id = p_user_uid AND i_del = 0) THEN
-    RAISE EXCEPTION 'USER_NOT_FOUND';
+  IF length(v) > p_max THEN
+    RAISE EXCEPTION '%_TOO_LONG', upper(p_field);
   END IF;
-
-  UPDATE users
-  SET usr = v_usr,
-      pwd = crypt(p_password, gen_salt('bf', 8)),
-      ts_upd = NOW()
-  WHERE id = p_user_uid;
-
-  RETURN jsonb_build_object('success', true, 'username', v_usr);
+  IF v ~ '[<>]' THEN
+    RAISE EXCEPTION '%_INVALID_CHARS', upper(p_field);
+  END IF;
+  RETURN v;
 END;
-$$;
-GRANT EXECUTE ON FUNCTION register_password(UUID, TEXT, TEXT) TO anon, authenticated, service_role;
+$function$
 
--- Harden admin staff creation.
-CREATE OR REPLACE FUNCTION admin_create_staff_user(
-  p_admin_uid UUID,
-  p_full_name TEXT,
-  p_phone TEXT,
-  p_email TEXT DEFAULT '',
-  p_username TEXT DEFAULT '',
-  p_password TEXT DEFAULT '',
-  p_role INT DEFAULT 4
-) RETURNS JSONB
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public, extensions
-AS $$
+REVOKE ALL ON FUNCTION app_assert_text_len(p_value text, p_field text, p_min integer, p_max integer) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app_assert_text_len(p_value text, p_field text, p_min integer, p_max integer) TO anon, authenticated, PUBLIC, service_role;
+
+CREATE OR REPLACE FUNCTION public.app_assert_username(p_username text, p_required boolean DEFAULT true)
+ RETURNS text
+ LANGUAGE plpgsql
+ IMMUTABLE
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
 DECLARE
-  v_admin_role INT;
-  v_phone TEXT;
-  v_username TEXT;
-  v_name TEXT;
-  v_email TEXT;
-  v_new_id UUID;
+  v TEXT;
 BEGIN
-  v_admin_role := _admin_employee_assert_actor(p_admin_uid, 5);
-
-  IF p_role NOT IN (2, 3, 4, 5) THEN
-    RAISE EXCEPTION 'INVALID_ROLE';
+  v := lower(btrim(COALESCE(p_username, '')));
+  IF v = '' THEN
+    IF p_required THEN
+      RAISE EXCEPTION 'USERNAME_REQUIRED';
+    END IF;
+    RETURN NULL;
   END IF;
-  IF v_admin_role < 6 AND p_role >= 5 THEN
-    RAISE EXCEPTION 'ONLY_MANAGER_CAN_CREATE_DEPUTY';
+  IF length(v) < 3 OR length(v) > 30 THEN
+    RAISE EXCEPTION 'USERNAME_LENGTH';
   END IF;
-
-  v_name := app_assert_text_len(p_full_name, 'name', 2, 60);
-  v_phone := app_assert_phone(p_phone);
-  v_username := app_assert_username(p_username, FALSE);
-  PERFORM app_assert_password(p_password, 8);
-  v_email := NULLIF(app_clean_text(p_email, 120), '');
-
-  IF v_email IS NOT NULL AND v_email !~* '^[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}$' THEN
-    RAISE EXCEPTION 'EMAIL_INVALID';
+  -- منع خلط اللغات: إما أحرف لاتينية وأرقام ورمزين، أو أحرف عربية وأرقام ورمزين
+  IF NOT v ~ '^([a-z0-9_.]+|[\u0600-\u06FF0-9_.]+)$' THEN
+    RAISE EXCEPTION 'USERNAME_INVALID_CHARS';
   END IF;
-
-  IF EXISTS (SELECT 1 FROM users WHERE normalize_sy_phone(ph) = v_phone AND i_del = 0) THEN
-    RAISE EXCEPTION 'PHONE_EXISTS';
-  END IF;
-  IF v_username IS NOT NULL AND EXISTS (SELECT 1 FROM users WHERE lower(usr) = v_username AND i_del = 0) THEN
-    RAISE EXCEPTION 'USERNAME_TAKEN';
-  END IF;
-
-  INSERT INTO users (nm, ph, eml, usr, pwd, role, sts, vrf, i_del, ts_crt, ts_upd)
-  VALUES (v_name, v_phone, v_email, v_username, crypt(p_password, gen_salt('bf', 8)), p_role, 0, 0, 0, NOW(), NOW())
-  RETURNING id INTO v_new_id;
-
-  PERFORM _admin_employee_log(
-    p_admin_uid,
-    'staff_create',
-    v_new_id,
-    jsonb_build_object('role', p_role, 'phone', v_phone, 'username', v_username)
-  );
-
-  RETURN jsonb_build_object('success', true, 'user_id', v_new_id);
+  RETURN v;
 END;
-$$;
-REVOKE ALL ON FUNCTION admin_create_staff_user(UUID, TEXT, TEXT, TEXT, TEXT, TEXT, INT) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION admin_create_staff_user(UUID, TEXT, TEXT, TEXT, TEXT, TEXT, INT) TO service_role;
+$function$
 
--- Harden profile updates.
-CREATE OR REPLACE FUNCTION update_user_profile_internal(
-  p_user_uid UUID,
-  p_payload JSONB
-) RETURNS BOOLEAN
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public, extensions
-AS $$
+REVOKE ALL ON FUNCTION app_assert_username(p_username text, p_required boolean) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app_assert_username(p_username text, p_required boolean) TO anon, authenticated, PUBLIC, service_role;
+
+CREATE OR REPLACE FUNCTION public.app_clean_text(p_value text, p_max_len integer DEFAULT 1000)
+ RETURNS text
+ LANGUAGE plpgsql
+ IMMUTABLE
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
 DECLARE
-  v_nm TEXT;
-  v_sid TEXT;
-  v_ad TEXT;
-  v_img TEXT;
+  v TEXT;
 BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  v := COALESCE(p_value, '');
+  v := regexp_replace(v, '[[:cntrl:]]', '', 'g');
+  v := regexp_replace(v, '\s+', ' ', 'g');
+  v := btrim(v);
+  IF p_max_len IS NOT NULL AND p_max_len > 0 AND length(v) > p_max_len THEN
+    v := substring(v from 1 for p_max_len);
   END IF;
+  RETURN v;
+END;
+$function$
 
-  v_nm := CASE WHEN p_payload ? 'nm' THEN app_assert_text_len(p_payload->>'nm', 'name', 2, 60) ELSE NULL END;
-  v_sid := CASE WHEN p_payload ? 'sid' THEN app_clean_text(p_payload->>'sid', 60) ELSE NULL END;
-  v_ad := CASE WHEN p_payload ? 'ad' THEN app_clean_text(p_payload->>'ad', 200) ELSE NULL END;
-  v_img := CASE WHEN p_payload ? 'img' THEN app_clean_text(p_payload->>'img', 500) ELSE NULL END;
+REVOKE ALL ON FUNCTION app_clean_text(p_value text, p_max_len integer) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app_clean_text(p_value text, p_max_len integer) TO anon, authenticated, PUBLIC, service_role;
 
-  UPDATE users
-  SET nm = COALESCE(v_nm, nm),
-      sid = COALESCE(v_sid, sid),
-      ad = COALESCE(v_ad, ad),
-      img = COALESCE(v_img, img),
-      ts_upd = NOW()
-  WHERE id = p_user_uid
-    AND i_del = 0;
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'USER_NOT_FOUND';
-  END IF;
+CREATE OR REPLACE FUNCTION public.attach_photography_media_to_offer_internal(p_admin_uid uuid, p_task_id uuid)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE v_role INT; v_task RECORD; v_imgs JSONB; v_merged JSONB;
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN RAISE EXCEPTION 'AUTH_MISMATCH'; END IF;
+  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
+  IF v_role IS NULL OR v_role < 3 THEN RAISE EXCEPTION 'NOT_AUTHORIZED'; END IF;
+  SELECT * INTO v_task FROM photography_tasks WHERE id = p_task_id;
+  IF NOT FOUND THEN RAISE EXCEPTION 'TASK_NOT_FOUND'; END IF;
+  SELECT COALESCE(imgs,'[]'::jsonb) INTO v_imgs FROM offers WHERE id = v_task.offer_id;
+  SELECT jsonb_agg(DISTINCT val) INTO v_merged FROM (
+    SELECT jsonb_array_elements(v_imgs) AS val UNION SELECT jsonb_array_elements(COALESCE(v_task.media,'[]'::jsonb))
+  ) c;
+  UPDATE offers SET imgs = COALESCE(v_merged,'[]'::jsonb) WHERE id = v_task.offer_id;
+  UPDATE photography_tasks SET sts = 3, ts_upd = NOW() WHERE id = p_task_id;
   RETURN TRUE;
-END;
-$$;
-GRANT EXECUTE ON FUNCTION update_user_profile_internal(UUID, JSONB) TO anon, authenticated, service_role;
+END; $function$
 
--- Harden request create/update.
-CREATE OR REPLACE FUNCTION create_request_internal(
-  p_user_uid UUID,
-  p_request JSONB
-) RETURNS SETOF requests
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public, extensions
-AS $$
+REVOKE ALL ON FUNCTION attach_photography_media_to_offer_internal(p_admin_uid uuid, p_task_id uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION attach_photography_media_to_offer_internal(p_admin_uid uuid, p_task_id uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.book_appointment_internal(p_user_uid uuid, p_offer_id uuid, p_dt timestamp with time zone, p_broker_id uuid DEFAULT NULL::uuid, p_request_id uuid DEFAULT NULL::uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
 DECLARE
-  v_user users%ROWTYPE;
-  v_config JSONB;
-  v_limit INT;
-  v_used INT;
-  v_name TEXT;
-  v_phone TEXT;
-  v_notes TEXT;
-  v_price NUMERIC;
+  v_offer      public.offers%ROWTYPE;
+  v_req        public.requests%ROWTYPE;
+  v_cfg        JSONB := public.appt_booking_config();
+  v_gap        INT;
+  v_day_key    TEXT;
+  v_slot       TEXT;
+  v_slot_from  INT;
+  v_slot_to    INT;
+  v_req_mins   INT;
+  v_avl_slots  JSONB;
+  v_found_slot BOOLEAN := FALSE;
+  v_supervisor UUID;
+  v_suggest    TIMESTAMPTZ;
+  v_active_count INT;
+  v_pending_completion INT;
+  v_appointment_id UUID;
 BEGIN
+  v_gap := (v_cfg->>'gap_mins')::INT;
+
   IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
     RAISE EXCEPTION 'AUTH_UID_MISMATCH';
   END IF;
 
-  SELECT * INTO v_user FROM users WHERE id = p_user_uid AND i_del = 0 AND sts = 0;
-  IF v_user.id IS NULL THEN
-    RAISE EXCEPTION 'USER_NOT_ACTIVE_OR_NOT_FOUND';
-  END IF;
+  SELECT * INTO v_offer FROM public.offers WHERE id = p_offer_id AND i_del = 0;
+  IF v_offer.id IS NULL THEN RAISE EXCEPTION 'OFFER_NOT_FOUND'; END IF;
+  IF v_offer.sts NOT IN (2) THEN RAISE EXCEPTION 'OFFER_NOT_AVAILABLE'; END IF;
+  IF p_user_uid = v_offer.usr_id THEN RAISE EXCEPTION 'CANNOT_BOOK_OWN_OFFER'; END IF;
+  IF p_dt <= NOW() THEN RAISE EXCEPTION 'INVALID_APPOINTMENT_TIME'; END IF;
 
-  v_name := app_assert_text_len(p_request->>'cl_nm', 'client_name', 2, 60);
-  v_phone := app_assert_phone(p_request->>'cl_ph');
-  v_notes := app_clean_text(p_request->>'notes', 1000);
-  v_price := COALESCE((p_request->>'prc')::NUMERIC, 0);
-  IF v_price < 0 OR v_price > 999999999999 THEN
-    RAISE EXCEPTION 'INVALID_PRICE';
-  END IF;
-
-  -- موظف المكتب فما فوق معفي من الحصة.
-  IF COALESCE(v_user.role, 0) < 4 THEN
-    SELECT value INTO v_config FROM app_config WHERE key = 'main';
-    v_limit := CASE WHEN COALESCE(v_user.role, 0) = 1
-      THEN COALESCE((v_config->'qta'->'b'->>'r')::INT, 5)
-      ELSE COALESCE((v_config->'qta'->'u'->>'r')::INT, 3)
-    END;
-
-    SELECT COUNT(*) INTO v_used FROM requests WHERE usr_id = p_user_uid AND i_del = 0;
-    IF COALESCE(v_used, 0) >= COALESCE(v_limit, 3) THEN
-      RAISE EXCEPTION 'QUOTA_EXCEEDED';
+  IF p_request_id IS NOT NULL THEN
+    SELECT * INTO v_req
+    FROM public.requests
+    WHERE id = p_request_id
+      AND usr_id = p_user_uid
+      AND i_del = 0
+      AND sts IN (0, 1)
+      AND (ts_end IS NULL OR ts_end > NOW());
+    IF v_req.id IS NULL THEN
+      RAISE EXCEPTION 'REQUEST_NOT_FOUND_OR_NOT_ACTIVE';
+    END IF;
+    IF v_req.elm <> v_offer.typ OR v_req.typ <> v_offer.trx THEN
+      RAISE EXCEPTION 'REQUEST_OFFER_MISMATCH';
     END IF;
   END IF;
 
-  RETURN QUERY
-  INSERT INTO requests (typ, elm, cl_nm, cl_ph, prc, cur, notes, specs, usr_id, sts, i_del, ts_crt)
-  VALUES (
-    COALESCE((p_request->>'typ')::INT, 0),
-    COALESCE((p_request->>'elm')::INT, 0),
-    v_name,
-    v_phone,
-    v_price,
-    COALESCE((p_request->>'cur')::INT, 0),
-    v_notes,
-    COALESCE(p_request->'specs', '{}'::jsonb),
-    p_user_uid,
-    0,
-    0,
-    NOW()
-  ) RETURNING *;
-END;
-$$;
-GRANT EXECUTE ON FUNCTION create_request_internal(UUID, JSONB) TO anon, authenticated, service_role;
+  SELECT COUNT(*) INTO v_pending_completion
+  FROM public.completion_requests cr
+  JOIN public.appointments a ON a.id = cr.app_id
+  WHERE a.off_id = p_offer_id
+    AND cr.decision = 'pending';
+  IF v_pending_completion > 0 THEN RAISE EXCEPTION 'OFFER_HAS_PENDING_COMPLETION'; END IF;
 
-CREATE OR REPLACE FUNCTION update_request_internal(
-  p_user_uid UUID,
-  p_request_id UUID,
-  p_patch JSONB
-) RETURNS BOOLEAN
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public, extensions
-AS $$
+  -- ✅ القاعدة 1: الحجز حصراً ضمن مواعيد صاحب العرض
+  -- avl فارغة = لا معاينة على هذا العرض إطلاقاً (سد ثغرة تخطي الفحص)
+  IF v_offer.avl IS NULL OR v_offer.avl = '{}'::jsonb OR v_offer.avl = 'null'::jsonb THEN
+    RAISE EXCEPTION 'NO_AVAILABILITY';
+  END IF;
+
+  v_day_key := LOWER(to_char(p_dt AT TIME ZONE 'Asia/Damascus', 'Dy'));
+
+  -- 'any' = جاهز بأي وقت → كل الأيام ضمن دوام الإعدادات (09:00-21:00 افتراضياً)
+  IF v_offer.avl ? 'any' THEN
+    v_avl_slots := jsonb_build_array((v_cfg->>'any_from') || '-' || (v_cfg->>'any_to'));
+  ELSE
+    v_avl_slots := v_offer.avl -> v_day_key;
+  END IF;
+
+  IF v_avl_slots IS NULL OR jsonb_array_length(v_avl_slots) = 0 THEN
+    RAISE EXCEPTION 'DAY_NOT_AVAILABLE';
+  END IF;
+
+  v_req_mins := EXTRACT(HOUR FROM p_dt AT TIME ZONE 'Asia/Damascus')::INT * 60
+              + EXTRACT(MINUTE FROM p_dt AT TIME ZONE 'Asia/Damascus')::INT;
+  FOR v_slot IN SELECT jsonb_array_elements_text(v_avl_slots)
+  LOOP
+    v_slot_from := SPLIT_PART(SPLIT_PART(v_slot, '-', 1), ':', 1)::INT * 60
+                 + SPLIT_PART(SPLIT_PART(v_slot, '-', 1), ':', 2)::INT;
+    v_slot_to := SPLIT_PART(SPLIT_PART(v_slot, '-', 2), ':', 1)::INT * 60
+               + SPLIT_PART(SPLIT_PART(v_slot, '-', 2), ':', 2)::INT;
+    IF v_req_mins >= v_slot_from AND v_req_mins < v_slot_to THEN
+      v_found_slot := TRUE; EXIT;
+    END IF;
+  END LOOP;
+  IF NOT v_found_slot THEN RAISE EXCEPTION 'TIME_NOT_IN_AVAILABLE_SLOTS'; END IF;
+
+  -- ✅ القاعدة 3: عدم التعارض — فارق لا يقل عن ساعة بين مواعيد نفس العرض
+  -- (موعد 10:00 → أقرب حجز مسموح 11:00)
+  IF EXISTS (
+    SELECT 1 FROM public.appointments
+    WHERE off_id = p_offer_id AND sts IN (0, 1)
+      AND dt > p_dt - make_interval(mins => v_gap)
+      AND dt < p_dt + make_interval(mins => v_gap)
+  ) THEN
+    RAISE EXCEPTION 'TIME_CONFLICT_ON_OFFER';
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM public.appointments WHERE off_id = p_offer_id AND req_uid = p_user_uid AND sts IN (0, 1)) THEN
+    RAISE EXCEPTION 'DUPLICATE_APPOINTMENT';
+  END IF;
+
+  -- ✅ القاعدة 2: المشرف الأقل مواعيد نشطة، مع استبعاد المشغول ضمن فارق الساعة
+  -- (استعلام مرتّب: إن كان الأقل حمولة مشغولاً ينتقل تلقائياً للتالي)
+  SELECT u.id INTO v_supervisor
+  FROM public.users u
+  WHERE u.role = 3 AND u.sts = 0 AND u.i_del = 0
+    AND NOT EXISTS (
+      SELECT 1 FROM public.appointments a
+      WHERE a.supervisor_uid = u.id AND a.sts IN (0, 1)
+        AND a.dt > p_dt - make_interval(mins => v_gap)
+        AND a.dt < p_dt + make_interval(mins => v_gap)
+    )
+  ORDER BY (
+    SELECT COUNT(*) FROM public.appointments a2 WHERE a2.supervisor_uid = u.id AND a2.sts IN (0, 1)
+  ) ASC, u.ts_crt ASC
+  LIMIT 1;
+
+  -- ✅ القاعدة 2 (تكملة): لا مشرف متاح → إشعار الطالب + اقتراح أقرب موعد متاح
+  IF v_supervisor IS NULL THEN
+    v_suggest := public.suggest_appointment_slot(p_offer_id, p_dt);
+    PERFORM public.notify_user(
+      p_user_uid,
+      2,
+      'لا يوجد مشرف متاح للتوقيت المطلوب',
+      CASE WHEN v_suggest IS NOT NULL
+        THEN 'تعذّر تثبيت موعد المعاينة في التوقيت الذي اخترته لعدم توفر مشرف. أقرب موعد متاح: '
+             || to_char(v_suggest AT TIME ZONE 'Asia/Damascus', 'YYYY/MM/DD HH24:MI')
+             || ' — يمكنك إعادة الحجز عليه أو اختيار وقت آخر.'
+        ELSE 'تعذّر تثبيت موعد المعاينة في التوقيت الذي اخترته لعدم توفر مشرف. يرجى اختيار وقت آخر.'
+      END,
+      p_offer_id::text,
+      'appointment_suggest'
+    );
+    RETURN jsonb_build_object(
+      'success', false,
+      'error', 'NO_SUPERVISOR_AVAILABLE',
+      'suggested_dt', v_suggest
+    );
+  END IF;
+
+  INSERT INTO public.appointments (
+    off_id, req_id, req_uid, own_id, bkr_id, dt, sts,
+    supervisor_uid,
+    fbk_own, fbk_req, i_force, rmnd_24, rmnd_2, rmnd_qtr, rmnd_end, ts_crt
+  ) VALUES (
+    p_offer_id, p_request_id, p_user_uid, v_offer.usr_id, COALESCE(p_broker_id, v_offer.brk_id), p_dt, 0,
+    v_supervisor,
+    0, 0, 0, 0, 0, 0, 0, NOW()
+  ) RETURNING id INTO v_appointment_id;
+
+  IF p_request_id IS NOT NULL THEN
+    UPDATE public.requests
+    SET sts = 1
+    WHERE id = p_request_id
+      AND usr_id = p_user_uid
+      AND sts = 0
+      AND i_del = 0;
+  END IF;
+
+  SELECT COUNT(*) INTO v_active_count FROM public.appointments WHERE off_id = p_offer_id AND sts IN (0, 1);
+  RETURN jsonb_build_object('success', true, 'appointment_id', v_appointment_id, 'active_appointments', v_active_count, 'supervisor_uid', v_supervisor);
+END;
+$function$
+
+REVOKE ALL ON FUNCTION book_appointment_internal(p_user_uid uuid, p_offer_id uuid, p_dt timestamp with time zone, p_broker_id uuid, p_request_id uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION book_appointment_internal(p_user_uid uuid, p_offer_id uuid, p_dt timestamp with time zone, p_broker_id uuid, p_request_id uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.broker_handle_appointment_internal(p_broker_uid uuid, p_appointment_id uuid, p_action text)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
 DECLARE
-  v_name TEXT;
-  v_phone TEXT;
-  v_notes TEXT;
-  v_price NUMERIC;
+  v_allowed BOOLEAN := FALSE;
+  v_now TIMESTAMPTZ := NOW();
 BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_broker_uid THEN
     RAISE EXCEPTION 'AUTH_UID_MISMATCH';
   END IF;
 
-  v_name := CASE WHEN p_patch ? 'cl_nm' THEN app_assert_text_len(p_patch->>'cl_nm', 'client_name', 2, 60) ELSE NULL END;
-  v_phone := CASE WHEN p_patch ? 'cl_ph' THEN app_assert_phone(p_patch->>'cl_ph') ELSE NULL END;
-  v_notes := CASE WHEN p_patch ? 'notes' THEN app_clean_text(p_patch->>'notes', 1000) ELSE NULL END;
-  v_price := CASE WHEN p_patch ? 'prc' THEN (p_patch->>'prc')::NUMERIC ELSE NULL END;
-  IF v_price IS NOT NULL AND (v_price < 0 OR v_price > 999999999999) THEN
-    RAISE EXCEPTION 'INVALID_PRICE';
+  SELECT EXISTS (
+    SELECT 1 FROM appointments a
+    LEFT JOIN offers o ON o.id = a.off_id
+    WHERE a.id = p_appointment_id
+      AND (a.bkr_id = p_broker_uid OR a.own_id = p_broker_uid OR o.usr_id = p_broker_uid)
+  ) INTO v_allowed;
+
+  IF NOT v_allowed THEN
+    RAISE EXCEPTION 'APPOINTMENT_NOT_FOUND_OR_NOT_ALLOWED';
   END IF;
 
-  UPDATE requests
-  SET typ = COALESCE((p_patch->>'typ')::INT, typ),
-      elm = COALESCE((p_patch->>'elm')::INT, elm),
-      cl_nm = COALESCE(v_name, cl_nm),
-      cl_ph = COALESCE(v_phone, cl_ph),
-      prc = COALESCE(v_price, prc),
-      cur = COALESCE((p_patch->>'cur')::INT, cur),
-      notes = COALESCE(v_notes, notes),
-      specs = COALESCE(p_patch->'specs', specs)
-  WHERE id = p_request_id
-    AND usr_id = p_user_uid
-    AND i_del = 0;
+  IF p_action = 'confirm' THEN
+    UPDATE appointments
+    SET sts        = 1,
+        fbk_own    = 1,
+        fbk_own_dt = v_now
+    WHERE id = p_appointment_id;
+  ELSIF p_action = 'reject' THEN
+    UPDATE appointments
+    SET sts        = 4,
+        fbk_own    = 2,
+        fbk_own_dt = v_now,
+        dt_end     = v_now
+    WHERE id = p_appointment_id;
+  ELSIF p_action = 'complete' THEN
+    UPDATE appointments
+    SET sts    = 2,
+        dt_end = v_now
+    WHERE id = p_appointment_id;
+  ELSE
+    RAISE EXCEPTION 'INVALID_ACTION';
+  END IF;
+
+  RETURN TRUE;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION broker_handle_appointment_internal(p_broker_uid uuid, p_appointment_id uuid, p_action text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION broker_handle_appointment_internal(p_broker_uid uuid, p_appointment_id uuid, p_action text) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.calculate_commission(p_prc numeric, p_pct numeric)
+ RETURNS numeric
+ LANGUAGE plpgsql
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$ BEGIN RETURN ROUND(p_prc * p_pct / 100, 2); END; $function$
+
+REVOKE ALL ON FUNCTION calculate_commission(p_prc numeric, p_pct numeric) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION calculate_commission(p_prc numeric, p_pct numeric) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.cancel_appointment_internal(p_requester_uid uuid, p_appointment_id uuid, p_reason text DEFAULT ''::text)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_requester_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
+  UPDATE appointments
+  SET sts     = 3,
+      cnl_by  = p_requester_uid,
+      cnl_rsn = COALESCE(p_reason, ''),
+      dt_end  = NOW()
+  WHERE id      = p_appointment_id
+    AND req_uid = p_requester_uid
+    AND sts IN (0, 1);
 
   IF NOT FOUND THEN
-    RAISE EXCEPTION 'REQUEST_NOT_FOUND_OR_NOT_ALLOWED';
+    RAISE EXCEPTION 'APPOINTMENT_NOT_FOUND_OR_NOT_ALLOWED';
   END IF;
   RETURN TRUE;
 END;
-$$;
-GRANT EXECUTE ON FUNCTION update_request_internal(UUID, UUID, JSONB) TO anon, authenticated, service_role;
+$function$
 
--- Harden offer creation while preserving current production logic.
-CREATE OR REPLACE FUNCTION create_offer_internal(
-  p_user_uid UUID,
-  p_offer JSONB
-) RETURNS SETOF offers
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public, extensions
-AS $$
+REVOKE ALL ON FUNCTION cancel_appointment_internal(p_requester_uid uuid, p_appointment_id uuid, p_reason text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION cancel_appointment_internal(p_requester_uid uuid, p_appointment_id uuid, p_reason text) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.check_offer_duplicate(p_ttl text, p_prc numeric, p_loc jsonb, p_usr_id uuid)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE v_dup BOOLEAN;
+BEGIN
+  -- تطبيع النص: lowercase + إزالة المسافات المتعددة
+  SELECT EXISTS(
+    SELECT 1 FROM offers
+    WHERE LOWER(REGEXP_REPLACE(ttl, '\s+', ' ', 'g')) =
+          LOWER(REGEXP_REPLACE(p_ttl, '\s+', ' ', 'g'))
+      AND prc = p_prc
+      AND i_del = 0
+      -- نكشف التكرار حتى من نفس المستخدم (لمنع نشر متعدد بنفس الحساب)
+  ) INTO v_dup;
+  RETURN v_dup;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION check_offer_duplicate(p_ttl text, p_prc numeric, p_loc jsonb, p_usr_id uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION check_offer_duplicate(p_ttl text, p_prc numeric, p_loc jsonb, p_usr_id uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.complete_deal_internal(p_admin_uid uuid, p_deal_id uuid, p_commission numeric DEFAULT NULL::numeric, p_note text DEFAULT NULL::text)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE
+  v_role   INT;
+  v_off_id UUID;
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
+  IF v_role IS NULL OR v_role < 5 THEN
+    RAISE EXCEPTION 'FORBIDDEN';
+  END IF;
+
+  -- إكمال الصفقة
+  UPDATE deals
+  SET sts = 1,
+      cmpl_by = p_admin_uid,
+      ts_cmpl = NOW(),
+      com_val = COALESCE(p_commission, com_val),
+      com_note = COALESCE(p_note, com_note)
+  WHERE id = p_deal_id AND i_del = 0;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'DEAL_NOT_FOUND';
+  END IF;
+
+  -- جلب off_id من الصفقة
+  SELECT off_id INTO v_off_id FROM deals WHERE id = p_deal_id;
+
+  -- تحويل العرض إلى مكتمل
+  IF v_off_id IS NOT NULL THEN
+    UPDATE offers SET sts = 6, i_pub = 0 WHERE id = v_off_id AND sts IN (2, 5);
+
+    -- إلغاء أي مواعيد متبقية
+    UPDATE appointments
+    SET sts = 3,
+        cnl_rsn = 'تم إكمال صفقة على هذا العرض',
+        dt_end = NOW()
+    WHERE off_id = v_off_id AND sts IN (0, 1);
+  END IF;
+
+  RETURN TRUE;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION complete_deal_internal(p_admin_uid uuid, p_deal_id uuid, p_commission numeric, p_note text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION complete_deal_internal(p_admin_uid uuid, p_deal_id uuid, p_commission numeric, p_note text) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.create_deal_internal(p_admin_uid uuid, p_deal jsonb)
+ RETURNS SETOF deals
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE
+  v_role   INT;
+  v_off_id UUID;
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
+  IF v_role IS NULL OR v_role < 5 THEN
+    RAISE EXCEPTION 'FORBIDDEN';
+  END IF;
+
+  v_off_id := NULLIF(p_deal->>'off_id', '')::UUID;
+
+  -- تحويل العرض إلى محجوز
+  IF v_off_id IS NOT NULL THEN
+    UPDATE offers SET sts = 5, i_pub = 0 WHERE id = v_off_id AND sts = 2;
+  END IF;
+
+  RETURN QUERY
+  INSERT INTO deals (
+    off_id, app_id, sell_uid, buy_uid, brk_uid, fin_prc, cur,
+    com_pct, com_val, com_note, form, sts, cmpl_by, i_del, ts_crt, ts_cmpl
+  ) VALUES (
+    v_off_id,
+    NULLIF(p_deal->>'app_id', '')::UUID,
+    NULLIF(p_deal->>'sell_uid', '')::UUID,
+    NULLIF(p_deal->>'buy_uid', '')::UUID,
+    NULLIF(p_deal->>'brk_uid', '')::UUID,
+    COALESCE((p_deal->>'fin_prc')::NUMERIC, 0),
+    COALESCE((p_deal->>'cur')::INT, 1),
+    COALESCE((p_deal->>'com_pct')::NUMERIC, 0),
+    COALESCE((p_deal->>'com_val')::NUMERIC, 0),
+    NULLIF(p_deal->>'com_note', ''),
+    COALESCE(p_deal->'form', '{}'::jsonb),
+    COALESCE((p_deal->>'sts')::INT, 0),
+    NULL, 0, NOW(), NULL
+  ) RETURNING *;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION create_deal_internal(p_admin_uid uuid, p_deal jsonb) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION create_deal_internal(p_admin_uid uuid, p_deal jsonb) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.create_offer_internal(p_user_uid uuid, p_offer jsonb)
+ RETURNS SETOF offers
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
+AS $function$
 DECLARE
   v_user users%ROWTYPE;
   v_config JSONB;
@@ -3566,6 +1591,9 @@ DECLARE
   v_exact_loc TEXT;
   v_soc_txt TEXT;
   v_price NUMERIC;
+  v_admin_role INT;
+  v_added_by UUID := NULL;
+  v_is_admin_action BOOLEAN := FALSE;
 BEGIN
   IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
     RAISE EXCEPTION 'AUTH_UID_MISMATCH';
@@ -3576,15 +1604,35 @@ BEGIN
     RAISE EXCEPTION 'USER_NOT_ACTIVE_OR_NOT_FOUND';
   END IF;
 
-  v_title := app_assert_text_len(p_offer->>'ttl', 'title', 2, 120);
+  -- التحقق من هوية المنفذ الإداري (added_by) وحراسته من التلاعب
+  IF p_offer ? 'added_by' AND NULLIF(p_offer->>'added_by', '') IS NOT NULL THEN
+    SELECT role INTO v_admin_role FROM users
+    WHERE id = (p_offer->>'added_by')::UUID AND sts = 0 AND i_del = 0;
+
+    IF COALESCE(v_admin_role, 0) >= 4 THEN
+      v_added_by := (p_offer->>'added_by')::UUID;
+      v_is_admin_action := TRUE;
+    ELSE
+      -- إذا حاول شخص غير إداري تمرير added_by نرفض القيمة ونعتبرها NULL
+      v_added_by := NULL;
+    END IF;
+  ELSE
+    -- إذا كان المنفذ هو المستخدم نفسه ولكنه موظف إداري يضيف لنفسه
+    IF COALESCE(v_user.role, 0) >= 4 THEN
+      v_added_by := p_user_uid;
+      v_is_admin_action := TRUE;
+    END IF;
+  END IF;
+
+  v_title := app_assert_text_len(COALESCE(p_offer->>'ttl', p_offer->>'title'), 'title', 2, 120);
   v_contact_ph := app_assert_phone(p_offer->>'contact_ph');
   v_price := app_assert_price(COALESCE((p_offer->>'prc')::NUMERIC, 0), TRUE);
   v_desc := app_clean_text(p_offer->>'descript', 2000);
   v_exact_loc := app_clean_text(p_offer->>'exact_loc', 300);
   v_soc_txt := app_clean_text(p_offer->>'soc_txt', 500);
 
-  -- الإدارة الداخلية (موظف مكتب فما فوق) غير مقيّدة بحصة.
-  IF COALESCE(v_user.role, 0) < 4 THEN
+  -- الإدارة الداخلية (موظف مكتب فما فوق أو إضافة إدارية لعميل) غير مقيّدة بحصة.
+  IF NOT v_is_admin_action THEN
     SELECT value INTO v_config FROM app_config WHERE key = 'main';
 
     v_effective_pkg := CASE
@@ -3669,8 +1717,1654 @@ BEGIN
     NULL,
     NULL,
     NULL,
-    CASE WHEN COALESCE(v_user.role, 0) >= 4 THEN p_user_uid ELSE NULL END
+    v_added_by
   ) RETURNING *;
 END;
-$$;
-GRANT EXECUTE ON FUNCTION create_offer_internal(UUID, JSONB) TO anon, authenticated, service_role;
+$function$
+
+REVOKE ALL ON FUNCTION create_offer_internal(p_user_uid uuid, p_offer jsonb) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION create_offer_internal(p_user_uid uuid, p_offer jsonb) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.create_payment_internal(p_user_uid uuid, p_payment jsonb)
+ RETURNS SETOF payments
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE
+  v_user        users%ROWTYPE;
+  v_pending_cnt INT;
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
+  SELECT * INTO v_user
+  FROM users WHERE id = p_user_uid AND i_del = 0 AND sts = 0;
+  IF v_user.id IS NULL THEN
+    RAISE EXCEPTION 'USER_NOT_ACTIVE_OR_NOT_FOUND';
+  END IF;
+
+  IF COALESCE(trim(p_payment->>'proof'), '') = '' OR
+     COALESCE(trim(p_payment->>'ref'),   '') = '' THEN
+    RAISE EXCEPTION 'MISSING_PAYMENT_PROOF_OR_REFERENCE';
+  END IF;
+
+  -- FIX: منع الدفعة المزدوجة المعلقة لنفس الباقة
+  SELECT COUNT(*) INTO v_pending_cnt
+  FROM payments
+  WHERE uid = p_user_uid
+    AND sts = 0
+    AND pkg = COALESCE((p_payment->>'pkg')::INT, 0)
+    AND tp  = 0;
+
+  IF v_pending_cnt > 0 THEN
+    RAISE EXCEPTION 'PENDING_PAYMENT_EXISTS';
+  END IF;
+
+  RETURN QUERY
+  INSERT INTO payments (
+    uid, tp, pkg, amt, cur, mtd, channel, proof, ref, sts, appr_by, ts_crt
+  ) VALUES (
+    p_user_uid,
+    COALESCE((p_payment->>'tp')::INT,      0),
+    COALESCE((p_payment->>'pkg')::INT,     0),
+    COALESCE((p_payment->>'amt')::NUMERIC, 0),
+    COALESCE((p_payment->>'cur')::INT,     1),
+    COALESCE((p_payment->>'mtd')::INT,     0),
+    COALESCE(p_payment->>'channel', ''),
+    COALESCE(p_payment->>'proof',   ''),
+    COALESCE(p_payment->>'ref',     ''),
+    0,
+    NULL,
+    NOW()
+  ) RETURNING *;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION create_payment_internal(p_user_uid uuid, p_payment jsonb) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION create_payment_internal(p_user_uid uuid, p_payment jsonb) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.create_photography_task_internal(p_admin_uid uuid, p_offer_id uuid, p_photographer_id uuid, p_notes text, p_ts_scheduled timestamp with time zone)
+ RETURNS SETOF photography_tasks
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE v_role INT; v_offer RECORD;
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN RAISE EXCEPTION 'AUTH_MISMATCH'; END IF;
+  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
+  IF v_role IS NULL OR v_role < 3 THEN RAISE EXCEPTION 'NOT_AUTHORIZED'; END IF;
+  SELECT * INTO v_offer FROM offers WHERE id = p_offer_id AND i_del = 0;
+  IF NOT FOUND THEN RAISE EXCEPTION 'OFFER_NOT_FOUND'; END IF;
+  RETURN QUERY
+  INSERT INTO photography_tasks (offer_id, photographer_id, assigned_by, title, notes, loc, sts, ts_scheduled, ts_crt, ts_upd)
+  VALUES (p_offer_id, p_photographer_id, p_admin_uid, v_offer.ttl, COALESCE(p_notes,''), COALESCE(v_offer.loc,'{}'::jsonb), 0, p_ts_scheduled, NOW(), NOW())
+  RETURNING *;
+END; $function$
+
+REVOKE ALL ON FUNCTION create_photography_task_internal(p_admin_uid uuid, p_offer_id uuid, p_photographer_id uuid, p_notes text, p_ts_scheduled timestamp with time zone) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION create_photography_task_internal(p_admin_uid uuid, p_offer_id uuid, p_photographer_id uuid, p_notes text, p_ts_scheduled timestamp with time zone) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.create_rating_internal(p_reviewer_uid uuid, p_target_uid uuid, p_stars integer, p_comment text DEFAULT ''::text)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_reviewer_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
+  INSERT INTO ratings (reviewer_uid, target_uid, stars, comment)
+  VALUES (p_reviewer_uid, p_target_uid, p_stars, COALESCE(p_comment, ''));
+  RETURN TRUE;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION create_rating_internal(p_reviewer_uid uuid, p_target_uid uuid, p_stars integer, p_comment text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION create_rating_internal(p_reviewer_uid uuid, p_target_uid uuid, p_stars integer, p_comment text) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.create_report_internal(p_reporter_uid uuid, p_report jsonb)
+ RETURNS SETOF reports
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_reporter_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
+  RETURN QUERY
+  INSERT INTO reports (
+    rep_uid, tgt_uid, tgt_tp, tgt_id, rsn, det, sts, act, act_dur, note, act_by, ts_crt
+  ) VALUES (
+    p_reporter_uid,
+    NULLIF(p_report->>'tgt_uid', '')::UUID,
+    COALESCE((p_report->>'tgt_tp')::INT, 0),
+    COALESCE(p_report->>'tgt_id', ''),
+    COALESCE((p_report->>'rsn')::INT, 0),
+    COALESCE(p_report->>'det', ''),
+    0,
+    0,
+    0,
+    '',
+    NULL,
+    NOW()
+  ) RETURNING *;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION create_report_internal(p_reporter_uid uuid, p_report jsonb) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION create_report_internal(p_reporter_uid uuid, p_report jsonb) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.create_request_internal(p_user_uid uuid, p_request jsonb)
+ RETURNS SETOF requests
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE
+  v_user public.users%ROWTYPE;
+  v_config JSONB;
+  v_limit INT;
+  v_used INT;
+  v_name TEXT;
+  v_phone TEXT;
+  v_notes TEXT;
+  v_price NUMERIC;
+  v_days INT;
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
+  SELECT * INTO v_user FROM public.users WHERE id = p_user_uid AND i_del = 0 AND sts = 0;
+  IF v_user.id IS NULL THEN
+    RAISE EXCEPTION 'USER_NOT_ACTIVE_OR_NOT_FOUND';
+  END IF;
+
+  v_name := public.app_assert_text_len(p_request->>'cl_nm', 'client_name', 2, 60);
+  v_phone := public.app_assert_phone(p_request->>'cl_ph');
+  v_notes := public.app_clean_text(p_request->>'notes', 1000);
+  v_price := COALESCE((p_request->>'prc')::NUMERIC, 0);
+  IF v_price < 0 OR v_price > 999999999999 THEN
+    RAISE EXCEPTION 'INVALID_PRICE';
+  END IF;
+
+  -- Staff office and above are exempt. Only active/in-progress requests consume quota.
+  IF COALESCE(v_user.role, 0) < 4 THEN
+    SELECT value INTO v_config FROM public.app_config WHERE key = 'main';
+    v_limit := CASE WHEN COALESCE(v_user.role, 0) = 1
+      THEN COALESCE((v_config->'qta'->'b'->>'r')::INT, 5)
+      ELSE COALESCE((v_config->'qta'->'u'->>'r')::INT, 3)
+    END;
+
+    SELECT COUNT(*) INTO v_used
+    FROM public.requests
+    WHERE usr_id = p_user_uid
+      AND i_del = 0
+      AND sts IN (0, 1);
+
+    IF COALESCE(v_used, 0) >= COALESCE(v_limit, 3) THEN
+      RAISE EXCEPTION 'QUOTA_EXCEEDED';
+    END IF;
+  END IF;
+
+  v_days := public.request_lifecycle_days('d', 30);
+
+  RETURN QUERY
+  INSERT INTO public.requests (
+    typ, elm, cl_nm, cl_ph, prc, cur, notes, specs,
+    usr_id, sts, matches, i_del, ts_crt, ts_end, rmnd_ren,
+    closed_reason, closed_note
+  ) VALUES (
+    COALESCE((p_request->>'typ')::INT, 0),
+    COALESCE((p_request->>'elm')::INT, 0),
+    v_name,
+    v_phone,
+    v_price,
+    COALESCE((p_request->>'cur')::INT, 0),
+    v_notes,
+    COALESCE(p_request->'specs', '{}'::jsonb),
+    p_user_uid,
+    0,
+    COALESCE(p_request->'matches', '{}'::jsonb),
+    0,
+    NOW(),
+    NOW() + (v_days || ' days')::INTERVAL,
+    0,
+    '',
+    ''
+  ) RETURNING *;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION create_request_internal(p_user_uid uuid, p_request jsonb) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION create_request_internal(p_user_uid uuid, p_request jsonb) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.create_user_from_phone(p_phone text, p_nm text DEFAULT ''::text)
+ RETURNS uuid
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE
+  v_uid UUID;
+  v_phone TEXT;
+BEGIN
+  v_phone := public.normalize_sy_phone(p_phone);
+
+  SELECT id
+  INTO v_uid
+  FROM public.users
+  WHERE public.normalize_sy_phone(ph) = v_phone
+    AND i_del = 0
+  LIMIT 1;
+
+  IF v_uid IS NOT NULL THEN
+    RETURN v_uid;
+  END IF;
+
+  INSERT INTO public.users (nm, ph, role, sts, i_del, ts_crt)
+  VALUES (p_nm, v_phone, 0, 0, 0, NOW())
+  RETURNING id INTO v_uid;
+
+  PERFORM public.add_points(v_uid, 1000);
+  RETURN v_uid;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION create_user_from_phone(p_phone text, p_nm text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION create_user_from_phone(p_phone text, p_nm text) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.expire_offers()
+ RETURNS void
+ LANGUAGE plpgsql
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+BEGIN
+  UPDATE offers
+  SET sts = 4, ts_end = NOW()
+  WHERE sts = 2
+    AND i_del = 0
+    AND (
+      (ts_ren IS NULL AND COALESCE(ts_pub, ts_crt) < NOW() - INTERVAL '30 days')
+      OR
+      (ts_ren IS NOT NULL AND ts_end < NOW())
+    );
+END;
+$function$
+
+REVOKE ALL ON FUNCTION expire_offers() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION expire_offers() TO service_role;
+
+CREATE OR REPLACE FUNCTION public.generate_otp(p_phone text)
+ RETURNS text
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE
+  v_code TEXT;
+  v_int  BIGINT;
+BEGIN
+  -- نأخذ 3 بايت = 0 .. 16,777,215 ثم نطبّقها mod 900000 + 100000
+  v_int := (get_byte(gen_random_bytes(3), 0) * 65536
+          + get_byte(gen_random_bytes(3), 1) * 256
+          + get_byte(gen_random_bytes(3), 2));
+  v_code := LPAD(((v_int % 900000) + 100000)::TEXT, 6, '0');
+  INSERT INTO otp_codes (phone, code, expires_at)
+    VALUES (p_phone, v_code, NOW() + INTERVAL '5 minutes');
+  RETURN v_code;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION generate_otp(p_phone text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION generate_otp(p_phone text) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.get_admin_appointments_internal(p_admin_uid uuid)
+ RETURNS SETOF appointments
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE v_role INT;
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN RAISE EXCEPTION 'AUTH_MISMATCH'; END IF;
+  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
+  IF v_role IS NULL OR v_role < 3 THEN RAISE EXCEPTION 'NOT_AUTHORIZED'; END IF;
+  RETURN QUERY SELECT * FROM appointments ORDER BY ts_crt DESC;
+END; $function$
+
+REVOKE ALL ON FUNCTION get_admin_appointments_internal(p_admin_uid uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION get_admin_appointments_internal(p_admin_uid uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.get_admin_dashboard_stats(p_admin_uid uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
+AS $function$
+DECLARE
+  v_role INT;
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN
+    RAISE EXCEPTION 'AUTH_MISMATCH';
+  END IF;
+
+  SELECT role INTO v_role
+  FROM users
+  WHERE id = p_admin_uid
+    AND i_del = 0
+    AND sts = 0;
+
+  IF v_role IS NULL OR v_role < 4 THEN
+    RAISE EXCEPTION 'UNAUTHORIZED';
+  END IF;
+
+  RETURN jsonb_build_object(
+    'totalOffers', (SELECT COUNT(*) FROM offers WHERE i_del = 0),
+    'pendingOffers', (SELECT COUNT(*) FROM offers WHERE sts = 1 AND i_del = 0),
+    'publishedOffers', (SELECT COUNT(*) FROM offers WHERE sts = 2 AND i_del = 0),
+
+    'totalUsers', (SELECT COUNT(*) FROM users WHERE i_del = 0),
+    'activeUsers', (SELECT COUNT(*) FROM users WHERE sts = 0 AND i_del = 0),
+    'bannedUsers', (SELECT COUNT(*) FROM users WHERE sts = 2 AND i_del = 0),
+    'brokers', (SELECT COUNT(*) FROM users WHERE role = 1 AND i_del = 0),
+
+    'totalDeals', (SELECT COUNT(*) FROM deals WHERE i_del = 0),
+    'completedDeals', (SELECT COUNT(*) FROM deals WHERE sts IN (1, 2) AND i_del = 0),
+    'totalCommission', COALESCE((SELECT SUM(com_val) FROM deals WHERE sts IN (1, 2) AND i_del = 0), 0),
+
+    'totalAppointments', (SELECT COUNT(*) FROM appointments),
+    'completedAppointments', (SELECT COUNT(*) FROM appointments WHERE sts = 2),
+
+    'pendingPayments', (SELECT COUNT(*) FROM payments WHERE sts = 0),
+    'approvedPayments', (SELECT COUNT(*) FROM payments WHERE sts IN (1, 2)),
+    'openReports', (SELECT COUNT(*) FROM reports WHERE sts = 0),
+    'pendingVerifications', (SELECT COUNT(*) FROM users WHERE vrf = 1 AND i_del = 0)
+  );
+END;
+$function$
+
+REVOKE ALL ON FUNCTION get_admin_dashboard_stats(p_admin_uid uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION get_admin_dashboard_stats(p_admin_uid uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.get_admin_deals_internal(p_admin_uid uuid)
+ RETURNS SETOF deals
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE v_role INT;
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN RAISE EXCEPTION 'AUTH_MISMATCH'; END IF;
+  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
+  IF v_role IS NULL OR v_role < 3 THEN RAISE EXCEPTION 'NOT_AUTHORIZED'; END IF;
+  RETURN QUERY SELECT * FROM deals ORDER BY ts_crt DESC;
+END; $function$
+
+REVOKE ALL ON FUNCTION get_admin_deals_internal(p_admin_uid uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION get_admin_deals_internal(p_admin_uid uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.get_admin_offers_internal(p_admin_uid uuid, p_limit integer DEFAULT 100)
+ RETURNS SETOF offers
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE v_role INT;
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN RAISE EXCEPTION 'AUTH_MISMATCH'; END IF;
+  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
+  IF v_role IS NULL OR v_role < 3 THEN RAISE EXCEPTION 'NOT_AUTHORIZED'; END IF;
+  RETURN QUERY SELECT * FROM offers WHERE i_del = 0 ORDER BY ts_crt DESC LIMIT p_limit;
+END; $function$
+
+REVOKE ALL ON FUNCTION get_admin_offers_internal(p_admin_uid uuid, p_limit integer) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION get_admin_offers_internal(p_admin_uid uuid, p_limit integer) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.get_admin_payments_internal(p_admin_uid uuid)
+ RETURNS SETOF payments
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE v_role INT;
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN RAISE EXCEPTION 'AUTH_MISMATCH'; END IF;
+  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
+  IF v_role IS NULL OR v_role < 3 THEN RAISE EXCEPTION 'NOT_AUTHORIZED'; END IF;
+  RETURN QUERY SELECT * FROM payments ORDER BY ts_crt DESC;
+END; $function$
+
+REVOKE ALL ON FUNCTION get_admin_payments_internal(p_admin_uid uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION get_admin_payments_internal(p_admin_uid uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.get_admin_pending_offers_internal(p_admin_uid uuid)
+ RETURNS SETOF offers
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE v_role INT;
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN RAISE EXCEPTION 'AUTH_MISMATCH'; END IF;
+  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
+  IF v_role IS NULL OR v_role < 3 THEN RAISE EXCEPTION 'NOT_AUTHORIZED'; END IF;
+  RETURN QUERY SELECT * FROM offers WHERE sts = 1 AND i_del = 0 ORDER BY ts_crt DESC;
+END; $function$
+
+REVOKE ALL ON FUNCTION get_admin_pending_offers_internal(p_admin_uid uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION get_admin_pending_offers_internal(p_admin_uid uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.get_admin_reports_internal(p_admin_uid uuid)
+ RETURNS SETOF reports
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE v_role INT;
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN RAISE EXCEPTION 'AUTH_MISMATCH'; END IF;
+  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
+  IF v_role IS NULL OR v_role < 3 THEN RAISE EXCEPTION 'NOT_AUTHORIZED'; END IF;
+  RETURN QUERY SELECT * FROM reports WHERE i_del = 0 ORDER BY ts_crt DESC;
+END; $function$
+
+REVOKE ALL ON FUNCTION get_admin_reports_internal(p_admin_uid uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION get_admin_reports_internal(p_admin_uid uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.get_all_staff_users(p_admin_uid uuid)
+ RETURNS SETOF jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_admin_role INT;
+BEGIN
+  v_admin_role := public._admin_employee_assert_actor(p_admin_uid, 5);
+
+  RETURN QUERY
+    SELECT jsonb_build_object(
+      'id', u.id,
+      'nm', u.nm,
+      'ph', u.ph,
+      'eml', u.eml,
+      'ad', u.ad,
+      'role', u.role,
+      'sid', u.sid,
+      'img', u.img,
+      'pt', u.pt,
+      'bg', u.bg,
+      'bg_ts', u.bg_ts,
+      'b_pkg', u.b_pkg,
+      'pkg_end', u.pkg_end,
+      'pkg_grace', u.pkg_grace,
+      'brk', u.brk,
+      'brk_cls', u.brk_cls,
+      'brk_nm', u.brk_nm,
+      'sts', u.sts,
+      'ban_rsn', u.ban_rsn,
+      'ntf', u.ntf,
+      'stats', u.stats,
+      'wk_lgn', u.wk_lgn,
+      'strk', u.strk,
+      'strk_dt', u.strk_dt,
+      'i_del', u.i_del,
+      'perm', u.perm,
+      'ts_crt', u.ts_crt,
+      'ts_upd', u.ts_upd,
+      'vrf', u.vrf,
+      'ref_by', u.ref_by,
+      'ref_cnt', u.ref_cnt,
+      'usr', u.usr,
+      'pwd', CASE WHEN u.pwd IS NOT NULL THEN 'set' ELSE NULL END,
+      'rl', u.rl,
+      'device_id', u.device_id,
+      'last_ip', u.last_ip,
+      'signup_ip', u.signup_ip,
+      'device_history', u.device_history
+    )
+    FROM public.users u
+    WHERE u.i_del = 0
+      AND u.role IN (2, 3, 4, 5, 6)
+    ORDER BY u.role DESC, u.ts_crt DESC;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION get_all_staff_users(p_admin_uid uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION get_all_staff_users(p_admin_uid uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.get_broker_appointments_internal(p_broker_uid uuid)
+ RETURNS SETOF appointments
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_broker_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
+  RETURN QUERY
+  SELECT DISTINCT a.*
+  FROM appointments a
+  LEFT JOIN offers o ON o.id = a.off_id
+  WHERE a.bkr_id = p_broker_uid
+     OR a.own_id = p_broker_uid
+     OR o.usr_id = p_broker_uid
+  ORDER BY dt ASC;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION get_broker_appointments_internal(p_broker_uid uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION get_broker_appointments_internal(p_broker_uid uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.get_broker_deals_internal(p_broker_uid uuid)
+ RETURNS SETOF deals
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_broker_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
+  RETURN QUERY
+  SELECT * FROM deals
+  WHERE brk_uid = p_broker_uid
+    AND i_del = 0
+  ORDER BY ts_crt DESC;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION get_broker_deals_internal(p_broker_uid uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION get_broker_deals_internal(p_broker_uid uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.get_broker_offers_internal(p_broker_uid uuid)
+ RETURNS SETOF offers
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_broker_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
+  RETURN QUERY
+  SELECT * FROM offers
+  WHERE i_del = 0
+    AND (usr_id = p_broker_uid OR brk_id = p_broker_uid)
+  ORDER BY ts_crt DESC;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION get_broker_offers_internal(p_broker_uid uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION get_broker_offers_internal(p_broker_uid uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.get_offer_by_id_internal(p_offer_id uuid, p_user_uid uuid DEFAULT NULL::uuid)
+ RETURNS SETOF offers
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE
+  v_role INT := 0;
+BEGIN
+  IF p_user_uid IS NOT NULL AND auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
+  IF p_user_uid IS NOT NULL THEN
+    SELECT COALESCE(role, 0) INTO v_role FROM users WHERE id = p_user_uid AND i_del = 0;
+  END IF;
+
+  RETURN QUERY
+  SELECT *
+  FROM offers
+  WHERE id = p_offer_id
+    AND i_del = 0
+    AND (
+      i_pub = 1
+      OR (p_user_uid IS NOT NULL AND usr_id = p_user_uid)
+      OR (p_user_uid IS NOT NULL AND v_role >= 2)
+    )
+  LIMIT 1;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION get_offer_by_id_internal(p_offer_id uuid, p_user_uid uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION get_offer_by_id_internal(p_offer_id uuid, p_user_uid uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.get_owner_appointments_internal(p_owner_uid uuid)
+ RETURNS SETOF appointments
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_owner_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
+  RETURN QUERY
+  SELECT * FROM appointments
+  WHERE own_id = p_owner_uid
+  ORDER BY dt ASC;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION get_owner_appointments_internal(p_owner_uid uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION get_owner_appointments_internal(p_owner_uid uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.get_pending_offers_count()
+ RETURNS integer
+ LANGUAGE plpgsql
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE
+  v_cnt INTEGER;
+BEGIN
+  SELECT COUNT(*) INTO v_cnt
+  FROM offers
+  WHERE sts = 1
+    AND i_del = 0;
+  RETURN v_cnt;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION get_pending_offers_count() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION get_pending_offers_count() TO service_role;
+
+CREATE OR REPLACE FUNCTION public.get_user_appointments_internal(p_user_uid uuid)
+ RETURNS SETOF appointments
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
+  RETURN QUERY
+  SELECT * FROM appointments
+  WHERE req_uid = p_user_uid
+  ORDER BY dt ASC;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION get_user_appointments_internal(p_user_uid uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION get_user_appointments_internal(p_user_uid uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.get_user_by_phone(p_phone text)
+ RETURNS SETOF users
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+BEGIN RETURN QUERY SELECT * FROM users WHERE ph = p_phone AND i_del = 0; END;
+$function$
+
+REVOKE ALL ON FUNCTION get_user_by_phone(p_phone text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION get_user_by_phone(p_phone text) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.get_user_notifications_internal(p_user_uid uuid)
+ RETURNS SETOF notifications
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
+  RETURN QUERY
+  SELECT * FROM notifications
+  WHERE uid = p_user_uid
+    AND i_del = 0
+  ORDER BY ts_crt DESC;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION get_user_notifications_internal(p_user_uid uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION get_user_notifications_internal(p_user_uid uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.get_user_offers_internal(p_user_uid uuid)
+ RETURNS SETOF offers
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
+  RETURN QUERY
+  SELECT * FROM offers
+  WHERE usr_id = p_user_uid
+    AND i_del = 0
+  ORDER BY ts_crt DESC;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION get_user_offers_internal(p_user_uid uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION get_user_offers_internal(p_user_uid uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.get_user_payments_internal(p_user_uid uuid)
+ RETURNS SETOF payments
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
+  RETURN QUERY
+  SELECT * FROM payments
+  WHERE uid = p_user_uid
+  ORDER BY ts_crt DESC;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION get_user_payments_internal(p_user_uid uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION get_user_payments_internal(p_user_uid uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.get_user_requests_internal(p_user_uid uuid)
+ RETURNS SETOF requests
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
+  RETURN QUERY
+  SELECT * FROM public.requests
+  WHERE usr_id = p_user_uid
+    AND i_del = 0
+  ORDER BY ts_crt DESC;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION get_user_requests_internal(p_user_uid uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION get_user_requests_internal(p_user_uid uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.increment_offer_views_internal(p_offer_id uuid)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+BEGIN
+  UPDATE offers
+  SET vws = COALESCE(vws, 0) + 1
+  WHERE id    = p_offer_id
+    AND i_del = 0
+    AND i_pub = 1;
+  RETURN TRUE;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION increment_offer_views_internal(p_offer_id uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION increment_offer_views_internal(p_offer_id uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.login_with_password(p_identifier text, p_password text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE
+  v_user RECORD;
+  v_identifier TEXT;
+  v_norm TEXT;
+  v_session JSONB := NULL;
+BEGIN
+  v_identifier := LOWER(TRIM(p_identifier));
+  v_norm := normalize_arabic_username(v_identifier);
+
+  SELECT id, nm, role, pwd, sts, i_del INTO v_user
+  FROM users
+  WHERE (normalize_arabic_username(usr) = v_norm
+         OR normalize_sy_phone(ph) = normalize_sy_phone(v_identifier))
+    AND i_del = 0
+  LIMIT 1;
+
+  IF v_user IS NULL THEN
+    RAISE EXCEPTION 'USER_NOT_FOUND' USING HINT = 'لم يتم العثور على حساب بهذا الاسم أو الرقم';
+  END IF;
+
+  IF v_user.pwd IS NULL THEN
+    RAISE EXCEPTION 'NO_PASSWORD_SET' USING HINT = 'لم يتم تعيين كلمة مرور لهذا الحساب، سجّل دخولك عبر واتساب أولاً';
+  END IF;
+
+  IF v_user.sts = 2 THEN
+    RAISE EXCEPTION 'USER_BANNED';
+  END IF;
+
+  IF v_user.sts = 1 THEN
+    RAISE EXCEPTION 'USER_FROZEN';
+  END IF;
+
+  IF v_user.pwd != crypt(p_password, v_user.pwd) THEN
+    RAISE EXCEPTION 'WRONG_PASSWORD' USING HINT = 'كلمة المرور غير صحيحة';
+  END IF;
+
+  -- Always issue session for any authenticated user
+  v_session := _issue_staff_session(v_user.id, '', '', INTERVAL '7 days');
+
+  RETURN jsonb_build_object(
+    'success', true,
+    'user_id', v_user.id,
+    'role', v_user.role,
+    'nm', v_user.nm,
+    'staff_session', v_session
+  );
+END;
+$function$
+
+REVOKE ALL ON FUNCTION login_with_password(p_identifier text, p_password text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION login_with_password(p_identifier text, p_password text) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.mark_all_notifications_read_internal(p_user_uid uuid)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
+  UPDATE notifications
+  SET i_rd = 1
+  WHERE uid  = p_user_uid
+    AND i_rd = 0;
+  RETURN TRUE;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION mark_all_notifications_read_internal(p_user_uid uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION mark_all_notifications_read_internal(p_user_uid uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.mark_notification_read_internal(p_user_uid uuid, p_notification_id uuid)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
+  UPDATE notifications
+  SET i_rd = 1
+  WHERE id  = p_notification_id
+    AND uid = p_user_uid;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'NOTIFICATION_NOT_FOUND_OR_NOT_ALLOWED';
+  END IF;
+  RETURN TRUE;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION mark_notification_read_internal(p_user_uid uuid, p_notification_id uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION mark_notification_read_internal(p_user_uid uuid, p_notification_id uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.mark_social_published_internal(p_user_uid uuid, p_offer_id uuid, p_text text)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
+  UPDATE offers
+  SET soc_pub = 1,
+      soc_txt = COALESCE(p_text, '')
+  WHERE id = p_offer_id
+    AND usr_id = p_user_uid
+    AND i_del = 0;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'OFFER_NOT_FOUND_OR_NOT_ALLOWED';
+  END IF;
+  RETURN TRUE;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION mark_social_published_internal(p_user_uid uuid, p_offer_id uuid, p_text text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION mark_social_published_internal(p_user_uid uuid, p_offer_id uuid, p_text text) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.normalize_sy_phone(p_phone text)
+ RETURNS text
+ LANGUAGE plpgsql
+ IMMUTABLE
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE
+  v TEXT;
+BEGIN
+  v := COALESCE(p_phone, '');
+  -- ترجمة الأرقام العربية المشرقية (٠-٩) والفارسية (۰-۹) إلى لاتينية (0-9)
+  v := translate(v, '٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹', '01234567890123456789');
+  v := regexp_replace(v, '[^0-9+]', '', 'g');
+
+  IF v = '' THEN
+    RETURN '';
+  END IF;
+
+  IF left(v, 1) = '+' THEN
+    IF left(v, 4) = '+963' THEN
+      RETURN v;
+    END IF;
+    RETURN v;
+  END IF;
+
+  IF left(v, 5) = '00963' THEN
+    RETURN '+963' || substring(v from 6);
+  END IF;
+
+  IF left(v, 3) = '963' THEN
+    RETURN '+' || v;
+  END IF;
+
+  IF left(v, 1) = '0' THEN
+    RETURN '+963' || substring(v from 2);
+  END IF;
+
+  IF left(v, 1) = '9' THEN
+    RETURN '+963' || v;
+  END IF;
+
+  RETURN v;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION normalize_sy_phone(p_phone text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION normalize_sy_phone(p_phone text) TO anon, authenticated, PUBLIC, service_role;
+
+CREATE OR REPLACE FUNCTION public.register_daily_streak_internal(p_user_uid uuid, p_points integer DEFAULT 50)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE
+  v_current_streak INT := 0;
+  v_last_ts        TIMESTAMPTZ;
+  v_now            TIMESTAMPTZ := NOW();
+  v_today          TEXT;
+  v_last_day       TEXT;
+  v_yesterday      TEXT;
+  v_new_streak     INT;
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
+  SELECT COALESCE(strk, 0), strk_dt INTO v_current_streak, v_last_ts
+  FROM users
+  WHERE id    = p_user_uid
+    AND i_del = 0;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'USER_NOT_FOUND';
+  END IF;
+
+  v_today := to_char(
+    (v_now AT TIME ZONE 'UTC' + INTERVAL '3 hours')::date,
+    'YYYY-MM-DD'
+  );
+
+  v_yesterday := to_char(
+    ((v_now - INTERVAL '1 day') AT TIME ZONE 'UTC' + INTERVAL '3 hours')::date,
+    'YYYY-MM-DD'
+  );
+
+  IF v_last_ts IS NOT NULL THEN
+    v_last_day := to_char(
+      (v_last_ts AT TIME ZONE 'UTC' + INTERVAL '3 hours')::date,
+      'YYYY-MM-DD'
+    );
+  END IF;
+
+  -- نفس اليوم → لا شيء
+  IF v_last_day = v_today THEN
+    RETURN jsonb_build_object('streak', v_current_streak, 'changed', false, 'awarded', false);
+  END IF;
+
+  -- FIX: تصحيح منطق الـ streak
+  -- أمس بالضبط → يكمل السلسلة
+  -- NULL أو أكثر من يوم → يُصفَّر إلى 1
+  v_new_streak := CASE
+    WHEN v_last_day IS NULL        THEN 1
+    WHEN v_last_day = v_yesterday  THEN v_current_streak + 1
+    ELSE                                1
+  END;
+
+  UPDATE users
+  SET strk    = v_new_streak,
+      strk_dt = v_now,
+      ts_upd  = v_now
+  WHERE id = p_user_uid;
+
+  PERFORM add_points(p_user_uid, p_points);
+
+  RETURN jsonb_build_object('streak', v_new_streak, 'changed', true, 'awarded', true);
+END;
+$function$
+
+REVOKE ALL ON FUNCTION register_daily_streak_internal(p_user_uid uuid, p_points integer) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION register_daily_streak_internal(p_user_uid uuid, p_points integer) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.register_password(p_user_uid uuid, p_username text, p_password text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE
+  v_usr TEXT;
+  v_norm TEXT;
+  v_existing UUID;
+BEGIN
+  v_usr := app_assert_username(p_username, TRUE);
+  v_norm := normalize_arabic_username(v_usr);
+  PERFORM app_assert_password(p_password, 8);
+
+  SELECT id INTO v_existing
+  FROM users
+  WHERE normalize_arabic_username(usr) = v_norm
+    AND i_del = 0
+    AND id <> p_user_uid;
+
+  IF v_existing IS NOT NULL THEN
+    RAISE EXCEPTION 'USERNAME_TAKEN';
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM users WHERE id = p_user_uid AND i_del = 0) THEN
+    RAISE EXCEPTION 'USER_NOT_FOUND';
+  END IF;
+
+  UPDATE users
+  SET usr = v_usr,
+      pwd = crypt(p_password, gen_salt('bf', 8)),
+      ts_upd = NOW()
+  WHERE id = p_user_uid;
+
+  RETURN jsonb_build_object('success', true, 'username', v_usr);
+END;
+$function$
+
+REVOKE ALL ON FUNCTION register_password(p_user_uid uuid, p_username text, p_password text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION register_password(p_user_uid uuid, p_username text, p_password text) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.revoke_all_staff_sessions(p_user_uid uuid)
+ RETURNS integer
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_count INT;
+BEGIN
+  UPDATE public.staff_sessions
+  SET revoked = 1
+  WHERE user_id = p_user_uid
+    AND revoked = 0;
+
+  GET DIAGNOSTICS v_count = ROW_COUNT;
+
+  RETURN v_count;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION revoke_all_staff_sessions(p_user_uid uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION revoke_all_staff_sessions(p_user_uid uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.revoke_staff_session(p_user_uid uuid, p_token text)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
+AS $function$
+DECLARE
+  v_session RECORD;
+BEGIN
+  IF p_user_uid IS NULL OR COALESCE(p_token, '') = '' THEN
+    RETURN FALSE;
+  END IF;
+
+  FOR v_session IN
+    SELECT id, token_hash
+    FROM public.staff_sessions
+    WHERE user_id = p_user_uid
+      AND revoked = 0
+  LOOP
+    IF v_session.token_hash = crypt(p_token, v_session.token_hash) THEN
+      UPDATE public.staff_sessions
+      SET revoked = 1
+      WHERE id = v_session.id;
+
+      RETURN TRUE;
+    END IF;
+  END LOOP;
+
+  RETURN FALSE;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION revoke_staff_session(p_user_uid uuid, p_token text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION revoke_staff_session(p_user_uid uuid, p_token text) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.send_appointment_reminders()
+ RETURNS void
+ LANGUAGE plpgsql
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$ BEGIN
+  UPDATE appointments SET rmnd_2 = 1 WHERE sts IN (0, 1) AND i_force = 0 AND dt <= NOW() + INTERVAL '2 hours' AND dt > NOW() AND rmnd_2 = 0;
+  UPDATE appointments SET rmnd_24 = 1 WHERE sts IN (0, 1) AND i_force = 0 AND dt <= NOW() + INTERVAL '24 hours' AND dt > NOW() AND rmnd_24 = 0;
+END; $function$
+
+REVOKE ALL ON FUNCTION send_appointment_reminders() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION send_appointment_reminders() TO service_role;
+
+CREATE OR REPLACE FUNCTION public.soft_delete(p_table text, p_id uuid)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$ BEGIN EXECUTE format('UPDATE %I SET i_del = 1 WHERE id = %L', p_table, p_id); END; $function$
+
+REVOKE ALL ON FUNCTION soft_delete(p_table text, p_id uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION soft_delete(p_table text, p_id uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.soft_delete_request_internal(p_user_uid uuid, p_request_id uuid)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+BEGIN
+  -- Compatibility path: do not erase accountability; mark as user-cancelled.
+  RETURN public.cancel_request_internal(p_user_uid, p_request_id, '');
+END;
+$function$
+
+REVOKE ALL ON FUNCTION soft_delete_request_internal(p_user_uid uuid, p_request_id uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION soft_delete_request_internal(p_user_uid uuid, p_request_id uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.submit_broker_request_internal(p_user_uid uuid, p_business_name text, p_category integer, p_experience text DEFAULT ''::text, p_about text DEFAULT ''::text)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
+  UPDATE users
+  SET brk_nm = COALESCE(p_business_name, ''),
+      brk_cls = COALESCE(p_category, 0),
+      vrf     = CASE WHEN vrf = 0 THEN 1 ELSE vrf END,
+      ts_upd  = NOW()
+  WHERE id    = p_user_uid
+    AND i_del = 0;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'USER_NOT_FOUND';
+  END IF;
+
+  -- FIX: activity_log schema → act INT, det TEXT (not action TEXT / details JSONB)
+  -- act = 10 reserved for broker_request events
+  INSERT INTO activity_log (uid, act, det, ts_crt)
+  VALUES (
+    p_user_uid,
+    10,
+    'broker_request: ' || COALESCE(p_business_name, '') ||
+      ' cat=' || COALESCE(p_category::TEXT, '0') ||
+      CASE WHEN COALESCE(trim(p_experience), '') <> ''
+           THEN ' exp=' || p_experience ELSE '' END,
+    NOW()
+  );
+
+  RETURN TRUE;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION submit_broker_request_internal(p_user_uid uuid, p_business_name text, p_category integer, p_experience text, p_about text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION submit_broker_request_internal(p_user_uid uuid, p_business_name text, p_category integer, p_experience text, p_about text) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.submit_photography_task_internal(p_photographer_uid uuid, p_task_id uuid, p_media jsonb, p_photographer_note text DEFAULT ''::text)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_photographer_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
+  IF jsonb_typeof(COALESCE(p_media, '[]'::jsonb)) <> 'array' THEN
+    RAISE EXCEPTION 'INVALID_MEDIA_ARRAY';
+  END IF;
+
+  UPDATE photography_tasks
+  SET media = COALESCE(p_media, '[]'::jsonb),
+      photographer_note = COALESCE(p_photographer_note, ''),
+      sts = 2,
+      ts_submit = NOW(),
+      ts_upd = NOW()
+  WHERE id = p_task_id
+    AND photographer_id = p_photographer_uid
+    AND sts IN (0, 1, 4);
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'TASK_NOT_FOUND_OR_NOT_ALLOWED';
+  END IF;
+
+  RETURN TRUE;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION submit_photography_task_internal(p_photographer_uid uuid, p_task_id uuid, p_media jsonb, p_photographer_note text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION submit_photography_task_internal(p_photographer_uid uuid, p_task_id uuid, p_media jsonb, p_photographer_note text) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.update_photography_task_status_internal(p_admin_uid uuid, p_task_id uuid, p_status integer, p_office_note text DEFAULT ''::text)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE v_role INT;
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN RAISE EXCEPTION 'AUTH_MISMATCH'; END IF;
+  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
+  IF v_role IS NULL OR v_role < 3 THEN RAISE EXCEPTION 'NOT_AUTHORIZED'; END IF;
+  UPDATE photography_tasks SET sts = p_status, office_note = COALESCE(p_office_note,''), ts_upd = NOW() WHERE id = p_task_id;
+  RETURN FOUND;
+END; $function$
+
+REVOKE ALL ON FUNCTION update_photography_task_status_internal(p_admin_uid uuid, p_task_id uuid, p_status integer, p_office_note text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION update_photography_task_status_internal(p_admin_uid uuid, p_task_id uuid, p_status integer, p_office_note text) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.update_request_internal(p_user_uid uuid, p_request_id uuid, p_patch jsonb)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE
+  v_name TEXT;
+  v_phone TEXT;
+  v_notes TEXT;
+  v_price NUMERIC;
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
+  v_name := CASE WHEN p_patch ? 'cl_nm' THEN public.app_assert_text_len(p_patch->>'cl_nm', 'client_name', 2, 60) ELSE NULL END;
+  v_phone := CASE WHEN p_patch ? 'cl_ph' THEN public.app_assert_phone(p_patch->>'cl_ph') ELSE NULL END;
+  v_notes := CASE WHEN p_patch ? 'notes' THEN public.app_clean_text(p_patch->>'notes', 1000) ELSE NULL END;
+  v_price := CASE WHEN p_patch ? 'prc' THEN (p_patch->>'prc')::NUMERIC ELSE NULL END;
+  IF v_price IS NOT NULL AND (v_price < 0 OR v_price > 999999999999) THEN
+    RAISE EXCEPTION 'INVALID_PRICE';
+  END IF;
+
+  UPDATE public.requests
+  SET typ = COALESCE((p_patch->>'typ')::INT, typ),
+      elm = COALESCE((p_patch->>'elm')::INT, elm),
+      cl_nm = COALESCE(v_name, cl_nm),
+      cl_ph = COALESCE(v_phone, cl_ph),
+      prc = COALESCE(v_price, prc),
+      cur = COALESCE((p_patch->>'cur')::INT, cur),
+      notes = COALESCE(v_notes, notes),
+      specs = COALESCE(p_patch->'specs', specs)
+  WHERE id = p_request_id
+    AND usr_id = p_user_uid
+    AND i_del = 0
+    AND sts IN (0, 1);
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'REQUEST_NOT_FOUND_OR_NOT_EDITABLE';
+  END IF;
+  RETURN TRUE;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION update_request_internal(p_user_uid uuid, p_request_id uuid, p_patch jsonb) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION update_request_internal(p_user_uid uuid, p_request_id uuid, p_patch jsonb) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.update_user_badge(p_uid uuid)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE v_pts INTEGER; v_new_bg INTEGER;
+BEGIN
+  SELECT pt INTO v_pts FROM users WHERE id = p_uid;
+  IF v_pts IS NULL THEN RETURN; END IF;
+  IF v_pts >= 40000 THEN v_new_bg := 4;
+  ELSIF v_pts >= 30000 THEN v_new_bg := 3;
+  ELSIF v_pts >= 20000 THEN v_new_bg := 2;
+  ELSIF v_pts >= 10000 THEN v_new_bg := 1;
+  ELSE v_new_bg := 0; END IF;
+  UPDATE users SET bg = v_new_bg, bg_ts = NOW() WHERE id = p_uid AND bg != v_new_bg;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION update_user_badge(p_uid uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION update_user_badge(p_uid uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.update_user_notification_settings_internal(p_user_uid uuid, p_ntf jsonb)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
+  IF jsonb_typeof(COALESCE(p_ntf, '{}'::jsonb)) <> 'object' THEN
+    RAISE EXCEPTION 'INVALID_NOTIFICATION_SETTINGS';
+  END IF;
+
+  UPDATE users
+  SET ntf    = p_ntf,
+      ts_upd = NOW()
+  WHERE id    = p_user_uid
+    AND i_del = 0;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'USER_NOT_FOUND';
+  END IF;
+  RETURN TRUE;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION update_user_notification_settings_internal(p_user_uid uuid, p_ntf jsonb) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION update_user_notification_settings_internal(p_user_uid uuid, p_ntf jsonb) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.update_user_profile_internal(p_user_uid uuid, p_payload jsonb)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
+AS $function$
+DECLARE
+  v_nm TEXT;
+  v_sid TEXT;
+  v_ad TEXT;
+  v_img TEXT;
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
+  v_nm := CASE WHEN p_payload ? 'nm' THEN app_assert_text_len(p_payload->>'nm', 'name', 2, 60) ELSE NULL END;
+  v_sid := CASE WHEN p_payload ? 'sid' THEN app_clean_text(p_payload->>'sid', 60) ELSE NULL END;
+  v_ad := CASE WHEN p_payload ? 'ad' THEN app_clean_text(p_payload->>'ad', 200) ELSE NULL END;
+  v_img := CASE WHEN p_payload ? 'img' THEN app_clean_text(p_payload->>'img', 500) ELSE NULL END;
+
+  UPDATE users
+  SET nm = COALESCE(v_nm, nm),
+      sid = COALESCE(v_sid, sid),
+      ad = COALESCE(v_ad, ad),
+      img = COALESCE(v_img, img),
+      ts_upd = NOW()
+  WHERE id = p_user_uid
+    AND i_del = 0;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'USER_NOT_FOUND';
+  END IF;
+  RETURN TRUE;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION update_user_profile_internal(p_user_uid uuid, p_payload jsonb) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION update_user_profile_internal(p_user_uid uuid, p_payload jsonb) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.upsert_user_after_otp(p_identifier text, p_channel text)
+ RETURNS TABLE(user_id uuid, is_new boolean)
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE
+  v_uid UUID;
+  v_new BOOLEAN := FALSE;
+  v_identifier TEXT;
+BEGIN
+  IF p_channel = 'whatsapp' OR p_channel = 'sms' THEN
+    v_identifier := normalize_sy_phone(p_identifier);
+
+    SELECT id INTO v_uid
+    FROM users
+    WHERE normalize_sy_phone(ph) = v_identifier
+      AND i_del = 0
+    LIMIT 1;
+
+    IF v_uid IS NULL THEN
+      INSERT INTO users (nm, ph, eml, role, sts, i_del, ts_crt)
+      VALUES ('', v_identifier, '', 0, 0, 0, NOW())
+      RETURNING id INTO v_uid;
+      v_new := TRUE;
+    END IF;
+  ELSIF p_channel = 'email' THEN
+    v_identifier := LOWER(TRIM(p_identifier));
+
+    SELECT id INTO v_uid
+    FROM users
+    WHERE LOWER(COALESCE(eml, '')) = v_identifier
+      AND i_del = 0
+    LIMIT 1;
+
+    IF v_uid IS NULL THEN
+      INSERT INTO users (nm, ph, eml, role, sts, i_del, ts_crt)
+      VALUES ('', '', v_identifier, 0, 0, 0, NOW())
+      RETURNING id INTO v_uid;
+      v_new := TRUE;
+    END IF;
+  END IF;
+
+  RETURN QUERY SELECT v_uid, v_new;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION upsert_user_after_otp(p_identifier text, p_channel text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION upsert_user_after_otp(p_identifier text, p_channel text) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.validate_staff_session(p_user_uid uuid, p_token text, p_min_role integer DEFAULT 5)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
+AS $function$
+DECLARE
+  v_session RECORD;
+  v_user RECORD;
+BEGIN
+  IF p_user_uid IS NULL THEN
+    RETURN jsonb_build_object('success', false, 'error', 'USER_UID_REQUIRED');
+  END IF;
+
+  IF COALESCE(p_token, '') = '' THEN
+    RETURN jsonb_build_object('success', false, 'error', 'SESSION_TOKEN_REQUIRED');
+  END IF;
+
+  SELECT id, role, sts, i_del INTO v_user
+  FROM public.users
+  WHERE id = p_user_uid
+    AND i_del = 0;
+
+  IF v_user IS NULL THEN
+    RETURN jsonb_build_object('success', false, 'error', 'USER_NOT_FOUND');
+  END IF;
+
+  IF v_user.sts <> 0 THEN
+    RETURN jsonb_build_object('success', false, 'error', 'USER_INACTIVE');
+  END IF;
+
+  IF v_user.role < p_min_role THEN
+    RETURN jsonb_build_object('success', false, 'error', 'UNAUTHORIZED');
+  END IF;
+
+  FOR v_session IN
+    SELECT id, token_hash, expires_at
+    FROM public.staff_sessions
+    WHERE user_id = p_user_uid
+      AND revoked = 0
+      AND expires_at > NOW()
+    ORDER BY created_at DESC
+  LOOP
+    IF v_session.token_hash = crypt(p_token, v_session.token_hash) THEN
+      UPDATE public.staff_sessions
+      SET last_used_at = NOW()
+      WHERE id = v_session.id;
+
+      RETURN jsonb_build_object(
+        'success', true,
+        'user_id', p_user_uid,
+        'role', v_user.role,
+        'session_id', v_session.id,
+        'expires_at', v_session.expires_at
+      );
+    END IF;
+  END LOOP;
+
+  RETURN jsonb_build_object('success', false, 'error', 'INVALID_SESSION');
+END;
+$function$
+
+REVOKE ALL ON FUNCTION validate_staff_session(p_user_uid uuid, p_token text, p_min_role integer) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION validate_staff_session(p_user_uid uuid, p_token text, p_min_role integer) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.verify_otp(p_phone text, p_code text)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE v_found BOOLEAN;
+BEGIN
+  SELECT EXISTS(SELECT 1 FROM otp_codes WHERE phone = p_phone AND code = p_code AND used = 0 AND expires_at > NOW()) INTO v_found;
+  IF v_found THEN
+    UPDATE otp_codes SET used = 1 WHERE phone = p_phone AND code = p_code AND used = 0 AND expires_at > NOW();
+    DELETE FROM otp_codes WHERE phone = p_phone AND used = 1;
+    RETURN TRUE;
+  END IF;
+  RETURN FALSE;
+END;
+$function$
+
+REVOKE ALL ON FUNCTION verify_otp(p_phone text, p_code text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION verify_otp(p_phone text, p_code text) TO service_role;
+
+-- ---------------------------------------------------------------------
+-- دوال في setup.sql الأصلي وغير موجودة على الخادم الحيّ (تُركت كما هي):
+-- [STALE] admin_update_user_permissions
+CREATE OR REPLACE FUNCTION admin_update_user_permissions(
+  p_target_uid UUID,
+  p_perm JSONB DEFAULT '[]'::jsonb
+)
+RETURNS BOOLEAN AS $$
+DECLARE
+  v_admin_role INT;
+  v_item TEXT;
+  v_allowed TEXT[] := ARRAY[
+    'admin_dashboard',
+    'office_operations',
+    'manage_users',
+    'manage_permissions',
+    'review_offers',
+    'review_verifications',
+    'media_review',
+    'photography_management',
+    'photographer_tasks',
+    'fraud_suspects',
+    'manage_appointments',
+    'manage_deals',
+    'manage_payments',
+    'manage_reports',
+    'manage_config',
+    'view_analytics',
+    'broker_dashboard',
+    'broker_offers',
+    'broker_appointments',
+    'broker_deals',
+    'broker_stats',
+    'user_home',
+    'user_offers',
+    'user_requests',
+    'user_appointments',
+    'user_profile'
+  ];
+BEGIN
+  SELECT role INTO v_admin_role FROM users WHERE id = auth.uid();
+
+  IF v_admin_role IS NULL OR v_admin_role < 3 THEN
+    RAISE EXCEPTION 'FORBIDDEN: Deputy/admin role required.';
+  END IF;
+
+  IF p_perm IS NULL THEN
+    p_perm := '[]'::jsonb;
+  END IF;
+
+  IF jsonb_typeof(p_perm) <> 'array' THEN
+    RAISE EXCEPTION 'INVALID_PERMISSIONS: Expected JSON array.';
+  END IF;
+
+  FOR v_item IN SELECT jsonb_array_elements_text(p_perm)
+  LOOP
+    IF NOT (v_item = ANY(v_allowed)) THEN
+      RAISE EXCEPTION 'INVALID_PERMISSION: %', v_item;
+    END IF;
+  END LOOP;
+
+  UPDATE users
+  SET perm = p_perm,
+      ts_upd = NOW()
+  WHERE id = p_target_uid
+    AND i_del = 0;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'USER_NOT_FOUND';
+  END IF;
+
+  RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+REVOKE EXECUTE ON FUNCTION admin_update_user_permissions FROM anon;
+GRANT EXECUTE ON FUNCTION admin_update_user_permissions TO authenticated;
+-- ---------------------------------------------------------------------
