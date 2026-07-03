@@ -8,7 +8,6 @@ import '../../core/theme/app_theme.dart';
 import '../../core/constants/db_constants.dart';
 import '../../core/validation/input_validators.dart';
 import '../../models/request_model.dart';
-import '../../models/offer_model.dart';
 
 /// شاشة إضافة طلب (شراء / إيجار)
 class AddRequestScreen extends StatefulWidget {
