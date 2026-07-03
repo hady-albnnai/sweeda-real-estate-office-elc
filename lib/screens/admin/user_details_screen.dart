@@ -555,7 +555,10 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
           margin: const EdgeInsets.only(bottom: 6),
           child: ListTile(
             leading: const Icon(Icons.history, color: AppTheme.primaryGold, size: 18),
-            title: Text(a['action']?.toString() ?? '—',
+            title: Text(
+                a['det']?.toString().isNotEmpty == true
+                    ? a['det'].toString()
+                    : (a['action']?.toString() ?? (a['act'] != null ? 'إجراء رقم ${a['act']}' : '—')),
                 style: const TextStyle(color: AppTheme.textWhite, fontSize: 13)),
             subtitle: Text(
               AppUtils.formatTimestamp(a['ts_crt']),

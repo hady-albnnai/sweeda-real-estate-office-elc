@@ -206,8 +206,11 @@
 
 ### 5.5 RPCs آمنة للأدمن
 - `request_verification_by_uid(p_user_uid)` — المسار المتوافق مع الوضع الحالي لرفع `vrf` من المستخدم، مع مطابقة `auth.uid()` متى كانت الجلسة الحقيقية متاحة.
-- `admin_approve_verification_by_admin(p_admin_uid, uid)` — يفحص دور الإداري ويرسل إشعاراً.
-- `admin_reject_verification_by_admin(p_admin_uid, uid, reason)` — مثلها مع السبب.
+- `admin_approve_verification_by_admin(p_admin_uid, uid)` — يفحص دور الإداري (`role >= 4`) ويرسل إشعاراً ويوثق الحركة في `activity_log`.
+- `admin_reject_verification_by_admin(p_admin_uid, uid, reason)` — يفرض سبب الرفض إجبارياً ويفحص الدور (`role >= 4`) ويوثق في `activity_log`.
+- `admin_review_offer_internal(p_admin_uid, p_offer_id, p_approve, p_reject_reason)` — يفحص دور الإداري (`role >= 4`) ويفرض سبب الرفض عند الرفض ويوثق في `activity_log`.
+- `approve_payment_final` و `admin_reject_payment_internal` — محصورة للرتبة العليا (`role >= 5`) وتوثق في `activity_log`.
+- **(تحديث سجل الحركات 2026-07-02):** يتم تسجيل جميع القرارات والتصرفات الإدارية آلياً في جدول `activity_log` عبر الدالة الموحدة `log_admin_action` لضمان المحاسبة وتتبع الأثر (Audit Trail).
 
 ### 5.6 منع phishing notifications
 - INSERT في `notifications` محظور من client (`WITH CHECK (false)`).
