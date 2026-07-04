@@ -614,6 +614,9 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
                                       case 'details':
                                         _showEmployeeDetails(user);
                                         break;
+                                      case 'update_id_images':
+                                        _updateStaffIdImages(user);
+                                        break;
                                       case 'change_role':
                                         _changeRole(user);
                                         break;
@@ -631,6 +634,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
                                   itemBuilder: (context) => [
                                     const PopupMenuItem(value: 'details', child: Text('عرض التفاصيل')),
                                     if (canModify) ...[
+                                      const PopupMenuItem(value: 'update_id_images', child: Text('تحديث صور الهوية')),
                                       const PopupMenuDivider(),
                                       const PopupMenuItem(value: 'change_role', child: Text('تغيير الدور')),
                                       PopupMenuItem(
