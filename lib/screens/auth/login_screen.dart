@@ -51,11 +51,15 @@ class _LoginScreenState extends State<LoginScreen> {
       _snack(auth.lastError ?? 'خطأ في الاسم أو كلمة المرور');
     } else {
       if (mounted) {
-        if (auth.isSenior || auth.isLawyer) {
+        if (auth.isLawyer) {
+          context.go('/lawyer/dashboard');
+        } else if (auth.isExpediter) {
+          context.go('/expediter/tasks');
+        } else if (auth.isSenior) {
           context.go('/admin/dashboard');
         } else if (auth.isEmployee) {
           context.go('/employee/home');
-        } else if (auth.isSupervisor || auth.isExpediter) {
+        } else if (auth.isSupervisor) {
           context.go('/executor/tasks');
         } else if (auth.isPhotographer) {
           context.go('/photographer/tasks');

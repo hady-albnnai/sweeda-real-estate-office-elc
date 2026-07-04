@@ -56,9 +56,9 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_idImages.isEmpty) {
+    if (_idImages.length < 2) {
       AppTheme.showSnackBar(context,
-        const SnackBar(content: Text('يرجى اختيار صورة الهوية')),
+        const SnackBar(content: Text('يجب رفع صورتين للهوية على الأقل: الوجه والقفا')),
       );
       return;
     }
@@ -191,7 +191,7 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          _idImages.isEmpty ? 'ارفع صور الهوية (وجه وقفا) *' : 'تم اختيار ${_idImages.length} صورة',
+                          _idImages.length < 2 ? 'ارفع صورتين للهوية (وجه وقفا) *' : 'تم اختيار ${_idImages.length} صورة',
                           style: TextStyle(
                             color: _idImages.isEmpty ? AppTheme.textGrey : AppTheme.textWhite,
                             fontSize: 14,

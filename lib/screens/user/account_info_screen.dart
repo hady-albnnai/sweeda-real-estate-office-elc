@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -46,6 +47,11 @@ class AccountInfoScreen extends StatelessWidget {
           children: [
             // ─── معلومات الحساب ───
             _buildInfoCard(user, context),
+
+            if (user.isLawyer || user.isExpediter) ...[
+              const SizedBox(height: 16),
+              _buildLegalRoleDetailsCard(user),
+            ],
 
             const SizedBox(height: 16),
 
@@ -105,8 +111,8 @@ class AccountInfoScreen extends StatelessWidget {
               user.sid.isEmpty ? 'غير مكتمل' : user.sid, context),
           _infoRow(
               Icons.credit_card_outlined,
-              'صورة الهوية',
-              user.img.isEmpty ? 'غير مرفوعة' : 'مرفوعة بشكل خاص',
+              user.isInternal ? 'صور الهوية' : 'صورة الهوية',
+              _identityImagesText(user),
               context),
           _infoRow(Icons.calendar_today_outlined, 'تاريخ التسجيل',
               AppUtils.formatTimestamp(user.tsCrt), context),
@@ -135,6 +141,145 @@ class AccountInfoScreen extends StatelessWidget {
                 context,
               ),
           ],
+        ],
+      ),
+    );
+  }
+
+  List<String> _parseIdentityImages(String raw) {
+    final value = raw.trim();
+    if (value.isEmpty) return const [];
+    if (value.startsWith('[')) {
+      try {
+        final parsed = jsonDecode(value);
+        if (parsed is List) {
+          return parsed.map((e) => e.toString()).where((e) => e.isNotEmpty).toList();
+        }
+      } catch (_) {
+        // fallback below
+      }
+    }
+    return [value];
+  }
+
+  String _identityImagesText(UserModel user) {
+    final count = _parseIdentityImages(user.img).length;
+    if (count <= 0) return 'غير مرفوعة';
+    if (user.isInternal) return 'محفوظة بشكل خاص ($count/2)';
+    return 'مرفوعة بشكل خاص';
+  }
+
+  Future<Map<String, dynamic>?> _fetchLawyerProfile(UserModel user) async {
+    final res = await SupabaseService().invokeFunction(
+      'legal-actions',
+      body: {'action': 'get_lawyer_profile', 'user_uid': user.uid},
+    );
+    final data = res.data is Map ? Map<String, dynamic>.from(res.data) : null;
+    if (data == null || data['success'] != true || data['profile'] is! Map) return null;
+    return Map<String, dynamic>.from(data['profile'] as Map);
+  }
+
+  Future<List<dynamic>> _fetchExpediterTasks(UserModel user) async {
+    final res = await SupabaseService().invokeFunction(
+      'legal-actions',
+      body: {'action': 'get_my_expediting_tasks', 'user_uid': user.uid},
+    );
+    final data = res.data is Map ? Map<String, dynamic>.from(res.data) : null;
+    if (data == null || data['success'] != true || data['tasks'] is! List) return const [];
+    return data['tasks'] as List;
+  }
+
+  Widget _buildLegalRoleDetailsCard(UserModel user) {
+    if (user.isLawyer) {
+      return FutureBuilder<Map<String, dynamic>?>(
+        future: _fetchLawyerProfile(user),
+        builder: (context, snapshot) {
+          final profile = snapshot.data;
+          final found = profile != null && profile['found'] == true;
+          return _roleDetailsContainer(
+            title: 'تفاصيل المحامي المختص',
+            icon: Icons.gavel_rounded,
+            children: [
+              _infoRow(Icons.work_outline, 'القسم', 'القسم القانوني والاستشارات', context),
+              _infoRow(Icons.verified_user_outlined, 'التوثيق', user.vrf == 2 ? 'موثق وظيفياً' : 'ينتظر استكمال التوثيق الوظيفي', context),
+              _infoRow(Icons.credit_card, 'صور الهوية', _identityImagesText(user), context),
+              if (snapshot.connectionState == ConnectionState.waiting)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: LinearProgressIndicator(color: AppTheme.primaryGold),
+                )
+              else ...[
+                _infoRow(Icons.phone_android, 'واتساب', found ? (profile['whatsapp_phone']?.toString() ?? '') : 'غير معد بعد', context),
+                _infoRow(Icons.location_on_outlined, 'عنوان المكتب', found ? (profile['office_address']?.toString() ?? '') : 'غير محدد', context),
+                _infoRow(Icons.balance_outlined, 'الاختصاص', found ? (profile['specialization']?.toString() ?? '') : 'عقارات وسيارات', context),
+                _infoRow(Icons.toggle_on_outlined, 'حالة الملف', found && profile['is_active'] == true ? 'نشط' : 'يحتاج إعداد رقم الواتساب', context),
+              ],
+            ],
+          );
+        },
+      );
+    }
+
+    return FutureBuilder<List<dynamic>>(
+      future: _fetchExpediterTasks(user),
+      builder: (context, snapshot) {
+        final tasks = snapshot.data ?? const [];
+        final pending = tasks.where((t) => t is Map && (t['status'] == 0 || t['status'] == 1)).length;
+        final done = tasks.where((t) => t is Map && (t['status'] == 2 || t['status'] == 3)).length;
+        return _roleDetailsContainer(
+          title: 'تفاصيل معقب المعاملات',
+          icon: Icons.assignment_turned_in_outlined,
+          children: [
+            _infoRow(Icons.work_outline, 'القسم', 'تعقيب المعاملات الميدانية', context),
+            _infoRow(Icons.verified_user_outlined, 'التوثيق', user.vrf == 2 ? 'موثق وظيفياً' : 'ينتظر استكمال التوثيق الوظيفي', context),
+            _infoRow(Icons.credit_card, 'صور الهوية', _identityImagesText(user), context),
+            if (snapshot.connectionState == ConnectionState.waiting)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: LinearProgressIndicator(color: AppTheme.primaryGold),
+              )
+            else ...[
+              _infoRow(Icons.pending_actions, 'مهام قيد العمل', '$pending', context),
+              _infoRow(Icons.task_alt, 'مهام منتهية', '$done', context),
+              _infoRow(Icons.list_alt, 'إجمالي المهام', '${tasks.length}', context),
+            ],
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _roleDetailsContainer({
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceBlack,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: AppTheme.primaryGold, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: AppTheme.primaryGold,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...children,
         ],
       ),
     );

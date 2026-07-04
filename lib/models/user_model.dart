@@ -193,10 +193,11 @@ class UserModel {
 
   /// هل هو موظف داخلي (مصور فما فوق)؟
   bool get isInternal => role >= UserRole.minInternal;
-  /// هل هو إداري (مشرف فما فوق) — يصل للوحة الإدارة؟
-  bool get isAdmin => role >= UserRole.minAdmin;
-  /// هل هو إدارة عليا (نائب مدير فما فوق)؟
-  bool get isSenior => role >= UserRole.minSenior;
+  /// هل هو إداري تشغيلي يصل للوحة الإدارة؟
+  /// مهم: الأدوار القانونية 7/8 أعلى رقمياً لكنها ليست إدارة.
+  bool get isAdmin => role >= UserRole.minAdmin && role <= UserRole.manager;
+  /// هل هو إدارة عليا (نائب مدير/مدير فقط)؟
+  bool get isSenior => role >= UserRole.minSenior && role <= UserRole.manager;
   /// هل هو مصور؟
   bool get isPhotographer => role == UserRole.photographer;
   /// هل هو مشرف (ميداني)؟

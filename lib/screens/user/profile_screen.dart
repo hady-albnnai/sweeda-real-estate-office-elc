@@ -82,11 +82,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } else {
       // 🚀 توجيه فوري - لا ننتظر rebuild كي لا تظهر شاشة الحساب للحظة
       if (mounted) {
-        if (auth.isSenior || auth.isLawyer) {
+        if (auth.isLawyer) {
+          context.go('/lawyer/dashboard');
+        } else if (auth.isExpediter) {
+          context.go('/expediter/tasks');
+        } else if (auth.isSenior) {
           context.go('/admin/dashboard');
         } else if (auth.isEmployee) {
           context.go('/employee/home');
-        } else if (auth.isSupervisor || auth.isExpediter) {
+        } else if (auth.isSupervisor) {
           context.go('/executor/tasks');
         } else if (auth.isPhotographer) {
           context.go('/photographer/tasks');
@@ -350,7 +354,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [AppTheme.primaryGold.withOpacity(0.2), AppTheme.deepBlack])),
       child: Column(children: [
         Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          Text(user.isAdmin ? 'الملف الوظيفي' : 'حسابي', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 22, fontWeight: FontWeight.bold)),
+          Text(user.isInternal ? 'الملف الوظيفي' : 'حسابي', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 22, fontWeight: FontWeight.bold)),
           IconButton(icon: const Icon(Icons.settings_outlined, color: AppTheme.primaryGold), onPressed: () => context.push('/user/settings')),
         ]),
         const SizedBox(height: 16),
@@ -362,7 +366,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const SizedBox(height: 12),
         Text(user.nm.isNotEmpty ? user.nm : 'مستخدم جديد', style: const TextStyle(color: AppTheme.textWhite, fontSize: 20, fontWeight: FontWeight.bold)),
         const SizedBox(height: 6),
-        if (user.isAdmin) ...[
+        if (user.isInternal) ...[
           Text(user.roleName, style: const TextStyle(color: AppTheme.primaryGold, fontSize: 14, fontWeight: FontWeight.w600)),
           const SizedBox(height: 4),
           if (user.sid.isNotEmpty) Text('الرقم الوطني: ${user.sid}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
@@ -460,8 +464,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildMenuSection(UserModel u) => Column(children: [
         _buildMenuItem(
             i: Icons.person_outline,
-            t: u.isAdmin ? 'بياناتي الوظيفية' : 'معلومات الحساب',
-            s: u.isAdmin
+            t: u.isInternal ? 'بياناتي الوظيفية' : 'معلومات الحساب',
+            s: u.isInternal
                 ? 'بيانات التعيين والتحقق الوظيفي ✅'
                 : 'معلوماتك الشخصية والتوثيق',
             o: () => context.push('/user/account-info')),
@@ -470,13 +474,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
             t: 'تقييماتي المستلمة',
             s: 'شاهد تقييمات العملاء لك',
             o: () => context.push('/user/my-ratings')),
-        if (u.isAdmin)
+        if (u.isInternal)
           _buildMenuItem(
-              i: Icons.dashboard_outlined,
-              t: 'لوحة التحكم الإدارية',
-              s: 'الانتقال لواجهة العمليات',
+              i: u.isLawyer
+                  ? Icons.gavel_outlined
+                  : u.isExpediter
+                      ? Icons.assignment_turned_in_outlined
+                      : Icons.dashboard_outlined,
+              t: u.isLawyer
+                  ? 'لوحة المحامي'
+                  : u.isExpediter
+                      ? 'مهام التعقيب'
+                      : 'لوحة التحكم الإدارية',
+              s: u.isLawyer
+                  ? 'المواعيد والمهام القانونية'
+                  : u.isExpediter
+                      ? 'متابعة مهام التعقيب المستلمة'
+                      : 'الانتقال لواجهة العمليات',
               o: () {
-                if (u.isPhotographer) {
+                if (u.isLawyer) {
+                  context.go('/lawyer/dashboard');
+                } else if (u.isExpediter) {
+                  context.go('/expediter/tasks');
+                } else if (u.isPhotographer) {
                   context.go('/photographer/tasks');
                 } else if (u.isSupervisor) {
                   context.go('/executor/tasks');

@@ -110,9 +110,15 @@ serve(async (req) => {
     const phone = body.phone;
     const email = body.email ?? "";
     const username = body.username ?? "";
-    const address = body.address ?? "";
-    const sid = body.sid ?? "";
+    const address = (body.address ?? "").toString();
+    const sid = (body.sid ?? "").toString();
     const role = Number(body.role);
+    if (address.trim().length < 3) {
+      return json({ success: false, error: "ADDRESS_REQUIRED" }, 400);
+    }
+    if (sid.trim().length < 3) {
+      return json({ success: false, error: "SID_REQUIRED" }, 400);
+    }
     const password = typeof body.password === "string" && body.password.length >= 8
       ? body.password
       : randomPassword();
@@ -123,6 +129,9 @@ serve(async (req) => {
       .filter((item): item is string => typeof item === "string" && item.length > 0)
       .slice(0, 2)
       .map(base64ToUint8Array);
+    if (idImageBytesList.length < 2) {
+      return json({ success: false, error: "ID_IMAGES_REQUIRED_MIN_2" }, 400);
+    }
     if (idImageBytesList.some((bytes) => bytes.length > 8 * 1024 * 1024)) {
       return json({ success: false, error: "ID_IMAGE_TOO_LARGE" }, 413);
     }
@@ -163,6 +172,10 @@ serve(async (req) => {
           });
 
         if (uploadError) {
+          await supabaseAdmin
+            .from("users")
+            .update({ i_del: 1, sts: 1, ban_rsn: "ID_UPLOAD_FAILED", ts_upd: new Date().toISOString() })
+            .eq("id", data.user_id);
           return json({ success: false, error: `ID_UPLOAD_FAILED: ${uploadError.message}`, user_id: data.user_id }, 400);
         }
         idImagePaths.push(idImagePath);
@@ -171,10 +184,14 @@ serve(async (req) => {
       const storedImg = idImagePaths.length === 1 ? idImagePaths[0] : JSON.stringify(idImagePaths);
       const { error: updateImageError } = await supabaseAdmin
         .from("users")
-        .update({ img: storedImg, ts_upd: new Date().toISOString() })
+        .update({ img: storedImg, vrf: 2, ts_upd: new Date().toISOString() })
         .eq("id", data.user_id);
 
       if (updateImageError) {
+        await supabaseAdmin
+          .from("users")
+          .update({ i_del: 1, sts: 1, ban_rsn: "ID_IMAGE_SAVE_FAILED", ts_upd: new Date().toISOString() })
+          .eq("id", data.user_id);
         return json({ success: false, error: `ID_IMAGE_SAVE_FAILED: ${updateImageError.message}`, user_id: data.user_id }, 400);
       }
     }

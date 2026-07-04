@@ -377,79 +377,52 @@ AS $function$ BEGIN UPDATE users SET pt = pt + p_pts, ts_upd = NOW() WHERE id = 
 REVOKE ALL ON FUNCTION add_points(p_uid uuid, p_pts integer) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION add_points(p_uid uuid, p_pts integer) TO service_role;
 
-CREATE OR REPLACE FUNCTION public.admin_create_staff_user(p_admin_uid uuid, p_full_name text, p_phone text, p_email text DEFAULT ''::text, p_username text DEFAULT ''::text, p_password text DEFAULT ''::text, p_role integer DEFAULT 4)
- RETURNS jsonb
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public', 'extensions'
-AS $function$
-DECLARE
-  v_admin_role INT;
-  v_phone TEXT;
-  v_username TEXT;
-  v_name TEXT;
-  v_email TEXT;
-  v_new_id UUID;
+CREATE OR REPLACE FUNCTION public.admin_create_staff_user(
+  p_admin_uid uuid,
+  p_full_name text,
+  p_phone text,
+  p_email text DEFAULT ''::text,
+  p_username text DEFAULT ''::text,
+  p_password text DEFAULT ''::text,
+  p_role integer DEFAULT 4
+) RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions, pg_temp
+AS $$
 BEGIN
-  v_admin_role := _admin_employee_assert_actor(p_admin_uid, 5);
-
-  IF p_role NOT IN (2, 3, 4, 5) THEN
-    RAISE EXCEPTION 'INVALID_ROLE';
-  END IF;
-  IF v_admin_role < 6 AND p_role >= 5 THEN
-    RAISE EXCEPTION 'ONLY_MANAGER_CAN_CREATE_DEPUTY';
-  END IF;
-
-  v_name := app_assert_text_len(p_full_name, 'name', 2, 60);
-  v_phone := app_assert_phone(p_phone);
-  v_username := app_assert_username(p_username, FALSE);
-  PERFORM app_assert_password(p_password, 8);
-  v_email := NULLIF(app_clean_text(p_email, 120), '');
-
-  IF v_email IS NOT NULL AND v_email !~* '^[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}$' THEN
-    RAISE EXCEPTION 'EMAIL_INVALID';
-  END IF;
-
-  IF EXISTS (SELECT 1 FROM users WHERE normalize_sy_phone(ph) = v_phone AND i_del = 0) THEN
-    RAISE EXCEPTION 'PHONE_EXISTS';
-  END IF;
-  IF v_username IS NOT NULL AND EXISTS (SELECT 1 FROM users WHERE lower(usr) = v_username AND i_del = 0) THEN
-    RAISE EXCEPTION 'USERNAME_TAKEN';
-  END IF;
-
-  INSERT INTO users (nm, ph, eml, usr, pwd, role, sts, vrf, i_del, ts_crt, ts_upd)
-  VALUES (v_name, v_phone, v_email, v_username, crypt(p_password, gen_salt('bf', 8)), p_role, 0, 0, 0, NOW(), NOW())
-  RETURNING id INTO v_new_id;
-
-  PERFORM _admin_employee_log(
-    p_admin_uid,
-    'staff_create',
-    v_new_id,
-    jsonb_build_object('role', p_role, 'phone', v_phone, 'username', v_username)
-  );
-
-  RETURN jsonb_build_object('success', true, 'user_id', v_new_id);
+  RAISE EXCEPTION 'FULL_IDENTITY_REQUIRED';
 END;
-$function$
+$$;
 
-REVOKE ALL ON FUNCTION admin_create_staff_user(p_admin_uid uuid, p_full_name text, p_phone text, p_email text, p_username text, p_password text, p_role integer) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION admin_create_staff_user(p_admin_uid uuid, p_full_name text, p_phone text, p_email text, p_username text, p_password text, p_role integer) TO service_role;
+REVOKE ALL ON FUNCTION public.admin_create_staff_user(uuid, text, text, text, text, text, integer) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_create_staff_user(uuid, text, text, text, text, text, integer) TO service_role;
 
-CREATE OR REPLACE FUNCTION public.admin_create_staff_user(p_admin_uid uuid, p_full_name text, p_phone text, p_email text, p_username text, p_password text, p_role integer, p_address text DEFAULT ''::text, p_sid text DEFAULT ''::text, p_img text DEFAULT ''::text)
- RETURNS jsonb
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public', 'extensions'
-AS $function$
+CREATE OR REPLACE FUNCTION public.admin_create_staff_user(
+  p_admin_uid uuid,
+  p_full_name text,
+  p_phone text,
+  p_email text,
+  p_username text,
+  p_password text,
+  p_role integer,
+  p_address text DEFAULT ''::text,
+  p_sid text DEFAULT ''::text,
+  p_img text DEFAULT ''::text
+) RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions, pg_temp
+AS $$
 DECLARE
   v_admin_role INT;
   v_phone TEXT;
   v_username TEXT;
   v_new_id UUID;
 BEGIN
-  v_admin_role := _admin_employee_assert_actor(p_admin_uid, 5);
+  v_admin_role := public._admin_employee_assert_actor(p_admin_uid, 5);
 
-  IF p_role NOT IN (2, 3, 4, 5) THEN
+  IF p_role NOT IN (2, 3, 4, 5, 7, 8) THEN
     RAISE EXCEPTION 'INVALID_ROLE';
   END IF;
 
@@ -465,60 +438,67 @@ BEGIN
     RAISE EXCEPTION 'PASSWORD_TOO_SHORT';
   END IF;
 
-  v_phone := normalize_sy_phone(COALESCE(p_phone, ''));
+  IF LENGTH(TRIM(COALESCE(p_address, ''))) < 3 THEN
+    RAISE EXCEPTION 'ADDRESS_REQUIRED';
+  END IF;
+
+  IF LENGTH(TRIM(COALESCE(p_sid, ''))) < 3 THEN
+    RAISE EXCEPTION 'SID_REQUIRED';
+  END IF;
+
+  v_phone := public.normalize_sy_phone(p_phone);
   IF v_phone = '' THEN
     RAISE EXCEPTION 'PHONE_REQUIRED';
   END IF;
 
-  IF EXISTS (SELECT 1 FROM users WHERE normalize_sy_phone(ph) = v_phone AND i_del = 0) THEN
+  v_username := NULLIF(public.normalize_arabic_username(p_username), '');
+
+  IF EXISTS (SELECT 1 FROM public.users WHERE public.normalize_sy_phone(ph) = v_phone AND i_del = 0) THEN
     RAISE EXCEPTION 'PHONE_EXISTS';
   END IF;
 
-  v_username := NULLIF(LOWER(TRIM(COALESCE(p_username, ''))), '');
-  IF v_username IS NOT NULL THEN
-    IF LENGTH(v_username) < 3 OR LENGTH(v_username) > 30 THEN
-      RAISE EXCEPTION 'USERNAME_LENGTH';
-    END IF;
-    IF NOT v_username ~ '^[a-z0-9_.]+$' THEN
-      RAISE EXCEPTION 'USERNAME_INVALID_CHARS';
-    END IF;
-    IF EXISTS (SELECT 1 FROM users WHERE LOWER(usr) = v_username AND i_del = 0) THEN
-      RAISE EXCEPTION 'USERNAME_TAKEN';
-    END IF;
+  IF v_username IS NOT NULL AND EXISTS (
+    SELECT 1 FROM public.users
+    WHERE public.normalize_arabic_username(usr) = v_username
+      AND i_del = 0
+  ) THEN
+    RAISE EXCEPTION 'USERNAME_EXISTS';
   END IF;
 
-  INSERT INTO users (nm, ph, eml, usr, pwd, role, sts, vrf, ad, sid, img, i_del, ts_crt, ts_upd)
-  VALUES (
-    TRIM(COALESCE(p_full_name, '')),
+  INSERT INTO public.users (
+    nm, ph, eml, usr, pwd,
+    role, ad, sid, img,
+    sts, vrf, i_del, ts_crt, ts_upd
+  ) VALUES (
+    TRIM(p_full_name),
     v_phone,
     NULLIF(TRIM(COALESCE(p_email, '')), ''),
     v_username,
-    crypt(p_password, gen_salt('bf', 8)),
+    crypt(p_password, gen_salt('bf', 10)),
     p_role,
-    0,
-    2, -- Verified officially since added by Admin
-    COALESCE(p_address, ''),
-    COALESCE(p_sid, ''),
+    TRIM(COALESCE(p_address, '')),
+    TRIM(COALESCE(p_sid, '')),
     COALESCE(p_img, ''),
+    0,
+    2,
     0,
     NOW(),
     NOW()
-  )
-  RETURNING id INTO v_new_id;
+  ) RETURNING id INTO v_new_id;
 
-  PERFORM _admin_employee_log(
+  PERFORM public._admin_employee_log(
     p_admin_uid,
-    'staff_create',
+    'create_staff_full',
     v_new_id,
-    jsonb_build_object('role', p_role, 'phone', v_phone, 'username', v_username, 'vrf', 2)
+    jsonb_build_object('role', p_role, 'nm', p_full_name, 'sid', p_sid)
   );
 
-  RETURN jsonb_build_object('success', true, 'user_id', v_new_id);
+  RETURN jsonb_build_object('success', true, 'user_id', v_new_id, 'role', p_role);
 END;
-$function$
+$$;
 
-REVOKE ALL ON FUNCTION admin_create_staff_user(p_admin_uid uuid, p_full_name text, p_phone text, p_email text, p_username text, p_password text, p_role integer, p_address text, p_sid text, p_img text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION admin_create_staff_user(p_admin_uid uuid, p_full_name text, p_phone text, p_email text, p_username text, p_password text, p_role integer, p_address text, p_sid text, p_img text) TO service_role;
+REVOKE ALL ON FUNCTION public.admin_create_staff_user(uuid, text, text, text, text, text, integer, text, text, text) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_create_staff_user(uuid, text, text, text, text, text, integer, text, text, text) TO service_role;
 
 CREATE OR REPLACE FUNCTION public.admin_delete_staff_user(p_admin_uid uuid, p_target_uid uuid)
  RETURNS jsonb
