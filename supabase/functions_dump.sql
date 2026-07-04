@@ -6942,3 +6942,145 @@ REVOKE ALL ON FUNCTION verify_otp_v2(p_identifier text, p_code text) FROM PUBLIC
 GRANT EXECUTE ON FUNCTION verify_otp_v2(p_identifier text, p_code text) TO service_role;
 
 
+-- =====================================================================
+-- القسم القانوني وتعقيب المعاملات (Phase 1 Tables & RPCs)
+-- =====================================================================
+
+CREATE TABLE IF NOT EXISTS public.lawyer_profiles (
+    uid UUID PRIMARY KEY REFERENCES public.users(id) ON DELETE CASCADE,
+    whatsapp_phone TEXT NOT NULL DEFAULT '',
+    office_address TEXT DEFAULT '',
+    specialization TEXT DEFAULT 'عقارات وسيارات',
+    avl JSONB DEFAULT '{}'::jsonb,
+    active_tasks_count INT DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.lawyer_profiles ENABLE ROW LEVEL SECURITY;
+
+CREATE TABLE IF NOT EXISTS public.expediting_tasks (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    lawyer_uid UUID NOT NULL REFERENCES public.users(id),
+    expediter_uid UUID NOT NULL REFERENCES public.users(id),
+    offer_id UUID REFERENCES public.offers(id),
+    item_type INT NOT NULL DEFAULT 0,
+    target_property_num TEXT DEFAULT '',
+    target_zone TEXT DEFAULT '',
+    checklist JSONB NOT NULL DEFAULT '[]'::jsonb,
+    status INT NOT NULL DEFAULT 0,
+    lawyer_notes TEXT DEFAULT '',
+    expediter_notes TEXT DEFAULT '',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    completed_at TIMESTAMPTZ
+);
+
+ALTER TABLE public.expediting_tasks ENABLE ROW LEVEL SECURITY;
+
+-- === admin_upsert_lawyer_profile ===
+CREATE OR REPLACE FUNCTION public.admin_upsert_lawyer_profile(
+    p_admin_uid uuid,
+    p_target_uid uuid,
+    p_whatsapp text,
+    p_address text DEFAULT '',
+    p_spec text DEFAULT 'عقارات وسيارات',
+    p_avl jsonb DEFAULT '{}'::jsonb
+) RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE
+    v_role INT;
+BEGIN
+    IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN RAISE EXCEPTION 'AUTH_MISMATCH'; END IF;
+    SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
+    IF v_role IS NULL OR v_role < 5 THEN RAISE EXCEPTION 'NOT_AUTHORIZED'; END IF;
+
+    UPDATE users SET role = 7, ts_upd = NOW() WHERE id = p_target_uid AND role < 7;
+
+    INSERT INTO lawyer_profiles (uid, whatsapp_phone, office_address, specialization, avl, is_active, updated_at)
+    VALUES (p_target_uid, p_whatsapp, p_address, p_spec, p_avl, TRUE, NOW())
+    ON CONFLICT (uid) DO UPDATE
+    SET whatsapp_phone = EXCLUDED.whatsapp_phone,
+        office_address = EXCLUDED.office_address,
+        specialization = EXCLUDED.specialization,
+        avl = EXCLUDED.avl,
+        is_active = TRUE,
+        updated_at = NOW();
+
+    RETURN TRUE;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION admin_upsert_lawyer_profile(uuid, uuid, text, text, text, jsonb) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION admin_upsert_lawyer_profile(uuid, uuid, text, text, text, jsonb) TO service_role;
+
+-- === get_active_lawyers ===
+CREATE OR REPLACE FUNCTION public.get_active_lawyers()
+RETURNS TABLE(uid uuid, nm text, ph text, whatsapp_phone text, office_address text, specialization text, avl jsonb, active_tasks_count int)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+BEGIN
+    RETURN QUERY
+    SELECT lp.uid, COALESCE(u.nm, ''), COALESCE(u.ph, ''), lp.whatsapp_phone, lp.office_address, lp.specialization, lp.avl, lp.active_tasks_count
+    FROM lawyer_profiles lp
+    JOIN users u ON u.id = lp.uid
+    WHERE lp.is_active = TRUE AND u.i_del = 0;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION get_active_lawyers() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION get_active_lawyers() TO service_role;
+
+-- === update_expediting_checklist_item ===
+CREATE OR REPLACE FUNCTION public.update_expediting_checklist_item(
+    p_actor_uid uuid,
+    p_task_id uuid,
+    p_item_key text,
+    p_status int,
+    p_input_value text DEFAULT '',
+    p_attachment_url text DEFAULT '',
+    p_notes text DEFAULT ''
+) RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE
+    v_task RECORD;
+    v_new_checklist JSONB := '[]'::jsonb;
+    v_item JSONB;
+BEGIN
+    IF auth.uid() IS NOT NULL AND auth.uid() <> p_actor_uid THEN RAISE EXCEPTION 'AUTH_MISMATCH'; END IF;
+
+    SELECT * INTO v_task FROM expediting_tasks WHERE id = p_task_id;
+    IF v_task IS NULL THEN RETURN jsonb_build_object('success', false, 'error', 'TASK_NOT_FOUND'); END IF;
+    IF v_task.expediter_uid <> p_actor_uid AND v_task.lawyer_uid <> p_actor_uid THEN
+        RETURN jsonb_build_object('success', false, 'error', 'NOT_AUTHORIZED');
+    END IF;
+
+    FOR v_item IN SELECT * FROM jsonb_array_elements(v_task.checklist)
+    LOOP
+        IF v_item->>'key' = p_item_key THEN
+            v_item := jsonb_set(v_item, '{status}', to_jsonb(p_status));
+            IF p_input_value <> '' THEN v_item := jsonb_set(v_item, '{input_value}', to_jsonb(p_input_value)); END IF;
+            IF p_attachment_url <> '' THEN v_item := jsonb_set(v_item, '{attachment_url}', to_jsonb(p_attachment_url)); END IF;
+            IF p_notes <> '' THEN v_item := jsonb_set(v_item, '{notes}', to_jsonb(p_notes)); END IF;
+        END IF;
+        v_new_checklist := v_new_checklist || v_item;
+    END LOOP;
+
+    UPDATE expediting_tasks SET checklist = v_new_checklist WHERE id = p_task_id;
+
+    RETURN jsonb_build_object('success', true, 'checklist', v_new_checklist);
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION update_expediting_checklist_item(uuid, uuid, text, int, text, text, text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION update_expediting_checklist_item(uuid, uuid, text, int, text, text, text) TO service_role;
+
+
