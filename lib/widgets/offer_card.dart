@@ -39,10 +39,10 @@ class _OfferCardState extends State<OfferCard> {
       final auth = context.read<AuthProvider>();
       if (auth.isLoggedIn) {
         final config = context.read<ConfigProvider>().config;
-        final awarded = await BusinessService().registerEventPoints(
+        final awarded = await BusinessService().awardEvent(
           auth.userModel!.uid,
-          'like',
           config,
+          'like',
           fallback: 10,
         );
         if (awarded && mounted) {

@@ -318,6 +318,7 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
           ),
         ),
       ),
+    ),
     );
   }
 
