@@ -70,12 +70,9 @@ class SupabaseService {
     final finalHeaders = Map<String, String>.from(headers ?? {});
 
     if (jwt != null) {
-      // JWT is primary
+      // JWT is primary. Custom password-login sessions are sent in the body
+      // as staff_session_token so Edge Function JWT verification remains safe.
       finalHeaders['Authorization'] = 'Bearer $jwt';
-    } else if (sessionToken != null && sessionToken.isNotEmpty) {
-      // Custom password-login session. Some Edge Functions read the token
-      // from Authorization when no Supabase JWT exists.
-      finalHeaders['Authorization'] = sessionToken;
     }
 
     dynamic finalBody = body;

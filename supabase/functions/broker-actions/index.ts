@@ -24,7 +24,8 @@ function json(body: Record<string, unknown>, status = 200): Response {
 async function validateUser(
   req: Request,
   supabaseAdmin: ReturnType<typeof createClient>,
-  requestedUid: string
+  requestedUid: string,
+  body: Record<string, unknown> = {}
 ): Promise<{ ok: true; uid: string } | { ok: false; response: Response }> {
   const authHeader = req.headers.get("Authorization") ?? "";
   const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
@@ -41,8 +42,9 @@ async function validateUser(
   }
 
   // 2. Try Custom Session Token validation (for custom password login)
-  const sessionToken = authHeader.trim();
-  if (sessionToken && !authHeader.startsWith("Bearer ")) {
+  const sessionToken = (body?.staff_session_token ?? body?.staffSessionToken ?? body?.session_token ?? body?.sessionToken)?.toString()
+    || (authHeader && !authHeader.startsWith("Bearer ") ? authHeader.trim() : "");
+  if (sessionToken && sessionToken !== "undefined" && sessionToken !== "null" && sessionToken !== "anon_key_here") {
     const { data, error } = await supabaseAdmin.rpc("validate_staff_session", {
       p_token: sessionToken,
       p_user_uid: requestedUid,
@@ -74,7 +76,7 @@ serve(async (req) => {
 
     if (!requestedUid) return json({ success: false, error: "USER_UID_REQUIRED" }, 400);
 
-    const actor = await validateUser(req, supabaseAdmin, requestedUid);
+    const actor = await validateUser(req, supabaseAdmin, requestedUid, body);
     if (!actor.ok) return actor.response;
     const uid = actor.uid;
 
