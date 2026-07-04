@@ -18,13 +18,10 @@ class LegalProvider with ChangeNotifier {
 
   List<Map<String, dynamic>> _availableExpediters = [];
   List<Map<String, dynamic>> get availableExpediters => _availableExpediters;
-
   List<ExpeditingTaskModel> _lawyerTasks = [];
   List<ExpeditingTaskModel> get lawyerTasks => _lawyerTasks;
-
   List<Map<String, dynamic>> _lawyerAppointments = [];
   List<Map<String, dynamic>> get lawyerAppointments => _lawyerAppointments;
-
   List<ExpeditingTaskModel> _expeditingTasks = [];
   List<ExpeditingTaskModel> get expeditingTasks => _expeditingTasks;
 
@@ -34,8 +31,9 @@ class LegalProvider with ChangeNotifier {
       final res = await SupabaseService().invokeFunction('legal-actions', body: {'action': 'get_active_lawyers'});
       final data = res.data as Map<String, dynamic>?;
       if (data != null && data['success'] == true) {
-        _activeLawyers = ((data['lawyers'] as List?) ?? []).map((e) => LawyerProfileModel.fromMap(Map<String, dynamic>.from(e as Map))).toList();
-      } else { _error = data?['error']?.toString() ?? 'فشل جلب المحامين'; }
+        final list = data['lawyers'] as List? ?? [];
+        _activeLawyers = list.map((e) => LawyerProfileModel.fromMap(Map<String, dynamic>.from(e as Map))).toList();
+      } else { _error = data?['error']?.toString() ?? 'فشل'; }
     } catch (e) { _error = e.toString(); }
     finally { _isLoading = false; notifyListeners(); }
   }
@@ -53,23 +51,28 @@ class LegalProvider with ChangeNotifier {
     } catch (e) { return false; }
   }
 
+  /// تعود true فقط إذا وُجد ملف محامي برقم واتساب فعلي
   Future<bool> checkLawyerProfile(String uid) async {
     try {
       final res = await SupabaseService().invokeFunction('legal-actions', body: {'action': 'get_lawyer_profile', 'user_uid': uid});
       final data = res.data as Map<String, dynamic>?;
       if (data != null && data['success'] == true) {
         final profile = data['profile'] as Map<String, dynamic>?;
-        if (profile != null && profile['found'] == true) { _lawyerProfile = profile; _profileSetupComplete = true; notifyListeners(); return true; }
+        if (profile != null && profile['found'] == true) {
+          final wa = (profile['whatsapp_phone'] ?? '').toString().trim();
+          if (wa.isNotEmpty) { _lawyerProfile = profile; _profileSetupComplete = true; notifyListeners(); return true; }
+        }
       }
       _profileSetupComplete = false; notifyListeners(); return false;
-    } catch (e) { _profileSetupComplete = false; return false; }
+    } catch (e) { _profileSetupComplete = false; notifyListeners(); return false; }
   }
 
   Future<void> fetchAvailableExpediters() async {
     try {
       final res = await SupabaseService().invokeFunction('legal-actions', body: {'action': 'get_available_expediters', 'user_uid': ''});
       final data = res.data as Map<String, dynamic>?;
-      _availableExpediters = (data != null && data['success'] == true) ? ((data['expediters'] as List?)?.map((e) => Map<String, dynamic>.from(e as Map)).toList() ?? []) : [];
+      _availableExpediters = (data != null && data['success'] == true)
+          ? ((data['expediters'] as List?)?.map((e) => Map<String, dynamic>.from(e as Map)).toList() ?? []) : [];
     } catch (_) { _availableExpediters = []; }
     notifyListeners();
   }
@@ -92,7 +95,8 @@ class LegalProvider with ChangeNotifier {
     try {
       final res = await SupabaseService().invokeFunction('legal-actions', body: {'action': 'get_lawyer_expediting_tasks', 'user_uid': ''});
       final data = res.data as Map<String, dynamic>?;
-      _lawyerTasks = (data != null && data['success'] == true) ? ((data['tasks'] as List?)?.map((e) => ExpeditingTaskModel.fromMap(Map<String, dynamic>.from(e as Map))).toList() ?? []) : [];
+      _lawyerTasks = (data != null && data['success'] == true)
+          ? ((data['tasks'] as List?)?.map((e) => ExpeditingTaskModel.fromMap(Map<String, dynamic>.from(e as Map))).toList() ?? []) : [];
     } catch (e) { _lawyerTasks = []; }
     notifyListeners();
   }
@@ -101,7 +105,8 @@ class LegalProvider with ChangeNotifier {
     try {
       final res = await SupabaseService().invokeFunction('legal-actions', body: {'action': 'get_lawyer_appointments', 'user_uid': ''});
       final data = res.data as Map<String, dynamic>?;
-      _lawyerAppointments = (data != null && data['success'] == true) ? ((data['appointments'] as List?)?.map((e) => Map<String, dynamic>.from(e as Map)).toList() ?? []) : [];
+      _lawyerAppointments = (data != null && data['success'] == true)
+          ? ((data['appointments'] as List?)?.map((e) => Map<String, dynamic>.from(e as Map)).toList() ?? []) : [];
     } catch (_) { _lawyerAppointments = []; }
     notifyListeners();
   }
@@ -110,7 +115,8 @@ class LegalProvider with ChangeNotifier {
     try {
       final res = await SupabaseService().invokeFunction('legal-actions', body: {'action': 'get_my_expediting_tasks', 'user_uid': userUid ?? ''});
       final data = res.data as Map<String, dynamic>?;
-      _expeditingTasks = (data != null && data['success'] == true) ? ((data['tasks'] as List?)?.map((e) => ExpeditingTaskModel.fromMap(Map<String, dynamic>.from(e as Map))).toList() ?? []) : [];
+      _expeditingTasks = (data != null && data['success'] == true)
+          ? ((data['tasks'] as List?)?.map((e) => ExpeditingTaskModel.fromMap(Map<String, dynamic>.from(e as Map))).toList() ?? []) : [];
     } catch (e) { _expeditingTasks = []; }
     notifyListeners(); return _expeditingTasks;
   }
