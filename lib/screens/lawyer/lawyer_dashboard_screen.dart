@@ -62,6 +62,36 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
       SnackBar(content: Text(m), backgroundColor: bg ?? AppTheme.primaryGold));
   }
 
+  Future<void> _openAccountDetails() async {
+    if (!mounted) return;
+    context.push('/user/account-info');
+  }
+
+  Future<void> _logout() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surfaceBlack,
+        title: const Text('تسجيل الخروج', style: TextStyle(color: AppTheme.textWhite)),
+        content: const Text('هل تريد تسجيل الخروج من حساب المحامي؟', style: TextStyle(color: AppTheme.textGrey)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('إلغاء', style: TextStyle(color: AppTheme.textGrey)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('تسجيل خروج', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+    await context.read<AuthProvider>().logout();
+    if (!mounted) return;
+    context.go('/user/profile');
+  }
+
   // ──────── حوار الملف الشخصي ────────
   void _showProfileDialog() {
     final user = context.read<AuthProvider>().userModel;
@@ -168,8 +198,21 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
       appBar: AppBar(
         title: const Text('⚖️ لوحة المحامي'), backgroundColor: AppTheme.scaffoldBackground,
         actions: [
-          IconButton(icon: const Icon(Icons.person_outline, color: AppTheme.primaryGold),
-            tooltip: 'الملف الشخصي', onPressed: _showProfileDialog),
+          IconButton(
+            icon: const Icon(Icons.account_circle_outlined, color: AppTheme.primaryGold),
+            tooltip: 'تفاصيل حسابي',
+            onPressed: _openAccountDetails,
+          ),
+          IconButton(
+            icon: const Icon(Icons.lock_outline, color: AppTheme.primaryGold),
+            tooltip: 'تغيير كلمة المرور',
+            onPressed: _showProfileDialog,
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.redAccent),
+            tooltip: 'تسجيل خروج',
+            onPressed: _logout,
+          ),
         ],
         bottom: TabBar(controller: _tabCtrl, indicatorColor: AppTheme.primaryGold,
           labelColor: AppTheme.primaryGold, unselectedLabelColor: AppTheme.textGrey,
@@ -191,7 +234,22 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
   Widget _buildSetupScreen() {
     return Scaffold(
       backgroundColor: AppTheme.scaffoldBackground,
-      appBar: AppBar(title: const Text('⚖️ مرحباً أستاذ'), backgroundColor: AppTheme.scaffoldBackground),
+      appBar: AppBar(
+        title: const Text('⚖️ مرحباً أستاذ'),
+        backgroundColor: AppTheme.scaffoldBackground,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.account_circle_outlined, color: AppTheme.primaryGold),
+            tooltip: 'تفاصيل حسابي',
+            onPressed: _openAccountDetails,
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.redAccent),
+            tooltip: 'تسجيل خروج',
+            onPressed: _logout,
+          ),
+        ],
+      ),
       body: SingleChildScrollView(padding: const EdgeInsets.all(20), child: Column(children: [
         const SizedBox(height: 20),
         Container(padding: const EdgeInsets.all(20),
