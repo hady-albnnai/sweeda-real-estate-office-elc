@@ -72,9 +72,6 @@ class SupabaseService {
     if (jwt != null) {
       // JWT is primary
       finalHeaders['Authorization'] = 'Bearer $jwt';
-    } else if (sessionToken != null && sessionToken.isNotEmpty) {
-      // Fallback to custom session token — Kong Gateway requires Bearer prefix
-      finalHeaders['Authorization'] = sessionToken.startsWith('Bearer ') ? sessionToken : 'Bearer $sessionToken';
     }
 
     dynamic finalBody = body;
