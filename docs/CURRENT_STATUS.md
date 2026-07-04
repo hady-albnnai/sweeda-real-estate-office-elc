@@ -358,3 +358,26 @@
 **الخطوة التالية (بعد Phase B):**
 - اختبار smoke كامل حسب `docs/MANUAL_TEST_PLAN_BY_ROLE.md`
 - إعداد إصدار `v1.0.0-rc1`
+
+---
+
+## تحديث 2026-07-04 — إصلاح أخطاء Flutter في إدارة الموظفين (Employee Management Fixes)
+
+**السياق:** أثناء تنفيذ خطة نظام الاستشارات القانونية، ظهرت أخطاء بناء تمنع `flutter run`.
+
+**الأخطاء المكتشفة والمصلحة:**
+1. **`employee_management_screen.dart:739`** — قوس إغلاق `}` زائد بعد نهاية الكلاس (Syntax Error).
+2. **`add_employee_dialog.dart:239`** — المتغير `isSenior` غير مُعرف في `_AddEmployeeDialogState`.
+3. **`change_role_dialog.dart:93`** — المتغير `isSenior` غير مُعرف في `_ChangeRoleDialogState`.
+
+**طريقة الإصلاح:**
+- إزالة القوس الزائد.
+- إضافة المتغير المحلي `isSenior` عبر `currentUser?.isSenior ?? false` في كلتا الشاشتين (مع الاحتفاظ بـ `isManager` الأصلي).
+- `isSenior` هو getter معرف في `UserModel` (السطر 199): `bool get isSenior => role >= UserRole.minSenior` (أي نائب مدير فما فوق).
+
+**الملفات المعدلة:**
+- `lib/screens/admin/employee_management/employee_management_screen.dart`
+- `lib/screens/admin/employee_management/add_employee_dialog.dart`
+- `lib/screens/admin/employee_management/change_role_dialog.dart`
+
+**الحالة:** ✅ مُنجز ومرفوع للمستودع — ينتظر اختبار `flutter run` من الجهاز المحلي.
