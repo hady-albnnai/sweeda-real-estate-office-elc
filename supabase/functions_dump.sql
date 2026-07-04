@@ -7014,7 +7014,7 @@ BEGIN
 END;
 $function$;
 
-REVOKE ALL ON FUNCTION admin_upsert_lawyer_profile(uuid, uuid, text, text, text, jsonb) FROM PUBLIC;
+REVOKE ALL ON FUNCTION admin_upsert_lawyer_profile(uuid, uuid, text, text, text, jsonb) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION admin_upsert_lawyer_profile(uuid, uuid, text, text, text, jsonb) TO service_role;
 
 -- === get_active_lawyers ===
@@ -7033,7 +7033,7 @@ BEGIN
 END;
 $function$;
 
-REVOKE ALL ON FUNCTION get_active_lawyers() FROM PUBLIC;
+REVOKE ALL ON FUNCTION get_active_lawyers() FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION get_active_lawyers() TO service_role;
 
 -- === update_expediting_checklist_item ===
@@ -7080,7 +7080,7 @@ BEGIN
 END;
 $function$;
 
-REVOKE ALL ON FUNCTION update_expediting_checklist_item(uuid, uuid, text, int, text, text, text) FROM PUBLIC;
+REVOKE ALL ON FUNCTION update_expediting_checklist_item(uuid, uuid, text, int, text, text, text) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION update_expediting_checklist_item(uuid, uuid, text, int, text, text, text) TO service_role;
 
 
