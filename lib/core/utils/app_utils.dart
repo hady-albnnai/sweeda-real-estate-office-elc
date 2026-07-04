@@ -117,7 +117,7 @@ class _FloatingPointsWidgetState extends State<_FloatingPointsWidget> with Singl
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsSync: this, duration: const Duration(milliseconds: 2000));
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 2000));
     _opacity = TweenSequence<double>([
       TweenSequenceItem(tween: Tween(begin: 0.0, end: 1.0).chain(CurveTween(curve: Curves.easeOut)), weight: 15),
       TweenSequenceItem(tween: ConstantTween<double>(1.0), weight: 55),

@@ -274,8 +274,7 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
             ]),
           ),
         ),
-      ),
-    );
+      );
     }
 
     final days = _availableDays;
