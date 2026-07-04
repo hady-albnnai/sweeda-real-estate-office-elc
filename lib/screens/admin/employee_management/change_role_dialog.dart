@@ -69,7 +69,9 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isManager = context.read<AuthProvider>().userModel?.role == 6;
+    final currentUser = context.read<AuthProvider>().userModel;
+    final isManager = currentUser?.role == 6;
+    final isSenior = currentUser?.isSenior ?? false;
 
     return AlertDialog(
       backgroundColor: AppTheme.surfaceBlack,
