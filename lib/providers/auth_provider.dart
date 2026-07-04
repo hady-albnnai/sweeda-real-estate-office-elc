@@ -57,9 +57,8 @@ class AuthProvider with ChangeNotifier {
 
       final userId = data['user_id'] as String;
       _isNewUser = false;
-      await _loadUserData(userId);
 
-      // حفظ الجلسة محلياً
+      // حفظ الجلسة محلياً أولاً قبل جلب الملف الشخصي لكي تستخدم الدالة التوكن المحفوظ
       final prefs = await _getPrefs();
       await prefs.setString('user_id', userId);
       await prefs.setString('auth_channel', 'password');
@@ -78,6 +77,8 @@ class AuthProvider with ChangeNotifier {
         await prefs.remove('staff_session_token');
         await prefs.remove('staff_session_expires_at');
       }
+
+      await _loadUserData(userId);
 
       // تسجيل FCM token
       await FCMService().registerCurrentTokenForUser();
