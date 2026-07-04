@@ -17,7 +17,7 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS pkg_grace TIMESTAMPTZ;
 
 -- Ensure final 0..6 role contract.
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
-ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role BETWEEN 0 AND 6);
+ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role BETWEEN 0 AND 8);
 
 CREATE UNIQUE INDEX IF NOT EXISTS ux_users_username_active
   ON users (LOWER(usr))

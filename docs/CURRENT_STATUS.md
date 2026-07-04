@@ -381,3 +381,24 @@
 - `lib/screens/admin/employee_management/change_role_dialog.dart`
 
 **الحالة:** ✅ مُنجز ومرفوع للمستودع — ينتظر اختبار `flutter run` من الجهاز المحلي.
+
+---
+
+## تحديث 2026-07-04 — توسيع CHECK CONSTRAINT للأدوار 7 و 8 (إصلاح خطأ إضافة محامي)
+
+**السياق:** أثناء إضافة موظف بدور "محامي مختص (role=7)" يظهر خطأ `violates check constraint 'users_role_check'`.
+
+**التشخيص (من السيرفر الحي):**
+- `admin_create_staff_user` (نسختان على السيرفر) تقبل الأدوار 2, 3, 4, 5, 7, 8 ✅
+- لكن **CHECK CONSTRAINT** على جدول `users` يحدد `role BETWEEN 0 AND 6` ❌
+
+**الإصلاح المطبق:**
+- `supabase/migrations/2026_06_15_admin_employee_management_final.sql`: تغيير CHECK من `BETWEEN 0 AND 6` إلى `BETWEEN 0 AND 8`
+- `supabase/setup.sql`: تغيير CHECK من `BETWEEN 0 AND 4` إلى `BETWEEN 0 AND 8`
+- SQL مباشر على السيرفر: `ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check; ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role >= 0 AND role <= 8);`
+
+**التحقق الأمني:**
+- `trg_user_safe_insert` يمنع أي مستخدم من تسجيل بدور > 0
+- `trg_user_safe_update` يمنع أي مستخدم من تغيير دورو بنفسه
+- `admin_create_staff_user` ممنوحة فقط لـ `service_role`
+- الأدوار 7 و 8 محمية أصلاً عبر `_admin_employee_assert_actor` (يتطلب role ≥ 5)
