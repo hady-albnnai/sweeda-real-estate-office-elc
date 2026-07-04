@@ -14,11 +14,14 @@ class ExpediterTaskDetailScreen extends StatefulWidget {
 
 class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
   late List<ChecklistItemModel> _items;
+  late int _taskStatus;
+  bool _completingTask = false;
 
   @override
   void initState() {
     super.initState();
     _items = List.from(widget.task.checklist);
+    _taskStatus = widget.task.status;
   }
 
   void _snack(String m) {
@@ -53,6 +56,59 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
       });
     } else {
       _snack('فشل تحديث البند');
+    }
+  }
+
+  bool get _allItemsDone => _items.isNotEmpty && _items.every((item) => item.status == 2);
+
+  Future<void> _completeTask() async {
+    if (!_allItemsDone) {
+      _snack('يجب تعليم كل البنود كـ تم الاستخراج قبل إتمام المهمة');
+      return;
+    }
+
+    final notesCtrl = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surfaceBlack,
+        title: const Text('إتمام مهمة التعقيب', style: TextStyle(color: AppTheme.primaryGold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'سيتم إرسال إشعار للمحامي بأن المهمة اكتملت وبانتظار اعتماده.',
+              style: TextStyle(color: AppTheme.textGrey, height: 1.4),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: notesCtrl,
+              maxLines: 3,
+              style: const TextStyle(color: AppTheme.textWhite),
+              decoration: const InputDecoration(labelText: 'ملاحظات ختامية اختيارية'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('إلغاء', style: TextStyle(color: AppTheme.textGrey))),
+          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('إتمام وإشعار المحامي')),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+    setState(() => _completingTask = true);
+    final ok = await context.read<LegalProvider>().completeExpeditingTask(
+      taskId: widget.task.id,
+      notes: notesCtrl.text.trim(),
+    );
+    if (!mounted) return;
+    setState(() => _completingTask = false);
+    if (ok) {
+      setState(() => _taskStatus = 2);
+      _snack('✅ تم إتمام المهمة وإشعار المحامي');
+    } else {
+      _snack(context.read<LegalProvider>().error ?? 'فشل إتمام المهمة');
     }
   }
 
@@ -213,6 +269,49 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
                 ),
               );
             }).toList(),
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: _taskStatus >= 2 ? Colors.green.withOpacity(0.1) : AppTheme.surfaceBlack,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: _taskStatus >= 2 ? Colors.green : AppTheme.primaryGold.withOpacity(0.35)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    _taskStatus >= 3
+                        ? 'تم اعتماد المهمة من المحامي ✅'
+                        : _taskStatus == 2
+                            ? 'تم إرسال الإنجاز للمحامي — بانتظار الاعتماد ✅'
+                            : _allItemsDone
+                                ? 'كل البنود مكتملة — يمكنك الآن إتمام المهمة وإشعار المحامي'
+                                : 'أكمل كل البنود أولاً حتى يظهر زر إتمام المهمة',
+                    style: TextStyle(
+                      color: _taskStatus >= 2 || _allItemsDone ? Colors.green : AppTheme.textGrey,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                  if (_taskStatus < 2) ...[
+                    const SizedBox(height: 12),
+                    ElevatedButton.icon(
+                      onPressed: (!_allItemsDone || _completingTask) ? null : _completeTask,
+                      icon: _completingTask
+                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.deepBlack))
+                          : const Icon(Icons.done_all, color: AppTheme.deepBlack),
+                      label: Text(
+                        _completingTask ? 'جاري الإرسال...' : 'إتمام المهمة وإشعار المحامي',
+                        style: const TextStyle(color: AppTheme.deepBlack, fontWeight: FontWeight.bold),
+                      ),
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ],
         ),
       ),

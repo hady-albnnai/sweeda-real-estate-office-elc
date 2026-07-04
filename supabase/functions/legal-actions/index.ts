@@ -219,6 +219,34 @@ serve(async (req) => {
       return json(data as Record<string, unknown>);
     }
 
+    if (action === "complete_expediting_task") {
+      if (!isExpediter(role)) return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
+      const taskId = (body.task_id ?? body.taskId)?.toString() ?? "";
+      const notes = (body.expediter_notes ?? body.notes ?? "").toString();
+      if (!taskId) return json({ success: false, error: "TASK_ID_REQUIRED" }, 400);
+
+      const { data, error } = await supabaseAdmin.rpc("complete_expediting_task_internal", {
+        p_expediter_uid: uid,
+        p_task_id: taskId,
+        p_notes: notes,
+      });
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json(data as Record<string, unknown>);
+    }
+
+    if (action === "approve_expediting_task") {
+      if (!isLawyer(role)) return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
+      const taskId = (body.task_id ?? body.taskId)?.toString() ?? "";
+      if (!taskId) return json({ success: false, error: "TASK_ID_REQUIRED" }, 400);
+
+      const { data, error } = await supabaseAdmin.rpc("approve_expediting_task_internal", {
+        p_lawyer_uid: uid,
+        p_task_id: taskId,
+      });
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json(data as Record<string, unknown>);
+    }
+
     if (action === "get_lawyer_expediting_tasks") {
       if (!isLawyer(role)) return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
       const { data, error } = await supabaseAdmin.rpc("get_lawyer_expediting_tasks", {

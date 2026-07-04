@@ -263,6 +263,7 @@ SELECT * FROM cron.job_run_details ORDER BY start_time DESC LIMIT 10;
 | 11 | `delete-user` 🆕 | حذف منطقي لموظف داخلي | `{ admin_uid, staff_session_token?, user_id }` | `{ success }` | ✅ منشور |
 | 12 | `update-user-permissions` 🆕 | تحديث صلاحيات مستخدم عبر جلسة موظف | `{ admin_uid, staff_session_token?, user_id, permissions }` | `{ success }` | ✅ منشور |
 | 13 | `upload-offer-images` 🆕🔒 | رفع صور العروض بأمان عبر service_role (يتحقق من staff_session_token أو JWT) | `multipart/form-data: files, user_id, offer_id?, folder?, admin_uid?` | `{ success, urls, count }` | ✅ منشور — يحتاج إعادة نشر بعد آخر تعديل |
+| 14 | `legal-actions` ⚖️🔒 | عمليات المحامي والمعقب: ملف المحامي، إرسال مهمة، تحديث checklist، إتمام مهمة، اعتمادها | `{ action, user_uid, staff_session_token?, ... }` | `{ success, ... }` | ✅ منشور — يحتاج إعادة نشر بعد آخر تعديل |
 
 > ⚠️ **`generate_otp` / `verify_otp` القديمة** ما زالت موجودة للتوافق الخلفي فقط — استخدم النسخة V2 في الكود الجديد.
 > 📖 لخطوات تفعيل WhatsApp + Email Magic Link: راجع `docs/AUTH_SETUP.md`
@@ -671,7 +672,7 @@ Migration mirror: `2026_06_17_linter_security_hardening.sql`
 - `notify_user(uuid, integer, text, text, text, text)`
 - `send_push_notification(uuid, text, text, jsonb)`
 
-السبب: لا يجوز للعميل إنشاء إشعار أو إرسال push لأي مستخدم مباشرة.  
+السبب: لا يجوز للعميل إنشاء إشعار أو إرسال push لأي مستخدم مباشرة.
 الأثر المتوقع: أي إشعارات كانت تُنشأ من العميل مباشرة قد تتوقف مؤقتاً. الإشعارات المهمة يجب أن تنتقل إلى Triggers أو Edge Functions موثوقة.
 
 ### تحديث مهم — قفل دوال النقاط المباشرة
@@ -681,7 +682,7 @@ Migration mirror: `2026_06_17_linter_security_hardening.sql`
 - `add_points(uuid, integer)`
 - `award_points_safe(uuid, text, integer)`
 
-السبب: الدالتان تسمحان للعميل بتمرير `uid` وعدد النقاط أو نوع الحدث، وهذا غير آمن حتى مع وجود حدود يومية.  
+السبب: الدالتان تسمحان للعميل بتمرير `uid` وعدد النقاط أو نوع الحدث، وهذا غير آمن حتى مع وجود حدود يومية.
 الأثر المتوقع: قد تتوقف مؤقتاً بعض مكافآت النقاط التي كانت تُمنح من التطبيق مباشرة مثل نقاط المشاركة أو بعض الأحداث اليومية، لكن الوظائف الأساسية لا تتأثر.
 
 الحل المعتمد لاحقاً: نقل منح النقاط إلى Edge Functions أو Triggers تتحقق من الحدث فعلياً من السيرفر، ولا تقبل عدد النقاط من العميل.
@@ -1894,10 +1895,10 @@ NOW() > pkg_grace          → expire_packages     → b_pkg = 0
 | `search_screen` | فلتر السعر (من/إلى) + اختيار العملة |
 
 ## 🛡️ Edge Function — `admin-reports`
-**الحالة:** جاهزة للنشر والقفل  
-**الأذونات:** `service_role` للـ Supabase client، ويتطلب `staff_session_token` صالح من العميل بصلاحية `>= 3`.  
+**الحالة:** جاهزة للنشر والقفل
+**الأذونات:** `service_role` للـ Supabase client، ويتطلب `staff_session_token` صالح من العميل بصلاحية `>= 3`.
 
-**الغرض:** 
+**الغرض:**
 نقل عمليات إدارة التبليغات التي يقوم بها الإداريون إلى بيئة آمنة لا تعتمد على الـ RPC المباشر المفتوح.
 
 **Actions المدعومة:**
@@ -1905,10 +1906,10 @@ NOW() > pkg_grace          → expire_packages     → b_pkg = 0
 2. `handle` — استدعاء `admin_handle_report_internal` لمعالجة تبليغ (تحذير، تجميد، حظر).
 
 ## 🛡️ Edge Function — `admin-deals`
-**الحالة:** جاهزة للنشر والقفل  
-**الأذونات:** `service_role` للـ Supabase client، ويتطلب `staff_session_token` صالح من العميل بصلاحية `>= 3`.  
+**الحالة:** جاهزة للنشر والقفل
+**الأذونات:** `service_role` للـ Supabase client، ويتطلب `staff_session_token` صالح من العميل بصلاحية `>= 3`.
 
-**الغرض:** 
+**الغرض:**
 نقل عمليات إدارة الصفقات التي يقوم بها الإداريون إلى بيئة آمنة لا تعتمد على الـ RPC المباشر المفتوح.
 
 **Actions المدعومة:**
@@ -1917,11 +1918,11 @@ NOW() > pkg_grace          → expire_packages     → b_pkg = 0
 3. `complete` — استدعاء `complete_deal_internal` لإتمام الصفقة وإضافة العمولة.
 
 ## 🛡️ Edge Functions للمهام والتصوير
-**الحالة:** جاهزة للنشر والقفل  
+**الحالة:** جاهزة للنشر والقفل
 **الأذونات:** `service_role` للـ Supabase client، ويتطلب `staff_session_token` صالح من العميل.
 
-1. **`executor-tasks`**: تدير مهام المنفذ، تتطلب صلاحية `>= 2` (منفذ أو أعلى).  
-2. **`photographer-tasks`**: تدير مهام المصور، تتطلب صلاحية `>= 2` (مصور أو أعلى).  
+1. **`executor-tasks`**: تدير مهام المنفذ، تتطلب صلاحية `>= 2` (منفذ أو أعلى).
+2. **`photographer-tasks`**: تدير مهام المصور، تتطلب صلاحية `>= 2` (مصور أو أعلى).
 3. **`admin-photography`**: تدير مهام التصوير من طرف الإدارة، تتطلب صلاحية `>= 3` (مكتب أو أعلى).
 
 ## 🛡️ Edge Function — `upload-offer-images`
@@ -1945,38 +1946,38 @@ NOW() > pkg_grace          → expire_packages     → b_pkg = 0
 ---
 
 ## 🛡️ Edge Function — `user-offers`
-**الحالة:** ✅ مكتمل (تم تشديد الأمن وإطاحة الـ Fallback في 2026-07-02 لفرض مطابقة توكن JWT مع الـ `user_uid`).  
+**الحالة:** ✅ مكتمل (تم تشديد الأمن وإطاحة الـ Fallback في 2026-07-02 لفرض مطابقة توكن JWT مع الـ `user_uid`).
 **الأذونات:** `service_role` للـ Supabase client، وتتحقق من `JWT Token` الخاص بالمستخدم العادي، باستثناء دالة زيادة المشاهدات التي يمكن استدعاؤها من الزوار.
 
 ## 🛡️ Edge Function — `user-requests`
-**الحالة:** ✅ مكتمل (تم إطاحة الـ Fallback الانتحالي في 2026-07-02، وتم تحديث المزود والواجهة لمرير وترجمة استثناءات التحقق الصارمة كـ `PHONE_INVALID` و`QUOTA_EXCEEDED` مع تطبيع الأرقام العربية).  
+**الحالة:** ✅ مكتمل (تم إطاحة الـ Fallback الانتحالي في 2026-07-02، وتم تحديث المزود والواجهة لمرير وترجمة استثناءات التحقق الصارمة كـ `PHONE_INVALID` و`QUOTA_EXCEEDED` مع تطبيع الأرقام العربية).
 **الأذونات:** `service_role` للـ Supabase client، وتتحقق من `JWT Token` الخاص بالمستخدم العادي، وتضمن أن الـ `user_uid` المطلوب مطابق لصاحب الجلسة.
 
 ## 🛡️ Edge Function — `user-appointments`
-**الحالة:** ✅ مكتمل (تم إطاحة الـ Fallback الانتحالي).  
+**الحالة:** ✅ مكتمل (تم إطاحة الـ Fallback الانتحالي).
 **الأذونات:** `service_role` للـ Supabase client، وتتحقق من `JWT Token`، وتضمن أن الـ `user_uid` المطلوب مطابق لصاحب الجلسة (سواء كان المستخدم كطالب للموعد، أو مالكاً، أو وسيطاً).
 
 ## 🛡️ Edge Function — `user-notifications`
-**الحالة:** ✅ مكتمل (تم إطاحة الـ Fallback الانتحالي).  
+**الحالة:** ✅ مكتمل (تم إطاحة الـ Fallback الانتحالي).
 **الأذونات:** `service_role` للـ Supabase client، وتتحقق من `JWT Token` وتضمن المطابقة.
 
 ## 🛡️ Edge Function — `user-account`
-**الحالة:** ✅ مكتمل (تمت معالجة التوافق Adaptive Handling لردود الـ JSONB والـ BOOLEAN وتوحيد أسماء بارامترات الـ payload ونقل إنشاء المدفوعات `create_payment` عبر Edge Function لمنع الدفعة المزدوجة في دوال إعداد كلمة المرور وتغييرها وتحديث الملف الشخصي ومنح النقاط وإبطال جلسة الموظف).  
+**الحالة:** ✅ مكتمل (تمت معالجة التوافق Adaptive Handling لردود الـ JSONB والـ BOOLEAN وتوحيد أسماء بارامترات الـ payload ونقل إنشاء المدفوعات `create_payment` عبر Edge Function لمنع الدفعة المزدوجة في دوال إعداد كلمة المرور وتغييرها وتحديث الملف الشخصي ومنح النقاط وإبطال جلسة الموظف).
 **الأذونات:** `service_role` للـ Supabase client، تدعم دوال لا تتطلب توثيق كالتسجيل، وتدعم دوال تتطلب `JWT Token` ومطابقة الـ UID لحماية الملف الشخصي.
 
 ## 🛡️ Edge Function — `user-rewards` 🆕
-**الحالة:** ✅ مكتمل (تم إضافة دالة `validateUser` وتشديد الأمن في 2026-07-02 لمنع استدعاء مكافآت التقييم والستريك والإحالات بدون توكن مصادقة مطابق).  
-**الأذونات:** يتطلب `JWT Token` صالح ومطابق للـ `user_uid`.  
+**الحالة:** ✅ مكتمل (تم إضافة دالة `validateUser` وتشديد الأمن في 2026-07-02 لمنع استدعاء مكافآت التقييم والستريك والإحالات بدون توكن مصادقة مطابق).
+**الأذونات:** يتطلب `JWT Token` صالح ومطابق للـ `user_uid`.
 **الغرض:** إدارة المكافآت والنقاط اليومية والإحالات ومكافآت التقييم 5 نجوم.
 
 ## 🛡️ Edge Function — `admin-dashboard`
-**الحالة:** ✅ مكتمل  
-**الأذونات:** يتطلب `staff_session_token` صالح من العميل.  
+**الحالة:** ✅ مكتمل
+**الأذونات:** يتطلب `staff_session_token` صالح من العميل.
 **الغرض:** جلب إحصائيات الإدارة وإحصائيات الموظف وقائمة المشتبه بهم بالاحتيال وإبطال جلسة الموظف.
 
 ## 🛡️ Edge Function — `broker-actions`
-**الحالة:** ✅ مكتمل  
-**الأذونات:** يتحقق من `JWT Token`.  
+**الحالة:** ✅ مكتمل
+**الأذونات:** يتحقق من `JWT Token`.
 **الغرض:** تسجيل طلبات المستخدمين ليصبحوا وسطاء عقاريين.
 
 ---
@@ -2007,4 +2008,96 @@ NOW() > pkg_grace          → expire_packages     → b_pkg = 0
 | `expediting_tasks` | TABLE | جدول مهام استخراج الثبوتيات المحالة من المحامي للمعقب مع قوائم التدقيق التفاعلية. |
 | `admin_upsert_lawyer_profile` | RPC | إضافة أو تحديث ملف المحامي وضبط أوقاته المتاحة (Role >= 5). |
 | `get_active_lawyers` | RPC | جلب قائمة المحامين المتاحين ومواعيدهم وحملهم التشغيلي التراكمي. |
-| `update_expediting_checklist_item` | RPC | تحديث حالة وقيمة أي بند في قائمة تدقيق المعقب (إدخال أرقام السيارات والعقارات ورفع الروابط). |
+| `create_expediting_task_internal` | RPC | إنشاء مهمة تعقيب من محامٍ `role=7` إلى معقب نشط `role=8` مع إشعار المعقب. |
+| `update_expediting_checklist_item` | RPC | تحديث حالة وقيمة أي بند في قائمة تدقيق المعقب (إدخال أرقام السيارات والعقارات ورفع الروابط)، وتحويل المهمة إلى قيد الاستخراج عند بدء العمل. |
+| `complete_expediting_task_internal` | RPC | تأكيد المعقب أنه أتم كل البنود بنجاح؛ يشترط كل checklist status=2، يضبط `status=2`, `completed_at`, ويشعر المحامي. |
+| `approve_expediting_task_internal` | RPC | اعتماد المحامي لإنجاز المعقب؛ يضبط `status=3` ويشعر المعقب. |
+
+---
+
+## ⚖️ Edge Function — `legal-actions` (تحديث 2026-07-04)
+
+**الحالة:** ✅ منشورة، وتحتاج إعادة نشر بعد إضافة إتمام/اعتماد مهمة التعقيب.
+**الأذونات:** تتحقق من JWT إن وجد، أو `staff_session_token` عبر `validate_staff_session(p_min_role=0)`، ثم تفحص الدور صراحة:
+
+- المحامي: `role=7`
+- المعقب: `role=8`
+- الإدارة العليا: `role IN (5,6)` فقط لإدارة ملف المحامي
+
+### Actions المعتمدة
+
+| Action | من يستطيع | الوصف |
+|---|---|---|
+| `get_lawyer_profile` | محامي | جلب ملف المحامي ورقم الواتساب والاختصاص. |
+| `admin_upsert_lawyer` | محامي لنفسه أو مدير/نائب | إعداد/تحديث ملف المحامي بدون تغيير الدور. |
+| `get_available_expediters` | محامي أو مدير/نائب | جلب المعقبين النشطين. |
+| `create_expediting_task` | محامي | إرسال مهمة تعقيب إلى معقب نشط، وتوليد إشعار للمعقب. |
+| `get_lawyer_expediting_tasks` | محامي | قائمة المهام التي أرسلها المحامي. |
+| `get_lawyer_appointments` | محامي | مواعيد المحامي. |
+| `get_my_expediting_tasks` | معقب | قائمة مهام المعقب المستلمة. |
+| `update_checklist_item` | المحامي أو المعقب صاحب المهمة | تحديث بند من checklist. |
+| `complete_expediting_task` | المعقب صاحب المهمة | تأكيد أن المهمة اكتملت بعد اكتمال كل البنود، وإشعار المحامي. |
+| `approve_expediting_task` | المحامي صاحب المهمة | اعتماد إنجاز المعقب، وإشعار المعقب. |
+
+### دورة الحالة في `expediting_tasks.status`
+
+| القيمة | المعنى |
+|---|---|
+| `0` | بانتظار المعقب |
+| `1` | قيد الاستخراج / بدأ العمل على checklist |
+| `2` | مكتملة من المعقب وبانتظار اعتماد المحامي |
+| `3` | معتمدة من المحامي |
+
+### كيف يؤكد المعقب الإنجاز؟
+
+1. يدخل المعقب إلى تفاصيل المهمة.
+2. يعلّم كل بنود checklist كـ `تم الاستخراج والرفع` (`status=2`).
+3. يظهر زر **إتمام المهمة وإشعار المحامي**.
+4. عند الضغط يستدعي التطبيق:
+
+```json
+{
+  "action": "complete_expediting_task",
+  "task_id": "task-uuid",
+  "expediter_notes": "ملاحظات ختامية اختيارية"
+}
+```
+
+السيرفر يرفض الإتمام إن بقي أي بند غير مكتمل ويرجع:
+
+```json
+{ "success": false, "error": "CHECKLIST_NOT_COMPLETE", "incomplete_count": 3 }
+```
+
+### كيف يشعر المحامي؟
+
+عند نجاح `complete_expediting_task_internal` يتم إدراج إشعار:
+
+```text
+ttl = مهمة تعقيب مكتملة
+act = expediting_task_completed
+ref_id = task_id
+```
+
+وتتحول المهمة في تبويب **المهام المرسلة** إلى حالة:
+
+```text
+مكتملة — بانتظار اعتمادك
+```
+
+ثم يضغط المحامي زر **اعتماد إنجاز المعقب وإشعاره** لاستدعاء:
+
+```json
+{
+  "action": "approve_expediting_task",
+  "task_id": "task-uuid"
+}
+```
+
+بعد الاعتماد يتم إشعار المعقب:
+
+```text
+ttl = تم اعتماد مهمة التعقيب
+act = expediting_task_approved
+ref_id = task_id
+```

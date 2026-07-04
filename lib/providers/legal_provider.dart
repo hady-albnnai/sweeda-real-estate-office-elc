@@ -91,6 +91,39 @@ class LegalProvider with ChangeNotifier {
     } catch (e) { return false; }
   }
 
+  Future<bool> completeExpeditingTask({required String taskId, String notes = ''}) async {
+    try {
+      final res = await SupabaseService().invokeFunction('legal-actions', body: {
+        'action': 'complete_expediting_task',
+        'task_id': taskId,
+        'expediter_notes': notes,
+      });
+      final data = res.data as Map<String, dynamic>?;
+      if (data != null && data['success'] == true) {
+        await getExpeditingTasks();
+        return true;
+      }
+      _error = data?['error']?.toString() ?? 'فشل إتمام المهمة';
+      return false;
+    } catch (e) { _error = e.toString(); return false; }
+  }
+
+  Future<bool> approveExpeditingTask({required String taskId}) async {
+    try {
+      final res = await SupabaseService().invokeFunction('legal-actions', body: {
+        'action': 'approve_expediting_task',
+        'task_id': taskId,
+      });
+      final data = res.data as Map<String, dynamic>?;
+      if (data != null && data['success'] == true) {
+        await fetchLawyerTasks();
+        return true;
+      }
+      _error = data?['error']?.toString() ?? 'فشل اعتماد المهمة';
+      return false;
+    } catch (e) { _error = e.toString(); return false; }
+  }
+
   Future<void> fetchLawyerTasks() async {
     try {
       final res = await SupabaseService().invokeFunction('legal-actions', body: {'action': 'get_lawyer_expediting_tasks', 'user_uid': ''});

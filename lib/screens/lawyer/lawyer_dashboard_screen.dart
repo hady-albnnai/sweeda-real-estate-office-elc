@@ -357,6 +357,32 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
     ]));
   }
 
+  Future<void> _approveTask(ExpeditingTaskModel task) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surfaceBlack,
+        title: const Text('اعتماد مهمة التعقيب', style: TextStyle(color: AppTheme.primaryGold)),
+        content: const Text(
+          'هل تؤكد اعتماد إنجاز المعقب لهذه المهمة؟ سيتم إشعار المعقب بالاعتماد.',
+          style: TextStyle(color: AppTheme.textGrey, height: 1.4),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('إلغاء', style: TextStyle(color: AppTheme.textGrey))),
+          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('اعتماد')),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+    final ok = await context.read<LegalProvider>().approveExpeditingTask(taskId: task.id);
+    if (!mounted) return;
+    if (ok) {
+      _snack('✅ تم اعتماد المهمة وإشعار المعقب');
+    } else {
+      _snack(context.read<LegalProvider>().error ?? 'فشل اعتماد المهمة', bg: AppTheme.errorRed);
+    }
+  }
+
   // ──────── تبويب المهام المرسلة ────────
   Widget _buildSentTasksTab(LegalProvider legal) {
     final tasks = legal.lawyerTasks;
@@ -381,12 +407,26 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
               Text('رقم: ${t.targetPropertyNum} | ${t.targetZone}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 13))],
             Row(children: [Icon(Icons.checklist, size: 16, color: AppTheme.primaryGold), const SizedBox(width: 6),
               Text('$done / $total وثائق', style: const TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+              if (t.status == 2) ...[
+                const SizedBox(width: 8),
+                Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(color: Colors.orange.withOpacity(0.2), borderRadius: BorderRadius.circular(10)),
+                  child: const Text('بانتظار اعتمادك', style: TextStyle(color: Colors.orange, fontSize: 11, fontWeight: FontWeight.bold)))],
               if (t.status == 3) ...[
                 const SizedBox(width: 8),
                 Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(color: Colors.green.withOpacity(0.2), borderRadius: BorderRadius.circular(10)),
                   child: const Text('معتمد', style: TextStyle(color: Colors.green, fontSize: 11, fontWeight: FontWeight.bold)))],
             ]),
+            if (t.status == 2) ...[
+              const SizedBox(height: 12),
+              SizedBox(width: double.infinity, child: ElevatedButton.icon(
+                onPressed: () => _approveTask(t),
+                icon: const Icon(Icons.verified, color: AppTheme.deepBlack),
+                label: const Text('اعتماد إنجاز المعقب وإشعاره', style: TextStyle(color: AppTheme.deepBlack, fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+              )),
+            ],
           ]));
       }));
   }

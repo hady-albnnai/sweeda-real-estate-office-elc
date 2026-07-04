@@ -1,5 +1,5 @@
 -- Functions Dump — السيرفر الحي
--- التاريخ: 2026-07-04 | عدد الدوال: 169
+-- التاريخ: 2026-07-04 | عدد الدوال: 171
 
 CREATE OR REPLACE FUNCTION public._admin_employee_assert_actor(p_admin_uid uuid, p_min_role integer DEFAULT 5)
  RETURNS integer
@@ -1151,6 +1151,64 @@ BEGIN
 END;
 $function$
 
+CREATE OR REPLACE FUNCTION public.approve_expediting_task_internal(p_lawyer_uid uuid, p_task_id uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE
+  v_task record;
+  v_lawyer_role int;
+BEGIN
+  SELECT role INTO v_lawyer_role
+  FROM public.users
+  WHERE id = p_lawyer_uid AND i_del = 0 AND sts = 0;
+
+  IF v_lawyer_role <> 7 THEN
+    RAISE EXCEPTION 'LAWYER_ROLE_REQUIRED';
+  END IF;
+
+  SELECT * INTO v_task
+  FROM public.expediting_tasks
+  WHERE id = p_task_id
+  FOR UPDATE;
+
+  IF v_task IS NULL THEN
+    RETURN jsonb_build_object('success', false, 'error', 'TASK_NOT_FOUND');
+  END IF;
+
+  IF v_task.lawyer_uid <> p_lawyer_uid THEN
+    RETURN jsonb_build_object('success', false, 'error', 'NOT_AUTHORIZED');
+  END IF;
+
+  IF v_task.status = 3 THEN
+    RETURN jsonb_build_object('success', true, 'already_approved', true);
+  END IF;
+
+  IF v_task.status <> 2 THEN
+    RETURN jsonb_build_object('success', false, 'error', 'TASK_NOT_COMPLETED_BY_EXPEDITER');
+  END IF;
+
+  UPDATE public.expediting_tasks
+  SET status = 3
+  WHERE id = p_task_id;
+
+  INSERT INTO public.notifications (uid, tp, ttl, bdy, ref_id, act, ts_crt)
+  VALUES (
+    v_task.expediter_uid,
+    2,
+    'تم اعتماد مهمة التعقيب',
+    'اعتمد المحامي مهمة التعقيب المكتملة. شكراً لجهودك.',
+    p_task_id::text,
+    'expediting_task_approved',
+    NOW()
+  );
+
+  RETURN jsonb_build_object('success', true, 'status', 3);
+END;
+$function$
+
 CREATE OR REPLACE FUNCTION public.approve_payment_final(p_payment_id uuid, p_admin_id uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -1926,6 +1984,75 @@ BEGIN
 END;
 $function$
 
+CREATE OR REPLACE FUNCTION public.complete_expediting_task_internal(p_expediter_uid uuid, p_task_id uuid, p_notes text DEFAULT ''::text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE
+  v_task record;
+  v_expediter_role int;
+  v_incomplete int;
+BEGIN
+  SELECT role INTO v_expediter_role
+  FROM public.users
+  WHERE id = p_expediter_uid AND i_del = 0 AND sts = 0;
+
+  IF v_expediter_role <> 8 THEN
+    RAISE EXCEPTION 'EXPEDITER_ROLE_REQUIRED';
+  END IF;
+
+  SELECT * INTO v_task
+  FROM public.expediting_tasks
+  WHERE id = p_task_id
+  FOR UPDATE;
+
+  IF v_task IS NULL THEN
+    RETURN jsonb_build_object('success', false, 'error', 'TASK_NOT_FOUND');
+  END IF;
+
+  IF v_task.expediter_uid <> p_expediter_uid THEN
+    RETURN jsonb_build_object('success', false, 'error', 'NOT_AUTHORIZED');
+  END IF;
+
+  IF v_task.status = 3 THEN
+    RETURN jsonb_build_object('success', false, 'error', 'TASK_ALREADY_APPROVED');
+  END IF;
+
+  IF v_task.status = 2 THEN
+    RETURN jsonb_build_object('success', true, 'already_completed', true);
+  END IF;
+
+  SELECT COUNT(*) INTO v_incomplete
+  FROM jsonb_array_elements(v_task.checklist) item
+  WHERE COALESCE((item->>'status')::int, 0) <> 2;
+
+  IF v_incomplete > 0 THEN
+    RETURN jsonb_build_object('success', false, 'error', 'CHECKLIST_NOT_COMPLETE', 'incomplete_count', v_incomplete);
+  END IF;
+
+  UPDATE public.expediting_tasks
+  SET status = 2,
+      completed_at = NOW(),
+      expediter_notes = COALESCE(p_notes, expediter_notes)
+  WHERE id = p_task_id;
+
+  INSERT INTO public.notifications (uid, tp, ttl, bdy, ref_id, act, ts_crt)
+  VALUES (
+    v_task.lawyer_uid,
+    2,
+    'مهمة تعقيب مكتملة',
+    'أتم المعقب مهمة التعقيب بنجاح وهي بانتظار اعتمادك.',
+    p_task_id::text,
+    'expediting_task_completed',
+    NOW()
+  );
+
+  RETURN jsonb_build_object('success', true, 'status', 2);
+END;
+$function$
+
 CREATE OR REPLACE FUNCTION public.create_deal_internal(p_admin_uid uuid, p_deal jsonb)
  RETURNS SETOF deals
  LANGUAGE plpgsql
@@ -2040,6 +2167,17 @@ BEGIN
     COALESCE(p_target_property_num, ''), COALESCE(p_target_zone, ''),
     v_default_checklist, 0, COALESCE(p_lawyer_notes, ''), NOW()
   ) RETURNING id INTO v_task_id;
+
+  INSERT INTO public.notifications (uid, tp, ttl, bdy, ref_id, act, ts_crt)
+  VALUES (
+    p_expediter_uid,
+    2,
+    'مهمة تعقيب جديدة',
+    CASE WHEN p_item_type = 0 THEN 'تم تكليفك بمهمة استخراج ثبوتيات عقار جديدة.' ELSE 'تم تكليفك بمهمة استخراج ثبوتيات مركبة جديدة.' END,
+    v_task_id::text,
+    'expediting_task_assigned',
+    NOW()
+  );
 
   RETURN jsonb_build_object('success', true, 'task_id', v_task_id);
 END;
@@ -5788,32 +5926,58 @@ CREATE OR REPLACE FUNCTION public.update_expediting_checklist_item(p_actor_uid u
  SET search_path TO 'public', 'extensions', 'pg_temp'
 AS $function$
 DECLARE
-    v_task RECORD;
-    v_new_checklist JSONB := '[]'::jsonb;
-    v_item JSONB;
+  v_task record;
+  v_new_checklist jsonb := '[]'::jsonb;
+  v_item jsonb;
+  v_found boolean := false;
 BEGIN
-    IF auth.uid() IS NOT NULL AND auth.uid() <> p_actor_uid THEN RAISE EXCEPTION 'AUTH_MISMATCH'; END IF;
+  IF p_actor_uid IS NULL THEN
+    RAISE EXCEPTION 'USER_UID_REQUIRED';
+  END IF;
 
-    SELECT * INTO v_task FROM expediting_tasks WHERE id = p_task_id;
-    IF v_task IS NULL THEN RETURN jsonb_build_object('success', false, 'error', 'TASK_NOT_FOUND'); END IF;
-    IF v_task.expediter_uid <> p_actor_uid AND v_task.lawyer_uid <> p_actor_uid THEN
-        RETURN jsonb_build_object('success', false, 'error', 'NOT_AUTHORIZED');
-    End IF;
+  IF p_status NOT IN (0, 1, 2, 3) THEN
+    RAISE EXCEPTION 'INVALID_STATUS';
+  END IF;
 
-    FOR v_item IN SELECT * FROM jsonb_array_elements(v_task.checklist)
-    LOOP
-        IF v_item->>'key' = p_item_key THEN
-            v_item := jsonb_set(v_item, '{status}', to_jsonb(p_status));
-            IF p_input_value <> '' THEN v_item := jsonb_set(v_item, '{input_value}', to_jsonb(p_input_value)); END IF;
-            IF p_attachment_url <> '' THEN v_item := jsonb_set(v_item, '{attachment_url}', to_jsonb(p_attachment_url)); END IF;
-            IF p_notes <> '' THEN v_item := jsonb_set(v_item, '{notes}', to_jsonb(p_notes)); END IF;
-        END IF;
-        v_new_checklist := v_new_checklist || v_item;
-    END LOOP;
+  SELECT * INTO v_task
+  FROM public.expediting_tasks
+  WHERE id = p_task_id
+  FOR UPDATE;
 
-    UPDATE expediting_tasks SET checklist = v_new_checklist WHERE id = p_task_id;
+  IF v_task IS NULL THEN
+    RETURN jsonb_build_object('success', false, 'error', 'TASK_NOT_FOUND');
+  END IF;
 
-    RETURN jsonb_build_object('success', true, 'checklist', v_new_checklist);
+  IF v_task.expediter_uid <> p_actor_uid AND v_task.lawyer_uid <> p_actor_uid THEN
+    RETURN jsonb_build_object('success', false, 'error', 'NOT_AUTHORIZED');
+  END IF;
+
+  IF v_task.status = 3 THEN
+    RETURN jsonb_build_object('success', false, 'error', 'TASK_ALREADY_APPROVED');
+  END IF;
+
+  FOR v_item IN SELECT * FROM jsonb_array_elements(v_task.checklist)
+  LOOP
+    IF v_item->>'key' = p_item_key THEN
+      v_found := true;
+      v_item := jsonb_set(v_item, '{status}', to_jsonb(p_status));
+      IF COALESCE(p_input_value, '') <> '' THEN v_item := jsonb_set(v_item, '{input_value}', to_jsonb(p_input_value)); END IF;
+      IF COALESCE(p_attachment_url, '') <> '' THEN v_item := jsonb_set(v_item, '{attachment_url}', to_jsonb(p_attachment_url)); END IF;
+      IF COALESCE(p_notes, '') <> '' THEN v_item := jsonb_set(v_item, '{notes}', to_jsonb(p_notes)); END IF;
+    END IF;
+    v_new_checklist := v_new_checklist || v_item;
+  END LOOP;
+
+  IF NOT v_found THEN
+    RETURN jsonb_build_object('success', false, 'error', 'ITEM_NOT_FOUND');
+  END IF;
+
+  UPDATE public.expediting_tasks
+  SET checklist = v_new_checklist,
+      status = CASE WHEN status < 2 AND p_status IN (1, 2, 3) THEN 1 ELSE status END
+  WHERE id = p_task_id;
+
+  RETURN jsonb_build_object('success', true, 'checklist', v_new_checklist);
 END;
 $function$
 
