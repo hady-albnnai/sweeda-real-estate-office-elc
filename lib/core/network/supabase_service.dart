@@ -94,10 +94,18 @@ class SupabaseService {
       finalBody = mapBody;
     }
 
-    return await client.functions.invoke(
-      functionName,
-      body: finalBody,
-      headers: finalHeaders,
-    );
+    debugPrint('👉 [NET_DEBUG] Invoking function "$functionName" | authHeader="${finalHeaders['Authorization'] != null ? finalHeaders['Authorization']!.substring(0, 15) + '...' : 'NONE'}" | body=$finalBody');
+    try {
+      final res = await client.functions.invoke(
+        functionName,
+        body: finalBody,
+        headers: finalHeaders,
+      );
+      debugPrint('👉 [NET_DEBUG] Success "$functionName" | status=${res.status} | data=${res.data}');
+      return res;
+    } catch (e) {
+      debugPrint('👉 [NET_DEBUG] ERROR invoking "$functionName": $e');
+      rethrow;
+    }
   }
 }
