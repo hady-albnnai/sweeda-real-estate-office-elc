@@ -619,6 +619,8 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
       case 4: return 'موظف مكتب';
       case 5: return 'نائب مدير';
       case 6: return 'مدير';
+      case 7: return 'محامي مختص';
+      case 8: return 'معقب معاملات';
       default: return 'غير معروف';
     }
   }
@@ -630,6 +632,8 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
       case 4: return Colors.blue;
       case 5: return Colors.purple;
       case 6: return AppTheme.primaryGold;
+      case 7: return Colors.deepPurple;
+      case 8: return Colors.brown;
       default: return Colors.grey;
     }
   }
