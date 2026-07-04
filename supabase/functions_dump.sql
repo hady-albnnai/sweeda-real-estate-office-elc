@@ -1,5 +1,5 @@
 -- Functions Dump — السيرفر الحي
--- التاريخ: 2026-07-04 | عدد الدوال: 164
+-- التاريخ: 2026-07-04 | عدد الدوال: 169
 
 CREATE OR REPLACE FUNCTION public._admin_employee_assert_actor(p_admin_uid uuid, p_min_role integer DEFAULT 5)
  RETURNS integer
@@ -2003,6 +2003,59 @@ END;
 $function$
 
 
+CREATE OR REPLACE FUNCTION public.create_expediting_task_internal(p_lawyer_uid uuid, p_expediter_uid uuid, p_item_type integer, p_target_property_num text DEFAULT ''::text, p_target_zone text DEFAULT ''::text, p_lawyer_notes text DEFAULT ''::text, p_checklist jsonb DEFAULT '[]'::jsonb)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
+AS $function$
+DECLARE
+  v_task_id uuid;
+  v_default_checklist jsonb;
+BEGIN
+  IF p_lawyer_uid IS NULL OR p_expediter_uid IS NULL THEN
+    RAISE EXCEPTION 'MISSING_REQUIRED_FIELDS';
+  END IF;
+  
+  -- Default checklist based on item type
+  IF p_checklist = '[]'::jsonb OR p_checklist IS NULL THEN
+    IF p_item_type = 0 THEN
+      v_default_checklist := '[
+        {"key": "extract", "title": "إخراج قيد عقاري حديث", "status": 0},
+        {"key": "area_stmt", "title": "بيان مساحة عقاري", "status": 0},
+        {"key": "fin_clearance", "title": "براءة ذمة مالية وبلدية", "status": 0},
+        {"key": "fin_record", "title": "قيد مالي للعقار", "status": 0},
+        {"key": "sales_tax", "title": "ضريبة البيوع العقارية", "status": 0},
+        {"key": "poa_chain", "title": "تسلسل وكالات كاتب بالعدل", "status": 0}
+      ]'::jsonb;
+    ELSE
+      v_default_checklist := '[
+        {"key": "traffic_info", "title": "كشف اطلاع مروري", "status": 0},
+        {"key": "traffic_clearance", "title": "براءة ذمة مرورية ومخالفات", "status": 0},
+        {"key": "tech_inspect", "title": "كشف فني ومطابقة الأرقام", "status": 0},
+        {"key": "title_deed", "title": "سند الملكية / ميكانيك المركبة", "status": 0}
+      ]'::jsonb;
+    END IF;
+  ELSE
+    v_default_checklist := p_checklist;
+  END IF;
+
+  INSERT INTO public.expediting_tasks (
+    lawyer_uid, expediter_uid, item_type,
+    target_property_num, target_zone,
+    checklist, status, lawyer_notes, created_at
+  ) VALUES (
+    p_lawyer_uid, p_expediter_uid, p_item_type,
+    p_target_property_num, p_target_zone,
+    v_default_checklist, 0, p_lawyer_notes, NOW()
+  )
+  RETURNING id INTO v_task_id;
+
+  RETURN jsonb_build_object('success', true, 'task_id', v_task_id);
+END;
+$function$
+
+
 CREATE OR REPLACE FUNCTION public.create_offer_internal(p_user_uid uuid, p_offer jsonb)
  RETURNS SETOF offers
  LANGUAGE plpgsql
@@ -2851,6 +2904,26 @@ END;
 $function$
 
 
+CREATE OR REPLACE FUNCTION public.get_available_expediters()
+ RETURNS SETOF jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
+AS $function$
+BEGIN
+  RETURN QUERY
+  SELECT jsonb_build_object(
+    'id', u.id,
+    'nm', u.nm,
+    'ph', u.ph
+  )
+  FROM public.users u
+  WHERE u.role = 8 AND u.sts = 0 AND u.i_del = 0
+  ORDER BY u.nm;
+END;
+$function$
+
+
 CREATE OR REPLACE FUNCTION public.get_available_supervisor(p_dt timestamp with time zone)
  RETURNS uuid
  LANGUAGE plpgsql
@@ -3046,6 +3119,73 @@ BEGIN
   WHERE a.id = p_appointment_id
     AND a.supervisor_uid = p_user_uid
   LIMIT 1;
+END;
+$function$
+
+
+CREATE OR REPLACE FUNCTION public.get_lawyer_appointments(p_lawyer_uid uuid)
+ RETURNS TABLE(id uuid, client_name text, client_phone text, dt timestamp with time zone, sts integer, notes text)
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
+AS $function$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    a.id,
+    COALESCE(u.nm, '') AS client_name,
+    COALESCE(u.ph, '') AS client_phone,
+    a.dt, a.sts,
+    COALESCE(a.note, '') AS notes
+  FROM public.appointments a
+  JOIN public.users u ON u.id = a.req_uid
+  WHERE a.bkr_id = p_lawyer_uid
+  ORDER BY a.dt DESC;
+END;
+$function$
+
+
+CREATE OR REPLACE FUNCTION public.get_lawyer_expediting_tasks(p_lawyer_uid uuid)
+ RETURNS SETOF expediting_tasks
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
+AS $function$
+BEGIN
+  IF p_lawyer_uid IS NULL THEN RAISE EXCEPTION 'USER_UID_REQUIRED'; END IF;
+  RETURN QUERY
+  SELECT *
+  FROM public.expediting_tasks
+  WHERE lawyer_uid = p_lawyer_uid
+  ORDER BY created_at DESC;
+END;
+$function$
+
+
+CREATE OR REPLACE FUNCTION public.get_lawyer_profile(p_lawyer_uid uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
+AS $function$
+DECLARE
+  v_profile jsonb;
+BEGIN
+  SELECT jsonb_build_object(
+    'uid', lp.uid,
+    'whatsapp_phone', lp.whatsapp_phone,
+    'office_address', lp.office_address,
+    'specialization', lp.specialization,
+    'avl', lp.avl,
+    'is_active', lp.is_active
+  ) INTO v_profile
+  FROM public.lawyer_profiles lp
+  WHERE lp.uid = p_lawyer_uid;
+  
+  IF v_profile IS NULL THEN
+    RETURN jsonb_build_object('found', false);
+  END IF;
+  RETURN v_profile || jsonb_build_object('found', true);
 END;
 $function$
 

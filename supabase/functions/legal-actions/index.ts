@@ -129,6 +129,60 @@ serve(async (req) => {
       return json(data as Record<string, unknown>);
     }
 
+
+    if (action === "get_lawyer_profile") {
+      const { data, error } = await supabaseAdmin.rpc("get_lawyer_profile", {
+        p_lawyer_uid: uid,
+      });
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json({ success: true, profile: data });
+    }
+
+    if (action === "get_available_expediters") {
+      const { data, error } = await supabaseAdmin.rpc("get_available_expediters");
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json({ success: true, expediters: data ?? [] });
+    }
+
+    if (action === "create_expediting_task") {
+      const expediterUid = (body.expediter_uid ?? body.expediterUid)?.toString() ?? "";
+      const itemType = Number(body.item_type ?? body.itemType ?? 0);
+      const propNum = (body.target_property_num ?? "").toString();
+      const zone = (body.target_zone ?? "").toString();
+      const notes = (body.lawyer_notes ?? body.notes ?? "").toString();
+      const checklist = body.checklist ?? [];
+
+      if (!expediterUid) return json({ success: false, error: "EXPEDITER_UID_REQUIRED" }, 400);
+
+      const { data, error } = await supabaseAdmin.rpc("create_expediting_task_internal", {
+        p_lawyer_uid: uid,
+        p_expediter_uid: expediterUid,
+        p_item_type: itemType,
+        p_target_property_num: propNum,
+        p_target_zone: zone,
+        p_lawyer_notes: notes,
+        p_checklist: checklist,
+      });
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json(data as Record<string, unknown>);
+    }
+
+    if (action === "get_lawyer_expediting_tasks") {
+      const { data, error } = await supabaseAdmin.rpc("get_lawyer_expediting_tasks", {
+        p_lawyer_uid: uid,
+      });
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json({ success: true, tasks: data ?? [] });
+    }
+
+    if (action === "get_lawyer_appointments") {
+      const { data, error } = await supabaseAdmin.rpc("get_lawyer_appointments", {
+        p_lawyer_uid: uid,
+      });
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json({ success: true, appointments: data ?? [] });
+    }
+
     if (action === "get_my_expediting_tasks") {
       const { data, error } = await supabaseAdmin.rpc("get_my_expediting_tasks", {
         p_expediter_uid: uid,
