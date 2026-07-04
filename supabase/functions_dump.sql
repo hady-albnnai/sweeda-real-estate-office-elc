@@ -1,8 +1,5 @@
--- ═══════════════════════════════════════════════════════════════
 -- Functions Dump — السيرفر الحي
--- التاريخ: 2026-07-04
--- عدد الدوال: 163
--- ═══════════════════════════════════════════════════════════════
+-- التاريخ: 2026-07-04 | عدد الدوال: 163
 
 CREATE OR REPLACE FUNCTION public._admin_employee_assert_actor(p_admin_uid uuid, p_min_role integer DEFAULT 5)
  RETURNS integer
@@ -812,18 +809,11 @@ BEGIN
 
   SELECT role INTO v_target_role
   FROM public.users
-  WHERE id = p_target_uid
-    AND i_del = 0;
+  WHERE id = p_target_uid AND i_del = 0;
+  IF v_target_role IS NULL THEN RAISE EXCEPTION 'USER_NOT_FOUND'; END IF;
+  IF v_target_role = 6 THEN RAISE EXCEPTION 'CANNOT_MODIFY_MANAGER'; END IF;
 
-  IF v_target_role IS NULL THEN
-    RAISE EXCEPTION 'USER_NOT_FOUND';
-  END IF;
-
-  IF v_target_role = 6 THEN
-    RAISE EXCEPTION 'CANNOT_MODIFY_MANAGER';
-  END IF;
-
-  IF p_role NOT IN (2, 3, 4, 5) THEN
+  IF p_role NOT IN (2, 3, 4, 5, 7, 8) THEN
     RAISE EXCEPTION 'INVALID_ROLE';
   END IF;
 
@@ -831,22 +821,8 @@ BEGIN
     RAISE EXCEPTION 'ONLY_MANAGER_CAN_MANAGE_DEPUTIES';
   END IF;
 
-  UPDATE public.users
-  SET role = p_role,
-      ts_upd = NOW()
-  WHERE id = p_target_uid
-    AND i_del = 0;
-
-  PERFORM public._admin_employee_log(
-    p_admin_uid,
-    'staff_role_update',
-    p_target_uid,
-    jsonb_build_object(
-      'old_role', v_target_role,
-      'new_role', p_role
-    )
-  );
-
+  UPDATE public.users SET role = p_role, ts_upd = NOW() WHERE id = p_target_uid AND i_del = 0;
+  PERFORM public._admin_employee_log(p_admin_uid, 'staff_role_update', p_target_uid, jsonb_build_object('old_role', v_target_role, 'new_role', p_role));
   RETURN jsonb_build_object('success', true);
 END;
 $function$
@@ -2856,48 +2832,20 @@ BEGIN
 
   RETURN QUERY
     SELECT jsonb_build_object(
-      'id', u.id,
-      'nm', u.nm,
-      'ph', u.ph,
-      'eml', u.eml,
-      'ad', u.ad,
-      'role', u.role,
-      'sid', u.sid,
-      'img', u.img,
-      'pt', u.pt,
-      'bg', u.bg,
-      'bg_ts', u.bg_ts,
-      'b_pkg', u.b_pkg,
-      'pkg_end', u.pkg_end,
-      'pkg_grace', u.pkg_grace,
-      'brk', u.brk,
-      'brk_cls', u.brk_cls,
-      'brk_nm', u.brk_nm,
-      'sts', u.sts,
-      'ban_rsn', u.ban_rsn,
-      'ntf', u.ntf,
-      'stats', u.stats,
-      'wk_lgn', u.wk_lgn,
-      'strk', u.strk,
-      'strk_dt', u.strk_dt,
-      'i_del', u.i_del,
-      'perm', u.perm,
-      'ts_crt', u.ts_crt,
-      'ts_upd', u.ts_upd,
-      'vrf', u.vrf,
-      'ref_by', u.ref_by,
-      'ref_cnt', u.ref_cnt,
-      'usr', u.usr,
+      'id', u.id, 'nm', u.nm, 'ph', u.ph, 'eml', u.eml, 'ad', u.ad,
+      'role', u.role, 'sid', u.sid, 'img', u.img, 'pt', u.pt, 'bg', u.bg,
+      'bg_ts', u.bg_ts, 'b_pkg', u.b_pkg, 'pkg_end', u.pkg_end, 'pkg_grace', u.pkg_grace,
+      'brk', u.brk, 'brk_cls', u.brk_cls, 'brk_nm', u.brk_nm,
+      'sts', u.sts, 'ban_rsn', u.ban_rsn, 'ntf', u.ntf, 'stats', u.stats,
+      'wk_lgn', u.wk_lgn, 'strk', u.strk, 'strk_dt', u.strk_dt, 'i_del', u.i_del,
+      'perm', u.perm, 'ts_crt', u.ts_crt, 'ts_upd', u.ts_upd, 'vrf', u.vrf,
+      'ref_by', u.ref_by, 'ref_cnt', u.ref_cnt, 'usr', u.usr,
       'pwd', CASE WHEN u.pwd IS NOT NULL THEN 'set' ELSE NULL END,
-      'rl', u.rl,
-      'device_id', u.device_id,
-      'last_ip', u.last_ip,
-      'signup_ip', u.signup_ip,
-      'device_history', u.device_history
+      'rl', u.rl, 'device_id', u.device_id, 'last_ip', u.last_ip, 'signup_ip', u.signup_ip, 'device_history', u.device_history
     )
     FROM public.users u
     WHERE u.i_del = 0
-      AND u.role IN (2, 3, 4, 5, 6)
+      AND u.role IN (2, 3, 4, 5, 6, 7, 8)
     ORDER BY u.role DESC, u.ts_crt DESC;
 END;
 $function$
@@ -3333,130 +3281,51 @@ DECLARE
   v_result JSONB := '{}'::jsonb;
   v_count INT := 0;
 BEGIN
-  SELECT role INTO v_role
-  FROM public.users
-  WHERE id = p_user_uid
-    AND i_del = 0;
-
-  IF v_role IS NULL THEN
-    RETURN jsonb_build_object(
-      'success', false,
-      'error', 'USER_NOT_FOUND'
-    );
-  END IF;
+  SELECT role INTO v_role FROM public.users WHERE id = p_user_uid AND i_del = 0;
+  IF v_role IS NULL THEN RETURN jsonb_build_object('success', false, 'error', 'USER_NOT_FOUND'); END IF;
 
   IF v_role = 2 THEN
-    SELECT COUNT(*) INTO v_count
-    FROM public.photography_tasks
-    WHERE photographer_id = p_user_uid
-      AND sts = 3;
-
+    SELECT COUNT(*) INTO v_count FROM public.photography_tasks WHERE photographer_id = p_user_uid AND sts = 3;
     v_result := v_result || jsonb_build_object('completed_tasks', v_count);
-
-    SELECT COUNT(*) INTO v_count
-    FROM public.photography_tasks
-    WHERE photographer_id = p_user_uid
-      AND sts IN (0, 1);
-
+    SELECT COUNT(*) INTO v_count FROM public.photography_tasks WHERE photographer_id = p_user_uid AND sts IN (0, 1);
     v_result := v_result || jsonb_build_object('pending_tasks', v_count);
-
-    SELECT COUNT(*) INTO v_count
-    FROM public.photography_tasks
-    WHERE photographer_id = p_user_uid
-      AND sts = 2;
-
+    SELECT COUNT(*) INTO v_count FROM public.photography_tasks WHERE photographer_id = p_user_uid AND sts = 2;
     v_result := v_result || jsonb_build_object('submitted_tasks', v_count);
-
   ELSIF v_role = 3 THEN
-    SELECT COUNT(*) INTO v_count
-    FROM public.appointments
-    WHERE supervisor_uid = p_user_uid
-      AND sts = 2;
-
+    SELECT COUNT(*) INTO v_count FROM public.appointments WHERE supervisor_uid = p_user_uid AND sts = 2;
     v_result := v_result || jsonb_build_object('completed_visits', v_count);
-
-    SELECT COUNT(*) INTO v_count
-    FROM public.appointments
-    WHERE supervisor_uid = p_user_uid
-      AND sts IN (0, 1);
-
+    SELECT COUNT(*) INTO v_count FROM public.appointments WHERE supervisor_uid = p_user_uid AND sts IN (0, 1);
     v_result := v_result || jsonb_build_object('active_tasks', v_count);
-
-    -- الأعمدة executor_uid/sts غير موجودة حالياً في completion_requests على السيرفر
     v_result := v_result || jsonb_build_object('completion_requests', 0);
-
   ELSIF v_role = 4 THEN
-    SELECT COUNT(*) INTO v_count
-    FROM public.offers
-    WHERE added_by = p_user_uid
-      AND i_del = 0;
-
+    SELECT COUNT(*) INTO v_count FROM public.offers WHERE added_by = p_user_uid AND i_del = 0;
     v_result := v_result || jsonb_build_object('reviewed_offers', v_count);
-
-    SELECT COUNT(*) INTO v_count
-    FROM public.appointments
-    WHERE bkr_id = p_user_uid
-      AND sts = 2;
-
+    SELECT COUNT(*) INTO v_count FROM public.appointments WHERE bkr_id = p_user_uid AND sts = 2;
     v_result := v_result || jsonb_build_object('managed_appointments', v_count);
-
-    -- الأعمدة المطلوبة غير موجودة حالياً في completion_requests على السيرفر
     v_result := v_result || jsonb_build_object('processed_completions', 0);
-
+  ELSIF v_role = 7 THEN
+    v_result := v_result || jsonb_build_object('message', 'Lawyer stats - consultations');
+  ELSIF v_role = 8 THEN
+    v_result := v_result || jsonb_build_object('message', 'Expediter stats - field tasks');
   ELSIF v_role >= 5 THEN
-    SELECT COUNT(*) INTO v_count
-    FROM public.deals
-    WHERE i_del = 0;
-
+    SELECT COUNT(*) INTO v_count FROM public.deals WHERE i_del = 0;
     v_result := v_result || jsonb_build_object('total_deals', v_count);
-
-    SELECT COUNT(*) INTO v_count
-    FROM public.payments
-    WHERE sts IN (1, 2);
-
+    SELECT COUNT(*) INTO v_count FROM public.payments WHERE sts IN (1, 2);
     v_result := v_result || jsonb_build_object('approved_payments', v_count);
-
-    SELECT COUNT(*) INTO v_count
-    FROM public.payments
-    WHERE sts = 0;
-
+    SELECT COUNT(*) INTO v_count FROM public.payments WHERE sts = 0;
     v_result := v_result || jsonb_build_object('pending_payments', v_count);
-
-    SELECT COUNT(*) INTO v_count
-    FROM public.users
-    WHERE vrf = 2
-      AND i_del = 0;
-
+    SELECT COUNT(*) INTO v_count FROM public.users WHERE vrf = 2 AND i_del = 0;
     v_result := v_result || jsonb_build_object('verified_users', v_count);
-
-    SELECT COUNT(*) INTO v_count
-    FROM public.users
-    WHERE vrf = 1
-      AND i_del = 0;
-
+    SELECT COUNT(*) INTO v_count FROM public.users WHERE vrf = 1 AND i_del = 0;
     v_result := v_result || jsonb_build_object('pending_verifications', v_count);
-
-    SELECT COUNT(*) INTO v_count
-    FROM public.users
-    WHERE i_del = 0;
-
+    SELECT COUNT(*) INTO v_count FROM public.users WHERE i_del = 0;
     v_result := v_result || jsonb_build_object('total_users', v_count);
-
-    SELECT COUNT(*) INTO v_count
-    FROM public.offers
-    WHERE sts = 2
-      AND i_del = 0;
-
+    SELECT COUNT(*) INTO v_count FROM public.offers WHERE sts = 2 AND i_del = 0;
     v_result := v_result || jsonb_build_object('active_offers', v_count);
-
   ELSE
-    v_result := v_result || jsonb_build_object(
-      'message', 'No specific stats for this role'
-    );
+    v_result := v_result || jsonb_build_object('message', 'No specific stats for this role');
   END IF;
-
   v_result := v_result || jsonb_build_object('role', v_role);
-
   RETURN v_result;
 END;
 $function$
