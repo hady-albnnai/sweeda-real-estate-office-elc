@@ -70,7 +70,6 @@ class AuthProvider with ChangeNotifier {
       if (staffSession is Map && staffSession['success'] == true) {
         final token = staffSession['session_token']?.toString();
         final expiresAt = staffSession['expires_at']?.toString();
-        debugPrint('👉 [AUTH_DEBUG] Storing staff_session_token: ${token?.substring(0, 10)}...');
         if (token != null && token.isNotEmpty) {
           await prefs.setString('staff_session_token', token);
         }
@@ -78,14 +77,17 @@ class AuthProvider with ChangeNotifier {
           await prefs.setString('staff_session_expires_at', expiresAt);
         }
       } else {
-        debugPrint('👉 [AUTH_DEBUG] No staff session in data: $staffSession');
         await prefs.remove('staff_session_token');
         await prefs.remove('staff_session_expires_at');
       }
 
-      debugPrint('👉 [AUTH_DEBUG] Loading profile for userId="$userId"');
-      await _loadUserData(userId);
-      debugPrint('👉 [AUTH_DEBUG] Profile loaded! _userModel=${_userModel?.nm} | role=${_userModel?.role}');
+      final profile = data['profile'];
+      if (profile is Map) {
+        _userModel = UserModel.fromSupabase(Map<String, dynamic>.from(profile), userId);
+        DeviceService().registerWithServer();
+      } else {
+        await _loadUserData(userId);
+      }
 
       // تسجيل FCM token
       await FCMService().registerCurrentTokenForUser();

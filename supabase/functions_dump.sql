@@ -4186,6 +4186,7 @@ DECLARE
   v_identifier TEXT;
   v_norm TEXT;
   v_session JSONB := NULL;
+  v_profile JSONB := NULL;
 BEGIN
   v_identifier := LOWER(TRIM(p_identifier));
   v_norm := normalize_arabic_username(v_identifier);
@@ -4220,12 +4221,15 @@ BEGIN
   -- Always issue session for any authenticated user
   v_session := _issue_staff_session(v_user.id, '', '', INTERVAL '7 days');
 
+  SELECT get_user_full_by_id(v_user.id) INTO v_profile;
+
   RETURN jsonb_build_object(
     'success', true,
     'user_id', v_user.id,
     'role', v_user.role,
     'nm', v_user.nm,
-    'staff_session', v_session
+    'staff_session', v_session,
+    'profile', v_profile
   );
 END;
 $function$
