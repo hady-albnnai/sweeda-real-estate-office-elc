@@ -87,7 +87,8 @@ serve(async (req) => {
 
     // الدالة check_offer_duplicate يمكن أن تكون للمستخدم أو للموظف (من شاشة الإضافة للموظف)، لكنها تحتاج توثيق
     if (action === "check_duplicate") {
-      const actor = await validateUser(req, supabaseAdmin, "");
+      const duplicateCheckUid = (body.user_uid ?? body.userUid)?.toString() ?? "";
+      const actor = await validateUser(req, supabaseAdmin, duplicateCheckUid);
       if (!actor.ok) return actor.response;
 
       const title = (body.title ?? "").toString();
