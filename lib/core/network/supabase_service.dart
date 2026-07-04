@@ -64,6 +64,7 @@ class SupabaseService {
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final sessionToken = prefs.getString('staff_session_token');
+    final storedUserId = prefs.getString('user_id') ?? currentUser?.id;
     final jwt = auth.currentSession?.accessToken;
 
     final finalHeaders = Map<String, String>.from(headers ?? {});
@@ -76,9 +77,26 @@ class SupabaseService {
       finalHeaders['Authorization'] = sessionToken;
     }
 
+    dynamic finalBody = body;
+    if (body is Map) {
+      final mapBody = Map<String, dynamic>.from(body);
+      if (sessionToken != null && sessionToken.isNotEmpty && mapBody['staff_session_token'] == null) {
+        mapBody['staff_session_token'] = sessionToken;
+      }
+      if (storedUserId != null && storedUserId.isNotEmpty) {
+        if (functionName.startsWith('admin-') && mapBody['admin_uid'] == null && mapBody['adminUid'] == null) {
+          mapBody['admin_uid'] = storedUserId;
+        }
+        if (!functionName.startsWith('admin-') && mapBody['user_uid'] == null && mapBody['userUid'] == null) {
+          mapBody['user_uid'] = storedUserId;
+        }
+      }
+      finalBody = mapBody;
+    }
+
     return await client.functions.invoke(
       functionName,
-      body: body,
+      body: finalBody,
       headers: finalHeaders,
     );
   }

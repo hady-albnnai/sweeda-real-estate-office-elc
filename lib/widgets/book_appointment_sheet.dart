@@ -231,45 +231,49 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
 
     // الزائر غير المسجّل — نعرض رسالة تسجيل الدخول بدل الـ sheet
     if (!isLoggedIn) {
-      return Container(
-        padding: const EdgeInsets.all(30),
-        decoration: const BoxDecoration(
-          color: AppTheme.deepBlack,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      return SafeArea(
+        child: Container(
+          padding: const EdgeInsets.all(30),
+          decoration: const BoxDecoration(
+            color: AppTheme.deepBlack,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+          ),
+          child: SingleChildScrollView(
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              const Icon(Icons.lock_outline, color: AppTheme.primaryGold, size: 60),
+              const SizedBox(height: 16),
+              const Text('يجب تسجيل الدخول',
+                  style: TextStyle(
+                      color: AppTheme.textWhite,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              const Text(
+                'لحجز موعد معاينة يجب أن تكون مسجّلاً في التطبيق.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppTheme.textGrey, fontSize: 14, height: 1.5),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    context.push('/login');
+                  },
+                  child: const Text('تسجيل الدخول',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('لاحقاً',
+                    style: TextStyle(color: AppTheme.textGrey)),
+              ),
+            ]),
+          ),
         ),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          const Icon(Icons.lock_outline, color: AppTheme.primaryGold, size: 60),
-          const SizedBox(height: 16),
-          const Text('يجب تسجيل الدخول',
-              style: TextStyle(
-                  color: AppTheme.textWhite,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          const Text(
-            'لحجز موعد معاينة يجب أن تكون مسجّلاً في التطبيق.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: AppTheme.textGrey, fontSize: 14, height: 1.5),
-          ),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                context.push('/login');
-              },
-              child: const Text('تسجيل الدخول',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-          ),
-          const SizedBox(height: 10),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('لاحقاً',
-                style: TextStyle(color: AppTheme.textGrey)),
-          ),
-        ]),
       );
     }
 
@@ -278,16 +282,16 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
     final media = MediaQuery.of(context);
 
     // ارتفاع أقصى + تمرير داخلي لمنع الـ Overflow مهما بلغ عدد الأوقات
-    return Container(
-      constraints: BoxConstraints(maxHeight: media.size.height * 0.85),
-      decoration: const BoxDecoration(
-        color: AppTheme.deepBlack,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-      ),
-      padding: EdgeInsets.only(bottom: media.viewInsets.bottom),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
+    return SafeArea(
+      child: Container(
+        constraints: BoxConstraints(maxHeight: media.size.height * 0.88),
+        decoration: const BoxDecoration(
+          color: AppTheme.deepBlack,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+        ),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + media.viewInsets.bottom),
+          child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -323,6 +327,26 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
                     'الحجز يتم عبر إدارة المكتب لضمان الجدية. يرجى ملاحظة أنه قد يكون هناك طلبات أخرى تسبقك في الدور.',
                     style: TextStyle(
                         color: AppTheme.primaryGold, fontSize: 12, height: 1.4),
+                  ),
+                ),
+              ]),
+            ),
+            const SizedBox(height: 8),
+            // تنبيه التوثيق القانوني المأجور
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.green.withOpacity(0.3)),
+              ),
+              child: const Row(children: [
+                Icon(Icons.verified_user_outlined, color: Colors.green, size: 18),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'يتولى القسم القانوني في المكتب تدقيق ثبوتيات الملكية وتنظيم العقود المعتمدة عند طلب إتمام المعاملة.',
+                    style: TextStyle(color: Colors.green, fontSize: 11, height: 1.4, fontWeight: FontWeight.w600),
                   ),
                 ),
               ]),

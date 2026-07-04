@@ -1,4 +1,6 @@
 import 'package:intl/intl.dart';
+import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 
 /// أدوات مساعدة للتنسيق والتحقق
 class AppUtils {
@@ -77,5 +79,118 @@ class AppUtils {
   static String truncate(String text, int maxLength) {
     if (text.length <= maxLength) return text;
     return '${text.substring(0, maxLength)}...';
+  }
+
+  /// عرض إشعار لطيف ومتحرك يطفو للأعلى لمدة ثانيتين عند اكتساب النقاط
+  static void showPointsAwarded(BuildContext context, int points, {String label = 'نقاط مكافأة'}) {
+    final overlay = Overlay.maybeOf(context);
+    if (overlay == null) return;
+    late OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (ctx) => _FloatingPointsWidget(
+        points: points,
+        label: label,
+        onFinish: () {
+          if (entry.mounted) entry.remove();
+        },
+      ),
+    );
+    overlay.insert(entry);
+  }
+}
+
+class _FloatingPointsWidget extends StatefulWidget {
+  final int points;
+  final String label;
+  final VoidCallback onFinish;
+  const _FloatingPointsWidget({required this.points, required this.label, required this.onFinish});
+
+  @override
+  State<_FloatingPointsWidget> createState() => _FloatingPointsWidgetState();
+}
+
+class _FloatingPointsWidgetState extends State<_FloatingPointsWidget> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _opacity;
+  late Animation<Offset> _offset;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsSync: this, duration: const Duration(milliseconds: 2000));
+    _opacity = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: 1.0).chain(CurveTween(curve: Curves.easeOut)), weight: 15),
+      TweenSequenceItem(tween: ConstantTween<double>(1.0), weight: 55),
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.0).chain(CurveTween(curve: Curves.easeIn)), weight: 30),
+    ]).animate(_controller);
+
+    _offset = Tween<Offset>(
+      begin: const Offset(0, 30),
+      end: const Offset(0, -60),
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+
+    _controller.forward().then((_) {
+      if (mounted) widget.onFinish();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      bottom: 120,
+      left: 40,
+      right: 40,
+      child: IgnorePointer(
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            return Opacity(
+              opacity: _opacity.value,
+              child: Transform.translate(
+                offset: _offset.value,
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppTheme.primaryGold.withOpacity(0.95),
+                          const Color(0xFFE5C158).withOpacity(0.95),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: const [
+                        BoxShadow(color: Colors.black54, blurRadius: 12, offset: Offset(0, 4)),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.star, color: AppTheme.deepBlack, size: 22),
+                        const SizedBox(width: 8),
+                        Text(
+                          '+${widget.points} ${widget.label} 🔥',
+                          style: const TextStyle(
+                            color: AppTheme.deepBlack,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
   }
 }

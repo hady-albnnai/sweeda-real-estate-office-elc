@@ -245,10 +245,11 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
             top: 16,
             bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
               const Text('إنشاء مهمة تصوير', style: TextStyle(color: AppTheme.primaryGold, fontSize: 17, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
               DropdownButtonFormField<OfferModel>(

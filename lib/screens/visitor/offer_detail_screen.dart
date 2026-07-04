@@ -116,6 +116,22 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
         duration: const Duration(seconds: 1),
       ));
     }
+    if (added && mounted) {
+      final auth = context.read<AuthProvider>();
+      if (auth.isLoggedIn) {
+        final config = context.read<ConfigProvider>().config;
+        final awarded = await BusinessService().registerEventPoints(
+          auth.userModel!.uid,
+          'like',
+          config,
+          fallback: 10,
+        );
+        if (awarded && mounted) {
+          auth.refreshUser();
+          AppUtils.showPointsAwarded(context, 10, label: 'نقطة إعجاب');
+        }
+      }
+    }
   }
 
   Future<void> _share() async {
@@ -982,7 +998,85 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                       _spec(Icons.favorite, 'الإعجابات', '${offer.fvs}'),
                     ],
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 25),
+
+                  // ⚖️ بطاقة التوثيق القانوني وكتابة العقود المعتمدة (Legal Verification Card)
+                  Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.only(bottom: 25),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color(0xFF1A160A),
+                          AppTheme.surfaceBlack,
+                        ],
+                        begin: Alignment.topRight,
+                        end: Alignment.bottomLeft,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4), width: 1.5),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.primaryGold.withOpacity(0.08),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryGold.withOpacity(0.15),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.gavel, color: AppTheme.primaryGold, size: 22),
+                            ),
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Text(
+                                'الضمان والتوثيق القانوني المعتمد ⚖️',
+                                style: TextStyle(
+                                  color: AppTheme.primaryGold,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'يقدم المكتب العقاري خدمة التوثيق القانوني المأجور وتنظيم العقود أصولاً لضمان حق الطرفين. عند تقديم طلب إتمام المعاملة، يتولى فريقنا القانوني تدقيق صحة سندات الملكية (طابو، حكم محكمة، مواصلات) وخلوها من الإشارات والنزاعات قبل إتمام الصفقة.',
+                          style: TextStyle(
+                            color: AppTheme.textWhite,
+                            fontSize: 13,
+                            height: 1.6,
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        const Row(
+                          children: [
+                            Icon(Icons.verified_user, color: Colors.green, size: 16),
+                            SizedBox(width: 6),
+                            Text(
+                              'توثيق قانوني • عقود معتمدة • استشارات محامين',
+                              style: TextStyle(
+                                color: Colors.green,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
 
                   // زر مشاركة على السوشال (للمالك خصوصاً)
                   if (isOwner)

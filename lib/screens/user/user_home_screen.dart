@@ -12,6 +12,7 @@ import '../../widgets/bottom_nav_bar.dart';
 import '../../widgets/shimmer_loading.dart';
 import '../../widgets/error_widget.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/app_utils.dart';
 import '../../core/services/permission_service.dart';
 
 /// الشاشة الرئيسية للمستخدم بعد تسجيل الدخول
@@ -51,7 +52,10 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
           Provider.of<NotificationProvider>(context, listen: false)
               .fetchNotifications(uid);
         }
-        await auth.registerStreak(config.config);
+        final res = await auth.registerStreak(config.config);
+        if (mounted && res['awarded'] == true) {
+          AppUtils.showPointsAwarded(context, 50, label: 'نقطة دخول يومي');
+        }
       }
     });
   }

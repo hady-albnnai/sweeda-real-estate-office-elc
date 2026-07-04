@@ -27,11 +27,11 @@ async function validateActor(
   body: Record<string, unknown>,
   minRole = 3,
 ): Promise<{ ok: true; adminUid: string; role: number } | { ok: false; response: Response }> {
-  const requestedAdminUid = (body.admin_uid ?? body.adminUid)?.toString() ?? "";
+  const requestedAdminUid = (body.admin_uid ?? body.adminUid ?? body.user_uid ?? body.userUid ?? body.admin_id ?? body.adminId)?.toString() ?? "";
   const authHeader = req.headers.get("Authorization") ?? "";
   const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
 
-  if (bearer) {
+  if (bearer && bearer !== "undefined" && bearer !== "null" && bearer !== "anon_key_here") {
     const { data: userData } = await supabaseAdmin.auth.getUser(bearer);
     const uid = userData?.user?.id;
     if (uid && (!requestedAdminUid || requestedAdminUid === uid)) {
@@ -48,7 +48,7 @@ async function validateActor(
     }
   }
 
-  const sessionToken = (body.staff_session_token ?? body.staffSessionToken)?.toString() ?? "";
+  const sessionToken = (body.staff_session_token ?? body.staffSessionToken)?.toString() ?? (authHeader && !authHeader.startsWith("Bearer ") ? authHeader.trim() : "");
   if (!requestedAdminUid || !sessionToken) {
     return { ok: false, response: json({ success: false, error: "ADMIN_SESSION_REQUIRED" }, 401) };
   }

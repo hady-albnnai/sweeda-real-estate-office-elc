@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../models/offer_model.dart';
 import '../core/theme/app_theme.dart';
 import '../core/utils/app_utils.dart';
 import '../core/services/local_cache_service.dart';
-import 'package:go_router/go_router.dart';
+import '../core/services/business_service.dart';
+import '../providers/auth_provider.dart';
+import '../providers/config_provider.dart';
 
 class OfferCard extends StatefulWidget {
   final OfferModel offer;
@@ -30,6 +34,22 @@ class _OfferCardState extends State<OfferCard> {
         content: Text(added ? 'أُضيف للمفضلة ❤️' : 'أُزيل من المفضلة'),
         duration: const Duration(seconds: 1),
       ));
+    }
+    if (added && mounted) {
+      final auth = context.read<AuthProvider>();
+      if (auth.isLoggedIn) {
+        final config = context.read<ConfigProvider>().config;
+        final awarded = await BusinessService().registerEventPoints(
+          auth.userModel!.uid,
+          'like',
+          config,
+          fallback: 10,
+        );
+        if (awarded && mounted) {
+          auth.refreshUser();
+          AppUtils.showPointsAwarded(context, 10, label: 'نقطة إعجاب');
+        }
+      }
     }
   }
 

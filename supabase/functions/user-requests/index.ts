@@ -40,6 +40,19 @@ async function validateUser(
     }
   }
 
+  // 2. Try Custom Session Token validation (for custom password login)
+  const sessionToken = authHeader.trim();
+  if (sessionToken && !authHeader.startsWith("Bearer ")) {
+    const { data, error } = await supabaseAdmin.rpc("validate_staff_session", {
+      p_token: sessionToken,
+      p_user_uid: requestedUid,
+    });
+
+    if (!error && data && data.success === true) {
+      return { ok: true, uid: data.user_id };
+    }
+  }
+
   // FALLBACK REMOVED: No longer accepting requestedUid blindly.
   return { ok: false, response: json({ success: false, error: "AUTH_TOKEN_REQUIRED" }, 401) };
 }
