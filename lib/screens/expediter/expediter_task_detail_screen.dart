@@ -181,6 +181,37 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
                       const SizedBox(height: 4),
                       Text('ملاحظات: ${item.notes}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
                     ],
+<<<<<<< HEAD
+=======
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: isDone ? null : () => _updateItem(item, 2, item.inputValue, item.attachmentUrl, item.notes),
+                            icon: const Icon(Icons.check_circle_outline, size: 16),
+                            label: const Text('تم الاستخراج ✔️', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => _showEditDialog(item),
+                            icon: const Icon(Icons.edit_note, size: 16, color: AppTheme.primaryGold),
+                            label: const Text('البيانات والمرفق ✏️', style: TextStyle(color: AppTheme.primaryGold, fontSize: 12)),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: AppTheme.primaryGold),
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+>>>>>>> 8678b22 (feat(ux): add VisualMilestoneTracker widget and one-tap expediter quick action buttons)
                   ],
                 ),
               );
