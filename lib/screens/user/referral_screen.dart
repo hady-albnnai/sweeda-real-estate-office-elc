@@ -59,7 +59,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
   Future<void> _copyCode(String code) async {
     await Clipboard.setData(ClipboardData(text: code));
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.showSnackBar(context,
         const SnackBar(content: Text('✅ تم نسخ الكود'),
             duration: Duration(seconds: 1)),
       );
@@ -85,7 +85,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
 
     if (user == null) {
       return const Scaffold(
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         body: Center(
             child: Text('سجّل دخولك أولاً',
                 style: TextStyle(color: AppTheme.textGrey))),
@@ -95,10 +95,10 @@ class _ReferralScreenState extends State<ReferralScreen> {
     final code = _refCode(user.uid);
 
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
         title: const Text('دعوة الأصدقاء'),
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         elevation: 0,
       ),
       body: SingleChildScrollView(

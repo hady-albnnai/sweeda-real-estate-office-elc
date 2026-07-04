@@ -30,10 +30,10 @@ class _BrokerStatsScreenState extends State<BrokerStatsScreen> {
     final s = broker.stats;
 
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
         title: const Text('الإحصائيات'),
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh, color: AppTheme.primaryGold),

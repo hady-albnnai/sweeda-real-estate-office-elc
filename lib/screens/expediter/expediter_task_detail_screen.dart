@@ -23,7 +23,7 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
 
   void _snack(String m) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
+    AppTheme.showSnackBar(context, SnackBar(content: Text(m)));
   }
 
   Future<void> _updateItem(ChecklistItemModel item, int newSts, String inputVal, String attachUrl, String notes) async {
@@ -125,10 +125,10 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
         title: Text(widget.task.itemType == 0 ? 'مهمة استخراج ثبوتيات عقار 🏠' : 'مهمة استخراج ثبوتيات مركبة 🚗'),
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),

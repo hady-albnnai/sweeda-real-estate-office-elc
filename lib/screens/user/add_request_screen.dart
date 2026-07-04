@@ -156,7 +156,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
 
   void _snack(String m) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
+    AppTheme.showSnackBar(context, SnackBar(content: Text(m)));
   }
 
   // ── مساعدات التصنيف من Config (مطابقة لشاشة العرض) ──
@@ -222,9 +222,9 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         elevation: 0,
         title: const Text('إضافة طلب جديد',
             style: TextStyle(

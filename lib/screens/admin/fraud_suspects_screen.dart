@@ -39,16 +39,16 @@ class _FraudSuspectsScreenState extends State<FraudSuspectsScreen> {
     try {
       final auth = context.read<AuthProvider>();
       final adminId = auth.userModel?.uid;
-      
+
       final res = await SupabaseService().invokeFunction('admin-dashboard', body: {
         'action': 'fraud_suspects',
         'admin_uid': adminId,
         'staff_session_token': await AuthService().getStaffSessionToken(),
       });
-      
+
       final data = res.data as Map<String, dynamic>?;
-      final list = (data != null && data['success'] == true) 
-          ? (data['suspects'] as List).map((e) => Map<String, dynamic>.from(e)).toList() 
+      final list = (data != null && data['success'] == true)
+          ? (data['suspects'] as List).map((e) => Map<String, dynamic>.from(e)).toList()
           : <Map<String, dynamic>>[];
 
       if (!mounted) return;
@@ -68,10 +68,10 @@ class _FraudSuspectsScreenState extends State<FraudSuspectsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
         title: const Text('كشف الاحتيال'),
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         foregroundColor: AppTheme.primaryGold,
         actions: [
           IconButton(icon: const Icon(Icons.refresh), onPressed: _load),

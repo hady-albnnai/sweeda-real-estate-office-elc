@@ -45,10 +45,10 @@ class _BrokerOffersScreenState extends State<BrokerOffersScreen> {
     final offers = _apply(broker.offers);
 
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
         title: const Text('عروضي'),
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh, color: AppTheme.primaryGold),

@@ -23,7 +23,7 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
   final _usernameController = TextEditingController();
   final _addressController = TextEditingController();
   final _sidController = TextEditingController();
-  
+
   int _selectedRole = 4; // موظف مكتب افتراضي
   bool _isLoading = false;
   final List<XFile> _idImages = [];
@@ -55,9 +55,9 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     if (_idImages.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.showSnackBar(context,
         const SnackBar(content: Text('يرجى اختيار صورة الهوية')),
       );
       return;
@@ -100,13 +100,13 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
       if (result['success'] == true) {
         Navigator.pop(context, result);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppTheme.showSnackBar(context,
           SnackBar(content: Text("فشل إضافة الموظف: ${result['error'] ?? 'خطأ غير معروف'}")),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppTheme.showSnackBar(context,
           SnackBar(content: Text('خطأ: $e')),
         );
       }

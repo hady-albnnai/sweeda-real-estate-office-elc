@@ -402,3 +402,17 @@
 - `trg_user_safe_update` يمنع أي مستخدم من تغيير دورو بنفسه
 - `admin_create_staff_user` ممنوحة فقط لـ `service_role`
 - الأدوار 7 و 8 محمية أصلاً عبر `_admin_employee_assert_actor` (يتطلب role ≥ 5)
+
+---
+
+## تحديث 2026-07-04 — إصلاح رسائل الواجهة وتغيير كلمة المرور والثيم النهاري
+
+- تم تحويل رسائل `SnackBar` إلى طبقة Overlay علوية موحدة عبر `AppTheme.showSnackBar` حتى تظهر فوق النوافذ المنبثقة والـ BottomSheets ولا تختفي خلفها.
+- تم تصحيح تغيير كلمة المرور من الملف الشخصي بإرسال المفاتيح الصحيحة إلى `user-account`: `old_password` و `new_password` بدلاً من `p_old_password` و `p_new_password`.
+- تم تعديل `SupabaseService.invokeFunction` لتمرير `staff_session_token` في Authorization عند عدم وجود JWT، لدعم تسجيل الدخول بكلمة مرور مخصصة.
+- تم تعديل Edge Functions المستخدم (`user-account`, `user-offers`, `user-requests`, `user-appointments`, `user-notifications`, `user-rewards`, `broker-actions`) للتحقق من جلسة المستخدم العادي عبر `p_min_role: 0`.
+- تمت إضافة Migration: `2026_07_04_user_account_password_session_fix.sql` لإصدار جلسة مخصصة لكل الأدوار بعد تسجيل دخول صحيح بكلمة المرور.
+- تم تحويل اللوحة اللونية العامة إلى وضع نهاري أبيض/ذهبي: خلفية دافئة، بطاقات بيضاء، نص داكن، وذهبي كلون أساسي.
+- المرجع التفصيلي: `docs/2026_07_04_ui_auth_theme_fix.md`.
+
+**يلزم للنشر الحي:** إعادة نشر Edge Functions المعدلة وتطبيق Migration على قاعدة البيانات.

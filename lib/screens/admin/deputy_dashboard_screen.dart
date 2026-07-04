@@ -18,10 +18,10 @@ class DeputyDashboardScreen extends StatelessWidget {
     final name = user?.nm ?? 'نائب المدير';
 
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
         leading: const AppBackButton(),
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

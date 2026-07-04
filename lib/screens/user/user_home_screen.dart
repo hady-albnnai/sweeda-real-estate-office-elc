@@ -100,9 +100,9 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     final userName = auth.userModel?.nm ?? 'مستخدم';
 
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         elevation: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

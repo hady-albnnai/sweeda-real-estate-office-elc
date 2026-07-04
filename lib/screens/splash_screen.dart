@@ -107,7 +107,7 @@ class _SplashScreenState extends State<SplashScreen>
     final logoSize = (screenSize.shortestSide * 0.85).clamp(280.0, 480.0);
 
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       body: Stack(
         children: [
           // ─── تأثير إضاءة خلفي (Glow) ───

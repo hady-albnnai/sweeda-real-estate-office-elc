@@ -173,7 +173,7 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
 
   Future<void> _confirm() async {
     if (_selectedDayKey == null || _selectedSlot == null || _selectedTime == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.showSnackBar(context,
         const SnackBar(content: Text('يرجى اختيار اليوم والفترة والوقت')),
       );
       return;
@@ -200,7 +200,7 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
     if (result.success) {
       final activeCount = result.activeCount;
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.showSnackBar(context,
         SnackBar(
           content: Text(
             activeCount > 1
@@ -215,7 +215,7 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
     } else {
       // تحديث الأوقات المحجوزة بعد الفشل (قد يكون سببه تعارضاً حديثاً)
       _loadBookedSlots();
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.showSnackBar(context,
         SnackBar(
           content: Text(_errorMessage(result)),
           duration: const Duration(seconds: 6),

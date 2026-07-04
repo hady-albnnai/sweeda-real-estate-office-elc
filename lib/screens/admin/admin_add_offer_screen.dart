@@ -262,7 +262,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
 
   void _snack(String m) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
+    AppTheme.showSnackBar(context, SnackBar(content: Text(m)));
   }
 
   @override

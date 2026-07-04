@@ -171,10 +171,10 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
         leading: const AppBackButton(),
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         title: const Text('مهام التصوير',
             style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
         actions: [
@@ -553,6 +553,6 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
 
   void _snack(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    AppTheme.showSnackBar(context, SnackBar(content: Text(msg)));
   }
 }

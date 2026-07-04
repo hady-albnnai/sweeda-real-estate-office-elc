@@ -49,7 +49,7 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
     final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
     final ok = await context.read<AdminProvider>().approveVerification(adminUid, userId);
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+    AppTheme.showSnackBar(context, SnackBar(
       content: Text(ok ? '✅ تم اعتماد توثيق $name' : '❌ فشل الاعتماد'),
       backgroundColor: ok ? Colors.green : Colors.red,
     ));
@@ -106,7 +106,7 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
         .read<AdminProvider>()
         .rejectVerification(adminUid, userId, reason: reasonCtrl.text.trim());
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+    AppTheme.showSnackBar(context, SnackBar(
       content: Text(ok ? '🚫 تم رفض توثيق $name' : '❌ فشل الرفض'),
       backgroundColor: ok ? Colors.orange : Colors.red,
     ));
@@ -129,7 +129,7 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
             .createSignedUrl(imgPathOrUrl, 60);
       } catch (e) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppTheme.showSnackBar(context,
           SnackBar(content: Text('❌ تعذّر فتح الصورة: $e')),
         );
         return;
@@ -158,10 +158,10 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
         title: const Text('مراجعة طلبات التوثيق'),
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         foregroundColor: AppTheme.primaryGold,
         actions: [
           IconButton(

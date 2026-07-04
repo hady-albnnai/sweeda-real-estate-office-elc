@@ -332,10 +332,8 @@ BEGIN
     RAISE EXCEPTION 'USER_NOT_FOUND_OR_INACTIVE';
   END IF;
 
-  IF v_role < 2 THEN
-    RETURN jsonb_build_object('success', false, 'error', 'NOT_STAFF');
-  END IF;
-
+  -- تسمح لكل الأدوار بإصدار جلسة مخصصة بعد تسجيل دخول صحيح بكلمة المرور.
+  -- الصلاحيات الفعلية تضبط لاحقاً عند التحقق عبر p_min_role.
   v_token := encode(gen_random_bytes(32), 'hex');
   v_expires_at := NOW() + p_ttl;
 

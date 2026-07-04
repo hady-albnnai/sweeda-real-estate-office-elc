@@ -69,7 +69,7 @@ class _PermissionsManagementScreenState extends State<PermissionsManagementScree
         );
     if (!mounted) return;
     setState(() => _saving = false);
-    ScaffoldMessenger.of(context).showSnackBar(
+    AppTheme.showSnackBar(context,
       SnackBar(content: Text(ok ? 'تم حفظ الصلاحيات' : 'فشل حفظ الصلاحيات')),
     );
     if (ok) await _load();
@@ -82,7 +82,7 @@ class _PermissionsManagementScreenState extends State<PermissionsManagementScree
     final ok = await context.read<AdminProvider>().updateUserPermissions(context.read<AuthProvider>().userModel?.uid ?? '', user.uid, const []);
     if (!mounted) return;
     setState(() => _saving = false);
-    ScaffoldMessenger.of(context).showSnackBar(
+    AppTheme.showSnackBar(context,
       SnackBar(content: Text(ok ? 'تمت العودة لصلاحيات الدور' : 'فشل إعادة الضبط')),
     );
     if (ok) await _load();
@@ -92,9 +92,9 @@ class _PermissionsManagementScreenState extends State<PermissionsManagementScree
   Widget build(BuildContext context) {
     final wide = MediaQuery.of(context).size.width >= 820;
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         title: const Text('إدارة الصلاحيات'),
         actions: [
           IconButton(

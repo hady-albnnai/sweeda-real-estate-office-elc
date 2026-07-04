@@ -69,7 +69,7 @@ class PasswordResultDialog extends StatelessWidget {
           onPressed: () async {
             await Clipboard.setData(ClipboardData(text: password));
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
+              AppTheme.showSnackBar(context,
                 const SnackBar(content: Text('تم نسخ كلمة السر')),
               );
             }

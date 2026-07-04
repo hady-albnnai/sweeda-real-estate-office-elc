@@ -127,7 +127,7 @@ class _MyAppState extends State<MyApp> {
             return Directionality(
               textDirection: TextDirection.rtl,
               child: Scaffold(
-                backgroundColor: AppTheme.deepBlack,
+                backgroundColor: AppTheme.scaffoldBackground,
                 body: Center(
                   child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                     const Icon(Icons.error_outline, color: Colors.red, size: 60),

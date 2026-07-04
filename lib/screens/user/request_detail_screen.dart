@@ -177,20 +177,20 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
   }
 
   void _snack(String m) =>
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
+      AppTheme.showSnackBar(context, SnackBar(content: Text(m)));
 
   @override
   Widget build(BuildContext context) {
     if (_loading) {
       return const Scaffold(
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         body: Center(
             child: CircularProgressIndicator(color: AppTheme.primaryGold)),
       );
     }
     if (_request == null) {
       return const Scaffold(
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         body: Center(
           child: Text('الطلب غير موجود',
               style: TextStyle(color: AppTheme.textGrey)),
@@ -200,10 +200,10 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
 
     final r = _request!;
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
         title: const Text('تفاصيل الطلب'),
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         elevation: 0,
         actions: [
           IconButton(
@@ -584,7 +584,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
   Widget _renewButton() {
     final user = context.watch<AuthProvider>().userModel;
     final r = _request!;
-    
+
     // تجديد الطلب: متاح للحسابات المدفوعة دائماً، وللمجانية قبل يومين فقط من الانتهاء
     final bool canRenewNow = (user?.bPkg != 0) || (r.daysUntilExpiration <= 2);
 
@@ -748,7 +748,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
 
   void _bookOnOffer(OfferModel offer) {
     if (offer.avl.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.showSnackBar(context,
           const SnackBar(content: Text('هذا العرض لا يحتوي مواعيد متاحة حالياً')));
       return;
     }

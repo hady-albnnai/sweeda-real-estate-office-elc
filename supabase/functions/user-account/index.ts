@@ -49,6 +49,7 @@ async function validateUser(
     const { data, error } = await supabaseAdmin.rpc("validate_staff_session", {
       p_token: sessionToken,
       p_user_uid: requestedUid, // Pass requestedUid to ensure the token belongs to the requested user
+      p_min_role: 0,
     });
 
     if (!error && data && data.success === true) {
@@ -117,7 +118,7 @@ serve(async (req) => {
     // ----------------------------------------------------
     // دوال تتطلب مستخدم مسجل الدخول (JWT)
     // ----------------------------------------------------
-    
+
     const requestedUid = (body.user_uid ?? body.userUid)?.toString() ?? "";
     if (!requestedUid) return json({ success: false, error: "USER_UID_REQUIRED" }, 400);
 

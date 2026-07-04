@@ -31,13 +31,13 @@ class RatingDialog extends StatefulWidget {
   }) async {
     final auth = context.read<AuthProvider>();
     if (!auth.isLoggedIn) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.showSnackBar(context,
         const SnackBar(content: Text('سجّل دخولك أولاً لإرسال تقييم')),
       );
       return false;
     }
     if (auth.userModel!.uid == targetUid) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.showSnackBar(context,
         const SnackBar(content: Text('لا يمكنك تقييم نفسك')),
       );
       return false;
@@ -71,7 +71,7 @@ class _RatingDialogState extends State<RatingDialog> {
 
   Future<void> _submit() async {
     if (_stars == 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.showSnackBar(context,
         const SnackBar(content: Text('اختر عدد النجوم من 1 إلى 5')),
       );
       return;
@@ -105,7 +105,7 @@ class _RatingDialogState extends State<RatingDialog> {
       }
 
       Navigator.pop(context, true);
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.showSnackBar(context,
         SnackBar(
           content: Text(_stars == 5
               ? '⭐ شكراً! تم منح الطرف الآخر 200 نقطة مكافأة'
@@ -126,7 +126,7 @@ class _RatingDialogState extends State<RatingDialog> {
       } else if (raw.contains('ratings_no_self')) {
         userMsg = 'لا يمكنك تقييم نفسك.';
       }
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.showSnackBar(context,
         SnackBar(content: Text(userMsg)),
       );
     }

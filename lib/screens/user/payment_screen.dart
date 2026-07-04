@@ -225,7 +225,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   void _snack(String m) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
+    AppTheme.showSnackBar(context, SnackBar(content: Text(m)));
   }
 
   @override
@@ -234,10 +234,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
     final channels = config?.enabledPayChannels ?? [];
 
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
         title: const Text('دفع الاشتراك'),
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         elevation: 0,
       ),
       body: Stack(

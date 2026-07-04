@@ -58,7 +58,7 @@ class _MyRatingsScreenState extends State<MyRatingsScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.showSnackBar(context,
         SnackBar(content: Text('❌ فشل تحميل التقييمات: $e')),
       );
     }
@@ -67,10 +67,10 @@ class _MyRatingsScreenState extends State<MyRatingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
         title: const Text('تقييماتي المستلمة'),
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         foregroundColor: AppTheme.primaryGold,
         actions: [
           IconButton(

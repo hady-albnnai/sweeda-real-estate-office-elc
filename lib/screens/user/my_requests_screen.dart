@@ -33,9 +33,9 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
     final reqProv = Provider.of<RequestProvider>(context);
 
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         elevation: 0,
         title: const Text('طلباتي', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
         actions: [

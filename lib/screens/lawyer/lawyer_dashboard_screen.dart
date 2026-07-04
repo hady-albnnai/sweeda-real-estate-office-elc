@@ -58,7 +58,7 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
 
   void _snack(String m, {Color? bg}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
+    AppTheme.showSnackBar(context,
       SnackBar(content: Text(m), backgroundColor: bg ?? AppTheme.primaryGold));
   }
 
@@ -106,8 +106,10 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
             if (newCtrl.text.length < 8) { _snack('كلمة المرور أقل من 8 أحرف', bg: AppTheme.errorRed); return; }
             try {
               final res = await SupabaseService().invokeFunction('user-account', body: {
-                'action': 'change_password', 'user_uid': user?.uid ?? '',
-                'p_old_password': oldCtrl.text, 'p_new_password': newCtrl.text,
+                'action': 'change_password',
+                'user_uid': user?.uid ?? '',
+                'old_password': oldCtrl.text,
+                'new_password': newCtrl.text,
               });
               final d = res.data as Map?;
               if (d?['success'] == true) { Navigator.pop(ctx); _snack('✅ تم تغيير كلمة المرور'); }
@@ -156,15 +158,15 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
   Widget build(BuildContext context) {
     final legal = context.watch<LegalProvider>();
     if (_checking) return const Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       body: Center(child: CircularProgressIndicator(color: AppTheme.primaryGold)),
     );
     if (!legal.profileSetupComplete) return _buildSetupScreen();
 
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
-        title: const Text('⚖️ لوحة المحامي'), backgroundColor: AppTheme.deepBlack,
+        title: const Text('⚖️ لوحة المحامي'), backgroundColor: AppTheme.scaffoldBackground,
         actions: [
           IconButton(icon: const Icon(Icons.person_outline, color: AppTheme.primaryGold),
             tooltip: 'الملف الشخصي', onPressed: _showProfileDialog),
@@ -188,8 +190,8 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
   // ──────── شاشة الإعداد الأولي ────────
   Widget _buildSetupScreen() {
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
-      appBar: AppBar(title: const Text('⚖️ مرحباً أستاذ'), backgroundColor: AppTheme.deepBlack),
+      backgroundColor: AppTheme.scaffoldBackground,
+      appBar: AppBar(title: const Text('⚖️ مرحباً أستاذ'), backgroundColor: AppTheme.scaffoldBackground),
       body: SingleChildScrollView(padding: const EdgeInsets.all(20), child: Column(children: [
         const SizedBox(height: 20),
         Container(padding: const EdgeInsets.all(20),

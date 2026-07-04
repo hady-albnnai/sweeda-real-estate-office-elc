@@ -111,7 +111,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
     final added = await LocalCacheService().toggleFavorite(widget.offerId);
     setState(() => _isFav = added);
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      AppTheme.showSnackBar(context, SnackBar(
         content: Text(added ? 'أُضيف للمفضلة ❤️' : 'أُزيل من المفضلة'),
         duration: const Duration(seconds: 1),
       ));
@@ -187,24 +187,23 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
       leading: Icon(icon, color: color),
       title: Text(label, style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.w600)),
       onTap: () async {
-        final messenger = ScaffoldMessenger.of(context);
         final adminProv = context.read<AdminProvider>();
         final authProv = context.read<AuthProvider>();
 
         Navigator.pop(ctx);
-        // نعطي الـ bottom sheet وقتاً ليُغلق حتى لا تضيع الـ SnackBar خلفه/أثناء الإغلاق.
+        // نعطي الـ bottom sheet وقتاً ليُغلق حتى لا تضيع الرسالة خلفه/أثناء الإغلاق.
         await Future<void>.delayed(const Duration(milliseconds: 120));
         if (!mounted) return;
 
-        messenger
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            const SnackBar(
-              content: Text('جاري تحديث أولوية العرض...'),
-              behavior: SnackBarBehavior.floating,
-              duration: Duration(seconds: 2),
-            ),
-          );
+        AppTheme.hideSnackBar(context);
+        AppTheme.showSnackBar(
+          context,
+          const SnackBar(
+            content: Text('جاري تحديث أولوية العرض...'),
+            behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 2),
+          ),
+        );
 
         final ok = await adminProv.setOfferPriority(
           authProv.userModel!.uid,
@@ -213,9 +212,10 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
         );
 
         if (mounted) {
-          messenger.hideCurrentSnackBar();
+          AppTheme.hideSnackBar(context);
           if (ok) {
-            messenger.showSnackBar(
+            AppTheme.showSnackBar(
+              context,
               const SnackBar(
                 content: Text('تم تحديث أولوية العرض بنجاح'),
                 backgroundColor: Colors.green,
@@ -225,7 +225,8 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
             // Refresh to see updated state
             _load();
           } else {
-            messenger.showSnackBar(
+            AppTheme.showSnackBar(
+              context,
               SnackBar(
                 content: Text('فشل التحديث: ${adminProv.error ?? "حدث خطأ"}'),
                 backgroundColor: AppTheme.errorRed,
@@ -262,24 +263,24 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
               Navigator.pop(ctx);
               final adminProv = context.read<AdminProvider>();
               final authProv = context.read<AuthProvider>();
-              
-              ScaffoldMessenger.of(context).showSnackBar(
+
+              AppTheme.showSnackBar(context,
                 const SnackBar(content: Text('جاري الحذف...')),
               );
-              
+
               final ok = await adminProv.deleteOfferByAdmin(
                 authProv.userModel!.uid,
                 offer.id,
               );
-              
+
               if (mounted) {
                 if (ok) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  AppTheme.showSnackBar(context,
                     const SnackBar(content: Text('تم حذف العرض بنجاح')),
                   );
                   Navigator.pop(context); // الرجوع للشاشة السابقة بعد الحذف
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  AppTheme.showSnackBar(context,
                     SnackBar(content: Text('فشل الحذف: ${adminProv.error ?? "حدث خطأ"}')),
                   );
                 }
@@ -329,12 +330,12 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
         final config = context.read<ConfigProvider>().config;
         await BusinessService().awardEvent(offer.usrId, config, 'addO', fallback: 500);
       } catch (_) {}
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.showSnackBar(context,
         const SnackBar(content: Text('✅ تم نشر العرض'), backgroundColor: Colors.green),
       );
       _load();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.showSnackBar(context,
         SnackBar(content: Text('فشل النشر: ${admin.error ?? "خطأ غير معروف"}'), backgroundColor: AppTheme.errorRed),
       );
     }
@@ -349,12 +350,12 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
     final ok = await admin.reviewOffer(adminUid, offer.id, false, reason: reason);
     if (!mounted) return;
     if (ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.showSnackBar(context,
         const SnackBar(content: Text('تم رفض العرض'), backgroundColor: Colors.orange),
       );
       _load();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.showSnackBar(context,
         SnackBar(content: Text('فشل الرفض: ${admin.error ?? "خطأ غير معروف"}'), backgroundColor: AppTheme.errorRed),
       );
     }
@@ -437,7 +438,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
     if (_offer == null) return;
     final auth = context.read<AuthProvider>();
     if (!auth.isLoggedIn) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.showSnackBar(context,
         SnackBar(
           content: const Text('يجب تسجيل الدخول لتبليغ عن عرض'),
           action: SnackBarAction(
@@ -546,14 +547,14 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
         throw Exception(response.data?['error'] ?? 'Report failed');
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.showSnackBar(context,
         const SnackBar(
           content: Text('✅ تم إرسال التبليغ، شكراً لمساعدتنا'),
           backgroundColor: Colors.green,
         ),
       );
     } catch (e) {if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.showSnackBar(context,
         const SnackBar(content: Text('فشل إرسال التبليغ، حاول مرة أخرى')),
       );
     }
@@ -563,14 +564,14 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
   Widget build(BuildContext context) {
     if (_loading) {
       return const Scaffold(
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         body: Center(child: CircularProgressIndicator(color: AppTheme.primaryGold)),
       );
     }
     final offer = _offer;
     if (offer == null) {
       return const Scaffold(
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         body: Center(
             child: Text('العرض غير موجود',
                 style: TextStyle(color: AppTheme.textGrey))),
@@ -581,7 +582,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
     final isOwner = auth.userModel?.uid == offer.usrId;
 
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
@@ -938,7 +939,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                     }),
                     const SizedBox(height: 20),
                   ],
-                  
+
                   // تفاصيل سند الملكية (للكل كمعلومة نصية، وللموظفين كمعاينة)
                   if (offer.docTp >= 0) ...[
                     const SizedBox(height: 20),
@@ -1115,7 +1116,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                         ),
                       ),
                     ),
-                  
+
                                     // أزرار مراجعة العرض — للإدارة فقط للعروض غير المنشورة
                   if (auth.isAdmin && offer.iPub == 0) ...[
                     const SizedBox(height: 10),
@@ -1249,7 +1250,6 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
 
   Future<void> _shareAndMark() async {
     if (_offer == null) return;
-    final messenger = ScaffoldMessenger.of(context);
     final config = context.read<ConfigProvider>().config;
     final auth = context.read<AuthProvider>();
     final text = BusinessService().generateSocialPost(_offer!, config: config);
@@ -1269,14 +1269,18 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
         await BusinessService()
             .awardEvent(auth.userModel!.uid, config, 'soc', fallback: 100);
         if (mounted) {
-          messenger.showSnackBar(
-              SnackBar(content: Text('تم مشاركة العرض ✅ (+$pts نقطة)')));
+          AppTheme.showSnackBar(
+            context,
+            SnackBar(content: Text('تم مشاركة العرض ✅ (+$pts نقطة)')),
+          );
         }
       }
     } else {
       if (mounted) {
-        messenger.showSnackBar(
-            const SnackBar(content: Text('لم تتم المشاركة')));
+        AppTheme.showSnackBar(
+          context,
+          const SnackBar(content: Text('لم تتم المشاركة')),
+        );
       }
     }
   }

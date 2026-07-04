@@ -84,10 +84,10 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> with Code
       return;
     }
     setState(() => _loading = true);
-    
+
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final ok = await authProvider.verifySMSOTP(_otp);
-    
+
     if (!mounted) return;
     setState(() => _loading = false);
     if (ok) {
@@ -111,13 +111,13 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> with Code
     }
   }
 
-  void _toast(String m) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
+  void _toast(String m) => AppTheme.showSnackBar(context, SnackBar(content: Text(m)));
 
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0, leading: IconButton(icon: const Icon(Icons.arrow_back_ios), onPressed: () => context.pop())),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -141,8 +141,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> with Code
                 children: List.generate(6, (i) => SizedBox(
                   width: 48,
                   child: TextField(
-                    controller: _ctrls[i], focusNode: _nodes[i], textAlign: TextAlign.center, 
-                    keyboardType: TextInputType.text, 
+                    controller: _ctrls[i], focusNode: _nodes[i], textAlign: TextAlign.center,
+                    keyboardType: TextInputType.text,
                     maxLength: 1,
                     style: const TextStyle(color: AppTheme.primaryGold, fontSize: 24, fontWeight: FontWeight.bold),
                     decoration: InputDecoration(counterText: '', filled: true, fillColor: AppTheme.surfaceBlack, enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Colors.white10)), focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2))),
@@ -164,9 +164,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> with Code
             SizedBox(width: double.infinity, height: 56, child: ElevatedButton(onPressed: _loading ? null : _verify, style: ElevatedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))), child: _loading ? const CircularProgressIndicator(color: Colors.black) : const Text('تحقق الآن', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)))),
             const SizedBox(height: 20),
             TextButton(
-              onPressed: _canResend ? () { 
-                Provider.of<AuthProvider>(context, listen: false).sendSMSOTP(auth.currentPhone ?? ''); 
-                startTimer(); 
+              onPressed: _canResend ? () {
+                Provider.of<AuthProvider>(context, listen: false).sendSMSOTP(auth.currentPhone ?? '');
+                startTimer();
               } : null,
               child: Text(_canResend ? 'إعادة إرسال رمز الـ SMS' : 'إعادة الإرسال خلال $_start ثانية', style: TextStyle(color: _canResend ? AppTheme.primaryGold : AppTheme.textGrey, fontWeight: FontWeight.bold)),
             ),

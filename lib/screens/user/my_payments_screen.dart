@@ -34,10 +34,10 @@ class _MyPaymentsScreenState extends State<MyPaymentsScreen> {
     final payProv = context.watch<PaymentProvider>();
 
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
         title: const Text('سجل دفعاتي'),
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         elevation: 0,
         actions: [
           IconButton(

@@ -75,10 +75,10 @@ class _RequestsManagementScreenState extends State<RequestsManagementScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
         title: const Text('إدارة الطلبات'),
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh, color: AppTheme.primaryGold),
@@ -336,7 +336,7 @@ class _RequestsManagementScreenState extends State<RequestsManagementScreen> {
           note: note,
         );
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
+    AppTheme.showSnackBar(context,
       SnackBar(content: Text(ok ? 'تم تحديث حالة الطلب' : 'فشل تحديث حالة الطلب')),
     );
     if (ok) _load();

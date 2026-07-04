@@ -68,10 +68,10 @@ class _MyTasksScreenState extends State<MyTasksScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
         leading: const AppBackButton(),
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         title: const Text('مهامي', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
         actions: [
           IconButton(icon: const Icon(Icons.refresh, color: AppTheme.primaryGold), onPressed: _load),

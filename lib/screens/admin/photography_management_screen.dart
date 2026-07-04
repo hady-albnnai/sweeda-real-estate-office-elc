@@ -54,9 +54,9 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         title: const Text('إدارة مهام التصوير'),
         actions: [
           IconButton(
@@ -389,6 +389,6 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
 
   void _snack(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    AppTheme.showSnackBar(context, SnackBar(content: Text(message)));
   }
 }

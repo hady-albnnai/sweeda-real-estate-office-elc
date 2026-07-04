@@ -70,10 +70,10 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
     final prov = context.watch<ConfigProvider>();
 
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
         title: const Text('إعدادات التطبيق'),
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh, color: AppTheme.primaryGold),
@@ -269,7 +269,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
     final ok = await prov.updateConfig(current);
     if (mounted) {
       setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.showSnackBar(context,
         SnackBar(content: Text(ok ? 'تم حفظ الإعدادات ✅' : 'فشل الحفظ ❌')),
       );
     }

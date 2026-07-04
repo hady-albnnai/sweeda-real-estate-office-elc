@@ -147,7 +147,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
       if (!mounted) return;
       setState(() => _loading = false);
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.showSnackBar(context,
         const SnackBar(
           content: Text('✅ تم إنشاء وتأمين حسابك بنجاح'),
           backgroundColor: Colors.green,
@@ -193,13 +193,13 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
 
   void _snack(String m) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
+    AppTheme.showSnackBar(context, SnackBar(content: Text(m)));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
         title: const Text('إعداد الحساب'),
         backgroundColor: Colors.transparent,

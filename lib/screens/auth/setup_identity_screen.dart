@@ -123,7 +123,7 @@ class _SetupIdentityScreenState extends State<SetupIdentityScreen> {
       if (!mounted) return;
       setState(() => _loading = false);
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.showSnackBar(context,
         const SnackBar(
           content: Text('✅ تم حفظ بيانات الهوية'),
           backgroundColor: Colors.green,
@@ -139,13 +139,13 @@ class _SetupIdentityScreenState extends State<SetupIdentityScreen> {
 
   void _snack(String m) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
+    AppTheme.showSnackBar(context, SnackBar(content: Text(m)));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
         title: const Text('بيانات الهوية'),
         backgroundColor: Colors.transparent,

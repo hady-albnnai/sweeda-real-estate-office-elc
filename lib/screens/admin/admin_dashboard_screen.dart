@@ -47,10 +47,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final name = auth.userModel?.nm ?? 'المدير';
 
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
         leading: const AppBackButton(),
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         elevation: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

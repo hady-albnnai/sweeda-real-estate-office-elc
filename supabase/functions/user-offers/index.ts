@@ -47,6 +47,7 @@ async function validateUser(
     const { data, error } = await supabaseAdmin.rpc("validate_staff_session", {
       p_token: sessionToken,
       p_user_uid: requestedUid,
+      p_min_role: 0,
     });
 
     if (!error && data && data.success === true) {
@@ -88,7 +89,7 @@ serve(async (req) => {
     if (action === "check_duplicate") {
       const actor = await validateUser(req, supabaseAdmin, "");
       if (!actor.ok) return actor.response;
-      
+
       const title = (body.title ?? "").toString();
       const price = Number(body.price ?? 0);
       const loc = body.loc as Record<string, unknown>;

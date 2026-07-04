@@ -28,43 +28,43 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   int? _selectedType;
   int? _selectedTrans;
   int? _selectedMainCat;
-  int? _selectedSubCat; 
-  String? _selectedCityArea; 
+  int? _selectedSubCat;
+  String? _selectedCityArea;
   int _cur = Currency.lbp;
   final _priceCtrl = TextEditingController();
-  final _locCtrl = TextEditingController();   
-  final _descCtrl = TextEditingController();  
-  final _specCtrl = TextEditingController();  
-  final _ttlCtrl  = TextEditingController();  
-  final _customSubCtrl = TextEditingController(); 
-  final _contactPhoneCtrl = TextEditingController(); 
-  final _customCityCtrl = TextEditingController(); 
+  final _locCtrl = TextEditingController();
+  final _descCtrl = TextEditingController();
+  final _specCtrl = TextEditingController();
+  final _ttlCtrl  = TextEditingController();
+  final _customSubCtrl = TextEditingController();
+  final _contactPhoneCtrl = TextEditingController();
+  final _customCityCtrl = TextEditingController();
 
   final List<XFile> _pickedImages = [];
-  XFile? _docImage; 
-  LatLng? _pickedLocation; 
-  int? _selectedDocType; 
-  bool _agreePledge = false; 
+  XFile? _docImage;
+  LatLng? _pickedLocation;
+  int? _selectedDocType;
+  bool _agreePledge = false;
   bool _submitting = false;
-  bool _anytimeReady = false; 
+  bool _anytimeReady = false;
 
   final _carBrandCtrl = TextEditingController();
   final _carModelCtrl = TextEditingController();
   final _carYearCtrl = TextEditingController();
   final _carColorCtrl = TextEditingController();
   final _carKmCtrl = TextEditingController();
-  final _carPlateCtrl = TextEditingController(); 
+  final _carPlateCtrl = TextEditingController();
   String? _carFuel;
   String? _carTransmission;
-  String? _carGovernorate; 
-  int? _selectedCarDocType;  
-  int? _selectedPlateType;   
+  String? _carGovernorate;
+  int? _selectedCarDocType;
+  int? _selectedPlateType;
 
-  final _areaCtrl = TextEditingController();    
-  final _floorCtrl = TextEditingController();   
-  final _legalNotesCtrl = TextEditingController(); 
-  String? _finishing;   
-  String? _direction;   
+  final _areaCtrl = TextEditingController();
+  final _floorCtrl = TextEditingController();
+  final _legalNotesCtrl = TextEditingController();
+  String? _finishing;
+  String? _direction;
   String _progressMsg = '';
 
   static const _weekDays = [
@@ -159,15 +159,15 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     if (_selectedType == null || _selectedTrans == null || _selectedMainCat == null || _selectedDocType == null) {
       _snack('يرجى إكمال البيانات الأساسية واختيار نوع السند'); return;
     }
-    
+
     // إزالة شرط إلزامية الصورة (أصبحت اختيارية كما طلبت)
-    
+
     final effectivePhone = InputValidators.normalizeDigits(_contactPhoneCtrl.text.trim().isNotEmpty ? _contactPhoneCtrl.text.trim() : user.ph.trim());
     if (!RegExp(r'^09[3-9]\d{7}$').hasMatch(effectivePhone)) { _snack('يرجى إدخال رقم هاتف سوري صحيح (09xxxxxxxx)'); return; }
 
     setState(() { _submitting = true; _progressMsg = 'جاري رفع البيانات...'; });
     final docUrl = await _uploadDocImage(user.uid) ?? '';
-    
+
     List<String> imageUrls = [];
     if (_pickedImages.isNotEmpty) {
       imageUrls = await _storage.uploadOfferImages(files: _pickedImages, userId: user.uid, onProgress: (done, total) {
@@ -199,7 +199,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     }
   }
 
-  void _snack(String m) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
+  void _snack(String m) => AppTheme.showSnackBar(context, SnackBar(content: Text(m)));
 
   @override
   Widget build(BuildContext context) {

@@ -47,6 +47,7 @@ async function validateUser(
     const { data, error } = await supabaseAdmin.rpc("validate_staff_session", {
       p_token: sessionToken,
       p_user_uid: requestedUid,
+      p_min_role: 0,
     });
 
     if (!error && data && data.success === true) {
@@ -72,7 +73,7 @@ serve(async (req) => {
     const body = await req.json() as Record<string, unknown>;
     const action = (body.action ?? "").toString();
     const requestedUid = (body.user_uid ?? body.userUid)?.toString() ?? "";
-    
+
     if (!requestedUid) {
       return json({ success: false, error: "USER_UID_REQUIRED" }, 400);
     }

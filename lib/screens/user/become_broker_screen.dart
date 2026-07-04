@@ -119,7 +119,7 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
   }
 
   void _snack(String m) =>
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
+      AppTheme.showSnackBar(context, SnackBar(content: Text(m)));
 
   @override
   Widget build(BuildContext context) {
@@ -129,10 +129,10 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
         user?.brkNm.isNotEmpty == true && !isAlreadyBroker;
 
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
         title: const Text('انضم كوسيط'),
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         elevation: 0,
       ),
       body: SingleChildScrollView(

@@ -19,14 +19,14 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   Map<String, dynamic>? _staffStats;
   bool _loadingStats = false;
-  int _activeBlock = 0; 
+  int _activeBlock = 0;
   int _signupMethod = 0;
 
   final _loginUserCtrl = TextEditingController();
   final _loginPassCtrl = TextEditingController();
   final _signupPhoneCtrl = TextEditingController();
   final _signupEmailCtrl = TextEditingController();
-  
+
   bool _isPassObscure = true;
   bool _isBusy = false;
 
@@ -47,7 +47,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _snack(String m) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
+    AppTheme.showSnackBar(context, SnackBar(content: Text(m)));
   }
 
   Future<void> _loadStaffStats() async {
@@ -163,14 +163,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (user == null) {
       return Scaffold(
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         body: _buildVisitorUI(),
         bottomNavigationBar: const CustomBottomNavBar(currentIndex: 4),
       );
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(child: _buildHeader(user)),
@@ -200,7 +200,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Container(
       width: double.infinity,
-      color: AppTheme.deepBlack,
+      color: AppTheme.scaffoldBackground,
       child: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),

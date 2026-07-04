@@ -15,7 +15,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   // 0: مغلق، 1: تسجيل جديد، 2: تسجيل دخول
-  int _activeSection = 0; 
+  int _activeSection = 0;
   // 1: هاتف، 2: إيميل
   int _signupMethod = 0;
 
@@ -23,7 +23,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
-  
+
   bool _obs = true;
   bool _loading = false;
 
@@ -93,7 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (ok) context.push('/check-email');
   }
 
-  void _snack(String m) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
+  void _snack(String m) => AppTheme.showSnackBar(context, SnackBar(content: Text(m)));
 
   @override
   Widget build(BuildContext context) {
@@ -101,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final logoSize = (sz.shortestSide * 0.95).clamp(300.0, 550.0);
 
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),

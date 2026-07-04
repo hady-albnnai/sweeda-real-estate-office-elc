@@ -50,7 +50,7 @@ class CheckEmailScreen extends StatelessWidget {
                   onPressed: () {
                     if (auth.currentEmail != null) {
                       auth.sendEmailMagicLink(auth.currentEmail!);
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      AppTheme.showSnackBar(context,
                           const SnackBar(
                               content: Text('تم إعادة إرسال الرابط')));
                     }

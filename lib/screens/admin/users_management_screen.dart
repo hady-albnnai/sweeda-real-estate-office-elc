@@ -46,10 +46,10 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
         title: const Text('إدارة الحسابات والعملاء'),
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
       ),
       body: Column(
         children: [
@@ -304,6 +304,6 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
 
   void _snack(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    AppTheme.showSnackBar(context, SnackBar(content: Text(msg)));
   }
 }

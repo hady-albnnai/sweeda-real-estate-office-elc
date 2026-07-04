@@ -52,10 +52,10 @@ class _PackagesScreenState extends State<PackagesScreen> {
         .toList();
 
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
         title: const Text('باقات الاشتراك'),
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         elevation: 0,
         actions: [
           // زر "دفعاتي"

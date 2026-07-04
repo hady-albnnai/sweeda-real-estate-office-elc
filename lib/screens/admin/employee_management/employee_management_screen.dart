@@ -43,7 +43,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
     try {
       final auth = context.read<AuthProvider>();
       final adminProvider = context.read<AdminProvider>();
-      
+
       final currentUser = auth.userModel;
       if (currentUser == null) {
         throw Exception('لم يتم تسجيل الدخول');
@@ -55,7 +55,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
       }
 
       final users = await adminProvider.getAllStaffUsers(currentUser.uid);
-      
+
       if (mounted) {
         setState(() {
           _allUsers = users;
@@ -117,7 +117,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
   }
 
   void _showSeniorRestrictionSnack() {
-    ScaffoldMessenger.of(context).showSnackBar(
+    AppTheme.showSnackBar(context,
       const SnackBar(content: Text('هذه العملية محصورة بالمدير الرئيسي للإدارة العليا')),
     );
   }
@@ -143,7 +143,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
       return;
     }
     final isActive = user.sts == 0;
-    
+
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => ToggleStatusDialog(user: user, currentStatus: isActive),
@@ -208,13 +208,13 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
           );
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppTheme.showSnackBar(context,
           SnackBar(content: Text("فشل إعادة التعيين: ${result['error'] ?? 'خطأ غير معروف'}")),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppTheme.showSnackBar(context,
           SnackBar(content: Text('خطأ: $e')),
         );
       }
@@ -258,22 +258,22 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
       final adminUid = auth.userModel?.uid;
       if (adminUid == null) throw Exception('لم يتم العثور على جلسة المدير');
       final success = await adminProvider.deleteStaffUser(adminUid, user.uid);
-      
+
       if (mounted) {
         if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          AppTheme.showSnackBar(context,
             const SnackBar(content: Text('تم حذف المستخدم بنجاح')),
           );
           _loadUsers();
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
+          AppTheme.showSnackBar(context,
             const SnackBar(content: Text('فشل حذف المستخدم')),
           );
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppTheme.showSnackBar(context,
           SnackBar(content: Text('خطأ: $e')),
         );
       }
@@ -327,7 +327,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
       final urls = await context.read<AdminProvider>().getStaffIdImageUrls(adminUid, user.uid);
       if (!mounted) return;
       if (urls.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppTheme.showSnackBar(context,
           const SnackBar(content: Text('لا توجد صور هوية محفوظة لهذا الموظف')),
         );
         return;
@@ -343,7 +343,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.showSnackBar(context,
         SnackBar(content: Text('تعذّر عرض صورة الهوية: $e')),
       );
     }
@@ -352,13 +352,13 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
   Future<void> _showEmployeeDetails(UserModel user) async {
     final currentRole = context.read<AuthProvider>().userModel?.role ?? 0;
     if (currentRole < 5) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.showSnackBar(context,
         const SnackBar(content: Text('عرض تفاصيل الموظفين محصور بالمدير ونائب المدير')),
       );
       return;
     }
     if (currentRole < 6 && user.role >= 5 && user.uid != context.read<AuthProvider>().userModel?.uid) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.showSnackBar(context,
         const SnackBar(content: Text('نائب المدير لا يستطيع عرض بيانات الإدارة العليا')),
       );
       return;
@@ -412,9 +412,9 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         title: const Text('إدارة الموظفين', style: TextStyle(color: AppTheme.textWhite)),
         actions: [
           IconButton(
@@ -593,8 +593,8 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: isActive 
-                    ? Colors.green.withOpacity(0.2) 
+                color: isActive
+                    ? Colors.green.withOpacity(0.2)
                     : Colors.red.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(8),
               ),

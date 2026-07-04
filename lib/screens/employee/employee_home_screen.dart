@@ -47,10 +47,10 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
     final user = auth.userModel;
 
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
         leading: const AppBackButton(),
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         elevation: 0,
         title: Column(
           children: [

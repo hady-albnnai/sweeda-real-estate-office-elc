@@ -52,9 +52,9 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         title: const Text('مركز عمليات المكتب'),
         actions: [
           IconButton(

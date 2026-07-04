@@ -68,10 +68,14 @@ class SupabaseService {
     final jwt = auth.currentSession?.accessToken;
 
     final finalHeaders = Map<String, String>.from(headers ?? {});
-    
+
     if (jwt != null) {
       // JWT is primary
       finalHeaders['Authorization'] = 'Bearer $jwt';
+    } else if (sessionToken != null && sessionToken.isNotEmpty) {
+      // Custom password-login session. Some Edge Functions read the token
+      // from Authorization when no Supabase JWT exists.
+      finalHeaders['Authorization'] = sessionToken;
     }
 
     dynamic finalBody = body;

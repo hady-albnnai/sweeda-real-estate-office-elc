@@ -46,6 +46,7 @@ async function validateUser(
     const { data, error } = await supabaseAdmin.rpc("validate_staff_session", {
       p_token: sessionToken,
       p_user_uid: requestedUid,
+      p_min_role: 0,
     });
 
     if (!error && data && data.success === true) {

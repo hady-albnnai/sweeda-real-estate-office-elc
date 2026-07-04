@@ -45,11 +45,11 @@ class _ToggleStatusDialogState extends State<ToggleStatusDialog> {
       if (mounted) {
         Navigator.pop(context, success);
         if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          AppTheme.showSnackBar(context,
             SnackBar(content: Text(widget.currentStatus ? 'تم تعطيل المستخدم' : 'تم تفعيل المستخدم')),
           );
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
+          AppTheme.showSnackBar(context,
             const SnackBar(content: Text('فشل العملية')),
           );
         }
@@ -57,7 +57,7 @@ class _ToggleStatusDialogState extends State<ToggleStatusDialog> {
     } catch (e) {
       if (mounted) {
         Navigator.pop(context, false);
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppTheme.showSnackBar(context,
           SnackBar(content: Text('خطأ: $e')),
         );
       }
@@ -102,7 +102,7 @@ class _ToggleStatusDialogState extends State<ToggleStatusDialog> {
         ElevatedButton(
           onPressed: _isLoading ? null : _submit,
           style: ElevatedButton.styleFrom(backgroundColor: color),
-          child: _isLoading 
+          child: _isLoading
               ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
               : Text(actionText),
         ),

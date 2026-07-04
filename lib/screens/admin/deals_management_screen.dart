@@ -45,10 +45,10 @@ class _DealsManagementScreenState extends State<DealsManagementScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
         title: const Text('إدارة الصفقات'),
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh, color: AppTheme.primaryGold),
@@ -279,6 +279,6 @@ class _DealsManagementScreenState extends State<DealsManagementScreen> {
 
   void _snack(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    AppTheme.showSnackBar(context, SnackBar(content: Text(msg)));
   }
 }

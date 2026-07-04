@@ -40,10 +40,10 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
     final stats = broker.stats;
 
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
         leading: const AppBackButton(),
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         elevation: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

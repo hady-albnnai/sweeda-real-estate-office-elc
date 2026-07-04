@@ -46,11 +46,11 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
       if (mounted) {
         Navigator.pop(context, success);
         if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          AppTheme.showSnackBar(context,
             const SnackBar(content: Text('تم تغيير الدور بنجاح')),
           );
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
+          AppTheme.showSnackBar(context,
             const SnackBar(content: Text('فشل تغيير الدور')),
           );
         }
@@ -58,7 +58,7 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
     } catch (e) {
       if (mounted) {
         Navigator.pop(context, false);
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppTheme.showSnackBar(context,
           SnackBar(content: Text('خطأ: $e')),
         );
       }
@@ -115,7 +115,7 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
         ElevatedButton(
           onPressed: (widget.user.role == 6 || _isLoading) ? null : _submit,
           style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryGold),
-          child: _isLoading 
+          child: _isLoading
               ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
               : const Text('تغيير'),
         ),

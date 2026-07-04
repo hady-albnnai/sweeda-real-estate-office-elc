@@ -71,9 +71,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final auth = context.watch<AuthProvider>();
 
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         elevation: 0,
         title: const Text('المكتب العقاري الالكتروني',
             style: TextStyle(color: AppTheme.primaryGold, fontSize: 16)),
@@ -82,7 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: const Icon(Icons.notifications_none, color: AppTheme.textGrey),
             onPressed: () {
               if (!auth.isLoggedIn) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                AppTheme.showSnackBar(context, SnackBar(
                   content: const Text('سجّل دخولك لرؤية الإشعارات'),
                   action: SnackBarAction(
                       label: 'دخول',
@@ -234,7 +234,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ]),
 
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         selectedItemColor: AppTheme.primaryGold,
         unselectedItemColor: AppTheme.textGrey,
         currentIndex: 0,

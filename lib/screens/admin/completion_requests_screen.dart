@@ -112,9 +112,9 @@ class _CompletionRequestsScreenState extends State<CompletionRequestsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         title: const Text('طلبات إتمام المعاملات',
             style: TextStyle(color: AppTheme.primaryGold)),
         actions: [
@@ -234,6 +234,6 @@ class _CompletionRequestsScreenState extends State<CompletionRequestsScreen> {
 
   void _snack(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    AppTheme.showSnackBar(context, SnackBar(content: Text(msg)));
   }
 }

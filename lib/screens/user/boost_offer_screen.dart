@@ -134,21 +134,21 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
 
   void _snack(String m) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
+    AppTheme.showSnackBar(context, SnackBar(content: Text(m)));
   }
 
   @override
   Widget build(BuildContext context) {
     if (_loading) {
       return const Scaffold(
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         body: Center(
             child: CircularProgressIndicator(color: AppTheme.primaryGold)),
       );
     }
     if (_offer == null) {
       return Scaffold(
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         appBar: AppBar(title: const Text('ترقية العرض')),
         body: const Center(
           child: Text('العرض غير موجود',
@@ -164,10 +164,10 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
         {'ren': 500, 'pin': 2000, 'bst': 4000, 'dsc5': 3000, 'fms': 8000};
 
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
         title: const Text('ترقية العرض'),
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         elevation: 0,
       ),
       body: Stack(

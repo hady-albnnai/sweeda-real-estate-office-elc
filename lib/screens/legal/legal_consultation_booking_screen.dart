@@ -51,7 +51,7 @@ class _LegalConsultationBookingScreenState extends State<LegalConsultationBookin
 
   void _snack(String m) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
+    AppTheme.showSnackBar(context, SnackBar(content: Text(m)));
   }
 
   Future<void> _submit() async {
@@ -82,10 +82,10 @@ class _LegalConsultationBookingScreenState extends State<LegalConsultationBookin
     final activeLawyers = context.watch<LegalProvider>().activeLawyers;
 
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
         title: const Text('القسم القانوني والاستشارات ⚖️'),
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         elevation: 0,
       ),
       body: SingleChildScrollView(

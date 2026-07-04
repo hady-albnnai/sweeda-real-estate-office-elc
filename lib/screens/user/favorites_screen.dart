@@ -46,9 +46,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     final favOffers = offerProv.offers.where((o) => _favIds.contains(o.id)).toList();
 
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         elevation: 0,
         title: Text(
           'المفضلة (${favOffers.length})',

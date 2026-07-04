@@ -19,7 +19,7 @@ class AccountInfoScreen extends StatelessWidget {
 
     if (user == null) {
       return const Scaffold(
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         body: Center(
             child: Text('جاري التحميل...',
                 style: TextStyle(color: AppTheme.textGrey))),
@@ -27,9 +27,9 @@ class AccountInfoScreen extends StatelessWidget {
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         elevation: 0,
         title: const Text('معلومات الحساب',
             style: TextStyle(
@@ -292,7 +292,7 @@ class AccountInfoScreen extends StatelessWidget {
     if (user == null) return;
 
     if (user.img.isEmpty || user.sid.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.showSnackBar(context,
         SnackBar(
           content: const Text(
               'يجب رفع صورة الهوية + الرقم الوطني قبل طلب التوثيق'),
@@ -341,7 +341,7 @@ class AccountInfoScreen extends StatelessWidget {
       await SupabaseService().invokeFunction('user-account', body: {'action': 'request_verification', 'p_user_uid': user.uid});
       await auth.refreshUser();
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.showSnackBar(context,
         const SnackBar(
           content: Text('✅ تم إرسال طلب التوثيق، بانتظار مراجعة الإدارة'),
           backgroundColor: Colors.green,
@@ -358,7 +358,7 @@ class AccountInfoScreen extends StatelessWidget {
       } else if (msg.contains('MISSING_DOCUMENTS')) {
         userMsg = 'يجب رفع صورة الهوية + الرقم الوطني أولاً';
       }
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.showSnackBar(context,
         SnackBar(content: Text(userMsg), backgroundColor: AppTheme.errorRed),
       );
     }
@@ -495,15 +495,15 @@ class AccountInfoScreen extends StatelessWidget {
           ),
           ElevatedButton(
             onPressed: () async {
-              if (newCtrl.text.length < 6) {
-                ScaffoldMessenger.of(context).showSnackBar(
+              if (newCtrl.text.length < 8) {
+                AppTheme.showSnackBar(context,
                   const SnackBar(
-                      content: Text('كلمة المرور يجب أن تكون 6 أحرف على الأقل')),
+                      content: Text('كلمة المرور يجب أن تكون 8 أحرف على الأقل')),
                 );
                 return;
               }
               if (newCtrl.text != confirmCtrl.text) {
-                ScaffoldMessenger.of(context).showSnackBar(
+                AppTheme.showSnackBar(context,
                   const SnackBar(content: Text('كلمتا المرور غير متطابقتين')),
                 );
                 return;
@@ -515,7 +515,12 @@ class AccountInfoScreen extends StatelessWidget {
                 final user = auth.userModel!;
 
                 if (hasOld) {
-                  await SupabaseService().invokeFunction('user-account', body: {'action': 'change_password', 'p_user_uid': user.uid, 'p_old_password': oldCtrl.text, 'p_new_password': newCtrl.text});
+                  await SupabaseService().invokeFunction('user-account', body: {
+                    'action': 'change_password',
+                    'user_uid': user.uid,
+                    'old_password': oldCtrl.text,
+                    'new_password': newCtrl.text,
+                  });
                 } else {
                   await SupabaseService().invokeFunction('user-account', body: {
                     'action': 'register_password',
@@ -527,7 +532,7 @@ class AccountInfoScreen extends StatelessWidget {
 
                 await auth.refreshUser();
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  AppTheme.showSnackBar(context,
                     const SnackBar(
                         content: Text('✅ تم تحديث كلمة المرور'),
                         backgroundColor: Colors.green),
@@ -540,7 +545,7 @@ class AccountInfoScreen extends StatelessWidget {
                   if (msg.contains('WRONG_OLD_PASSWORD')) {
                     userMsg = 'كلمة المرور الحالية غير صحيحة';
                   }
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  AppTheme.showSnackBar(context,
                     SnackBar(
                         content: Text(userMsg),
                         backgroundColor: AppTheme.errorRed),

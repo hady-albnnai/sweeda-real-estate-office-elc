@@ -157,10 +157,10 @@ class _ExecuteTaskScreenState extends State<ExecuteTaskScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
         leading: const AppBackButton(),
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         title: const Text('تنفيذ المهمة', style: TextStyle(color: AppTheme.primaryGold)),
       ),
       body: _loading
@@ -284,6 +284,6 @@ class _ExecuteTaskScreenState extends State<ExecuteTaskScreen> {
 
   void _snack(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    AppTheme.showSnackBar(context, SnackBar(content: Text(msg)));
   }
 }

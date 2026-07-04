@@ -36,9 +36,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         elevation: 0,
         title: const Text('الإعدادات', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
         leading: IconButton(
@@ -175,11 +175,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             break;
         }
       });
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.showSnackBar(context,
         const SnackBar(content: Text('تم الحفظ ✅'), duration: Duration(seconds: 1)),
       );
     } catch (e) {if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        AppTheme.showSnackBar(context,
           const SnackBar(content: Text('فشل الحفظ')),
         );
       }

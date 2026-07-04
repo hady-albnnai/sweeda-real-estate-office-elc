@@ -29,7 +29,7 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
   double _maxPrice = 1000000;
   final String _sortBy = 'match_score';
   String? _selectedCity;
-  
+
   // فلاتر عقارات
   int? _selectedCat;
   int? _selectedDocTp;
@@ -39,7 +39,7 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
   double? _maxArea;
   int? _selectedFloor;
   int? _minRooms;
-  
+
   // فلاتر سيارات
   String? _selectedBrand;
   String? _selectedModel;
@@ -47,7 +47,7 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
   String? _selectedFuel;
   String? _selectedTransmission;
   int? _maxKm;
-  
+
   bool _hasImagesOnly = false;
 
   Timer? _refreshTimer;
@@ -102,7 +102,7 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
         _filteredOffers = List.from(_matchingOffers);
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      AppTheme.showSnackBar(context,
         SnackBar(
           content: Text('🎉 ظهر ${newMatches.length} عرض جديد مطابق!'),
           backgroundColor: Colors.green,
@@ -458,10 +458,10 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
         title: Text('العروض المطابقة (${_filteredOffers.length})'),
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -472,7 +472,7 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
             icon: const Icon(Icons.notifications_active_outlined),
             onPressed: () {
               // حفظ البحث (Save Search)
-              ScaffoldMessenger.of(context).showSnackBar(
+              AppTheme.showSnackBar(context,
                 const SnackBar(
                   content: Text('✅ تم تفعيل التنبيهات. سنخطرك عند ظهور عروض جديدة مطابقة'),
                   duration: Duration(seconds: 3),

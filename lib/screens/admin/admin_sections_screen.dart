@@ -44,9 +44,9 @@ class _AdminSectionsScreenState extends State<AdminSectionsScreen> {
     final user = context.watch<AuthProvider>().userModel;
 
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         title: const Text('أقسام الإدارة'),
         actions: [
           IconButton(

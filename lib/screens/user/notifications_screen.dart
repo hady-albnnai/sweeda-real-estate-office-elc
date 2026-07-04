@@ -37,9 +37,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final uid = context.read<AuthProvider>().userModel?.uid ?? '';
 
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         title: const Text('الإشعارات'),
         actions: [
           if (prov.notifications.any((n) => !n.isRead))

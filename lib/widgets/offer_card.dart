@@ -30,7 +30,7 @@ class _OfferCardState extends State<OfferCard> {
     final added = await LocalCacheService().toggleFavorite(widget.offer.id);
     if (mounted) setState(() => _isFav = added);
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      AppTheme.showSnackBar(context, SnackBar(
         content: Text(added ? 'أُضيف للمفضلة ❤️' : 'أُزيل من المفضلة'),
         duration: const Duration(seconds: 1),
       ));
@@ -300,7 +300,7 @@ class _OfferCardState extends State<OfferCard> {
                           ],
                         ),
                       ),
-                      
+
                       // زر المفضلة
                       GestureDetector(
                         onTap: _toggleFav,

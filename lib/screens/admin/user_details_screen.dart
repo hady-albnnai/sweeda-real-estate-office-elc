@@ -188,20 +188,20 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
   }
 
   void _snack(String m) =>
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
+      AppTheme.showSnackBar(context, SnackBar(content: Text(m)));
 
   @override
   Widget build(BuildContext context) {
     if (_loading) {
       return const Scaffold(
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         body: Center(
             child: CircularProgressIndicator(color: AppTheme.primaryGold)),
       );
     }
     if (_user == null) {
       return Scaffold(
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         appBar: AppBar(title: const Text('تفاصيل المستخدم')),
         body: const Center(
             child: Text('المستخدم غير موجود',
@@ -210,7 +210,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       body: NestedScrollView(
         headerSliverBuilder: (_, __) => [
           SliverAppBar(

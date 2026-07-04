@@ -61,9 +61,9 @@ class _MediaReviewScreenState extends State<MediaReviewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.deepBlack,
+      backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
-        backgroundColor: AppTheme.deepBlack,
+        backgroundColor: AppTheme.scaffoldBackground,
         title: const Text('إدارة الوسائط والتصوير'),
         actions: [
           IconButton(
