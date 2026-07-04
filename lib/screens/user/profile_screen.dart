@@ -76,8 +76,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() => _isBusy = true);
     final auth = context.read<AuthProvider>();
     final ok = await auth.loginWithPassword(user, pass);
+    if (mounted) setState(() => _isBusy = false);
     if (!ok) {
-      if (mounted) setState(() => _isBusy = false);
       _snack('فشل تسجيل الدخول، تأكد من بياناتك');
     } else {
       // 🚀 توجيه فوري - لا ننتظر rebuild كي لا تظهر شاشة الحساب للحظة

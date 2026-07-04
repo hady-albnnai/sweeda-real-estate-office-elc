@@ -46,8 +46,8 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _loading = true);
     final auth = context.read<AuthProvider>();
     final ok = await auth.loginWithPassword(_userCtrl.text.trim(), _passCtrl.text);
+    if (mounted) setState(() => _loading = false);
     if (!ok) {
-      if (mounted) setState(() => _loading = false);
       _snack(auth.lastError ?? 'خطأ في الاسم أو كلمة المرور');
     } else {
       if (mounted) {
