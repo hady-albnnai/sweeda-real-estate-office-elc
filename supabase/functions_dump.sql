@@ -1,27 +1,9 @@
--- =====================================================================
--- functions_dump.sql
--- مولّد آليًا: نسخةُ الدوال في schema "public" مطابقةٌ تمامًا لما هو
--- موجود على الخادم الحيّ (Supabase · المشروع vsgkgnjtebjxyqwpuopz).
---
--- تاريخ التوليد: 2026-07-04
--- المصدر: الكتالوج الحيّ مباشرةً (pg_get_functiondef + pg_proc.proacl).
--- الغرض: أن تكون هذه النسخة "مرجع الحقيقة" للدوال (تعريف + صلاحيات)
--- متى ما قورنت setup.sql أو أي توثيق آخر.
---
--- ملاحظات دقّة:
--- 1) التعريفات مأخوذة بحرفيّة من pg_get_functiondef، أي أنها تعكس الحالة
---    الحالية على الخادم بما فيها SET search_path وSECURITY DEFINER وSECURITY
---    INVOKER بدقّة.
--- 2) الصلاحيات (GRANT/REVOKE) أُعيد بناؤها من قائمة التحكم proacl الفعلية:
---    - REVOKE ALL ... FROM PUBLIC ثم منح EXECUTE للأدوار المخوّلة فقط.
---    - الدوال الحسّاسة مقيّدة إلى service_role حصرًا (لا anon/authenticated).
--- 3) الترتيب حسب التبعية (dependencies) حتى يصلح التطبيق على قاعدة جديدة
---    (الدوال التي تستدعي غيرها تُنشأ بعد الدوال التي تعتمد عليها).
--- 4) حُوّلت نهايات الأسطر من CRLF إلى LF لتنظيف الملف في المستودع؛ محتوى
---    SQL لم يتغيّر.
--- =====================================================================
+-- ═══════════════════════════════════════════════════════════════
+-- Functions Dump — السيرفر الحي
+-- التاريخ: 2026-07-04
+-- عدد الدوال: 163
+-- ═══════════════════════════════════════════════════════════════
 
--- === _admin_employee_assert_actor(p_admin_uid uuid, p_min_role integer) ===
 CREATE OR REPLACE FUNCTION public._admin_employee_assert_actor(p_admin_uid uuid, p_min_role integer DEFAULT 5)
  RETURNS integer
  LANGUAGE plpgsql
@@ -59,11 +41,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION _admin_employee_assert_actor(p_admin_uid uuid, p_min_role integer) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION _admin_employee_assert_actor(p_admin_uid uuid, p_min_role integer) TO service_role;
 
-
--- === _admin_employee_log(p_admin_uid uuid, p_action text, p_target_uid uuid, p_payload jsonb) ===
 CREATE OR REPLACE FUNCTION public._admin_employee_log(p_admin_uid uuid, p_action text, p_target_uid uuid DEFAULT NULL::uuid, p_payload jsonb DEFAULT '{}'::jsonb)
  RETURNS void
  LANGUAGE plpgsql
@@ -83,11 +61,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION _admin_employee_log(p_admin_uid uuid, p_action text, p_target_uid uuid, p_payload jsonb) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION _admin_employee_log(p_admin_uid uuid, p_action text, p_target_uid uuid, p_payload jsonb) TO service_role;
 
-
--- === _issue_staff_session(p_user_uid uuid, p_device_id text, p_ip text, p_ttl interval) ===
 CREATE OR REPLACE FUNCTION public._issue_staff_session(p_user_uid uuid, p_device_id text DEFAULT ''::text, p_ip text DEFAULT ''::text, p_ttl interval DEFAULT '7 days'::interval)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -144,11 +118,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION _issue_staff_session(p_user_uid uuid, p_device_id text, p_ip text, p_ttl interval) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION _issue_staff_session(p_user_uid uuid, p_device_id text, p_ip text, p_ttl interval) TO service_role;
 
-
--- === accounts_on_same_device(p_device_id text) ===
 CREATE OR REPLACE FUNCTION public.accounts_on_same_device(p_device_id text)
  RETURNS TABLE(uid uuid, name text, signup_at timestamp with time zone, points integer)
  LANGUAGE plpgsql
@@ -163,11 +133,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION accounts_on_same_device(p_device_id text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION accounts_on_same_device(p_device_id text) TO service_role;
 
-
--- === add_points(p_uid uuid, p_pts integer) ===
 CREATE OR REPLACE FUNCTION public.add_points(p_uid uuid, p_pts integer)
  RETURNS void
  LANGUAGE plpgsql
@@ -175,11 +141,7 @@ CREATE OR REPLACE FUNCTION public.add_points(p_uid uuid, p_pts integer)
  SET search_path TO 'public', 'extensions', 'pg_temp'
 AS $function$ BEGIN UPDATE users SET pt = pt + p_pts, ts_upd = NOW() WHERE id = p_uid; PERFORM update_user_badge(p_uid); END; $function$
 
-REVOKE ALL ON FUNCTION add_points(p_uid uuid, p_pts integer) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION add_points(p_uid uuid, p_pts integer) TO service_role;
 
-
--- === admin_approve_verification_by_admin(p_admin_uid uuid, p_target_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.admin_approve_verification_by_admin(p_admin_uid uuid, p_target_uid uuid)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -200,11 +162,7 @@ BEGIN
   RETURN FOUND;
 END; $function$
 
-REVOKE ALL ON FUNCTION admin_approve_verification_by_admin(p_admin_uid uuid, p_target_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION admin_approve_verification_by_admin(p_admin_uid uuid, p_target_uid uuid) TO service_role;
 
-
--- === admin_close_request_internal(p_admin_uid uuid, p_request_id uuid, p_status integer, p_reason text, p_note text) ===
 CREATE OR REPLACE FUNCTION public.admin_close_request_internal(p_admin_uid uuid, p_request_id uuid, p_status integer, p_reason text DEFAULT 'closed_by_admin'::text, p_note text DEFAULT ''::text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -251,11 +209,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION admin_close_request_internal(p_admin_uid uuid, p_request_id uuid, p_status integer, p_reason text, p_note text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION admin_close_request_internal(p_admin_uid uuid, p_request_id uuid, p_status integer, p_reason text, p_note text) TO service_role;
 
-
--- === admin_create_staff_user(p_admin_uid uuid, p_full_name text, p_phone text, p_email text, p_username text, p_password text, p_role integer) ===
 CREATE OR REPLACE FUNCTION public.admin_create_staff_user(p_admin_uid uuid, p_full_name text, p_phone text, p_email text DEFAULT ''::text, p_username text DEFAULT ''::text, p_password text DEFAULT ''::text, p_role integer DEFAULT 4)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -282,40 +236,34 @@ BEGIN
   v_name := app_assert_text_len(p_full_name, 'name', 2, 60);
   v_phone := app_assert_phone(p_phone);
   v_username := app_assert_username(p_username, FALSE);
-  PERFORM app_assert_password(p_password, 8);
-  v_email := NULLIF(app_clean_text(p_email, 120), '');
-
-  IF v_email IS NOT NULL AND v_email !~* '^[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}$' THEN
-    RAISE EXCEPTION 'EMAIL_INVALID';
+  IF LENGTH(COALESCE(p_password, '')) > 0 THEN
+    PERFORM app_assert_password(p_password);
   END IF;
 
-  IF EXISTS (SELECT 1 FROM users WHERE normalize_sy_phone(ph) = v_phone AND i_del = 0) THEN
+  v_email := NULLIF(LOWER(TRIM(COALESCE(p_email, ''))), '');
+
+  IF EXISTS (SELECT 1 FROM users WHERE normalize_sy_phone(ph) = normalize_sy_phone(v_phone)) THEN
     RAISE EXCEPTION 'PHONE_EXISTS';
   END IF;
-  IF v_username IS NOT NULL AND EXISTS (SELECT 1 FROM users WHERE lower(usr) = v_username AND i_del = 0) THEN
-    RAISE EXCEPTION 'USERNAME_TAKEN';
+  IF v_username IS NOT NULL AND EXISTS (SELECT 1 FROM users WHERE normalize_arabic_username(usr) = normalize_arabic_username(v_username)) THEN
+    RAISE EXCEPTION 'USERNAME_EXISTS';
   END IF;
 
-  INSERT INTO users (nm, ph, eml, usr, pwd, role, sts, vrf, i_del, ts_crt, ts_upd)
-  VALUES (v_name, v_phone, v_email, v_username, crypt(p_password, gen_salt('bf', 8)), p_role, 0, 0, 0, NOW(), NOW())
+  INSERT INTO users (nm, ph, eml, usr, pwd, role, sts, i_del, ts_crt)
+  VALUES (
+    v_name, v_phone, v_email, v_username,
+    CASE WHEN LENGTH(COALESCE(p_password, '')) > 0 THEN crypt(p_password, gen_salt('bf', 10)) ELSE NULL END,
+    p_role, 0, 0, NOW()
+  )
   RETURNING id INTO v_new_id;
 
-  PERFORM _admin_employee_log(
-    p_admin_uid,
-    'staff_create',
-    v_new_id,
-    jsonb_build_object('role', p_role, 'phone', v_phone, 'username', v_username)
-  );
+  PERFORM _admin_employee_log(p_admin_uid, 'create_staff', v_new_id, jsonb_build_object('role', p_role, 'nm', v_name, 'ph', v_phone));
 
-  RETURN jsonb_build_object('success', true, 'user_id', v_new_id);
+  RETURN jsonb_build_object('success', true, 'user_id', v_new_id, 'role', p_role);
 END;
 $function$
 
-REVOKE ALL ON FUNCTION admin_create_staff_user(p_admin_uid uuid, p_full_name text, p_phone text, p_email text, p_username text, p_password text, p_role integer) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION admin_create_staff_user(p_admin_uid uuid, p_full_name text, p_phone text, p_email text, p_username text, p_password text, p_role integer) TO service_role;
 
-
--- === admin_create_staff_user(p_admin_uid uuid, p_full_name text, p_phone text, p_email text, p_username text, p_password text, p_role integer, p_address text, p_sid text, p_img text) ===
 CREATE OR REPLACE FUNCTION public.admin_create_staff_user(p_admin_uid uuid, p_full_name text, p_phone text, p_email text, p_username text, p_password text, p_role integer, p_address text DEFAULT ''::text, p_sid text DEFAULT ''::text, p_img text DEFAULT ''::text)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -346,63 +294,33 @@ BEGIN
     RAISE EXCEPTION 'PASSWORD_TOO_SHORT';
   END IF;
 
-  v_phone := normalize_sy_phone(COALESCE(p_phone, ''));
-  IF v_phone = '' THEN
-    RAISE EXCEPTION 'PHONE_REQUIRED';
-  END IF;
+  v_phone := normalize_sy_phone(p_phone);
+  v_username := NULLIF(normalize_arabic_username(p_username), '');
 
   IF EXISTS (SELECT 1 FROM users WHERE normalize_sy_phone(ph) = v_phone AND i_del = 0) THEN
     RAISE EXCEPTION 'PHONE_EXISTS';
   END IF;
 
-  v_username := NULLIF(LOWER(TRIM(COALESCE(p_username, ''))), '');
-  IF v_username IS NOT NULL THEN
-    IF LENGTH(v_username) < 3 OR LENGTH(v_username) > 30 THEN
-      RAISE EXCEPTION 'USERNAME_LENGTH';
-    END IF;
-    IF NOT v_username ~ '^[a-z0-9_.]+$' THEN
-      RAISE EXCEPTION 'USERNAME_INVALID_CHARS';
-    END IF;
-    IF EXISTS (SELECT 1 FROM users WHERE LOWER(usr) = v_username AND i_del = 0) THEN
-      RAISE EXCEPTION 'USERNAME_TAKEN';
-    END IF;
+  IF v_username IS NOT NULL AND EXISTS (SELECT 1 FROM users WHERE normalize_arabic_username(usr) = v_username AND i_del = 0) THEN
+    RAISE EXCEPTION 'USERNAME_EXISTS';
   END IF;
 
-  INSERT INTO users (nm, ph, eml, usr, pwd, role, sts, vrf, ad, sid, img, i_del, ts_crt, ts_upd)
+  INSERT INTO users (nm, ph, eml, usr, pwd, role, ad, sid, img, sts, i_del, ts_crt)
   VALUES (
-    TRIM(COALESCE(p_full_name, '')),
-    v_phone,
-    NULLIF(TRIM(COALESCE(p_email, '')), ''),
-    v_username,
-    crypt(p_password, gen_salt('bf', 8)),
-    p_role,
-    0,
-    2, -- Verified officially since added by Admin
-    COALESCE(p_address, ''),
-    COALESCE(p_sid, ''),
-    COALESCE(p_img, ''),
-    0,
-    NOW(),
-    NOW()
+    TRIM(p_full_name), v_phone, NULLIF(TRIM(COALESCE(p_email, '')), ''), v_username,
+    crypt(p_password, gen_salt('bf', 10)),
+    p_role, COALESCE(p_address, ''), COALESCE(p_sid, ''), COALESCE(p_img, ''),
+    0, 0, NOW()
   )
   RETURNING id INTO v_new_id;
 
-  PERFORM _admin_employee_log(
-    p_admin_uid,
-    'staff_create',
-    v_new_id,
-    jsonb_build_object('role', p_role, 'phone', v_phone, 'username', v_username, 'vrf', 2)
-  );
+  PERFORM _admin_employee_log(p_admin_uid, 'create_staff_full', v_new_id, jsonb_build_object('role', p_role, 'nm', p_full_name, 'sid', p_sid));
 
-  RETURN jsonb_build_object('success', true, 'user_id', v_new_id);
+  RETURN jsonb_build_object('success', true, 'user_id', v_new_id, 'role', p_role);
 END;
 $function$
 
-REVOKE ALL ON FUNCTION admin_create_staff_user(p_admin_uid uuid, p_full_name text, p_phone text, p_email text, p_username text, p_password text, p_role integer, p_address text, p_sid text, p_img text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION admin_create_staff_user(p_admin_uid uuid, p_full_name text, p_phone text, p_email text, p_username text, p_password text, p_role integer, p_address text, p_sid text, p_img text) TO service_role;
 
-
--- === admin_delete_offer_internal(p_admin_uid uuid, p_offer_id uuid) ===
 CREATE OR REPLACE FUNCTION public.admin_delete_offer_internal(p_admin_uid uuid, p_offer_id uuid)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -449,11 +367,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION admin_delete_offer_internal(p_admin_uid uuid, p_offer_id uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION admin_delete_offer_internal(p_admin_uid uuid, p_offer_id uuid) TO service_role;
 
-
--- === admin_delete_staff_user(p_admin_uid uuid, p_target_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.admin_delete_staff_user(p_admin_uid uuid, p_target_uid uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -501,11 +415,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION admin_delete_staff_user(p_admin_uid uuid, p_target_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION admin_delete_staff_user(p_admin_uid uuid, p_target_uid uuid) TO service_role;
 
-
--- === admin_force_appointment_internal(p_admin_uid uuid, p_appointment_id uuid) ===
 CREATE OR REPLACE FUNCTION public.admin_force_appointment_internal(p_admin_uid uuid, p_appointment_id uuid)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -532,11 +442,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION admin_force_appointment_internal(p_admin_uid uuid, p_appointment_id uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION admin_force_appointment_internal(p_admin_uid uuid, p_appointment_id uuid) TO service_role;
 
-
--- === admin_fraud_suspects(p_admin_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.admin_fraud_suspects(p_admin_uid uuid)
  RETURNS SETOF fraud_suspects
  LANGUAGE plpgsql
@@ -551,11 +457,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION admin_fraud_suspects(p_admin_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION admin_fraud_suspects(p_admin_uid uuid) TO service_role;
 
-
--- === admin_get_id_signed_path(p_target_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.admin_get_id_signed_path(p_target_uid uuid)
  RETURNS text
  LANGUAGE plpgsql
@@ -575,11 +477,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION admin_get_id_signed_path(p_target_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION admin_get_id_signed_path(p_target_uid uuid) TO service_role;
 
-
--- === admin_handle_report_internal(p_admin_uid uuid, p_report_id uuid, p_action integer, p_note text, p_duration integer) ===
 CREATE OR REPLACE FUNCTION public.admin_handle_report_internal(p_admin_uid uuid, p_report_id uuid, p_action integer, p_note text DEFAULT ''::text, p_duration integer DEFAULT 0)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -610,11 +508,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION admin_handle_report_internal(p_admin_uid uuid, p_report_id uuid, p_action integer, p_note text, p_duration integer) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION admin_handle_report_internal(p_admin_uid uuid, p_report_id uuid, p_action integer, p_note text, p_duration integer) TO service_role;
 
-
--- === admin_reject_payment_internal(p_admin_uid uuid, p_payment_id uuid) ===
 CREATE OR REPLACE FUNCTION public.admin_reject_payment_internal(p_admin_uid uuid, p_payment_id uuid)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -633,11 +527,7 @@ BEGIN
   RETURN FOUND;
 END; $function$
 
-REVOKE ALL ON FUNCTION admin_reject_payment_internal(p_admin_uid uuid, p_payment_id uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION admin_reject_payment_internal(p_admin_uid uuid, p_payment_id uuid) TO service_role;
 
-
--- === admin_reject_verification_by_admin(p_admin_uid uuid, p_target_uid uuid, p_reason text) ===
 CREATE OR REPLACE FUNCTION public.admin_reject_verification_by_admin(p_admin_uid uuid, p_target_uid uuid, p_reason text DEFAULT ''::text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -661,11 +551,7 @@ BEGIN
   RETURN FOUND;
 END; $function$
 
-REVOKE ALL ON FUNCTION admin_reject_verification_by_admin(p_admin_uid uuid, p_target_uid uuid, p_reason text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION admin_reject_verification_by_admin(p_admin_uid uuid, p_target_uid uuid, p_reason text) TO service_role;
 
-
--- === admin_reset_staff_password(p_admin_uid uuid, p_target_uid uuid, p_new_password text) ===
 CREATE OR REPLACE FUNCTION public.admin_reset_staff_password(p_admin_uid uuid, p_target_uid uuid, p_new_password text)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -716,11 +602,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION admin_reset_staff_password(p_admin_uid uuid, p_target_uid uuid, p_new_password text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION admin_reset_staff_password(p_admin_uid uuid, p_target_uid uuid, p_new_password text) TO service_role;
 
-
--- === admin_review_offer_internal(p_admin_uid uuid, p_offer_id uuid, p_approve boolean, p_reject_reason text) ===
 CREATE OR REPLACE FUNCTION public.admin_review_offer_internal(p_admin_uid uuid, p_offer_id uuid, p_approve boolean, p_reject_reason text DEFAULT NULL::text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -745,11 +627,7 @@ BEGIN
   RETURN FOUND;
 END; $function$
 
-REVOKE ALL ON FUNCTION admin_review_offer_internal(p_admin_uid uuid, p_offer_id uuid, p_approve boolean, p_reject_reason text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION admin_review_offer_internal(p_admin_uid uuid, p_offer_id uuid, p_approve boolean, p_reject_reason text) TO service_role;
 
-
--- === admin_set_offer_priority_internal(p_admin_uid uuid, p_offer_id uuid, p_priority_type text, p_duration_days integer) ===
 CREATE OR REPLACE FUNCTION public.admin_set_offer_priority_internal(p_admin_uid uuid, p_offer_id uuid, p_priority_type text, p_duration_days integer DEFAULT 7)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -787,11 +665,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION admin_set_offer_priority_internal(p_admin_uid uuid, p_offer_id uuid, p_priority_type text, p_duration_days integer) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION admin_set_offer_priority_internal(p_admin_uid uuid, p_offer_id uuid, p_priority_type text, p_duration_days integer) TO service_role;
 
-
--- === admin_set_user_status(p_admin_uid uuid, p_target_uid uuid, p_status integer, p_reason text) ===
 CREATE OR REPLACE FUNCTION public.admin_set_user_status(p_admin_uid uuid, p_target_uid uuid, p_status integer, p_reason text DEFAULT ''::text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -849,11 +723,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION admin_set_user_status(p_admin_uid uuid, p_target_uid uuid, p_status integer, p_reason text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION admin_set_user_status(p_admin_uid uuid, p_target_uid uuid, p_status integer, p_reason text) TO service_role;
 
-
--- === admin_toggle_staff_status(p_admin_uid uuid, p_target_uid uuid, p_status integer, p_reason text) ===
 CREATE OR REPLACE FUNCTION public.admin_toggle_staff_status(p_admin_uid uuid, p_target_uid uuid, p_status integer, p_reason text DEFAULT ''::text)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -911,11 +781,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION admin_toggle_staff_status(p_admin_uid uuid, p_target_uid uuid, p_status integer, p_reason text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION admin_toggle_staff_status(p_admin_uid uuid, p_target_uid uuid, p_status integer, p_reason text) TO service_role;
 
-
--- === admin_update_appointment_status_internal(p_admin_uid uuid, p_appointment_id uuid, p_status integer, p_admin_note text) ===
 CREATE OR REPLACE FUNCTION public.admin_update_appointment_status_internal(p_admin_uid uuid, p_appointment_id uuid, p_status integer, p_admin_note text DEFAULT ''::text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -931,11 +797,7 @@ BEGIN
   RETURN FOUND;
 END; $function$
 
-REVOKE ALL ON FUNCTION admin_update_appointment_status_internal(p_admin_uid uuid, p_appointment_id uuid, p_status integer, p_admin_note text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION admin_update_appointment_status_internal(p_admin_uid uuid, p_appointment_id uuid, p_status integer, p_admin_note text) TO service_role;
 
-
--- === admin_update_staff_role(p_admin_uid uuid, p_target_uid uuid, p_role integer) ===
 CREATE OR REPLACE FUNCTION public.admin_update_staff_role(p_admin_uid uuid, p_target_uid uuid, p_role integer)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -961,7 +823,7 @@ BEGIN
     RAISE EXCEPTION 'CANNOT_MODIFY_MANAGER';
   END IF;
 
-  IF p_role NOT IN (2, 3, 4, 5, 7, 8) THEN
+  IF p_role NOT IN (2, 3, 4, 5) THEN
     RAISE EXCEPTION 'INVALID_ROLE';
   END IF;
 
@@ -989,11 +851,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION admin_update_staff_role(p_admin_uid uuid, p_target_uid uuid, p_role integer) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION admin_update_staff_role(p_admin_uid uuid, p_target_uid uuid, p_role integer) TO service_role;
 
-
--- === admin_update_user_permissions_by_admin(p_admin_uid uuid, p_target_uid uuid, p_perm jsonb) ===
 CREATE OR REPLACE FUNCTION public.admin_update_user_permissions_by_admin(p_admin_uid uuid, p_target_uid uuid, p_perm jsonb)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -1009,11 +867,7 @@ BEGIN
   RETURN FOUND;
 END; $function$
 
-REVOKE ALL ON FUNCTION admin_update_user_permissions_by_admin(p_admin_uid uuid, p_target_uid uuid, p_perm jsonb) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION admin_update_user_permissions_by_admin(p_admin_uid uuid, p_target_uid uuid, p_perm jsonb) TO service_role;
 
-
--- === admin_update_user_role(p_admin_uid uuid, p_target_uid uuid, p_role integer) ===
 CREATE OR REPLACE FUNCTION public.admin_update_user_role(p_admin_uid uuid, p_target_uid uuid, p_role integer)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -1039,7 +893,6 @@ BEGIN
     RAISE EXCEPTION 'CANNOT_MODIFY_MANAGER';
   END IF;
 
-  -- لا نسمح بإنشاء مدير جديد من هذه الدالة القديمة
   IF p_role < 0 OR p_role > 8 THEN
     RAISE EXCEPTION 'INVALID_ROLE';
   END IF;
@@ -1065,15 +918,42 @@ BEGIN
     )
   );
 
-  RETURN FOUND;
+  RETURN TRUE;
 END;
 $function$
 
-REVOKE ALL ON FUNCTION admin_update_user_role(p_admin_uid uuid, p_target_uid uuid, p_role integer) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION admin_update_user_role(p_admin_uid uuid, p_target_uid uuid, p_role integer) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.admin_upsert_lawyer_profile(p_admin_uid uuid, p_target_uid uuid, p_whatsapp text, p_address text DEFAULT ''::text, p_spec text DEFAULT 'عقارات وسيارات'::text, p_avl jsonb DEFAULT '{}'::jsonb)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE
+    v_role INT;
+BEGIN
+    IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN RAISE EXCEPTION 'AUTH_MISMATCH'; END IF;
+    SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
+    IF v_role IS NULL OR v_role < 5 THEN RAISE EXCEPTION 'NOT_AUTHORIZED'; END IF;
+
+    -- Update user role to 7 (lawyer) if less
+    UPDATE users SET role = 7, ts_upd = NOW() WHERE id = p_target_uid AND role < 7;
+
+    INSERT INTO lawyer_profiles (uid, whatsapp_phone, office_address, specialization, avl, is_active, updated_at)
+    VALUES (p_target_uid, p_whatsapp, p_address, p_spec, p_avl, TRUE, NOW())
+    ON CONFLICT (uid) DO UPDATE
+    SET whatsapp_phone = EXCLUDED.whatsapp_phone,
+        office_address = EXCLUDED.office_address,
+        specialization = EXCLUDED.specialization,
+        avl = EXCLUDED.avl,
+        is_active = TRUE,
+        updated_at = NOW();
+
+    RETURN TRUE;
+END;
+$function$
 
 
--- === admin_wipe_test_data(p_admin_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.admin_wipe_test_data(p_admin_uid uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -1107,11 +987,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION admin_wipe_test_data(p_admin_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION admin_wipe_test_data(p_admin_uid uuid) TO service_role;
 
-
--- === app_assert_password(p_password text, p_min integer) ===
 CREATE OR REPLACE FUNCTION public.app_assert_password(p_password text, p_min integer DEFAULT 8)
  RETURNS text
  LANGUAGE plpgsql
@@ -1129,11 +1005,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION app_assert_password(p_password text, p_min integer) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION app_assert_password(p_password text, p_min integer) TO anon, authenticated, PUBLIC, service_role;
 
-
--- === app_assert_phone(p_phone text) ===
 CREATE OR REPLACE FUNCTION public.app_assert_phone(p_phone text)
  RETURNS text
  LANGUAGE plpgsql
@@ -1154,11 +1026,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION app_assert_phone(p_phone text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION app_assert_phone(p_phone text) TO anon, authenticated, PUBLIC, service_role;
 
-
--- === app_assert_price(p_value numeric, p_required boolean) ===
 CREATE OR REPLACE FUNCTION public.app_assert_price(p_value numeric, p_required boolean DEFAULT true)
  RETURNS numeric
  LANGUAGE plpgsql
@@ -1182,11 +1050,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION app_assert_price(p_value numeric, p_required boolean) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION app_assert_price(p_value numeric, p_required boolean) TO anon, authenticated, PUBLIC, service_role;
 
-
--- === app_assert_text_len(p_value text, p_field text, p_min integer, p_max integer) ===
 CREATE OR REPLACE FUNCTION public.app_assert_text_len(p_value text, p_field text, p_min integer DEFAULT 0, p_max integer DEFAULT 1000)
  RETURNS text
  LANGUAGE plpgsql
@@ -1210,11 +1074,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION app_assert_text_len(p_value text, p_field text, p_min integer, p_max integer) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION app_assert_text_len(p_value text, p_field text, p_min integer, p_max integer) TO anon, authenticated, PUBLIC, service_role;
 
-
--- === app_assert_username(p_username text, p_required boolean) ===
 CREATE OR REPLACE FUNCTION public.app_assert_username(p_username text, p_required boolean DEFAULT true)
  RETURNS text
  LANGUAGE plpgsql
@@ -1242,11 +1102,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION app_assert_username(p_username text, p_required boolean) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION app_assert_username(p_username text, p_required boolean) TO anon, authenticated, PUBLIC, service_role;
 
-
--- === app_clean_text(p_value text, p_max_len integer) ===
 CREATE OR REPLACE FUNCTION public.app_clean_text(p_value text, p_max_len integer DEFAULT 1000)
  RETURNS text
  LANGUAGE plpgsql
@@ -1267,11 +1123,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION app_clean_text(p_value text, p_max_len integer) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION app_clean_text(p_value text, p_max_len integer) TO anon, authenticated, PUBLIC, service_role;
 
-
--- === apply_referral(p_new_uid uuid, p_referrer_code text, p_pts integer) ===
 CREATE OR REPLACE FUNCTION public.apply_referral(p_new_uid uuid, p_referrer_code text, p_pts integer DEFAULT 1500)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -1333,11 +1185,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION apply_referral(p_new_uid uuid, p_referrer_code text, p_pts integer) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION apply_referral(p_new_uid uuid, p_referrer_code text, p_pts integer) TO service_role;
 
-
--- === approve_payment_final(p_payment_id uuid, p_admin_id uuid) ===
 CREATE OR REPLACE FUNCTION public.approve_payment_final(p_payment_id uuid, p_admin_id uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -1401,11 +1249,7 @@ EXCEPTION WHEN OTHERS THEN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION approve_payment_final(p_payment_id uuid, p_admin_id uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION approve_payment_final(p_payment_id uuid, p_admin_id uuid) TO service_role;
 
-
--- === appt_booking_config() ===
 CREATE OR REPLACE FUNCTION public.appt_booking_config()
  RETURNS jsonb
  LANGUAGE sql
@@ -1416,11 +1260,7 @@ AS $function$
          || COALESCE((SELECT value->'appt' FROM public.app_config WHERE key = 'main'), '{}'::jsonb);
 $function$
 
-REVOKE ALL ON FUNCTION appt_booking_config() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION appt_booking_config() TO service_role;
 
-
--- === attach_photography_media_to_offer_internal(p_admin_uid uuid, p_task_id uuid) ===
 CREATE OR REPLACE FUNCTION public.attach_photography_media_to_offer_internal(p_admin_uid uuid, p_task_id uuid)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -1443,11 +1283,7 @@ BEGIN
   RETURN TRUE;
 END; $function$
 
-REVOKE ALL ON FUNCTION attach_photography_media_to_offer_internal(p_admin_uid uuid, p_task_id uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION attach_photography_media_to_offer_internal(p_admin_uid uuid, p_task_id uuid) TO service_role;
 
-
--- === award_points_safe(p_uid uuid, p_event_type text, p_points integer) ===
 CREATE OR REPLACE FUNCTION public.award_points_safe(p_uid uuid, p_event_type text, p_points integer)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -1489,11 +1325,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION award_points_safe(p_uid uuid, p_event_type text, p_points integer) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION award_points_safe(p_uid uuid, p_event_type text, p_points integer) TO service_role;
 
-
--- === book_appointment_internal(p_user_uid uuid, p_offer_id uuid, p_dt timestamp with time zone, p_broker_id uuid, p_request_id uuid) ===
 CREATE OR REPLACE FUNCTION public.book_appointment_internal(p_user_uid uuid, p_offer_id uuid, p_dt timestamp with time zone, p_broker_id uuid DEFAULT NULL::uuid, p_request_id uuid DEFAULT NULL::uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -1664,11 +1496,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION book_appointment_internal(p_user_uid uuid, p_offer_id uuid, p_dt timestamp with time zone, p_broker_id uuid, p_request_id uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION book_appointment_internal(p_user_uid uuid, p_offer_id uuid, p_dt timestamp with time zone, p_broker_id uuid, p_request_id uuid) TO service_role;
 
-
--- === broker_handle_appointment_internal(p_broker_uid uuid, p_appointment_id uuid, p_action text) ===
 CREATE OR REPLACE FUNCTION public.broker_handle_appointment_internal(p_broker_uid uuid, p_appointment_id uuid, p_action text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -1720,22 +1548,14 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION broker_handle_appointment_internal(p_broker_uid uuid, p_appointment_id uuid, p_action text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION broker_handle_appointment_internal(p_broker_uid uuid, p_appointment_id uuid, p_action text) TO service_role;
 
-
--- === calculate_commission(p_prc numeric, p_pct numeric) ===
 CREATE OR REPLACE FUNCTION public.calculate_commission(p_prc numeric, p_pct numeric)
  RETURNS numeric
  LANGUAGE plpgsql
  SET search_path TO 'public', 'extensions', 'pg_temp'
 AS $function$ BEGIN RETURN ROUND(p_prc * p_pct / 100, 2); END; $function$
 
-REVOKE ALL ON FUNCTION calculate_commission(p_prc numeric, p_pct numeric) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION calculate_commission(p_prc numeric, p_pct numeric) TO service_role;
 
-
--- === can_publish_request_internal(p_user_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.can_publish_request_internal(p_user_uid uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -1782,11 +1602,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION can_publish_request_internal(p_user_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION can_publish_request_internal(p_user_uid uuid) TO service_role;
 
-
--- === cancel_appointment_internal(p_requester_uid uuid, p_appointment_id uuid, p_reason text) ===
 CREATE OR REPLACE FUNCTION public.cancel_appointment_internal(p_requester_uid uuid, p_appointment_id uuid, p_reason text DEFAULT ''::text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -1814,11 +1630,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION cancel_appointment_internal(p_requester_uid uuid, p_appointment_id uuid, p_reason text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION cancel_appointment_internal(p_requester_uid uuid, p_appointment_id uuid, p_reason text) TO service_role;
 
-
--- === cancel_request_internal(p_user_uid uuid, p_request_id uuid, p_reason text) ===
 CREATE OR REPLACE FUNCTION public.cancel_request_internal(p_user_uid uuid, p_request_id uuid, p_reason text DEFAULT ''::text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -1860,11 +1672,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION cancel_request_internal(p_user_uid uuid, p_request_id uuid, p_reason text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION cancel_request_internal(p_user_uid uuid, p_request_id uuid, p_reason text) TO service_role;
 
-
--- === change_password_internal(p_user_uid uuid, p_old_password text, p_new_password text) ===
 CREATE OR REPLACE FUNCTION public.change_password_internal(p_user_uid uuid, p_old_password text, p_new_password text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -1896,11 +1704,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION change_password_internal(p_user_uid uuid, p_old_password text, p_new_password text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION change_password_internal(p_user_uid uuid, p_old_password text, p_new_password text) TO service_role;
 
-
--- === check_offer_duplicate(p_ttl text, p_prc numeric, p_loc jsonb, p_usr_id uuid) ===
 CREATE OR REPLACE FUNCTION public.check_offer_duplicate(p_ttl text, p_prc numeric, p_loc jsonb, p_usr_id uuid)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -1922,11 +1726,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION check_offer_duplicate(p_ttl text, p_prc numeric, p_loc jsonb, p_usr_id uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION check_offer_duplicate(p_ttl text, p_prc numeric, p_loc jsonb, p_usr_id uuid) TO service_role;
 
-
--- === check_offer_safe_update() ===
 CREATE OR REPLACE FUNCTION public.check_offer_safe_update()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -1956,11 +1756,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION check_offer_safe_update() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION check_offer_safe_update() TO service_role;
 
-
--- === check_rating_valid() ===
 CREATE OR REPLACE FUNCTION public.check_rating_valid()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -2004,11 +1800,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION check_rating_valid() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION check_rating_valid() TO service_role;
 
-
--- === check_user_safe_insert() ===
 CREATE OR REPLACE FUNCTION public.check_user_safe_insert()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -2051,11 +1843,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION check_user_safe_insert() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION check_user_safe_insert() TO service_role;
 
-
--- === check_user_safe_update() ===
 CREATE OR REPLACE FUNCTION public.check_user_safe_update()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -2119,11 +1907,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION check_user_safe_update() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION check_user_safe_update() TO service_role;
 
-
--- === check_username_available(p_username text) ===
 CREATE OR REPLACE FUNCTION public.check_username_available(p_username text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -2143,11 +1927,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION check_username_available(p_username text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION check_username_available(p_username text) TO service_role;
 
-
--- === complete_deal_internal(p_admin_uid uuid, p_deal_id uuid, p_commission numeric, p_note text) ===
 CREATE OR REPLACE FUNCTION public.complete_deal_internal(p_admin_uid uuid, p_deal_id uuid, p_commission numeric DEFAULT NULL::numeric, p_note text DEFAULT NULL::text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -2198,11 +1978,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION complete_deal_internal(p_admin_uid uuid, p_deal_id uuid, p_commission numeric, p_note text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION complete_deal_internal(p_admin_uid uuid, p_deal_id uuid, p_commission numeric, p_note text) TO service_role;
 
-
--- === create_deal_internal(p_admin_uid uuid, p_deal jsonb) ===
 CREATE OR REPLACE FUNCTION public.create_deal_internal(p_admin_uid uuid, p_deal jsonb)
  RETURNS SETOF deals
  LANGUAGE plpgsql
@@ -2250,11 +2026,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION create_deal_internal(p_admin_uid uuid, p_deal jsonb) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION create_deal_internal(p_admin_uid uuid, p_deal jsonb) TO service_role;
 
-
--- === create_offer_internal(p_user_uid uuid, p_offer jsonb) ===
 CREATE OR REPLACE FUNCTION public.create_offer_internal(p_user_uid uuid, p_offer jsonb)
  RETURNS SETOF offers
  LANGUAGE plpgsql
@@ -2406,11 +2178,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION create_offer_internal(p_user_uid uuid, p_offer jsonb) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION create_offer_internal(p_user_uid uuid, p_offer jsonb) TO service_role;
 
-
--- === create_payment_internal(p_user_uid uuid, p_payment jsonb) ===
 CREATE OR REPLACE FUNCTION public.create_payment_internal(p_user_uid uuid, p_payment jsonb)
  RETURNS SETOF payments
  LANGUAGE plpgsql
@@ -2468,11 +2236,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION create_payment_internal(p_user_uid uuid, p_payment jsonb) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION create_payment_internal(p_user_uid uuid, p_payment jsonb) TO service_role;
 
-
--- === create_photography_task_internal(p_admin_uid uuid, p_offer_id uuid, p_photographer_id uuid, p_notes text, p_ts_scheduled timestamp with time zone) ===
 CREATE OR REPLACE FUNCTION public.create_photography_task_internal(p_admin_uid uuid, p_offer_id uuid, p_photographer_id uuid, p_notes text, p_ts_scheduled timestamp with time zone)
  RETURNS SETOF photography_tasks
  LANGUAGE plpgsql
@@ -2492,11 +2256,7 @@ BEGIN
   RETURNING *;
 END; $function$
 
-REVOKE ALL ON FUNCTION create_photography_task_internal(p_admin_uid uuid, p_offer_id uuid, p_photographer_id uuid, p_notes text, p_ts_scheduled timestamp with time zone) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION create_photography_task_internal(p_admin_uid uuid, p_offer_id uuid, p_photographer_id uuid, p_notes text, p_ts_scheduled timestamp with time zone) TO service_role;
 
-
--- === create_rating_internal(p_reviewer_uid uuid, p_target_uid uuid, p_stars integer, p_comment text) ===
 CREATE OR REPLACE FUNCTION public.create_rating_internal(p_reviewer_uid uuid, p_target_uid uuid, p_stars integer, p_comment text DEFAULT ''::text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -2514,11 +2274,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION create_rating_internal(p_reviewer_uid uuid, p_target_uid uuid, p_stars integer, p_comment text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION create_rating_internal(p_reviewer_uid uuid, p_target_uid uuid, p_stars integer, p_comment text) TO service_role;
 
-
--- === create_report_internal(p_reporter_uid uuid, p_report jsonb) ===
 CREATE OR REPLACE FUNCTION public.create_report_internal(p_reporter_uid uuid, p_report jsonb)
  RETURNS SETOF reports
  LANGUAGE plpgsql
@@ -2550,11 +2306,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION create_report_internal(p_reporter_uid uuid, p_report jsonb) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION create_report_internal(p_reporter_uid uuid, p_report jsonb) TO service_role;
 
-
--- === create_request_internal(p_user_uid uuid, p_request jsonb) ===
 CREATE OR REPLACE FUNCTION public.create_request_internal(p_user_uid uuid, p_request jsonb)
  RETURNS SETOF requests
  LANGUAGE plpgsql
@@ -2637,11 +2389,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION create_request_internal(p_user_uid uuid, p_request jsonb) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION create_request_internal(p_user_uid uuid, p_request jsonb) TO service_role;
 
-
--- === create_user_from_phone(p_phone text, p_nm text) ===
 CREATE OR REPLACE FUNCTION public.create_user_from_phone(p_phone text, p_nm text DEFAULT ''::text)
  RETURNS uuid
  LANGUAGE plpgsql
@@ -2674,11 +2422,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION create_user_from_phone(p_phone text, p_nm text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION create_user_from_phone(p_phone text, p_nm text) TO service_role;
 
-
--- === expire_offer_boosts() ===
 CREATE OR REPLACE FUNCTION public.expire_offer_boosts()
  RETURNS integer
  LANGUAGE plpgsql
@@ -2708,11 +2452,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION expire_offer_boosts() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION expire_offer_boosts() TO service_role;
 
-
--- === expire_offers() ===
 CREATE OR REPLACE FUNCTION public.expire_offers()
  RETURNS void
  LANGUAGE plpgsql
@@ -2731,11 +2471,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION expire_offers() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION expire_offers() TO service_role;
 
-
--- === expire_packages() ===
 CREATE OR REPLACE FUNCTION public.expire_packages()
  RETURNS integer
  LANGUAGE plpgsql
@@ -2782,11 +2518,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION expire_packages() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION expire_packages() TO service_role;
 
-
--- === expire_requests() ===
 CREATE OR REPLACE FUNCTION public.expire_requests()
  RETURNS integer
  LANGUAGE plpgsql
@@ -2828,11 +2560,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION expire_requests() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION expire_requests() TO service_role;
 
-
--- === generate_otp(p_phone text) ===
 CREATE OR REPLACE FUNCTION public.generate_otp(p_phone text)
  RETURNS text
  LANGUAGE plpgsql
@@ -2854,11 +2582,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION generate_otp(p_phone text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION generate_otp(p_phone text) TO service_role;
 
-
--- === generate_otp_v2(p_identifier text, p_channel text) ===
 CREATE OR REPLACE FUNCTION public.generate_otp_v2(p_identifier text, p_channel text DEFAULT 'sms'::text)
  RETURNS text
  LANGUAGE plpgsql
@@ -2889,11 +2613,23 @@ AS $function$
   END;
 $function$
 
-REVOKE ALL ON FUNCTION generate_otp_v2(p_identifier text, p_channel text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION generate_otp_v2(p_identifier text, p_channel text) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.get_active_lawyers()
+ RETURNS TABLE(uid uuid, nm text, ph text, whatsapp_phone text, office_address text, specialization text, avl jsonb, active_tasks_count integer)
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+BEGIN
+    RETURN QUERY
+    SELECT lp.uid, COALESCE(u.nm, ''), COALESCE(u.ph, ''), lp.whatsapp_phone, lp.office_address, lp.specialization, lp.avl, lp.active_tasks_count
+    FROM lawyer_profiles lp
+    JOIN users u ON u.id = lp.uid
+    WHERE lp.is_active = TRUE AND u.i_del = 0;
+END;
+$function$
 
 
--- === get_admin_appointments_internal(p_admin_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.get_admin_appointments_internal(p_admin_uid uuid)
  RETURNS SETOF appointments
  LANGUAGE plpgsql
@@ -2908,11 +2644,7 @@ BEGIN
   RETURN QUERY SELECT * FROM appointments ORDER BY ts_crt DESC;
 END; $function$
 
-REVOKE ALL ON FUNCTION get_admin_appointments_internal(p_admin_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_admin_appointments_internal(p_admin_uid uuid) TO service_role;
 
-
--- === get_admin_dashboard_stats(p_admin_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.get_admin_dashboard_stats(p_admin_uid uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -2961,11 +2693,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION get_admin_dashboard_stats(p_admin_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_admin_dashboard_stats(p_admin_uid uuid) TO service_role;
 
-
--- === get_admin_deals_internal(p_admin_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.get_admin_deals_internal(p_admin_uid uuid)
  RETURNS SETOF deals
  LANGUAGE plpgsql
@@ -2980,11 +2708,7 @@ BEGIN
   RETURN QUERY SELECT * FROM deals ORDER BY ts_crt DESC;
 END; $function$
 
-REVOKE ALL ON FUNCTION get_admin_deals_internal(p_admin_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_admin_deals_internal(p_admin_uid uuid) TO service_role;
 
-
--- === get_admin_offers_internal(p_admin_uid uuid, p_limit integer) ===
 CREATE OR REPLACE FUNCTION public.get_admin_offers_internal(p_admin_uid uuid, p_limit integer DEFAULT 100)
  RETURNS SETOF offers
  LANGUAGE plpgsql
@@ -2999,11 +2723,7 @@ BEGIN
   RETURN QUERY SELECT * FROM offers WHERE i_del = 0 ORDER BY ts_crt DESC LIMIT p_limit;
 END; $function$
 
-REVOKE ALL ON FUNCTION get_admin_offers_internal(p_admin_uid uuid, p_limit integer) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_admin_offers_internal(p_admin_uid uuid, p_limit integer) TO service_role;
 
-
--- === get_admin_payments_internal(p_admin_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.get_admin_payments_internal(p_admin_uid uuid)
  RETURNS SETOF payments
  LANGUAGE plpgsql
@@ -3018,11 +2738,7 @@ BEGIN
   RETURN QUERY SELECT * FROM payments ORDER BY ts_crt DESC;
 END; $function$
 
-REVOKE ALL ON FUNCTION get_admin_payments_internal(p_admin_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_admin_payments_internal(p_admin_uid uuid) TO service_role;
 
-
--- === get_admin_pending_offers_internal(p_admin_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.get_admin_pending_offers_internal(p_admin_uid uuid)
  RETURNS SETOF offers
  LANGUAGE plpgsql
@@ -3037,11 +2753,7 @@ BEGIN
   RETURN QUERY SELECT * FROM offers WHERE sts = 1 AND i_del = 0 ORDER BY ts_crt DESC;
 END; $function$
 
-REVOKE ALL ON FUNCTION get_admin_pending_offers_internal(p_admin_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_admin_pending_offers_internal(p_admin_uid uuid) TO service_role;
 
-
--- === get_admin_reports_internal(p_admin_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.get_admin_reports_internal(p_admin_uid uuid)
  RETURNS SETOF reports
  LANGUAGE plpgsql
@@ -3056,11 +2768,7 @@ BEGIN
   RETURN QUERY SELECT * FROM reports WHERE i_del = 0 ORDER BY ts_crt DESC;
 END; $function$
 
-REVOKE ALL ON FUNCTION get_admin_reports_internal(p_admin_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_admin_reports_internal(p_admin_uid uuid) TO service_role;
 
-
--- === get_admin_requests_internal(p_admin_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.get_admin_requests_internal(p_admin_uid uuid)
  RETURNS TABLE(id uuid, typ integer, elm integer, cl_nm text, cl_ph text, prc numeric, cur integer, notes text, specs jsonb, usr_id uuid, sts integer, matches jsonb, i_del integer, ts_crt timestamp with time zone, ts_end timestamp with time zone, ts_ren timestamp with time zone, rmnd_ren integer, closed_at timestamp with time zone, closed_by uuid, closed_by_name text, closed_by_role integer, closed_reason text, closed_note text, closed_offer_id uuid, closed_appointment_id uuid, closed_completion_request_id uuid)
  LANGUAGE plpgsql
@@ -3092,11 +2800,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION get_admin_requests_internal(p_admin_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_admin_requests_internal(p_admin_uid uuid) TO service_role;
 
-
--- === get_all_pending_completion_requests(p_admin_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.get_all_pending_completion_requests(p_admin_uid uuid DEFAULT NULL::uuid)
  RETURNS TABLE(request_id uuid, appointment_id uuid, off_id uuid, display_title text, offer_number text, task_type text, client_name text, client_phone text, executor_name text, executor_notes text, request_date timestamp with time zone, appointment_date timestamp with time zone)
  LANGUAGE plpgsql
@@ -3138,11 +2842,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION get_all_pending_completion_requests(p_admin_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_all_pending_completion_requests(p_admin_uid uuid) TO service_role;
 
-
--- === get_all_staff_users(p_admin_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.get_all_staff_users(p_admin_uid uuid)
  RETURNS SETOF jsonb
  LANGUAGE plpgsql
@@ -3202,11 +2902,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION get_all_staff_users(p_admin_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_all_staff_users(p_admin_uid uuid) TO service_role;
 
-
--- === get_available_supervisor(p_dt timestamp with time zone) ===
 CREATE OR REPLACE FUNCTION public.get_available_supervisor(p_dt timestamp with time zone)
  RETURNS uuid
  LANGUAGE plpgsql
@@ -3238,11 +2934,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION get_available_supervisor(p_dt timestamp with time zone) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_available_supervisor(p_dt timestamp with time zone) TO service_role;
 
-
--- === get_booked_slots_internal(p_offer_id uuid, p_date date) ===
 CREATE OR REPLACE FUNCTION public.get_booked_slots_internal(p_offer_id uuid, p_date date)
  RETURNS text[]
  LANGUAGE sql
@@ -3259,11 +2951,7 @@ AS $function$
     AND (dt AT TIME ZONE 'Asia/Damascus')::date = p_date;
 $function$
 
-REVOKE ALL ON FUNCTION get_booked_slots_internal(p_offer_id uuid, p_date date) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_booked_slots_internal(p_offer_id uuid, p_date date) TO service_role;
 
-
--- === get_broker_appointments_internal(p_broker_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.get_broker_appointments_internal(p_broker_uid uuid)
  RETURNS SETOF appointments
  LANGUAGE plpgsql
@@ -3286,11 +2974,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION get_broker_appointments_internal(p_broker_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_broker_appointments_internal(p_broker_uid uuid) TO service_role;
 
-
--- === get_broker_deals_internal(p_broker_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.get_broker_deals_internal(p_broker_uid uuid)
  RETURNS SETOF deals
  LANGUAGE plpgsql
@@ -3310,11 +2994,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION get_broker_deals_internal(p_broker_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_broker_deals_internal(p_broker_uid uuid) TO service_role;
 
-
--- === get_broker_offers_internal(p_broker_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.get_broker_offers_internal(p_broker_uid uuid)
  RETURNS SETOF offers
  LANGUAGE plpgsql
@@ -3334,11 +3014,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION get_broker_offers_internal(p_broker_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_broker_offers_internal(p_broker_uid uuid) TO service_role;
 
-
--- === get_completed_tasks(p_user_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.get_completed_tasks(p_user_uid uuid DEFAULT NULL::uuid)
  RETURNS TABLE(appointment_id uuid, off_id uuid, offer_number text, display_title text, task_type text, client_name text, client_phone text, appointment_date timestamp with time zone, location jsonb, description text, price numeric, offer_cur integer, outcome text, completion_date timestamp with time zone, rejection_reason text, sts integer)
  LANGUAGE plpgsql
@@ -3377,11 +3053,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION get_completed_tasks(p_user_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_completed_tasks(p_user_uid uuid) TO service_role;
 
-
--- === get_executor_task_by_appointment(p_user_uid uuid, p_appointment_id uuid) ===
 CREATE OR REPLACE FUNCTION public.get_executor_task_by_appointment(p_user_uid uuid, p_appointment_id uuid)
  RETURNS TABLE(appointment_id uuid, off_id uuid, offer_number text, display_title text, task_type text, client_name text, client_phone text, appointment_date timestamp with time zone, location jsonb, description text, price numeric, offer_cur integer, outcome text, completion_date timestamp with time zone, rejection_reason text, sts integer)
  LANGUAGE plpgsql
@@ -3429,11 +3101,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION get_executor_task_by_appointment(p_user_uid uuid, p_appointment_id uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_executor_task_by_appointment(p_user_uid uuid, p_appointment_id uuid) TO service_role;
 
-
--- === get_my_completion_requests(p_user_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.get_my_completion_requests(p_user_uid uuid)
  RETURNS TABLE(request_id uuid, appointment_id uuid, off_id uuid, display_title text, offer_number text, task_type text, executor_notes text, office_notes text, decision text, request_date timestamp with time zone, decided_date timestamp with time zone, appointment_date timestamp with time zone)
  LANGUAGE plpgsql
@@ -3477,11 +3145,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION get_my_completion_requests(p_user_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_my_completion_requests(p_user_uid uuid) TO service_role;
 
-
--- === get_my_tasks(p_user_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.get_my_tasks(p_user_uid uuid DEFAULT NULL::uuid)
  RETURNS TABLE(appointment_id uuid, off_id uuid, offer_number text, display_title text, task_type text, client_name text, client_phone text, appointment_date timestamp with time zone, location jsonb, description text, price numeric, offer_cur integer, outcome text, sts integer)
  LANGUAGE plpgsql
@@ -3520,11 +3184,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION get_my_tasks(p_user_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_my_tasks(p_user_uid uuid) TO service_role;
 
-
--- === get_offer_by_id_internal(p_offer_id uuid, p_user_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.get_offer_by_id_internal(p_offer_id uuid, p_user_uid uuid DEFAULT NULL::uuid)
  RETURNS SETOF offers
  LANGUAGE plpgsql
@@ -3556,11 +3216,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION get_offer_by_id_internal(p_offer_id uuid, p_user_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_offer_by_id_internal(p_offer_id uuid, p_user_uid uuid) TO service_role;
 
-
--- === get_owner_appointments_internal(p_owner_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.get_owner_appointments_internal(p_owner_uid uuid)
  RETURNS SETOF appointments
  LANGUAGE plpgsql
@@ -3579,11 +3235,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION get_owner_appointments_internal(p_owner_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_owner_appointments_internal(p_owner_uid uuid) TO service_role;
 
-
--- === get_pending_offers_count() ===
 CREATE OR REPLACE FUNCTION public.get_pending_offers_count()
  RETURNS integer
  LANGUAGE plpgsql
@@ -3600,11 +3252,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION get_pending_offers_count() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_pending_offers_count() TO service_role;
 
-
--- === get_photographer_tasks_internal(p_photographer_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.get_photographer_tasks_internal(p_photographer_uid uuid)
  RETURNS SETOF photography_tasks
  LANGUAGE plpgsql
@@ -3634,11 +3282,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION get_photographer_tasks_internal(p_photographer_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_photographer_tasks_internal(p_photographer_uid uuid) TO service_role;
 
-
--- === get_postponed_tasks(p_user_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.get_postponed_tasks(p_user_uid uuid DEFAULT NULL::uuid)
  RETURNS TABLE(appointment_id uuid, off_id uuid, offer_number text, display_title text, task_type text, client_name text, client_phone text, appointment_date timestamp with time zone, location jsonb, description text, price numeric, offer_cur integer, outcome text, sts integer)
  LANGUAGE plpgsql
@@ -3677,11 +3321,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION get_postponed_tasks(p_user_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_postponed_tasks(p_user_uid uuid) TO service_role;
 
-
--- === get_staff_stats_internal(p_user_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.get_staff_stats_internal(p_user_uid uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -3821,11 +3461,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION get_staff_stats_internal(p_user_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_staff_stats_internal(p_user_uid uuid) TO service_role;
 
-
--- === get_user_appointments_internal(p_user_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.get_user_appointments_internal(p_user_uid uuid)
  RETURNS SETOF appointments
  LANGUAGE plpgsql
@@ -3844,11 +3480,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION get_user_appointments_internal(p_user_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_user_appointments_internal(p_user_uid uuid) TO service_role;
 
-
--- === get_user_by_email(p_email text) ===
 CREATE OR REPLACE FUNCTION public.get_user_by_email(p_email text)
  RETURNS SETOF users
  LANGUAGE plpgsql
@@ -3860,11 +3492,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION get_user_by_email(p_email text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_user_by_email(p_email text) TO service_role;
 
-
--- === get_user_by_phone(p_phone text) ===
 CREATE OR REPLACE FUNCTION public.get_user_by_phone(p_phone text)
  RETURNS SETOF users
  LANGUAGE plpgsql
@@ -3874,11 +3502,7 @@ AS $function$
 BEGIN RETURN QUERY SELECT * FROM users WHERE ph = p_phone AND i_del = 0; END;
 $function$
 
-REVOKE ALL ON FUNCTION get_user_by_phone(p_phone text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_user_by_phone(p_phone text) TO service_role;
 
-
--- === get_user_device_tokens(p_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.get_user_device_tokens(p_uid uuid)
  RETURNS TABLE(device_token text, platform text)
  LANGUAGE plpgsql
@@ -3891,11 +3515,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION get_user_device_tokens(p_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_user_device_tokens(p_uid uuid) TO service_role;
 
-
--- === get_user_full_by_id(p_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.get_user_full_by_id(p_uid uuid)
  RETURNS SETOF jsonb
  LANGUAGE plpgsql
@@ -3922,11 +3542,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION get_user_full_by_id(p_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_user_full_by_id(p_uid uuid) TO service_role;
 
-
--- === get_user_notifications_internal(p_user_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.get_user_notifications_internal(p_user_uid uuid)
  RETURNS SETOF notifications
  LANGUAGE plpgsql
@@ -3946,11 +3562,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION get_user_notifications_internal(p_user_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_user_notifications_internal(p_user_uid uuid) TO service_role;
 
-
--- === get_user_offers_internal(p_user_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.get_user_offers_internal(p_user_uid uuid)
  RETURNS SETOF offers
  LANGUAGE plpgsql
@@ -3970,11 +3582,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION get_user_offers_internal(p_user_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_user_offers_internal(p_user_uid uuid) TO service_role;
 
-
--- === get_user_payments_internal(p_user_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.get_user_payments_internal(p_user_uid uuid)
  RETURNS SETOF payments
  LANGUAGE plpgsql
@@ -3993,11 +3601,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION get_user_payments_internal(p_user_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_user_payments_internal(p_user_uid uuid) TO service_role;
 
-
--- === get_user_requests_internal(p_user_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.get_user_requests_internal(p_user_uid uuid)
  RETURNS SETOF requests
  LANGUAGE plpgsql
@@ -4017,11 +3621,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION get_user_requests_internal(p_user_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION get_user_requests_internal(p_user_uid uuid) TO service_role;
 
-
--- === handle_email_auth_internal() ===
 CREATE OR REPLACE FUNCTION public.handle_email_auth_internal()
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -4132,11 +3732,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION handle_email_auth_internal() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION handle_email_auth_internal() TO service_role;
 
-
--- === increment_offer_views_internal(p_offer_id uuid) ===
 CREATE OR REPLACE FUNCTION public.increment_offer_views_internal(p_offer_id uuid)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -4153,11 +3749,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION increment_offer_views_internal(p_offer_id uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION increment_offer_views_internal(p_offer_id uuid) TO service_role;
 
-
--- === log_admin_action(p_admin_uid uuid, p_act integer, p_det text, p_ref_id text, p_ref_col text) ===
 CREATE OR REPLACE FUNCTION public.log_admin_action(p_admin_uid uuid, p_act integer, p_det text, p_ref_id text DEFAULT ''::text, p_ref_col text DEFAULT ''::text)
  RETURNS void
  LANGUAGE plpgsql
@@ -4170,11 +3762,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION log_admin_action(p_admin_uid uuid, p_act integer, p_det text, p_ref_id text, p_ref_col text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION log_admin_action(p_admin_uid uuid, p_act integer, p_det text, p_ref_id text, p_ref_col text) TO service_role;
 
-
--- === login_with_password(p_identifier text, p_password text) ===
 CREATE OR REPLACE FUNCTION public.login_with_password(p_identifier text, p_password text)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -4234,11 +3822,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION login_with_password(p_identifier text, p_password text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION login_with_password(p_identifier text, p_password text) TO service_role;
 
-
--- === mark_all_notifications_read_internal(p_user_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.mark_all_notifications_read_internal(p_user_uid uuid)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -4258,11 +3842,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION mark_all_notifications_read_internal(p_user_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION mark_all_notifications_read_internal(p_user_uid uuid) TO service_role;
 
-
--- === mark_notification_read_internal(p_user_uid uuid, p_notification_id uuid) ===
 CREATE OR REPLACE FUNCTION public.mark_notification_read_internal(p_user_uid uuid, p_notification_id uuid)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -4286,11 +3866,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION mark_notification_read_internal(p_user_uid uuid, p_notification_id uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION mark_notification_read_internal(p_user_uid uuid, p_notification_id uuid) TO service_role;
 
-
--- === mark_social_published_internal(p_user_uid uuid, p_offer_id uuid, p_text text) ===
 CREATE OR REPLACE FUNCTION public.mark_social_published_internal(p_user_uid uuid, p_offer_id uuid, p_text text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -4316,11 +3892,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION mark_social_published_internal(p_user_uid uuid, p_offer_id uuid, p_text text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION mark_social_published_internal(p_user_uid uuid, p_offer_id uuid, p_text text) TO service_role;
 
-
--- === normalize_arabic_username(p_str text) ===
 CREATE OR REPLACE FUNCTION public.normalize_arabic_username(p_str text)
  RETURNS text
  LANGUAGE plpgsql
@@ -4343,11 +3915,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION normalize_arabic_username(p_str text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION normalize_arabic_username(p_str text) TO anon, authenticated, PUBLIC, service_role;
 
-
--- === normalize_sy_phone(p_phone text) ===
 CREATE OR REPLACE FUNCTION public.normalize_sy_phone(p_phone text)
  RETURNS text
  LANGUAGE plpgsql
@@ -4393,11 +3961,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION normalize_sy_phone(p_phone text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION normalize_sy_phone(p_phone text) TO anon, authenticated, PUBLIC, service_role;
 
-
--- === notify_admin_on_new_offer() ===
 CREATE OR REPLACE FUNCTION public.notify_admin_on_new_offer()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -4435,11 +3999,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION notify_admin_on_new_offer() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION notify_admin_on_new_offer() TO service_role;
 
-
--- === notify_user(p_uid uuid, p_type integer, p_title text, p_body text, p_ref_id text, p_action text) ===
 CREATE OR REPLACE FUNCTION public.notify_user(p_uid uuid, p_type integer, p_title text, p_body text, p_ref_id text DEFAULT ''::text, p_action text DEFAULT ''::text)
  RETURNS uuid
  LANGUAGE plpgsql
@@ -4455,11 +4015,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION notify_user(p_uid uuid, p_type integer, p_title text, p_body text, p_ref_id text, p_action text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION notify_user(p_uid uuid, p_type integer, p_title text, p_body text, p_ref_id text, p_action text) TO service_role;
 
-
--- === owner_respond_appointment(p_owner_uid uuid, p_appointment_id uuid, p_accept boolean, p_reject_reason integer, p_reject_text text, p_proposed_dt timestamp with time zone) ===
 CREATE OR REPLACE FUNCTION public.owner_respond_appointment(p_owner_uid uuid, p_appointment_id uuid, p_accept boolean, p_reject_reason integer DEFAULT 0, p_reject_text text DEFAULT ''::text, p_proposed_dt timestamp with time zone DEFAULT NULL::timestamp with time zone)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -4663,11 +4219,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION owner_respond_appointment(p_owner_uid uuid, p_appointment_id uuid, p_accept boolean, p_reject_reason integer, p_reject_text text, p_proposed_dt timestamp with time zone) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION owner_respond_appointment(p_owner_uid uuid, p_appointment_id uuid, p_accept boolean, p_reject_reason integer, p_reject_text text, p_proposed_dt timestamp with time zone) TO service_role;
 
-
--- === process_completion_request(p_admin_uid uuid, p_request_id uuid, p_decision text, p_office_notes text) ===
 CREATE OR REPLACE FUNCTION public.process_completion_request(p_admin_uid uuid, p_request_id uuid, p_decision text, p_office_notes text DEFAULT ''::text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -4754,11 +4306,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION process_completion_request(p_admin_uid uuid, p_request_id uuid, p_decision text, p_office_notes text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION process_completion_request(p_admin_uid uuid, p_request_id uuid, p_decision text, p_office_notes text) TO service_role;
 
-
--- === purchase_offer_boost(p_uid uuid, p_offer_id uuid, p_boost_type text) ===
 CREATE OR REPLACE FUNCTION public.purchase_offer_boost(p_uid uuid, p_offer_id uuid, p_boost_type text)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -4900,11 +4448,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION purchase_offer_boost(p_uid uuid, p_offer_id uuid, p_boost_type text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION purchase_offer_boost(p_uid uuid, p_offer_id uuid, p_boost_type text) TO service_role;
 
-
--- === purge_old_closed_requests() ===
 CREATE OR REPLACE FUNCTION public.purge_old_closed_requests()
  RETURNS integer
  LANGUAGE plpgsql
@@ -4934,11 +4478,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION purge_old_closed_requests() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION purge_old_closed_requests() TO service_role;
 
-
--- === register_daily_streak_internal(p_user_uid uuid, p_points integer) ===
 CREATE OR REPLACE FUNCTION public.register_daily_streak_internal(p_user_uid uuid, p_points integer DEFAULT 50)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -5010,11 +4550,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION register_daily_streak_internal(p_user_uid uuid, p_points integer) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION register_daily_streak_internal(p_user_uid uuid, p_points integer) TO service_role;
 
-
--- === register_device(p_device_id text, p_ip_hint text) ===
 CREATE OR REPLACE FUNCTION public.register_device(p_device_id text, p_ip_hint text DEFAULT NULL::text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -5063,11 +4599,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION register_device(p_device_id text, p_ip_hint text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION register_device(p_device_id text, p_ip_hint text) TO service_role;
 
-
--- === register_password(p_user_uid uuid, p_username text, p_password text) ===
 CREATE OR REPLACE FUNCTION public.register_password(p_user_uid uuid, p_username text, p_password text)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -5107,11 +4639,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION register_password(p_user_uid uuid, p_username text, p_password text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION register_password(p_user_uid uuid, p_username text, p_password text) TO service_role;
 
-
--- === register_weekly_login(p_uid uuid, p_pts integer) ===
 CREATE OR REPLACE FUNCTION public.register_weekly_login(p_uid uuid, p_pts integer DEFAULT 100)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -5149,11 +4677,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION register_weekly_login(p_uid uuid, p_pts integer) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION register_weekly_login(p_uid uuid, p_pts integer) TO service_role;
 
-
--- === renew_request_internal(p_user_uid uuid, p_request_id uuid) ===
 CREATE OR REPLACE FUNCTION public.renew_request_internal(p_user_uid uuid, p_request_id uuid)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -5198,11 +4722,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION renew_request_internal(p_user_uid uuid, p_request_id uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION renew_request_internal(p_user_uid uuid, p_request_id uuid) TO service_role;
 
-
--- === request_assert_owner_active(p_user_uid uuid, p_request_id uuid) ===
 CREATE OR REPLACE FUNCTION public.request_assert_owner_active(p_user_uid uuid, p_request_id uuid)
  RETURNS requests
  LANGUAGE plpgsql
@@ -5225,11 +4745,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION request_assert_owner_active(p_user_uid uuid, p_request_id uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION request_assert_owner_active(p_user_uid uuid, p_request_id uuid) TO service_role;
 
-
--- === request_completion_by_appointment(p_user_uid uuid, p_appointment_id uuid, p_notes text) ===
 CREATE OR REPLACE FUNCTION public.request_completion_by_appointment(p_user_uid uuid, p_appointment_id uuid, p_notes text DEFAULT ''::text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -5255,11 +4771,7 @@ BEGIN
   RETURN TRUE;
 END; $function$
 
-REVOKE ALL ON FUNCTION request_completion_by_appointment(p_user_uid uuid, p_appointment_id uuid, p_notes text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION request_completion_by_appointment(p_user_uid uuid, p_appointment_id uuid, p_notes text) TO service_role;
 
-
--- === request_lifecycle_days(p_key text, p_default integer) ===
 CREATE OR REPLACE FUNCTION public.request_lifecycle_days(p_key text, p_default integer)
  RETURNS integer
  LANGUAGE plpgsql
@@ -5281,11 +4793,7 @@ EXCEPTION WHEN OTHERS THEN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION request_lifecycle_days(p_key text, p_default integer) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION request_lifecycle_days(p_key text, p_default integer) TO service_role;
 
-
--- === request_verification_by_uid(p_user_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.request_verification_by_uid(p_user_uid uuid)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -5331,11 +4839,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION request_verification_by_uid(p_user_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION request_verification_by_uid(p_user_uid uuid) TO service_role;
 
-
--- === requester_counter_appointment(p_user_uid uuid, p_appointment_id uuid, p_accept boolean, p_proposed_dt timestamp with time zone) ===
 CREATE OR REPLACE FUNCTION public.requester_counter_appointment(p_user_uid uuid, p_appointment_id uuid, p_accept boolean, p_proposed_dt timestamp with time zone DEFAULT NULL::timestamp with time zone)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -5501,11 +5005,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION requester_counter_appointment(p_user_uid uuid, p_appointment_id uuid, p_accept boolean, p_proposed_dt timestamp with time zone) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION requester_counter_appointment(p_user_uid uuid, p_appointment_id uuid, p_accept boolean, p_proposed_dt timestamp with time zone) TO service_role;
 
-
--- === reset_password_with_otp(p_user_uid uuid, p_new_password text) ===
 CREATE OR REPLACE FUNCTION public.reset_password_with_otp(p_user_uid uuid, p_new_password text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -5530,11 +5030,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION reset_password_with_otp(p_user_uid uuid, p_new_password text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION reset_password_with_otp(p_user_uid uuid, p_new_password text) TO service_role;
 
-
--- === revoke_all_staff_sessions(p_user_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.revoke_all_staff_sessions(p_user_uid uuid)
  RETURNS integer
  LANGUAGE plpgsql
@@ -5555,11 +5051,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION revoke_all_staff_sessions(p_user_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION revoke_all_staff_sessions(p_user_uid uuid) TO service_role;
 
-
--- === revoke_staff_session(p_user_uid uuid, p_token text) ===
 CREATE OR REPLACE FUNCTION public.revoke_staff_session(p_user_uid uuid, p_token text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -5592,11 +5084,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION revoke_staff_session(p_user_uid uuid, p_token text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION revoke_staff_session(p_user_uid uuid, p_token text) TO service_role;
 
-
--- === send_appointment_reminders() ===
 CREATE OR REPLACE FUNCTION public.send_appointment_reminders()
  RETURNS void
  LANGUAGE plpgsql
@@ -5606,11 +5094,7 @@ AS $function$ BEGIN
   UPDATE appointments SET rmnd_24 = 1 WHERE sts IN (0, 1) AND i_force = 0 AND dt <= NOW() + INTERVAL '24 hours' AND dt > NOW() AND rmnd_24 = 0;
 END; $function$
 
-REVOKE ALL ON FUNCTION send_appointment_reminders() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION send_appointment_reminders() TO service_role;
 
-
--- === send_push_notification(p_uid uuid, p_title text, p_body text, p_data jsonb) ===
 CREATE OR REPLACE FUNCTION public.send_push_notification(p_uid uuid, p_title text, p_body text, p_data jsonb DEFAULT '{}'::jsonb)
  RETURNS bigint
  LANGUAGE plpgsql
@@ -5653,11 +5137,7 @@ EXCEPTION WHEN OTHERS THEN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION send_push_notification(p_uid uuid, p_title text, p_body text, p_data jsonb) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION send_push_notification(p_uid uuid, p_title text, p_body text, p_data jsonb) TO service_role;
 
-
--- === send_renewal_reminders() ===
 CREATE OR REPLACE FUNCTION public.send_renewal_reminders()
  RETURNS integer
  LANGUAGE plpgsql
@@ -5695,11 +5175,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION send_renewal_reminders() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION send_renewal_reminders() TO service_role;
 
-
--- === send_request_renewal_reminders() ===
 CREATE OR REPLACE FUNCTION public.send_request_renewal_reminders()
  RETURNS integer
  LANGUAGE plpgsql
@@ -5737,11 +5213,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION send_request_renewal_reminders() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION send_request_renewal_reminders() TO service_role;
 
-
--- === set_offer_number() ===
 CREATE OR REPLACE FUNCTION public.set_offer_number()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -5755,11 +5227,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION set_offer_number() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION set_offer_number() TO anon, authenticated, PUBLIC, service_role;
 
-
--- === soft_delete(p_table text, p_id uuid) ===
 CREATE OR REPLACE FUNCTION public.soft_delete(p_table text, p_id uuid)
  RETURNS void
  LANGUAGE plpgsql
@@ -5767,11 +5235,7 @@ CREATE OR REPLACE FUNCTION public.soft_delete(p_table text, p_id uuid)
  SET search_path TO 'public', 'extensions', 'pg_temp'
 AS $function$ BEGIN EXECUTE format('UPDATE %I SET i_del = 1 WHERE id = %L', p_table, p_id); END; $function$
 
-REVOKE ALL ON FUNCTION soft_delete(p_table text, p_id uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION soft_delete(p_table text, p_id uuid) TO service_role;
 
-
--- === soft_delete_request_internal(p_user_uid uuid, p_request_id uuid) ===
 CREATE OR REPLACE FUNCTION public.soft_delete_request_internal(p_user_uid uuid, p_request_id uuid)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -5784,11 +5248,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION soft_delete_request_internal(p_user_uid uuid, p_request_id uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION soft_delete_request_internal(p_user_uid uuid, p_request_id uuid) TO service_role;
 
-
--- === start_photography_task_internal(p_photographer_uid uuid, p_task_id uuid) ===
 CREATE OR REPLACE FUNCTION public.start_photography_task_internal(p_photographer_uid uuid, p_task_id uuid)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -5825,11 +5285,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION start_photography_task_internal(p_photographer_uid uuid, p_task_id uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION start_photography_task_internal(p_photographer_uid uuid, p_task_id uuid) TO service_role;
 
-
--- === submit_broker_request_internal(p_user_uid uuid, p_business_name text, p_category integer, p_experience text, p_about text) ===
 CREATE OR REPLACE FUNCTION public.submit_broker_request_internal(p_user_uid uuid, p_business_name text, p_category integer, p_experience text DEFAULT ''::text, p_about text DEFAULT ''::text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -5870,11 +5326,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION submit_broker_request_internal(p_user_uid uuid, p_business_name text, p_category integer, p_experience text, p_about text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION submit_broker_request_internal(p_user_uid uuid, p_business_name text, p_category integer, p_experience text, p_about text) TO service_role;
 
-
--- === submit_photography_task_internal(p_photographer_uid uuid, p_task_id uuid, p_media jsonb, p_photographer_note text) ===
 CREATE OR REPLACE FUNCTION public.submit_photography_task_internal(p_photographer_uid uuid, p_task_id uuid, p_media jsonb, p_photographer_note text DEFAULT ''::text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -5908,11 +5360,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION submit_photography_task_internal(p_photographer_uid uuid, p_task_id uuid, p_media jsonb, p_photographer_note text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION submit_photography_task_internal(p_photographer_uid uuid, p_task_id uuid, p_media jsonb, p_photographer_note text) TO service_role;
 
-
--- === suggest_appointment_slot(p_offer_id uuid, p_from timestamp with time zone) ===
 CREATE OR REPLACE FUNCTION public.suggest_appointment_slot(p_offer_id uuid, p_from timestamp with time zone DEFAULT now())
  RETURNS timestamp with time zone
  LANGUAGE plpgsql
@@ -5996,11 +5444,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION suggest_appointment_slot(p_offer_id uuid, p_from timestamp with time zone) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION suggest_appointment_slot(p_offer_id uuid, p_from timestamp with time zone) TO service_role;
 
-
--- === trg_appointment_created() ===
 CREATE OR REPLACE FUNCTION public.trg_appointment_created()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -6062,11 +5506,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION trg_appointment_created() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION trg_appointment_created() TO service_role;
 
-
--- === trg_appointment_status_changed() ===
 CREATE OR REPLACE FUNCTION public.trg_appointment_status_changed()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -6190,11 +5630,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION trg_appointment_status_changed() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION trg_appointment_status_changed() TO service_role;
 
-
--- === trg_deal_completed() ===
 CREATE OR REPLACE FUNCTION public.trg_deal_completed()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -6251,11 +5687,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION trg_deal_completed() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION trg_deal_completed() TO service_role;
 
-
--- === trg_offer_published_match_requests() ===
 CREATE OR REPLACE FUNCTION public.trg_offer_published_match_requests()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -6295,11 +5727,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION trg_offer_published_match_requests() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION trg_offer_published_match_requests() TO service_role;
 
-
--- === trg_offer_status_changed() ===
 CREATE OR REPLACE FUNCTION public.trg_offer_status_changed()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -6343,11 +5771,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION trg_offer_status_changed() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION trg_offer_status_changed() TO service_role;
 
-
--- === trg_payment_approved() ===
 CREATE OR REPLACE FUNCTION public.trg_payment_approved()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -6387,11 +5811,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION trg_payment_approved() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION trg_payment_approved() TO service_role;
 
-
--- === trg_rating_bonus() ===
 CREATE OR REPLACE FUNCTION public.trg_rating_bonus()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -6406,11 +5826,44 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION trg_rating_bonus() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION trg_rating_bonus() TO service_role;
+
+CREATE OR REPLACE FUNCTION public.update_expediting_checklist_item(p_actor_uid uuid, p_task_id uuid, p_item_key text, p_status integer, p_input_value text DEFAULT ''::text, p_attachment_url text DEFAULT ''::text, p_notes text DEFAULT ''::text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE
+    v_task RECORD;
+    v_new_checklist JSONB := '[]'::jsonb;
+    v_item JSONB;
+BEGIN
+    IF auth.uid() IS NOT NULL AND auth.uid() <> p_actor_uid THEN RAISE EXCEPTION 'AUTH_MISMATCH'; END IF;
+
+    SELECT * INTO v_task FROM expediting_tasks WHERE id = p_task_id;
+    IF v_task IS NULL THEN RETURN jsonb_build_object('success', false, 'error', 'TASK_NOT_FOUND'); END IF;
+    IF v_task.expediter_uid <> p_actor_uid AND v_task.lawyer_uid <> p_actor_uid THEN
+        RETURN jsonb_build_object('success', false, 'error', 'NOT_AUTHORIZED');
+    End IF;
+
+    FOR v_item IN SELECT * FROM jsonb_array_elements(v_task.checklist)
+    LOOP
+        IF v_item->>'key' = p_item_key THEN
+            v_item := jsonb_set(v_item, '{status}', to_jsonb(p_status));
+            IF p_input_value <> '' THEN v_item := jsonb_set(v_item, '{input_value}', to_jsonb(p_input_value)); END IF;
+            IF p_attachment_url <> '' THEN v_item := jsonb_set(v_item, '{attachment_url}', to_jsonb(p_attachment_url)); END IF;
+            IF p_notes <> '' THEN v_item := jsonb_set(v_item, '{notes}', to_jsonb(p_notes)); END IF;
+        END IF;
+        v_new_checklist := v_new_checklist || v_item;
+    END LOOP;
+
+    UPDATE expediting_tasks SET checklist = v_new_checklist WHERE id = p_task_id;
+
+    RETURN jsonb_build_object('success', true, 'checklist', v_new_checklist);
+END;
+$function$
 
 
--- === update_photography_task_status_internal(p_admin_uid uuid, p_task_id uuid, p_status integer, p_office_note text) ===
 CREATE OR REPLACE FUNCTION public.update_photography_task_status_internal(p_admin_uid uuid, p_task_id uuid, p_status integer, p_office_note text DEFAULT ''::text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -6426,11 +5879,7 @@ BEGIN
   RETURN FOUND;
 END; $function$
 
-REVOKE ALL ON FUNCTION update_photography_task_status_internal(p_admin_uid uuid, p_task_id uuid, p_status integer, p_office_note text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION update_photography_task_status_internal(p_admin_uid uuid, p_task_id uuid, p_status integer, p_office_note text) TO service_role;
 
-
--- === update_request_internal(p_user_uid uuid, p_request_id uuid, p_patch jsonb) ===
 CREATE OR REPLACE FUNCTION public.update_request_internal(p_user_uid uuid, p_request_id uuid, p_patch jsonb)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -6476,11 +5925,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION update_request_internal(p_user_uid uuid, p_request_id uuid, p_patch jsonb) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION update_request_internal(p_user_uid uuid, p_request_id uuid, p_patch jsonb) TO service_role;
 
-
--- === update_task_outcome(p_user_uid uuid, p_appointment_id uuid, p_outcome text, p_notes text, p_rejection_reason text, p_new_date timestamp with time zone) ===
 CREATE OR REPLACE FUNCTION public.update_task_outcome(p_user_uid uuid, p_appointment_id uuid, p_outcome text, p_notes text DEFAULT ''::text, p_rejection_reason text DEFAULT ''::text, p_new_date timestamp with time zone DEFAULT NULL::timestamp with time zone)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -6532,11 +5977,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION update_task_outcome(p_user_uid uuid, p_appointment_id uuid, p_outcome text, p_notes text, p_rejection_reason text, p_new_date timestamp with time zone) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION update_task_outcome(p_user_uid uuid, p_appointment_id uuid, p_outcome text, p_notes text, p_rejection_reason text, p_new_date timestamp with time zone) TO service_role;
 
-
--- === update_user_badge(p_uid uuid) ===
 CREATE OR REPLACE FUNCTION public.update_user_badge(p_uid uuid)
  RETURNS void
  LANGUAGE plpgsql
@@ -6556,11 +5997,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION update_user_badge(p_uid uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION update_user_badge(p_uid uuid) TO service_role;
 
-
--- === update_user_notification_settings_internal(p_user_uid uuid, p_ntf jsonb) ===
 CREATE OR REPLACE FUNCTION public.update_user_notification_settings_internal(p_user_uid uuid, p_ntf jsonb)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -6589,11 +6026,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION update_user_notification_settings_internal(p_user_uid uuid, p_ntf jsonb) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION update_user_notification_settings_internal(p_user_uid uuid, p_ntf jsonb) TO service_role;
 
-
--- === update_user_profile_internal(p_user_uid uuid, p_payload jsonb) ===
 CREATE OR REPLACE FUNCTION public.update_user_profile_internal(p_user_uid uuid, p_payload jsonb)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -6631,11 +6064,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION update_user_profile_internal(p_user_uid uuid, p_payload jsonb) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION update_user_profile_internal(p_user_uid uuid, p_payload jsonb) TO service_role;
 
-
--- === update_user_stats_on_appointment() ===
 CREATE OR REPLACE FUNCTION public.update_user_stats_on_appointment()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -6657,11 +6086,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION update_user_stats_on_appointment() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION update_user_stats_on_appointment() TO service_role;
 
-
--- === update_user_stats_on_deal() ===
 CREATE OR REPLACE FUNCTION public.update_user_stats_on_deal()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -6695,11 +6120,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION update_user_stats_on_deal() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION update_user_stats_on_deal() TO service_role;
 
-
--- === update_user_stats_on_offer() ===
 CREATE OR REPLACE FUNCTION public.update_user_stats_on_offer()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -6721,11 +6142,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION update_user_stats_on_offer() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION update_user_stats_on_offer() TO service_role;
 
-
--- === update_user_stats_on_request() ===
 CREATE OR REPLACE FUNCTION public.update_user_stats_on_request()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -6756,11 +6173,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION update_user_stats_on_request() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION update_user_stats_on_request() TO service_role;
 
-
--- === upsert_user_after_otp(p_identifier text, p_channel text) ===
 CREATE OR REPLACE FUNCTION public.upsert_user_after_otp(p_identifier text, p_channel text)
  RETURNS TABLE(user_id uuid, is_new boolean)
  LANGUAGE plpgsql
@@ -6808,11 +6221,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION upsert_user_after_otp(p_identifier text, p_channel text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION upsert_user_after_otp(p_identifier text, p_channel text) TO service_role;
 
-
--- === validate_staff_session(p_user_uid uuid, p_token text, p_min_role integer) ===
 CREATE OR REPLACE FUNCTION public.validate_staff_session(p_user_uid uuid, p_token text, p_min_role integer DEFAULT 5)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -6875,11 +6284,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION validate_staff_session(p_user_uid uuid, p_token text, p_min_role integer) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION validate_staff_session(p_user_uid uuid, p_token text, p_min_role integer) TO service_role;
 
-
--- === verify_otp(p_phone text, p_code text) ===
 CREATE OR REPLACE FUNCTION public.verify_otp(p_phone text, p_code text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -6898,11 +6303,7 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION verify_otp(p_phone text, p_code text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION verify_otp(p_phone text, p_code text) TO service_role;
 
-
--- === verify_otp_v2(p_identifier text, p_code text) ===
 CREATE OR REPLACE FUNCTION public.verify_otp_v2(p_identifier text, p_code text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -6937,150 +6338,5 @@ BEGIN
   RETURN FALSE;
 END;
 $function$
-
-REVOKE ALL ON FUNCTION verify_otp_v2(p_identifier text, p_code text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION verify_otp_v2(p_identifier text, p_code text) TO service_role;
-
-
--- =====================================================================
--- القسم القانوني وتعقيب المعاملات (Phase 1 Tables & RPCs)
--- =====================================================================
-
-CREATE TABLE IF NOT EXISTS public.lawyer_profiles (
-    uid UUID PRIMARY KEY REFERENCES public.users(id) ON DELETE CASCADE,
-    whatsapp_phone TEXT NOT NULL DEFAULT '',
-    office_address TEXT DEFAULT '',
-    specialization TEXT DEFAULT 'عقارات وسيارات',
-    avl JSONB DEFAULT '{}'::jsonb,
-    active_tasks_count INT DEFAULT 0,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-ALTER TABLE public.lawyer_profiles ENABLE ROW LEVEL SECURITY;
-
-CREATE TABLE IF NOT EXISTS public.expediting_tasks (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    lawyer_uid UUID NOT NULL REFERENCES public.users(id),
-    expediter_uid UUID NOT NULL REFERENCES public.users(id),
-    offer_id UUID REFERENCES public.offers(id),
-    item_type INT NOT NULL DEFAULT 0,
-    target_property_num TEXT DEFAULT '',
-    target_zone TEXT DEFAULT '',
-    checklist JSONB NOT NULL DEFAULT '[]'::jsonb,
-    status INT NOT NULL DEFAULT 0,
-    lawyer_notes TEXT DEFAULT '',
-    expediter_notes TEXT DEFAULT '',
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    completed_at TIMESTAMPTZ
-);
-
-ALTER TABLE public.expediting_tasks ENABLE ROW LEVEL SECURITY;
-
--- === admin_upsert_lawyer_profile ===
-CREATE OR REPLACE FUNCTION public.admin_upsert_lawyer_profile(
-    p_admin_uid uuid,
-    p_target_uid uuid,
-    p_whatsapp text,
-    p_address text DEFAULT '',
-    p_spec text DEFAULT 'عقارات وسيارات',
-    p_avl jsonb DEFAULT '{}'::jsonb
-) RETURNS boolean
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public', 'extensions', 'pg_temp'
-AS $function$
-DECLARE
-    v_role INT;
-BEGIN
-    IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN RAISE EXCEPTION 'AUTH_MISMATCH'; END IF;
-    SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
-    IF v_role IS NULL OR v_role < 5 THEN RAISE EXCEPTION 'NOT_AUTHORIZED'; END IF;
-
-    UPDATE users SET role = 7, ts_upd = NOW() WHERE id = p_target_uid AND role < 7;
-
-    INSERT INTO lawyer_profiles (uid, whatsapp_phone, office_address, specialization, avl, is_active, updated_at)
-    VALUES (p_target_uid, p_whatsapp, p_address, p_spec, p_avl, TRUE, NOW())
-    ON CONFLICT (uid) DO UPDATE
-    SET whatsapp_phone = EXCLUDED.whatsapp_phone,
-        office_address = EXCLUDED.office_address,
-        specialization = EXCLUDED.specialization,
-        avl = EXCLUDED.avl,
-        is_active = TRUE,
-        updated_at = NOW();
-
-    RETURN TRUE;
-END;
-$function$;
-
-REVOKE ALL ON FUNCTION admin_upsert_lawyer_profile(uuid, uuid, text, text, text, jsonb) FROM PUBLIC, anon, authenticated;
-GRANT EXECUTE ON FUNCTION admin_upsert_lawyer_profile(uuid, uuid, text, text, text, jsonb) TO service_role;
-
--- === get_active_lawyers ===
-CREATE OR REPLACE FUNCTION public.get_active_lawyers()
-RETURNS TABLE(uid uuid, nm text, ph text, whatsapp_phone text, office_address text, specialization text, avl jsonb, active_tasks_count int)
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public', 'extensions', 'pg_temp'
-AS $function$
-BEGIN
-    RETURN QUERY
-    SELECT lp.uid, COALESCE(u.nm, ''), COALESCE(u.ph, ''), lp.whatsapp_phone, lp.office_address, lp.specialization, lp.avl, lp.active_tasks_count
-    FROM lawyer_profiles lp
-    JOIN users u ON u.id = lp.uid
-    WHERE lp.is_active = TRUE AND u.i_del = 0;
-END;
-$function$;
-
-REVOKE ALL ON FUNCTION get_active_lawyers() FROM PUBLIC, anon, authenticated;
-GRANT EXECUTE ON FUNCTION get_active_lawyers() TO service_role;
-
--- === update_expediting_checklist_item ===
-CREATE OR REPLACE FUNCTION public.update_expediting_checklist_item(
-    p_actor_uid uuid,
-    p_task_id uuid,
-    p_item_key text,
-    p_status int,
-    p_input_value text DEFAULT '',
-    p_attachment_url text DEFAULT '',
-    p_notes text DEFAULT ''
-) RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public', 'extensions', 'pg_temp'
-AS $function$
-DECLARE
-    v_task RECORD;
-    v_new_checklist JSONB := '[]'::jsonb;
-    v_item JSONB;
-BEGIN
-    IF auth.uid() IS NOT NULL AND auth.uid() <> p_actor_uid THEN RAISE EXCEPTION 'AUTH_MISMATCH'; END IF;
-
-    SELECT * INTO v_task FROM expediting_tasks WHERE id = p_task_id;
-    IF v_task IS NULL THEN RETURN jsonb_build_object('success', false, 'error', 'TASK_NOT_FOUND'); END IF;
-    IF v_task.expediter_uid <> p_actor_uid AND v_task.lawyer_uid <> p_actor_uid THEN
-        RETURN jsonb_build_object('success', false, 'error', 'NOT_AUTHORIZED');
-    END IF;
-
-    FOR v_item IN SELECT * FROM jsonb_array_elements(v_task.checklist)
-    LOOP
-        IF v_item->>'key' = p_item_key THEN
-            v_item := jsonb_set(v_item, '{status}', to_jsonb(p_status));
-            IF p_input_value <> '' THEN v_item := jsonb_set(v_item, '{input_value}', to_jsonb(p_input_value)); END IF;
-            IF p_attachment_url <> '' THEN v_item := jsonb_set(v_item, '{attachment_url}', to_jsonb(p_attachment_url)); END IF;
-            IF p_notes <> '' THEN v_item := jsonb_set(v_item, '{notes}', to_jsonb(p_notes)); END IF;
-        END IF;
-        v_new_checklist := v_new_checklist || v_item;
-    END LOOP;
-
-    UPDATE expediting_tasks SET checklist = v_new_checklist WHERE id = p_task_id;
-
-    RETURN jsonb_build_object('success', true, 'checklist', v_new_checklist);
-END;
-$function$;
-
-REVOKE ALL ON FUNCTION update_expediting_checklist_item(uuid, uuid, text, int, text, text, text) FROM PUBLIC, anon, authenticated;
-GRANT EXECUTE ON FUNCTION update_expediting_checklist_item(uuid, uuid, text, int, text, text, text) TO service_role;
 
 
