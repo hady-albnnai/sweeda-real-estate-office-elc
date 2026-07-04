@@ -24,7 +24,11 @@ class CustomBottomNavBar extends StatelessWidget {
           case 0:
             final auth = context.read<AuthProvider>();
             if (auth.isLoggedIn) {
-              if (auth.isSenior) {
+              if (auth.isLawyer) {
+                context.go('/lawyer/dashboard');
+              } else if (auth.isExpediter) {
+                context.go('/expediter/tasks');
+              } else if (auth.isSenior) {
                 context.go('/admin/dashboard');
               } else if (auth.isEmployee) {
                 context.go('/employee/home');

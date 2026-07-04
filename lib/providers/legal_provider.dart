@@ -61,6 +61,29 @@ class LegalProvider with ChangeNotifier {
     }
   }
 
+  List<ExpeditingTaskModel> _expeditingTasks = [];
+  List<ExpeditingTaskModel> get expeditingTasks => _expeditingTasks;
+
+  Future<List<ExpeditingTaskModel>> getExpeditingTasks({String? userUid}) async {
+    try {
+      final res = await SupabaseService().invokeFunction('legal-actions', body: {
+        'action': 'get_my_expediting_tasks',
+        'user_uid': userUid ?? '',
+      });
+      final data = res.data as Map<String, dynamic>?;
+      if (data != null && data['success'] == true) {
+        final list = data['tasks'] as List? ?? [];
+        _expeditingTasks = list.map((e) => ExpeditingTaskModel.fromMap(Map<String, dynamic>.from(e as Map))).toList();
+      } else {
+        _expeditingTasks = [];
+      }
+    } catch (e) {
+      _expeditingTasks = [];
+    }
+    notifyListeners();
+    return _expeditingTasks;
+  }
+
   Future<bool> updateChecklistItem({
     required String taskId,
     required String itemKey,

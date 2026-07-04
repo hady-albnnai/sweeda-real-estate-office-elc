@@ -1,5 +1,5 @@
 -- Functions Dump — السيرفر الحي
--- التاريخ: 2026-07-04 | عدد الدوال: 163
+-- التاريخ: 2026-07-04 | عدد الدوال: 164
 
 CREATE OR REPLACE FUNCTION public._admin_employee_assert_actor(p_admin_uid uuid, p_min_role integer DEFAULT 5)
  RETURNS integer
@@ -3090,6 +3090,25 @@ BEGIN
   JOIN public.offers o ON o.id = a.off_id
   WHERE cr.req_by = p_user_uid
   ORDER BY cr.ts_crt DESC;
+END;
+$function$
+
+
+CREATE OR REPLACE FUNCTION public.get_my_expediting_tasks(p_expediter_uid uuid)
+ RETURNS SETOF expediting_tasks
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions'
+AS $function$
+BEGIN
+  IF p_expediter_uid IS NULL THEN
+    RAISE EXCEPTION 'USER_UID_REQUIRED';
+  END IF;
+  RETURN QUERY
+  SELECT *
+  FROM public.expediting_tasks
+  WHERE expediter_uid = p_expediter_uid
+  ORDER BY created_at DESC;
 END;
 $function$
 

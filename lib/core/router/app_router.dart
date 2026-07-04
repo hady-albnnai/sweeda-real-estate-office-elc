@@ -55,6 +55,7 @@ import '../../screens/executor/execute_task_screen.dart';
 import '../../screens/legal/legal_consultation_booking_screen.dart';
 import '../../screens/lawyer/lawyer_dashboard_screen.dart';
 import '../../screens/expediter/expediter_task_detail_screen.dart';
+import '../../screens/expediter/expediter_tasks_screen.dart';
 import '../../models/expediting_task_model.dart';
 
 // === Employee ===
@@ -184,6 +185,8 @@ class AppRouter {
       }
 
       if (path.startsWith('/admin')) {
+        if (auth.isLawyer) return '/lawyer/dashboard';
+        if (auth.isExpediter) return '/expediter/tasks';
         if (!(auth.isEmployee || auth.isSenior)) {
           return auth.isBroker ? '/broker/dashboard' : '/user/home';
         }
@@ -282,6 +285,7 @@ class AppRouter {
       GoRoute(path: '/admin/completion-requests', builder: (context, state) => const CompletionRequestsScreen()),
       GoRoute(path: '/legal/consultations', builder: (context, state) => const LegalConsultationBookingScreen()),
       GoRoute(path: '/lawyer/dashboard', builder: (context, state) => const LawyerDashboardScreen()),
+      GoRoute(path: '/expediter/tasks', builder: (context, state) => const ExpediterTasksScreen()),
       GoRoute(
         path: '/expediter/task-detail',
         builder: (context, state) {

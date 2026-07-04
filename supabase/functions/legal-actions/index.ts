@@ -129,6 +129,14 @@ serve(async (req) => {
       return json(data as Record<string, unknown>);
     }
 
+    if (action === "get_my_expediting_tasks") {
+      const { data, error } = await supabaseAdmin.rpc("get_my_expediting_tasks", {
+        p_expediter_uid: uid,
+      });
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json({ success: true, tasks: data ?? [] });
+    }
+
     return json({ success: false, error: "UNKNOWN_ACTION" }, 400);
   } catch (error) {
     return json({ success: false, error: (error as Error).message }, 500);
