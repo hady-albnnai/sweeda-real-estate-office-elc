@@ -8,6 +8,8 @@ class UserRole {
   static const int employee = 4;     // موظف مكتب — عمليات مكتبية
   static const int deputy = 5;       // نائب مدير
   static const int manager = 6;      // مدير — أعلى صلاحية
+  static const int lawyer = 7;       // محامي مختص — قسم الاستشارات والتوثيق العقود
+  static const int expediter = 8;    // معقب معاملات ميداني — استخراج الثبوتيات
 
   /// أقل مستوى يُعتبر "موظف داخلي" (مصور فما فوق)
   static const int minInternal = photographer;
@@ -25,12 +27,14 @@ class UserRole {
       case employee: return 'موظف مكتب';
       case deputy: return 'نائب مدير';
       case manager: return 'مدير';
+      case lawyer: return 'محامي مختص';
+      case expediter: return 'معقب معاملات';
       default: return 'غير معروف';
     }
   }
 
   /// عدد الأدوار الكلي (للحلقات والـ UI)
-  static const int count = 7;
+  static const int count = 9;
 }
 
 /// نموذج المستخدم — أسماء الحقول القصيرة تطابق قاعدة البيانات
@@ -203,6 +207,10 @@ class UserModel {
   bool get isDeputy => role == UserRole.deputy;
   /// هل هو مدير؟
   bool get isManager => role == UserRole.manager;
+  /// هل هو محامي مختص؟
+  bool get isLawyer => role == UserRole.lawyer;
+  /// هل هو معقب معاملات؟
+  bool get isExpediter => role == UserRole.expediter;
 
   /// الباقة الفعلية مع مراعاة فترة السماح
   /// — إذا كانت ضمن pkg_grace تُعامَل كباقة نشطة

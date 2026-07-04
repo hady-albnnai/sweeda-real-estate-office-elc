@@ -82,11 +82,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } else {
       // 🚀 توجيه فوري - لا ننتظر rebuild كي لا تظهر شاشة الحساب للحظة
       if (mounted) {
-        if (auth.isSenior) {
+        if (auth.isSenior || auth.isLawyer) {
           context.go('/admin/dashboard');
         } else if (auth.isEmployee) {
           context.go('/employee/home');
-        } else if (auth.isSupervisor) {
+        } else if (auth.isSupervisor || auth.isExpediter) {
           context.go('/executor/tasks');
         } else if (auth.isPhotographer) {
           context.go('/photographer/tasks');
