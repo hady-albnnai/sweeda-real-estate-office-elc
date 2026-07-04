@@ -38,7 +38,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public._admin_employee_log(p_admin_uid uuid, p_action text, p_target_uid uuid DEFAULT NULL::uuid, p_payload jsonb DEFAULT '{}'::jsonb)
  RETURNS void
  LANGUAGE plpgsql
@@ -57,7 +56,6 @@ BEGIN
   );
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public._issue_staff_session(p_user_uid uuid, p_device_id text DEFAULT ''::text, p_ip text DEFAULT ''::text, p_ttl interval DEFAULT '7 days'::interval)
  RETURNS jsonb
@@ -81,10 +79,8 @@ BEGIN
     RAISE EXCEPTION 'USER_NOT_FOUND_OR_INACTIVE';
   END IF;
 
-  IF v_role < 2 THEN
-    RETURN jsonb_build_object('success', false, 'error', 'NOT_STAFF');
-  END IF;
-
+  -- تسمح لكل الأدوار بإصدار جلسة مخصصة بعد تسجيل دخول صحيح بكلمة المرور.
+  -- الصلاحيات الفعلية تضبط لاحقاً عند التحقق عبر p_min_role.
   v_token := encode(gen_random_bytes(32), 'hex');
   v_expires_at := NOW() + p_ttl;
 
@@ -102,8 +98,7 @@ BEGIN
     COALESCE(p_device_id, ''),
     COALESCE(p_ip, ''),
     v_expires_at
-  )
-  RETURNING id INTO v_session_id;
+  ) RETURNING id INTO v_session_id;
 
   RETURN jsonb_build_object(
     'success', true,
@@ -114,7 +109,6 @@ BEGIN
   );
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.accounts_on_same_device(p_device_id text)
  RETURNS TABLE(uid uuid, name text, signup_at timestamp with time zone, points integer)
@@ -130,14 +124,12 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.add_points(p_uid uuid, p_pts integer)
  RETURNS void
  LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO 'public', 'extensions', 'pg_temp'
 AS $function$ BEGIN UPDATE users SET pt = pt + p_pts, ts_upd = NOW() WHERE id = p_uid; PERFORM update_user_badge(p_uid); END; $function$
-
 
 CREATE OR REPLACE FUNCTION public.admin_approve_verification_by_admin(p_admin_uid uuid, p_target_uid uuid)
  RETURNS boolean
@@ -158,7 +150,6 @@ BEGIN
   END IF;
   RETURN FOUND;
 END; $function$
-
 
 CREATE OR REPLACE FUNCTION public.admin_close_request_internal(p_admin_uid uuid, p_request_id uuid, p_status integer, p_reason text DEFAULT 'closed_by_admin'::text, p_note text DEFAULT ''::text)
  RETURNS boolean
@@ -206,66 +197,22 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.admin_create_staff_user(p_admin_uid uuid, p_full_name text, p_phone text, p_email text DEFAULT ''::text, p_username text DEFAULT ''::text, p_password text DEFAULT ''::text, p_role integer DEFAULT 4)
  RETURNS jsonb
  LANGUAGE plpgsql
  SECURITY DEFINER
- SET search_path TO 'public', 'extensions'
+ SET search_path TO 'public', 'extensions', 'pg_temp'
 AS $function$
-DECLARE
-  v_admin_role INT;
-  v_phone TEXT;
-  v_username TEXT;
-  v_name TEXT;
-  v_email TEXT;
-  v_new_id UUID;
 BEGIN
-  v_admin_role := _admin_employee_assert_actor(p_admin_uid, 5);
-
-  IF p_role NOT IN (2, 3, 4, 5, 7, 8) THEN
-    RAISE EXCEPTION 'INVALID_ROLE';
-  END IF;
-  IF v_admin_role < 6 AND p_role >= 5 THEN
-    RAISE EXCEPTION 'ONLY_MANAGER_CAN_CREATE_DEPUTY';
-  END IF;
-
-  v_name := app_assert_text_len(p_full_name, 'name', 2, 60);
-  v_phone := app_assert_phone(p_phone);
-  v_username := app_assert_username(p_username, FALSE);
-  IF LENGTH(COALESCE(p_password, '')) > 0 THEN
-    PERFORM app_assert_password(p_password);
-  END IF;
-
-  v_email := NULLIF(LOWER(TRIM(COALESCE(p_email, ''))), '');
-
-  IF EXISTS (SELECT 1 FROM users WHERE normalize_sy_phone(ph) = normalize_sy_phone(v_phone)) THEN
-    RAISE EXCEPTION 'PHONE_EXISTS';
-  END IF;
-  IF v_username IS NOT NULL AND EXISTS (SELECT 1 FROM users WHERE normalize_arabic_username(usr) = normalize_arabic_username(v_username)) THEN
-    RAISE EXCEPTION 'USERNAME_EXISTS';
-  END IF;
-
-  INSERT INTO users (nm, ph, eml, usr, pwd, role, sts, i_del, ts_crt)
-  VALUES (
-    v_name, v_phone, v_email, v_username,
-    CASE WHEN LENGTH(COALESCE(p_password, '')) > 0 THEN crypt(p_password, gen_salt('bf', 10)) ELSE NULL END,
-    p_role, 0, 0, NOW()
-  )
-  RETURNING id INTO v_new_id;
-
-  PERFORM _admin_employee_log(p_admin_uid, 'create_staff', v_new_id, jsonb_build_object('role', p_role, 'nm', v_name, 'ph', v_phone));
-
-  RETURN jsonb_build_object('success', true, 'user_id', v_new_id, 'role', p_role);
+  RAISE EXCEPTION 'FULL_IDENTITY_REQUIRED';
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.admin_create_staff_user(p_admin_uid uuid, p_full_name text, p_phone text, p_email text, p_username text, p_password text, p_role integer, p_address text DEFAULT ''::text, p_sid text DEFAULT ''::text, p_img text DEFAULT ''::text)
  RETURNS jsonb
  LANGUAGE plpgsql
  SECURITY DEFINER
- SET search_path TO 'public', 'extensions'
+ SET search_path TO 'public', 'extensions', 'pg_temp'
 AS $function$
 DECLARE
   v_admin_role INT;
@@ -273,7 +220,7 @@ DECLARE
   v_username TEXT;
   v_new_id UUID;
 BEGIN
-  v_admin_role := _admin_employee_assert_actor(p_admin_uid, 5);
+  v_admin_role := public._admin_employee_assert_actor(p_admin_uid, 5);
 
   IF p_role NOT IN (2, 3, 4, 5, 7, 8) THEN
     RAISE EXCEPTION 'INVALID_ROLE';
@@ -291,32 +238,64 @@ BEGIN
     RAISE EXCEPTION 'PASSWORD_TOO_SHORT';
   END IF;
 
-  v_phone := normalize_sy_phone(p_phone);
-  v_username := NULLIF(normalize_arabic_username(p_username), '');
+  IF LENGTH(TRIM(COALESCE(p_address, ''))) < 3 THEN
+    RAISE EXCEPTION 'ADDRESS_REQUIRED';
+  END IF;
 
-  IF EXISTS (SELECT 1 FROM users WHERE normalize_sy_phone(ph) = v_phone AND i_del = 0) THEN
+  IF LENGTH(TRIM(COALESCE(p_sid, ''))) < 3 THEN
+    RAISE EXCEPTION 'SID_REQUIRED';
+  END IF;
+
+  v_phone := public.normalize_sy_phone(p_phone);
+  IF v_phone = '' THEN
+    RAISE EXCEPTION 'PHONE_REQUIRED';
+  END IF;
+
+  v_username := NULLIF(public.normalize_arabic_username(p_username), '');
+
+  IF EXISTS (SELECT 1 FROM public.users WHERE public.normalize_sy_phone(ph) = v_phone AND i_del = 0) THEN
     RAISE EXCEPTION 'PHONE_EXISTS';
   END IF;
 
-  IF v_username IS NOT NULL AND EXISTS (SELECT 1 FROM users WHERE normalize_arabic_username(usr) = v_username AND i_del = 0) THEN
+  IF v_username IS NOT NULL AND EXISTS (
+    SELECT 1 FROM public.users
+    WHERE public.normalize_arabic_username(usr) = v_username
+      AND i_del = 0
+  ) THEN
     RAISE EXCEPTION 'USERNAME_EXISTS';
   END IF;
 
-  INSERT INTO users (nm, ph, eml, usr, pwd, role, ad, sid, img, sts, i_del, ts_crt)
-  VALUES (
-    TRIM(p_full_name), v_phone, NULLIF(TRIM(COALESCE(p_email, '')), ''), v_username,
+  INSERT INTO public.users (
+    nm, ph, eml, usr, pwd,
+    role, ad, sid, img,
+    sts, vrf, i_del, ts_crt, ts_upd
+  ) VALUES (
+    TRIM(p_full_name),
+    v_phone,
+    NULLIF(TRIM(COALESCE(p_email, '')), ''),
+    v_username,
     crypt(p_password, gen_salt('bf', 10)),
-    p_role, COALESCE(p_address, ''), COALESCE(p_sid, ''), COALESCE(p_img, ''),
-    0, 0, NOW()
-  )
-  RETURNING id INTO v_new_id;
+    p_role,
+    TRIM(COALESCE(p_address, '')),
+    TRIM(COALESCE(p_sid, '')),
+    COALESCE(p_img, ''),
+    0,
+    2,
+    0,
+    NOW(),
+    NOW()
+  ) RETURNING id INTO v_new_id;
 
-  PERFORM _admin_employee_log(p_admin_uid, 'create_staff_full', v_new_id, jsonb_build_object('role', p_role, 'nm', p_full_name, 'sid', p_sid));
+  PERFORM public._admin_employee_log(
+    p_admin_uid,
+    'create_staff_full',
+    v_new_id,
+    jsonb_build_object('role', p_role, 'nm', p_full_name, 'sid', p_sid)
+  );
 
   RETURN jsonb_build_object('success', true, 'user_id', v_new_id, 'role', p_role);
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.admin_delete_offer_internal(p_admin_uid uuid, p_offer_id uuid)
  RETURNS boolean
@@ -363,7 +342,6 @@ BEGIN
   RETURN TRUE;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.admin_delete_staff_user(p_admin_uid uuid, p_target_uid uuid)
  RETURNS jsonb
@@ -412,7 +390,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.admin_force_appointment_internal(p_admin_uid uuid, p_appointment_id uuid)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -439,7 +416,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.admin_fraud_suspects(p_admin_uid uuid)
  RETURNS SETOF fraud_suspects
  LANGUAGE plpgsql
@@ -453,7 +429,6 @@ BEGIN
   RETURN QUERY SELECT * FROM fraud_suspects ORDER BY account_count DESC;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.admin_get_id_signed_path(p_target_uid uuid)
  RETURNS text
@@ -473,7 +448,6 @@ BEGIN
   RETURN v_img;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.admin_handle_report_internal(p_admin_uid uuid, p_report_id uuid, p_action integer, p_note text DEFAULT ''::text, p_duration integer DEFAULT 0)
  RETURNS boolean
@@ -505,7 +479,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.admin_reject_payment_internal(p_admin_uid uuid, p_payment_id uuid)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -523,7 +496,6 @@ BEGIN
   END IF;
   RETURN FOUND;
 END; $function$
-
 
 CREATE OR REPLACE FUNCTION public.admin_reject_verification_by_admin(p_admin_uid uuid, p_target_uid uuid, p_reason text DEFAULT ''::text)
  RETURNS boolean
@@ -547,7 +519,6 @@ BEGIN
   END IF;
   RETURN FOUND;
 END; $function$
-
 
 CREATE OR REPLACE FUNCTION public.admin_reset_staff_password(p_admin_uid uuid, p_target_uid uuid, p_new_password text)
  RETURNS jsonb
@@ -599,7 +570,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.admin_review_offer_internal(p_admin_uid uuid, p_offer_id uuid, p_approve boolean, p_reject_reason text DEFAULT NULL::text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -623,7 +593,6 @@ BEGIN
   END IF;
   RETURN FOUND;
 END; $function$
-
 
 CREATE OR REPLACE FUNCTION public.admin_set_offer_priority_internal(p_admin_uid uuid, p_offer_id uuid, p_priority_type text, p_duration_days integer DEFAULT 7)
  RETURNS boolean
@@ -661,7 +630,6 @@ BEGIN
   RETURN TRUE;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.admin_set_user_status(p_admin_uid uuid, p_target_uid uuid, p_status integer, p_reason text DEFAULT ''::text)
  RETURNS boolean
@@ -720,7 +688,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.admin_toggle_staff_status(p_admin_uid uuid, p_target_uid uuid, p_status integer, p_reason text DEFAULT ''::text)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -778,7 +745,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.admin_update_appointment_status_internal(p_admin_uid uuid, p_appointment_id uuid, p_status integer, p_admin_note text DEFAULT ''::text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -793,7 +759,6 @@ BEGIN
   UPDATE appointments SET sts = p_status, admin_nt = COALESCE(p_admin_note, '') WHERE id = p_appointment_id;
   RETURN FOUND;
 END; $function$
-
 
 CREATE OR REPLACE FUNCTION public.admin_update_staff_role(p_admin_uid uuid, p_target_uid uuid, p_role integer)
  RETURNS jsonb
@@ -827,7 +792,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.admin_update_user_permissions_by_admin(p_admin_uid uuid, p_target_uid uuid, p_perm jsonb)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -842,7 +806,6 @@ BEGIN
   UPDATE users SET perm = p_perm, ts_upd = NOW() WHERE id = p_target_uid AND i_del = 0;
   RETURN FOUND;
 END; $function$
-
 
 CREATE OR REPLACE FUNCTION public.admin_update_user_role(p_admin_uid uuid, p_target_uid uuid, p_role integer)
  RETURNS boolean
@@ -898,7 +861,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.admin_upsert_lawyer_profile(p_admin_uid uuid, p_target_uid uuid, p_whatsapp text, p_address text DEFAULT ''::text, p_spec text DEFAULT 'عقارات وسيارات'::text, p_avl jsonb DEFAULT '{}'::jsonb)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -906,29 +868,64 @@ CREATE OR REPLACE FUNCTION public.admin_upsert_lawyer_profile(p_admin_uid uuid, 
  SET search_path TO 'public', 'extensions', 'pg_temp'
 AS $function$
 DECLARE
-    v_role INT;
+  v_actor_role int;
+  v_target_role int;
 BEGIN
-    IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN RAISE EXCEPTION 'AUTH_MISMATCH'; END IF;
-    SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
-    IF v_role IS NULL OR v_role < 5 THEN RAISE EXCEPTION 'NOT_AUTHORIZED'; END IF;
+  IF p_admin_uid IS NULL OR p_target_uid IS NULL THEN
+    RAISE EXCEPTION 'MISSING_REQUIRED_FIELDS';
+  END IF;
 
-    -- Update user role to 7 (lawyer) if less
-    UPDATE users SET role = 7, ts_upd = NOW() WHERE id = p_target_uid AND role < 7;
+  IF COALESCE(TRIM(p_whatsapp), '') = '' THEN
+    RAISE EXCEPTION 'WHATSAPP_REQUIRED';
+  END IF;
 
-    INSERT INTO lawyer_profiles (uid, whatsapp_phone, office_address, specialization, avl, is_active, updated_at)
-    VALUES (p_target_uid, p_whatsapp, p_address, p_spec, p_avl, TRUE, NOW())
-    ON CONFLICT (uid) DO UPDATE
-    SET whatsapp_phone = EXCLUDED.whatsapp_phone,
-        office_address = EXCLUDED.office_address,
-        specialization = EXCLUDED.specialization,
-        avl = EXCLUDED.avl,
-        is_active = TRUE,
-        updated_at = NOW();
+  SELECT role INTO v_actor_role
+  FROM public.users
+  WHERE id = p_admin_uid AND i_del = 0 AND sts = 0;
 
-    RETURN TRUE;
+  IF v_actor_role IS NULL THEN
+    RAISE EXCEPTION 'USER_NOT_FOUND_OR_INACTIVE';
+  END IF;
+
+  SELECT role INTO v_target_role
+  FROM public.users
+  WHERE id = p_target_uid AND i_del = 0 AND sts = 0;
+
+  IF v_target_role IS NULL THEN
+    RAISE EXCEPTION 'TARGET_USER_NOT_FOUND_OR_INACTIVE';
+  END IF;
+
+  -- إدارة ملفات المحامين:
+  -- 1) المحامي role=7 يعدّل ملفه فقط.
+  -- 2) نائب المدير/المدير فقط role IN (5,6) يعدّلان ملف محامٍ موجود.
+  -- 3) لا ترقية أدوار من هذه الدالة؛ تغيير الدور يتم حصراً من إدارة الموظفين.
+  IF p_admin_uid = p_target_uid THEN
+    IF v_actor_role <> 7 AND v_actor_role NOT IN (5, 6) THEN
+      RAISE EXCEPTION 'NOT_AUTHORIZED';
+    END IF;
+  ELSE
+    IF v_actor_role NOT IN (5, 6) THEN
+      RAISE EXCEPTION 'NOT_AUTHORIZED';
+    END IF;
+  END IF;
+
+  IF v_target_role <> 7 THEN
+    RAISE EXCEPTION 'TARGET_NOT_LAWYER';
+  END IF;
+
+  INSERT INTO public.lawyer_profiles (uid, whatsapp_phone, office_address, specialization, avl, is_active, updated_at)
+  VALUES (p_target_uid, TRIM(p_whatsapp), COALESCE(p_address, ''), COALESCE(p_spec, 'عقارات وسيارات'), COALESCE(p_avl, '{}'::jsonb), TRUE, NOW())
+  ON CONFLICT (uid) DO UPDATE
+  SET whatsapp_phone = EXCLUDED.whatsapp_phone,
+      office_address = EXCLUDED.office_address,
+      specialization = EXCLUDED.specialization,
+      avl = EXCLUDED.avl,
+      is_active = TRUE,
+      updated_at = NOW();
+
+  RETURN TRUE;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.admin_wipe_test_data(p_admin_uid uuid)
  RETURNS jsonb
@@ -963,7 +960,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.app_assert_password(p_password text, p_min integer DEFAULT 8)
  RETURNS text
  LANGUAGE plpgsql
@@ -980,7 +976,6 @@ BEGIN
   RETURN p_password;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.app_assert_phone(p_phone text)
  RETURNS text
@@ -1001,7 +996,6 @@ BEGIN
   RETURN v;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.app_assert_price(p_value numeric, p_required boolean DEFAULT true)
  RETURNS numeric
@@ -1026,7 +1020,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.app_assert_text_len(p_value text, p_field text, p_min integer DEFAULT 0, p_max integer DEFAULT 1000)
  RETURNS text
  LANGUAGE plpgsql
@@ -1049,7 +1042,6 @@ BEGIN
   RETURN v;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.app_assert_username(p_username text, p_required boolean DEFAULT true)
  RETURNS text
@@ -1078,7 +1070,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.app_clean_text(p_value text, p_max_len integer DEFAULT 1000)
  RETURNS text
  LANGUAGE plpgsql
@@ -1098,7 +1089,6 @@ BEGIN
   RETURN v;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.apply_referral(p_new_uid uuid, p_referrer_code text, p_pts integer DEFAULT 1500)
  RETURNS boolean
@@ -1160,7 +1150,6 @@ BEGIN
   RETURN TRUE;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.approve_payment_final(p_payment_id uuid, p_admin_id uuid)
  RETURNS jsonb
@@ -1225,7 +1214,6 @@ EXCEPTION WHEN OTHERS THEN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.appt_booking_config()
  RETURNS jsonb
  LANGUAGE sql
@@ -1235,7 +1223,6 @@ AS $function$
   SELECT '{"any_from":"09:00","any_to":"21:00","gap_mins":60}'::jsonb
          || COALESCE((SELECT value->'appt' FROM public.app_config WHERE key = 'main'), '{}'::jsonb);
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.attach_photography_media_to_offer_internal(p_admin_uid uuid, p_task_id uuid)
  RETURNS boolean
@@ -1258,7 +1245,6 @@ BEGIN
   UPDATE photography_tasks SET sts = 3, ts_upd = NOW() WHERE id = p_task_id;
   RETURN TRUE;
 END; $function$
-
 
 CREATE OR REPLACE FUNCTION public.award_points_safe(p_uid uuid, p_event_type text, p_points integer)
  RETURNS jsonb
@@ -1300,7 +1286,6 @@ BEGIN
   RETURN jsonb_build_object('success', true, 'points_added', p_points);
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.book_appointment_internal(p_user_uid uuid, p_offer_id uuid, p_dt timestamp with time zone, p_broker_id uuid DEFAULT NULL::uuid, p_request_id uuid DEFAULT NULL::uuid)
  RETURNS jsonb
@@ -1472,7 +1457,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.broker_handle_appointment_internal(p_broker_uid uuid, p_appointment_id uuid, p_action text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -1524,13 +1508,11 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.calculate_commission(p_prc numeric, p_pct numeric)
  RETURNS numeric
  LANGUAGE plpgsql
  SET search_path TO 'public', 'extensions', 'pg_temp'
 AS $function$ BEGIN RETURN ROUND(p_prc * p_pct / 100, 2); END; $function$
-
 
 CREATE OR REPLACE FUNCTION public.can_publish_request_internal(p_user_uid uuid)
  RETURNS jsonb
@@ -1578,7 +1560,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.cancel_appointment_internal(p_requester_uid uuid, p_appointment_id uuid, p_reason text DEFAULT ''::text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -1605,7 +1586,6 @@ BEGIN
   RETURN TRUE;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.cancel_request_internal(p_user_uid uuid, p_request_id uuid, p_reason text DEFAULT ''::text)
  RETURNS boolean
@@ -1648,7 +1628,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.change_password_internal(p_user_uid uuid, p_old_password text, p_new_password text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -1680,7 +1659,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.check_offer_duplicate(p_ttl text, p_prc numeric, p_loc jsonb, p_usr_id uuid)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -1701,7 +1679,6 @@ BEGIN
   RETURN v_dup;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.check_offer_safe_update()
  RETURNS trigger
@@ -1731,7 +1708,6 @@ BEGIN
   RETURN NEW;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.check_rating_valid()
  RETURNS trigger
@@ -1776,7 +1752,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.check_user_safe_insert()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -1818,7 +1793,6 @@ BEGIN
   RETURN NEW;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.check_user_safe_update()
  RETURNS trigger
@@ -1883,7 +1857,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.check_username_available(p_username text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -1902,7 +1875,6 @@ BEGIN
   );
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.complete_deal_internal(p_admin_uid uuid, p_deal_id uuid, p_commission numeric DEFAULT NULL::numeric, p_note text DEFAULT NULL::text)
  RETURNS boolean
@@ -1954,7 +1926,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.create_deal_internal(p_admin_uid uuid, p_deal jsonb)
  RETURNS SETOF deals
  LANGUAGE plpgsql
@@ -2002,23 +1973,43 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.create_expediting_task_internal(p_lawyer_uid uuid, p_expediter_uid uuid, p_item_type integer, p_target_property_num text DEFAULT ''::text, p_target_zone text DEFAULT ''::text, p_lawyer_notes text DEFAULT ''::text, p_checklist jsonb DEFAULT '[]'::jsonb)
  RETURNS jsonb
  LANGUAGE plpgsql
  SECURITY DEFINER
- SET search_path TO 'public', 'extensions'
+ SET search_path TO 'public', 'extensions', 'pg_temp'
 AS $function$
 DECLARE
   v_task_id uuid;
   v_default_checklist jsonb;
+  v_lawyer_role int;
+  v_expediter_role int;
 BEGIN
   IF p_lawyer_uid IS NULL OR p_expediter_uid IS NULL THEN
     RAISE EXCEPTION 'MISSING_REQUIRED_FIELDS';
   END IF;
-  
-  -- Default checklist based on item type
-  IF p_checklist = '[]'::jsonb OR p_checklist IS NULL THEN
+
+  SELECT role INTO v_lawyer_role
+  FROM public.users
+  WHERE id = p_lawyer_uid AND i_del = 0 AND sts = 0;
+
+  IF v_lawyer_role <> 7 THEN
+    RAISE EXCEPTION 'LAWYER_ROLE_REQUIRED';
+  END IF;
+
+  SELECT role INTO v_expediter_role
+  FROM public.users
+  WHERE id = p_expediter_uid AND i_del = 0 AND sts = 0;
+
+  IF v_expediter_role <> 8 THEN
+    RAISE EXCEPTION 'EXPEDITER_ROLE_REQUIRED';
+  END IF;
+
+  IF p_item_type NOT IN (0, 1) THEN
+    RAISE EXCEPTION 'INVALID_ITEM_TYPE';
+  END IF;
+
+  IF p_checklist IS NULL OR p_checklist = '[]'::jsonb THEN
     IF p_item_type = 0 THEN
       v_default_checklist := '[
         {"key": "extract", "title": "إخراج قيد عقاري حديث", "status": 0},
@@ -2046,15 +2037,13 @@ BEGIN
     checklist, status, lawyer_notes, created_at
   ) VALUES (
     p_lawyer_uid, p_expediter_uid, p_item_type,
-    p_target_property_num, p_target_zone,
-    v_default_checklist, 0, p_lawyer_notes, NOW()
-  )
-  RETURNING id INTO v_task_id;
+    COALESCE(p_target_property_num, ''), COALESCE(p_target_zone, ''),
+    v_default_checklist, 0, COALESCE(p_lawyer_notes, ''), NOW()
+  ) RETURNING id INTO v_task_id;
 
   RETURN jsonb_build_object('success', true, 'task_id', v_task_id);
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.create_offer_internal(p_user_uid uuid, p_offer jsonb)
  RETURNS SETOF offers
@@ -2207,7 +2196,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.create_payment_internal(p_user_uid uuid, p_payment jsonb)
  RETURNS SETOF payments
  LANGUAGE plpgsql
@@ -2265,7 +2253,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.create_photography_task_internal(p_admin_uid uuid, p_offer_id uuid, p_photographer_id uuid, p_notes text, p_ts_scheduled timestamp with time zone)
  RETURNS SETOF photography_tasks
  LANGUAGE plpgsql
@@ -2285,7 +2272,6 @@ BEGIN
   RETURNING *;
 END; $function$
 
-
 CREATE OR REPLACE FUNCTION public.create_rating_internal(p_reviewer_uid uuid, p_target_uid uuid, p_stars integer, p_comment text DEFAULT ''::text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -2302,7 +2288,6 @@ BEGIN
   RETURN TRUE;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.create_report_internal(p_reporter_uid uuid, p_report jsonb)
  RETURNS SETOF reports
@@ -2334,7 +2319,6 @@ BEGIN
   ) RETURNING *;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.create_request_internal(p_user_uid uuid, p_request jsonb)
  RETURNS SETOF requests
@@ -2418,7 +2402,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.create_user_from_phone(p_phone text, p_nm text DEFAULT ''::text)
  RETURNS uuid
  LANGUAGE plpgsql
@@ -2451,7 +2434,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.expire_offer_boosts()
  RETURNS integer
  LANGUAGE plpgsql
@@ -2481,7 +2463,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.expire_offers()
  RETURNS void
  LANGUAGE plpgsql
@@ -2499,7 +2480,6 @@ BEGIN
     );
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.expire_packages()
  RETURNS integer
@@ -2547,7 +2527,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.expire_requests()
  RETURNS integer
  LANGUAGE plpgsql
@@ -2589,7 +2568,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.generate_otp(p_phone text)
  RETURNS text
  LANGUAGE plpgsql
@@ -2610,7 +2588,6 @@ BEGIN
   RETURN v_code;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.generate_otp_v2(p_identifier text, p_channel text DEFAULT 'sms'::text)
  RETURNS text
@@ -2642,7 +2619,6 @@ AS $function$
   END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.get_active_lawyers()
  RETURNS TABLE(uid uuid, nm text, ph text, whatsapp_phone text, office_address text, specialization text, avl jsonb, active_tasks_count integer)
  LANGUAGE plpgsql
@@ -2658,7 +2634,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.get_admin_appointments_internal(p_admin_uid uuid)
  RETURNS SETOF appointments
  LANGUAGE plpgsql
@@ -2672,7 +2647,6 @@ BEGIN
   IF v_role IS NULL OR v_role < 3 THEN RAISE EXCEPTION 'NOT_AUTHORIZED'; END IF;
   RETURN QUERY SELECT * FROM appointments ORDER BY ts_crt DESC;
 END; $function$
-
 
 CREATE OR REPLACE FUNCTION public.get_admin_dashboard_stats(p_admin_uid uuid)
  RETURNS jsonb
@@ -2722,7 +2696,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.get_admin_deals_internal(p_admin_uid uuid)
  RETURNS SETOF deals
  LANGUAGE plpgsql
@@ -2736,7 +2709,6 @@ BEGIN
   IF v_role IS NULL OR v_role < 3 THEN RAISE EXCEPTION 'NOT_AUTHORIZED'; END IF;
   RETURN QUERY SELECT * FROM deals ORDER BY ts_crt DESC;
 END; $function$
-
 
 CREATE OR REPLACE FUNCTION public.get_admin_offers_internal(p_admin_uid uuid, p_limit integer DEFAULT 100)
  RETURNS SETOF offers
@@ -2752,7 +2724,6 @@ BEGIN
   RETURN QUERY SELECT * FROM offers WHERE i_del = 0 ORDER BY ts_crt DESC LIMIT p_limit;
 END; $function$
 
-
 CREATE OR REPLACE FUNCTION public.get_admin_payments_internal(p_admin_uid uuid)
  RETURNS SETOF payments
  LANGUAGE plpgsql
@@ -2766,7 +2737,6 @@ BEGIN
   IF v_role IS NULL OR v_role < 3 THEN RAISE EXCEPTION 'NOT_AUTHORIZED'; END IF;
   RETURN QUERY SELECT * FROM payments ORDER BY ts_crt DESC;
 END; $function$
-
 
 CREATE OR REPLACE FUNCTION public.get_admin_pending_offers_internal(p_admin_uid uuid)
  RETURNS SETOF offers
@@ -2782,7 +2752,6 @@ BEGIN
   RETURN QUERY SELECT * FROM offers WHERE sts = 1 AND i_del = 0 ORDER BY ts_crt DESC;
 END; $function$
 
-
 CREATE OR REPLACE FUNCTION public.get_admin_reports_internal(p_admin_uid uuid)
  RETURNS SETOF reports
  LANGUAGE plpgsql
@@ -2796,7 +2765,6 @@ BEGIN
   IF v_role IS NULL OR v_role < 3 THEN RAISE EXCEPTION 'NOT_AUTHORIZED'; END IF;
   RETURN QUERY SELECT * FROM reports WHERE i_del = 0 ORDER BY ts_crt DESC;
 END; $function$
-
 
 CREATE OR REPLACE FUNCTION public.get_admin_requests_internal(p_admin_uid uuid)
  RETURNS TABLE(id uuid, typ integer, elm integer, cl_nm text, cl_ph text, prc numeric, cur integer, notes text, specs jsonb, usr_id uuid, sts integer, matches jsonb, i_del integer, ts_crt timestamp with time zone, ts_end timestamp with time zone, ts_ren timestamp with time zone, rmnd_ren integer, closed_at timestamp with time zone, closed_by uuid, closed_by_name text, closed_by_role integer, closed_reason text, closed_note text, closed_offer_id uuid, closed_appointment_id uuid, closed_completion_request_id uuid)
@@ -2828,7 +2796,6 @@ BEGIN
   ORDER BY r.ts_crt DESC;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.get_all_pending_completion_requests(p_admin_uid uuid DEFAULT NULL::uuid)
  RETURNS TABLE(request_id uuid, appointment_id uuid, off_id uuid, display_title text, offer_number text, task_type text, client_name text, client_phone text, executor_name text, executor_notes text, request_date timestamp with time zone, appointment_date timestamp with time zone)
@@ -2871,7 +2838,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.get_all_staff_users(p_admin_uid uuid)
  RETURNS SETOF jsonb
  LANGUAGE plpgsql
@@ -2903,12 +2869,11 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.get_available_expediters()
  RETURNS SETOF jsonb
  LANGUAGE plpgsql
  SECURITY DEFINER
- SET search_path TO 'public', 'extensions'
+ SET search_path TO 'public', 'extensions', 'pg_temp'
 AS $function$
 BEGIN
   RETURN QUERY
@@ -2922,7 +2887,6 @@ BEGIN
   ORDER BY u.nm;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.get_available_supervisor(p_dt timestamp with time zone)
  RETURNS uuid
@@ -2955,7 +2919,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.get_booked_slots_internal(p_offer_id uuid, p_date date)
  RETURNS text[]
  LANGUAGE sql
@@ -2971,7 +2934,6 @@ AS $function$
     AND sts IN (0, 1)
     AND (dt AT TIME ZONE 'Asia/Damascus')::date = p_date;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.get_broker_appointments_internal(p_broker_uid uuid)
  RETURNS SETOF appointments
@@ -2995,7 +2957,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.get_broker_deals_internal(p_broker_uid uuid)
  RETURNS SETOF deals
  LANGUAGE plpgsql
@@ -3015,7 +2976,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.get_broker_offers_internal(p_broker_uid uuid)
  RETURNS SETOF offers
  LANGUAGE plpgsql
@@ -3034,7 +2994,6 @@ BEGIN
   ORDER BY ts_crt DESC;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.get_completed_tasks(p_user_uid uuid DEFAULT NULL::uuid)
  RETURNS TABLE(appointment_id uuid, off_id uuid, offer_number text, display_title text, task_type text, client_name text, client_phone text, appointment_date timestamp with time zone, location jsonb, description text, price numeric, offer_cur integer, outcome text, completion_date timestamp with time zone, rejection_reason text, sts integer)
@@ -3073,7 +3032,6 @@ BEGIN
   ORDER BY a.completion_date DESC NULLS LAST, a.dt DESC;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.get_executor_task_by_appointment(p_user_uid uuid, p_appointment_id uuid)
  RETURNS TABLE(appointment_id uuid, off_id uuid, offer_number text, display_title text, task_type text, client_name text, client_phone text, appointment_date timestamp with time zone, location jsonb, description text, price numeric, offer_cur integer, outcome text, completion_date timestamp with time zone, rejection_reason text, sts integer)
@@ -3122,20 +3080,30 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.get_lawyer_appointments(p_lawyer_uid uuid)
  RETURNS TABLE(id uuid, client_name text, client_phone text, dt timestamp with time zone, sts integer, notes text)
  LANGUAGE plpgsql
  SECURITY DEFINER
- SET search_path TO 'public', 'extensions'
+ SET search_path TO 'public', 'extensions', 'pg_temp'
 AS $function$
+DECLARE
+  v_role int;
 BEGIN
+  SELECT role INTO v_role
+  FROM public.users
+  WHERE id = p_lawyer_uid AND i_del = 0 AND sts = 0;
+
+  IF v_role <> 7 THEN
+    RAISE EXCEPTION 'LAWYER_ROLE_REQUIRED';
+  END IF;
+
   RETURN QUERY
-  SELECT 
+  SELECT
     a.id,
     COALESCE(u.nm, '') AS client_name,
     COALESCE(u.ph, '') AS client_phone,
-    a.dt, a.sts,
+    a.dt,
+    a.sts,
     COALESCE(a.note, '') AS notes
   FROM public.appointments a
   JOIN public.users u ON u.id = a.req_uid
@@ -3144,15 +3112,23 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.get_lawyer_expediting_tasks(p_lawyer_uid uuid)
  RETURNS SETOF expediting_tasks
  LANGUAGE plpgsql
  SECURITY DEFINER
- SET search_path TO 'public', 'extensions'
+ SET search_path TO 'public', 'extensions', 'pg_temp'
 AS $function$
+DECLARE
+  v_role int;
 BEGIN
-  IF p_lawyer_uid IS NULL THEN RAISE EXCEPTION 'USER_UID_REQUIRED'; END IF;
+  SELECT role INTO v_role
+  FROM public.users
+  WHERE id = p_lawyer_uid AND i_del = 0 AND sts = 0;
+
+  IF v_role <> 7 THEN
+    RAISE EXCEPTION 'LAWYER_ROLE_REQUIRED';
+  END IF;
+
   RETURN QUERY
   SELECT *
   FROM public.expediting_tasks
@@ -3161,16 +3137,24 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.get_lawyer_profile(p_lawyer_uid uuid)
  RETURNS jsonb
  LANGUAGE plpgsql
  SECURITY DEFINER
- SET search_path TO 'public', 'extensions'
+ SET search_path TO 'public', 'extensions', 'pg_temp'
 AS $function$
 DECLARE
   v_profile jsonb;
+  v_role int;
 BEGIN
+  SELECT role INTO v_role
+  FROM public.users
+  WHERE id = p_lawyer_uid AND i_del = 0 AND sts = 0;
+
+  IF v_role <> 7 THEN
+    RAISE EXCEPTION 'LAWYER_ROLE_REQUIRED';
+  END IF;
+
   SELECT jsonb_build_object(
     'uid', lp.uid,
     'whatsapp_phone', lp.whatsapp_phone,
@@ -3181,14 +3165,13 @@ BEGIN
   ) INTO v_profile
   FROM public.lawyer_profiles lp
   WHERE lp.uid = p_lawyer_uid;
-  
+
   IF v_profile IS NULL THEN
     RETURN jsonb_build_object('found', false);
   END IF;
   RETURN v_profile || jsonb_build_object('found', true);
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.get_my_completion_requests(p_user_uid uuid)
  RETURNS TABLE(request_id uuid, appointment_id uuid, off_id uuid, display_title text, offer_number text, task_type text, executor_notes text, office_notes text, decision text, request_date timestamp with time zone, decided_date timestamp with time zone, appointment_date timestamp with time zone)
@@ -3233,17 +3216,23 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.get_my_expediting_tasks(p_expediter_uid uuid)
  RETURNS SETOF expediting_tasks
  LANGUAGE plpgsql
  SECURITY DEFINER
- SET search_path TO 'public', 'extensions'
+ SET search_path TO 'public', 'extensions', 'pg_temp'
 AS $function$
+DECLARE
+  v_role int;
 BEGIN
-  IF p_expediter_uid IS NULL THEN
-    RAISE EXCEPTION 'USER_UID_REQUIRED';
+  SELECT role INTO v_role
+  FROM public.users
+  WHERE id = p_expediter_uid AND i_del = 0 AND sts = 0;
+
+  IF v_role <> 8 THEN
+    RAISE EXCEPTION 'EXPEDITER_ROLE_REQUIRED';
   END IF;
+
   RETURN QUERY
   SELECT *
   FROM public.expediting_tasks
@@ -3251,7 +3240,6 @@ BEGIN
   ORDER BY created_at DESC;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.get_my_tasks(p_user_uid uuid DEFAULT NULL::uuid)
  RETURNS TABLE(appointment_id uuid, off_id uuid, offer_number text, display_title text, task_type text, client_name text, client_phone text, appointment_date timestamp with time zone, location jsonb, description text, price numeric, offer_cur integer, outcome text, sts integer)
@@ -3291,7 +3279,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.get_offer_by_id_internal(p_offer_id uuid, p_user_uid uuid DEFAULT NULL::uuid)
  RETURNS SETOF offers
  LANGUAGE plpgsql
@@ -3323,7 +3310,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.get_owner_appointments_internal(p_owner_uid uuid)
  RETURNS SETOF appointments
  LANGUAGE plpgsql
@@ -3342,7 +3328,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.get_pending_offers_count()
  RETURNS integer
  LANGUAGE plpgsql
@@ -3358,7 +3343,6 @@ BEGIN
   RETURN v_cnt;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.get_photographer_tasks_internal(p_photographer_uid uuid)
  RETURNS SETOF photography_tasks
@@ -3388,7 +3372,6 @@ BEGIN
   ORDER BY COALESCE(ts_scheduled, ts_crt) ASC, ts_crt DESC;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.get_postponed_tasks(p_user_uid uuid DEFAULT NULL::uuid)
  RETURNS TABLE(appointment_id uuid, off_id uuid, offer_number text, display_title text, task_type text, client_name text, client_phone text, appointment_date timestamp with time zone, location jsonb, description text, price numeric, offer_cur integer, outcome text, sts integer)
@@ -3427,7 +3410,6 @@ BEGIN
   ORDER BY a.dt ASC;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.get_staff_stats_internal(p_user_uid uuid)
  RETURNS jsonb
@@ -3489,7 +3471,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.get_user_appointments_internal(p_user_uid uuid)
  RETURNS SETOF appointments
  LANGUAGE plpgsql
@@ -3508,7 +3489,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.get_user_by_email(p_email text)
  RETURNS SETOF users
  LANGUAGE plpgsql
@@ -3520,7 +3500,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.get_user_by_phone(p_phone text)
  RETURNS SETOF users
  LANGUAGE plpgsql
@@ -3529,7 +3508,6 @@ CREATE OR REPLACE FUNCTION public.get_user_by_phone(p_phone text)
 AS $function$
 BEGIN RETURN QUERY SELECT * FROM users WHERE ph = p_phone AND i_del = 0; END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.get_user_device_tokens(p_uid uuid)
  RETURNS TABLE(device_token text, platform text)
@@ -3542,7 +3520,6 @@ BEGIN
     WHERE ud.uid = p_uid AND ud.is_active = TRUE;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.get_user_full_by_id(p_uid uuid)
  RETURNS SETOF jsonb
@@ -3570,7 +3547,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.get_user_notifications_internal(p_user_uid uuid)
  RETURNS SETOF notifications
  LANGUAGE plpgsql
@@ -3589,7 +3565,6 @@ BEGIN
   ORDER BY ts_crt DESC;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.get_user_offers_internal(p_user_uid uuid)
  RETURNS SETOF offers
@@ -3610,7 +3585,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.get_user_payments_internal(p_user_uid uuid)
  RETURNS SETOF payments
  LANGUAGE plpgsql
@@ -3628,7 +3602,6 @@ BEGIN
   ORDER BY ts_crt DESC;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.get_user_requests_internal(p_user_uid uuid)
  RETURNS SETOF requests
@@ -3648,7 +3621,6 @@ BEGIN
   ORDER BY ts_crt DESC;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.handle_email_auth_internal()
  RETURNS jsonb
@@ -3760,7 +3732,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.increment_offer_views_internal(p_offer_id uuid)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -3777,7 +3748,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.log_admin_action(p_admin_uid uuid, p_act integer, p_det text, p_ref_id text DEFAULT ''::text, p_ref_col text DEFAULT ''::text)
  RETURNS void
  LANGUAGE plpgsql
@@ -3789,7 +3759,6 @@ BEGIN
   VALUES (p_admin_uid, p_act, COALESCE(p_det, ''), COALESCE(p_ref_id, ''), COALESCE(p_ref_col, ''), NOW());
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.login_with_password(p_identifier text, p_password text)
  RETURNS jsonb
@@ -3850,7 +3819,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.mark_all_notifications_read_internal(p_user_uid uuid)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -3869,7 +3837,6 @@ BEGIN
   RETURN TRUE;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.mark_notification_read_internal(p_user_uid uuid, p_notification_id uuid)
  RETURNS boolean
@@ -3893,7 +3860,6 @@ BEGIN
   RETURN TRUE;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.mark_social_published_internal(p_user_uid uuid, p_offer_id uuid, p_text text)
  RETURNS boolean
@@ -3920,7 +3886,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.normalize_arabic_username(p_str text)
  RETURNS text
  LANGUAGE plpgsql
@@ -3942,7 +3907,6 @@ BEGIN
   RETURN v;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.normalize_sy_phone(p_phone text)
  RETURNS text
@@ -3989,7 +3953,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.notify_admin_on_new_offer()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -4027,7 +3990,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.notify_user(p_uid uuid, p_type integer, p_title text, p_body text, p_ref_id text DEFAULT ''::text, p_action text DEFAULT ''::text)
  RETURNS uuid
  LANGUAGE plpgsql
@@ -4042,7 +4004,6 @@ BEGIN
   RETURN v_id;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.owner_respond_appointment(p_owner_uid uuid, p_appointment_id uuid, p_accept boolean, p_reject_reason integer DEFAULT 0, p_reject_text text DEFAULT ''::text, p_proposed_dt timestamp with time zone DEFAULT NULL::timestamp with time zone)
  RETURNS jsonb
@@ -4247,7 +4208,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.process_completion_request(p_admin_uid uuid, p_request_id uuid, p_decision text, p_office_notes text DEFAULT ''::text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -4333,7 +4293,6 @@ BEGIN
   RETURN TRUE;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.purchase_offer_boost(p_uid uuid, p_offer_id uuid, p_boost_type text)
  RETURNS jsonb
@@ -4476,7 +4435,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.purge_old_closed_requests()
  RETURNS integer
  LANGUAGE plpgsql
@@ -4505,7 +4463,6 @@ BEGIN
   RETURN v_count;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.register_daily_streak_internal(p_user_uid uuid, p_points integer DEFAULT 50)
  RETURNS jsonb
@@ -4578,7 +4535,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.register_device(p_device_id text, p_ip_hint text DEFAULT NULL::text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -4627,7 +4583,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.register_password(p_user_uid uuid, p_username text, p_password text)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -4667,7 +4622,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.register_weekly_login(p_uid uuid, p_pts integer DEFAULT 100)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -4704,7 +4658,6 @@ BEGIN
   RETURN TRUE;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.renew_request_internal(p_user_uid uuid, p_request_id uuid)
  RETURNS boolean
@@ -4750,7 +4703,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.request_assert_owner_active(p_user_uid uuid, p_request_id uuid)
  RETURNS requests
  LANGUAGE plpgsql
@@ -4772,7 +4724,6 @@ BEGIN
   RETURN v_req;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.request_completion_by_appointment(p_user_uid uuid, p_appointment_id uuid, p_notes text DEFAULT ''::text)
  RETURNS boolean
@@ -4799,7 +4750,6 @@ BEGIN
   RETURN TRUE;
 END; $function$
 
-
 CREATE OR REPLACE FUNCTION public.request_lifecycle_days(p_key text, p_default integer)
  RETURNS integer
  LANGUAGE plpgsql
@@ -4820,7 +4770,6 @@ EXCEPTION WHEN OTHERS THEN
   RETURN p_default;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.request_verification_by_uid(p_user_uid uuid)
  RETURNS boolean
@@ -4866,7 +4815,6 @@ BEGIN
   RETURN TRUE;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.requester_counter_appointment(p_user_uid uuid, p_appointment_id uuid, p_accept boolean, p_proposed_dt timestamp with time zone DEFAULT NULL::timestamp with time zone)
  RETURNS jsonb
@@ -5033,7 +4981,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.reset_password_with_otp(p_user_uid uuid, p_new_password text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -5058,7 +5005,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.revoke_all_staff_sessions(p_user_uid uuid)
  RETURNS integer
  LANGUAGE plpgsql
@@ -5078,7 +5024,6 @@ BEGIN
   RETURN v_count;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.revoke_staff_session(p_user_uid uuid, p_token text)
  RETURNS boolean
@@ -5112,7 +5057,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.send_appointment_reminders()
  RETURNS void
  LANGUAGE plpgsql
@@ -5121,7 +5065,6 @@ AS $function$ BEGIN
   UPDATE appointments SET rmnd_2 = 1 WHERE sts IN (0, 1) AND i_force = 0 AND dt <= NOW() + INTERVAL '2 hours' AND dt > NOW() AND rmnd_2 = 0;
   UPDATE appointments SET rmnd_24 = 1 WHERE sts IN (0, 1) AND i_force = 0 AND dt <= NOW() + INTERVAL '24 hours' AND dt > NOW() AND rmnd_24 = 0;
 END; $function$
-
 
 CREATE OR REPLACE FUNCTION public.send_push_notification(p_uid uuid, p_title text, p_body text, p_data jsonb DEFAULT '{}'::jsonb)
  RETURNS bigint
@@ -5165,7 +5108,6 @@ EXCEPTION WHEN OTHERS THEN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.send_renewal_reminders()
  RETURNS integer
  LANGUAGE plpgsql
@@ -5202,7 +5144,6 @@ BEGIN
   RETURN v_count;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.send_request_renewal_reminders()
  RETURNS integer
@@ -5241,7 +5182,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.set_offer_number()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -5255,14 +5195,12 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.soft_delete(p_table text, p_id uuid)
  RETURNS void
  LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO 'public', 'extensions', 'pg_temp'
 AS $function$ BEGIN EXECUTE format('UPDATE %I SET i_del = 1 WHERE id = %L', p_table, p_id); END; $function$
-
 
 CREATE OR REPLACE FUNCTION public.soft_delete_request_internal(p_user_uid uuid, p_request_id uuid)
  RETURNS boolean
@@ -5275,7 +5213,6 @@ BEGIN
   RETURN public.cancel_request_internal(p_user_uid, p_request_id, '');
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.start_photography_task_internal(p_photographer_uid uuid, p_task_id uuid)
  RETURNS boolean
@@ -5312,7 +5249,6 @@ BEGIN
   RETURN TRUE;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.submit_broker_request_internal(p_user_uid uuid, p_business_name text, p_category integer, p_experience text DEFAULT ''::text, p_about text DEFAULT ''::text)
  RETURNS boolean
@@ -5354,7 +5290,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.submit_photography_task_internal(p_photographer_uid uuid, p_task_id uuid, p_media jsonb, p_photographer_note text DEFAULT ''::text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -5387,7 +5322,6 @@ BEGIN
   RETURN TRUE;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.suggest_appointment_slot(p_offer_id uuid, p_from timestamp with time zone DEFAULT now())
  RETURNS timestamp with time zone
@@ -5472,7 +5406,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.trg_appointment_created()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -5533,7 +5466,6 @@ BEGIN
   RETURN NEW;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.trg_appointment_status_changed()
  RETURNS trigger
@@ -5658,7 +5590,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.trg_deal_completed()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -5715,7 +5646,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.trg_offer_published_match_requests()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -5754,7 +5684,6 @@ BEGIN
   RETURN NEW;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.trg_offer_status_changed()
  RETURNS trigger
@@ -5799,7 +5728,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.trg_payment_approved()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -5839,7 +5767,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.trg_rating_bonus()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -5853,7 +5780,6 @@ BEGIN
   RETURN NEW;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.update_expediting_checklist_item(p_actor_uid uuid, p_task_id uuid, p_item_key text, p_status integer, p_input_value text DEFAULT ''::text, p_attachment_url text DEFAULT ''::text, p_notes text DEFAULT ''::text)
  RETURNS jsonb
@@ -5891,7 +5817,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.update_photography_task_status_internal(p_admin_uid uuid, p_task_id uuid, p_status integer, p_office_note text DEFAULT ''::text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -5906,7 +5831,6 @@ BEGIN
   UPDATE photography_tasks SET sts = p_status, office_note = COALESCE(p_office_note,''), ts_upd = NOW() WHERE id = p_task_id;
   RETURN FOUND;
 END; $function$
-
 
 CREATE OR REPLACE FUNCTION public.update_request_internal(p_user_uid uuid, p_request_id uuid, p_patch jsonb)
  RETURNS boolean
@@ -5952,7 +5876,6 @@ BEGIN
   RETURN TRUE;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.update_task_outcome(p_user_uid uuid, p_appointment_id uuid, p_outcome text, p_notes text DEFAULT ''::text, p_rejection_reason text DEFAULT ''::text, p_new_date timestamp with time zone DEFAULT NULL::timestamp with time zone)
  RETURNS boolean
@@ -6005,7 +5928,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.update_user_badge(p_uid uuid)
  RETURNS void
  LANGUAGE plpgsql
@@ -6024,7 +5946,6 @@ BEGIN
   UPDATE users SET bg = v_new_bg, bg_ts = NOW() WHERE id = p_uid AND bg != v_new_bg;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.update_user_notification_settings_internal(p_user_uid uuid, p_ntf jsonb)
  RETURNS boolean
@@ -6053,7 +5974,6 @@ BEGIN
   RETURN TRUE;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.update_user_profile_internal(p_user_uid uuid, p_payload jsonb)
  RETURNS boolean
@@ -6092,7 +6012,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.update_user_stats_on_appointment()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -6113,7 +6032,6 @@ BEGIN
   RETURN NEW;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.update_user_stats_on_deal()
  RETURNS trigger
@@ -6148,7 +6066,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.update_user_stats_on_offer()
  RETURNS trigger
  LANGUAGE plpgsql
@@ -6169,7 +6086,6 @@ BEGIN
   RETURN NEW;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.update_user_stats_on_request()
  RETURNS trigger
@@ -6200,7 +6116,6 @@ BEGIN
   IF TG_OP = 'DELETE' THEN RETURN OLD; ELSE RETURN NEW; END IF;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.upsert_user_after_otp(p_identifier text, p_channel text)
  RETURNS TABLE(user_id uuid, is_new boolean)
@@ -6248,7 +6163,6 @@ BEGIN
   RETURN QUERY SELECT v_uid, v_new;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.validate_staff_session(p_user_uid uuid, p_token text, p_min_role integer DEFAULT 5)
  RETURNS jsonb
@@ -6312,7 +6226,6 @@ BEGIN
 END;
 $function$
 
-
 CREATE OR REPLACE FUNCTION public.verify_otp(p_phone text, p_code text)
  RETURNS boolean
  LANGUAGE plpgsql
@@ -6330,7 +6243,6 @@ BEGIN
   RETURN FALSE;
 END;
 $function$
-
 
 CREATE OR REPLACE FUNCTION public.verify_otp_v2(p_identifier text, p_code text)
  RETURNS boolean
@@ -6366,5 +6278,3 @@ BEGIN
   RETURN FALSE;
 END;
 $function$
-
-

@@ -1,7 +1,7 @@
 # 📚 مرجع دوال Supabase (RPC + Edge Functions)
 
 > **مشروع:** عقارات السويداء
-> **آخر تحديث:** 2026-06-17 (محدّث بعد linter security hardening، تأمين تسجيل الإيميل والهاتف عبر Edge Functions، دعم صورتي هوية للموظف، ودالة `get-staff-id-images`)
+> **آخر تحديث:** 2026-07-04 (مطابق لتحديثات السيرفر الحي: إغلاق SECURITY DEFINER بالكامل، دعم الأدوار 7/8، إلزام صورتي هوية للموظف، ودوال `get-staff-id-images` و`update-staff-id-images`)
 > **المصدر:** `supabase/setup.sql` + Migrations + Edge Functions
 
 ---
@@ -51,7 +51,7 @@
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_admin_employee_management_final.sql` — دوال إدارة الموظفين النهائية: `get_all_staff_users`, `admin_create_staff_user`, `admin_update_staff_role`, `admin_toggle_staff_status`, `admin_reset_staff_password`, `admin_delete_staff_user` |
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_admin_dashboard_stats.sql` — دالة `get_admin_dashboard_stats` لإحصائيات لوحة الإدارة المجمعة |
 | ✅ **مُطبّق على السيرفر** | `2026_06_15_input_validation_hardening.sql` — helpers للتحقق من المدخلات وتقوية RPCs إنشاء العروض/الطلبات/الملف الشخصي/الموظفين، وتم التحقق من دوال `app_*` ومن الحفاظ على منطق `create_offer_internal` |
-| ✅ **منشور على السيرفر** | Edge Functions إدارة الموظفين: `create-user` محدثة لدعم صورتي الهوية و`get-staff-id-images` منشورة لعرض صور الهوية بروابط مؤقتة |
+| ✅ **منشور على السيرفر** | Edge Functions إدارة الموظفين: `create-user` محدثة لإلزام صورتي الهوية، و`get-staff-id-images` للعرض، و`update-staff-id-images` لتحديث صور هوية موظف موجود |
 | 🆕 **جاهز للتطبيق** | `2026_06_17_secure_email_auth_internal.sql` — تأمين Email Magic Link عبر RPC `handle_email_auth_internal` + فهارس unique canonical للإيميل والهاتف |
 | 🆕 **جاهز للتطبيق** | `2026_06_17_lock_otp_direct_rpcs.sql` — إغلاق direct execute لدوال OTP/upsert عن `anon/authenticated` وجعلها عبر Edge Functions فقط |
 | ✅ **مُطبّق على السيرفر** | `2026_06_17_linter_security_hardening.sql` — إصلاح `users_public` كـ `security_invoker`، ضبط `search_path` لكل دوال public، قفل OTP legacy/direct، قفل `admin_create_staff_user` و`admin_wipe_test_data`، قفل دوال النقاط والإشعارات المباشرة، قفل دوال trigger/helper/legacy helper الداخلية، تشديد `otp_codes/user_devices`، وحذف سياسات list العامة لبكتات public |
@@ -67,8 +67,11 @@
 | 🆕 **جاهز للتطبيق (بانتظار تنفيذه على السيرفر + إعادة نشر `user-appointments`)** | `2026_07_02_appointment_booking_rules.sql` — قواعد الحجز الثلاث: (1) دعم `avl.any` عبر دوام `app_config.appt` + رفض `avl` الفارغة بـ `NO_AVAILABILITY` (2) مشرف الأقل حمولة مع فارق الساعة + عند عدم التوفر إشعار الطالب واقتراح بديل عبر `suggest_appointment_slot` (3) قاعدة فارق الساعة `TIME_CONFLICT_ON_OFFER` على العرض والمشرف + دوال جديدة: `appt_booking_config`, `get_booked_slots_internal`, `suggest_appointment_slot` + توحيد `get_available_supervisor` + **تحويلات توقيع تستلزم DROP** (مثبتة بالفحص الحي للسيرفر 2026-07-02): `get_booked_slots_internal` من `TABLE(booked_time text)` إلى `TEXT[]` (النسخة القديمة كانت تكسر تظليل الأوقات في التطبيق + فلترة تاريخ بـ UTC بدل دمشق)، و`owner_respond_appointment`/`requester_counter_appointment` من `BOOLEAN` إلى `JSONB` مع فرض قواعد فارق الساعة والوقت المستقبلي ومعالجة غياب المشرف على مسار التراشق (LOGIC_SPEC §7) |
 | 🆕 **جاهز للتطبيق (بانتظار تنفيذه على السيرفر + إعادة نشر `send-sms-otp` و `verify-sms-otp`)** | `2026_07_02_arabic_phone_and_username_support.sql` — دعم الأرقام العربية المشرقية والفارسية (`٠-٩`، `۰-۹`) في أرقام الهواتف عبر `normalize_sy_phone` + دعم أسماء المستخدمين باللغة العربية مع دالة تطبيع موحدة `normalize_arabic_username` (إطاحة التشكيل والكشيدة وتوحيد الألف والتاء المربوطة والياء) ومنع خلط اللغات في الاسم الواحد (Homoglyph prevention) في `app_assert_username` و `check_username_available` و `register_password` و `login_with_password` |
 | 🆕 **جاهز للتطبيق (بانتظار تنفيذه على السيرفر)** | `2026_07_02_fix_create_offer_added_by_and_quota.sql` — تصحيح توثيق عمود `added_by` في جدول العروض ليخزن معرف الموظف الإداري المنفذ عند إضافته العرض بالنيابة عن عميل (مع فحص أن المنفذ `role >= 4`)، وإعفاء العمليات الإدارية من فحص حصص النشر (`QUOTA_EXCEEDED`) |
-| 🆕 **جاهز للتطبيق (بانتظار تنفيذه على السيرفر لإغلاق تحذيرات Linter)** | `2026_07_02_lock_security_definer_rpcs.sql` — سحب صلاحيات الاستدعاء المباشر عن دوال `SECURITY DEFINER` الأربع (`check_username_available`, `register_password`, `login_with_password`, `create_offer_internal`) وحصرها بـ `service_role` فقط، لحماية قاعدة البيانات وإغلاق تحذيرات Linter الأمان |
+| ✅ **مُطبّق على السيرفر** | `2026_07_02_lock_security_definer_rpcs.sql` — سحب صلاحيات الاستدعاء المباشر عن دوال `SECURITY DEFINER` الأربع (`check_username_available`, `register_password`, `login_with_password`, `create_offer_internal`) وحصرها بـ `service_role` فقط، لحماية قاعدة البيانات وإغلاق تحذيرات Linter الأمان |
 | 🆕 **جاهز للتطبيق (بانتظار تنفيذه على السيرفر)** | `2026_07_02_admin_audit_logging_and_rbac_hardening.sql` — توسيع التسجيل الآلي لتصرفات الإدارة في `activity_log` عبر الدالة الموحدة `log_admin_action` (عند اعتماد/رفض العروض، التوثيق، المدفوعات)، وتعديل رتب المراجعة لتبدأ من 4 فما فوق للعروض والتوثيق ومن 5 فما فوق للمدفوعات، وفرض إلزامية سبب الرفض عند الرفض |
+| ✅ **مُطبّق على السيرفر** | `2026_07_04_user_account_password_session_fix.sql` — إصدار جلسة كلمة مرور مخصصة لكل الأدوار بعد تسجيل دخول صحيح، مع بقاء الصلاحيات محكومة عبر `validate_staff_session(p_min_role)` |
+| ✅ **مُطبّق على السيرفر** | `2026_07_04_legal_rpcs_security_hardening.sql` — قفل دوال القانون/التعقيب عن `anon/authenticated` وحصرها بـ `service_role`، وتشديد أدوار المحامي `7` والمعقب `8` |
+| ✅ **مُطبّق على السيرفر** | `2026_07_04_staff_identity_images_required.sql` — إلزام هوية الموظف الوظيفية، تعطيل overload المختصر، ضبط `vrf=2` للحسابات الداخلية، وفرض المسار الكامل للهوية |
 
 ---
 
@@ -251,14 +254,15 @@ SELECT * FROM cron.job_run_details ORDER BY start_time DESC LIMIT 10;
 | 2 | `verify-whatsapp-otp` 🆕 | يتحقق + ينشئ user + يصدر session | `{ phone, code }` | `{ success, userId, isNew, session: { token_hash, ... } }` | ⚠️ مكتوب — لم يُنشر |
 | 3 | `send-push-notification` 🆕🆕🆕🆕🆕 | يرسل FCM push لكل أجهزة المستخدم (HTTP v1 API) | `{ uid, title, body, data? }` | `{ success, sent, failed, total }` | ⚠️ مكتوب — لم يُنشر |
 | 4 | `verify-sms-otp` 🆕 | يتحقق من SMS OTP وينشئ/يجلب المستخدم عبر service_role | `{ phone, code }` | `{ success, userId, isNew, session }` | ✅ منشور |
-| 5 | `create-user` 🆕 | إنشاء موظف داخلي من الإدارة عبر `users.usr/pwd` + رفع صور الهوية الخاصة عبر `service_role` | `{ admin_uid, staff_session_token?, full_name, phone, email?, username?, role, address?, sid?, id_images_base64? }` | `{ success, user_id, new_password, id_image_paths? }` | ✅ منشور |
+| 5 | `create-user` 🆕 | إنشاء موظف داخلي من الإدارة عبر `users.usr/pwd` + رفع صورتي الهوية الخاصة عبر `service_role` | `{ admin_uid, staff_session_token?, full_name, phone, email?, username?, role, address, sid, id_images_base64[2] }` | `{ success, user_id, new_password, id_image_paths }` | ✅ منشور — يتطلب صورتين |
 | 6 | `get-staff-id-images` 🆕 | إرجاع روابط مؤقتة لصور هوية موظف للمدير/النائب | `{ admin_uid, staff_session_token?, target_uid }` | `{ success, urls, count }` | ✅ منشور |
-| 7 | `update-user-role` 🆕 | تغيير دور موظف داخلي | `{ admin_uid, staff_session_token?, user_id, role }` | `{ success }` | ✅ منشور |
-| 8 | `toggle-user-status` 🆕 | تفعيل/تجميد/حظر موظف | `{ admin_uid, staff_session_token?, user_id, status, reason? }` | `{ success }` | ✅ منشور |
-| 9 | `reset-user-password` 🆕 | توليد كلمة سر جديدة وتحديث `users.pwd` | `{ admin_uid, staff_session_token?, user_id }` | `{ success, new_password }` | ✅ منشور |
-| 10 | `delete-user` 🆕 | حذف منطقي لموظف داخلي | `{ admin_uid, staff_session_token?, user_id }` | `{ success }` | ✅ منشور |
-| 11 | `update-user-permissions` 🆕 | تحديث صلاحيات مستخدم عبر جلسة موظف | `{ admin_uid, staff_session_token?, user_id, permissions }` | `{ success }` | ✅ منشور |
-| 12 | `upload-offer-images` 🆕🔒 | رفع صور العروض بأمان عبر service_role (يتحقق من staff_session_token أو JWT) | `multipart/form-data: files, user_id, offer_id?, folder?, admin_uid?` | `{ success, urls, count }` | ✅ منشور — يحتاج إعادة نشر بعد آخر تعديل |
+| 7 | `update-staff-id-images` 🆕 | تحديث صور هوية موظف موجود وتثبيت `vrf=2` | `{ admin_uid, staff_session_token?, target_uid, id_images_base64[2], id_image_content_type? }` | `{ success, user_id, id_image_paths, count }` | ✅ منشور |
+| 8 | `update-user-role` 🆕 | تغيير دور موظف داخلي | `{ admin_uid, staff_session_token?, user_id, role }` | `{ success }` | ✅ منشور |
+| 9 | `toggle-user-status` 🆕 | تفعيل/تجميد/حظر موظف | `{ admin_uid, staff_session_token?, user_id, status, reason? }` | `{ success }` | ✅ منشور |
+| 10 | `reset-user-password` 🆕 | توليد كلمة سر جديدة وتحديث `users.pwd` | `{ admin_uid, staff_session_token?, user_id }` | `{ success, new_password }` | ✅ منشور |
+| 11 | `delete-user` 🆕 | حذف منطقي لموظف داخلي | `{ admin_uid, staff_session_token?, user_id }` | `{ success }` | ✅ منشور |
+| 12 | `update-user-permissions` 🆕 | تحديث صلاحيات مستخدم عبر جلسة موظف | `{ admin_uid, staff_session_token?, user_id, permissions }` | `{ success }` | ✅ منشور |
+| 13 | `upload-offer-images` 🆕🔒 | رفع صور العروض بأمان عبر service_role (يتحقق من staff_session_token أو JWT) | `multipart/form-data: files, user_id, offer_id?, folder?, admin_uid?` | `{ success, urls, count }` | ✅ منشور — يحتاج إعادة نشر بعد آخر تعديل |
 
 > ⚠️ **`generate_otp` / `verify_otp` القديمة** ما زالت موجودة للتوافق الخلفي فقط — استخدم النسخة V2 في الكود الجديد.
 > 📖 لخطوات تفعيل WhatsApp + Email Magic Link: راجع `docs/AUTH_SETUP.md`
@@ -684,7 +688,7 @@ Migration mirror: `2026_06_17_linter_security_hardening.sql`
 
 ملاحظات مهمة:
 
-- لا يتم حالياً قفل كل دوال `SECURITY DEFINER` المفتوحة للـ `anon/authenticated` دفعة واحدة، لأن التطبيق لا يزال يعتمد على RPC مباشرة في مسارات عديدة.
+- حسب فحص السيرفر الحي بتاريخ 2026-07-04: عدد دوال `SECURITY DEFINER` القابلة للتنفيذ من `anon/authenticated` = `0`. كل المسارات الحساسة تمر عبر Edge Functions أو `service_role`.
 - سيتم نقل الدوال الحساسة تدريجياً إلى Edge Functions قبل قفلها نهائياً.
 - حذف سياسات SELECT العامة من public buckets لا يمنع الوصول عبر public URL، لكنه يمنع listing واسع عبر Storage API.
 
@@ -880,7 +884,7 @@ Migration المطبق:
 
 ### 1. `create-user`
 
-ينشئ موظفاً داخلياً في جدول `users`، ويولد كلمة سر جديدة متوافقة مع نظام `users.pwd`. يدعم حقول العنوان والرقم الوطني، ويدعم رفع صورة/صورتين للهوية (`id_images_base64`) داخل bucket خاص `ids_private` عبر `service_role`، ثم يخزن المسارات في `users.img`.
+ينشئ موظفاً داخلياً في جدول `users`، ويولد كلمة سر جديدة متوافقة مع نظام `users.pwd`. حقول العنوان والرقم الوطني إجبارية، ورفع صورتي الهوية (`id_images_base64`) إلزامي بحد أدنى صورتين داخل bucket خاص `ids_private` عبر `service_role`، ثم يخزن المسارات في `users.img` ويضبط `vrf=2` للتوثيق الوظيفي.
 
 ```json
 {
@@ -910,6 +914,14 @@ Migration المطبق:
 ```
 
 
+ملاحظات حماية:
+
+- `id_images_base64` يجب أن يحتوي صورتين على الأقل: وجه وقفا، وإلا يرجع `ID_IMAGES_REQUIRED_MIN_2`.
+- `address` و `sid` إجباريان.
+- النسخة القديمة المختصرة من `admin_create_staff_user` معطلة برسالة `FULL_IDENTITY_REQUIRED` حتى لا يُنشأ أي حساب داخلي بلا هوية.
+- عند فشل رفع/حفظ صور الهوية يتم تعطيل الحساب المنشأ فوراً حتى لا يبقى حساب داخلي نشط بلا صور.
+- الأدوار المدعومة داخلياً: `2,3,4,5,7,8` مع حصر إنشاء نائب المدير بالمدير.
+
 ### 2. `get-staff-id-images`
 
 يرجع روابط مؤقتة signed URLs لصور هوية موظف داخلي، لاستخدامها في شاشة تفاصيل الموظف.
@@ -938,7 +950,40 @@ Migration المطبق:
 - نائب المدير `role=5` يستطيع عرض هويات الموظفين الأدنى منه، ولا يستطيع عرض بيانات نائب/مدير آخر.
 - الروابط مؤقتة لمدة 300 ثانية.
 
-### 3. `update-user-role`
+### 3. `update-staff-id-images`
+
+يحدّث صور هوية موظف داخلي موجود، ويستخدم عند تصحيح حساب قديم أو استبدال صور الهوية. يحفظ مساري الصورتين في `users.img` كـ JSON Array، ويضبط `vrf=2`.
+
+```json
+{
+  "admin_uid": "uuid-of-manager-or-deputy",
+  "staff_session_token": "token-from-login",
+  "target_uid": "staff-user-uuid",
+  "id_images_base64": ["base64-front", "base64-back"],
+  "id_image_content_type": "image/jpeg"
+}
+```
+
+المخرج:
+
+```json
+{
+  "success": true,
+  "user_id": "staff-user-uuid",
+  "id_image_paths": ["staff-uid/staff_id_..._1.jpg", "staff-uid/staff_id_..._2.jpg"],
+  "count": 2
+}
+```
+
+ملاحظات حماية:
+
+- يتطلب `staff_session_token` صالحاً و `role >= 5`.
+- المدير `role=6` يستطيع تحديث الجميع.
+- نائب المدير لا يستطيع تحديث صور الإدارة العليا أو الأدوار القانونية الأعلى رقمياً، إلا حسابه نفسه.
+- يجب إرسال صورتين على الأقل، وإلا يرجع `ID_IMAGES_REQUIRED_MIN_2`.
+- الصور القديمة في `ids_private` تُحذف بعد نجاح حفظ الصور الجديدة.
+
+### 4. `update-user-role`
 
 ```json
 {
@@ -955,7 +1000,7 @@ Migration المطبق:
 { "success": true }
 ```
 
-### 4. `toggle-user-status`
+### 5. `toggle-user-status`
 
 حالات `users.sts`:
 
@@ -981,7 +1026,7 @@ Migration المطبق:
 { "success": true }
 ```
 
-### 5. `reset-user-password`
+### 6. `reset-user-password`
 
 يولد كلمة سر جديدة، يحدث `users.pwd` مشفراً، ويرجع كلمة السر الصريحة مرة واحدة فقط.
 
@@ -1002,7 +1047,7 @@ Migration المطبق:
 }
 ```
 
-### 6. `delete-user`
+### 7. `delete-user`
 
 ينفذ حذفاً منطقياً فقط: `users.i_del = 1`.
 
@@ -1020,7 +1065,7 @@ Migration المطبق:
 { "success": true }
 ```
 
-### 7. `update-user-permissions`
+### 8. `update-user-permissions`
 
 يحدّث صلاحيات مستخدم عبر جلسة إدارية صالحة.
 
@@ -1044,7 +1089,7 @@ Migration المطبق:
 - لا يمكن تعديل أو حذف المدير الرئيسي `role=6`.
 - نائب المدير لا يستطيع إدارة نائب مدير آخر أو إنشاء نائب مدير.
 - كل عملية تسجل في `activity_log`.
-- الأدوار المسموحة لإنشاء/تعديل الموظفين حالياً: `2`, `3`, `4`, `5` حسب صلاحية المنفذ.
+- الأدوار المسموحة لإنشاء/تعديل الموظفين حالياً: `2`, `3`, `4`, `5`, `7`, `8` حسب صلاحية المنفذ، مع الانتباه أن `7` محامي و`8` معقب وليسا إدارة رغم أن رقمهما أعلى.
 
 ---
 
@@ -1075,6 +1120,7 @@ Migration المطبق:
 
 - `create-user`
 - `get-staff-id-images`
+- `update-staff-id-images`
 - `update-user-role`
 - `toggle-user-status`
 - `reset-user-password`

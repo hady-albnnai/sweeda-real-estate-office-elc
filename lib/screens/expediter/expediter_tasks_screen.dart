@@ -28,6 +28,36 @@ class _ExpediterTasksScreenState extends State<ExpediterTasksScreen> {
     }
   }
 
+  Future<void> _openAccountDetails() async {
+    if (!mounted) return;
+    context.push('/user/account-info');
+  }
+
+  Future<void> _logout() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surfaceBlack,
+        title: const Text('تسجيل الخروج', style: TextStyle(color: AppTheme.textWhite)),
+        content: const Text('هل تريد تسجيل الخروج من حساب المعقب؟', style: TextStyle(color: AppTheme.textGrey)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('إلغاء', style: TextStyle(color: AppTheme.textGrey)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('تسجيل خروج', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+    await context.read<AuthProvider>().logout();
+    if (!mounted) return;
+    context.go('/user/profile');
+  }
+
   @override
   Widget build(BuildContext context) {
     final tasks = context.watch<LegalProvider>().expeditingTasks;
@@ -39,8 +69,19 @@ class _ExpediterTasksScreenState extends State<ExpediterTasksScreen> {
         backgroundColor: AppTheme.scaffoldBackground,
         actions: [
           IconButton(
+            icon: const Icon(Icons.account_circle_outlined, color: AppTheme.primaryGold),
+            tooltip: 'تفاصيل حسابي',
+            onPressed: _openAccountDetails,
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh, color: AppTheme.primaryGold),
+            tooltip: 'تحديث المهام',
             onPressed: _load,
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.redAccent),
+            tooltip: 'تسجيل خروج',
+            onPressed: _logout,
           ),
         ],
       ),
