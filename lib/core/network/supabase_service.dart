@@ -82,10 +82,15 @@ class SupabaseService {
         mapBody['staff_session_token'] = sessionToken;
       }
       if (storedUserId != null && storedUserId.isNotEmpty) {
-        if (functionName.startsWith('admin-') && mapBody['admin_uid'] == null && mapBody['adminUid'] == null) {
+        final adminUidEmpty = (mapBody['admin_uid'] == null || mapBody['admin_uid'].toString().isEmpty) &&
+            (mapBody['adminUid'] == null || mapBody['adminUid'].toString().isEmpty);
+        final userUidEmpty = (mapBody['user_uid'] == null || mapBody['user_uid'].toString().isEmpty) &&
+            (mapBody['userUid'] == null || mapBody['userUid'].toString().isEmpty);
+
+        if (functionName.startsWith('admin-') && adminUidEmpty) {
           mapBody['admin_uid'] = storedUserId;
         }
-        if (!functionName.startsWith('admin-') && mapBody['user_uid'] == null && mapBody['userUid'] == null) {
+        if (!functionName.startsWith('admin-') && userUidEmpty) {
           mapBody['user_uid'] = storedUserId;
         }
       }

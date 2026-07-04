@@ -10,6 +10,8 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+type SupabaseAdmin = ReturnType<typeof createClient>;
+
 function env(name: string, fallback?: string): string {
   return Deno.env.get(name) ?? (fallback ? Deno.env.get(fallback) ?? "" : "");
 }
@@ -21,12 +23,40 @@ function json(body: Record<string, unknown>, status = 200): Response {
   });
 }
 
+async function getUserRole(
+  supabaseAdmin: SupabaseAdmin,
+  uid: string,
+): Promise<number | null> {
+  const { data, error } = await supabaseAdmin
+    .from("users")
+    .select("role, sts, i_del")
+    .eq("id", uid)
+    .eq("i_del", 0)
+    .single();
+
+  if (error || !data || Number(data.sts) !== 0) return null;
+  return Number(data.role);
+}
+
+function canManageLawyerProfiles(role: number): boolean {
+  // الإدارة العليا فقط: نائب مدير ومدير. لا يدخل lawyer=7 أو expediter=8 في صلاحيات الإدارة.
+  return role === 5 || role === 6;
+}
+
+function isLawyer(role: number): boolean {
+  return role === 7;
+}
+
+function isExpediter(role: number): boolean {
+  return role === 8;
+}
+
 async function validateUser(
   req: Request,
-  supabaseAdmin: ReturnType<typeof createClient>,
+  supabaseAdmin: SupabaseAdmin,
   requestedUid: string,
-  body: Record<string, unknown> = {}
-): Promise<{ ok: true; uid: string } | { ok: false; response: Response }> {
+  body: Record<string, unknown> = {},
+): Promise<{ ok: true; uid: string; role: number } | { ok: false; response: Response }> {
   const authHeader = req.headers.get("Authorization") ?? "";
   const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
 
@@ -37,19 +67,26 @@ async function validateUser(
       if (requestedUid && requestedUid !== uid) {
         return { ok: false, response: json({ success: false, error: "UNAUTHORIZED_ACCESS" }, 403) };
       }
-      return { ok: true, uid: uid };
+      const role = await getUserRole(supabaseAdmin, uid);
+      if (role == null) {
+        return { ok: false, response: json({ success: false, error: "USER_INACTIVE" }, 401) };
+      }
+      return { ok: true, uid, role };
     }
   }
 
-  const sessionToken = (body?.staff_session_token ?? body?.staffSessionToken ?? body?.session_token ?? body?.sessionToken)?.toString() || bearer || authHeader.trim();
+  const sessionToken = (body?.staff_session_token ?? body?.staffSessionToken ?? body?.session_token ?? body?.sessionToken)?.toString()
+    || (authHeader && !authHeader.startsWith("Bearer ") ? authHeader.trim() : "");
+
   if (sessionToken && sessionToken !== "anon_key_here" && sessionToken !== "undefined" && sessionToken !== "null") {
     const { data, error } = await supabaseAdmin.rpc("validate_staff_session", {
       p_token: sessionToken,
       p_user_uid: requestedUid,
+      p_min_role: 0,
     });
 
     if (!error && data && data.success === true) {
-      return { ok: true, uid: data.user_id };
+      return { ok: true, uid: data.user_id, role: Number(data.role) };
     }
   }
 
@@ -76,6 +113,7 @@ serve(async (req) => {
     const actor = await validateUser(req, supabaseAdmin, requestedUid, body);
     if (!actor.ok) return actor.response;
     const uid = actor.uid;
+    const role = actor.role;
 
     if (action === "get_active_lawyers") {
       const { data, error } = await supabaseAdmin.rpc("get_active_lawyers");
@@ -91,6 +129,12 @@ serve(async (req) => {
       const avl = body.avl ?? {};
 
       if (!targetUid || !whatsapp) return json({ success: false, error: "MISSING_REQUIRED_FIELDS" }, 400);
+      if (targetUid !== uid && !canManageLawyerProfiles(role)) {
+        return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
+      }
+      if (targetUid === uid && !isLawyer(role) && !canManageLawyerProfiles(role)) {
+        return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
+      }
 
       const { data, error } = await supabaseAdmin.rpc("admin_upsert_lawyer_profile", {
         p_admin_uid: uid,
@@ -106,6 +150,10 @@ serve(async (req) => {
     }
 
     if (action === "update_checklist_item") {
+      if (!isLawyer(role) && !isExpediter(role) && !canManageLawyerProfiles(role)) {
+        return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
+      }
+
       const taskId = (body.task_id ?? body.taskId)?.toString() ?? "";
       const itemKey = (body.item_key ?? body.itemKey)?.toString() ?? "";
       const status = Number(body.status ?? 0);
@@ -129,8 +177,8 @@ serve(async (req) => {
       return json(data as Record<string, unknown>);
     }
 
-
     if (action === "get_lawyer_profile") {
+      if (!isLawyer(role)) return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
       const { data, error } = await supabaseAdmin.rpc("get_lawyer_profile", {
         p_lawyer_uid: uid,
       });
@@ -139,12 +187,16 @@ serve(async (req) => {
     }
 
     if (action === "get_available_expediters") {
+      if (!isLawyer(role) && !canManageLawyerProfiles(role)) {
+        return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
+      }
       const { data, error } = await supabaseAdmin.rpc("get_available_expediters");
       if (error) return json({ success: false, error: error.message }, 400);
       return json({ success: true, expediters: data ?? [] });
     }
 
     if (action === "create_expediting_task") {
+      if (!isLawyer(role)) return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
       const expediterUid = (body.expediter_uid ?? body.expediterUid)?.toString() ?? "";
       const itemType = Number(body.item_type ?? body.itemType ?? 0);
       const propNum = (body.target_property_num ?? "").toString();
@@ -168,6 +220,7 @@ serve(async (req) => {
     }
 
     if (action === "get_lawyer_expediting_tasks") {
+      if (!isLawyer(role)) return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
       const { data, error } = await supabaseAdmin.rpc("get_lawyer_expediting_tasks", {
         p_lawyer_uid: uid,
       });
@@ -176,6 +229,7 @@ serve(async (req) => {
     }
 
     if (action === "get_lawyer_appointments") {
+      if (!isLawyer(role)) return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
       const { data, error } = await supabaseAdmin.rpc("get_lawyer_appointments", {
         p_lawyer_uid: uid,
       });
@@ -184,6 +238,7 @@ serve(async (req) => {
     }
 
     if (action === "get_my_expediting_tasks") {
+      if (!isExpediter(role)) return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
       const { data, error } = await supabaseAdmin.rpc("get_my_expediting_tasks", {
         p_expediter_uid: uid,
       });

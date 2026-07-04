@@ -416,3 +416,29 @@
 - المرجع التفصيلي: `docs/2026_07_04_ui_auth_theme_fix.md`.
 
 **يلزم للنشر الحي:** إعادة نشر Edge Functions المعدلة وتطبيق Migration على قاعدة البيانات.
+
+---
+
+## تحديث 2026-07-04 — تحصين دوال القسم القانوني والتعقيب على السيرفر الحي
+
+- تم اكتشاف أن دوال القسم القانوني/التعقيب الجديدة كانت ما زالت قابلة للتنفيذ مباشرة من `anon/authenticated` رغم أنها `SECURITY DEFINER`.
+- تم تطبيق Migration جديدة على السيرفر الحي: `2026_07_04_legal_rpcs_security_hardening.sql`.
+- تم قفل الدوال التالية عن العميل المباشر ومنحها لـ `service_role` فقط:
+  - `admin_upsert_lawyer_profile`
+  - `create_expediting_task_internal`
+  - `get_available_expediters`
+  - `get_lawyer_appointments`
+  - `get_lawyer_expediting_tasks`
+  - `get_lawyer_profile`
+  - `get_my_expediting_tasks`
+- تم تشديد منطق `admin_upsert_lawyer_profile`:
+  - المحامي `role=7` يعدل ملفه فقط.
+  - نائب المدير/المدير فقط `role IN (5,6)` يستطيعان تعديل ملف محامٍ آخر.
+  - الدالة لم تعد تغيّر الأدوار؛ تغيير الدور يبقى حصراً عبر إدارة الموظفين.
+- تم تشديد إنشاء مهمة التعقيب:
+  - `p_lawyer_uid` يجب أن يكون محامياً نشطاً `role=7`.
+  - `p_expediter_uid` يجب أن يكون معقباً نشطاً `role=8`.
+- تم تحديث `legal-actions` ليفحص الدور صراحة قبل كل إجراء حساس.
+- تم التحقق من السيرفر الحي بعد التطبيق:
+  - عدد دوال `SECURITY DEFINER` المفتوحة لـ `anon/authenticated` = `0`.
+  - الدوال الحساسة المذكورة أعلاه: `anon=false`, `authenticated=false`, `service_role=true`.
