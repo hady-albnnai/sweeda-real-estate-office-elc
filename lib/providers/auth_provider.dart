@@ -42,16 +42,19 @@ class AuthProvider with ChangeNotifier {
   /// تسجيل الدخول باسم مستخدم/رقم هاتف + كلمة مرور
   Future<bool> loginWithPassword(String identifier, String password) async {
     try {
+      debugPrint('👉 [AUTH_DEBUG] Starting loginWithPassword for "$identifier"');
       // تنظيف أي جلسات قديمة لضمان عدم تعارض التوكنات
       await AuthService().signOut();
       
       _lastError = null;
       final result = await SupabaseService().invokeFunction('user-account', body: {'action': 'login_with_password', 'identifier': identifier, 'password': password});
+      debugPrint('👉 [AUTH_DEBUG] invokeFunction result: ${result.data}');
 
       final respData = result.data is Map ? Map<String, dynamic>.from(result.data) : null;
       final data = respData?['result'] is Map ? Map<String, dynamic>.from(respData!['result']) : respData;
       if (data == null || data['success'] != true) {
         _lastError = 'فشل تسجيل الدخول';
+        debugPrint('👉 [AUTH_DEBUG] Login failed: data=$data');
         return false;
       }
 
@@ -67,6 +70,7 @@ class AuthProvider with ChangeNotifier {
       if (staffSession is Map && staffSession['success'] == true) {
         final token = staffSession['session_token']?.toString();
         final expiresAt = staffSession['expires_at']?.toString();
+        debugPrint('👉 [AUTH_DEBUG] Storing staff_session_token: ${token?.substring(0, 10)}...');
         if (token != null && token.isNotEmpty) {
           await prefs.setString('staff_session_token', token);
         }
@@ -74,11 +78,14 @@ class AuthProvider with ChangeNotifier {
           await prefs.setString('staff_session_expires_at', expiresAt);
         }
       } else {
+        debugPrint('👉 [AUTH_DEBUG] No valid staff_session returned: $staffSession');
         await prefs.remove('staff_session_token');
         await prefs.remove('staff_session_expires_at');
       }
 
+      debugPrint('👉 [AUTH_DEBUG] Now loading user data for userId="$userId"');
       await _loadUserData(userId);
+      debugPrint('👉 [AUTH_DEBUG] Loaded user data! _userModel=${_userModel?.nm} | role=${_userModel?.role}');
 
       // تسجيل FCM token
       await FCMService().registerCurrentTokenForUser();
@@ -86,6 +93,7 @@ class AuthProvider with ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
+      debugPrint('👉 [AUTH_DEBUG] Exception in loginWithPassword: $e');
       final msg = e.toString();
       if (msg.contains('USER_NOT_FOUND')) {
         _lastError = 'لم يتم العثور على حساب بهذا الاسم أو الرقم';
@@ -200,17 +208,26 @@ class AuthProvider with ChangeNotifier {
 
   Future<void> _loadUserData(String userId) async {
     try {
+      debugPrint('👉 [LOAD_USER_DEBUG] Calling get_full_profile for userId="$userId"');
       final response = await SupabaseService().invokeFunction('user-account', body: {'action': 'get_full_profile', 'user_uid': userId});
+      debugPrint('👉 [LOAD_USER_DEBUG] get_full_profile raw response: ${response.data}');
       final data = response.data as Map;
-      if (data['success'] != true || data['profile'] == null) return;
+      if (data['success'] != true || data['profile'] == null) {
+        debugPrint('👉 [LOAD_USER_DEBUG] get_full_profile failed or profile null! data=$data');
+        return;
+      }
       final profileList = data['profile'];
-      if (profileList is! List || profileList.isEmpty) return;
+      if (profileList is! List || profileList.isEmpty) {
+        debugPrint('👉 [LOAD_USER_DEBUG] profileList empty! profileList=$profileList');
+        return;
+      }
       final row = Map<String, dynamic>.from(profileList.first as Map);
       _userModel = UserModel.fromSupabase(row, userId);
+      debugPrint('👉 [LOAD_USER_DEBUG] Successfully set _userModel! nm="${_userModel?.nm}", role=${_userModel?.role}');
       notifyListeners();
       DeviceService().registerWithServer();
     } catch (e) {
-      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+      debugPrint('👉 [LOAD_USER_DEBUG] Exception in _loadUserData: $e');
     }
   }
 

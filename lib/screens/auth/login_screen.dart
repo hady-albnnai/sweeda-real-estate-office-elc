@@ -41,27 +41,36 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   // ── العمليات الوظيفية ──
-    Future<void> _login() async {
+  Future<void> _login() async {
     if (_userCtrl.text.isEmpty || _passCtrl.text.isEmpty) { _snack('أدخل بيانات الدخول'); return; }
     setState(() => _loading = true);
     final auth = context.read<AuthProvider>();
+    debugPrint('👉 [LOGIN_DEBUG] Calling loginWithPassword for id="${_userCtrl.text.trim()}"');
     final ok = await auth.loginWithPassword(_userCtrl.text.trim(), _passCtrl.text);
+    debugPrint('👉 [LOGIN_DEBUG] loginWithPassword returned: $ok | lastError: ${auth.lastError}');
     if (!ok) {
       if (mounted) setState(() => _loading = false);
       _snack(auth.lastError ?? 'خطأ في الاسم أو كلمة المرور');
     } else {
+      debugPrint('👉 [LOGIN_DEBUG] User logged in! role=${auth.userModel?.role} | isSenior=${auth.isSenior} | isLoggedIn=${auth.isLoggedIn}');
       if (mounted) {
         if (auth.isSenior) {
+          debugPrint('👉 [LOGIN_DEBUG] Navigating to /admin/dashboard');
           context.go('/admin/dashboard');
         } else if (auth.isEmployee) {
+          debugPrint('👉 [LOGIN_DEBUG] Navigating to /employee/home');
           context.go('/employee/home');
         } else if (auth.isSupervisor) {
+          debugPrint('👉 [LOGIN_DEBUG] Navigating to /executor/tasks');
           context.go('/executor/tasks');
         } else if (auth.isPhotographer) {
+          debugPrint('👉 [LOGIN_DEBUG] Navigating to /photographer/tasks');
           context.go('/photographer/tasks');
         } else if (auth.isBroker) {
+          debugPrint('👉 [LOGIN_DEBUG] Navigating to /broker/dashboard');
           context.go('/broker/dashboard');
         } else {
+          debugPrint('👉 [LOGIN_DEBUG] Navigating to /user/home');
           context.go('/user/home');
         }
       }
