@@ -172,6 +172,20 @@ class StaffAdminService {
     return urls.map((e) => e.toString()).where((e) => e.isNotEmpty).toList();
   }
 
+  Future<Map<String, dynamic>> updateStaffIdImages({
+    required String adminUid,
+    required String targetUid,
+    required List<String> idImagesBase64,
+    String idImageContentType = 'image/jpeg',
+  }) {
+    return _invokeStaffFunction('update-staff-id-images', {
+      'admin_uid': adminUid,
+      'target_uid': targetUid,
+      'id_images_base64': idImagesBase64,
+      'id_image_content_type': idImageContentType,
+    });
+  }
+
   Future<Map<String, dynamic>> getStaffStatsInternal(String userUid) async {
     try {
       final token = await AuthService().getStaffSessionToken();

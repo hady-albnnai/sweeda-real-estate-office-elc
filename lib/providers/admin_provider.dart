@@ -240,6 +240,23 @@ class AdminProvider with ChangeNotifier {
     return urls;
   }
 
+  Future<Map<String, dynamic>> updateStaffIdImages({
+    required String adminUid,
+    required String targetUid,
+    required List<String> idImagesBase64,
+    String idImageContentType = 'image/jpeg',
+  }) async {
+    final data = await _staffAdmin.updateStaffIdImages(
+      adminUid: adminUid,
+      targetUid: targetUid,
+      idImagesBase64: idImagesBase64,
+      idImageContentType: idImageContentType,
+    );
+    _syncStaffError();
+    if (data['success'] == true) notifyListeners();
+    return data;
+  }
+
   Future<Map<String, dynamic>> getStaffStatsInternal(String userUid) async {
     final stats = await _staffAdmin.getStaffStatsInternal(userUid);
     _syncStaffError();

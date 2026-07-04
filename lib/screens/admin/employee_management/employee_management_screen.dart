@@ -6,6 +6,7 @@ import '../../../providers/admin_provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../models/user_model.dart';
+import '../../../services/storage_service.dart';
 import 'add_employee_dialog.dart';
 import 'change_role_dialog.dart';
 import 'toggle_status_dialog.dart';
@@ -319,6 +320,65 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
     );
   }
 
+  Future<void> _updateStaffIdImages(UserModel user) async {
+    final currentRole = context.read<AuthProvider>().userModel?.role ?? 0;
+    if (currentRole < 5) {
+      AppTheme.showSnackBar(context,
+        const SnackBar(content: Text('تحديث صور الهوية محصور بالمدير ونائب المدير')),
+      );
+      return;
+    }
+    if (currentRole < 6 && user.role >= 5 && user.uid != context.read<AuthProvider>().userModel?.uid) {
+      AppTheme.showSnackBar(context,
+        const SnackBar(content: Text('نائب المدير لا يستطيع تحديث صور هوية الإدارة العليا')),
+      );
+      return;
+    }
+
+    final imgs = await StorageService().pickMultiImages(limit: 2);
+    if (!mounted) return;
+    if (imgs.length < 2) {
+      AppTheme.showSnackBar(context,
+        const SnackBar(content: Text('يجب اختيار صورتين للهوية: الوجه والقفا')),
+      );
+      return;
+    }
+
+    try {
+      final adminUid = context.read<AuthProvider>().userModel?.uid;
+      if (adminUid == null) throw Exception('لم يتم العثور على جلسة المدير');
+
+      final idImagesBase64 = <String>[];
+      for (final image in imgs.take(2)) {
+        idImagesBase64.add(base64Encode(await image.readAsBytes()));
+      }
+
+      final result = await context.read<AdminProvider>().updateStaffIdImages(
+        adminUid: adminUid,
+        targetUid: user.uid,
+        idImagesBase64: idImagesBase64,
+        idImageContentType: 'image/jpeg',
+      );
+
+      if (!mounted) return;
+      if (result['success'] == true) {
+        AppTheme.showSnackBar(context,
+          const SnackBar(content: Text('تم تحديث صور الهوية وتوثيق الحساب وظيفياً ✅'), backgroundColor: Colors.green),
+        );
+        await _loadUsers();
+      } else {
+        AppTheme.showSnackBar(context,
+          SnackBar(content: Text("فشل تحديث الصور: ${result['error'] ?? 'خطأ غير معروف'}"), backgroundColor: AppTheme.errorRed),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      AppTheme.showSnackBar(context,
+        SnackBar(content: Text('تعذّر تحديث صور الهوية: $e'), backgroundColor: AppTheme.errorRed),
+      );
+    }
+  }
+
   Future<void> _showStaffIdImages(UserModel user) async {
     try {
       final adminUid = context.read<AuthProvider>().userModel?.uid;
@@ -393,6 +453,22 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
                 ),
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: AppTheme.primaryGold),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+              const SizedBox(height: 8),
+              ElevatedButton.icon(
+                onPressed: () async {
+                  Navigator.pop(ctx);
+                  await _updateStaffIdImages(user);
+                },
+                icon: const Icon(Icons.upload_file, color: AppTheme.deepBlack),
+                label: const Text(
+                  'تحديث صور الهوية (وجه وقفا)',
+                  style: TextStyle(color: AppTheme.deepBlack, fontWeight: FontWeight.bold),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryGold,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
