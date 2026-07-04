@@ -262,6 +262,7 @@ class AppRouter {
       GoRoute(path: '/admin/employee-management', builder: (context, state) => const EmployeeManagementScreen()),
       GoRoute(path: '/admin/sections', builder: (context, state) => const AdminSectionsScreen()),
       GoRoute(path: '/admin/office-operations', builder: (context, state) => const OfficeOperationsScreen()),
+      GoRoute(path: '/admin/operations-dashboard', builder: (context, state) => const OfficeOperationsScreen()),
       GoRoute(path: '/admin/permissions', builder: (context, state) => const PermissionsManagementScreen()),
       GoRoute(path: '/admin/users', builder: (context, state) => const UsersManagementScreen()),
       GoRoute(path: '/admin/user/:id', builder: (context, state) => UserDetailsScreen(userId: state.pathParameters['id']!)),

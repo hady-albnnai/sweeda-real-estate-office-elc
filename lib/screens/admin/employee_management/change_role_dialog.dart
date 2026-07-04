@@ -21,7 +21,7 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
   @override
   void initState() {
     super.initState();
-    _selectedRole = widget.user.role;
+    _selectedRole = [2, 3, 4, 5, 7, 8].contains(widget.user.role) ? widget.user.role : 4;
   }
 
   Future<void> _submit() async {
@@ -88,7 +88,9 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
             items: [
               const DropdownMenuItem(value: 2, child: Text('مصور')),
               const DropdownMenuItem(value: 3, child: Text('مشرف ميداني')),
+              const DropdownMenuItem(value: 8, child: Text('معقب معاملات ميداني')),
               const DropdownMenuItem(value: 4, child: Text('موظف مكتب')),
+              if (isManager || isSenior) const DropdownMenuItem(value: 7, child: Text('محامي مختص (قسم الاستشارات)')),
               if (isManager) const DropdownMenuItem(value: 5, child: Text('نائب مدير')),
             ],
             onChanged: (value) {

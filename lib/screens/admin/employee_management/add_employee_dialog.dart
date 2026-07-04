@@ -234,7 +234,9 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
                 items: [
                   const DropdownMenuItem(value: 2, child: Text('مصور')),
                   const DropdownMenuItem(value: 3, child: Text('مشرف ميداني')),
+                  const DropdownMenuItem(value: 8, child: Text('معقب معاملات ميداني')),
                   const DropdownMenuItem(value: 4, child: Text('موظف مكتب')),
+                  if (isManager || isSenior) const DropdownMenuItem(value: 7, child: Text('محامي مختص (قسم الاستشارات)')),
                   if (isManager) const DropdownMenuItem(value: 5, child: Text('نائب مدير')),
                 ],
                 onChanged: (value) {

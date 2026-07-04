@@ -272,7 +272,7 @@ DECLARE
 BEGIN
   v_admin_role := _admin_employee_assert_actor(p_admin_uid, 5);
 
-  IF p_role NOT IN (2, 3, 4, 5) THEN
+  IF p_role NOT IN (2, 3, 4, 5, 7, 8) THEN
     RAISE EXCEPTION 'INVALID_ROLE';
   END IF;
   IF v_admin_role < 6 AND p_role >= 5 THEN
@@ -330,7 +330,7 @@ DECLARE
 BEGIN
   v_admin_role := _admin_employee_assert_actor(p_admin_uid, 5);
 
-  IF p_role NOT IN (2, 3, 4, 5) THEN
+  IF p_role NOT IN (2, 3, 4, 5, 7, 8) THEN
     RAISE EXCEPTION 'INVALID_ROLE';
   END IF;
 
@@ -961,7 +961,7 @@ BEGIN
     RAISE EXCEPTION 'CANNOT_MODIFY_MANAGER';
   END IF;
 
-  IF p_role NOT IN (2, 3, 4, 5) THEN
+  IF p_role NOT IN (2, 3, 4, 5, 7, 8) THEN
     RAISE EXCEPTION 'INVALID_ROLE';
   END IF;
 
@@ -1040,7 +1040,7 @@ BEGIN
   END IF;
 
   -- لا نسمح بإنشاء مدير جديد من هذه الدالة القديمة
-  IF p_role < 0 OR p_role > 5 THEN
+  IF p_role < 0 OR p_role > 8 THEN
     RAISE EXCEPTION 'INVALID_ROLE';
   END IF;
 

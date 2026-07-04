@@ -419,7 +419,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.dashboard_customize, color: AppTheme.primaryGold),
-            onPressed: () => context.push('/admin/operations-dashboard'),
+            onPressed: () => context.push('/admin/office-operations'),
             tooltip: 'لوحة المدير والأقسام',
           ),
           IconButton(
@@ -735,4 +735,5 @@ class _StaffIdImagesViewerState extends State<_StaffIdImagesViewer> {
       ),
     );
   }
+}
 }
