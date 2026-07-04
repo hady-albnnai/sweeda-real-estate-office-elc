@@ -181,8 +181,6 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
                       const SizedBox(height: 4),
                       Text('ملاحظات: ${item.notes}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
                     ],
-<<<<<<< HEAD
-=======
                     const SizedBox(height: 12),
                     Row(
                       children: [
@@ -211,7 +209,6 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
                         ),
                       ],
                     ),
->>>>>>> 8678b22 (feat(ux): add VisualMilestoneTracker widget and one-tap expediter quick action buttons)
                   ],
                 ),
               );

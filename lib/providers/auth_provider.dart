@@ -34,6 +34,8 @@ class AuthProvider with ChangeNotifier {
   bool get isEmployee => _userModel?.isEmployee ?? false;
   bool get isSenior => _userModel?.isSenior ?? false;
   bool get isManager => _userModel?.isManager ?? false;
+  bool get isLawyer => _userModel?.isLawyer ?? false;
+  bool get isExpediter => _userModel?.isExpediter ?? false;
 
   // ════════════════════════════════════════════════════════════════════
   // 🔑 اسم مستخدم + كلمة مرور
