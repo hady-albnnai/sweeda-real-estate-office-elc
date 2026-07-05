@@ -343,8 +343,7 @@ class _RequestsManagementScreenState extends State<RequestsManagementScreen> {
   }
 
   Widget _infoRow(IconData icon, String label, String value,
-      {Color? color}) {
-    final valueColor = color ?? AppTheme.textWhite;
+      {Color color = AppTheme.textWhite}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(children: [
@@ -356,7 +355,7 @@ class _RequestsManagementScreenState extends State<RequestsManagementScreen> {
         Expanded(
           child: Text(value,
               style: TextStyle(
-                  color: valueColor,
+                  color: color,
                   fontSize: 13,
                   fontWeight: FontWeight.w500)),
         ),
