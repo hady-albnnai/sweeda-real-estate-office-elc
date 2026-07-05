@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/network/supabase_service.dart';
 import '../../providers/auth_provider.dart';
@@ -18,12 +20,15 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
     with SingleTickerProviderStateMixin {
   final _whatsappCtrl = TextEditingController();
   final _addressCtrl = TextEditingController();
+  static const String _customDocsStorageKey = 'lawyer_expediting_custom_docs_v1';
+
   final _taskPropertyCtrl = TextEditingController();
   final _taskZoneCtrl = TextEditingController();
   final _taskNotesCtrl = TextEditingController();
-  final _customDocTitleCtrl = TextEditingController();
-  String? _selectedDocKey;
+  final _permanentDocTitleCtrl = TextEditingController();
+  final _oneTimeDocTitleCtrl = TextEditingController();
   final List<Map<String, dynamic>> _selectedChecklist = [];
+  final Map<int, List<Map<String, String>>> _customDocTemplates = {0: [], 1: []};
 
   bool _savingProfile = false;
   bool _creatingTask = false;
@@ -36,6 +41,7 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
   void initState() {
     super.initState();
     _tabCtrl = TabController(length: 3, vsync: this);
+    _loadCustomDocumentTemplates();
     WidgetsBinding.instance.addPostFrameCallback((_) => _init());
   }
 
@@ -56,7 +62,8 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
   void dispose() {
     _whatsappCtrl.dispose(); _addressCtrl.dispose();
     _taskPropertyCtrl.dispose(); _taskZoneCtrl.dispose(); _taskNotesCtrl.dispose();
-    _customDocTitleCtrl.dispose();
+    _permanentDocTitleCtrl.dispose();
+    _oneTimeDocTitleCtrl.dispose();
     _tabCtrl.dispose();
     super.dispose();
   }
@@ -173,7 +180,7 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
     } else { _snack('فشل الحفظ', bg: AppTheme.errorRed); }
   }
 
-  List<Map<String, String>> _documentTemplatesFor(int itemType) {
+  List<Map<String, String>> _baseDocumentTemplatesFor(int itemType) {
     if (itemType == 0) {
       return const [
         {'key': 'extract', 'title': 'إخراج قيد عقاري حديث'},
@@ -192,54 +199,141 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
     ];
   }
 
+  List<Map<String, String>> _documentTemplatesFor(int itemType) {
+    return [
+      ..._baseDocumentTemplatesFor(itemType),
+      ...(_customDocTemplates[itemType] ?? const <Map<String, String>>[]),
+    ];
+  }
+
+  bool _isBaseDocument(String key) {
+    return _baseDocumentTemplatesFor(_selectedItemType).any((doc) => doc['key'] == key);
+  }
+
+  Future<void> _loadCustomDocumentTemplates() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_customDocsStorageKey);
+    if (raw == null || raw.isEmpty) return;
+    try {
+      final parsed = jsonDecode(raw);
+      if (parsed is Map) {
+        final loaded = <int, List<Map<String, String>>>{0: [], 1: []};
+        for (final type in [0, 1]) {
+          final list = parsed[type.toString()];
+          if (list is List) {
+            loaded[type] = list
+                .whereType<Map>()
+                .map((item) => {
+                      'key': item['key']?.toString() ?? '',
+                      'title': item['title']?.toString() ?? '',
+                    })
+                .where((item) => item['key']!.isNotEmpty && item['title']!.isNotEmpty)
+                .toList();
+          }
+        }
+        if (mounted) {
+          setState(() {
+            _customDocTemplates
+              ..clear()
+              ..addAll(loaded);
+          });
+        }
+      }
+    } catch (_) {
+      // تجاهل كاش تالف.
+    }
+  }
+
+  Future<void> _saveCustomDocumentTemplates() async {
+    final prefs = await SharedPreferences.getInstance();
+    final serializable = {
+      '0': _customDocTemplates[0] ?? [],
+      '1': _customDocTemplates[1] ?? [],
+    };
+    await prefs.setString(_customDocsStorageKey, jsonEncode(serializable));
+  }
+
+  Map<String, dynamic> _newChecklistItem(String key, String title) {
+    return {
+      'key': key,
+      'title': title,
+      'status': 0,
+      'required_copies': 1,
+      'lawyer_instructions': '',
+    };
+  }
+
+  void _toggleDocumentForTask(Map<String, String> doc, bool selected) {
+    final key = doc['key']!;
+    final title = doc['title']!;
+    setState(() {
+      if (selected) {
+        if (!_selectedChecklist.any((item) => item['key'] == key)) {
+          _selectedChecklist.add(_newChecklistItem(key, title));
+        }
+      } else {
+        _selectedChecklist.removeWhere((item) => item['key'] == key);
+      }
+    });
+  }
+
   void _changeItemType(int type) {
     if (_selectedItemType == type) return;
     setState(() {
       _selectedItemType = type;
-      _selectedDocKey = null;
-      _customDocTitleCtrl.clear();
       _selectedChecklist.clear();
+      _permanentDocTitleCtrl.clear();
+      _oneTimeDocTitleCtrl.clear();
       _taskPropertyCtrl.clear();
       _taskZoneCtrl.clear();
     });
   }
 
-  void _addSelectedDocument() {
-    final key = _selectedDocKey;
-    if (key == null) {
-      _snack('اختر وثيقة أولاً', bg: AppTheme.errorRed);
+  Future<void> _addPermanentDocumentTemplate() async {
+    final title = _permanentDocTitleCtrl.text.trim();
+    if (title.length < 2) {
+      _snack('اكتب اسم الوثيقة التي تريد إضافتها للقائمة', bg: AppTheme.errorRed);
       return;
     }
-
-    late final String docKey;
-    late final String title;
-    if (key == '__custom__') {
-      title = _customDocTitleCtrl.text.trim();
-      if (title.length < 2) {
-        _snack('اكتب اسم الوثيقة المطلوبة', bg: AppTheme.errorRed);
-        return;
-      }
-      docKey = 'custom_${DateTime.now().microsecondsSinceEpoch}';
-    } else {
-      final doc = _documentTemplatesFor(_selectedItemType).firstWhere((d) => d['key'] == key);
-      docKey = doc['key']!;
-      title = doc['title']!;
-      if (_selectedChecklist.any((item) => item['key'] == docKey)) {
-        _snack('هذه الوثيقة مضافة مسبقاً', bg: AppTheme.errorRed);
-        return;
-      }
+    final exists = _documentTemplatesFor(_selectedItemType)
+        .any((doc) => doc['title']?.trim() == title);
+    if (exists) {
+      _snack('هذه الوثيقة موجودة مسبقاً في القائمة', bg: AppTheme.errorRed);
+      return;
     }
-
+    final key = 'saved_${_selectedItemType}_${DateTime.now().microsecondsSinceEpoch}';
     setState(() {
-      _selectedChecklist.add({
-        'key': docKey,
-        'title': title,
-        'status': 0,
-        'required_copies': 1,
-        'lawyer_instructions': '',
-      });
-      _selectedDocKey = null;
-      _customDocTitleCtrl.clear();
+      _customDocTemplates.putIfAbsent(_selectedItemType, () => []).add({'key': key, 'title': title});
+      _permanentDocTitleCtrl.clear();
+    });
+    await _saveCustomDocumentTemplates();
+    _snack('تمت إضافة الوثيقة للقائمة الدائمة');
+  }
+
+  Future<void> _deletePermanentDocumentTemplate(Map<String, String> doc) async {
+    final key = doc['key'] ?? '';
+    if (_isBaseDocument(key)) {
+      _snack('لا يمكن حذف الوثائق الأساسية، يمكن حذف الوثائق المضافة فقط', bg: AppTheme.errorRed);
+      return;
+    }
+    setState(() {
+      _customDocTemplates[_selectedItemType]?.removeWhere((item) => item['key'] == key);
+      _selectedChecklist.removeWhere((item) => item['key'] == key);
+    });
+    await _saveCustomDocumentTemplates();
+    _snack('تم حذف الوثيقة من القائمة الدائمة');
+  }
+
+  void _addOneTimeDocument() {
+    final title = _oneTimeDocTitleCtrl.text.trim();
+    if (title.length < 2) {
+      _snack('اكتب اسم الوثيقة الحرة المطلوبة لهذه المهمة', bg: AppTheme.errorRed);
+      return;
+    }
+    final key = 'one_time_${DateTime.now().microsecondsSinceEpoch}';
+    setState(() {
+      _selectedChecklist.add(_newChecklistItem(key, title));
+      _oneTimeDocTitleCtrl.clear();
     });
   }
 
@@ -247,13 +341,7 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
     setState(() {
       for (final doc in _documentTemplatesFor(_selectedItemType)) {
         if (!_selectedChecklist.any((item) => item['key'] == doc['key'])) {
-          _selectedChecklist.add({
-            'key': doc['key'],
-            'title': doc['title'],
-            'status': 0,
-            'required_copies': 1,
-            'lawyer_instructions': '',
-          });
+          _selectedChecklist.add(_newChecklistItem(doc['key']!, doc['title']!));
         }
       }
     });
@@ -276,7 +364,6 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
       setState(() {
         _selectedExpediterUid = null;
         _selectedChecklist.clear();
-        _selectedDocKey = null;
       });
     } else { _snack('فشل إنشاء المهمة', bg: AppTheme.errorRed); }
   }
@@ -469,45 +556,99 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text('الوثائق المطلوبة من المعقب:', style: TextStyle(color: AppTheme.primaryGold, fontSize: 15, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 10),
-          DropdownButtonFormField<String>(
-            value: _selectedDocKey,
-            dropdownColor: AppTheme.surfaceBlack,
-            style: const TextStyle(color: AppTheme.textWhite),
-            decoration: const InputDecoration(labelText: 'اختر وثيقة لإضافتها', prefixIcon: Icon(Icons.description, color: AppTheme.primaryGold)),
-            items: [
-              ...docs.map((doc) => DropdownMenuItem(value: doc['key'], child: Text(doc['title']!))),
-              const DropdownMenuItem(value: '__custom__', child: Text('وثيقة أخرى / نص حر')),
-            ],
-            onChanged: (value) => setState(() => _selectedDocKey = value),
-          ),
-          if (_selectedDocKey == '__custom__') ...[
-            const SizedBox(height: 10),
-            TextField(
-              controller: _customDocTitleCtrl,
-              style: const TextStyle(color: AppTheme.textWhite),
-              decoration: const InputDecoration(labelText: 'اسم الوثيقة المطلوبة', hintText: 'مثال: بيان ملكية خاص / وثيقة أخرى'),
-            ),
-          ],
-          const SizedBox(height: 10),
-          Row(children: [
-            Expanded(child: ElevatedButton.icon(
-              onPressed: _addSelectedDocument,
-              icon: const Icon(Icons.add),
-              label: const Text('إضافة وثيقة'),
-            )),
-            const SizedBox(width: 8),
-            Expanded(child: OutlinedButton.icon(
-              onPressed: _addAllDefaultDocuments,
-              icon: const Icon(Icons.playlist_add_check, color: AppTheme.primaryGold),
-              label: const Text('إضافة الكل', style: TextStyle(color: AppTheme.primaryGold)),
-              style: OutlinedButton.styleFrom(side: const BorderSide(color: AppTheme.primaryGold)),
-            )),
-          ]),
+          const SizedBox(height: 8),
+          const Text('حدد وثيقة أو أكثر لنفس المهمة، ثم اضبط عدد النسخ والتعليمات لكل وثيقة.', style: TextStyle(color: AppTheme.textGrey, fontSize: 12, height: 1.35)),
           const SizedBox(height: 12),
+          ...docs.map((doc) {
+            final key = doc['key']!;
+            final selected = _selectedChecklist.any((item) => item['key'] == key);
+            final canDelete = !_isBaseDocument(key);
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(
+                color: selected ? AppTheme.primaryGold.withOpacity(0.1) : AppTheme.scaffoldBackground,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: selected ? AppTheme.primaryGold : AppTheme.textGrey.withOpacity(0.18)),
+              ),
+              child: Row(
+                children: [
+                  Checkbox(
+                    value: selected,
+                    activeColor: AppTheme.primaryGold,
+                    onChanged: (value) => _toggleDocumentForTask(doc, value == true),
+                  ),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => _toggleDocumentForTask(doc, !selected),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Text(doc['title']!, style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.w600)),
+                      ),
+                    ),
+                  ),
+                  if (canDelete)
+                    IconButton(
+                      tooltip: 'حذف من القائمة الدائمة',
+                      onPressed: () => _deletePermanentDocumentTemplate(doc),
+                      icon: const Icon(Icons.delete_outline, color: AppTheme.errorRed, size: 20),
+                    ),
+                ],
+              ),
+            );
+          }),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            onPressed: _addAllDefaultDocuments,
+            icon: const Icon(Icons.playlist_add_check, color: AppTheme.primaryGold),
+            label: const Text('تحديد كل وثائق القائمة', style: TextStyle(color: AppTheme.primaryGold)),
+            style: OutlinedButton.styleFrom(side: const BorderSide(color: AppTheme.primaryGold), minimumSize: const Size(double.infinity, 44)),
+          ),
+          const SizedBox(height: 16),
+          const Divider(color: Colors.white12),
+          const SizedBox(height: 8),
+          const Text('إضافة وثيقة دائمة للقائمة:', style: TextStyle(color: AppTheme.primaryGold, fontSize: 13, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Row(children: [
+            Expanded(
+              child: TextField(
+                controller: _permanentDocTitleCtrl,
+                style: const TextStyle(color: AppTheme.textWhite),
+                decoration: const InputDecoration(labelText: 'اسم الوثيقة الجديدة', hintText: 'تُحفظ في القائمة لهذا الجهاز'),
+              ),
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              tooltip: 'إضافة للقائمة',
+              onPressed: _addPermanentDocumentTemplate,
+              icon: const Icon(Icons.add_circle, color: AppTheme.primaryGold, size: 30),
+            ),
+          ]),
+          const SizedBox(height: 16),
+          const Text('وثيقة لمرة واحدة لهذه المهمة فقط:', style: TextStyle(color: AppTheme.primaryGold, fontSize: 13, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Row(children: [
+            Expanded(
+              child: TextField(
+                controller: _oneTimeDocTitleCtrl,
+                style: const TextStyle(color: AppTheme.textWhite),
+                decoration: const InputDecoration(labelText: 'نص حر', hintText: 'لا تُحفظ في القائمة الدائمة'),
+              ),
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              tooltip: 'إضافة للمهمة فقط',
+              onPressed: _addOneTimeDocument,
+              icon: const Icon(Icons.post_add, color: AppTheme.primaryGold, size: 30),
+            ),
+          ]),
+          const SizedBox(height: 16),
+          const Divider(color: Colors.white12),
+          const SizedBox(height: 8),
           if (_selectedChecklist.isEmpty)
-            const Text('لم تتم إضافة وثائق بعد. يجب تحديد وثيقة واحدة على الأقل.', style: TextStyle(color: AppTheme.textGrey, fontSize: 12))
-          else
+            const Text('لم تحدد أي وثيقة بعد. يجب تحديد وثيقة واحدة على الأقل.', style: TextStyle(color: AppTheme.textGrey, fontSize: 12))
+          else ...[
+            Text('الوثائق المحددة (${_selectedChecklist.length}):', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 13, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
             ..._selectedChecklist.asMap().entries.map((entry) {
               final index = entry.key;
               final item = entry.value;
@@ -550,6 +691,7 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
                 ]),
               );
             }),
+          ],
         ],
       ),
     );
