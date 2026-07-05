@@ -25,7 +25,7 @@ class DeputyDashboardScreen extends StatelessWidget {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('لوحة نائب المدير', style: TextStyle(color: AppTheme.textWhite, fontSize: 18)),
+            Text('لوحة نائب المدير', style: TextStyle(color: AppTheme.textWhite, fontSize: 18)),
             Text('أهلاً، $name', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 12)),
           ],
         ),
@@ -120,9 +120,9 @@ class DeputyDashboardScreen extends StatelessWidget {
         children: [
           Text(emoji, style: const TextStyle(fontSize: 20)),
           const SizedBox(height: 8),
-          Text(label, style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+          Text(label, style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
           Text(value, style: const TextStyle(color: AppTheme.primaryGold, fontSize: 22, fontWeight: FontWeight.bold)),
-          Text(sub, style: const TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+          Text(sub, style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
         ],
       ),
     );
@@ -144,7 +144,7 @@ class DeputyDashboardScreen extends StatelessWidget {
           children: [
             Icon(icon, color: AppTheme.primaryGold, size: 30),
             const SizedBox(height: 10),
-            Text(title, textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.textWhite, fontSize: 13)),
+            Text(title, textAlign: TextAlign.center, style: TextStyle(color: AppTheme.textWhite, fontSize: 13)),
           ],
         ),
       ),

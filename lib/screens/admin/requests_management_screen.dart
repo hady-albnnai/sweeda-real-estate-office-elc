@@ -95,12 +95,12 @@ class _RequestsManagementScreenState extends State<RequestsManagementScreen> {
               _search = v;
               _applyFilter();
             },
-            style: const TextStyle(color: AppTheme.textWhite),
+            style: TextStyle(color: AppTheme.textWhite),
             decoration: InputDecoration(
               hintText: 'بحث باسم العميل أو هاتفه...',
-              hintStyle: const TextStyle(color: AppTheme.textGrey),
+              hintStyle: TextStyle(color: AppTheme.textGrey),
               prefixIcon:
-                  const Icon(Icons.search, color: AppTheme.textGrey),
+                  Icon(Icons.search, color: AppTheme.textGrey),
               filled: true,
               fillColor: AppTheme.surfaceBlack,
               border: OutlineInputBorder(
@@ -132,7 +132,7 @@ class _RequestsManagementScreenState extends State<RequestsManagementScreen> {
                   child: CircularProgressIndicator(
                       color: AppTheme.primaryGold))
               : _filtered.isEmpty
-                  ? const Center(
+                  ? Center(
                       child: Text('لا توجد طلبات',
                           style: TextStyle(color: AppTheme.textGrey)))
                   : RefreshIndicator(
@@ -201,7 +201,7 @@ class _RequestsManagementScreenState extends State<RequestsManagementScreen> {
           Expanded(
             child: Text(
               '$typeLabel $elmLabel',
-              style: const TextStyle(
+              style: TextStyle(
                   color: AppTheme.textWhite,
                   fontWeight: FontWeight.bold,
                   fontSize: 14),
@@ -239,7 +239,7 @@ class _RequestsManagementScreenState extends State<RequestsManagementScreen> {
         if (r.notes.isNotEmpty) ...[
           const SizedBox(height: 6),
           Text('ملاحظات: ${r.notes}',
-              style: const TextStyle(
+              style: TextStyle(
                   color: AppTheme.textGrey, fontSize: 12),
               maxLines: 2,
               overflow: TextOverflow.ellipsis),
@@ -249,7 +249,7 @@ class _RequestsManagementScreenState extends State<RequestsManagementScreen> {
           const SizedBox(height: 4),
           Text(
             'المواصفات: ${(r.specs['details'] ?? r.specs.toString())}',
-            style: const TextStyle(color: AppTheme.textGrey, fontSize: 11),
+            style: TextStyle(color: AppTheme.textGrey, fontSize: 11),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
@@ -258,7 +258,7 @@ class _RequestsManagementScreenState extends State<RequestsManagementScreen> {
         const SizedBox(height: 6),
         Text(
           'تاريخ الطلب: ${AppUtils.formatTimestamp(r.tsCrt)}',
-          style: const TextStyle(color: AppTheme.textGrey, fontSize: 11),
+          style: TextStyle(color: AppTheme.textGrey, fontSize: 11),
         ),
         if (r.tsEnd != null)
           _infoRow(Icons.hourglass_bottom, 'ينتهي في',
@@ -312,7 +312,7 @@ class _RequestsManagementScreenState extends State<RequestsManagementScreen> {
         content: TextField(
           controller: ctrl,
           maxLines: 3,
-          style: const TextStyle(color: AppTheme.textWhite),
+          style: TextStyle(color: AppTheme.textWhite),
           decoration: const InputDecoration(hintText: 'سبب/ملاحظة الإغلاق...'),
         ),
         actions: [
@@ -350,7 +350,7 @@ class _RequestsManagementScreenState extends State<RequestsManagementScreen> {
         Icon(icon, color: AppTheme.textGrey, size: 14),
         const SizedBox(width: 6),
         Text('$label: ',
-            style: const TextStyle(
+            style: TextStyle(
                 color: AppTheme.textGrey, fontSize: 12)),
         Expanded(
           child: Text(value,

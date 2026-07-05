@@ -75,15 +75,15 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
-        title: const Text('تأكيد القبول',
+        title: Text('تأكيد القبول',
             style: TextStyle(color: AppTheme.textWhite)),
-        content: const Text(
+        content: Text(
             'سيتم نشر العرض ليصبح مرئياً للجميع. هل أنت متأكد؟',
             style: TextStyle(color: AppTheme.textGrey)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('إلغاء',
+            child: Text('إلغاء',
                 style: TextStyle(color: AppTheme.textGrey)),
           ),
           ElevatedButton(
@@ -149,7 +149,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
         builder: (ctx, setS) {
           return AlertDialog(
             backgroundColor: AppTheme.surfaceBlack,
-            title: const Text('سبب الرفض',
+            title: Text('سبب الرفض',
                 style: TextStyle(color: AppTheme.textWhite)),
             content: SingleChildScrollView(
               child: Column(
@@ -158,7 +158,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                 children: [
                   ...presets.map((p) => RadioListTile<String>(
                         title: Text(p,
-                            style: const TextStyle(color: AppTheme.textWhite)),
+                            style: TextStyle(color: AppTheme.textWhite)),
                         value: p,
                         groupValue: selected,
                         onChanged: (value) => setS(() => selected = value),
@@ -170,7 +170,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                   TextField(
                     controller: ctrl,
                     maxLines: 2,
-                    style: const TextStyle(color: AppTheme.textWhite),
+                    style: TextStyle(color: AppTheme.textWhite),
                     decoration: const InputDecoration(
                       hintText: 'تفاصيل إضافية (اختياري)',
                       border: OutlineInputBorder(),
@@ -182,7 +182,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text('إلغاء',
+                child: Text('إلغاء',
                     style: TextStyle(color: AppTheme.textGrey)),
               ),
               ElevatedButton(
@@ -234,7 +234,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                           size: 80,
                           color: Colors.green.withOpacity(0.6)),
                       const SizedBox(height: 20),
-                      const Text(
+                      Text(
                         'لا توجد عروض بانتظار المراجعة 🎉',
                         style: TextStyle(
                             color: AppTheme.textGrey, fontSize: 16),
@@ -306,7 +306,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => Container(
                     color: AppTheme.deepBlack,
-                    child: const Center(
+                    child: Center(
                       child: Icon(Icons.broken_image,
                           color: AppTheme.textGrey, size: 50),
                     ),
@@ -318,7 +318,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
             Container(
               height: 120,
               color: AppTheme.deepBlack,
-              child: const Center(
+              child: Center(
                 child: Icon(Icons.image_not_supported,
                     color: AppTheme.textGrey, size: 50),
               ),
@@ -336,7 +336,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                     Expanded(
                       child: Text(
                         o.ttl,
-                        style: const TextStyle(
+                        style: TextStyle(
                             color: AppTheme.textWhite,
                             fontSize: 16,
                             fontWeight: FontWeight.bold),
@@ -366,13 +366,13 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                 // الموقع
                 Row(
                   children: [
-                    const Icon(Icons.location_on,
+                    Icon(Icons.location_on,
                         color: AppTheme.textGrey, size: 14),
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
                         (o.loc['d'] ?? 'غير محدد').toString(),
-                        style: const TextStyle(
+                        style: TextStyle(
                             color: AppTheme.textGrey, fontSize: 12),
                       ),
                     ),
@@ -386,7 +386,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                     o.descript,
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                         color: AppTheme.textWhite, fontSize: 13),
                   ),
                   const SizedBox(height: 10),
@@ -419,7 +419,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                 ],
 
                 // المرسل (صاحب العرض)
-                const Divider(color: AppTheme.textGrey, height: 16),
+                Divider(color: AppTheme.textGrey, height: 16),
                 Row(
                   children: [
                     CircleAvatar(
@@ -444,14 +444,14 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                             owner?.nm.isNotEmpty == true
                                 ? owner!.nm
                                 : 'مستخدم بدون اسم',
-                            style: const TextStyle(
+                            style: TextStyle(
                                 color: AppTheme.textWhite,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13),
                           ),
                           Text(
                             owner?.ph ?? '—',
-                            style: const TextStyle(
+                            style: TextStyle(
                                 color: AppTheme.textGrey, fontSize: 11),
                           ),
                         ],
@@ -506,9 +506,9 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                 Expanded(
                   child: TextButton.icon(
                     onPressed: () => context.push('/offer/${o.id}'),
-                    icon: const Icon(Icons.preview,
+                    icon: Icon(Icons.preview,
                         color: AppTheme.textWhite),
-                    label: const Text('معاينة',
+                    label: Text('معاينة',
                         style: TextStyle(color: AppTheme.textWhite)),
                     style: TextButton.styleFrom(
                       padding:

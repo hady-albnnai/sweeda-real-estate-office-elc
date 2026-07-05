@@ -169,7 +169,7 @@ class _SetupIdentityScreenState extends State<SetupIdentityScreen> {
                   border: Border.all(
                       color: AppTheme.primaryGold.withOpacity(0.3)),
                 ),
-                child: const Row(children: [
+                child: Row(children: [
                   Icon(Icons.shield_outlined,
                       color: AppTheme.primaryGold, size: 20),
                   SizedBox(width: 10),
@@ -194,7 +194,7 @@ class _SetupIdentityScreenState extends State<SetupIdentityScreen> {
               TextField(
                 controller: _sidController,
                 keyboardType: TextInputType.number,
-                style: const TextStyle(color: AppTheme.textWhite),
+                style: TextStyle(color: AppTheme.textWhite),
                 decoration: const InputDecoration(
                   hintText: 'أدخل الرقم الوطني',
                   prefixIcon:
@@ -225,7 +225,7 @@ class _SetupIdentityScreenState extends State<SetupIdentityScreen> {
                     ),
                   ),
                   child: _idImage == null
-                      ? const Center(
+                      ? Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [

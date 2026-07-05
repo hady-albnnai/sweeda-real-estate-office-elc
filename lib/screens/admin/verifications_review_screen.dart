@@ -62,7 +62,7 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
-        title: const Text('رفض التوثيق',
+        title: Text('رفض التوثيق',
             style: TextStyle(color: AppTheme.textWhite)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -70,14 +70,14 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
           children: [
             Text(
               'سيُعاد $name إلى حالة "غير موثق" وسيصله إشعار. اذكر سبب الرفض (اختياري):',
-              style: const TextStyle(color: AppTheme.textGrey),
+              style: TextStyle(color: AppTheme.textGrey),
             ),
             const SizedBox(height: 10),
             TextField(
               controller: reasonCtrl,
               maxLines: 2,
-              style: const TextStyle(color: AppTheme.textWhite),
-              decoration: const InputDecoration(
+              style: TextStyle(color: AppTheme.textWhite),
+              decoration: InputDecoration(
                 hintText: 'مثال: صورة الهوية غير واضحة',
                 hintStyle: TextStyle(color: AppTheme.textGrey),
                 border: OutlineInputBorder(),
@@ -88,7 +88,7 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('إلغاء',
+            child: Text('إلغاء',
                 style: TextStyle(color: AppTheme.textGrey)),
           ),
           ElevatedButton(
@@ -144,7 +144,7 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
           child: Image.network(
             displayUrl!,
             fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) => const Padding(
+            errorBuilder: (_, __, ___) => Padding(
               padding: EdgeInsets.all(40),
               child: Icon(Icons.broken_image,
                   color: AppTheme.textGrey, size: 80),
@@ -178,10 +178,10 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.verified_user_outlined,
+                      Icon(Icons.verified_user_outlined,
                           color: AppTheme.textGrey, size: 80),
                       const SizedBox(height: 16),
-                      const Text('لا توجد طلبات توثيق قيد المراجعة',
+                      Text('لا توجد طلبات توثيق قيد المراجعة',
                           style: TextStyle(
                               color: AppTheme.textGrey, fontSize: 16)),
                       const SizedBox(height: 8),
@@ -255,7 +255,7 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
               Expanded(
                 child: Text(
                   name,
-                  style: const TextStyle(
+                  style: TextStyle(
                       color: AppTheme.textWhite,
                       fontSize: 16,
                       fontWeight: FontWeight.bold),
@@ -289,7 +289,7 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: AppTheme.primaryGold),
                 ),
-                child: const Column(
+                child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.badge_outlined,
@@ -364,10 +364,10 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
         Icon(icon, color: AppTheme.primaryGold, size: 16),
         const SizedBox(width: 6),
         Text('$label: ',
-            style: const TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+            style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
         Expanded(
           child: Text(value,
-              style: const TextStyle(
+              style: TextStyle(
                   color: AppTheme.textWhite, fontSize: 13),
               overflow: TextOverflow.ellipsis),
         ),

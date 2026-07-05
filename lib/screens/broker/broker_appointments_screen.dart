@@ -104,14 +104,14 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
-        title: const Text('رفض الموعد',
+        title: Text('رفض الموعد',
             style: TextStyle(color: AppTheme.textWhite)),
-        content: const Text('هل أنت متأكد من رفض هذا الموعد؟',
+        content: Text('هل أنت متأكد من رفض هذا الموعد؟',
             style: TextStyle(color: AppTheme.textGrey)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('إلغاء',
+              child: Text('إلغاء',
                   style: TextStyle(color: AppTheme.textGrey))),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -140,16 +140,16 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
-        title: const Text('إكمال المعاينة',
+        title: Text('إكمال المعاينة',
             style: TextStyle(color: AppTheme.textWhite)),
-        content: const Text(
+        content: Text(
           'هل تم تنفيذ المعاينة فعلياً؟\nسيتم تسجيلها كمعاينة مكتملة (يمكن لاحقاً تسجيل صفقة منها).',
           style: TextStyle(color: AppTheme.textGrey),
         ),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('إلغاء',
+              child: Text('إلغاء',
                   style: TextStyle(color: AppTheme.textGrey))),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -235,7 +235,7 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
             const Icon(Icons.event_busy,
                 size: 80, color: Color.fromRGBO(212, 175, 55, 0.5)),
             const SizedBox(height: 20),
-            const Text('لا توجد طلبات في هذه الفئة',
+            Text('لا توجد طلبات في هذه الفئة',
                 style: TextStyle(color: AppTheme.textGrey, fontSize: 16)),
           ],
         ),
@@ -288,7 +288,7 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
                 const Spacer(),
                 Text(
                   '${a.dt.day}/${a.dt.month}/${a.dt.year} - ${a.dt.hour.toString().padLeft(2, '0')}:${a.dt.minute.toString().padLeft(2, '0')}',
-                  style: const TextStyle(
+                  style: TextStyle(
                       color: AppTheme.textGrey, fontSize: 12),
                 ),
               ],
@@ -323,7 +323,7 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
                         children: [
                           Text(
                             offer?.ttl ?? 'عرض #${a.offId.substring(0, 6)}',
-                            style: const TextStyle(
+                            style: TextStyle(
                                 color: AppTheme.textWhite,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 14),
@@ -333,7 +333,7 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
                           if (offer != null)
                             Text(
                               '${offer.prc.toStringAsFixed(0)} ${offer.cur == 0 ? '\$' : 'ل.س'} • ${(offer.loc['d'] ?? '').toString()}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                   color: AppTheme.textGrey, fontSize: 11),
                             ),
                         ],
@@ -348,7 +348,7 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
                   ],
                 ),
 
-                const Divider(color: AppTheme.textGrey, height: 18),
+                Divider(color: AppTheme.textGrey, height: 18),
 
                 // القاعدة الذهبية: لا تظهر أي معلومة عن طالب الحجز
                 // التواصل يتم فقط عبر إدارة المكتب
@@ -455,7 +455,7 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
 
   Widget _imgPlaceholder() => Container(
         color: AppTheme.deepBlack,
-        child: const Icon(Icons.image, color: AppTheme.textGrey, size: 24),
+        child: Icon(Icons.image, color: AppTheme.textGrey, size: 24),
       );
 
   (String, Color, IconData) _statusInfo(int s) {

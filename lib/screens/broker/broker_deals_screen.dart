@@ -85,7 +85,7 @@ class _BrokerDealsScreenState extends State<BrokerDealsScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('إجمالي العمولات المحققة',
+                    Text('إجمالي العمولات المحققة',
                         style:
                             TextStyle(color: AppTheme.textGrey, fontSize: 13)),
                     const SizedBox(height: 4),
@@ -143,7 +143,7 @@ class _BrokerDealsScreenState extends State<BrokerDealsScreen> {
             Icon(Icons.handshake,
                 size: 72, color: AppTheme.textGrey.withOpacity(0.3)),
             const SizedBox(height: 16),
-            const Text('لا توجد صفقات',
+            Text('لا توجد صفقات',
                 style: TextStyle(color: AppTheme.textGrey, fontSize: 15)),
           ],
         ),
@@ -183,7 +183,7 @@ class _BrokerDealsScreenState extends State<BrokerDealsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('صفقة #${d.id.length >= 8 ? d.id.substring(0, 8) : d.id}',
-                  style: const TextStyle(
+                  style: TextStyle(
                       color: AppTheme.textWhite, fontWeight: FontWeight.bold)),
               Container(
                 padding:
@@ -224,7 +224,7 @@ class _BrokerDealsScreenState extends State<BrokerDealsScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label,
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+              style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
           Text(value,
               style: TextStyle(
                   color: highlight ? AppTheme.primaryGold : AppTheme.textWhite,

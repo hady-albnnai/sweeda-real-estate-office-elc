@@ -106,8 +106,8 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
-        title: const Text('تأكيد حفظ البيانات', style: TextStyle(color: AppTheme.textWhite)),
-        content: const Text(
+        title: Text('تأكيد حفظ البيانات', style: TextStyle(color: AppTheme.textWhite)),
+        content: Text(
           'هل قمت بحفظ اسم المستخدم وكلمة المرور في مكان آمن؟\nستحتاج إليهما للدخول مستقبلاً.',
           style: TextStyle(color: AppTheme.textGrey),
         ),
@@ -226,7 +226,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                         color: AppTheme.primaryGold, size: 36),
                   ),
                   const SizedBox(height: 16),
-                  const Text(
+                  Text(
                     'إعداد بيانات الدخول',
                     style: TextStyle(
                         color: AppTheme.textWhite,
@@ -234,7 +234,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                         fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 6),
-                  const Text(
+                  Text(
                     'اختر اسم مستخدم وكلمة مرور لتسجيل الدخول لاحقاً',
                     textAlign: TextAlign.center,
                     style: TextStyle(color: AppTheme.textGrey, fontSize: 13),
@@ -250,7 +250,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                       fontWeight: FontWeight.bold,
                       fontSize: 13)),
               const SizedBox(height: 4),
-              const Text(
+              Text(
                 'أحرف عربية أو إنجليزية (بدون خلط) + أرقام + _ + . (3–30 حرف)',
                 style: TextStyle(color: AppTheme.textGrey, fontSize: 11),
               ),
@@ -259,7 +259,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                 controller: _usernameController,
                 textAlign: TextAlign.left,
                 textDirection: TextDirection.ltr,
-                style: const TextStyle(
+                style: TextStyle(
                     color: AppTheme.textWhite, letterSpacing: 1),
                 decoration: InputDecoration(
                   hintText: 'مثلاً: ahmed_123',
@@ -306,7 +306,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                 obscureText: _obscure,
                 textAlign: TextAlign.left,
                 textDirection: TextDirection.ltr,
-                style: const TextStyle(color: AppTheme.textWhite),
+                style: TextStyle(color: AppTheme.textWhite),
                 decoration: InputDecoration(
                   hintText: '8 أحرف على الأقل',
                   prefixIcon: const Icon(Icons.lock_outline,
@@ -337,7 +337,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                 obscureText: _obscure,
                 textAlign: TextAlign.left,
                 textDirection: TextDirection.ltr,
-                style: const TextStyle(color: AppTheme.textWhite),
+                style: TextStyle(color: AppTheme.textWhite),
                 decoration: InputDecoration(
                   hintText: 'أعد إدخال كلمة المرور',
                   prefixIcon: const Icon(Icons.lock_rounded,
@@ -366,7 +366,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                 ),
               ),
               const SizedBox(height: 14),
-              const Center(
+              Center(
                 child: Text(
                   '🔒 بياناتك مشفّرة ومحفوظة بأمان',
                   style: TextStyle(color: AppTheme.textGrey, fontSize: 11),

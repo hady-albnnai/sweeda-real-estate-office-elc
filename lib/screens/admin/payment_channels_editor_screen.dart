@@ -250,7 +250,7 @@ class _PaymentChannelsEditorScreenState
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: Colors.blue.withOpacity(0.4)),
         ),
-        child: const Row(
+        child: Row(
           children: [
             Icon(Icons.info_outline, color: Colors.lightBlueAccent),
             SizedBox(width: 10),
@@ -304,7 +304,7 @@ class _PaymentChannelsEditorScreenState
               ),
             ],
           ),
-          const Divider(color: AppTheme.textGrey, height: 18),
+          Divider(color: AppTheme.textGrey, height: 18),
 
           // حقول القناة العامة
           for (final f in _channelFields[key] ?? <String>[])
@@ -372,12 +372,12 @@ class _PaymentChannelsEditorScreenState
       child: TextField(
         controller: ctrl,
         maxLines: maxLines,
-        style: const TextStyle(color: AppTheme.textWhite),
+        style: TextStyle(color: AppTheme.textWhite),
         decoration: InputDecoration(
           labelText: label,
           filled: true,
           fillColor: AppTheme.deepBlack,
-          labelStyle: const TextStyle(color: AppTheme.textGrey, fontSize: 13),
+          labelStyle: TextStyle(color: AppTheme.textGrey, fontSize: 13),
         ),
       ),
     );

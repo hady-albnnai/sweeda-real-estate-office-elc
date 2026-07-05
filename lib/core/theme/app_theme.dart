@@ -4,12 +4,24 @@ import 'package:google_fonts/google_fonts.dart';
 class AppTheme {
   static const Color primaryGold = Color(0xFFD4AF37);
   static const Color deepBlack = Color(0xFF121212);
-  static const Color scaffoldBackground = Color(0xFFFFFBF2);
   static const Color lightGold = Color(0xFFF9E4B7);
-  static const Color surfaceBlack = Color(0xFFFFFFFF);
   static const Color errorRed = Color(0xFFB3261E);
-  static const Color textWhite = Color(0xFF17130A);
-  static const Color textGrey = Color(0xFF6F6656);
+
+  static bool _isDarkMode = false;
+  static bool get isDarkMode => _isDarkMode;
+
+  static void setDarkMode(bool value) {
+    _isDarkMode = value;
+  }
+
+  static Color get scaffoldBackground =>
+      _isDarkMode ? const Color(0xFF121212) : const Color(0xFFFFFBF2);
+  static Color get surfaceBlack =>
+      _isDarkMode ? const Color(0xFF1E1E1E) : const Color(0xFFFFFFFF);
+  static Color get textWhite =>
+      _isDarkMode ? const Color(0xFFF5F5F5) : const Color(0xFF17130A);
+  static Color get textGrey =>
+      _isDarkMode ? const Color(0xFFB0B0B0) : const Color(0xFF6F6656);
 
   static OverlayEntry? _activeMessageEntry;
 
@@ -117,26 +129,40 @@ class AppTheme {
   }
 
   static ThemeData get darkTheme {
+    final brightness = _isDarkMode ? Brightness.dark : Brightness.light;
+    final base = _isDarkMode ? ThemeData.dark() : ThemeData.light();
+    final scheme = _isDarkMode
+        ? ColorScheme.dark(
+            primary: primaryGold,
+            secondary: primaryGold,
+            surface: surfaceBlack,
+            error: errorRed,
+            onPrimary: deepBlack,
+            onSecondary: deepBlack,
+            onSurface: textWhite,
+          )
+        : ColorScheme.light(
+            primary: primaryGold,
+            secondary: primaryGold,
+            surface: surfaceBlack,
+            error: errorRed,
+            onPrimary: deepBlack,
+            onSecondary: deepBlack,
+            onSurface: textWhite,
+          );
+
     return ThemeData(
-      brightness: Brightness.light,
+      brightness: brightness,
       primaryColor: primaryGold,
       scaffoldBackgroundColor: scaffoldBackground,
-      colorScheme: const ColorScheme.light(
-        primary: primaryGold,
-        secondary: primaryGold,
-        surface: surfaceBlack,
-        error: errorRed,
-        onPrimary: deepBlack,
-        onSecondary: deepBlack,
-        onSurface: textWhite,
-      ),
+      colorScheme: scheme,
       textTheme: GoogleFonts.cairoTextTheme(
-        ThemeData.light().textTheme.apply(
+        base.textTheme.apply(
           bodyColor: textWhite,
           displayColor: primaryGold,
         ),
       ),
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         backgroundColor: scaffoldBackground,
         foregroundColor: primaryGold,
         elevation: 0,
@@ -159,16 +185,16 @@ class AppTheme {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.grey),
+          borderSide: BorderSide(color: _isDarkMode ? Colors.white24 : Colors.grey),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: primaryGold, width: 2),
         ),
-        labelStyle: const TextStyle(color: textGrey),
+        labelStyle: TextStyle(color: textGrey),
+        hintStyle: TextStyle(color: textGrey.withOpacity(0.75)),
       ),
-      // Removed cardTheme to avoid version conflict,
-      // we will handle card styling inside the widgets themselves for stability.
+      cardColor: surfaceBlack,
     );
   }
 }

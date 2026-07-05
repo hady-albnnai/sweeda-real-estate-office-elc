@@ -109,7 +109,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
           children: [
             Text(
               'مرحباً، $userName 👋',
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppTheme.textWhite,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -182,7 +182,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
             child: TextField(
               controller: _searchCtrl,
-              style: const TextStyle(color: AppTheme.textWhite),
+              style: TextStyle(color: AppTheme.textWhite),
               textInputAction: TextInputAction.search,
               onSubmitted: (_) => _doSearch(),
               decoration: InputDecoration(
@@ -190,7 +190,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                 prefixIcon: const Icon(Icons.search, color: AppTheme.primaryGold),
                 suffixIcon: _searchCtrl.text.isNotEmpty || _isSearching
                     ? IconButton(
-                        icon: const Icon(Icons.close, color: AppTheme.textGrey),
+                        icon: Icon(Icons.close, color: AppTheme.textGrey),
                         onPressed: _clearSearch,
                       )
                     : IconButton(
@@ -273,7 +273,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                                     size: 80,
                                     color: AppTheme.textGrey.withOpacity(0.3)),
                                 const SizedBox(height: 20),
-                                const Text(
+                                Text(
                                   'لا توجد عروض متاحة حالياً',
                                   style: TextStyle(
                                       color: AppTheme.textGrey, fontSize: 16),

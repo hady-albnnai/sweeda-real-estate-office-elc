@@ -164,15 +164,15 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
-        title: const Text('إعادة تعيين كلمة السر', style: TextStyle(color: AppTheme.textWhite)),
+        title: Text('إعادة تعيين كلمة السر', style: TextStyle(color: AppTheme.textWhite)),
         content: Text(
           'هل أنت متأكد من إعادة تعيين كلمة سر "${user.nm}"؟',
-          style: const TextStyle(color: AppTheme.textWhite),
+          style: TextStyle(color: AppTheme.textWhite),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('إلغاء', style: TextStyle(color: AppTheme.textGrey)),
+            child: Text('إلغاء', style: TextStyle(color: AppTheme.textGrey)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -235,12 +235,12 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
         title: const Text('تأكيد الحذف', style: TextStyle(color: Colors.red)),
         content: Text(
           'هل أنت متأكد من حذف "${user.nm}"؟\nهذا الإجراء لا يمكن التراجع عنه.',
-          style: const TextStyle(color: AppTheme.textWhite),
+          style: TextStyle(color: AppTheme.textWhite),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('إلغاء', style: TextStyle(color: AppTheme.textGrey)),
+            child: Text('إلغاء', style: TextStyle(color: AppTheme.textGrey)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -307,12 +307,12 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
           const SizedBox(width: 8),
           SizedBox(
             width: 95,
-            child: Text(label, style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+            child: Text(label, style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
           ),
           Expanded(
             child: SelectableText(
               value.isEmpty ? '—' : value,
-              style: const TextStyle(color: AppTheme.textWhite, fontSize: 13),
+              style: TextStyle(color: AppTheme.textWhite, fontSize: 13),
             ),
           ),
         ],
@@ -429,7 +429,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
-        title: Text('بيانات ${user.nm}', style: const TextStyle(color: AppTheme.textWhite)),
+        title: Text('بيانات ${user.nm}', style: TextStyle(color: AppTheme.textWhite)),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -478,7 +478,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('إغلاق', style: TextStyle(color: AppTheme.textGrey)),
+            child: Text('إغلاق', style: TextStyle(color: AppTheme.textGrey)),
           ),
         ],
       ),
@@ -491,7 +491,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
       backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
         backgroundColor: AppTheme.scaffoldBackground,
-        title: const Text('إدارة الموظفين', style: TextStyle(color: AppTheme.textWhite)),
+        title: Text('إدارة الموظفين', style: TextStyle(color: AppTheme.textWhite)),
         actions: [
           IconButton(
             icon: const Icon(Icons.dashboard_customize, color: AppTheme.primaryGold),
@@ -516,10 +516,10 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
             padding: const EdgeInsets.all(16),
             child: TextField(
               controller: _searchController,
-              style: const TextStyle(color: AppTheme.textWhite),
+              style: TextStyle(color: AppTheme.textWhite),
               decoration: InputDecoration(
                 hintText: 'بحث بالاسم أو الهاتف أو البريد...',
-                hintStyle: const TextStyle(color: AppTheme.textGrey),
+                hintStyle: TextStyle(color: AppTheme.textGrey),
                 prefixIcon: const Icon(Icons.search, color: AppTheme.primaryGold),
                 filled: true,
                 fillColor: AppTheme.surfaceBlack,
@@ -538,7 +538,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
                 : _errorMessage != null
                     ? Center(child: Text(_errorMessage!, style: const TextStyle(color: Colors.red)))
                     : _filteredUsers.isEmpty
-                        ? const Center(
+                        ? Center(
                             child: Text('لا يوجد موظفون', style: TextStyle(color: AppTheme.textGrey)),
                           )
                         : ListView.builder(
@@ -586,7 +586,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
                     children: [
                       Text(
                         user.nm,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppTheme.textWhite,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -608,7 +608,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
                   ),
                 ),
                                 PopupMenuButton<String>(
-                                  icon: const Icon(Icons.more_vert, color: AppTheme.textGrey),
+                                  icon: Icon(Icons.more_vert, color: AppTheme.textGrey),
                                   onSelected: (value) {
                                     switch (value) {
                                       case 'details':
@@ -654,18 +654,18 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
             const SizedBox(height: 12),
             Row(
               children: [
-                const Icon(Icons.phone, size: 16, color: AppTheme.textGrey),
+                Icon(Icons.phone, size: 16, color: AppTheme.textGrey),
                 const SizedBox(width: 6),
-                Text(user.ph, style: const TextStyle(color: AppTheme.textGrey)),
+                Text(user.ph, style: TextStyle(color: AppTheme.textGrey)),
               ],
             ),
             if (user.eml != null) ...[
               const SizedBox(height: 4),
               Row(
                 children: [
-                  const Icon(Icons.email, size: 16, color: AppTheme.textGrey),
+                  Icon(Icons.email, size: 16, color: AppTheme.textGrey),
                   const SizedBox(width: 6),
-                  Text(user.eml!, style: const TextStyle(color: AppTheme.textGrey)),
+                  Text(user.eml!, style: TextStyle(color: AppTheme.textGrey)),
                 ],
               ),
             ],
@@ -786,7 +786,7 @@ class _StaffIdImagesViewerState extends State<_StaffIdImagesViewer> {
                   child: Image.network(
                     widget.urls[i],
                     fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => const Icon(
+                    errorBuilder: (_, __, ___) => Icon(
                       Icons.broken_image,
                       color: AppTheme.textGrey,
                       size: 80,

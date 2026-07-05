@@ -76,7 +76,7 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
+            Text(
               'سيتم إرسال إشعار للمحامي بأن المهمة اكتملت وبانتظار اعتماده.',
               style: TextStyle(color: AppTheme.textGrey, height: 1.4),
             ),
@@ -84,13 +84,13 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
             TextField(
               controller: notesCtrl,
               maxLines: 3,
-              style: const TextStyle(color: AppTheme.textWhite),
+              style: TextStyle(color: AppTheme.textWhite),
               decoration: const InputDecoration(labelText: 'ملاحظات ختامية اختيارية'),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('إلغاء', style: TextStyle(color: AppTheme.textGrey))),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('إلغاء', style: TextStyle(color: AppTheme.textGrey))),
           ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('إتمام وإشعار المحامي')),
         ],
       ),
@@ -131,7 +131,7 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
                 DropdownButtonFormField<int>(
                   value: selectedSts,
                   dropdownColor: AppTheme.surfaceBlack,
-                  style: const TextStyle(color: AppTheme.textWhite),
+                  style: TextStyle(color: AppTheme.textWhite),
                   decoration: const InputDecoration(labelText: 'حالة الاستخراج'),
                   items: const [
                     DropdownMenuItem(value: 0, child: Text('مطلوب')),
@@ -144,27 +144,27 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
                 const SizedBox(height: 12),
                 TextField(
                   controller: inputCtrl,
-                  style: const TextStyle(color: AppTheme.textWhite),
+                  style: TextStyle(color: AppTheme.textWhite),
                   decoration: const InputDecoration(labelText: 'رقم العقار / رقم السيارة / الصحيفة'),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: attachCtrl,
-                  style: const TextStyle(color: AppTheme.textWhite),
+                  style: TextStyle(color: AppTheme.textWhite),
                   decoration: const InputDecoration(labelText: 'رابط صورة السند المستخرج'),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: notesCtrl,
                   maxLines: 2,
-                  style: const TextStyle(color: AppTheme.textWhite),
+                  style: TextStyle(color: AppTheme.textWhite),
                   decoration: const InputDecoration(labelText: 'ملاحظات المعقب الميدانية'),
                 ),
               ],
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء', style: TextStyle(color: AppTheme.textGrey))),
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text('إلغاء', style: TextStyle(color: AppTheme.textGrey))),
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(ctx);
@@ -200,7 +200,7 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
                     const Icon(Icons.home, color: AppTheme.primaryGold),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Text('رقم العقار: ${widget.task.targetPropertyNum.isEmpty ? "غير محدد" : widget.task.targetPropertyNum} | المنطقة العقارية: ${widget.task.targetZone.isEmpty ? "غير محددة" : widget.task.targetZone}', style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold, fontSize: 13)),
+                      child: Text('رقم العقار: ${widget.task.targetPropertyNum.isEmpty ? "غير محدد" : widget.task.targetPropertyNum} | المنطقة العقارية: ${widget.task.targetZone.isEmpty ? "غير محددة" : widget.task.targetZone}', style: TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold, fontSize: 13)),
                     ),
                   ],
                 ),
@@ -225,7 +225,7 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
                       children: [
                         Icon(isDone ? Icons.check_circle : Icons.radio_button_unchecked, color: isDone ? Colors.green : AppTheme.primaryGold),
                         const SizedBox(width: 10),
-                        Expanded(child: Text(item.title, style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold, fontSize: 15))),
+                        Expanded(child: Text(item.title, style: TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold, fontSize: 15))),
                         IconButton(icon: const Icon(Icons.edit, color: AppTheme.primaryGold), onPressed: () => _showEditDialog(item)),
                       ],
                     ),
@@ -235,7 +235,7 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
                     ],
                     if (item.notes.isNotEmpty) ...[
                       const SizedBox(height: 4),
-                      Text('ملاحظات: ${item.notes}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                      Text('ملاحظات: ${item.notes}', style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
                     ],
                     const SizedBox(height: 12),
                     Row(

@@ -123,7 +123,7 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
 
     return AlertDialog(
       backgroundColor: AppTheme.surfaceBlack,
-      title: const Text('إضافة موظف جديد', style: TextStyle(color: AppTheme.textWhite)),
+      title: Text('إضافة موظف جديد', style: TextStyle(color: AppTheme.textWhite)),
       content: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -132,8 +132,8 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
             children: [
               TextFormField(
                 controller: _nameController,
-                style: const TextStyle(color: AppTheme.textWhite),
-                decoration: const InputDecoration(
+                style: TextStyle(color: AppTheme.textWhite),
+                decoration: InputDecoration(
                   labelText: 'الاسم الكامل *',
                   labelStyle: TextStyle(color: AppTheme.textGrey),
                 ),
@@ -142,8 +142,8 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _phoneController,
-                style: const TextStyle(color: AppTheme.textWhite),
-                decoration: const InputDecoration(
+                style: TextStyle(color: AppTheme.textWhite),
+                decoration: InputDecoration(
                   labelText: 'رقم الهاتف *',
                   labelStyle: TextStyle(color: AppTheme.textGrey),
                 ),
@@ -153,8 +153,8 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _sidController,
-                style: const TextStyle(color: AppTheme.textWhite),
-                decoration: const InputDecoration(
+                style: TextStyle(color: AppTheme.textWhite),
+                decoration: InputDecoration(
                   labelText: 'الرقم الوطني *',
                   labelStyle: TextStyle(color: AppTheme.textGrey),
                 ),
@@ -164,8 +164,8 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _addressController,
-                style: const TextStyle(color: AppTheme.textWhite),
-                decoration: const InputDecoration(
+                style: TextStyle(color: AppTheme.textWhite),
+                decoration: InputDecoration(
                   labelText: 'العنوان التفصيلي *',
                   labelStyle: TextStyle(color: AppTheme.textGrey),
                 ),
@@ -205,8 +205,8 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _usernameController,
-                style: const TextStyle(color: AppTheme.textWhite),
-                decoration: const InputDecoration(
+                style: TextStyle(color: AppTheme.textWhite),
+                decoration: InputDecoration(
                   labelText: 'اسم المستخدم (اختياري)',
                   labelStyle: TextStyle(color: AppTheme.textGrey),
                   hintText: 'مثال: office_1',
@@ -217,8 +217,8 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _emailController,
-                style: const TextStyle(color: AppTheme.textWhite),
-                decoration: const InputDecoration(
+                style: TextStyle(color: AppTheme.textWhite),
+                decoration: InputDecoration(
                   labelText: 'البريد الإلكتروني (اختياري)',
                   labelStyle: TextStyle(color: AppTheme.textGrey),
                 ),
@@ -228,8 +228,8 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
               DropdownButtonFormField<int>(
                 value: _selectedRole,
                 dropdownColor: AppTheme.surfaceBlack,
-                style: const TextStyle(color: AppTheme.textWhite),
-                decoration: const InputDecoration(
+                style: TextStyle(color: AppTheme.textWhite),
+                decoration: InputDecoration(
                   labelText: 'الدور *',
                   labelStyle: TextStyle(color: AppTheme.textGrey),
                 ),
@@ -265,7 +265,7 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
       actions: [
         TextButton(
           onPressed: _isLoading ? null : () => Navigator.pop(context),
-          child: const Text('إلغاء', style: TextStyle(color: AppTheme.textGrey)),
+          child: Text('إلغاء', style: TextStyle(color: AppTheme.textGrey)),
         ),
         ElevatedButton(
           onPressed: _isLoading ? null : _submit,

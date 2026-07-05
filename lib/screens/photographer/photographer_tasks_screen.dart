@@ -343,7 +343,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
             const SizedBox(width: 10),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(task.ttl.isEmpty ? 'مهمة تصوير' : task.ttl,
-                  style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold)),
+                  style: TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold)),
               Text(task.statusLabel, style: TextStyle(color: color, fontSize: 12)),
             ])),
             Container(
@@ -379,19 +379,19 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
           if ((task.loc['d'] ?? '').toString().isNotEmpty) ...[
             const SizedBox(height: 6),
             Row(children: [
-              const Icon(Icons.location_on_outlined, color: AppTheme.textGrey, size: 14),
+              Icon(Icons.location_on_outlined, color: AppTheme.textGrey, size: 14),
               const SizedBox(width: 4),
               Expanded(child: Text(task.loc['d'].toString(),
-                  style: const TextStyle(color: AppTheme.textGrey, fontSize: 12))),
+                  style: TextStyle(color: AppTheme.textGrey, fontSize: 12))),
             ]),
           ],
           if (task.tsScheduled != null) ...[
             const SizedBox(height: 4),
             Row(children: [
-              const Icon(Icons.schedule, color: AppTheme.textGrey, size: 14),
+              Icon(Icons.schedule, color: AppTheme.textGrey, size: 14),
               const SizedBox(width: 4),
               Text('الموعد: ${_fmtDate(task.tsScheduled!)}',
-                  style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                  style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
             ]),
           ],
 
@@ -425,7 +425,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
                         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3)),
                         color: AppTheme.deepBlack,
                       ),
-                      child: const Center(child: Icon(Icons.image, color: AppTheme.textGrey)),
+                      child: Center(child: Icon(Icons.image, color: AppTheme.textGrey)),
                     ),
                     Positioned(
                       top: -6, right: -6,
@@ -452,7 +452,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
             TextField(
               controller: _notesControllers.putIfAbsent(taskHash, () => TextEditingController(text: task.photographerNote)),
               maxLines: 2,
-              style: const TextStyle(color: AppTheme.textWhite),
+              style: TextStyle(color: AppTheme.textWhite),
               decoration: const InputDecoration(labelText: 'ملاحظات (اختياري)'),
             ),
             const SizedBox(height: 10),
@@ -515,11 +515,11 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
           ),
         ),
         title: Text(task.ttl.isEmpty ? 'مهمة تصوير' : task.ttl,
-            style: const TextStyle(color: AppTheme.textWhite)),
+            style: TextStyle(color: AppTheme.textWhite)),
         subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(task.statusLabel, style: TextStyle(color: color, fontSize: 12)),
           Text('${task.media.length} وسائط',
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+              style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
           if (task.isSubmitted)
             const Text('بانتظار معالجة المكتب',
                 style: TextStyle(color: Colors.purple, fontSize: 11)),
@@ -542,7 +542,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
   }
 
   Widget _empty(String msg) {
-    return Center(child: Text(msg, style: const TextStyle(color: AppTheme.textGrey)));
+    return Center(child: Text(msg, style: TextStyle(color: AppTheme.textGrey)));
   }
 
   String _fmtDate(DateTime d) {

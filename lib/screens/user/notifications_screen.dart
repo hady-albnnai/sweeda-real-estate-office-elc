@@ -96,7 +96,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           children: [
             const SizedBox(height: 4),
             Text(n.bdy,
-                style: const TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+                style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
             const SizedBox(height: 4),
             Text(AppUtils.formatTimestamp(n.tsCrt),
                 style: TextStyle(

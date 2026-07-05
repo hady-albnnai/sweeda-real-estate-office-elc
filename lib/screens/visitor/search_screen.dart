@@ -70,7 +70,7 @@ class _SearchScreenState extends State<SearchScreen> {
             padding: const EdgeInsets.fromLTRB(15, 12, 15, 6),
             child: TextField(
               controller: _searchCtrl,
-              style: const TextStyle(color: AppTheme.textWhite),
+              style: TextStyle(color: AppTheme.textWhite),
               textInputAction: TextInputAction.search,
               onSubmitted: (_) => _doSearch(),
               decoration: InputDecoration(
@@ -125,8 +125,8 @@ class _SearchScreenState extends State<SearchScreen> {
               DropdownButton<int?>(
                 value: _currency,
                 dropdownColor: AppTheme.surfaceBlack,
-                style: const TextStyle(color: AppTheme.textWhite, fontSize: 13),
-                hint: const Text('العملة', style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+                style: TextStyle(color: AppTheme.textWhite, fontSize: 13),
+                hint: Text('العملة', style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
                 items: const [
                   DropdownMenuItem(value: null, child: Text('الكل')),
                   DropdownMenuItem(value: 0, child: Text('\$')),
@@ -139,8 +139,8 @@ class _SearchScreenState extends State<SearchScreen> {
                 child: TextField(
                   controller: _minPriceCtrl,
                   keyboardType: TextInputType.number,
-                  style: const TextStyle(color: AppTheme.textWhite, fontSize: 13),
-                  decoration: const InputDecoration(
+                  style: TextStyle(color: AppTheme.textWhite, fontSize: 13),
+                  decoration: InputDecoration(
                     hintText: 'سعر من',
                     hintStyle: TextStyle(color: AppTheme.textGrey, fontSize: 13),
                     filled: true, fillColor: AppTheme.surfaceBlack,
@@ -151,7 +151,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                 ),
               ),
-              const Padding(
+              Padding(
                 padding: EdgeInsets.symmetric(horizontal: 6),
                 child: Text('—', style: TextStyle(color: AppTheme.textGrey)),
               ),
@@ -159,8 +159,8 @@ class _SearchScreenState extends State<SearchScreen> {
                 child: TextField(
                   controller: _maxPriceCtrl,
                   keyboardType: TextInputType.number,
-                  style: const TextStyle(color: AppTheme.textWhite, fontSize: 13),
-                  decoration: const InputDecoration(
+                  style: TextStyle(color: AppTheme.textWhite, fontSize: 13),
+                  decoration: InputDecoration(
                     hintText: 'سعر إلى',
                     hintStyle: TextStyle(color: AppTheme.textGrey, fontSize: 13),
                     filled: true, fillColor: AppTheme.surfaceBlack,
@@ -222,7 +222,7 @@ class _SearchScreenState extends State<SearchScreen> {
           const SizedBox(height: 16),
           Text(text,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 15)),
+              style: TextStyle(color: AppTheme.textGrey, fontSize: 15)),
         ],
       ),
     );

@@ -212,7 +212,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           controlsBuilder: (context, details) => const SizedBox.shrink(),
           steps: [_step1(), _step2(), _step3(), if (_selectedType != 1) _stepAvl(), _step4()],
         ),
-        if (_submitting) Container(color: Colors.black54, child: Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [const CircularProgressIndicator(color: AppTheme.primaryGold), const SizedBox(height: 16), Text(_progressMsg, style: const TextStyle(color: AppTheme.textWhite))]))),
+        if (_submitting) Container(color: Colors.black54, child: Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [const CircularProgressIndicator(color: AppTheme.primaryGold), const SizedBox(height: 16), Text(_progressMsg, style: TextStyle(color: AppTheme.textWhite))]))),
       ]),
     );
   }
@@ -336,14 +336,14 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           value: _anytimeReady,
           onChanged: (v) => setState(() => _anytimeReady = v),
           title: const Text('أنا جاهز للمعاينة في أي وقت', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
-          subtitle: const Text('سيتمكن الزبائن من طلب موعد في أي وقت تراه الإدارة مناسباً', style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+          subtitle: Text('سيتمكن الزبائن من طلب موعد في أي وقت تراه الإدارة مناسباً', style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
           activeColor: AppTheme.primaryGold,
           contentPadding: EdgeInsets.zero,
         ),
       ),
       const SizedBox(height: 16),
       if (!_anytimeReady) ...[
-        const Text('أو حدد أياماً وفترات زمنية محددة:', style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+        Text('أو حدد أياماً وفترات زمنية محددة:', style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
         const SizedBox(height: 12),
         ..._weekDays.map((day) {
           final key = day.$1; final label = day.$2; final enabled = _avlDaysEnabled[key] ?? false; final slots = _avlSlots[key] ?? [];
@@ -362,11 +362,11 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   child: Row(children: [
-                    const Text('من', style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+                    Text('من', style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
                     const SizedBox(width: 4),
                     Expanded(child: _timeField(value: slot['from'] ?? '', hint: '09:00', onChanged: (v) => setState(() => _avlSlots[key]![i]['from'] = v))),
                     const SizedBox(width: 8),
-                    const Text('إلى', style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+                    Text('إلى', style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
                     const SizedBox(width: 4),
                     Expanded(child: _timeField(value: slot['to'] ?? '', hint: '12:00', onChanged: (v) => setState(() => _avlSlots[key]![i]['to'] = v))),
                     IconButton(icon: const Icon(Icons.remove_circle_outline, color: Colors.red, size: 18), onPressed: () => setState(() => _avlSlots[key]!.removeAt(i))),
@@ -385,7 +385,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     return TextField(
       controller: TextEditingController(text: value)..selection = TextSelection.collapsed(offset: value.length),
       keyboardType: TextInputType.datetime,
-      style: const TextStyle(color: AppTheme.textWhite, fontSize: 13),
+      style: TextStyle(color: AppTheme.textWhite, fontSize: 13),
       decoration: InputDecoration(hintText: hint, contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5), isDense: true, border: const OutlineInputBorder()),
       onChanged: onChanged,
     );
@@ -443,5 +443,5 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   }
 
   Widget _thumb(XFile file) => kIsWeb ? Image.network(file.path, width: 70, height: 70, fit: BoxFit.cover) : Image.file(File(file.path), width: 70, height: 70, fit: BoxFit.cover, cacheWidth: 200);
-  Widget _dd(String label, List<String> items, Function(String) on) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(label, style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)), const SizedBox(height: 5), DropdownButtonFormField<String>(items: items.map((i) => DropdownMenuItem(value: i, child: Text(i))).toList(), onChanged: (v) => on(v!), decoration: const InputDecoration(border: OutlineInputBorder()))]);
+  Widget _dd(String label, List<String> items, Function(String) on) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(label, style: TextStyle(color: AppTheme.textGrey, fontSize: 12)), const SizedBox(height: 5), DropdownButtonFormField<String>(items: items.map((i) => DropdownMenuItem(value: i, child: Text(i))).toList(), onChanged: (v) => on(v!), decoration: const InputDecoration(border: OutlineInputBorder()))]);
 }

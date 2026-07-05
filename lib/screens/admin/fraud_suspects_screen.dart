@@ -106,7 +106,7 @@ class _FraudSuspectsScreenState extends State<FraudSuspectsScreen> {
   }
 
   Widget _empty() {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -164,12 +164,12 @@ class _FraudSuspectsScreenState extends State<FraudSuspectsScreen> {
           const SizedBox(height: 4),
           Text(
             'Device: ${deviceId.length > 16 ? '${deviceId.substring(0, 16)}…' : deviceId}',
-            style: const TextStyle(
+            style: TextStyle(
                 color: AppTheme.textGrey,
                 fontSize: 11,
                 fontFamily: 'monospace'),
           ),
-          const Divider(color: AppTheme.textGrey, height: 16),
+          Divider(color: AppTheme.textGrey, height: 16),
           ...List.generate(names.length, (i) {
             final name = names[i].isNotEmpty ? names[i] : 'بدون اسم';
             final uid = ids[i];
@@ -183,10 +183,10 @@ class _FraudSuspectsScreenState extends State<FraudSuspectsScreen> {
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(name,
-                        style: const TextStyle(
+                        style: TextStyle(
                             color: AppTheme.textWhite, fontSize: 13)),
                   ),
-                  const Icon(Icons.arrow_forward_ios,
+                  Icon(Icons.arrow_forward_ios,
                       color: AppTheme.textGrey, size: 12),
                 ]),
               ),

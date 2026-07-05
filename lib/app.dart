@@ -18,6 +18,8 @@ import 'providers/broker_provider.dart';
 import 'providers/photography_provider.dart';
 import 'providers/executor_provider.dart';
 import 'providers/legal_provider.dart';
+import 'providers/theme_provider.dart';
+import 'widgets/theme_toggle_button.dart';
 import 'services/notification_service.dart';
 
 class MyApp extends StatefulWidget {
@@ -112,6 +114,7 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider(create: (_) => PhotographyProvider()),
         ChangeNotifierProvider(create: (_) => ExecutorProvider()),
         ChangeNotifierProvider(create: (_) => LegalProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
       child: Builder(builder: (ctx) {
         // ربط الـ listener مرة واحدة بعد ما يتوفر context الموجود فيه AuthProvider
@@ -120,6 +123,9 @@ class _MyAppState extends State<MyApp> {
             if (mounted) _listenAuthChanges();
           });
         }
+        final themeProvider = ctx.watch<ThemeProvider>();
+        AppTheme.setDarkMode(themeProvider.isDarkMode);
+
         return MaterialApp.router(
         title: 'المكتب العقاري الالكتروني',
         debugShowCheckedModeBanner: false,
@@ -130,26 +136,42 @@ class _MyAppState extends State<MyApp> {
           if (_initError != null) {
             return Directionality(
               textDirection: TextDirection.rtl,
-              child: Scaffold(
-                backgroundColor: AppTheme.scaffoldBackground,
-                body: Center(
-                  child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    const Icon(Icons.error_outline, color: Colors.red, size: 60),
-                    const SizedBox(height: 20),
-                    const Text('حدث خطأ في التهيئة', style: TextStyle(color: AppTheme.textWhite, fontSize: 18)),
-                    const SizedBox(height: 10),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 30),
-                      child: Text(_initError!, style: const TextStyle(color: AppTheme.textGrey, fontSize: 12), textAlign: TextAlign.center),
+              child: Stack(
+                children: [
+                  Scaffold(
+                    backgroundColor: AppTheme.scaffoldBackground,
+                    body: Center(
+                      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                        const Icon(Icons.error_outline, color: Colors.red, size: 60),
+                        const SizedBox(height: 20),
+                        Text('حدث خطأ في التهيئة', style: TextStyle(color: AppTheme.textWhite, fontSize: 18)),
+                        const SizedBox(height: 10),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 30),
+                          child: Text(_initError!, style: TextStyle(color: AppTheme.textGrey, fontSize: 12), textAlign: TextAlign.center),
+                        ),
+                        const SizedBox(height: 20),
+                        ElevatedButton(onPressed: () => setState(() { _initError = null; _initializeApp(); }), child: const Text('إعادة المحاولة')),
+                      ]),
                     ),
-                    const SizedBox(height: 20),
-                    ElevatedButton(onPressed: () => setState(() { _initError = null; _initializeApp(); }), child: const Text('إعادة المحاولة')),
-                  ]),
-                ),
+                  ),
+                  const ThemeToggleButton(),
+                ],
               ),
             );
           }
-          return Directionality(textDirection: TextDirection.rtl, child: child!);
+          return Directionality(
+            textDirection: TextDirection.rtl,
+            child: Stack(
+              children: [
+                KeyedSubtree(
+                  key: ValueKey<bool>(themeProvider.isDarkMode),
+                  child: child!,
+                ),
+                const ThemeToggleButton(),
+              ],
+            ),
+          );
         },
       );
       }),

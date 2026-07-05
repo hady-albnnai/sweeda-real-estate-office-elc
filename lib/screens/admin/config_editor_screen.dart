@@ -149,7 +149,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.orange.withOpacity(0.5)),
         ),
-        child: const Row(
+        child: Row(
           children: [
             Icon(Icons.warning_amber, color: Colors.orange),
             SizedBox(width: 10),
@@ -173,7 +173,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
               const SizedBox(height: 12),
               Text(msg ?? 'تعذّر تحميل الإعدادات',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: AppTheme.textGrey)),
+                  style: TextStyle(color: AppTheme.textGrey)),
               const SizedBox(height: 16),
               ElevatedButton(onPressed: _load, child: const Text('إعادة المحاولة')),
             ],
@@ -206,10 +206,10 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
       child: ListTile(
         leading: Icon(icon, color: AppTheme.primaryGold),
         title: Text(title,
-            style: const TextStyle(
+            style: TextStyle(
                 color: AppTheme.textWhite, fontWeight: FontWeight.bold)),
         subtitle: Text(subtitle,
-            style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+            style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
         trailing: const Icon(Icons.arrow_forward_ios,
             color: AppTheme.primaryGold, size: 16),
         onTap: onTap,
@@ -223,7 +223,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
       child: TextFormField(
         controller: ctrl,
         keyboardType: TextInputType.number,
-        style: const TextStyle(color: AppTheme.textWhite),
+        style: TextStyle(color: AppTheme.textWhite),
         decoration: InputDecoration(
           labelText: label,
           filled: true,

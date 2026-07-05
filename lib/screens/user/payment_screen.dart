@@ -194,7 +194,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         barrierDismissible: false,
         builder: (_) => AlertDialog(
           backgroundColor: AppTheme.surfaceBlack,
-          title: const Row(
+          title: Row(
             children: [
               Icon(Icons.check_circle, color: Colors.green, size: 28),
               SizedBox(width: 8),
@@ -202,7 +202,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   style: TextStyle(color: AppTheme.textWhite)),
             ],
           ),
-          content: const Text(
+          content: Text(
             'تم تسجيل دفعتك بنجاح ✅\n\nستراجعها الإدارة خلال 24 ساعة وستصلك رسالة عند التفعيل.',
             style: TextStyle(color: AppTheme.textGrey),
           ),
@@ -270,7 +270,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   _sectionTitle('🔢 رقم العملية / المرجع'),
                   TextField(
                     controller: _refCtrl,
-                    style: const TextStyle(color: AppTheme.textWhite),
+                    style: TextStyle(color: AppTheme.textWhite),
                     decoration: const InputDecoration(
                       hintText: 'مثلاً: TRX-123456 / رقم الإيصال',
                       prefixIcon:
@@ -309,7 +309,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         color: AppTheme.primaryGold),
                     const SizedBox(height: 16),
                     Text(_progress,
-                        style: const TextStyle(color: AppTheme.textWhite)),
+                        style: TextStyle(color: AppTheme.textWhite)),
                   ],
                 ),
               ),
@@ -401,7 +401,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Colors.orange.withOpacity(0.5)),
       ),
-      child: const Row(
+      child: Row(
         children: [
           Icon(Icons.warning_amber_rounded, color: Colors.orange),
           SizedBox(width: 10),
@@ -543,7 +543,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       fontSize: 16)),
             ],
           ),
-          const Divider(color: AppTheme.textGrey, height: 18),
+          Divider(color: AppTheme.textGrey, height: 18),
           if (fields.isEmpty)
             const Text(
               '⚠️ لم يتم إعداد بيانات هذه القناة بعد.\nيرجى التواصل مع الإدارة.',
@@ -569,7 +569,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   Expanded(
                     child: Text(
                       instructions,
-                      style: const TextStyle(
+                      style: TextStyle(
                           color: AppTheme.textWhite, fontSize: 12.5, height: 1.5),
                     ),
                   ),
@@ -657,7 +657,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               ),
             ),
             child: _proofImage == null
-                ? const Center(
+                ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -702,13 +702,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
           SizedBox(
             width: 95,
             child: Text(k,
-                style: const TextStyle(
+                style: TextStyle(
                     color: AppTheme.textGrey, fontSize: 12)),
           ),
           Expanded(
             child: SelectableText(
               v,
-              style: const TextStyle(
+              style: TextStyle(
                   color: AppTheme.textWhite,
                   fontSize: 13,
                   fontWeight: FontWeight.w600),

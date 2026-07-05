@@ -57,7 +57,7 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
             const Text('المكتب العقاري',
                 style: TextStyle(color: AppTheme.primaryGold, fontSize: 18, fontWeight: FontWeight.bold)),
             Text(user?.nm ?? 'موظف المكتب',
-                style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
           ],
         ),
         centerTitle: true,
@@ -149,8 +149,8 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
                   if (user != null && user.isSenior)
                     TextButton.icon(
                       onPressed: () => context.push('/admin/dashboard'),
-                      icon: const Icon(Icons.admin_panel_settings, color: AppTheme.textGrey),
-                      label: const Text('لوحة الإدارة الكاملة',
+                      icon: Icon(Icons.admin_panel_settings, color: AppTheme.textGrey),
+                      label: Text('لوحة الإدارة الكاملة',
                           style: TextStyle(color: AppTheme.textGrey)),
                     ),
 
@@ -210,7 +210,7 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
             ]),
             const SizedBox(height: 8),
             Text(item.title,
-                style: const TextStyle(color: AppTheme.textWhite, fontSize: 13, fontWeight: FontWeight.w600)),
+                style: TextStyle(color: AppTheme.textWhite, fontSize: 13, fontWeight: FontWeight.w600)),
           ],
         ),
       ),

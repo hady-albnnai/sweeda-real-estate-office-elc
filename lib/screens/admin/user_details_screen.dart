@@ -139,17 +139,17 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
           backgroundColor: AppTheme.surfaceBlack,
           title: Text(
             status == 1 ? 'تجميد الحساب' : 'حظر الحساب',
-            style: const TextStyle(color: AppTheme.textWhite),
+            style: TextStyle(color: AppTheme.textWhite),
           ),
           content: TextField(
             controller: ctrl,
-            style: const TextStyle(color: AppTheme.textWhite),
+            style: TextStyle(color: AppTheme.textWhite),
             decoration: const InputDecoration(hintText: 'السبب'),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('إلغاء',
+              child: Text('إلغاء',
                   style: TextStyle(color: AppTheme.textGrey)),
             ),
             ElevatedButton(
@@ -193,7 +193,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: AppTheme.scaffoldBackground,
         body: Center(
             child: CircularProgressIndicator(color: AppTheme.primaryGold)),
@@ -203,7 +203,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
       return Scaffold(
         backgroundColor: AppTheme.scaffoldBackground,
         appBar: AppBar(title: const Text('تفاصيل المستخدم')),
-        body: const Center(
+        body: Center(
             child: Text('المستخدم غير موجود',
                 style: TextStyle(color: AppTheme.textGrey))),
       );
@@ -283,17 +283,17 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
                   children: [
                     Text(
                       u.nm.isEmpty ? 'مستخدم بدون اسم' : u.nm,
-                      style: const TextStyle(
+                      style: TextStyle(
                           color: AppTheme.textWhite,
                           fontSize: 18,
                           fontWeight: FontWeight.bold),
                     ),
                     Text(u.ph,
-                        style: const TextStyle(
+                        style: TextStyle(
                             color: AppTheme.textGrey, fontSize: 13)),
                     if (u.eml?.isNotEmpty == true)
                       Text(u.eml!,
-                          style: const TextStyle(
+                          style: TextStyle(
                               color: AppTheme.textGrey, fontSize: 11)),
                   ],
                 ),
@@ -412,7 +412,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
-        title: const Text('تغيير الدور',
+        title: Text('تغيير الدور',
             style: TextStyle(color: AppTheme.textWhite)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -420,7 +420,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
             return ListTile(
               leading: const Icon(Icons.person, color: AppTheme.primaryGold),
               title: Text(UserRole.nameOf(i),
-                  style: const TextStyle(color: AppTheme.textWhite)),
+                  style: TextStyle(color: AppTheme.textWhite)),
               selected: _user!.role == i,
               onTap: () {
                 Navigator.pop(context);
@@ -435,7 +435,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
 
   Widget _offersTab() {
     if (_offers.isEmpty) {
-      return const Center(
+      return Center(
           child: Text('لا توجد عروض',
               style: TextStyle(color: AppTheme.textGrey)));
     }
@@ -456,18 +456,18 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
                 child: o.imgs.isNotEmpty
                     ? Image.network(o.imgs.first,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Icon(
+                        errorBuilder: (_, __, ___) => Icon(
                             Icons.image, color: AppTheme.textGrey))
-                    : const Icon(Icons.image, color: AppTheme.textGrey),
+                    : Icon(Icons.image, color: AppTheme.textGrey),
               ),
             ),
             title: Text(o.ttl,
-                style: const TextStyle(color: AppTheme.textWhite),
+                style: TextStyle(color: AppTheme.textWhite),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis),
             subtitle: Text(
               '${o.prc.toStringAsFixed(0)} ${o.cur == 0 ? '\$' : 'ل.س'} • ${_offerStatusText(o.sts)}',
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 11),
+              style: TextStyle(color: AppTheme.textGrey, fontSize: 11),
             ),
             trailing: const Icon(Icons.chevron_left, color: AppTheme.primaryGold),
             onTap: () => context.push('/offer/${o.id}'),
@@ -479,7 +479,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
 
   Widget _appointmentsTab() {
     if (_appointments.isEmpty) {
-      return const Center(
+      return Center(
           child: Text('لا توجد مواعيد',
               style: TextStyle(color: AppTheme.textGrey)));
     }
@@ -494,10 +494,10 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
           child: ListTile(
             leading: const Icon(Icons.event, color: AppTheme.primaryGold),
             title: Text('موعد #${a.id.substring(0, 6)}',
-                style: const TextStyle(color: AppTheme.textWhite)),
+                style: TextStyle(color: AppTheme.textWhite)),
             subtitle: Text(
               '${a.dt.year}/${a.dt.month}/${a.dt.day} ${a.dt.hour}:${a.dt.minute.toString().padLeft(2, '0')} • ${_apptStatusText(a.sts)}',
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 11),
+              style: TextStyle(color: AppTheme.textGrey, fontSize: 11),
             ),
           ),
         );
@@ -522,16 +522,16 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
           child: ListTile(
             leading: const Icon(Icons.flag, color: Colors.red),
             title: Text('تبليغ #${r['id'].toString().substring(0, 6)}',
-                style: const TextStyle(color: AppTheme.textWhite)),
+                style: TextStyle(color: AppTheme.textWhite)),
             subtitle: Text(
               '${r['det'] ?? 'بدون تفاصيل'}',
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 11),
+              style: TextStyle(color: AppTheme.textGrey, fontSize: 11),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
             trailing: Text(
               AppUtils.formatTimestamp(r['ts_crt']),
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 10),
+              style: TextStyle(color: AppTheme.textGrey, fontSize: 10),
             ),
           ),
         );
@@ -541,7 +541,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
 
   Widget _activityTab() {
     if (_activity.isEmpty) {
-      return const Center(
+      return Center(
           child: Text('لا نشاط حديث',
               style: TextStyle(color: AppTheme.textGrey)));
     }
@@ -559,10 +559,10 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
                 a['det']?.toString().isNotEmpty == true
                     ? a['det'].toString()
                     : (a['action']?.toString() ?? (a['act'] != null ? 'إجراء رقم ${a['act']}' : '—')),
-                style: const TextStyle(color: AppTheme.textWhite, fontSize: 13)),
+                style: TextStyle(color: AppTheme.textWhite, fontSize: 13)),
             subtitle: Text(
               AppUtils.formatTimestamp(a['ts_crt']),
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 10),
+              style: TextStyle(color: AppTheme.textGrey, fontSize: 10),
             ),
           ),
         );

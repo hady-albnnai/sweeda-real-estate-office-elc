@@ -103,11 +103,11 @@ class _ExecuteTaskScreenState extends State<ExecuteTaskScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
-        title: const Text('سبب الرفض', style: TextStyle(color: AppTheme.textWhite)),
+        title: Text('سبب الرفض', style: TextStyle(color: AppTheme.textWhite)),
         content: TextField(
           controller: _rejectCtrl,
           maxLines: 3,
-          style: const TextStyle(color: AppTheme.textWhite),
+          style: TextStyle(color: AppTheme.textWhite),
           decoration: const InputDecoration(hintText: 'اكتب سبب الرفض...'),
         ),
         actions: [
@@ -166,7 +166,7 @@ class _ExecuteTaskScreenState extends State<ExecuteTaskScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryGold))
           : _task == null
-              ? const Center(child: Text('لم يتم العثور على المهمة', style: TextStyle(color: AppTheme.textGrey)))
+              ? Center(child: Text('لم يتم العثور على المهمة', style: TextStyle(color: AppTheme.textGrey)))
               : SingleChildScrollView(
                   padding: const EdgeInsets.all(16),
                   child: Column(children: [
@@ -182,7 +182,7 @@ class _ExecuteTaskScreenState extends State<ExecuteTaskScreen> {
                     if ((_task!['description'] ?? '').isNotEmpty) ...[
                       const SizedBox(height: 12),
                       _card('تفاصيل العرض', [
-                        Text(_task!['description'], style: const TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+                        Text(_task!['description'], style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
                       ]),
                     ],
 
@@ -193,8 +193,8 @@ class _ExecuteTaskScreenState extends State<ExecuteTaskScreen> {
                       TextField(
                         controller: _notesCtrl,
                         maxLines: 3,
-                        style: const TextStyle(color: AppTheme.textWhite),
-                        decoration: const InputDecoration(
+                        style: TextStyle(color: AppTheme.textWhite),
+                        decoration: InputDecoration(
                           hintText: 'أدخل ملاحظات...',
                           hintStyle: TextStyle(color: AppTheme.textGrey),
                         ),
@@ -270,8 +270,8 @@ class _ExecuteTaskScreenState extends State<ExecuteTaskScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        SizedBox(width: 90, child: Text(label, style: const TextStyle(color: AppTheme.textGrey, fontSize: 13))),
-        Expanded(child: Text(value, style: const TextStyle(color: AppTheme.textWhite, fontSize: 13))),
+        SizedBox(width: 90, child: Text(label, style: TextStyle(color: AppTheme.textGrey, fontSize: 13))),
+        Expanded(child: Text(value, style: TextStyle(color: AppTheme.textWhite, fontSize: 13))),
       ]),
     );
   }

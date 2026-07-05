@@ -80,7 +80,7 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
                   _filters(),
                   const SizedBox(height: 12),
                   if (_tasks.isEmpty)
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.only(top: 100),
                       child: Center(child: Text('لا توجد مهام تصوير', style: TextStyle(color: AppTheme.textGrey))),
                     )
@@ -149,7 +149,7 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(task.ttl.isEmpty ? 'مهمة تصوير' : task.ttl,
-                          style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold)),
+                          style: TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold)),
                       Text(task.statusLabel, style: TextStyle(color: color, fontSize: 12)),
                     ],
                   ),
@@ -162,11 +162,11 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
             ),
             if (task.notes.isNotEmpty) ...[
               const SizedBox(height: 8),
-              Text(task.notes, style: const TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+              Text(task.notes, style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
             ],
             if (task.photographerNote.isNotEmpty) ...[
               const SizedBox(height: 8),
-              Text('ملاحظة المصور: ${task.photographerNote}', style: const TextStyle(color: AppTheme.textWhite, fontSize: 12)),
+              Text('ملاحظة المصور: ${task.photographerNote}', style: TextStyle(color: AppTheme.textWhite, fontSize: 12)),
             ],
             const SizedBox(height: 10),
             Wrap(
@@ -189,7 +189,7 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(10),
                       child: Image.network(task.media[index], width: 76, height: 76, fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(width: 76, height: 76, color: AppTheme.deepBlack, child: const Icon(Icons.broken_image, color: AppTheme.textGrey))),
+                          errorBuilder: (_, __, ___) => Container(width: 76, height: 76, color: AppTheme.deepBlack, child: Icon(Icons.broken_image, color: AppTheme.textGrey))),
                     ),
                   ),
                 ),
@@ -254,7 +254,7 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
               const SizedBox(height: 12),
               DropdownButtonFormField<OfferModel>(
                 dropdownColor: AppTheme.surfaceBlack,
-                style: const TextStyle(color: AppTheme.textWhite),
+                style: TextStyle(color: AppTheme.textWhite),
                 decoration: const InputDecoration(labelText: 'العرض'),
                 items: _offers.take(100).map((offer) => DropdownMenuItem(value: offer, child: Text(offer.ttl, overflow: TextOverflow.ellipsis))).toList(),
                 onChanged: (value) => setSheet(() => selectedOffer = value),
@@ -262,7 +262,7 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
               const SizedBox(height: 12),
               DropdownButtonFormField<UserModel>(
                 dropdownColor: AppTheme.surfaceBlack,
-                style: const TextStyle(color: AppTheme.textWhite),
+                style: TextStyle(color: AppTheme.textWhite),
                 decoration: const InputDecoration(labelText: 'المصور'),
                 items: _photographers.map((user) => DropdownMenuItem(value: user, child: Text(user.nm.isEmpty ? user.ph : user.nm))).toList(),
                 onChanged: (value) => setSheet(() => selectedPhotographer = value),
@@ -271,7 +271,7 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
               TextField(
                 controller: notesCtrl,
                 maxLines: 3,
-                style: const TextStyle(color: AppTheme.textWhite),
+                style: TextStyle(color: AppTheme.textWhite),
                 decoration: const InputDecoration(labelText: 'ملاحظات التصوير'),
               ),
               const SizedBox(height: 12),
@@ -335,10 +335,10 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
-        title: const Text('رفض التصوير', style: TextStyle(color: AppTheme.textWhite)),
+        title: Text('رفض التصوير', style: TextStyle(color: AppTheme.textWhite)),
         content: TextField(
           controller: ctrl,
-          style: const TextStyle(color: AppTheme.textWhite),
+          style: TextStyle(color: AppTheme.textWhite),
           decoration: const InputDecoration(labelText: 'سبب الرفض'),
         ),
         actions: [

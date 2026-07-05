@@ -77,7 +77,7 @@ class _OfferCardState extends State<OfferCard> {
         const SizedBox(width: 4),
         Text(
           text,
-          style: const TextStyle(color: AppTheme.textGrey, fontSize: 12),
+          style: TextStyle(color: AppTheme.textGrey, fontSize: 12),
         ),
       ],
     );
@@ -223,7 +223,7 @@ class _OfferCardState extends State<OfferCard> {
                       Expanded(
                         child: Text(
                           offer.ttl,
-                          style: const TextStyle(
+                          style: TextStyle(
                               color: AppTheme.textWhite,
                               fontSize: 17,
                               fontWeight: FontWeight.bold),

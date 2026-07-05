@@ -84,7 +84,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
     final refPts = config?.data['pts']?['ref'] ?? 1500;
 
     if (user == null) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: AppTheme.scaffoldBackground,
         body: Center(
             child: Text('سجّل دخولك أولاً',
@@ -161,7 +161,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
       ),
       child: Column(
         children: [
-          const Text('كود الدعوة الخاص بك',
+          Text('كود الدعوة الخاص بك',
               style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
           const SizedBox(height: 10),
           Container(
@@ -240,11 +240,11 @@ class _ReferralScreenState extends State<ReferralScreen> {
                             strokeWidth: 2,
                             color: AppTheme.primaryGold))
                     : Text('$_referralCount',
-                        style: const TextStyle(
+                        style: TextStyle(
                             color: AppTheme.textWhite,
                             fontSize: 24,
                             fontWeight: FontWeight.bold)),
-                const Text('أصدقاء انضمّوا',
+                Text('أصدقاء انضمّوا',
                     style: TextStyle(
                         color: AppTheme.textGrey, fontSize: 11)),
               ],
@@ -258,11 +258,11 @@ class _ReferralScreenState extends State<ReferralScreen> {
                     color: AppTheme.primaryGold, size: 28),
                 const SizedBox(height: 6),
                 Text('${_referralCount * refPts}',
-                    style: const TextStyle(
+                    style: TextStyle(
                         color: AppTheme.textWhite,
                         fontSize: 24,
                         fontWeight: FontWeight.bold)),
-                const Text('نقطة مكتسبة',
+                Text('نقطة مكتسبة',
                     style: TextStyle(
                         color: AppTheme.textGrey, fontSize: 11)),
               ],
@@ -315,7 +315,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
           const SizedBox(width: 10),
           Expanded(
             child: Text(text,
-                style: const TextStyle(
+                style: TextStyle(
                     color: AppTheme.textWhite, fontSize: 13)),
           ),
         ],

@@ -126,12 +126,12 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> with Code
             const SizedBox(height: 20),
             const Icon(Icons.sms_outlined, color: AppTheme.primaryGold, size: 72),
             const SizedBox(height: 24),
-            const Text('تحقق من الرمز', style: TextStyle(color: AppTheme.textWhite, fontSize: 28, fontWeight: FontWeight.bold)),
+            Text('تحقق من الرمز', style: TextStyle(color: AppTheme.textWhite, fontSize: 28, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
             Text(
               'أدخل الرمز المكون من 6 أحرف المرسل عبر رسالة نصية SMS إلى\n${auth.currentPhone ?? ''}',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 14, height: 1.5),
+              style: TextStyle(color: AppTheme.textGrey, fontSize: 14, height: 1.5),
             ),
             const SizedBox(height: 40),
             Directionality(

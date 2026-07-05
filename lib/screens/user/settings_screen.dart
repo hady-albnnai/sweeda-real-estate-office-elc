@@ -121,7 +121,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: SwitchListTile(
-        title: Text(title, style: const TextStyle(color: AppTheme.textWhite)),
+        title: Text(title, style: TextStyle(color: AppTheme.textWhite)),
         value: value,
         onChanged: onChanged,
         activeColor: AppTheme.primaryGold,
@@ -137,8 +137,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         leading: Icon(icon, color: AppTheme.primaryGold),
-        title: Text(title, style: const TextStyle(color: AppTheme.textWhite)),
-        trailing: const Icon(Icons.chevron_right, color: AppTheme.textGrey),
+        title: Text(title, style: TextStyle(color: AppTheme.textWhite)),
+        trailing: Icon(Icons.chevron_right, color: AppTheme.textGrey),
         onTap: onTap,
       ),
     );
@@ -192,7 +192,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
         title: const Text('عن التطبيق', style: TextStyle(color: AppTheme.primaryGold)),
-        content: const Text(
+        content: Text(
           'عقارات السويداء — المكتب العقاري الإلكتروني\n\n'
           'تطبيق لتصفح وعرض العقارات والسيارات في محافظة السويداء\n\n'
           'الإصدار: 1.0.0\n'
@@ -212,8 +212,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
-        title: const Text('تسجيل الخروج', style: TextStyle(color: AppTheme.textWhite)),
-        content: const Text('هل أنت متأكد من تسجيل الخروج؟', style: TextStyle(color: AppTheme.textGrey)),
+        title: Text('تسجيل الخروج', style: TextStyle(color: AppTheme.textWhite)),
+        content: Text('هل أنت متأكد من تسجيل الخروج؟', style: TextStyle(color: AppTheme.textGrey)),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء')),
           TextButton(

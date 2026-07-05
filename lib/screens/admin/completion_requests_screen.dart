@@ -48,7 +48,7 @@ class _CompletionRequestsScreenState extends State<CompletionRequestsScreen> {
             style: TextStyle(color: AppTheme.primaryGold)),
         content: Text(
           'الموافقة على إتمام المعاملة للعرض:\n${req['display_title'] ?? ''}',
-          style: const TextStyle(color: AppTheme.textWhite),
+          style: TextStyle(color: AppTheme.textWhite),
         ),
         actions: [
           TextButton(
@@ -80,11 +80,11 @@ class _CompletionRequestsScreenState extends State<CompletionRequestsScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
         title:
-            const Text('رفض الطلب', style: TextStyle(color: AppTheme.textWhite)),
+            Text('رفض الطلب', style: TextStyle(color: AppTheme.textWhite)),
         content: TextField(
           controller: ctrl,
           maxLines: 3,
-          style: const TextStyle(color: AppTheme.textWhite),
+          style: TextStyle(color: AppTheme.textWhite),
           decoration: const InputDecoration(hintText: 'سبب الرفض (اختياري)...'),
         ),
         actions: [
@@ -127,7 +127,7 @@ class _CompletionRequestsScreenState extends State<CompletionRequestsScreen> {
           ? const Center(
               child: CircularProgressIndicator(color: AppTheme.primaryGold))
           : _requests.isEmpty
-              ? const Center(
+              ? Center(
                   child: Text('لا توجد طلبات إتمام معلقة',
                       style: TextStyle(color: AppTheme.textGrey)))
               : RefreshIndicator(
@@ -163,12 +163,12 @@ class _CompletionRequestsScreenState extends State<CompletionRequestsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(req['display_title'] ?? 'طلب إتمام',
-                          style: const TextStyle(
+                          style: TextStyle(
                               color: AppTheme.textWhite,
                               fontWeight: FontWeight.bold)),
                       Text(
                           req['task_type'] == 'property' ? 'عقار' : 'سيارة',
-                          style: const TextStyle(
+                          style: TextStyle(
                               color: AppTheme.textGrey, fontSize: 12)),
                     ]),
               ),
@@ -217,11 +217,11 @@ class _CompletionRequestsScreenState extends State<CompletionRequestsScreen> {
             width: 100,
             child: Text(label,
                 style:
-                    const TextStyle(color: AppTheme.textGrey, fontSize: 12))),
+                    TextStyle(color: AppTheme.textGrey, fontSize: 12))),
         Expanded(
             child: Text(value,
                 style:
-                    const TextStyle(color: AppTheme.textWhite, fontSize: 12))),
+                    TextStyle(color: AppTheme.textWhite, fontSize: 12))),
       ]),
     );
   }

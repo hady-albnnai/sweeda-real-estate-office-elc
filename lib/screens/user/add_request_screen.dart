@@ -230,7 +230,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
             style: TextStyle(
                 color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
         leading: IconButton(
-          icon: const Icon(Icons.close, color: AppTheme.textGrey),
+          icon: Icon(Icons.close, color: AppTheme.textGrey),
           onPressed: () => context.pop(),
         ),
       ),
@@ -263,7 +263,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
                     padding: const EdgeInsets.only(left: 10),
                     child: TextButton(
                       onPressed: details.onStepCancel,
-                      child: const Text('السابق',
+                      child: Text('السابق',
                           style: TextStyle(color: AppTheme.textGrey)),
                     ),
                   ),
@@ -313,7 +313,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
           DropdownButtonFormField<int>(
             value: _selectedMainCat,
             dropdownColor: AppTheme.surfaceBlack,
-            style: const TextStyle(color: AppTheme.textWhite),
+            style: TextStyle(color: AppTheme.textWhite),
             decoration: const InputDecoration(
                 labelText: 'التصنيف الرئيسي (اختياري)',
                 border: OutlineInputBorder()),
@@ -326,7 +326,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
               _selectedSubCat  = null;
               _customSubCtrl.clear();
             }),
-            hint: const Text('اختر التصنيف',
+            hint: Text('اختر التصنيف',
                 style: TextStyle(color: AppTheme.textGrey)),
           ),
           if (_selectedMainCat != null) ...[
@@ -334,7 +334,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
             DropdownButtonFormField<int>(
               value: _selectedSubCat,
               dropdownColor: AppTheme.surfaceBlack,
-              style: const TextStyle(color: AppTheme.textWhite, fontSize: 14),
+              style: TextStyle(color: AppTheme.textWhite, fontSize: 14),
               decoration: const InputDecoration(
                   labelText: 'التصنيف الفرعي (اختياري)',
                   border: OutlineInputBorder()),
@@ -347,7 +347,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
                 _selectedSubCat = v;
                 if (v != -1) _customSubCtrl.clear();
               }),
-              hint: const Text('اختر التصنيف الفرعي',
+              hint: Text('اختر التصنيف الفرعي',
                   style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
             ),
             if (_selectedSubCat == -1)
@@ -377,7 +377,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
               _selectedType == 0
                   ? 'المكتب يتقاضى عمولة 3% عند إتمام عملية الشراء.'
                   : 'المكتب يتقاضى أجرة نصف شهر عند إتمام عملية الاستئجار.',
-              style: const TextStyle(color: AppTheme.textWhite, fontSize: 12),
+              style: TextStyle(color: AppTheme.textWhite, fontSize: 12),
             ),
           ),
         ],
@@ -394,7 +394,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
         content: Column(children: [
           TextField(
             controller: _clientNameCtrl,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'اسم العميل (إلزامي)',
               filled: true,
               fillColor: AppTheme.surfaceBlack,
@@ -405,7 +405,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
           TextField(
             controller: _clientPhoneCtrl,
             keyboardType: TextInputType.phone,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'هاتف العميل (إلزامي)',
               hintText: 'مثال: 0938862469',
               filled: true,
@@ -421,7 +421,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
               child: TextField(
                 controller: _priceCtrl,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'الميزانية المتوقعة',
                   filled: true,
                   fillColor: AppTheme.surfaceBlack,
@@ -435,8 +435,8 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
               child: DropdownButtonFormField<int>(
                 value: _cur,
                 dropdownColor: AppTheme.surfaceBlack,
-                style: const TextStyle(color: AppTheme.textWhite),
-                decoration: const InputDecoration(
+                style: TextStyle(color: AppTheme.textWhite),
+                decoration: InputDecoration(
                   border: OutlineInputBorder(),
                   filled: true,
                   fillColor: AppTheme.surfaceBlack,
@@ -459,7 +459,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
               border: Border.all(
                   color: AppTheme.primaryGold.withOpacity(0.2)),
             ),
-            child: const Row(children: [
+            child: Row(children: [
               Icon(Icons.lock_outline,
                   color: AppTheme.primaryGold, size: 14),
               SizedBox(width: 6),
@@ -487,7 +487,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
           TextField(
             controller: _specsCtrl,
             maxLines: 3,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'المواصفات المطلوبة (اختيارية)',
               hintText:
                   'مثال: 3 غرف نوم، موقف سيارة، بالقرب من المدارس...',
@@ -500,7 +500,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
           TextField(
             controller: _notesCtrl,
             maxLines: 3,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'ملاحظات إضافية (اختيارية)',
               filled: true,
               fillColor: AppTheme.surfaceBlack,

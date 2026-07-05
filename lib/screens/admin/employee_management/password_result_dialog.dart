@@ -30,12 +30,12 @@ class PasswordResultDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       backgroundColor: AppTheme.surfaceBlack,
-      title: Text(title, style: const TextStyle(color: AppTheme.textWhite)),
+      title: Text(title, style: TextStyle(color: AppTheme.textWhite)),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
+          Text(
             'انسخ كلمة السر وأرسلها للموظف. لن تظهر هذه الكلمة مرة أخرى.',
             style: TextStyle(color: AppTheme.textGrey),
           ),
@@ -63,7 +63,7 @@ class PasswordResultDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('إغلاق', style: TextStyle(color: AppTheme.textGrey)),
+          child: Text('إغلاق', style: TextStyle(color: AppTheme.textGrey)),
         ),
         ElevatedButton.icon(
           onPressed: () async {

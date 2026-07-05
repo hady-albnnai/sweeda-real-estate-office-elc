@@ -101,7 +101,7 @@ class _BrokerOffersScreenState extends State<BrokerOffersScreen> {
             Icon(Icons.home_work,
                 size: 72, color: AppTheme.textGrey.withOpacity(0.3)),
             const SizedBox(height: 16),
-            const Text('لا توجد عروض مرتبطة بك',
+            Text('لا توجد عروض مرتبطة بك',
                 style: TextStyle(color: AppTheme.textGrey, fontSize: 15)),
           ],
         ),
@@ -147,7 +147,7 @@ class _BrokerOffersScreenState extends State<BrokerOffersScreen> {
         title: Text(o.ttl,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
+            style: TextStyle(
                 color: AppTheme.textWhite, fontWeight: FontWeight.bold)),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -164,14 +164,14 @@ class _BrokerOffersScreenState extends State<BrokerOffersScreen> {
                     size: 13, color: AppTheme.textGrey.withOpacity(0.7)),
                 const SizedBox(width: 2),
                 Text('${o.vws}',
-                    style: const TextStyle(
+                    style: TextStyle(
                         color: AppTheme.textGrey, fontSize: 11)),
                 const SizedBox(width: 8),
                 Icon(Icons.favorite,
                     size: 13, color: AppTheme.textGrey.withOpacity(0.7)),
                 const SizedBox(width: 2),
                 Text('${o.fvs}',
-                    style: const TextStyle(
+                    style: TextStyle(
                         color: AppTheme.textGrey, fontSize: 11)),
               ],
             ),
@@ -186,7 +186,7 @@ class _BrokerOffersScreenState extends State<BrokerOffersScreen> {
         width: 60,
         height: 60,
         color: AppTheme.deepBlack,
-        child: const Icon(Icons.image, color: AppTheme.textGrey),
+        child: Icon(Icons.image, color: AppTheme.textGrey),
       );
 
   Widget _statusBadge(int sts) {

@@ -155,11 +155,11 @@ class _MyTasksScreenState extends State<MyTasksScreen>
                 backgroundColor: color.withOpacity(0.18),
                 child: Icon(_decisionIcon(decision), color: color),
               ),
-              title: Text(r['display_title'] ?? '', style: const TextStyle(color: AppTheme.textWhite)),
+              title: Text(r['display_title'] ?? '', style: TextStyle(color: AppTheme.textWhite)),
               subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('الحالة: ${_decisionLabel(decision)}', style: TextStyle(color: color, fontSize: 12)),
                 if ((r['office_notes'] ?? '').toString().isNotEmpty)
-                  Text('ملاحظة المكتب: ${r['office_notes']}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+                  Text('ملاحظة المكتب: ${r['office_notes']}', style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
               ]),
             ),
           );
@@ -194,8 +194,8 @@ class _MyTasksScreenState extends State<MyTasksScreen>
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(task.displayTitle.isEmpty ? 'مهمة' : task.displayTitle,
-                      style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold)),
-                  Text(task.taskTypeLabel, style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                      style: TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold)),
+                  Text(task.taskTypeLabel, style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
                 ]),
               ),
             ]),
@@ -236,13 +236,13 @@ class _MyTasksScreenState extends State<MyTasksScreen>
             color: color,
           ),
         ),
-        title: Text(task.displayTitle, style: const TextStyle(color: AppTheme.textWhite)),
+        title: Text(task.displayTitle, style: TextStyle(color: AppTheme.textWhite)),
         subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text('النتيجة: ${task.outcomeLabel}', style: TextStyle(color: color, fontSize: 12)),
           if (task.rejectionReason != null && task.rejectionReason!.isNotEmpty)
             Text('السبب: ${task.rejectionReason}', style: const TextStyle(color: Colors.red, fontSize: 11)),
           if (task.completionDate != null)
-            Text('تاريخ التنفيذ: ${_fmtDate(task.completionDate!)}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+            Text('تاريخ التنفيذ: ${_fmtDate(task.completionDate!)}', style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
         ]),
       ),
     );
@@ -291,13 +291,13 @@ class _MyTasksScreenState extends State<MyTasksScreen>
       child: Row(children: [
         Icon(icon, size: 15, color: AppTheme.textGrey),
         const SizedBox(width: 6),
-        Expanded(child: Text(text, style: const TextStyle(color: AppTheme.textGrey, fontSize: 12))),
+        Expanded(child: Text(text, style: TextStyle(color: AppTheme.textGrey, fontSize: 12))),
       ]),
     );
   }
 
   Widget _empty(String msg) {
-    return Center(child: Text(msg, style: const TextStyle(color: AppTheme.textGrey)));
+    return Center(child: Text(msg, style: TextStyle(color: AppTheme.textGrey)));
   }
 
   String _fmtDate(DateTime d) {

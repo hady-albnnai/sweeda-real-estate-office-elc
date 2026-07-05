@@ -58,7 +58,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
             padding: const EdgeInsets.all(12),
             child: TextField(
               controller: _searchCtrl,
-              style: const TextStyle(color: AppTheme.textWhite),
+              style: TextStyle(color: AppTheme.textWhite),
               decoration: InputDecoration(
                 hintText: 'ابحث بالاسم أو الهاتف...',
                 prefixIcon: const Icon(Icons.search, color: AppTheme.primaryGold),
@@ -87,7 +87,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                 ? const Center(
                     child: CircularProgressIndicator(color: AppTheme.primaryGold))
                 : _users.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Text('لا يوجد حسابات عملاء أو وسطاء',
                             style: TextStyle(color: AppTheme.textGrey)))
                     : RefreshIndicator(
@@ -126,7 +126,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
             Flexible(
               child: Text(u.nm.isEmpty ? 'بدون اسم' : u.nm,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                       color: AppTheme.textWhite, fontWeight: FontWeight.bold)),
             ),
             const SizedBox(width: 6),
@@ -138,9 +138,9 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
           children: [
             const SizedBox(height: 4),
             Text('${u.ph}  •  ${u.roleName}',
-                style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
             Text('${u.badgeName}  •  ⭐ ${u.pt}',
-                style: const TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+                style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
           ],
         ),
         trailing: PopupMenuButton<String>(
@@ -148,7 +148,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
           color: AppTheme.surfaceBlack,
           onSelected: (v) => _onAction(v, u),
           itemBuilder: (_) => [
-            const PopupMenuItem(
+            PopupMenuItem(
                 value: 'role', child: Text('تغيير الدور', style: TextStyle(color: AppTheme.textWhite))),
             if (u.sts != 0)
               const PopupMenuItem(
@@ -244,7 +244,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
               mainAxisSize: MainAxisSize.min,
               children: roles.entries.map((e) => RadioListTile<int>(
                     title: Text(e.value,
-                        style: const TextStyle(color: AppTheme.textWhite)),
+                        style: TextStyle(color: AppTheme.textWhite)),
                     value: e.key,
                     groupValue: selectedRole,
                     onChanged: (val) {
@@ -287,13 +287,13 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
         title: Text(title, style: const TextStyle(color: AppTheme.primaryGold)),
         content: TextField(
           controller: ctrl,
-          style: const TextStyle(color: AppTheme.textWhite),
+          style: TextStyle(color: AppTheme.textWhite),
           decoration: const InputDecoration(hintText: 'اكتب السبب...'),
         ),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('إلغاء', style: TextStyle(color: AppTheme.textGrey))),
+              child: Text('إلغاء', style: TextStyle(color: AppTheme.textGrey))),
           ElevatedButton(
               onPressed: () => Navigator.pop(ctx, ctrl.text.trim().isEmpty ? '—' : ctrl.text.trim()),
               child: const Text('تأكيد')),
