@@ -5,6 +5,8 @@ class ChecklistItemModel {
   final String inputValue; // حقل الكتابة التفاعلي مثل رقم السيارة أو العقار
   final String attachmentUrl; // رابط صورة السند المرفوعة
   final String notes; // ملاحظات المعقب الميدانية
+  final int requiredCopies; // عدد النسخ المطلوبة من المحامي
+  final String lawyerInstructions; // تعليمات المحامي الخاصة بهذه الوثيقة
 
   const ChecklistItemModel({
     required this.key,
@@ -13,6 +15,8 @@ class ChecklistItemModel {
     this.inputValue = '',
     this.attachmentUrl = '',
     this.notes = '',
+    this.requiredCopies = 1,
+    this.lawyerInstructions = '',
   });
 
   factory ChecklistItemModel.fromMap(Map<String, dynamic> map) {
@@ -23,6 +27,8 @@ class ChecklistItemModel {
       inputValue: (map['input_value'] ?? '').toString(),
       attachmentUrl: (map['attachment_url'] ?? '').toString(),
       notes: (map['notes'] ?? '').toString(),
+      requiredCopies: int.tryParse((map['required_copies'] ?? map['copies'] ?? 1).toString()) ?? 1,
+      lawyerInstructions: (map['lawyer_instructions'] ?? map['instructions'] ?? '').toString(),
     );
   }
 
@@ -34,6 +40,8 @@ class ChecklistItemModel {
       'input_value': inputValue,
       'attachment_url': attachmentUrl,
       'notes': notes,
+      'required_copies': requiredCopies,
+      'lawyer_instructions': lawyerInstructions,
     };
   }
 }

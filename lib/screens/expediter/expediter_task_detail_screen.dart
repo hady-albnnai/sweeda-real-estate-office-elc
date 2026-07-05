@@ -51,6 +51,8 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
             inputValue: inputVal,
             attachmentUrl: attachUrl,
             notes: notes,
+            requiredCopies: item.requiredCopies,
+            lawyerInstructions: item.lawyerInstructions,
           );
         }
       });
@@ -128,6 +130,23 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryGold.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppTheme.primaryGold.withOpacity(0.22)),
+                  ),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('عدد النسخ المطلوبة: ${item.requiredCopies}', style: const TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 13)),
+                    if (item.lawyerInstructions.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text('تعليمات المحامي: ${item.lawyerInstructions}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12, height: 1.35)),
+                    ],
+                  ]),
+                ),
+                const SizedBox(height: 12),
                 DropdownButtonFormField<int>(
                   value: selectedSts,
                   dropdownColor: AppTheme.surfaceBlack,
@@ -229,6 +248,12 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
                         IconButton(icon: const Icon(Icons.edit, color: AppTheme.primaryGold), onPressed: () => _showEditDialog(item)),
                       ],
                     ),
+                    const SizedBox(height: 6),
+                    Text('المطلوب من المحامي: ${item.requiredCopies} نسخة', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 12, fontWeight: FontWeight.w600)),
+                    if (item.lawyerInstructions.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text('تعليمات المحامي: ${item.lawyerInstructions}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12, height: 1.35)),
+                    ],
                     if (item.inputValue.isNotEmpty) ...[
                       const SizedBox(height: 6),
                       Text('البيانات المُدخلة: ${item.inputValue}', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 13, fontWeight: FontWeight.w600)),

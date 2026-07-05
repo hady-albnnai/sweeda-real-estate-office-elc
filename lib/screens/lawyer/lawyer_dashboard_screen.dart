@@ -21,6 +21,10 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
   final _taskPropertyCtrl = TextEditingController();
   final _taskZoneCtrl = TextEditingController();
   final _taskNotesCtrl = TextEditingController();
+  final _customDocTitleCtrl = TextEditingController();
+  String? _selectedDocKey;
+  final List<Map<String, dynamic>> _selectedChecklist = [];
+
   bool _savingProfile = false;
   bool _creatingTask = false;
   bool _checking = true; // يمنع وميض شاشة الإعداد
@@ -52,6 +56,7 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
   void dispose() {
     _whatsappCtrl.dispose(); _addressCtrl.dispose();
     _taskPropertyCtrl.dispose(); _taskZoneCtrl.dispose(); _taskNotesCtrl.dispose();
+    _customDocTitleCtrl.dispose();
     _tabCtrl.dispose();
     super.dispose();
   }
@@ -168,19 +173,111 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
     } else { _snack('فشل الحفظ', bg: AppTheme.errorRed); }
   }
 
+  List<Map<String, String>> _documentTemplatesFor(int itemType) {
+    if (itemType == 0) {
+      return const [
+        {'key': 'extract', 'title': 'إخراج قيد عقاري حديث'},
+        {'key': 'area_stmt', 'title': 'بيان مساحة عقاري'},
+        {'key': 'fin_clearance', 'title': 'براءة ذمة مالية وبلدية'},
+        {'key': 'fin_record', 'title': 'قيد مالي للعقار'},
+        {'key': 'sales_tax', 'title': 'ضريبة البيوع العقارية'},
+        {'key': 'poa_chain', 'title': 'تسلسل وكالات كاتب بالعدل'},
+      ];
+    }
+    return const [
+      {'key': 'traffic_info', 'title': 'كشف اطلاع مروري'},
+      {'key': 'traffic_clearance', 'title': 'براءة ذمة مرورية ومخالفات'},
+      {'key': 'tech_inspect', 'title': 'كشف فني ومطابقة الأرقام'},
+      {'key': 'title_deed', 'title': 'سند الملكية / ميكانيك المركبة'},
+    ];
+  }
+
+  void _changeItemType(int type) {
+    if (_selectedItemType == type) return;
+    setState(() {
+      _selectedItemType = type;
+      _selectedDocKey = null;
+      _customDocTitleCtrl.clear();
+      _selectedChecklist.clear();
+      _taskPropertyCtrl.clear();
+      _taskZoneCtrl.clear();
+    });
+  }
+
+  void _addSelectedDocument() {
+    final key = _selectedDocKey;
+    if (key == null) {
+      _snack('اختر وثيقة أولاً', bg: AppTheme.errorRed);
+      return;
+    }
+
+    late final String docKey;
+    late final String title;
+    if (key == '__custom__') {
+      title = _customDocTitleCtrl.text.trim();
+      if (title.length < 2) {
+        _snack('اكتب اسم الوثيقة المطلوبة', bg: AppTheme.errorRed);
+        return;
+      }
+      docKey = 'custom_${DateTime.now().microsecondsSinceEpoch}';
+    } else {
+      final doc = _documentTemplatesFor(_selectedItemType).firstWhere((d) => d['key'] == key);
+      docKey = doc['key']!;
+      title = doc['title']!;
+      if (_selectedChecklist.any((item) => item['key'] == docKey)) {
+        _snack('هذه الوثيقة مضافة مسبقاً', bg: AppTheme.errorRed);
+        return;
+      }
+    }
+
+    setState(() {
+      _selectedChecklist.add({
+        'key': docKey,
+        'title': title,
+        'status': 0,
+        'required_copies': 1,
+        'lawyer_instructions': '',
+      });
+      _selectedDocKey = null;
+      _customDocTitleCtrl.clear();
+    });
+  }
+
+  void _addAllDefaultDocuments() {
+    setState(() {
+      for (final doc in _documentTemplatesFor(_selectedItemType)) {
+        if (!_selectedChecklist.any((item) => item['key'] == doc['key'])) {
+          _selectedChecklist.add({
+            'key': doc['key'],
+            'title': doc['title'],
+            'status': 0,
+            'required_copies': 1,
+            'lawyer_instructions': '',
+          });
+        }
+      }
+    });
+  }
+
   // ──────── إنشاء مهمة ────────
   Future<void> _createTask() async {
     if (_selectedExpediterUid == null) { _snack('يرجى اختيار معقب', bg: AppTheme.errorRed); return; }
+    if (_selectedChecklist.isEmpty) { _snack('يرجى إضافة وثيقة واحدة على الأقل للمعقب', bg: AppTheme.errorRed); return; }
     setState(() => _creatingTask = true);
     final ok = await context.read<LegalProvider>().createExpeditingTask(
       expediterUid: _selectedExpediterUid!, itemType: _selectedItemType,
       targetPropertyNum: _taskPropertyCtrl.text.trim(), targetZone: _taskZoneCtrl.text.trim(),
-      notes: _taskNotesCtrl.text.trim());
+      notes: _taskNotesCtrl.text.trim(),
+      checklist: _selectedChecklist.map((item) => Map<String, dynamic>.from(item)).toList());
     if (!mounted) return; setState(() => _creatingTask = false);
     if (ok) {
       _snack('✅ تم إرسال المهمة');
       _taskPropertyCtrl.clear(); _taskZoneCtrl.clear(); _taskNotesCtrl.clear();
-      setState(() => _selectedExpediterUid = null);
+      setState(() {
+        _selectedExpediterUid = null;
+        _selectedChecklist.clear();
+        _selectedDocKey = null;
+      });
     } else { _snack('فشل إنشاء المهمة', bg: AppTheme.errorRed); }
   }
 
@@ -320,9 +417,9 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
       const Text('📋 تكليف معقب', style: TextStyle(color: AppTheme.primaryGold, fontSize: 18, fontWeight: FontWeight.bold)),
       const SizedBox(height: 16), const Text('نوع المعاملة:', style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
       Row(children: [
-        Expanded(child: _Chip(label: '🏠 عقار', selected: _selectedItemType == 0, onTap: () => setState(() => _selectedItemType = 0))),
+        Expanded(child: _Chip(label: '🏠 عقار', selected: _selectedItemType == 0, onTap: () => _changeItemType(0))),
         const SizedBox(width: 12),
-        Expanded(child: _Chip(label: '🚗 سيارة', selected: _selectedItemType == 1, onTap: () => setState(() => _selectedItemType = 1))),
+        Expanded(child: _Chip(label: '🚗 سيارة', selected: _selectedItemType == 1, onTap: () => _changeItemType(1))),
       ]), const SizedBox(height: 16), const Text('المعقب:', style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
       expediters.isEmpty
           ? Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(12),
@@ -345,6 +442,8 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
       if (_selectedItemType == 1)
         TextField(controller: _taskPropertyCtrl, style: const TextStyle(color: AppTheme.textWhite),
           decoration: const InputDecoration(labelText: 'رقم المركبة', hintText: '123456')),
+      const SizedBox(height: 16),
+      _buildChecklistSelector(),
       const SizedBox(height: 12),
       TextField(controller: _taskNotesCtrl, style: const TextStyle(color: AppTheme.textWhite), maxLines: 3,
         decoration: const InputDecoration(labelText: 'تعليمات', hintText: 'ملاحظات للمعقب...')),
@@ -355,6 +454,105 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
         label: Text(_creatingTask ? 'جاري...' : 'إرسال للمعقب', style: const TextStyle(fontWeight: FontWeight.bold)),
         style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryGold, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))))),
     ]));
+  }
+
+  Widget _buildChecklistSelector() {
+    final docs = _documentTemplatesFor(_selectedItemType);
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceBlack,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('الوثائق المطلوبة من المعقب:', style: TextStyle(color: AppTheme.primaryGold, fontSize: 15, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          DropdownButtonFormField<String>(
+            value: _selectedDocKey,
+            dropdownColor: AppTheme.surfaceBlack,
+            style: const TextStyle(color: AppTheme.textWhite),
+            decoration: const InputDecoration(labelText: 'اختر وثيقة لإضافتها', prefixIcon: Icon(Icons.description, color: AppTheme.primaryGold)),
+            items: [
+              ...docs.map((doc) => DropdownMenuItem(value: doc['key'], child: Text(doc['title']!))),
+              const DropdownMenuItem(value: '__custom__', child: Text('وثيقة أخرى / نص حر')),
+            ],
+            onChanged: (value) => setState(() => _selectedDocKey = value),
+          ),
+          if (_selectedDocKey == '__custom__') ...[
+            const SizedBox(height: 10),
+            TextField(
+              controller: _customDocTitleCtrl,
+              style: const TextStyle(color: AppTheme.textWhite),
+              decoration: const InputDecoration(labelText: 'اسم الوثيقة المطلوبة', hintText: 'مثال: بيان ملكية خاص / وثيقة أخرى'),
+            ),
+          ],
+          const SizedBox(height: 10),
+          Row(children: [
+            Expanded(child: ElevatedButton.icon(
+              onPressed: _addSelectedDocument,
+              icon: const Icon(Icons.add),
+              label: const Text('إضافة وثيقة'),
+            )),
+            const SizedBox(width: 8),
+            Expanded(child: OutlinedButton.icon(
+              onPressed: _addAllDefaultDocuments,
+              icon: const Icon(Icons.playlist_add_check, color: AppTheme.primaryGold),
+              label: const Text('إضافة الكل', style: TextStyle(color: AppTheme.primaryGold)),
+              style: OutlinedButton.styleFrom(side: const BorderSide(color: AppTheme.primaryGold)),
+            )),
+          ]),
+          const SizedBox(height: 12),
+          if (_selectedChecklist.isEmpty)
+            const Text('لم تتم إضافة وثائق بعد. يجب تحديد وثيقة واحدة على الأقل.', style: TextStyle(color: AppTheme.textGrey, fontSize: 12))
+          else
+            ..._selectedChecklist.asMap().entries.map((entry) {
+              final index = entry.key;
+              final item = entry.value;
+              final title = item['title']?.toString() ?? '';
+              final rawCopies = int.tryParse((item['required_copies'] ?? 1).toString()) ?? 1;
+              final copies = rawCopies < 1 ? 1 : (rawCopies > 10 ? 10 : rawCopies);
+              return Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.scaffoldBackground,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppTheme.primaryGold.withOpacity(0.15)),
+                ),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Row(children: [
+                    Expanded(child: Text(title, style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold, fontSize: 13))),
+                    IconButton(
+                      onPressed: () => setState(() => _selectedChecklist.removeAt(index)),
+                      icon: const Icon(Icons.delete_outline, color: AppTheme.errorRed, size: 20),
+                    ),
+                  ]),
+                  DropdownButtonFormField<int>(
+                    value: copies,
+                    dropdownColor: AppTheme.surfaceBlack,
+                    style: const TextStyle(color: AppTheme.textWhite),
+                    decoration: const InputDecoration(labelText: 'عدد النسخ المطلوبة'),
+                    items: List.generate(10, (i) => DropdownMenuItem(value: i + 1, child: Text('${i + 1} نسخة'))),
+                    onChanged: (value) => setState(() => item['required_copies'] = value ?? 1),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    key: ValueKey('instr_${item['key']}'),
+                    initialValue: item['lawyer_instructions']?.toString() ?? '',
+                    maxLines: 2,
+                    style: const TextStyle(color: AppTheme.textWhite),
+                    decoration: const InputDecoration(labelText: 'تعليمات خاصة بهذه الوثيقة', hintText: 'مثال: نسختان مصدقتان / صورة واضحة / إحضار الأصل'),
+                    onChanged: (value) => item['lawyer_instructions'] = value.trim(),
+                  ),
+                ]),
+              );
+            }),
+        ],
+      ),
+    );
   }
 
   Future<void> _approveTask(ExpeditingTaskModel task) async {
