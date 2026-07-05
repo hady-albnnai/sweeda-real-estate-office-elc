@@ -113,6 +113,15 @@ serve(async (req) => {
     if (!actor.ok) return actor.response;
     const adminUid = actor.uid;
 
+    if (action === "resource_usage") {
+      if (![4, 5, 6].includes(Number(actor.role))) {
+        return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
+      }
+      const { data, error } = await supabaseAdmin.rpc("get_resource_usage_internal", { p_admin_uid: adminUid });
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json(data && typeof data === "object" ? data as Record<string, unknown> : { success: true, usage: data });
+    }
+
     if (action === "dashboard_stats") {
       const { data, error } = await supabaseAdmin.rpc("get_admin_dashboard_stats", { p_admin_uid: adminUid });
       if (error) return json({ success: false, error: error.message }, 400);

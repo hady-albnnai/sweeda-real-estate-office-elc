@@ -2216,3 +2216,56 @@ expediting_docs
 - `request_expediting_item_revision_internal(uuid, uuid, text, text)` — `service_role` فقط.
 - `update_expediting_checklist_item(...)` — `service_role` فقط.
 - كل الاستدعاءات تمر عبر `legal-actions` بعد التحقق من الدور والملكية.
+
+---
+
+## 📊 مراقبة استهلاك السيرفر والتخزين — 2026-07-05
+
+تمت إضافة RPC:
+
+```text
+get_resource_usage_internal(p_admin_uid uuid)
+```
+
+**الأمان:** `SECURITY DEFINER` ومقفلة عن `anon/authenticated`، وتعمل عبر `service_role` فقط.
+**الأدوار:** `role IN (4,5,6)` فقط: موظف مكتب، نائب مدير، مدير.
+
+وتتم قراءتها عبر Edge Function:
+
+```json
+{
+  "action": "resource_usage",
+  "admin_uid": "uuid",
+  "staff_session_token": "token"
+}
+```
+
+### القياسات الدقيقة المتاحة
+
+- حجم قاعدة البيانات الكامل عبر `pg_database_size(current_database())`.
+- حجم schema `public` و `storage`.
+- حجم كل bucket وعدد الملفات من `storage.objects.metadata.size`.
+- حجم الملفات المرفوعة في الشهر الحالي.
+- أكبر الجداول حسب `pg_total_relation_size` مع حجم الفهارس وعدد الصفوف التقديري.
+- توزيع ملفات Storage حسب `mimetype`.
+
+### ملاحظة مهمة حول التراسل/Bandwidth
+
+قاعدة البيانات لا تملك عدّاداً دقيقاً للـ egress/API bandwidth الحقيقي. لذلك الشاشة تعرض القياسات الدقيقة المتاحة من قاعدة البيانات وStorage، وتعرض ملاحظة بأن قياس التراسل الحقيقي يحتاج:
+
+- Supabase Dashboard/Analytics.
+- أو Supabase Management API.
+- أو Log Drain / أداة مراقبة خارجية.
+
+### الواجهة
+
+تمت إضافة شاشة Flutter:
+
+```text
+/admin/resource-usage
+```
+
+وتظهر في:
+
+- أقسام الإدارة.
+- عمليات المكتب.

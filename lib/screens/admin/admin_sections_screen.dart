@@ -104,6 +104,8 @@ class _AdminSectionsScreenState extends State<AdminSectionsScreen> {
                     _tile(Icons.flag_outlined, 'التبليغات', '/admin/reports', badge: _counts['openReports'] ?? 0),
                   if (PermissionService.has(user, PermissionKeys.viewAnalytics))
                     _tile(Icons.analytics_outlined, 'التحليلات', '/admin/analytics'),
+                  if (PermissionService.has(user, PermissionKeys.resourceUsage))
+                    _tile(Icons.cloud_queue_outlined, 'استهلاك السيرفر والتخزين', '/admin/resource-usage'),
                   if (PermissionService.has(user, PermissionKeys.manageConfig))
                     _tile(Icons.tune_outlined, 'الإعدادات', '/admin/config'),
                 ]),

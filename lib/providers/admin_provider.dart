@@ -406,6 +406,12 @@ class AdminProvider with ChangeNotifier {
     return stats;
   }
 
+  Future<Map<String, dynamic>> getResourceUsage(String adminUid) async {
+    final usage = await _statsAdmin.getResourceUsage(adminUid);
+    _syncStatsError();
+    return usage;
+  }
+
   /// عدّاد سريع للعناصر التي تحتاج إجراء (للوحة الرئيسية)
   Future<Map<String, int>> getActionCounts(String adminUid) async {
     final counts = await _statsAdmin.getActionCounts(adminUid);

@@ -123,6 +123,8 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
                         _shortcut(Icons.people_outline, 'المستخدمون', '/admin/users'),
                       if (PermissionService.has(auth.userModel, PermissionKeys.viewAnalytics))
                         _shortcut(Icons.analytics_outlined, 'التحليلات', '/admin/analytics'),
+                      if (PermissionService.has(auth.userModel, PermissionKeys.resourceUsage))
+                        _shortcut(Icons.cloud_queue_outlined, 'استهلاك السيرفر', '/admin/resource-usage'),
                     ],
                   ),
                   const SizedBox(height: 20),

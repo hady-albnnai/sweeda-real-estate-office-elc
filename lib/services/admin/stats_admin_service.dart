@@ -37,6 +37,27 @@ class StatsAdminService {
     }
   }
 
+  Future<Map<String, dynamic>> getResourceUsage(String adminUid) async {
+    try {
+      final token = await AuthService().getStaffSessionToken();
+      final response = await SupabaseService().invokeFunction(
+        'admin-dashboard',
+        body: {
+          'action': 'resource_usage',
+          'admin_uid': adminUid,
+          'staff_session_token': token,
+        },
+      );
+      final data = response.data;
+      if (data == null || data['success'] != true) throw Exception(data?['error'] ?? 'Error');
+      clearError();
+      return Map<String, dynamic>.from(data as Map);
+    } catch (e) {
+      _setError(e);
+      return {};
+    }
+  }
+
   Future<Map<String, int>> getActionCounts(String adminUid) async {
     final stats = await getStats(adminUid);
     if (stats.isEmpty) return {};

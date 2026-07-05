@@ -20,6 +20,7 @@ class PermissionKeys {
   static const manageReports = 'manage_reports';
   static const manageConfig = 'manage_config';
   static const viewAnalytics = 'view_analytics';
+  static const resourceUsage = 'resource_usage';
   static const completionRequests = 'completion_requests';
   static const brokerDashboard = 'broker_dashboard';
   static const brokerOffers = 'broker_offers';
@@ -68,6 +69,7 @@ class PermissionService {
     AppPermission(key: PermissionKeys.mediaReview, title: 'إدارة الوسائط والتصوير', group: 'الإدارة', minimumRoleForDefault: UserRole.employee),
     AppPermission(key: PermissionKeys.fraudSuspects, title: 'كشف الاحتيال', group: 'الإدارة', minimumRoleForDefault: UserRole.employee),
     AppPermission(key: PermissionKeys.viewAnalytics, title: 'التحليلات', group: 'المالية', minimumRoleForDefault: UserRole.deputy),
+    AppPermission(key: PermissionKeys.resourceUsage, title: 'استهلاك السيرفر والتخزين', group: 'الرقابة التقنية', minimumRoleForDefault: UserRole.employee),
     AppPermission(key: PermissionKeys.completionRequests, title: 'طلبات إتمام المعاملات', group: 'التشغيل', minimumRoleForDefault: UserRole.employee),
 
     // — التصوير —

@@ -636,3 +636,37 @@ supabase functions deploy legal-actions
 ```bash
 supabase functions deploy legal-actions
 ```
+
+---
+
+## تحديث 2026-07-05 — مراقبة استهلاك السيرفر والتخزين للإدارة
+
+- تمت إضافة شاشة إدارية جديدة: `/admin/resource-usage` باسم **استهلاك السيرفر والتخزين**.
+- تظهر الشاشة للمدير ونائب المدير وموظف المكتب عبر صلاحية `resource_usage`.
+- تمت إضافة Tile داخل أقسام الإدارة وداخل اختصارات عمليات المكتب.
+- تمت إضافة RPC محصنة ومقفولة عن العميل المباشر:
+  - `get_resource_usage_internal(uuid)`
+- تمت إضافة Action في `admin-dashboard`:
+  - `resource_usage`
+- تقيس الشاشة بدقة من السيرفر:
+  - حجم قاعدة البيانات الكلي `pg_database_size`.
+  - حجم public schema.
+  - حجم storage schema.
+  - حجم Storage الإجمالي من `storage.objects.metadata.size`.
+  - عدد الملفات.
+  - حجم الرفع في الشهر الحالي.
+  - الاستهلاك حسب كل bucket.
+  - أكبر الجداول وحجم البيانات والفهارس وعدد الصفوف التقديري.
+  - توزيع التخزين حسب نوع الملف MIME.
+- توضح الشاشة أن قياس Bandwidth/API egress الحقيقي بدقة يحتاج Supabase Dashboard أو Management API/Log Drain، لأن قاعدة البيانات لا تملك عدّاد egress الحقيقي.
+- تم تطبيق Migration على السيرفر الحي: `2026_07_05_resource_usage_monitor.sql`.
+- تم اختبار الدالة على السيرفر الحي وكانت النتائج الحالية تقريباً:
+  - قاعدة البيانات: ~15.39 MB.
+  - Storage: ~5.36 MB / 42 ملف.
+  - Buckets: 5.
+- صلاحيات الدالة: `anon=false`, `authenticated=false`, `service_role=true`.
+
+**يلزم نشر:**
+```bash
+supabase functions deploy admin-dashboard
+```
