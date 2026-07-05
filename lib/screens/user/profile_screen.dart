@@ -211,33 +211,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             children: [
               const SizedBox(height: 10),
-              Hero(
-                tag: 'logo',
-                child: Container(
-                  width: logoSize, height: logoSize * 0.75,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(color: AppTheme.primaryGold.withOpacity(0.2), blurRadius: 100, spreadRadius: 30),
-                    ],
-                  ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Container(
-                        width: logoSize * 0.72, height: logoSize * 0.72,
-                        decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4), width: 4)),
-                      ),
-                      Container(
-                        width: logoSize * 0.65, height: logoSize * 0.65,
-                        decoration: const BoxDecoration(shape: BoxShape.circle, color: AppTheme.surfaceBlack),
-                        padding: const EdgeInsets.all(35),
-                        child: Image.asset('assets/images/logo_app.png', fit: BoxFit.contain),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              _buildFadedAccountLogo(logoSize),
               const SizedBox(height: 10),
               Text('المكتب العقاري الإلكتروني', style: GoogleFonts.cairo(color: AppTheme.primaryGold, fontSize: 22, fontWeight: FontWeight.w900)),
               const SizedBox(height: 50),
@@ -278,6 +252,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ]),
               ),
               const SizedBox(height: 60),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFadedAccountLogo(double logoSize) {
+    final boxSize = (logoSize * 0.72).clamp(250.0, 390.0);
+    final radius = BorderRadius.circular(34);
+
+    return Hero(
+      tag: 'logo',
+      child: Container(
+        width: boxSize,
+        height: boxSize,
+        decoration: BoxDecoration(
+          borderRadius: radius,
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.primaryGold.withOpacity(0.18),
+              blurRadius: 70,
+              spreadRadius: 10,
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: radius,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Container(color: AppTheme.scaffoldBackground),
+              Image.asset('assets/images/logo_app.png', fit: BoxFit.cover),
+              // فيد ناعم يخفي حواف مربع الشعار الأسود ويدمجه مع الخلفية النهارية
+              // بدون قص النص العربي داخل الشعار.
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    radius: 0.86,
+                    colors: [
+                      Colors.transparent,
+                      Colors.transparent,
+                      AppTheme.scaffoldBackground.withOpacity(0.16),
+                      AppTheme.scaffoldBackground.withOpacity(0.78),
+                    ],
+                    stops: const [0.0, 0.68, 0.84, 1.0],
+                  ),
+                ),
+              ),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: radius,
+                  border: Border.all(
+                    color: AppTheme.primaryGold.withOpacity(0.34),
+                    width: 1.2,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
