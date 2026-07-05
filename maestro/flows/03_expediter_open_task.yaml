@@ -1,0 +1,17 @@
+appId: com.sweeda.realestate
+---
+- runFlow:
+    file: 01_login_password.yaml
+    env:
+      E2E_USERNAME: "${EXPEDITER_USERNAME}"
+      E2E_PASSWORD: "${EXPEDITER_PASSWORD}"
+      E2E_EXPECT: "مهام تعقيب المعاملات"
+- extendedWaitUntil:
+    visible: "${TASK_NUMBER}"
+    timeout: 20000
+- tapOn: "${TASK_NUMBER}"
+- extendedWaitUntil:
+    visible: "قائمة الوثائق"
+    timeout: 15000
+- assertVisible: "إخراج قيد عقاري حديث"
+- assertVisible: "المطلوب من المحامي"

@@ -1,0 +1,33 @@
+appId: com.sweeda.realestate
+---
+- runFlow:
+    file: 01_login_password.yaml
+    env:
+      E2E_USERNAME: "${LAWYER_USERNAME}"
+      E2E_PASSWORD: "${LAWYER_PASSWORD}"
+      E2E_EXPECT: "لوحة المحامي"
+- tapOn: "إضافة مهمة"
+- extendedWaitUntil:
+    visible: "تكليف معقب"
+    timeout: 10000
+- tapOn: "اختر المعقب"
+- tapOn: "${EXPEDITER_LABEL}"
+- tapOn: "عقار"
+- tapOn: "رقم العقار"
+- inputText: "${TASK_NUMBER}"
+- tapOn: "المنطقة العقارية"
+- inputText: "${TASK_ZONE}"
+- scrollUntilVisible:
+    element: "إخراج قيد عقاري حديث"
+    direction: DOWN
+    timeout: 10000
+- tapOn: "إخراج قيد عقاري حديث"
+- tapOn: "بيان مساحة عقاري"
+- scrollUntilVisible:
+    element: "إرسال للمعقب"
+    direction: DOWN
+    timeout: 10000
+- tapOn: "إرسال للمعقب"
+- extendedWaitUntil:
+    visible: "تم إرسال المهمة"
+    timeout: 15000

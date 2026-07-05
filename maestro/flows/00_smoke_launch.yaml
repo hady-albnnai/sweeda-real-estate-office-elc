@@ -1,0 +1,8 @@
+appId: com.sweeda.realestate
+---
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible: "المكتب العقاري"
+    timeout: 20000
+- assertVisible: "حسابي"
