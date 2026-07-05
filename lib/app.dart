@@ -137,7 +137,6 @@ class _MyAppState extends State<MyApp> {
             return Directionality(
               textDirection: TextDirection.rtl,
               child: Stack(
-                fit: StackFit.expand,
                 children: [
                   Scaffold(
                     backgroundColor: AppTheme.scaffoldBackground,
@@ -164,9 +163,11 @@ class _MyAppState extends State<MyApp> {
           return Directionality(
             textDirection: TextDirection.rtl,
             child: Stack(
-              fit: StackFit.expand,
               children: [
-                child!,
+                KeyedSubtree(
+                  key: ValueKey<bool>(themeProvider.isDarkMode),
+                  child: child!,
+                ),
                 const ThemeToggleButton(),
               ],
             ),
