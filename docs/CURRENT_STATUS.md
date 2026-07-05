@@ -538,3 +538,29 @@ supabase functions deploy update-staff-id-images
 ```bash
 supabase functions deploy legal-actions
 ```
+
+---
+
+## تحديث 2026-07-05 — فحص أمان السيرفر الحي وإغلاق تحذيرات RLS المتبقية
+
+تم تنفيذ فحص أمان مباشر على السيرفر الحي:
+
+- `open_security_definer_count = 0` ✅
+- لا توجد جداول `public` بدون RLS ✅
+- تم رصد 3 جداول RLS مفعّل عليها بدون policies ظاهرة للـ linter:
+  - `staff_sessions`
+  - `stats`
+  - `user_daily_limits`
+- تم تطبيق Migration: `2026_07_05_rls_service_role_policy_cleanup.sql`.
+- السياسات الجديدة موجهة إلى `service_role` فقط، ولا تفتح أي صلاحية لـ `anon/authenticated`.
+- بعد التطبيق:
+  - `rls_enabled_no_policy = []` ✅
+  - `rls_disabled_tables = []` ✅
+  - `open_security_definer_count = 0` ✅
+- اختبارات Edge Functions بدون جلسة رفضت كما يجب:
+  - `create-user` → `ADMIN_SESSION_REQUIRED`
+  - `update-staff-id-images` → `ADMIN_SESSION_REQUIRED`
+  - `legal-actions` → `AUTH_TOKEN_REQUIRED`
+  - `user-account` → `AUTH_TOKEN_REQUIRED`
+  - `admin-dashboard` → `STAFF_SESSION_REQUIRED`
+- اختبارات RPC المباشرة من anon رفضت كما يجب بـ `permission denied` لدوال التعقيب الحساسة.

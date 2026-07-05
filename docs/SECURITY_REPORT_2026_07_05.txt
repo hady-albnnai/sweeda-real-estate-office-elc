@@ -1,0 +1,167 @@
+{
+  "open_security_definer_count": 0,
+  "open_security_definer_rows": [],
+  "rls_enabled_no_policy": [],
+  "rls_disabled_tables": [],
+  "critical_function_grants": [
+    [
+      "_issue_staff_session",
+      "p_user_uid uuid, p_device_id text, p_ip text, p_ttl interval",
+      false,
+      false,
+      true
+    ],
+    [
+      "admin_create_staff_user",
+      "p_admin_uid uuid, p_full_name text, p_phone text, p_email text, p_username text, p_password text, p_role integer",
+      false,
+      false,
+      true
+    ],
+    [
+      "admin_create_staff_user",
+      "p_admin_uid uuid, p_full_name text, p_phone text, p_email text, p_username text, p_password text, p_role integer, p_address text, p_sid text, p_img text",
+      false,
+      false,
+      true
+    ],
+    [
+      "approve_expediting_task_internal",
+      "p_lawyer_uid uuid, p_task_id uuid",
+      false,
+      false,
+      true
+    ],
+    [
+      "change_password_internal",
+      "p_user_uid uuid, p_old_password text, p_new_password text",
+      false,
+      false,
+      true
+    ],
+    [
+      "complete_expediting_task_internal",
+      "p_expediter_uid uuid, p_task_id uuid, p_notes text",
+      false,
+      false,
+      true
+    ],
+    [
+      "create_expediting_task_internal",
+      "p_lawyer_uid uuid, p_expediter_uid uuid, p_item_type integer, p_target_property_num text, p_target_zone text, p_lawyer_notes text, p_checklist jsonb",
+      false,
+      false,
+      true
+    ],
+    [
+      "create_offer_internal",
+      "p_user_uid uuid, p_offer jsonb",
+      false,
+      false,
+      true
+    ],
+    [
+      "get_user_full_by_id",
+      "p_uid uuid",
+      false,
+      false,
+      true
+    ],
+    [
+      "login_with_password",
+      "p_identifier text, p_password text",
+      false,
+      false,
+      true
+    ],
+    [
+      "register_password",
+      "p_user_uid uuid, p_username text, p_password text",
+      false,
+      false,
+      true
+    ],
+    [
+      "update_expediting_checklist_item",
+      "p_actor_uid uuid, p_task_id uuid, p_item_key text, p_status integer, p_input_value text, p_attachment_url text, p_notes text",
+      false,
+      false,
+      true
+    ],
+    [
+      "validate_staff_session",
+      "p_user_uid uuid, p_token text, p_min_role integer",
+      false,
+      false,
+      true
+    ]
+  ],
+  "invalid_staff_session_result": {
+    "error": "INVALID_SESSION",
+    "success": false
+  },
+  "users_role_check": [
+    [
+      "users_role_check",
+      "CHECK (((role >= 0) AND (role <= 8)))"
+    ]
+  ],
+  "storage_buckets": [
+    [
+      "config_assets",
+      "config_assets",
+      true
+    ],
+    [
+      "ids_private",
+      "ids_private",
+      false
+    ],
+    [
+      "offer_images",
+      "offer_images",
+      true
+    ],
+    [
+      "payment_proofs",
+      "payment_proofs",
+      false
+    ]
+  ],
+  "edge_unauthorized_tests": {
+    "create-user-no-session": [
+      401,
+      "{\"success\":false,\"error\":\"ADMIN_SESSION_REQUIRED\"}"
+    ],
+    "update-staff-id-images-no-session": [
+      401,
+      "{\"success\":false,\"error\":\"ADMIN_SESSION_REQUIRED\"}"
+    ],
+    "legal-actions-no-session": [
+      "ERR",
+      "TimeoutError('The read operation timed out')"
+    ],
+    "user-account-no-session": [
+      401,
+      "{\"success\":false,\"error\":\"AUTH_TOKEN_REQUIRED\"}"
+    ],
+    "admin-dashboard-no-session": [
+      401,
+      "{\"success\":false,\"error\":\"STAFF_SESSION_REQUIRED\"}"
+    ]
+  },
+  "direct_rpc_anon_tests": {
+    "complete_expediting_task_internal": [
+      401,
+      "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for function complete_expediting_task_internal\"}"
+    ],
+    "approve_expediting_task_internal": [
+      401,
+      "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for function approve_expediting_task_internal\"}"
+    ],
+    "create_expediting_task_internal": [
+      401,
+      "{\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"permission denied for function create_expediting_task_internal\"}"
+    ]
+  }
+}

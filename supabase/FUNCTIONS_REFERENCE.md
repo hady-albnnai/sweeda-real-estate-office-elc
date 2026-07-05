@@ -2101,3 +2101,44 @@ ttl = تم اعتماد مهمة التعقيب
 act = expediting_task_approved
 ref_id = task_id
 ```
+
+---
+
+## 🔒 فحص أمان السيرفر الحي — 2026-07-05
+
+نتائج الفحص المباشر على قاعدة الإنتاج:
+
+| الفحص | النتيجة |
+|---|---|
+| دوال `SECURITY DEFINER` المفتوحة لـ `anon/authenticated` | `0` ✅ |
+| جداول public بدون RLS | `0` ✅ |
+| جداول RLS Enabled No Policy | `0` ✅ |
+| `users_role_check` | `role >= 0 AND role <= 8` ✅ |
+| `users_public` | `security_invoker=true` ✅ |
+| `ids_private` | private bucket ✅ |
+| `payment_proofs` | private bucket ✅ |
+
+تم تطبيق:
+
+```text
+supabase/migrations/2026_07_05_rls_service_role_policy_cleanup.sql
+```
+
+السياسات المضافة موجهة إلى `service_role` فقط للجداول الداخلية:
+
+- `staff_sessions_service_role_all`
+- `stats_service_role_all`
+- `user_daily_limits_service_role_all`
+
+اختبارات الرفض بدون جلسة:
+
+| المسار | النتيجة المتوقعة والمحققة |
+|---|---|
+| `create-user` بدون `staff_session_token` | `ADMIN_SESSION_REQUIRED` |
+| `update-staff-id-images` بدون `staff_session_token` | `ADMIN_SESSION_REQUIRED` |
+| `legal-actions` بدون جلسة | `AUTH_TOKEN_REQUIRED` |
+| `user-account` بدون جلسة | `AUTH_TOKEN_REQUIRED` |
+| `admin-dashboard` بدون جلسة | `STAFF_SESSION_REQUIRED` |
+| RPC مباشر إلى `complete_expediting_task_internal` عبر anon | `permission denied` |
+| RPC مباشر إلى `approve_expediting_task_internal` عبر anon | `permission denied` |
+| RPC مباشر إلى `create_expediting_task_internal` عبر anon | `permission denied` |
