@@ -150,7 +150,7 @@ class _RatingDialogState extends State<RatingDialog> {
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(children: [
+          const Row(children: [
             Icon(Icons.star_rate, color: AppTheme.primaryGold),
             SizedBox(width: 8),
             Text('تقييم تجربتك',
@@ -161,7 +161,7 @@ class _RatingDialogState extends State<RatingDialog> {
             widget.refLabel != null
                 ? '${widget.refLabel} • مع: ${widget.targetName}'
                 : 'مع: ${widget.targetName}',
-            style: TextStyle(color: AppTheme.textGrey, fontSize: 12),
+            style: const TextStyle(color: AppTheme.textGrey, fontSize: 12),
           ),
         ],
       ),
@@ -204,8 +204,8 @@ class _RatingDialogState extends State<RatingDialog> {
             maxLines: 3,
             maxLength: 200,
             enabled: !_sending,
-            style: TextStyle(color: AppTheme.textWhite),
-            decoration: InputDecoration(
+            style: const TextStyle(color: AppTheme.textWhite),
+            decoration: const InputDecoration(
               hintText: 'تعليقك (اختياري)',
               hintStyle: TextStyle(color: AppTheme.textGrey),
               border: OutlineInputBorder(),
@@ -217,7 +217,7 @@ class _RatingDialogState extends State<RatingDialog> {
       actions: [
         TextButton(
           onPressed: _sending ? null : () => Navigator.pop(context, false),
-          child: Text('لاحقاً',
+          child: const Text('لاحقاً',
               style: TextStyle(color: AppTheme.textGrey)),
         ),
         ElevatedButton.icon(

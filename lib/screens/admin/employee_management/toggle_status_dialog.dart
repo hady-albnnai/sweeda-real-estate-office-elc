@@ -79,14 +79,14 @@ class _ToggleStatusDialogState extends State<ToggleStatusDialog> {
         children: [
           Text(
             'هل أنت متأكد من $actionText هذا المستخدم؟',
-            style: TextStyle(color: AppTheme.textWhite),
+            style: const TextStyle(color: AppTheme.textWhite),
           ),
           const SizedBox(height: 16),
           if (widget.currentStatus) // سبب التعطيل/التجميد عند إيقاف حساب نشط
             TextField(
               controller: _reasonController,
-              style: TextStyle(color: AppTheme.textWhite),
-              decoration: InputDecoration(
+              style: const TextStyle(color: AppTheme.textWhite),
+              decoration: const InputDecoration(
                 labelText: 'سبب التعطيل (اختياري)',
                 labelStyle: TextStyle(color: AppTheme.textGrey),
               ),
@@ -97,7 +97,7 @@ class _ToggleStatusDialogState extends State<ToggleStatusDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text('إلغاء', style: TextStyle(color: AppTheme.textGrey)),
+          child: const Text('إلغاء', style: TextStyle(color: AppTheme.textGrey)),
         ),
         ElevatedButton(
           onPressed: _isLoading ? null : _submit,

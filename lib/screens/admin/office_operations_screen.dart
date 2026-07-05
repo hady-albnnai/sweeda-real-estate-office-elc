@@ -170,7 +170,7 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'لوحة متابعة الأعمال اليومية',
                   style: TextStyle(color: AppTheme.textWhite, fontSize: 16, fontWeight: FontWeight.bold),
                 ),
@@ -179,7 +179,7 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
                   _totalPending == 0
                       ? 'لا توجد عناصر عاجلة حالياً.'
                       : 'يوجد $_totalPending عنصر يحتاج متابعة.',
-                  style: TextStyle(color: AppTheme.textGrey, fontSize: 12),
+                  style: const TextStyle(color: AppTheme.textGrey, fontSize: 12),
                 ),
               ],
             ),
@@ -218,7 +218,7 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
           backgroundColor: color.withOpacity(0.12),
           child: Icon(icon, color: color),
         ),
-        title: Text(title, style: TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.w600)),
+        title: Text(title, style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.w600)),
         trailing: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
@@ -248,7 +248,7 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
           children: [
             Icon(icon, color: AppTheme.primaryGold, size: 32),
             const SizedBox(height: 10),
-            Text(title, textAlign: TextAlign.center, style: TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.w600)),
+            Text(title, textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.w600)),
           ],
         ),
       ),
@@ -269,7 +269,7 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
           Icon(icon, color: AppTheme.primaryGold),
           const SizedBox(height: 8),
           Text('$value', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 22, fontWeight: FontWeight.bold)),
-          Text(title, style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+          Text(title, style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
         ],
       ),
     );

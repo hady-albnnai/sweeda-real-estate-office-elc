@@ -119,15 +119,15 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
-        title: Text('إلغاء الطلب',
+        title: const Text('إلغاء الطلب',
             style: TextStyle(color: AppTheme.textWhite)),
-        content: Text(
+        content: const Text(
             'هل أنت متأكد من إلغاء هذا الطلب؟ سيبقى محفوظاً لدى الإدارة لأغراض المسؤولية والمتابعة.',
             style: TextStyle(color: AppTheme.textGrey)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: Text('إلغاء',
+              child: const Text('إلغاء',
                   style: TextStyle(color: AppTheme.textGrey))),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -182,14 +182,14 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: AppTheme.scaffoldBackground,
         body: Center(
             child: CircularProgressIndicator(color: AppTheme.primaryGold)),
       );
     }
     if (_request == null) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: AppTheme.scaffoldBackground,
         body: Center(
           child: Text('الطلب غير موجود',
@@ -230,7 +230,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
             if (_matches.isNotEmpty) _filterBar(),
             const SizedBox(height: 10),
             if (_filteredMatches.isEmpty && _matches.isNotEmpty)
-              Padding(padding: EdgeInsets.all(20),
+              const Padding(padding: EdgeInsets.all(20),
                 child: Text('لا توجد عروض تطابق الفلتر', style: TextStyle(color: AppTheme.textGrey)))
             else if (_matches.isEmpty) _noMatches()
             else ..._filteredMatches.map(_matchTile),
@@ -260,7 +260,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
               const SizedBox(width: 8),
               Text(
                 r.typ == 0 ? 'بحث عن عقار' : 'بحث عن سيارة',
-                style: TextStyle(
+                style: const TextStyle(
                     color: AppTheme.textWhite,
                     fontSize: 18,
                     fontWeight: FontWeight.bold),
@@ -302,7 +302,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
             children: [
               Text(
                 'تاريخ الإنشاء: ${r.tsCrt.day}/${r.tsCrt.month}/${r.tsCrt.year}',
-                style: TextStyle(color: AppTheme.textGrey, fontSize: 12),
+                style: const TextStyle(color: AppTheme.textGrey, fontSize: 12),
               ),
               const Spacer(),
               if (r.isOpen) ...[
@@ -338,7 +338,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                   color: AppTheme.primaryGold,
                   fontWeight: FontWeight.bold,
                   fontSize: 15)),
-          Divider(color: AppTheme.textGrey, height: 16),
+          const Divider(color: AppTheme.textGrey, height: 16),
           _row('اسم العميل', r.clNm.isEmpty ? '—' : r.clNm),
           _row('هاتف العميل', r.clPh.isEmpty ? '—' : r.clPh),
           if (r.notes.isNotEmpty) ...[
@@ -348,7 +348,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                     color: AppTheme.primaryGold, fontSize: 13)),
             const SizedBox(height: 4),
             Text(r.notes,
-                style: TextStyle(
+                style: const TextStyle(
                     color: AppTheme.textWhite, fontSize: 13)),
           ],
           if (r.specs.isNotEmpty) ...[
@@ -650,13 +650,13 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
       ),
       child: Column(
         children: [
-          Icon(Icons.search_off,
+          const Icon(Icons.search_off,
               color: AppTheme.textGrey, size: 50),
           const SizedBox(height: 8),
-          Text('لا توجد عروض مطابقة حالياً',
+          const Text('لا توجد عروض مطابقة حالياً',
               style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
           const SizedBox(height: 4),
-          Text('سنبلغك عند توفّر عرض مطابق',
+          const Text('سنبلغك عند توفّر عرض مطابق',
               style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
         ],
       ),
@@ -687,11 +687,11 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => Container(
                               color: AppTheme.deepBlack,
-                              child: Icon(Icons.image,
+                              child: const Icon(Icons.image,
                                   color: AppTheme.textGrey)))
                       : Container(
                           color: AppTheme.deepBlack,
-                          child: Icon(Icons.image,
+                          child: const Icon(Icons.image,
                               color: AppTheme.textGrey)),
                 ),
               ),
@@ -703,7 +703,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                     Text(o.ttl,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
+                        style: const TextStyle(
                             color: AppTheme.textWhite,
                             fontWeight: FontWeight.bold)),
                     const SizedBox(height: 3),
@@ -715,7 +715,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text((o.loc['d'] ?? '').toString(),
-                        style: TextStyle(
+                        style: const TextStyle(
                             color: AppTheme.textGrey, fontSize: 11)),
                   ],
                 ),
@@ -769,12 +769,12 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
           SizedBox(
             width: 100,
             child: Text(k,
-                style: TextStyle(
+                style: const TextStyle(
                     color: AppTheme.textGrey, fontSize: 12)),
           ),
           Expanded(
             child: Text(v,
-                style: TextStyle(
+                style: const TextStyle(
                     color: AppTheme.textWhite,
                     fontSize: 13,
                     fontWeight: FontWeight.w500)),

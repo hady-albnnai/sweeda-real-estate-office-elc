@@ -79,7 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
             style: TextStyle(color: AppTheme.primaryGold, fontSize: 16)),
         actions: [
           IconButton(
-            icon: Icon(Icons.notifications_none, color: AppTheme.textGrey),
+            icon: const Icon(Icons.notifications_none, color: AppTheme.textGrey),
             onPressed: () {
               if (!auth.isLoggedIn) {
                 AppTheme.showSnackBar(context, SnackBar(
@@ -94,7 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
           IconButton(
-            icon: Icon(Icons.person_outline, color: AppTheme.textGrey),
+            icon: const Icon(Icons.person_outline, color: AppTheme.textGrey),
             onPressed: () => context.push('/user/profile'),
           ),
         ],
@@ -105,16 +105,16 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
           child: TextField(
             controller: _searchCtrl,
-            style: TextStyle(color: AppTheme.textWhite),
+            style: const TextStyle(color: AppTheme.textWhite),
             textInputAction: TextInputAction.search,
             onSubmitted: (_) => _doSearch(),
             decoration: InputDecoration(
               hintText: 'ابحث عن عقار أو سيارة...',
-              hintStyle: TextStyle(color: AppTheme.textGrey),
+              hintStyle: const TextStyle(color: AppTheme.textGrey),
               prefixIcon: const Icon(Icons.search, color: AppTheme.primaryGold),
               suffixIcon: _searchCtrl.text.isNotEmpty || _isSearching
                   ? IconButton(
-                      icon: Icon(Icons.close, color: AppTheme.textGrey),
+                      icon: const Icon(Icons.close, color: AppTheme.textGrey),
                       onPressed: _clearSearch,
                     )
                   : IconButton(
@@ -164,7 +164,7 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Text(
               '${offerProvider.offers.length} نتيجة',
-              style: TextStyle(color: AppTheme.textGrey, fontSize: 13),
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: 13),
             ),
           ),
 
@@ -185,7 +185,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             _isSearching
                                 ? 'لا توجد نتائج مطابقة'
                                 : 'لا توجد عروض متاحة حالياً',
-                            style: TextStyle(
+                            style: const TextStyle(
                                 color: AppTheme.textGrey, fontSize: 16)),
                           if (_isSearching) ...[
                             const SizedBox(height: 8),

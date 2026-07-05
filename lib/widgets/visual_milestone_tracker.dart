@@ -70,7 +70,7 @@ class VisualMilestoneTracker extends StatelessWidget {
                         child: Center(
                           child: isDone
                               ? const Icon(Icons.check, color: Colors.white, size: 16)
-                              : Text('${i + 1}', style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+                              : Text('${i + 1}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 11)),
                         ),
                       ),
                       if (!isLast)

@@ -55,7 +55,7 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
-        title: Row(children: [
+        title: const Row(children: [
           Icon(Icons.shopping_cart, color: AppTheme.primaryGold),
           SizedBox(width: 8),
           Text('تأكيد الشراء',
@@ -65,12 +65,12 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
           'هل تريد شراء "$label" بـ $cost نقطة؟\n\n'
           'رصيدك الحالي: ${user.pt} نقطة\n'
           'الرصيد بعد الشراء: ${user.pt - cost} نقطة',
-          style: TextStyle(color: AppTheme.textGrey),
+          style: const TextStyle(color: AppTheme.textGrey),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('إلغاء',
+            child: const Text('إلغاء',
                 style: TextStyle(color: AppTheme.textGrey)),
           ),
           ElevatedButton(
@@ -140,7 +140,7 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: AppTheme.scaffoldBackground,
         body: Center(
             child: CircularProgressIndicator(color: AppTheme.primaryGold)),
@@ -150,7 +150,7 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
       return Scaffold(
         backgroundColor: AppTheme.scaffoldBackground,
         appBar: AppBar(title: const Text('ترقية العرض')),
-        body: Center(
+        body: const Center(
           child: Text('العرض غير موجود',
               style: TextStyle(color: AppTheme.textGrey)),
         ),
@@ -271,11 +271,11 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
               child: o.imgs.isNotEmpty
                   ? Image.network(o.imgs.first.toString(),
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Icon(
+                      errorBuilder: (_, __, ___) => const Icon(
                           Icons.image, color: AppTheme.textGrey))
                   : Container(
                       color: AppTheme.deepBlack,
-                      child: Icon(Icons.image,
+                      child: const Icon(Icons.image,
                           color: AppTheme.textGrey)),
             ),
           ),
@@ -285,7 +285,7 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(o.ttl,
-                    style: TextStyle(
+                    style: const TextStyle(
                         color: AppTheme.textWhite,
                         fontWeight: FontWeight.bold)),
                 const SizedBox(height: 3),
@@ -389,12 +389,12 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(title,
-                        style: TextStyle(
+                        style: const TextStyle(
                             color: AppTheme.textWhite,
                             fontWeight: FontWeight.bold,
                             fontSize: 14)),
                     Text(description,
-                        style: TextStyle(
+                        style: const TextStyle(
                             color: AppTheme.textGrey, fontSize: 11)),
                   ],
                 ),
@@ -407,7 +407,7 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
                           color: color,
                           fontSize: 18,
                           fontWeight: FontWeight.bold)),
-                  Text('نقطة',
+                  const Text('نقطة',
                       style: TextStyle(
                           color: AppTheme.textGrey, fontSize: 10)),
                 ],
@@ -474,7 +474,7 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(10),
       ),
-      child: Row(
+      child: const Row(
         children: [
           Icon(Icons.info_outline, color: AppTheme.primaryGold, size: 18),
           SizedBox(width: 8),

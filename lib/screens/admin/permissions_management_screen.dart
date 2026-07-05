@@ -109,7 +109,7 @@ class _PermissionsManagementScreenState extends State<PermissionsManagementScree
               ? Row(
                   children: [
                     SizedBox(width: 360, child: _usersPane()),
-                    VerticalDivider(color: AppTheme.surfaceBlack, width: 1),
+                    const VerticalDivider(color: AppTheme.surfaceBlack, width: 1),
                     Expanded(child: _permissionsPane()),
                   ],
                 )
@@ -126,7 +126,7 @@ class _PermissionsManagementScreenState extends State<PermissionsManagementScree
           padding: const EdgeInsets.all(12),
           child: TextField(
             controller: _searchCtrl,
-            style: TextStyle(color: AppTheme.textWhite),
+            style: const TextStyle(color: AppTheme.textWhite),
             decoration: InputDecoration(
               hintText: 'بحث عن مستخدم...',
               prefixIcon: const Icon(Icons.search, color: AppTheme.primaryGold),
@@ -160,9 +160,9 @@ class _PermissionsManagementScreenState extends State<PermissionsManagementScree
                     backgroundColor: AppTheme.primaryGold.withOpacity(0.15),
                     child: Text(user.nm.isNotEmpty ? user.nm[0] : '؟', style: const TextStyle(color: AppTheme.primaryGold)),
                   ),
-                  title: Text(user.nm.isEmpty ? 'بدون اسم' : user.nm, style: TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold)),
-                  subtitle: Text('${user.roleName} • ${PermissionService.effectivePermissions(user).length} صلاحية', style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
-                  trailing: selected ? const Icon(Icons.check_circle, color: AppTheme.primaryGold) : Icon(Icons.chevron_left, color: AppTheme.textGrey),
+                  title: Text(user.nm.isEmpty ? 'بدون اسم' : user.nm, style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold)),
+                  subtitle: Text('${user.roleName} • ${PermissionService.effectivePermissions(user).length} صلاحية', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                  trailing: selected ? const Icon(Icons.check_circle, color: AppTheme.primaryGold) : const Icon(Icons.chevron_left, color: AppTheme.textGrey),
                   onTap: () => setState(() => _selectUser(user)),
                 ),
               );
@@ -176,7 +176,7 @@ class _PermissionsManagementScreenState extends State<PermissionsManagementScree
   Widget _permissionsPane({bool showBack = false}) {
     final user = _selectedUser;
     if (user == null) {
-      return Center(
+      return const Center(
         child: Text('اختر مستخدماً لتعديل صلاحياته', style: TextStyle(color: AppTheme.textGrey)),
       );
     }
@@ -203,9 +203,9 @@ class _PermissionsManagementScreenState extends State<PermissionsManagementScree
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(user.nm.isEmpty ? 'بدون اسم' : user.nm, style: TextStyle(color: AppTheme.textWhite, fontSize: 16, fontWeight: FontWeight.bold)),
+                    Text(user.nm.isEmpty ? 'بدون اسم' : user.nm, style: const TextStyle(color: AppTheme.textWhite, fontSize: 16, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 4),
-                    Text(user.perm.isEmpty ? 'صلاحيات الدور الافتراضية' : 'صلاحيات مخصصة', style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                    Text(user.perm.isEmpty ? 'صلاحيات الدور الافتراضية' : 'صلاحيات مخصصة', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
                   ],
                 ),
               ),
@@ -284,8 +284,8 @@ class _PermissionsManagementScreenState extends State<PermissionsManagementScree
             return SwitchListTile(
               value: checked,
               activeColor: AppTheme.primaryGold,
-              title: Text(permission.title, style: TextStyle(color: AppTheme.textWhite)),
-              subtitle: Text(permission.key, style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+              title: Text(permission.title, style: const TextStyle(color: AppTheme.textWhite)),
+              subtitle: Text(permission.key, style: const TextStyle(color: AppTheme.textGrey, fontSize: 11)),
               onChanged: (value) {
                 setState(() {
                   if (value) {

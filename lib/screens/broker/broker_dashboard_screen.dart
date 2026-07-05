@@ -48,7 +48,7 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('لوحة الوسيط',
+            const Text('لوحة الوسيط',
                 style: TextStyle(
                     color: AppTheme.textWhite,
                     fontSize: 18,
@@ -161,7 +161,7 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
               Text(emoji, style: const TextStyle(fontSize: 22)),
               const SizedBox(width: 8),
               Text(label,
-                  style: TextStyle(
+                  style: const TextStyle(
                       color: AppTheme.textGrey, fontSize: 13)),
             ],
           ),
@@ -172,7 +172,7 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
                   fontSize: 24,
                   fontWeight: FontWeight.bold)),
           Text(sub,
-              style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: 11)),
         ],
       ),
     );
@@ -197,10 +197,10 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
           child: Icon(icon, color: AppTheme.primaryGold),
         ),
         title: Text(title,
-            style: TextStyle(
+            style: const TextStyle(
                 color: AppTheme.textWhite, fontWeight: FontWeight.bold)),
         subtitle: Text(subtitle,
-            style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+            style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
         trailing:
             const Icon(Icons.arrow_back_ios, color: AppTheme.primaryGold, size: 16),
         onTap: onTap,

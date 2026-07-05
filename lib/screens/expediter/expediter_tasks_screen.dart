@@ -38,12 +38,12 @@ class _ExpediterTasksScreenState extends State<ExpediterTasksScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
-        title: Text('تسجيل الخروج', style: TextStyle(color: AppTheme.textWhite)),
-        content: Text('هل تريد تسجيل الخروج من حساب المعقب؟', style: TextStyle(color: AppTheme.textGrey)),
+        title: const Text('تسجيل الخروج', style: TextStyle(color: AppTheme.textWhite)),
+        content: const Text('هل تريد تسجيل الخروج من حساب المعقب؟', style: TextStyle(color: AppTheme.textGrey)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('إلغاء', style: TextStyle(color: AppTheme.textGrey)),
+            child: const Text('إلغاء', style: TextStyle(color: AppTheme.textGrey)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -92,12 +92,12 @@ class _ExpediterTasksScreenState extends State<ExpediterTasksScreen> {
                 children: [
                   Icon(Icons.assignment_late, size: 64, color: AppTheme.textGrey.withOpacity(0.4)),
                   const SizedBox(height: 16),
-                  Text(
+                  const Text(
                     'لا توجد مهام تعقيب حالياً',
                     style: TextStyle(color: AppTheme.textGrey, fontSize: 16),
                   ),
                   const SizedBox(height: 8),
-                  Text(
+                  const Text(
                     'عند إحالة المحامي مهمة لك، ستظهر هنا',
                     style: TextStyle(color: AppTheme.textGrey, fontSize: 13),
                   ),
@@ -195,7 +195,7 @@ class _TaskCard extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Text(
                     'رقم العقار: ${task.targetPropertyNum} | المنطقة: ${task.targetZone}',
-                    style: TextStyle(color: AppTheme.textGrey, fontSize: 13),
+                    style: const TextStyle(color: AppTheme.textGrey, fontSize: 13),
                   ),
                 ),
               Row(

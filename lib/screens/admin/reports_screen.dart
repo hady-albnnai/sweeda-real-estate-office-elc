@@ -80,7 +80,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 ? const Center(
                     child: CircularProgressIndicator(color: AppTheme.primaryGold))
                 : _filtered.isEmpty
-                    ? Center(
+                    ? const Center(
                         child: Text('لا توجد تبليغات',
                             style: TextStyle(color: AppTheme.textGrey)))
                     : RefreshIndicator(
@@ -144,13 +144,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       size: 18),
                   const SizedBox(width: 6),
                   Text('بلاغ على ${_tgtTypes[r.tgtTp] ?? '—'}',
-                      style: TextStyle(
+                      style: const TextStyle(
                           color: AppTheme.textWhite,
                           fontWeight: FontWeight.bold)),
                 ],
               ),
               Text(r.tsCrt.toString().split(' ').first,
-                  style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+                  style: const TextStyle(color: AppTheme.textGrey, fontSize: 11)),
             ],
           ),
           const SizedBox(height: 8),
@@ -192,7 +192,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             children: [
               ..._actions.entries.map((e) => RadioListTile<int>(
                     title: Text(e.value,
-                        style: TextStyle(color: AppTheme.textWhite)),
+                        style: const TextStyle(color: AppTheme.textWhite)),
                     value: e.key,
                     groupValue: selectedAction,
                     onChanged: (value) => setSt(() {
@@ -204,7 +204,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               const SizedBox(height: 8),
               TextField(
                 controller: noteCtrl,
-                style: TextStyle(color: AppTheme.textWhite),
+                style: const TextStyle(color: AppTheme.textWhite),
                 decoration: const InputDecoration(labelText: 'ملاحظة (اختياري)'),
               ),
             ],
@@ -212,7 +212,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
           actions: [
             TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
-                child: Text('إلغاء',
+                child: const Text('إلغاء',
                     style: TextStyle(color: AppTheme.textGrey))),
             ElevatedButton(
                 onPressed: () => Navigator.pop(ctx, true),
@@ -251,7 +251,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label,
-              style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: 13)),
           const SizedBox(width: 12),
           Flexible(
             child: Text(value,

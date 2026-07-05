@@ -83,7 +83,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
               const SizedBox(height: 12),
             ],
 
-            Text(
+            const Text(
               'اختر الباقة الأنسب لاحتياجك',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -92,7 +92,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
                   fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 6),
-            Text(
+            const Text(
               'كلما زادت الباقة، زاد عدد العروض ومدة العرض',
               textAlign: TextAlign.center,
               style: TextStyle(color: AppTheme.textGrey, fontSize: 13),
@@ -300,13 +300,13 @@ class _PackagesScreenState extends State<PackagesScreen> {
                         fontWeight: FontWeight.bold),
                   ),
                   if (!isFree)
-                    Text('/ شهرياً',
+                    const Text('/ شهرياً',
                         style:
                             TextStyle(color: AppTheme.textGrey, fontSize: 11)),
                 ],
               ),
             ]),
-            Divider(color: AppTheme.textGrey, height: 24),
+            const Divider(color: AppTheme.textGrey, height: 24),
             _feature(Icons.list_alt, '${pkg.offers} عروض فعّالة'),
             _feature(Icons.calendar_today, 'مدة العرض ${pkg.duration} يوم'),
             _feature(Icons.hourglass_bottom, '${config?.pkgGraceDays ?? 3} أيام سماح بعد الانتهاء'),
@@ -376,7 +376,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
           const SizedBox(width: 10),
           Expanded(
               child: Text(text,
-                  style: TextStyle(
+                  style: const TextStyle(
                       color: AppTheme.textWhite, fontSize: 14))),
         ]),
       );

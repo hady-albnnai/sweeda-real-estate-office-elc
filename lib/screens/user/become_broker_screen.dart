@@ -86,7 +86,7 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
         barrierDismissible: false,
         builder: (_) => AlertDialog(
           backgroundColor: AppTheme.surfaceBlack,
-          title: Row(
+          title: const Row(
             children: [
               Icon(Icons.check_circle, color: Colors.green, size: 28),
               SizedBox(width: 8),
@@ -94,7 +94,7 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
                   style: TextStyle(color: AppTheme.textWhite)),
             ],
           ),
-          content: Text(
+          content: const Text(
             'تم إرسال طلبك للإدارة بنجاح ✅\n\n'
             'ستراجع الإدارة طلب الوساطة + توثيق هويتك معاً، وسيصلك إشعار بالنتيجة. '
             'عادة خلال 48 ساعة.',
@@ -221,7 +221,7 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.orange),
       ),
-      child: Column(
+      child: const Column(
         children: [
           Icon(Icons.hourglass_top, color: Colors.orange, size: 48),
           SizedBox(height: 10),
@@ -269,7 +269,7 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
         _label('الاسم التجاري *'),
         TextField(
           controller: _businessNameCtrl,
-          style: TextStyle(color: AppTheme.textWhite),
+          style: const TextStyle(color: AppTheme.textWhite),
           decoration: const InputDecoration(
             hintText: 'مثلاً: مكتب النور للعقارات',
             prefixIcon: Icon(Icons.business, color: AppTheme.primaryGold),
@@ -295,7 +295,7 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
                       },
                       title: Text(
                         e.value,
-                        style: TextStyle(color: AppTheme.textWhite),
+                        style: const TextStyle(color: AppTheme.textWhite),
                       ),
                       activeColor: AppTheme.primaryGold,
                       dense: true,
@@ -309,7 +309,7 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
         TextField(
           controller: _experienceCtrl,
           keyboardType: TextInputType.number,
-          style: TextStyle(color: AppTheme.textWhite),
+          style: const TextStyle(color: AppTheme.textWhite),
           decoration: const InputDecoration(
             hintText: 'مثلاً: 5',
             prefixIcon: Icon(Icons.work_history,
@@ -322,7 +322,7 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
         TextField(
           controller: _aboutCtrl,
           maxLines: 4,
-          style: TextStyle(color: AppTheme.textWhite),
+          style: const TextStyle(color: AppTheme.textWhite),
           decoration: const InputDecoration(
             hintText: 'تحدّث عن خبرتك ومناطق عملك...',
           ),
@@ -338,7 +338,7 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
           ),
           child: Column(
             children: [
-              Text(
+              const Text(
                 '⚠️ شروط والتزامات الوسيط:\n• الالتزام بالأمانة والصدق في العروض\n• تسجيل العمولات للمكتب\n• الاستجابة لطلبات العملاء بسرعة\n• عدم تجاوز الصلاحيات المخوّلة',
                 style: TextStyle(color: AppTheme.textGrey, fontSize: 12),
               ),
@@ -347,7 +347,7 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
                 value: _agreeTerms,
                 onChanged: (v) =>
                     setState(() => _agreeTerms = v ?? false),
-                title: Text(
+                title: const Text(
                   'أوافق على الشروط والالتزامات',
                   style: TextStyle(
                       color: AppTheme.textWhite, fontSize: 13),
@@ -393,7 +393,7 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
           const SizedBox(width: 10),
           Expanded(
             child: Text(text,
-                style: TextStyle(
+                style: const TextStyle(
                     color: AppTheme.textWhite, fontSize: 13)),
           ),
         ],

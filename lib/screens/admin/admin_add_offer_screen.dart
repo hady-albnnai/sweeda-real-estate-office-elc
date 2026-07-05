@@ -298,7 +298,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
                     const CircularProgressIndicator(color: AppTheme.primaryGold),
                     const SizedBox(height: 16),
                     Text(_progressMsg,
-                        style: TextStyle(color: AppTheme.textWhite)),
+                        style: const TextStyle(color: AppTheme.textWhite)),
                   ],
                 ),
               ),
@@ -373,7 +373,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
               : SizedBox(
                   height: 220,
                   child: filtered.isEmpty
-                      ? Center(child: Text('لا يوجد مستخدم',
+                      ? const Center(child: Text('لا يوجد مستخدم',
                           style: TextStyle(color: AppTheme.textGrey)))
                       : ListView.builder(
                           itemCount: filtered.length,
@@ -398,12 +398,12 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
                               ),
                               title: Text(
                                 u.nm.isNotEmpty ? u.nm : 'مجهول',
-                                style: TextStyle(
+                                style: const TextStyle(
                                     color: AppTheme.textWhite, fontSize: 14),
                               ),
                               subtitle: Text(
                                 u.ph + (u.role == UserRole.broker ? ' • وسيط' : ''),
-                                style: TextStyle(
+                                style: const TextStyle(
                                     color: AppTheme.textGrey, fontSize: 11),
                               ),
                               trailing: selected
@@ -465,7 +465,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
           DropdownButtonFormField<int>(
             value: _selectedMainCat,
             dropdownColor: AppTheme.surfaceBlack,
-            style: TextStyle(color: AppTheme.textWhite),
+            style: const TextStyle(color: AppTheme.textWhite),
             decoration: const InputDecoration(
                 border: OutlineInputBorder(), labelText: 'التصنيف الرئيسي'),
             items: mainCategories.entries
@@ -476,7 +476,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
               _selectedSubCat  = null;
               _customSubCtrl.clear();
             }),
-            hint: Text('اختر التصنيف',
+            hint: const Text('اختر التصنيف',
                 style: TextStyle(color: AppTheme.textGrey)),
           ),
           if (_selectedMainCat != null) ...[
@@ -484,7 +484,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
             DropdownButtonFormField<int>(
               value: _selectedSubCat,
               dropdownColor: AppTheme.surfaceBlack,
-              style: TextStyle(color: AppTheme.textWhite, fontSize: 14),
+              style: const TextStyle(color: AppTheme.textWhite, fontSize: 14),
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), labelText: 'التصنيف الفرعي'),
               items: [
@@ -496,7 +496,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
                 _selectedSubCat = v;
                 if (v != -1) _customSubCtrl.clear();
               }),
-              hint: Text('اختر التصنيف الفرعي',
+              hint: const Text('اختر التصنيف الفرعي',
                   style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
             ),
             if (_selectedSubCat == -1)
@@ -524,7 +524,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
           DropdownButtonFormField<String>(
             value: _selectedCityArea,
             dropdownColor: AppTheme.surfaceBlack,
-            style: TextStyle(color: AppTheme.textWhite),
+            style: const TextStyle(color: AppTheme.textWhite),
             decoration: const InputDecoration(
                 border: OutlineInputBorder(), labelText: 'المنطقة الرئيسية'),
             items: cityItems,
@@ -532,7 +532,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
               _selectedCityArea = v;
               if (v != _customCityOption) _customCityCtrl.clear();
             }),
-            hint: Text('اختر المنطقة',
+            hint: const Text('اختر المنطقة',
                 style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
             menuMaxHeight: 300,
           ),
@@ -571,7 +571,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
           TextField(
             controller: _ttlCtrl,
             maxLength: 80,
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               labelText: 'عنوان مخصص (اختياري)',
               hintText: 'يُبنى تلقائياً إذا تُرك فارغاً',
               border: OutlineInputBorder(),
@@ -596,7 +596,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
               child: DropdownButtonFormField<int>(
                 value: _cur,
                 dropdownColor: AppTheme.surfaceBlack,
-                style: TextStyle(color: AppTheme.textWhite),
+                style: const TextStyle(color: AppTheme.textWhite),
                 decoration: const InputDecoration(border: OutlineInputBorder()),
                 items: const [
                   DropdownMenuItem(value: Currency.dollar, child: Text('دولار')),
@@ -705,7 +705,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
         content: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('حدد الأيام والفترات الزمنية المتاحة للمعاينة.',
+            const Text('حدد الأيام والفترات الزمنية المتاحة للمعاينة.',
                 style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
             const SizedBox(height: 16),
             ..._weekDays.map((day) {
@@ -782,7 +782,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 4),
                           child: Row(children: [
-                            Text('من',
+                            const Text('من',
                                 style: TextStyle(
                                     color: AppTheme.textGrey, fontSize: 13)),
                             const SizedBox(width: 6),
@@ -795,7 +795,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            Text('إلى',
+                            const Text('إلى',
                                 style: TextStyle(
                                     color: AppTheme.textGrey, fontSize: 13)),
                             const SizedBox(width: 6),
@@ -858,9 +858,9 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
         DropdownButtonFormField<int>(
           value: _selectedDocType,
           dropdownColor: AppTheme.surfaceBlack,
-          style: TextStyle(color: AppTheme.textWhite),
+          style: const TextStyle(color: AppTheme.textWhite),
           decoration: const InputDecoration(border: OutlineInputBorder()),
-          hint: Text('اختر نوع السند',
+          hint: const Text('اختر نوع السند',
               style: TextStyle(color: AppTheme.textGrey)),
           items: docTypes.entries
               .map((e) => DropdownMenuItem(
@@ -889,7 +889,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
               ),
             ),
             child: _docImage == null
-                ? Center(
+                ? const Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -956,10 +956,10 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
       controller: ctrl,
       keyboardType: TextInputType.datetime,
       textAlign: TextAlign.center,
-      style: TextStyle(color: AppTheme.textWhite, fontSize: 14),
+      style: const TextStyle(color: AppTheme.textWhite, fontSize: 14),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: AppTheme.textGrey, fontSize: 13),
+        hintStyle: const TextStyle(color: AppTheme.textGrey, fontSize: 13),
         contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         isDense: true,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
@@ -1088,7 +1088,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
 
   Widget _dd(String label, List<String> items, Function(String) on) =>
       Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label, style: TextStyle(color: AppTheme.textGrey)),
+        Text(label, style: const TextStyle(color: AppTheme.textGrey)),
         const SizedBox(height: 5),
         DropdownButtonFormField<String>(
           value: null,

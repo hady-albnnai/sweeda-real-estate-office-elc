@@ -107,10 +107,10 @@ class _MyRatingsScreenState extends State<MyRatingsScreen> {
           Icon(Icons.star_outline,
               color: AppTheme.textGrey.withOpacity(0.4), size: 80),
           const SizedBox(height: 12),
-          Text('لم تستلم أي تقييم بعد',
+          const Text('لم تستلم أي تقييم بعد',
               style: TextStyle(color: AppTheme.textGrey, fontSize: 16)),
           const SizedBox(height: 6),
-          Text('أكمل صفقات وقدّم خدمة ممتازة لتحصل على تقييمات',
+          const Text('أكمل صفقات وقدّم خدمة ممتازة لتحصل على تقييمات',
               textAlign: TextAlign.center,
               style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
         ],
@@ -228,7 +228,7 @@ class _MyRatingsScreenState extends State<MyRatingsScreen> {
               if (date != null)
                 Text(
                   '${date.year}/${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}',
-                  style: TextStyle(
+                  style: const TextStyle(
                       color: AppTheme.textGrey, fontSize: 11),
                 ),
             ],
@@ -237,7 +237,7 @@ class _MyRatingsScreenState extends State<MyRatingsScreen> {
             const SizedBox(height: 8),
             Text(
               '"$comment"',
-              style: TextStyle(
+              style: const TextStyle(
                   color: AppTheme.textWhite,
                   fontSize: 13,
                   fontStyle: FontStyle.italic,
@@ -246,7 +246,7 @@ class _MyRatingsScreenState extends State<MyRatingsScreen> {
           ],
           // 🏢 لا نُظهر اسم المُقيِّم لحماية الخصوصية (هوية المكتب)
           const SizedBox(height: 6),
-          Text('— تقييم من عميل عبر المكتب',
+          const Text('— تقييم من عميل عبر المكتب',
               style: TextStyle(
                   color: AppTheme.textGrey,
                   fontSize: 11,

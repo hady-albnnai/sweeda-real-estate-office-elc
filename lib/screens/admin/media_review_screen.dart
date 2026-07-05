@@ -85,7 +85,7 @@ class _MediaReviewScreenState extends State<MediaReviewScreen> {
                   _filters(),
                   const SizedBox(height: 12),
                   if (_filtered.isEmpty)
-                    Padding(
+                    const Padding(
                       padding: EdgeInsets.only(top: 80),
                       child: Center(
                         child: Text('لا توجد عروض مطابقة', style: TextStyle(color: AppTheme.textGrey)),
@@ -110,7 +110,7 @@ class _MediaReviewScreenState extends State<MediaReviewScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
               Icon(Icons.photo_library_outlined, color: AppTheme.primaryGold),
               SizedBox(width: 8),
@@ -144,7 +144,7 @@ class _MediaReviewScreenState extends State<MediaReviewScreen> {
       child: Column(
         children: [
           Text('$count', style: TextStyle(color: color, fontSize: 18, fontWeight: FontWeight.bold)),
-          Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: AppTheme.textGrey, fontSize: 10)),
+          Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppTheme.textGrey, fontSize: 10)),
         ],
       ),
     );
@@ -211,7 +211,7 @@ class _MediaReviewScreenState extends State<MediaReviewScreen> {
         ),
         title: Text(
           offer.ttl.isEmpty ? 'عرض بدون عنوان' : offer.ttl,
-          style: TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold),
+          style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -237,7 +237,7 @@ class _MediaReviewScreenState extends State<MediaReviewScreen> {
   Widget _placeholder() {
     return Container(
       color: AppTheme.deepBlack,
-      child: Icon(Icons.image_not_supported_outlined, color: AppTheme.textGrey),
+      child: const Icon(Icons.image_not_supported_outlined, color: AppTheme.textGrey),
     );
   }
 

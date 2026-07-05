@@ -64,7 +64,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     children: [
                       Icon(Icons.favorite_border, size: 80, color: AppTheme.textGrey.withOpacity(0.3)),
                       const SizedBox(height: 20),
-                      Text('ما عندك عروض مفضلة حالياً',
+                      const Text('ما عندك عروض مفضلة حالياً',
                           style: TextStyle(color: AppTheme.textGrey, fontSize: 16)),
                       const SizedBox(height: 20),
                       ElevatedButton.icon(

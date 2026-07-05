@@ -97,7 +97,7 @@ class _MyPaymentsScreenState extends State<MyPaymentsScreen> {
             children: [
               Text(
                 'باقة $pkgName',
-                style: TextStyle(
+                style: const TextStyle(
                     color: AppTheme.textWhite,
                     fontWeight: FontWeight.bold,
                     fontSize: 16),
@@ -185,10 +185,10 @@ class _MyPaymentsScreenState extends State<MyPaymentsScreen> {
         child: Row(children: [
           Text('$label: ',
               style:
-                  TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                  const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
           Expanded(
             child: Text(value,
-                style: TextStyle(
+                style: const TextStyle(
                     color: AppTheme.textWhite,
                     fontSize: 13,
                     fontWeight: FontWeight.w500)),
@@ -204,7 +204,7 @@ class _MyPaymentsScreenState extends State<MyPaymentsScreen> {
                 size: 80,
                 color: AppTheme.textGrey.withOpacity(0.3)),
             const SizedBox(height: 20),
-            Text('لا توجد دفعات بعد',
+            const Text('لا توجد دفعات بعد',
                 style: TextStyle(color: AppTheme.textGrey, fontSize: 16)),
             const SizedBox(height: 12),
             ElevatedButton(

@@ -27,7 +27,7 @@ class AppErrorWidget extends StatelessWidget {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 15, color: AppTheme.textGrey),
+              style: const TextStyle(fontSize: 15, color: AppTheme.textGrey),
             ),
             if (onRetry != null) ...[
               const SizedBox(height: 20),

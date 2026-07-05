@@ -119,7 +119,7 @@ class _MyOffersScreenState extends State<MyOffersScreen>
             Icon(Icons.folder_open,
                 size: 80, color: AppTheme.primaryGold.withOpacity(0.5)),
             const SizedBox(height: 20),
-            Text('لا توجد عروض في هذه الحالة',
+            const Text('لا توجد عروض في هذه الحالة',
                 style: TextStyle(color: AppTheme.textGrey, fontSize: 16)),
             const SizedBox(height: 16),
             ElevatedButton.icon(
@@ -209,7 +209,7 @@ class _MyOffersScreenState extends State<MyOffersScreen>
                           o.ttl,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
+                          style: const TextStyle(
                               color: AppTheme.textWhite,
                               fontWeight: FontWeight.bold,
                               fontSize: 15),
@@ -225,18 +225,18 @@ class _MyOffersScreenState extends State<MyOffersScreen>
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            Icon(Icons.remove_red_eye,
+                            const Icon(Icons.remove_red_eye,
                                 color: AppTheme.textGrey, size: 13),
                             const SizedBox(width: 3),
                             Text('${o.vws}',
-                                style: TextStyle(
+                                style: const TextStyle(
                                     color: AppTheme.textGrey, fontSize: 11)),
                             const SizedBox(width: 10),
-                            Icon(Icons.favorite,
+                            const Icon(Icons.favorite,
                                 color: AppTheme.textGrey, size: 13),
                             const SizedBox(width: 3),
                             Text('${o.fvs}',
-                                style: TextStyle(
+                                style: const TextStyle(
                                     color: AppTheme.textGrey, fontSize: 11)),
                           ],
                         ),
@@ -297,7 +297,7 @@ class _MyOffersScreenState extends State<MyOffersScreen>
 
   Widget _imgPlaceholder() => Container(
         color: AppTheme.deepBlack,
-        child: Icon(Icons.image_not_supported,
+        child: const Icon(Icons.image_not_supported,
             color: AppTheme.textGrey, size: 30),
       );
 

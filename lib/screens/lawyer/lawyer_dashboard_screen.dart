@@ -72,12 +72,12 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
-        title: Text('تسجيل الخروج', style: TextStyle(color: AppTheme.textWhite)),
-        content: Text('هل تريد تسجيل الخروج من حساب المحامي؟', style: TextStyle(color: AppTheme.textGrey)),
+        title: const Text('تسجيل الخروج', style: TextStyle(color: AppTheme.textWhite)),
+        content: const Text('هل تريد تسجيل الخروج من حساب المحامي؟', style: TextStyle(color: AppTheme.textGrey)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('إلغاء', style: TextStyle(color: AppTheme.textGrey)),
+            child: const Text('إلغاء', style: TextStyle(color: AppTheme.textGrey)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -109,28 +109,28 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
         ]),
         content: SingleChildScrollView(
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(user?.nm ?? '', style: TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold, fontSize: 16)),
-            Text(user?.ph ?? '', style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
+            Text(user?.nm ?? '', style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold, fontSize: 16)),
+            Text(user?.ph ?? '', style: const TextStyle(color: AppTheme.textGrey, fontSize: 14)),
             if (user?.usr != null && user!.usr!.isNotEmpty)
               Text('@${user.usr}', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 13)),
-            const SizedBox(height: 20), Divider(color: AppTheme.textGrey),
+            const SizedBox(height: 20), const Divider(color: AppTheme.textGrey),
             const Text('تغيير كلمة المرور', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 15)),
             const SizedBox(height: 12),
-            TextField(controller: oldCtrl, style: TextStyle(color: AppTheme.textWhite),
+            TextField(controller: oldCtrl, style: const TextStyle(color: AppTheme.textWhite),
               decoration: const InputDecoration(labelText: 'كلمة المرور الحالية', prefixIcon: Icon(Icons.lock_outline, color: AppTheme.primaryGold)),
               obscureText: true),
             const SizedBox(height: 10),
-            TextField(controller: newCtrl, style: TextStyle(color: AppTheme.textWhite),
+            TextField(controller: newCtrl, style: const TextStyle(color: AppTheme.textWhite),
               decoration: const InputDecoration(labelText: 'كلمة المرور الجديدة', prefixIcon: Icon(Icons.lock, color: AppTheme.primaryGold)),
               obscureText: true),
             const SizedBox(height: 10),
-            TextField(controller: confCtrl, style: TextStyle(color: AppTheme.textWhite),
+            TextField(controller: confCtrl, style: const TextStyle(color: AppTheme.textWhite),
               decoration: const InputDecoration(labelText: 'تأكيد كلمة المرور', prefixIcon: Icon(Icons.lock, color: AppTheme.primaryGold)),
               obscureText: true),
           ]),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text('إلغاء', style: TextStyle(color: AppTheme.textGrey))),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء', style: TextStyle(color: AppTheme.textGrey))),
           ElevatedButton(onPressed: () async {
             if (newCtrl.text != confCtrl.text) { _snack('كلمتا المرور غير متطابقتين', bg: AppTheme.errorRed); return; }
             if (newCtrl.text.length < 8) { _snack('كلمة المرور أقل من 8 أحرف', bg: AppTheme.errorRed); return; }
@@ -187,7 +187,7 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
   @override
   Widget build(BuildContext context) {
     final legal = context.watch<LegalProvider>();
-    if (_checking) return Scaffold(
+    if (_checking) return const Scaffold(
       backgroundColor: AppTheme.scaffoldBackground,
       body: Center(child: CircularProgressIndicator(color: AppTheme.primaryGold)),
     );
@@ -259,14 +259,14 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
             const Icon(Icons.gavel, size: 50, color: AppTheme.primaryGold), const SizedBox(height: 12),
             const Text('أهلاً بك', style: TextStyle(color: AppTheme.primaryGold, fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            Text('يرجى إعداد رقم الواتساب المعتمد', style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
+            const Text('يرجى إعداد رقم الواتساب المعتمد', style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
             const SizedBox(height: 24),
-            TextField(controller: _whatsappCtrl, style: TextStyle(color: AppTheme.textWhite),
+            TextField(controller: _whatsappCtrl, style: const TextStyle(color: AppTheme.textWhite),
               decoration: const InputDecoration(labelText: 'رقم الواتساب المعتمد *', hintText: '+9639xxxxxxxx',
                 prefixIcon: Icon(Icons.phone_android, color: AppTheme.primaryGold)),
               keyboardType: TextInputType.phone),
             const SizedBox(height: 16),
-            TextField(controller: _addressCtrl, style: TextStyle(color: AppTheme.textWhite),
+            TextField(controller: _addressCtrl, style: const TextStyle(color: AppTheme.textWhite),
               decoration: const InputDecoration(labelText: 'عنوان المكتب (اختياري)', hintText: 'مقر الشركة',
                 prefixIcon: Icon(Icons.location_on, color: AppTheme.primaryGold))),
             const SizedBox(height: 24),
@@ -286,7 +286,7 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
     final apps = legal.lawyerAppointments;
     if (apps.isEmpty) return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
       Icon(Icons.event_busy, size: 60, color: AppTheme.textGrey.withOpacity(0.4)),
-      const SizedBox(height: 12), Text('لا توجد مواعيد حالياً', style: TextStyle(color: AppTheme.textGrey, fontSize: 16)),
+      const SizedBox(height: 12), const Text('لا توجد مواعيد حالياً', style: TextStyle(color: AppTheme.textGrey, fontSize: 16)),
     ]));
     return RefreshIndicator(onRefresh: () => legal.fetchLawyerAppointments(),
       child: ListView.builder(padding: const EdgeInsets.all(16), itemCount: apps.length,
@@ -302,8 +302,8 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
         Container(width: 4, height: 60, decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(4))),
         const SizedBox(width: 14),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(a['client_name']?.toString() ?? '', style: TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold, fontSize: 15)),
-          Text(a['client_phone']?.toString() ?? '', style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+          Text(a['client_name']?.toString() ?? '', style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold, fontSize: 15)),
+          Text(a['client_phone']?.toString() ?? '', style: const TextStyle(color: AppTheme.textGrey, fontSize: 13)),
           Text(a['dt']?.toString().substring(0, 16) ?? '', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 12)),
         ])),
         Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -318,35 +318,35 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
     final expediters = legal.availableExpediters;
     return SingleChildScrollView(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const Text('📋 تكليف معقب', style: TextStyle(color: AppTheme.primaryGold, fontSize: 18, fontWeight: FontWeight.bold)),
-      const SizedBox(height: 16), Text('نوع المعاملة:', style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
+      const SizedBox(height: 16), const Text('نوع المعاملة:', style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
       Row(children: [
         Expanded(child: _Chip(label: '🏠 عقار', selected: _selectedItemType == 0, onTap: () => setState(() => _selectedItemType = 0))),
         const SizedBox(width: 12),
         Expanded(child: _Chip(label: '🚗 سيارة', selected: _selectedItemType == 1, onTap: () => setState(() => _selectedItemType = 1))),
-      ]), const SizedBox(height: 16), Text('المعقب:', style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
+      ]), const SizedBox(height: 16), const Text('المعقب:', style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
       expediters.isEmpty
           ? Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(12),
               border: Border.all(color: Colors.orange.withOpacity(0.3))),
-              child: Row(children: [Icon(Icons.info_outline, color: Colors.orange, size: 18), SizedBox(width: 10),
+              child: const Row(children: [Icon(Icons.info_outline, color: Colors.orange, size: 18), SizedBox(width: 10),
                 Expanded(child: Text('لا يوجد معقبين. أضف معقباً من إدارة الموظفين.', style: TextStyle(color: AppTheme.textGrey, fontSize: 13)))]))
           : DropdownButtonFormField<String>(value: _selectedExpediterUid, dropdownColor: AppTheme.surfaceBlack,
-              style: TextStyle(color: AppTheme.textWhite),
+              style: const TextStyle(color: AppTheme.textWhite),
               decoration: const InputDecoration(labelText: 'اختر المعقب', prefixIcon: Icon(Icons.person_search, color: AppTheme.primaryGold)),
               items: expediters.map((e) => DropdownMenuItem(value: e['id']?.toString(), child: Text('${e['nm']} (${e['ph']})'))).toList(),
               onChanged: (v) => setState(() => _selectedExpediterUid = v)),
       const SizedBox(height: 16),
       if (_selectedItemType == 0) ...[
-        TextField(controller: _taskPropertyCtrl, style: TextStyle(color: AppTheme.textWhite),
+        TextField(controller: _taskPropertyCtrl, style: const TextStyle(color: AppTheme.textWhite),
           decoration: const InputDecoration(labelText: 'رقم العقار', hintText: '12345')),
         const SizedBox(height: 12),
-        TextField(controller: _taskZoneCtrl, style: TextStyle(color: AppTheme.textWhite),
+        TextField(controller: _taskZoneCtrl, style: const TextStyle(color: AppTheme.textWhite),
           decoration: const InputDecoration(labelText: 'المنطقة العقارية', hintText: 'السويداء')),
       ],
       if (_selectedItemType == 1)
-        TextField(controller: _taskPropertyCtrl, style: TextStyle(color: AppTheme.textWhite),
+        TextField(controller: _taskPropertyCtrl, style: const TextStyle(color: AppTheme.textWhite),
           decoration: const InputDecoration(labelText: 'رقم المركبة', hintText: '123456')),
       const SizedBox(height: 12),
-      TextField(controller: _taskNotesCtrl, style: TextStyle(color: AppTheme.textWhite), maxLines: 3,
+      TextField(controller: _taskNotesCtrl, style: const TextStyle(color: AppTheme.textWhite), maxLines: 3,
         decoration: const InputDecoration(labelText: 'تعليمات', hintText: 'ملاحظات للمعقب...')),
       const SizedBox(height: 24),
       SizedBox(width: double.infinity, height: 50, child: ElevatedButton.icon(
@@ -363,12 +363,12 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
         title: const Text('اعتماد مهمة التعقيب', style: TextStyle(color: AppTheme.primaryGold)),
-        content: Text(
+        content: const Text(
           'هل تؤكد اعتماد إنجاز المعقب لهذه المهمة؟ سيتم إشعار المعقب بالاعتماد.',
           style: TextStyle(color: AppTheme.textGrey, height: 1.4),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('إلغاء', style: TextStyle(color: AppTheme.textGrey))),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('إلغاء', style: TextStyle(color: AppTheme.textGrey))),
           ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('اعتماد')),
         ],
       ),
@@ -388,7 +388,7 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
     final tasks = legal.lawyerTasks;
     if (tasks.isEmpty) return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
       Icon(Icons.assignment_late, size: 60, color: AppTheme.textGrey.withOpacity(0.4)),
-      const SizedBox(height: 12), Text('لا توجد مهام', style: TextStyle(color: AppTheme.textGrey, fontSize: 16)),
+      const SizedBox(height: 12), const Text('لا توجد مهام', style: TextStyle(color: AppTheme.textGrey, fontSize: 16)),
     ]));
     return RefreshIndicator(onRefresh: () => legal.fetchLawyerTasks(),
       child: ListView.builder(padding: const EdgeInsets.all(16), itemCount: tasks.length, itemBuilder: (_, i) {
@@ -404,9 +404,9 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
               Text(t.itemType == 0 ? '🏠 عقار' : '🚗 سيارة', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 12))]),
             if (t.targetPropertyNum.isNotEmpty) ...[
               const SizedBox(height: 8),
-              Text('رقم: ${t.targetPropertyNum} | ${t.targetZone}', style: TextStyle(color: AppTheme.textGrey, fontSize: 13))],
+              Text('رقم: ${t.targetPropertyNum} | ${t.targetZone}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 13))],
             Row(children: [Icon(Icons.checklist, size: 16, color: AppTheme.primaryGold), const SizedBox(width: 6),
-              Text('$done / $total وثائق', style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+              Text('$done / $total وثائق', style: const TextStyle(color: AppTheme.textGrey, fontSize: 13)),
               if (t.status == 2) ...[
                 const SizedBox(width: 8),
                 Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),

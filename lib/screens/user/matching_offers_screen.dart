@@ -384,7 +384,7 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
 
             const SizedBox(height: 16),
             SwitchListTile(
-              title: Text('عروض تحتوي على صور فقط', style: TextStyle(color: AppTheme.textWhite)),
+              title: const Text('عروض تحتوي على صور فقط', style: TextStyle(color: AppTheme.textWhite)),
               value: _hasImagesOnly,
               onChanged: (val) {
                 setState(() => _hasImagesOnly = val);
@@ -410,7 +410,7 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('نطاق السعر', style: TextStyle(color: AppTheme.textWhite)),
+        const Text('نطاق السعر', style: TextStyle(color: AppTheme.textWhite)),
         RangeSlider(
           values: RangeValues(_minPrice, _maxPrice),
           min: 0,
@@ -485,7 +485,7 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _filteredOffers.isEmpty
-              ? Center(child: Text('لا توجد عروض مطابقة حالياً', style: TextStyle(color: AppTheme.textGrey)))
+              ? const Center(child: Text('لا توجد عروض مطابقة حالياً', style: TextStyle(color: AppTheme.textGrey)))
               : ListView.builder(
                   padding: const EdgeInsets.all(12),
                   itemCount: _filteredOffers.length,
@@ -529,11 +529,11 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
               ],
             ),
             const SizedBox(height: 8),
-            Text(offer.ttl, style: TextStyle(color: AppTheme.textWhite, fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(offer.ttl, style: const TextStyle(color: AppTheme.textWhite, fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
             Row(
               children: [
-                Text(offer.loc['d'] ?? '', style: TextStyle(color: AppTheme.textGrey)),
+                Text(offer.loc['d'] ?? '', style: const TextStyle(color: AppTheme.textGrey)),
                 if (offer.imgs.isNotEmpty) ...[
                   const SizedBox(width: 12),
                   Icon(Icons.photo, size: 14, color: AppTheme.primaryGold),
@@ -606,7 +606,7 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Row(
                 children: [
-                  Text('${entry.key}: ', style: TextStyle(color: AppTheme.textWhite)),
+                  Text('${entry.key}: ', style: const TextStyle(color: AppTheme.textWhite)),
                   Text('${entry.value}%', style: const TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
                 ],
               ),

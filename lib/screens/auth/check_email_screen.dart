@@ -29,7 +29,7 @@ class CheckEmailScreen extends StatelessWidget {
               const Icon(Icons.mark_email_unread,
                   color: AppTheme.primaryGold, size: 88),
               const SizedBox(height: 24),
-              Text('تحقّق من بريدك الإلكتروني',
+              const Text('تحقّق من بريدك الإلكتروني',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       color: AppTheme.textWhite,
@@ -40,7 +40,7 @@ class CheckEmailScreen extends StatelessWidget {
                 'أرسلنا رابط تسجيل دخول إلى:\n${auth.currentEmail ?? ''}\n\nافتح بريدك واضغط الرابط لإكمال الدخول.',
                 textAlign: TextAlign.center,
                 style:
-                    TextStyle(color: AppTheme.textGrey, fontSize: 14),
+                    const TextStyle(color: AppTheme.textGrey, fontSize: 14),
               ),
               const SizedBox(height: 32),
               SizedBox(
@@ -72,7 +72,7 @@ class CheckEmailScreen extends StatelessWidget {
                   color: AppTheme.surfaceBlack,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Row(
+                child: const Row(
                   children: [
                     Icon(Icons.info_outline,
                         color: AppTheme.primaryGold, size: 18),

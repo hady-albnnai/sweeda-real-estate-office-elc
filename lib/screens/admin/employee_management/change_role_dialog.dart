@@ -75,15 +75,15 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
 
     return AlertDialog(
       backgroundColor: AppTheme.surfaceBlack,
-      title: Text('تغيير دور ${widget.user.nm}', style: TextStyle(color: AppTheme.textWhite)),
+      title: Text('تغيير دور ${widget.user.nm}', style: const TextStyle(color: AppTheme.textWhite)),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           DropdownButtonFormField<int>(
             value: _selectedRole,
             dropdownColor: AppTheme.surfaceBlack,
-            style: TextStyle(color: AppTheme.textWhite),
-            decoration: InputDecoration(
+            style: const TextStyle(color: AppTheme.textWhite),
+            decoration: const InputDecoration(
               labelText: 'الدور الجديد',
               labelStyle: TextStyle(color: AppTheme.textGrey),
             ),
@@ -110,7 +110,7 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text('إلغاء', style: TextStyle(color: AppTheme.textGrey)),
+          child: const Text('إلغاء', style: TextStyle(color: AppTheme.textGrey)),
         ),
         ElevatedButton(
           onPressed: (widget.user.role == 6 || _isLoading) ? null : _submit,

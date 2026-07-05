@@ -86,7 +86,7 @@ class _AppointmentsManagementScreenState
                 ? const Center(
                     child: CircularProgressIndicator(color: AppTheme.primaryGold))
                 : _filtered.isEmpty
-                    ? Center(
+                    ? const Center(
                         child: Text('لا توجد مواعيد',
                             style: TextStyle(color: AppTheme.textGrey)))
                     : RefreshIndicator(
@@ -162,7 +162,7 @@ class _AppointmentsManagementScreenState
                       color: AppTheme.primaryGold, size: 18),
                   const SizedBox(width: 6),
                   Text(_fmtDate(a.dt),
-                      style: TextStyle(
+                      style: const TextStyle(
                           color: AppTheme.textWhite,
                           fontWeight: FontWeight.bold)),
                 ],
@@ -192,7 +192,7 @@ class _AppointmentsManagementScreenState
           ),
           const SizedBox(height: 8),
           Text('العرض: ${_short(a.offId)}',
-              style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
           if (a.supervisorUid != null && a.supervisorUid!.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 3),

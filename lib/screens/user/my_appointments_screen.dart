@@ -141,7 +141,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
               Expanded(
                 child: Text(
                   'معاينة عرض #${appt.offId.length >= 8 ? appt.offId.substring(0, 8) : appt.offId}',
-                  style: TextStyle(
+                  style: const TextStyle(
                       color: AppTheme.textWhite,
                       fontWeight: FontWeight.bold,
                       fontSize: 15),
@@ -164,10 +164,10 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
             ]),
             const Divider(color: Colors.white12, height: 20),
             Row(children: [
-              Icon(Icons.calendar_today, size: 15, color: AppTheme.textGrey),
+              const Icon(Icons.calendar_today, size: 15, color: AppTheme.textGrey),
               const SizedBox(width: 8),
               Text(AppUtils.formatTimestamp(appt.dt),
-                  style: TextStyle(color: AppTheme.textGrey)),
+                  style: const TextStyle(color: AppTheme.textGrey)),
             ]),
 
             // وقت بديل مقترح من صاحب العرض
@@ -191,7 +191,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
                     const SizedBox(height: 4),
                     Text(
                       AppUtils.formatTimestamp(appt.lastProposedDt!),
-                      style: TextStyle(
+                      style: const TextStyle(
                           color: AppTheme.textWhite, fontSize: 14),
                     ),
                     const SizedBox(height: 10),
@@ -321,7 +321,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
               Expanded(
                 child: Text(
                   'طلب موعد على عرض #${appt.offId.length >= 8 ? appt.offId.substring(0, 8) : appt.offId}',
-                  style: TextStyle(
+                  style: const TextStyle(
                       color: AppTheme.textWhite,
                       fontWeight: FontWeight.bold,
                       fontSize: 14),
@@ -333,11 +333,11 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
 
             // التاريخ
             Row(children: [
-              Icon(Icons.calendar_today,
+              const Icon(Icons.calendar_today,
                   size: 15, color: AppTheme.textGrey),
               const SizedBox(width: 8),
               Text(AppUtils.formatTimestamp(appt.dt),
-                  style: TextStyle(color: AppTheme.textGrey)),
+                  style: const TextStyle(color: AppTheme.textGrey)),
             ]),
 
             // تاريخ التراشق
@@ -366,13 +366,13 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
                 children: [
                   Text(
                     'يوجد طلب حجز موعد بتاريخ:\n${AppUtils.formatTimestamp(appt.dt)}',
-                    style: TextStyle(
+                    style: const TextStyle(
                         color: AppTheme.textWhite,
                         fontSize: 14,
                         height: 1.5),
                   ),
                   const SizedBox(height: 4),
-                  Text(
+                  const Text(
                     '(لا تظهر معلومات الطالب — التواصل عبر المكتب)',
                     style: TextStyle(
                         color: AppTheme.textGrey,
@@ -477,7 +477,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setS) => AlertDialog(
           backgroundColor: AppTheme.surfaceBlack,
-          title: Text('سبب الرفض',
+          title: const Text('سبب الرفض',
               style: TextStyle(color: AppTheme.textWhite)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -486,7 +486,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
                 value: 0,
                 groupValue: reason,
                 onChanged: (v) => setS(() => reason = v),
-                title: Text('الوقت لا يناسبني',
+                title: const Text('الوقت لا يناسبني',
                     style: TextStyle(color: AppTheme.textWhite)),
                 activeColor: AppTheme.primaryGold,
               ),
@@ -494,7 +494,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
                 value: 1,
                 groupValue: reason,
                 onChanged: (v) => setS(() => reason = v),
-                title: Text('لم أعد مهتماً بالبيع/الإيجار',
+                title: const Text('لم أعد مهتماً بالبيع/الإيجار',
                     style: TextStyle(color: AppTheme.textWhite)),
                 activeColor: AppTheme.primaryGold,
               ),
@@ -502,7 +502,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
                 value: 2,
                 groupValue: reason,
                 onChanged: (v) => setS(() => reason = v),
-                title: Text('آخر',
+                title: const Text('آخر',
                     style: TextStyle(color: AppTheme.textWhite)),
                 activeColor: AppTheme.primaryGold,
               ),
@@ -510,8 +510,8 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
                 const SizedBox(height: 8),
                 TextField(
                   controller: textCtrl,
-                  style: TextStyle(color: AppTheme.textWhite),
-                  decoration: InputDecoration(
+                  style: const TextStyle(color: AppTheme.textWhite),
+                  decoration: const InputDecoration(
                     hintText: 'اكتب السبب...',
                     hintStyle: TextStyle(color: AppTheme.textGrey),
                     border: OutlineInputBorder(),
@@ -523,7 +523,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: Text('إلغاء',
+              child: const Text('إلغاء',
                   style: TextStyle(color: AppTheme.textGrey)),
             ),
             ElevatedButton(
@@ -551,16 +551,16 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
         context: context,
         builder: (_) => AlertDialog(
           backgroundColor: AppTheme.surfaceBlack,
-          title: Text('تأكيد إزالة العرض',
+          title: const Text('تأكيد إزالة العرض',
               style: TextStyle(color: AppTheme.textWhite)),
-          content: Text(
+          content: const Text(
             'سيتم إزالة عرضك تلقائياً عند الرفض بهذا السبب. هل أنت متأكد؟',
             style: TextStyle(color: AppTheme.textGrey),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: Text('لا', style: TextStyle(color: AppTheme.textGrey)),
+              child: const Text('لا', style: TextStyle(color: AppTheme.textGrey)),
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(context, true),
@@ -690,14 +690,14 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
-        title: Text('إلغاء الموعد',
+        title: const Text('إلغاء الموعد',
             style: TextStyle(color: AppTheme.textWhite)),
-        content: Text('هل أنت متأكد من إلغاء هذا الموعد؟',
+        content: const Text('هل أنت متأكد من إلغاء هذا الموعد؟',
             style: TextStyle(color: AppTheme.textGrey)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('لا',
+            child: const Text('لا',
                 style: TextStyle(color: AppTheme.textGrey)),
           ),
           TextButton(
@@ -751,7 +751,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
             const SizedBox(height: 20),
             Text(msg,
                 style:
-                    TextStyle(color: AppTheme.textGrey, fontSize: 16)),
+                    const TextStyle(color: AppTheme.textGrey, fontSize: 16)),
           ],
         ),
       );

@@ -165,7 +165,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              Text(
+              const Text(
                 'اختر مستوى الأولوية الذي سيظهر فيه العرض للمستخدمين. (لمدة 30 يوم)',
                 style: TextStyle(color: AppTheme.textGrey, fontSize: 12),
                 textAlign: TextAlign.center,
@@ -185,7 +185,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
   Widget _priorityOption(BuildContext ctx, String offerId, String type, String label, IconData icon, Color color) {
     return ListTile(
       leading: Icon(icon, color: color),
-      title: Text(label, style: TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.w600)),
+      title: Text(label, style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.w600)),
       onTap: () async {
         final adminProv = context.read<AdminProvider>();
         final authProv = context.read<AuthProvider>();
@@ -244,12 +244,12 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
-        title: Row(children: [
+        title: const Row(children: [
           Icon(Icons.warning_amber_rounded, color: AppTheme.errorRed),
           SizedBox(width: 8),
           Text('حذف العرض (إدارة)', style: TextStyle(color: AppTheme.textWhite)),
         ]),
-        content: Text(
+        content: const Text(
           'هل أنت متأكد من رغبتك في حذف هذا العرض؟ سيتم نقله إلى الأرشيف ولن يظهر للمستخدمين بعد الآن.',
           style: TextStyle(color: AppTheme.textGrey),
         ),
@@ -299,15 +299,15 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
-        title: Text('تأكيد القبول',
+        title: const Text('تأكيد القبول',
             style: TextStyle(color: AppTheme.textWhite)),
-        content: Text(
+        content: const Text(
             'سيتم نشر العرض ليصبح مرئياً للجميع. هل أنت متأكد؟',
             style: TextStyle(color: AppTheme.textGrey)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('إلغاء',
+            child: const Text('إلغاء',
                 style: TextStyle(color: AppTheme.textGrey)),
           ),
           ElevatedButton(
@@ -379,7 +379,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
         builder: (ctx, setS) {
           return AlertDialog(
             backgroundColor: AppTheme.surfaceBlack,
-            title: Text('سبب الرفض',
+            title: const Text('سبب الرفض',
                 style: TextStyle(color: AppTheme.textWhite)),
             content: SingleChildScrollView(
               child: Column(
@@ -388,7 +388,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                 children: [
                   ...presets.map((p) => RadioListTile<String>(
                         title: Text(p,
-                            style: TextStyle(color: AppTheme.textWhite)),
+                            style: const TextStyle(color: AppTheme.textWhite)),
                         value: p,
                         groupValue: selected,
                         onChanged: (value) => setS(() => selected = value),
@@ -400,7 +400,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                   TextField(
                     controller: ctrl,
                     maxLines: 2,
-                    style: TextStyle(color: AppTheme.textWhite),
+                    style: const TextStyle(color: AppTheme.textWhite),
                     decoration: const InputDecoration(
                       hintText: 'تفاصيل إضافية (اختياري)',
                       border: OutlineInputBorder(),
@@ -412,7 +412,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: Text('إلغاء',
+                child: const Text('إلغاء',
                     style: TextStyle(color: AppTheme.textGrey)),
               ),
               ElevatedButton(
@@ -468,7 +468,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setS) => AlertDialog(
           backgroundColor: AppTheme.surfaceBlack,
-          title: Row(children: [
+          title: const Row(children: [
             Icon(Icons.flag, color: Colors.red),
             SizedBox(width: 8),
             Text('تبليغ عن العرض',
@@ -479,12 +479,12 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('اختر سبب التبليغ:',
+                const Text('اختر سبب التبليغ:',
                     style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
                 const SizedBox(height: 6),
                 ...reasons.map((r) => RadioListTile<String>(
                       title: Text(r,
-                          style: TextStyle(color: AppTheme.textWhite)),
+                          style: const TextStyle(color: AppTheme.textWhite)),
                       value: r,
                       groupValue: selected,
                       onChanged: (value) => setS(() => selected = value),
@@ -496,7 +496,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                 TextField(
                   controller: notesCtrl,
                   maxLines: 2,
-                  style: TextStyle(color: AppTheme.textWhite),
+                  style: const TextStyle(color: AppTheme.textWhite),
                   decoration: const InputDecoration(
                     hintText: 'تفاصيل إضافية (اختياري)',
                     border: OutlineInputBorder(),
@@ -508,7 +508,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: Text('إلغاء',
+              child: const Text('إلغاء',
                   style: TextStyle(color: AppTheme.textGrey)),
             ),
             ElevatedButton(
@@ -563,14 +563,14 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: AppTheme.scaffoldBackground,
         body: Center(child: CircularProgressIndicator(color: AppTheme.primaryGold)),
       );
     }
     final offer = _offer;
     if (offer == null) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: AppTheme.scaffoldBackground,
         body: Center(
             child: Text('العرض غير موجود',
@@ -594,7 +594,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                 offer.imgs.isEmpty
                     ? Container(
                         color: AppTheme.surfaceBlack,
-                        child: Icon(Icons.home_work,
+                        child: const Icon(Icons.home_work,
                             size: 80, color: AppTheme.textGrey))
                     : GestureDetector(
                         onTap: () => _openImageViewer(offer.imgs, _currentImg),
@@ -604,7 +604,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                           width: double.infinity,
                           errorBuilder: (_, __, ___) => Container(
                               color: AppTheme.surfaceBlack,
-                              child: Icon(Icons.image,
+                              child: const Icon(Icons.image,
                                   size: 80, color: AppTheme.textGrey)),
                         ),
                       ),
@@ -766,7 +766,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                                   ),
                                 ),
                               Text(offer.ttl,
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                       color: AppTheme.textWhite,
                                       fontSize: 22,
                                       fontWeight: FontWeight.bold)),
@@ -826,7 +826,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                       const SizedBox(width: 4),
                       Text(
                         '${_ownerAvgRating!.toStringAsFixed(1)} ($_ownerRatingCount تقييم)',
-                        style: TextStyle(
+                        style: const TextStyle(
                             color: AppTheme.textWhite,
                             fontSize: 12,
                             fontWeight: FontWeight.w500),
@@ -850,7 +850,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold)),
                           Text(offer.loc['d'] ?? '',
-                              style: TextStyle(
+                              style: const TextStyle(
                                   color: AppTheme.textGrey, fontSize: 15)),
                         ],
                       ),
@@ -864,7 +864,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                           fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
                   Text(offer.descript.isEmpty ? 'لا يوجد وصف' : offer.descript,
-                      style: TextStyle(
+                      style: const TextStyle(
                           color: AppTheme.textWhite, fontSize: 16, height: 1.5)),
                   // المواصفات التقنية
                   // المواصفات التفصيلية — حسب نوع العرض
@@ -897,7 +897,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                     ],
                     if ((offer.specs['details'] ?? '').toString().trim().isNotEmpty) ...[
                       const SizedBox(height: 10),
-                      Text(offer.specs['details'].toString(), style: TextStyle(color: AppTheme.textWhite, fontSize: 14, height: 1.5)),
+                      Text(offer.specs['details'].toString(), style: const TextStyle(color: AppTheme.textWhite, fontSize: 14, height: 1.5)),
                     ],
                   ],
                   const SizedBox(height: 20),
@@ -1007,7 +1007,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                     margin: const EdgeInsets.only(bottom: 25),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
+                      gradient: const LinearGradient(
                         colors: [
                           Color(0xFF1A160A),
                           AppTheme.surfaceBlack,
@@ -1052,7 +1052,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                           ],
                         ),
                         const SizedBox(height: 12),
-                        Text(
+                        const Text(
                           'يقدم المكتب العقاري خدمة التوثيق القانوني المأجور وتنظيم العقود أصولاً لضمان حق الطرفين. عند تقديم طلب إتمام المعاملة، يتولى فريقنا القانوني تدقيق صحة سندات الملكية (طابو، حكم محكمة، مواصلات) وخلوها من الإشارات والنزاعات قبل إتمام الصفقة.',
                           style: TextStyle(
                             color: AppTheme.textWhite,
@@ -1161,9 +1161,9 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                         Expanded(
                           child: ElevatedButton.icon(
                             onPressed: () => _showAdminPrioritySheet(context, offer),
-                            icon: Icon(Icons.admin_panel_settings,
+                            icon: const Icon(Icons.admin_panel_settings,
                                 color: AppTheme.textWhite),
-                            label: Text('أولوية (إدارة)',
+                            label: const Text('أولوية (إدارة)',
                                 style: TextStyle(
                                     color: AppTheme.textWhite,
                                     fontWeight: FontWeight.bold, fontSize: 13)),
@@ -1180,7 +1180,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                             backgroundColor: AppTheme.errorRed.withOpacity(0.8),
                             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
                           ),
-                          child: Icon(Icons.delete_forever, color: AppTheme.textWhite),
+                          child: const Icon(Icons.delete_forever, color: AppTheme.textWhite),
                         ),
                       ],
                     ),
@@ -1303,7 +1303,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
         const SizedBox(width: 8),
         Expanded(
             child: Text('$label: $value',
-                style: TextStyle(color: AppTheme.textWhite, fontSize: 14),
+                style: const TextStyle(color: AppTheme.textWhite, fontSize: 14),
                 overflow: TextOverflow.ellipsis)),
       ]),
     );

@@ -125,12 +125,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           Icon(icon, color: AppTheme.primaryGold, size: 26),
           const SizedBox(height: 8),
           Text(value,
-              style: TextStyle(
+              style: const TextStyle(
                   color: AppTheme.textWhite,
                   fontSize: 22,
                   fontWeight: FontWeight.bold)),
           Text(label,
-              style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
         ],
       ),
     );
@@ -147,7 +147,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(label,
-                  style: TextStyle(color: AppTheme.textWhite, fontSize: 13)),
+                  style: const TextStyle(color: AppTheme.textWhite, fontSize: 13)),
               Text('$value (${(pct * 100).toStringAsFixed(0)}%)',
                   style: TextStyle(color: color, fontSize: 12)),
             ],
@@ -181,7 +181,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label,
-              style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: 13)),
           const SizedBox(height: 6),
           Text(value,
               style: TextStyle(

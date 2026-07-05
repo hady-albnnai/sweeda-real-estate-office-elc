@@ -82,7 +82,7 @@ class _DealsManagementScreenState extends State<DealsManagementScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('إجمالي عمولات المكتب',
+                    const Text('إجمالي عمولات المكتب',
                         style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
                     Text('${_totalCommission.toStringAsFixed(0)} \$',
                         style: const TextStyle(
@@ -111,7 +111,7 @@ class _DealsManagementScreenState extends State<DealsManagementScreen> {
                 ? const Center(
                     child: CircularProgressIndicator(color: AppTheme.primaryGold))
                 : _filtered.isEmpty
-                    ? Center(
+                    ? const Center(
                         child: Text('لا توجد صفقات',
                             style: TextStyle(color: AppTheme.textGrey)))
                     : RefreshIndicator(
@@ -166,7 +166,7 @@ class _DealsManagementScreenState extends State<DealsManagementScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('صفقة #${_short(d.id)}',
-                  style: TextStyle(
+                  style: const TextStyle(
                       color: AppTheme.textWhite, fontWeight: FontWeight.bold)),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
@@ -221,13 +221,13 @@ class _DealsManagementScreenState extends State<DealsManagementScreen> {
             TextField(
               controller: comCtrl,
               keyboardType: TextInputType.number,
-              style: TextStyle(color: AppTheme.textWhite),
+              style: const TextStyle(color: AppTheme.textWhite),
               decoration: const InputDecoration(labelText: 'قيمة العمولة (\$)'),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: noteCtrl,
-              style: TextStyle(color: AppTheme.textWhite),
+              style: const TextStyle(color: AppTheme.textWhite),
               decoration: const InputDecoration(labelText: 'ملاحظة (اختياري)'),
             ),
           ],
@@ -235,7 +235,7 @@ class _DealsManagementScreenState extends State<DealsManagementScreen> {
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: Text('إلغاء', style: TextStyle(color: AppTheme.textGrey))),
+              child: const Text('إلغاء', style: TextStyle(color: AppTheme.textGrey))),
           ElevatedButton(
               onPressed: () => Navigator.pop(ctx, true),
               child: const Text('تأكيد')),
@@ -261,7 +261,7 @@ class _DealsManagementScreenState extends State<DealsManagementScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label,
-              style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: 13)),
           Flexible(
             child: Text(value,
                 textAlign: TextAlign.left,

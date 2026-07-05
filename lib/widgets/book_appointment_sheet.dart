@@ -242,13 +242,13 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               const Icon(Icons.lock_outline, color: AppTheme.primaryGold, size: 60),
               const SizedBox(height: 16),
-              Text('يجب تسجيل الدخول',
+              const Text('يجب تسجيل الدخول',
                   style: TextStyle(
                       color: AppTheme.textWhite,
                       fontSize: 20,
                       fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              Text(
+              const Text(
                 'لحجز موعد معاينة يجب أن تكون مسجّلاً في التطبيق.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: AppTheme.textGrey, fontSize: 14, height: 1.5),
@@ -268,7 +268,7 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
               const SizedBox(height: 10),
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text('لاحقاً',
+                child: const Text('لاحقاً',
                     style: TextStyle(color: AppTheme.textGrey)),
               ),
             ]),
@@ -305,7 +305,7 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
               ),
             ),
             const SizedBox(height: 20),
-            Text('حجز موعد معاينة',
+            const Text('حجز موعد معاينة',
                 style: TextStyle(
                     color: AppTheme.textWhite,
                     fontSize: 20,
@@ -354,7 +354,7 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
             const SizedBox(height: 16),
 
             if (!hasAvailability)
-              Center(
+              const Center(
                 child: Text('لا توجد مواعيد متاحة حالياً للمعاينة.',
                     style: TextStyle(color: AppTheme.textGrey)),
               )
@@ -370,7 +370,7 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
                       '${context.read<ConfigProvider>().config?.apptAnyFrom ?? '09:00'}'
                       ' حتى '
                       '${context.read<ConfigProvider>().config?.apptAnyTo ?? '21:00'}',
-                      style: TextStyle(
+                      style: const TextStyle(
                           color: AppTheme.textGrey, fontSize: 12, height: 1.4),
                     ),
                   ),
@@ -520,7 +520,7 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
                   ),
                 if (_bookedSlots.isNotEmpty && !_loadingSlots) ...[
                   const SizedBox(height: 8),
-                  Row(
+                  const Row(
                     children: [
                       Icon(Icons.info_outline, size: 14, color: AppTheme.textGrey),
                       SizedBox(width: 4),

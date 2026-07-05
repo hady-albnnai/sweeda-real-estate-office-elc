@@ -75,7 +75,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
         children: [
           Icon(Icons.assignment_outlined, size: 80, color: AppTheme.textGrey.withOpacity(0.3)),
           const SizedBox(height: 20),
-          Text('ما عندك طلبات حالياً', style: TextStyle(color: AppTheme.textGrey, fontSize: 16)),
+          const Text('ما عندك طلبات حالياً', style: TextStyle(color: AppTheme.textGrey, fontSize: 16)),
           const SizedBox(height: 20),
           ElevatedButton.icon(
             onPressed: () => context.push('/user/add-request'),
@@ -106,13 +106,13 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
         title: Text(
           // اسم العميل وهاتفه للإدارة وصاحب الطلب فقط — لا يظهر في القائمة
           '$typeText $elementText',
-          style: TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold),
+          style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 4),
-            Text('$typeText — $elementText', style: TextStyle(color: AppTheme.textGrey)),
+            Text('$typeText — $elementText', style: const TextStyle(color: AppTheme.textGrey)),
             if (req.prc > 0)
               Text('الميزانية: ${AppUtils.formatPrice(req.prc, currency: req.cur)}',
                   style: const TextStyle(color: AppTheme.primaryGold)),

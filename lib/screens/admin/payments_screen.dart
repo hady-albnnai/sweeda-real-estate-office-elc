@@ -101,7 +101,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                 ? const Center(
                     child: CircularProgressIndicator(color: AppTheme.primaryGold))
                 : _filtered.isEmpty
-                    ? Center(
+                    ? const Center(
                         child: Text('لا توجد مدفوعات',
                             style: TextStyle(color: AppTheme.textGrey)))
                     : RefreshIndicator(
@@ -215,7 +215,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 2),
                     child: Row(children: [
                       Text('السعر المفترض: ',
-                          style: TextStyle(
+                          style: const TextStyle(
                               color: AppTheme.textGrey, fontSize: 12)),
                       Text(expectedLabel,
                           style: TextStyle(
@@ -313,7 +313,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                 padding: const EdgeInsets.all(8),
                 child: Image.network(
                   finalUrl!,
-                  errorBuilder: (_, __, ___) => Padding(
+                  errorBuilder: (_, __, ___) => const Padding(
                     padding: EdgeInsets.all(24),
                     child: Text('تعذّر تحميل الصورة',
                         style: TextStyle(color: AppTheme.textGrey)),
@@ -369,11 +369,11 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label,
-              style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: 13)),
           Flexible(
             child: Text(value,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: AppTheme.textWhite, fontSize: 13)),
+                style: const TextStyle(color: AppTheme.textWhite, fontSize: 13)),
           ),
         ],
       ),

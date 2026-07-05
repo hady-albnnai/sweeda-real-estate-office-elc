@@ -55,7 +55,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('لوحة الإدارة',
+            const Text('لوحة الإدارة',
                 style: TextStyle(
                     color: AppTheme.textWhite,
                     fontSize: 18,
@@ -174,7 +174,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               '${_counts['pendingPayments'] ?? 0} دفعة · '
               '${_counts['openReports'] ?? 0} تبليغ · '
               '${_counts['pendingVerifications'] ?? 0} توثيق)',
-              style: TextStyle(color: AppTheme.textWhite, fontSize: 13),
+              style: const TextStyle(color: AppTheme.textWhite, fontSize: 13),
             ),
           ),
         ],
@@ -210,7 +210,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 Text(label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+                    style: const TextStyle(color: AppTheme.textGrey, fontSize: 11)),
                 const SizedBox(height: 2),
                 Text(value,
                     maxLines: 1,
@@ -223,7 +223,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 Text(sub,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: AppTheme.textGrey, fontSize: 9)),
+                    style: const TextStyle(color: AppTheme.textGrey, fontSize: 9)),
               ],
             ),
           ),
@@ -256,7 +256,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 color: AppTheme.textWhite,
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -268,7 +268,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: AppTheme.textGrey, fontSize: 10),
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: 10),
             ),
           ],
         ),

@@ -60,7 +60,7 @@ class _AdminSectionsScreenState extends State<AdminSectionsScreen> {
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                Text(
+                const Text(
                   'صفحات متابعة وإدارة وليست صفحات تنفيذ ميداني خاصة بالمنفذ أو المصور.',
                   style: TextStyle(color: AppTheme.textGrey, fontSize: 12),
                 ),
@@ -140,14 +140,14 @@ class _AdminSectionsScreenState extends State<AdminSectionsScreen> {
         backgroundColor: AppTheme.primaryGold.withOpacity(0.12),
         child: Icon(icon, color: AppTheme.primaryGold),
       ),
-      title: Text(title, style: TextStyle(color: AppTheme.textWhite, fontSize: 13)),
+      title: Text(title, style: const TextStyle(color: AppTheme.textWhite, fontSize: 13)),
       trailing: badge > 0
           ? CircleAvatar(
               radius: 11,
               backgroundColor: AppTheme.errorRed,
               child: Text('$badge', style: const TextStyle(color: Colors.white, fontSize: 10)),
             )
-          : Icon(Icons.chevron_left, color: AppTheme.textGrey),
+          : const Icon(Icons.chevron_left, color: AppTheme.textGrey),
       onTap: () => context.push(route),
     );
   }

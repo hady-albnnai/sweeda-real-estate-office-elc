@@ -104,7 +104,7 @@ class _LegalConsultationBookingScreenState extends State<LegalConsultationBookin
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
               ),
-              child: Row(
+              child: const Row(
                 children: [
                   Icon(Icons.gavel, color: AppTheme.primaryGold, size: 36),
                   SizedBox(width: 14),
@@ -143,7 +143,7 @@ class _LegalConsultationBookingScreenState extends State<LegalConsultationBookin
                           Expanded(
                             child: Text(
                               s['title'] as String,
-                              style: TextStyle(color: AppTheme.textWhite, fontSize: 15, fontWeight: FontWeight.bold),
+                              style: const TextStyle(color: AppTheme.textWhite, fontSize: 15, fontWeight: FontWeight.bold),
                             ),
                           ),
                           Container(
@@ -157,7 +157,7 @@ class _LegalConsultationBookingScreenState extends State<LegalConsultationBookin
                         ],
                       ),
                       const SizedBox(height: 8),
-                      Text(s['desc'] as String, style: TextStyle(color: AppTheme.textGrey, fontSize: 12, height: 1.5)),
+                      Text(s['desc'] as String, style: const TextStyle(color: AppTheme.textGrey, fontSize: 12, height: 1.5)),
                     ],
                   ),
                 ),
@@ -169,10 +169,10 @@ class _LegalConsultationBookingScreenState extends State<LegalConsultationBookin
             TextField(
               controller: _subjectCtrl,
               maxLines: 4,
-              style: TextStyle(color: AppTheme.textWhite),
+              style: const TextStyle(color: AppTheme.textWhite),
               decoration: InputDecoration(
                 hintText: 'اكتب تفاصيل استفسارك أو رقم العقار/السيارة المطلوب تنظيم عقدها...',
-                hintStyle: TextStyle(color: AppTheme.textGrey),
+                hintStyle: const TextStyle(color: AppTheme.textGrey),
                 filled: true,
                 fillColor: AppTheme.surfaceBlack,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
@@ -200,7 +200,7 @@ class _LegalConsultationBookingScreenState extends State<LegalConsultationBookin
                   children: [
                     const Text('💬 الاتصال الفوري المعتمد (بعد اعتماد الدفع):', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 14)),
                     const SizedBox(height: 8),
-                    Text('بمجرد قيام الإدارة بتدقيق الإيصال، يُفتح لك زر التواصل المباشر بالرسائل الصوتية عبر واتساب مع المحامي المخصص:', style: TextStyle(color: AppTheme.textWhite, fontSize: 12, height: 1.4)),
+                    const Text('بمجرد قيام الإدارة بتدقيق الإيصال، يُفتح لك زر التواصل المباشر بالرسائل الصوتية عبر واتساب مع المحامي المخصص:', style: TextStyle(color: AppTheme.textWhite, fontSize: 12, height: 1.4)),
                     const SizedBox(height: 12),
                     SizedBox(
                       width: double.infinity,

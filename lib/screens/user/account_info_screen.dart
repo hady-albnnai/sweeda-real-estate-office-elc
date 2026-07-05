@@ -19,7 +19,7 @@ class AccountInfoScreen extends StatelessWidget {
     final user = auth.userModel;
 
     if (user == null) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: AppTheme.scaffoldBackground,
         body: Center(
             child: Text('جاري التحميل...',
@@ -305,7 +305,7 @@ class AccountInfoScreen extends StatelessWidget {
           Flexible(
             child: Text(
               value,
-              style: TextStyle(
+              style: const TextStyle(
                 color: AppTheme.textWhite,
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
@@ -395,7 +395,7 @@ class AccountInfoScreen extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             subtitle,
-            style: TextStyle(
+            style: const TextStyle(
               color: AppTheme.textGrey,
               fontSize: 12,
               height: 1.5,
@@ -457,9 +457,9 @@ class AccountInfoScreen extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('طلب التوثيق الرسمي',
+        title: const Text('طلب التوثيق الرسمي',
             style: TextStyle(color: AppTheme.textWhite)),
-        content: Text(
+        content: const Text(
           'سيتم إرسال بياناتك للإدارة لمراجعتها واعتمادها. '
           'بعد الاعتماد ستحصل على شارة "موثق ✓" في كل عروضك.\n\nهل تريد المتابعة؟',
           style: TextStyle(color: AppTheme.textGrey, height: 1.5),
@@ -467,7 +467,7 @@ class AccountInfoScreen extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('إلغاء',
+            child: const Text('إلغاء',
                 style: TextStyle(color: AppTheme.textGrey)),
           ),
           ElevatedButton(
@@ -547,7 +547,7 @@ class AccountInfoScreen extends StatelessWidget {
             hasPassword
                 ? 'كلمة المرور مُعيّنة — يمكنك تغييرها'
                 : 'لم يتم تعيين كلمة مرور بعد',
-            style: TextStyle(color: AppTheme.textGrey, fontSize: 12),
+            style: const TextStyle(color: AppTheme.textGrey, fontSize: 12),
           ),
           const SizedBox(height: 10),
           SizedBox(
@@ -590,7 +590,7 @@ class AccountInfoScreen extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           hasOld ? 'تغيير كلمة المرور' : 'تعيين كلمة مرور',
-          style: TextStyle(color: AppTheme.textWhite, fontSize: 16),
+          style: const TextStyle(color: AppTheme.textWhite, fontSize: 16),
         ),
         content: SingleChildScrollView(
           child: Column(
@@ -600,7 +600,7 @@ class AccountInfoScreen extends StatelessWidget {
                 TextField(
                   controller: oldCtrl,
                   obscureText: true,
-                  style: TextStyle(color: AppTheme.textWhite),
+                  style: const TextStyle(color: AppTheme.textWhite),
                   decoration: const InputDecoration(
                     labelText: 'كلمة المرور الحالية',
                     prefixIcon:
@@ -611,7 +611,7 @@ class AccountInfoScreen extends StatelessWidget {
               TextField(
                 controller: newCtrl,
                 obscureText: true,
-                style: TextStyle(color: AppTheme.textWhite),
+                style: const TextStyle(color: AppTheme.textWhite),
                 decoration: const InputDecoration(
                   labelText: 'كلمة المرور الجديدة',
                   prefixIcon:
@@ -622,7 +622,7 @@ class AccountInfoScreen extends StatelessWidget {
               TextField(
                 controller: confirmCtrl,
                 obscureText: true,
-                style: TextStyle(color: AppTheme.textWhite),
+                style: const TextStyle(color: AppTheme.textWhite),
                 decoration: const InputDecoration(
                   labelText: 'تأكيد كلمة المرور',
                   prefixIcon:
@@ -635,7 +635,7 @@ class AccountInfoScreen extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('إلغاء',
+            child: const Text('إلغاء',
                 style: TextStyle(color: AppTheme.textGrey)),
           ),
           ElevatedButton(
