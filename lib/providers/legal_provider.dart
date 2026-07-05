@@ -154,14 +154,54 @@ class LegalProvider with ChangeNotifier {
     notifyListeners(); return _expeditingTasks;
   }
 
-  Future<bool> updateChecklistItem({required String taskId, required String itemKey, required int status, String inputValue = '', String attachmentUrl = '', String notes = ''}) async {
+  Future<bool> updateChecklistItem({
+    required String taskId,
+    required String itemKey,
+    required int status,
+    String inputValue = '',
+    String attachmentUrl = '',
+    String attachmentBase64 = '',
+    String attachmentContentType = 'image/jpeg',
+    String notes = '',
+  }) async {
     try {
       final res = await SupabaseService().invokeFunction('legal-actions', body: {
-        'action': 'update_checklist_item', 'task_id': taskId, 'item_key': itemKey,
-        'status': status, 'input_value': inputValue, 'attachment_url': attachmentUrl, 'notes': notes,
+        'action': 'update_checklist_item',
+        'task_id': taskId,
+        'item_key': itemKey,
+        'status': status,
+        'input_value': inputValue,
+        'attachment_url': attachmentUrl,
+        if (attachmentBase64.isNotEmpty) 'attachment_base64': attachmentBase64,
+        if (attachmentBase64.isNotEmpty) 'attachment_content_type': attachmentContentType,
+        'notes': notes,
       });
       final data = res.data as Map<String, dynamic>?;
-      return data != null && data['success'] == true;
-    } catch (e) { return false; }
+      if (data != null && data['success'] == true) return true;
+      _error = data?['error']?.toString() ?? 'فشل تحديث الوثيقة';
+      return false;
+    } catch (e) { _error = e.toString(); return false; }
+  }
+
+  Future<bool> requestChecklistRevision({
+    required String taskId,
+    required String itemKey,
+    String notes = '',
+  }) async {
+    try {
+      final res = await SupabaseService().invokeFunction('legal-actions', body: {
+        'action': 'request_checklist_revision',
+        'task_id': taskId,
+        'item_key': itemKey,
+        'revision_notes': notes,
+      });
+      final data = res.data as Map<String, dynamic>?;
+      if (data != null && data['success'] == true) {
+        await fetchLawyerTasks();
+        return true;
+      }
+      _error = data?['error']?.toString() ?? 'فشل طلب إعادة الوثيقة';
+      return false;
+    } catch (e) { _error = e.toString(); return false; }
   }
 }

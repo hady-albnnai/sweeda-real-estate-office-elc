@@ -23,6 +23,57 @@ function json(body: Record<string, unknown>, status = 200): Response {
   });
 }
 
+function base64ToUint8Array(base64: string): Uint8Array {
+  const clean = base64.includes(",") ? base64.split(",").pop() ?? "" : base64;
+  const binary = atob(clean);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+function safeImageContentType(value: unknown): string {
+  const contentType = typeof value === "string" ? value.toLowerCase() : "image/jpeg";
+  return ["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(contentType)
+    ? (contentType === "image/jpg" ? "image/jpeg" : contentType)
+    : "image/jpeg";
+}
+
+function safeStorageName(value: string): string {
+  return value.replace(/[^a-zA-Z0-9_.-]/g, "_").slice(0, 80) || "item";
+}
+
+async function signExpeditingTaskAttachments(
+  supabaseAdmin: SupabaseAdmin,
+  tasks: unknown,
+): Promise<unknown[]> {
+  const list = Array.isArray(tasks) ? tasks : [];
+  const result: unknown[] = [];
+  for (const rawTask of list) {
+    const task = rawTask && typeof rawTask === "object" ? { ...(rawTask as Record<string, unknown>) } : rawTask;
+    if (!task || typeof task !== "object") {
+      result.push(task);
+      continue;
+    }
+    const record = task as Record<string, unknown>;
+    const checklist = Array.isArray(record.checklist) ? record.checklist : [];
+    record.checklist = await Promise.all(checklist.map(async (rawItem) => {
+      const item = rawItem && typeof rawItem === "object" ? { ...(rawItem as Record<string, unknown>) } : rawItem;
+      if (!item || typeof item !== "object") return item;
+      const itemRecord = item as Record<string, unknown>;
+      const path = (itemRecord.attachment_url ?? "").toString();
+      if (path && !path.startsWith("http")) {
+        const { data } = await supabaseAdmin.storage
+          .from("expediting_docs")
+          .createSignedUrl(path, 3600);
+        if (data?.signedUrl) itemRecord.attachment_signed_url = data.signedUrl;
+      }
+      return itemRecord;
+    }));
+    result.push(record);
+  }
+  return result;
+}
+
 async function getUserRole(
   supabaseAdmin: SupabaseAdmin,
   uid: string,
@@ -158,10 +209,34 @@ serve(async (req) => {
       const itemKey = (body.item_key ?? body.itemKey)?.toString() ?? "";
       const status = Number(body.status ?? 0);
       const inputValue = (body.input_value ?? body.inputValue ?? "").toString();
-      const attachmentUrl = (body.attachment_url ?? body.attachmentUrl ?? "").toString();
+      let attachmentUrl = (body.attachment_url ?? body.attachmentUrl ?? "").toString();
+      const attachmentBase64 = (body.attachment_base64 ?? body.attachmentBase64 ?? "").toString();
       const notes = (body.notes ?? "").toString();
 
       if (!taskId || !itemKey) return json({ success: false, error: "TASK_ID_AND_ITEM_KEY_REQUIRED" }, 400);
+
+      const { data: taskRow, error: taskError } = await supabaseAdmin
+        .from("expediting_tasks")
+        .select("id, lawyer_uid, expediter_uid")
+        .eq("id", taskId)
+        .single();
+      if (taskError || !taskRow) return json({ success: false, error: "TASK_NOT_FOUND" }, 404);
+      if (taskRow.lawyer_uid !== uid && taskRow.expediter_uid !== uid && !canManageLawyerProfiles(role)) {
+        return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
+      }
+
+      if (attachmentBase64) {
+        const contentType = safeImageContentType(body.attachment_content_type ?? body.attachmentContentType);
+        const ext = contentType === "image/png" ? "png" : contentType === "image/webp" ? "webp" : "jpg";
+        const bytes = base64ToUint8Array(attachmentBase64);
+        if (bytes.length > 8 * 1024 * 1024) return json({ success: false, error: "ATTACHMENT_TOO_LARGE" }, 413);
+        const path = `${taskId}/${safeStorageName(itemKey)}_${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabaseAdmin.storage
+          .from("expediting_docs")
+          .upload(path, bytes, { contentType, cacheControl: "3600", upsert: true });
+        if (uploadError) return json({ success: false, error: `ATTACHMENT_UPLOAD_FAILED: ${uploadError.message}` }, 400);
+        attachmentUrl = path;
+      }
 
       const { data, error } = await supabaseAdmin.rpc("update_expediting_checklist_item", {
         p_actor_uid: uid,
@@ -234,6 +309,23 @@ serve(async (req) => {
       return json(data as Record<string, unknown>);
     }
 
+    if (action === "request_checklist_revision") {
+      if (!isLawyer(role)) return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
+      const taskId = (body.task_id ?? body.taskId)?.toString() ?? "";
+      const itemKey = (body.item_key ?? body.itemKey)?.toString() ?? "";
+      const revisionNotes = (body.revision_notes ?? body.revisionNotes ?? body.notes ?? "").toString();
+      if (!taskId || !itemKey) return json({ success: false, error: "TASK_ID_AND_ITEM_KEY_REQUIRED" }, 400);
+
+      const { data, error } = await supabaseAdmin.rpc("request_expediting_item_revision_internal", {
+        p_lawyer_uid: uid,
+        p_task_id: taskId,
+        p_item_key: itemKey,
+        p_revision_notes: revisionNotes,
+      });
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json(data as Record<string, unknown>);
+    }
+
     if (action === "approve_expediting_task") {
       if (!isLawyer(role)) return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
       const taskId = (body.task_id ?? body.taskId)?.toString() ?? "";
@@ -253,7 +345,8 @@ serve(async (req) => {
         p_lawyer_uid: uid,
       });
       if (error) return json({ success: false, error: error.message }, 400);
-      return json({ success: true, tasks: data ?? [] });
+      const signedTasks = await signExpeditingTaskAttachments(supabaseAdmin, data ?? []);
+      return json({ success: true, tasks: signedTasks });
     }
 
     if (action === "get_lawyer_appointments") {
@@ -271,7 +364,8 @@ serve(async (req) => {
         p_expediter_uid: uid,
       });
       if (error) return json({ success: false, error: error.message }, 400);
-      return json({ success: true, tasks: data ?? [] });
+      const signedTasks = await signExpeditingTaskAttachments(supabaseAdmin, data ?? []);
+      return json({ success: true, tasks: signedTasks });
     }
 
     return json({ success: false, error: "UNKNOWN_ACTION" }, 400);

@@ -697,6 +697,127 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
     );
   }
 
+  Future<void> _requestRevision(ExpeditingTaskModel task, ChecklistItemModel item) async {
+    final ctrl = TextEditingController(text: item.revisionNotes);
+    final notes = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surfaceBlack,
+        title: Text('إعادة ${item.title}', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 16)),
+        content: TextField(
+          controller: ctrl,
+          maxLines: 3,
+          style: const TextStyle(color: AppTheme.textWhite),
+          decoration: const InputDecoration(labelText: 'سبب الإعادة / المطلوب تصحيحه'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء', style: TextStyle(color: AppTheme.textGrey))),
+          ElevatedButton(onPressed: () => Navigator.pop(ctx, ctrl.text.trim()), child: const Text('إرسال للمعقب')),
+        ],
+      ),
+    );
+    ctrl.dispose();
+    if (notes == null || !mounted) return;
+    final ok = await context.read<LegalProvider>().requestChecklistRevision(
+      taskId: task.id,
+      itemKey: item.key,
+      notes: notes,
+    );
+    if (!mounted) return;
+    if (ok) {
+      _snack('تمت إعادة الوثيقة للمعقب مع التعليمات');
+      if (Navigator.canPop(context)) Navigator.pop(context);
+    } else {
+      _snack(context.read<LegalProvider>().error ?? 'فشل طلب إعادة الوثيقة', bg: AppTheme.errorRed);
+    }
+  }
+
+  void _showTaskReviewDialog(ExpeditingTaskModel task) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surfaceBlack,
+        title: Text('تفاصيل مهمة التعقيب', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 16)),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(task.itemType == 0 ? 'نوع المهمة: عقار' : 'نوع المهمة: سيارة', style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold)),
+                if (task.targetPropertyNum.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text('الرقم/المرجع: ${task.targetPropertyNum}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                ],
+                if (task.targetZone.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text('المنطقة: ${task.targetZone}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                ],
+                if (task.lawyerNotes.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text('تعليمات عامة: ${task.lawyerNotes}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                ],
+                const SizedBox(height: 12),
+                ...task.checklist.map((item) {
+                  final imageUrl = item.attachmentSignedUrl.isNotEmpty
+                      ? item.attachmentSignedUrl
+                      : (item.attachmentUrl.startsWith('http') ? item.attachmentUrl : '');
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.scaffoldBackground,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: item.status == 2 ? Colors.green.withOpacity(0.45) : AppTheme.primaryGold.withOpacity(0.18)),
+                    ),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Row(children: [
+                        Icon(item.status == 2 ? Icons.check_circle : Icons.pending_actions, color: item.status == 2 ? Colors.green : AppTheme.primaryGold, size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(child: Text(item.title, style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold))),
+                      ]),
+                      const SizedBox(height: 6),
+                      Text('عدد النسخ المطلوبة: ${item.requiredCopies}', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 12)),
+                      if (item.lawyerInstructions.isNotEmpty) Text('تعليماتك: ${item.lawyerInstructions}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                      if (item.inputValue.isNotEmpty) Text('بيانات المعقب: ${item.inputValue}', style: const TextStyle(color: AppTheme.textWhite, fontSize: 12)),
+                      if (item.notes.isNotEmpty) Text('ملاحظات المعقب: ${item.notes}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                      if (item.revisionNotes.isNotEmpty) Text('طلب إعادة سابق: ${item.revisionNotes}', style: const TextStyle(color: AppTheme.errorRed, fontSize: 12)),
+                      if (imageUrl.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.network(imageUrl, height: 170, width: double.infinity, fit: BoxFit.cover),
+                        ),
+                      ] else ...[
+                        const SizedBox(height: 8),
+                        const Text('لا توجد صورة مرفقة بعد', style: TextStyle(color: AppTheme.errorRed, fontSize: 12)),
+                      ],
+                      if (task.status == 2) ...[
+                        const SizedBox(height: 8),
+                        OutlinedButton.icon(
+                          onPressed: () => _requestRevision(task, item),
+                          icon: const Icon(Icons.replay, color: AppTheme.errorRed, size: 18),
+                          label: const Text('إعادة هذا السند للمعقب', style: TextStyle(color: AppTheme.errorRed)),
+                          style: OutlinedButton.styleFrom(side: const BorderSide(color: AppTheme.errorRed)),
+                        ),
+                      ],
+                    ]),
+                  );
+                }),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إغلاق', style: TextStyle(color: AppTheme.textGrey))),
+          if (task.status == 2)
+            ElevatedButton(onPressed: () { Navigator.pop(ctx); _approveTask(task); }, child: const Text('اعتماد المهمة')),
+        ],
+      ),
+    );
+  }
+
   Future<void> _approveTask(ExpeditingTaskModel task) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -758,12 +879,19 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
                   decoration: BoxDecoration(color: Colors.green.withOpacity(0.2), borderRadius: BorderRadius.circular(10)),
                   child: const Text('معتمد', style: TextStyle(color: Colors.green, fontSize: 11, fontWeight: FontWeight.bold)))],
             ]),
+            const SizedBox(height: 12),
+            SizedBox(width: double.infinity, child: OutlinedButton.icon(
+              onPressed: () => _showTaskReviewDialog(t),
+              icon: const Icon(Icons.visibility, color: AppTheme.primaryGold),
+              label: const Text('فتح تفاصيل المهمة والوثائق', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
+              style: OutlinedButton.styleFrom(side: const BorderSide(color: AppTheme.primaryGold)),
+            )),
             if (t.status == 2) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               SizedBox(width: double.infinity, child: ElevatedButton.icon(
-                onPressed: () => _approveTask(t),
+                onPressed: () => _showTaskReviewDialog(t),
                 icon: const Icon(Icons.verified, color: AppTheme.deepBlack),
-                label: const Text('اعتماد إنجاز المعقب وإشعاره', style: TextStyle(color: AppTheme.deepBlack, fontWeight: FontWeight.bold)),
+                label: const Text('مراجعة ثم اعتماد إنجاز المعقب', style: TextStyle(color: AppTheme.deepBlack, fontWeight: FontWeight.bold)),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
               )),
             ],

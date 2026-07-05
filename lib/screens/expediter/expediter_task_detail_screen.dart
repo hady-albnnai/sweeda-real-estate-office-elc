@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/expediting_task_model.dart';
 import '../../providers/legal_provider.dart';
@@ -29,7 +31,15 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
     AppTheme.showSnackBar(context, SnackBar(content: Text(m)));
   }
 
-  Future<void> _updateItem(ChecklistItemModel item, int newSts, String inputVal, String attachUrl, String notes) async {
+  Future<void> _updateItem(
+    ChecklistItemModel item,
+    int newSts,
+    String inputVal,
+    String attachUrl,
+    String notes, {
+    String attachmentBase64 = '',
+    String attachmentContentType = 'image/jpeg',
+  }) async {
     final prov = context.read<LegalProvider>();
     final ok = await prov.updateChecklistItem(
       taskId: widget.task.id,
@@ -37,6 +47,8 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
       status: newSts,
       inputValue: inputVal,
       attachmentUrl: attachUrl,
+      attachmentBase64: attachmentBase64,
+      attachmentContentType: attachmentContentType,
       notes: notes,
     );
     if (ok && mounted) {
@@ -49,8 +61,10 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
             title: item.title,
             status: newSts,
             inputValue: inputVal,
-            attachmentUrl: attachUrl,
+            attachmentUrl: attachmentBase64.isNotEmpty ? attachUrl : (attachUrl.isNotEmpty ? attachUrl : item.attachmentUrl),
+            attachmentSignedUrl: attachmentBase64.isNotEmpty ? '' : item.attachmentSignedUrl,
             notes: notes,
+            revisionNotes: item.revisionNotes,
             requiredCopies: item.requiredCopies,
             lawyerInstructions: item.lawyerInstructions,
           );
@@ -114,11 +128,15 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
     }
   }
 
-  void _showEditDialog(ChecklistItemModel item) {
+  void _showEditDialog(ChecklistItemModel item, {bool forceDone = false}) {
     final inputCtrl = TextEditingController(text: item.inputValue);
-    final attachCtrl = TextEditingController(text: item.attachmentUrl);
     final notesCtrl = TextEditingController(text: item.notes);
-    int selectedSts = item.status;
+    int selectedSts = forceDone ? 2 : item.status;
+    String attachmentBase64 = '';
+    String attachmentName = '';
+    final existingImage = item.attachmentSignedUrl.isNotEmpty
+        ? item.attachmentSignedUrl
+        : (item.attachmentUrl.startsWith('http') ? item.attachmentUrl : '');
 
     showDialog(
       context: context,
@@ -144,6 +162,10 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
                       const SizedBox(height: 6),
                       Text('تعليمات المحامي: ${item.lawyerInstructions}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12, height: 1.35)),
                     ],
+                    if (item.revisionNotes.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text('طلب إعادة من المحامي: ${item.revisionNotes}', style: const TextStyle(color: AppTheme.errorRed, fontSize: 12, height: 1.35)),
+                    ],
                   ]),
                 ),
                 const SizedBox(height: 12),
@@ -167,10 +189,42 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
                   decoration: const InputDecoration(labelText: 'رقم العقار / رقم السيارة / الصحيفة'),
                 ),
                 const SizedBox(height: 12),
-                TextField(
-                  controller: attachCtrl,
-                  style: const TextStyle(color: AppTheme.textWhite),
-                  decoration: const InputDecoration(labelText: 'رابط صورة السند المستخرج'),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppTheme.scaffoldBackground,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppTheme.primaryGold.withOpacity(0.22)),
+                  ),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    const Text('صورة السند / الوثيقة المستخرجة', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 13)),
+                    const SizedBox(height: 8),
+                    if (attachmentBase64.isNotEmpty)
+                      Text('تم اختيار صورة: $attachmentName', style: const TextStyle(color: Colors.green, fontSize: 12))
+                    else if (existingImage.isNotEmpty)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(existingImage, height: 130, width: double.infinity, fit: BoxFit.cover),
+                      )
+                    else
+                      const Text('لم يتم إرفاق صورة بعد', style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      onPressed: () async {
+                        final file = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 82, maxWidth: 1600);
+                        if (file == null) return;
+                        final bytes = await file.readAsBytes();
+                        setDlg(() {
+                          attachmentBase64 = base64Encode(bytes);
+                          attachmentName = file.name;
+                        });
+                      },
+                      icon: const Icon(Icons.image_search, color: AppTheme.primaryGold),
+                      label: Text(existingImage.isNotEmpty || attachmentBase64.isNotEmpty ? 'استبدال الصورة' : 'إرفاق صورة من المعرض', style: const TextStyle(color: AppTheme.primaryGold)),
+                      style: OutlinedButton.styleFrom(side: const BorderSide(color: AppTheme.primaryGold)),
+                    ),
+                  ]),
                 ),
                 const SizedBox(height: 12),
                 TextField(
@@ -186,8 +240,19 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
             TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء', style: TextStyle(color: AppTheme.textGrey))),
             ElevatedButton(
               onPressed: () {
+                if (selectedSts == 2 && existingImage.isEmpty && attachmentBase64.isEmpty) {
+                  AppTheme.showSnackBar(context, const SnackBar(content: Text('يجب إرفاق صورة السند قبل تعليمه كمكتمل')));
+                  return;
+                }
                 Navigator.pop(ctx);
-                _updateItem(item, selectedSts, inputCtrl.text.trim(), attachCtrl.text.trim(), notesCtrl.text.trim());
+                _updateItem(
+                  item,
+                  selectedSts,
+                  inputCtrl.text.trim(),
+                  item.attachmentUrl,
+                  notesCtrl.text.trim(),
+                  attachmentBase64: attachmentBase64,
+                );
               },
               child: const Text('حفظ الإنجاز'),
             ),
@@ -258,16 +323,32 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
                       const SizedBox(height: 6),
                       Text('البيانات المُدخلة: ${item.inputValue}', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 13, fontWeight: FontWeight.w600)),
                     ],
+                    if (item.revisionNotes.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text('طلب إعادة من المحامي: ${item.revisionNotes}', style: const TextStyle(color: AppTheme.errorRed, fontSize: 12, height: 1.35)),
+                    ],
                     if (item.notes.isNotEmpty) ...[
                       const SizedBox(height: 4),
                       Text('ملاحظات: ${item.notes}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                    ],
+                    if (item.attachmentSignedUrl.isNotEmpty || item.attachmentUrl.startsWith('http')) ...[
+                      const SizedBox(height: 8),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Image.network(
+                          item.attachmentSignedUrl.isNotEmpty ? item.attachmentSignedUrl : item.attachmentUrl,
+                          height: 120,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
                     ],
                     const SizedBox(height: 12),
                     Row(
                       children: [
                         Expanded(
                           child: ElevatedButton.icon(
-                            onPressed: isDone ? null : () => _updateItem(item, 2, item.inputValue, item.attachmentUrl, item.notes),
+                            onPressed: isDone ? null : () => _showEditDialog(item, forceDone: true),
                             icon: const Icon(Icons.check_circle_outline, size: 16),
                             label: const Text('تم الاستخراج ✔️', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                             style: ElevatedButton.styleFrom(

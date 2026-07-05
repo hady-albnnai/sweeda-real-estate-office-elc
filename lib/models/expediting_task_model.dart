@@ -3,8 +3,10 @@ class ChecklistItemModel {
   final String title;
   final int status; // 0: مطلوب، 1: قيد الاستخراج، 2: تم الاستخراج والرفع، 3: عائق قانوني
   final String inputValue; // حقل الكتابة التفاعلي مثل رقم السيارة أو العقار
-  final String attachmentUrl; // رابط صورة السند المرفوعة
+  final String attachmentUrl; // مسار صورة السند الخاصة أو رابط قديم
+  final String attachmentSignedUrl; // رابط مؤقت للعرض من السيرفر
   final String notes; // ملاحظات المعقب الميدانية
+  final String revisionNotes; // ملاحظات المحامي عند طلب إعادة الوثيقة
   final int requiredCopies; // عدد النسخ المطلوبة من المحامي
   final String lawyerInstructions; // تعليمات المحامي الخاصة بهذه الوثيقة
 
@@ -14,7 +16,9 @@ class ChecklistItemModel {
     this.status = 0,
     this.inputValue = '',
     this.attachmentUrl = '',
+    this.attachmentSignedUrl = '',
     this.notes = '',
+    this.revisionNotes = '',
     this.requiredCopies = 1,
     this.lawyerInstructions = '',
   });
@@ -26,7 +30,9 @@ class ChecklistItemModel {
       status: int.tryParse(map['status']?.toString() ?? '0') ?? 0,
       inputValue: (map['input_value'] ?? '').toString(),
       attachmentUrl: (map['attachment_url'] ?? '').toString(),
+      attachmentSignedUrl: (map['attachment_signed_url'] ?? '').toString(),
       notes: (map['notes'] ?? '').toString(),
+      revisionNotes: (map['revision_notes'] ?? '').toString(),
       requiredCopies: int.tryParse((map['required_copies'] ?? map['copies'] ?? 1).toString()) ?? 1,
       lawyerInstructions: (map['lawyer_instructions'] ?? map['instructions'] ?? '').toString(),
     );
@@ -39,7 +45,9 @@ class ChecklistItemModel {
       'status': status,
       'input_value': inputValue,
       'attachment_url': attachmentUrl,
+      'attachment_signed_url': attachmentSignedUrl,
       'notes': notes,
+      'revision_notes': revisionNotes,
       'required_copies': requiredCopies,
       'lawyer_instructions': lawyerInstructions,
     };

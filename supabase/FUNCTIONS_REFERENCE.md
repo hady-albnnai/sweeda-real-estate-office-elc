@@ -2142,3 +2142,77 @@ supabase/migrations/2026_07_05_rls_service_role_policy_cleanup.sql
 | RPC مباشر إلى `complete_expediting_task_internal` عبر anon | `permission denied` |
 | RPC مباشر إلى `approve_expediting_task_internal` عبر anon | `permission denied` |
 | RPC مباشر إلى `create_expediting_task_internal` عبر anon | `permission denied` |
+
+---
+
+## ⚖️ تحديث تعقيب المعاملات — صور الوثائق ومراجعة المحامي 2026-07-05
+
+تمت إضافة bucket خاص:
+
+```text
+expediting_docs
+```
+
+الغرض منه حفظ صور السندات/الوثائق التي يرفعها المعقب. لا تُخزن روابط عامة داخل قاعدة البيانات، بل مسارات خاصة يتم تحويلها إلى signed URLs مؤقتة عند جلب المهام عبر `legal-actions`.
+
+### حقول checklist الموسعة
+
+كل بند في checklist قد يحتوي:
+
+```json
+{
+  "key": "doc_key",
+  "title": "اسم الوثيقة",
+  "status": 0,
+  "required_copies": 2,
+  "lawyer_instructions": "تعليمات المحامي",
+  "input_value": "بيانات المعقب",
+  "notes": "ملاحظات المعقب",
+  "attachment_url": "private/storage/path.jpg",
+  "attachment_signed_url": "temporary-signed-url",
+  "revision_notes": "سبب إعادة المحامي للوثيقة"
+}
+```
+
+### Action: `update_checklist_item`
+
+يدعم الآن رفع صورة مباشرة:
+
+```json
+{
+  "action": "update_checklist_item",
+  "task_id": "uuid",
+  "item_key": "extract",
+  "status": 2,
+  "input_value": "رقم الصحيفة",
+  "attachment_base64": "base64-image",
+  "attachment_content_type": "image/jpeg",
+  "notes": "تم الاستخراج"
+}
+```
+
+### Action: `request_checklist_revision`
+
+يستخدمه المحامي عند مراجعة مهمة مكتملة من المعقب ووجود سند غير صحيح:
+
+```json
+{
+  "action": "request_checklist_revision",
+  "task_id": "uuid",
+  "item_key": "extract",
+  "revision_notes": "الصورة غير واضحة، أعد رفع نسخة مصدقة"
+}
+```
+
+الأثر:
+
+- يتحول بند الوثيقة إلى `status=1`.
+- تتحول المهمة إلى `status=1`.
+- يتم تصفير `completed_at`.
+- يتم إشعار المعقب.
+
+### RPCs المقفلة
+
+- `request_expediting_item_revision_internal(uuid, uuid, text, text)` — `service_role` فقط.
+- `update_expediting_checklist_item(...)` — `service_role` فقط.
+- كل الاستدعاءات تمر عبر `legal-actions` بعد التحقق من الدور والملكية.

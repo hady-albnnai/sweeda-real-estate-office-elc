@@ -1,5 +1,5 @@
 -- Functions Dump — السيرفر الحي
--- التاريخ: 2026-07-04 | عدد الدوال: 171
+-- التاريخ: 2026-07-05 | عدد الدوال: 172
 
 CREATE OR REPLACE FUNCTION public._admin_employee_assert_actor(p_admin_uid uuid, p_min_role integer DEFAULT 5)
  RETURNS integer
@@ -4888,6 +4888,81 @@ BEGIN
   RETURN TRUE;
 END; $function$
 
+CREATE OR REPLACE FUNCTION public.request_expediting_item_revision_internal(p_lawyer_uid uuid, p_task_id uuid, p_item_key text, p_revision_notes text DEFAULT ''::text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE
+  v_task record;
+  v_role int;
+  v_new_checklist jsonb := '[]'::jsonb;
+  v_item jsonb;
+  v_found boolean := false;
+  v_item_title text := '';
+BEGIN
+  SELECT role INTO v_role
+  FROM public.users
+  WHERE id = p_lawyer_uid AND i_del = 0 AND sts = 0;
+
+  IF v_role <> 7 THEN
+    RAISE EXCEPTION 'LAWYER_ROLE_REQUIRED';
+  END IF;
+
+  SELECT * INTO v_task
+  FROM public.expediting_tasks
+  WHERE id = p_task_id
+  FOR UPDATE;
+
+  IF v_task IS NULL THEN
+    RETURN jsonb_build_object('success', false, 'error', 'TASK_NOT_FOUND');
+  END IF;
+
+  IF v_task.lawyer_uid <> p_lawyer_uid THEN
+    RETURN jsonb_build_object('success', false, 'error', 'NOT_AUTHORIZED');
+  END IF;
+
+  IF v_task.status = 3 THEN
+    RETURN jsonb_build_object('success', false, 'error', 'TASK_ALREADY_APPROVED');
+  END IF;
+
+  FOR v_item IN SELECT * FROM jsonb_array_elements(v_task.checklist)
+  LOOP
+    IF v_item->>'key' = p_item_key THEN
+      v_found := true;
+      v_item_title := COALESCE(v_item->>'title', 'وثيقة');
+      v_item := jsonb_set(v_item, '{status}', to_jsonb(1));
+      v_item := jsonb_set(v_item, '{revision_notes}', to_jsonb(COALESCE(p_revision_notes, '')));
+    END IF;
+    v_new_checklist := v_new_checklist || v_item;
+  END LOOP;
+
+  IF NOT v_found THEN
+    RETURN jsonb_build_object('success', false, 'error', 'ITEM_NOT_FOUND');
+  END IF;
+
+  UPDATE public.expediting_tasks
+  SET checklist = v_new_checklist,
+      status = 1,
+      completed_at = NULL
+  WHERE id = p_task_id;
+
+  INSERT INTO public.notifications (uid, tp, ttl, bdy, ref_id, act, ts_crt)
+  VALUES (
+    v_task.expediter_uid,
+    2,
+    'إعادة تدقيق وثيقة تعقيب',
+    'طلب المحامي إعادة إنجاز/تصحيح: ' || v_item_title,
+    p_task_id::text,
+    'expediting_item_revision_requested',
+    NOW()
+  );
+
+  RETURN jsonb_build_object('success', true, 'status', 1, 'item_key', p_item_key);
+END;
+$function$
+
 CREATE OR REPLACE FUNCTION public.request_lifecycle_days(p_key text, p_default integer)
  RETURNS integer
  LANGUAGE plpgsql
@@ -5961,9 +6036,15 @@ BEGIN
     IF v_item->>'key' = p_item_key THEN
       v_found := true;
       v_item := jsonb_set(v_item, '{status}', to_jsonb(p_status));
-      IF COALESCE(p_input_value, '') <> '' THEN v_item := jsonb_set(v_item, '{input_value}', to_jsonb(p_input_value)); END IF;
-      IF COALESCE(p_attachment_url, '') <> '' THEN v_item := jsonb_set(v_item, '{attachment_url}', to_jsonb(p_attachment_url)); END IF;
-      IF COALESCE(p_notes, '') <> '' THEN v_item := jsonb_set(v_item, '{notes}', to_jsonb(p_notes)); END IF;
+      IF COALESCE(p_input_value, '') <> '' THEN
+        v_item := jsonb_set(v_item, '{input_value}', to_jsonb(p_input_value));
+      END IF;
+      IF COALESCE(p_attachment_url, '') <> '' THEN
+        v_item := jsonb_set(v_item, '{attachment_url}', to_jsonb(p_attachment_url));
+      END IF;
+      IF COALESCE(p_notes, '') <> '' THEN
+        v_item := jsonb_set(v_item, '{notes}', to_jsonb(p_notes));
+      END IF;
     END IF;
     v_new_checklist := v_new_checklist || v_item;
   END LOOP;
@@ -5974,7 +6055,12 @@ BEGIN
 
   UPDATE public.expediting_tasks
   SET checklist = v_new_checklist,
-      status = CASE WHEN status < 2 AND p_status IN (1, 2, 3) THEN 1 ELSE status END
+      status = CASE
+        WHEN p_status IN (0, 1, 3) THEN 1
+        WHEN status < 2 AND p_status = 2 THEN 1
+        ELSE status
+      END,
+      completed_at = CASE WHEN p_status IN (0, 1, 3) THEN NULL ELSE completed_at END
   WHERE id = p_task_id;
 
   RETURN jsonb_build_object('success', true, 'checklist', v_new_checklist);
