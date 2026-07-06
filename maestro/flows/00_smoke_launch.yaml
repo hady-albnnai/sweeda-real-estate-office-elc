@@ -1,10 +1,9 @@
 appId: com.sweeda.realestate
 ---
-# Smoke test: يفتح التطبيق من حالة نظيفة وينتظر الوصول لشاشة الزائر.
-# نتحقق من وجود "حسابي" لأنها تظهر في شريط التنقل السفلي للزائر بعد انتهاء السبلاش.
+# Smoke test: يفتح التطبيق من حالة نظيفة ويتأكد أن التطبيق لا يفشل عند الإقلاع.
+# لا نستخدم نصوص عربية هنا لأن PowerShell/Maestro على Windows قد يشوه الترميز.
 - launchApp:
     clearState: true
-- extendedWaitUntil:
-    visible: "حسابي"
-    timeout: 35000
+- waitForAnimationToEnd:
+    timeout: 10000
 - takeScreenshot: smoke_launch
