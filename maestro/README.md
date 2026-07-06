@@ -22,6 +22,8 @@ https://maestro.mobile.dev/getting-started/installing-maestro
 maestro test maestro/flows/00_smoke_launch.yaml
 ```
 
+ملاحظة: هذا الاختبار يستخدم `clearState: true` حتى يبدأ كزائر، وينتظر ظهور زر `حسابي` في شريط التنقل. ظهور الأحرف العربية بشكل غريب في PowerShell هو مشكلة ترميز في الطرفية غالباً وليس مشكلة في التطبيق.
+
 ## 3) تشغيل اختبار تسجيل الدخول
 
 استبدل القيم ببيانات حساب اختبار:

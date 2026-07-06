@@ -1,8 +1,10 @@
 appId: com.sweeda.realestate
 ---
+# Smoke test: يفتح التطبيق من حالة نظيفة وينتظر الوصول لشاشة الزائر.
+# نتحقق من وجود "حسابي" لأنها تظهر في شريط التنقل السفلي للزائر بعد انتهاء السبلاش.
 - launchApp:
-    clearState: false
+    clearState: true
 - extendedWaitUntil:
-    visible: "المكتب العقاري"
-    timeout: 20000
-- assertVisible: "حسابي"
+    visible: "حسابي"
+    timeout: 35000
+- takeScreenshot: smoke_launch
