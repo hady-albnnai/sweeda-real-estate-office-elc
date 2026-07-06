@@ -909,11 +909,21 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
 }
 
 class _Chip extends StatelessWidget {
-  final String label; final bool selected; final VoidCallback onTap;
-  const _Chip({required this.label, required this.selected, required this.onTap});
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  final String? e2eId;
+
+  const _Chip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.e2eId,
+  });
+
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(onTap: onTap, child: Container(
+    final chip = GestureDetector(onTap: onTap, child: Container(
       padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(
         color: selected ? AppTheme.primaryGold.withOpacity(0.2) : AppTheme.surfaceBlack,
@@ -921,5 +931,6 @@ class _Chip extends StatelessWidget {
         border: Border.all(color: selected ? AppTheme.primaryGold : AppTheme.textGrey.withOpacity(0.3), width: selected ? 2 : 1)),
       child: Center(child: Text(label, style: TextStyle(color: selected ? AppTheme.primaryGold : AppTheme.textGrey,
         fontWeight: selected ? FontWeight.bold : FontWeight.normal, fontSize: 15)))));
+    return e2eId == null ? chip : E2E(id: e2eId!, button: true, child: chip);
   }
 }
