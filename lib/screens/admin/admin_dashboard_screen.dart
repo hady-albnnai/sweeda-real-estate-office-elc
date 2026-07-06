@@ -5,6 +5,7 @@ import '../../providers/admin_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../widgets/app_back_button.dart';
+import '../../widgets/e2e.dart';
 
 /// 🛡️ لوحة الإدارة الرئيسية
 /// تعرض: إحصائيات عامة + عدّادات الإجراءات المطلوبة + شبكة تنقّل للأقسام
@@ -52,7 +53,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         leading: const AppBackButton(),
         backgroundColor: AppTheme.scaffoldBackground,
         elevation: 0,
-        title: Column(
+        title: E2E(
+          id: 'e2e_screen_admin_dashboard',
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('لوحة الإدارة',
@@ -64,6 +67,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 style: TextStyle(
                     color: AppTheme.primaryGold.withOpacity(0.8), fontSize: 12)),
           ],
+          ),
         ),
         actions: [
           IconButton(

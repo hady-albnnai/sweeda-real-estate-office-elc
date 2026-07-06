@@ -5,6 +5,7 @@ import '../../core/theme/app_theme.dart';
 import '../../models/expediting_task_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/legal_provider.dart';
+import '../../widgets/e2e.dart';
 import 'expediter_task_detail_screen.dart';
 
 class ExpediterTasksScreen extends StatefulWidget {
@@ -65,7 +66,7 @@ class _ExpediterTasksScreenState extends State<ExpediterTasksScreen> {
     return Scaffold(
       backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
-        title: const Text('مهام تعقيب المعاملات 🏃'),
+        title: const E2E(id: 'e2e_screen_expediter_tasks', child: Text('مهام تعقيب المعاملات 🏃')),
         backgroundColor: AppTheme.scaffoldBackground,
         actions: [
           IconButton(

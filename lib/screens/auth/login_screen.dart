@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../widgets/e2e.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, this.startInSignUpMode = false});
@@ -128,11 +129,11 @@ class _LoginScreenState extends State<LoginScreen> {
             _buildBlock(
               id: 2, title: 'تسجيل الدخول', icon: Icons.login_rounded, isGold: false,
               child: Column(children: [
-                _input(_userCtrl, 'اسم المستخدم أو الهاتف', Icons.person_outline),
+                _input(_userCtrl, 'اسم المستخدم أو الهاتف', Icons.person_outline, e2eId: 'e2e_login_username'),
                 const SizedBox(height: 12),
-                _input(_passCtrl, 'كلمة المرور', Icons.lock_outline, isPass: true, obs: _obs, onT: () => setState(() => _obs = !_obs)),
+                _input(_passCtrl, 'كلمة المرور', Icons.lock_outline, isPass: true, obs: _obs, onT: () => setState(() => _obs = !_obs), e2eId: 'e2e_login_password'),
                 const SizedBox(height: 20),
-                _btn(label: 'دخول', onTap: _login),
+                _btn(label: 'دخول', onTap: _login, e2eId: 'e2e_login_button'),
                 TextButton(onPressed: _forgot, child: const Text('هل نسيت كلمة المرور؟ استعادة بـ SMS', style: TextStyle(color: AppTheme.primaryGold, decoration: TextDecoration.underline, fontSize: 13))),
               ]),
             ),
@@ -213,8 +214,8 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _input(TextEditingController c, String h, IconData i, {bool isPass = false, bool? obs, VoidCallback? onT, bool dark = false}) {
-    return TextField(
+  Widget _input(TextEditingController c, String h, IconData i, {bool isPass = false, bool? obs, VoidCallback? onT, bool dark = false, String? e2eId}) {
+    final field = TextField(
       controller: c, obscureText: obs ?? false, textAlign: TextAlign.left,
       style: TextStyle(color: dark ? Colors.black : AppTheme.textWhite, fontWeight: FontWeight.bold),
       decoration: InputDecoration(
@@ -223,13 +224,15 @@ class _LoginScreenState extends State<LoginScreen> {
         suffixIcon: isPass ? IconButton(icon: Icon(obs! ? Icons.visibility_off : Icons.visibility, color: AppTheme.textGrey), onPressed: onT) : null,
       ),
     );
+    return e2eId == null ? field : E2E(id: e2eId, child: field);
   }
 
-  Widget _btn({required String label, required VoidCallback? onTap, bool dark = false}) {
-    return SizedBox(width: double.infinity, height: 56, child: ElevatedButton(
+  Widget _btn({required String label, required VoidCallback? onTap, bool dark = false, String? e2eId}) {
+    final button = SizedBox(width: double.infinity, height: 56, child: ElevatedButton(
       onPressed: _loading ? null : onTap,
       style: ElevatedButton.styleFrom(backgroundColor: dark ? Colors.black : Colors.white, foregroundColor: dark ? Colors.white : Colors.black, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
       child: _loading ? const CircularProgressIndicator(color: Colors.grey) : Text(label, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17)),
     ));
+    return e2eId == null ? button : E2E(id: e2eId, button: true, child: button);
   }
 }

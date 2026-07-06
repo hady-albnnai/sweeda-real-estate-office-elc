@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../core/theme/app_theme.dart';
+import 'e2e.dart';
 
 /// شريط التنقل السفلي الرئيسي للتطبيق
 class CustomBottomNavBar extends StatelessWidget {
@@ -52,11 +53,11 @@ class CustomBottomNavBar extends StatelessWidget {
         }
       },
       items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'الرئيسية'),
-        BottomNavigationBarItem(icon: Icon(Icons.assignment_outlined), activeIcon: Icon(Icons.assignment), label: 'طلباتي'),
-        BottomNavigationBarItem(icon: Icon(Icons.calendar_today_outlined), activeIcon: Icon(Icons.calendar_today), label: 'مواعيدي'),
-        BottomNavigationBarItem(icon: Icon(Icons.favorite_outline), activeIcon: Icon(Icons.favorite), label: 'المفضلة'),
-        BottomNavigationBarItem(icon: Icon(Icons.person_outline), activeIcon: Icon(Icons.person), label: 'حسابي'),
+        BottomNavigationBarItem(icon: E2E(id: 'e2e_nav_home', button: true, child: Icon(Icons.home_outlined)), activeIcon: Icon(Icons.home), label: 'الرئيسية'),
+        BottomNavigationBarItem(icon: E2E(id: 'e2e_nav_requests', button: true, child: Icon(Icons.assignment_outlined)), activeIcon: Icon(Icons.assignment), label: 'طلباتي'),
+        BottomNavigationBarItem(icon: E2E(id: 'e2e_nav_appointments', button: true, child: Icon(Icons.calendar_today_outlined)), activeIcon: Icon(Icons.calendar_today), label: 'مواعيدي'),
+        BottomNavigationBarItem(icon: E2E(id: 'e2e_nav_favorites', button: true, child: Icon(Icons.favorite_outline)), activeIcon: Icon(Icons.favorite), label: 'المفضلة'),
+        BottomNavigationBarItem(icon: E2E(id: 'e2e_nav_profile', button: true, child: Icon(Icons.person_outline)), activeIcon: Icon(Icons.person), label: 'حسابي'),
       ],
     );
   }

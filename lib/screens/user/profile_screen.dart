@@ -7,6 +7,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/network/supabase_service.dart';
 import '../../models/user_model.dart';
 import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/e2e.dart';
 import '../../services/auth_service.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -219,11 +220,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _buildBlock(
                 id: 2, title: 'تسجيل الدخول', icon: Icons.login_rounded, isGold: false,
                 child: Column(children: [
-                  _buildInput(_loginUserCtrl, 'اسم المستخدم أو رقم الهاتف', Icons.person_outline),
+                  _buildInput(_loginUserCtrl, 'اسم المستخدم أو رقم الهاتف', Icons.person_outline, e2eId: 'e2e_login_username'),
                   const SizedBox(height: 12),
-                  _buildInput(_loginPassCtrl, 'كلمة المرور', Icons.lock_outline, isPass: true, obscure: _isPassObscure, onToggle: () => setState(() => _isPassObscure = !_isPassObscure)),
+                  _buildInput(_loginPassCtrl, 'كلمة المرور', Icons.lock_outline, isPass: true, obscure: _isPassObscure, onToggle: () => setState(() => _isPassObscure = !_isPassObscure), e2eId: 'e2e_login_password'),
                   const SizedBox(height: 20),
-                  _buildBigBtn(label: 'دخول', onTap: _handleLogin),
+                  _buildBigBtn(label: 'دخول', onTap: _handleLogin, e2eId: 'e2e_login_button'),
                   const SizedBox(height: 10),
                   TextButton(onPressed: _handleForgotPassword, child: const Text('هل نسيت كلمة المرور؟ استعادة بـ SMS', style: TextStyle(color: AppTheme.primaryGold, decoration: TextDecoration.underline, fontSize: 13))),
                 ]),
@@ -328,7 +329,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.5), width: 2),
       ),
       child: Column(children: [
-        InkWell(
+        E2E(
+          id: id == 2 ? 'e2e_profile_login_section' : 'e2e_profile_signup_section',
+          button: true,
+          child: InkWell(
           onTap: () => setState(() { _activeBlock = isOpen ? 0 : id; if (id == 1) _signupMethod = 0; }),
           borderRadius: BorderRadius.circular(24),
           child: Padding(padding: const EdgeInsets.all(20), child: Row(children: [
@@ -338,6 +342,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const Spacer(),
             Icon(isOpen ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, color: isGold ? Colors.black : AppTheme.textGrey),
           ])),
+          ),
         ),
         if (isOpen) Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 20), child: child),
       ]),
@@ -360,8 +365,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildInput(TextEditingController c, String h, IconData i, {bool isPass = false, bool? obscure, VoidCallback? onToggle, bool dark = false}) {
-    return TextField(
+  Widget _buildInput(TextEditingController c, String h, IconData i, {bool isPass = false, bool? obscure, VoidCallback? onToggle, bool dark = false, String? e2eId}) {
+    final field = TextField(
       controller: c, obscureText: obscure ?? false, textAlign: TextAlign.left,
       style: TextStyle(color: dark ? Colors.black : AppTheme.textWhite, fontWeight: FontWeight.bold),
       decoration: InputDecoration(
@@ -370,14 +375,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         suffixIcon: isPass ? IconButton(icon: Icon(obscure! ? Icons.visibility_off : Icons.visibility, color: AppTheme.textGrey), onPressed: onToggle) : null,
       ),
     );
+    return e2eId == null ? field : E2E(id: e2eId, child: field);
   }
 
-  Widget _buildBigBtn({required String label, required VoidCallback? onTap, bool dark = false}) {
-    return SizedBox(width: double.infinity, height: 56, child: ElevatedButton(
+  Widget _buildBigBtn({required String label, required VoidCallback? onTap, bool dark = false, String? e2eId}) {
+    final button = SizedBox(width: double.infinity, height: 56, child: ElevatedButton(
       onPressed: _isBusy ? null : onTap,
       style: ElevatedButton.styleFrom(backgroundColor: dark ? Colors.black : Colors.white, foregroundColor: dark ? Colors.white : Colors.black, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
       child: _isBusy ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)) : Text(label, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
     ));
+    return e2eId == null ? button : E2E(id: e2eId, button: true, child: button);
   }
 
   Widget _buildHeader(UserModel user) {

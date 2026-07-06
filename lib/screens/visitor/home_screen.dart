@@ -5,6 +5,7 @@ import '../../providers/auth_provider.dart';
 import '../../widgets/offer_card.dart';
 import '../../widgets/shimmer_loading.dart';
 import '../../core/theme/app_theme.dart';
+import '../../widgets/e2e.dart';
 import 'package:go_router/go_router.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -239,10 +240,10 @@ class _HomeScreenState extends State<HomeScreen> {
         unselectedItemColor: AppTheme.textGrey,
         currentIndex: 0,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'الرئيسية'),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'بحث'),
-          BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'المفضلة'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'حسابي'),
+          BottomNavigationBarItem(icon: E2E(id: 'e2e_nav_home', button: true, child: Icon(Icons.home)), label: 'الرئيسية'),
+          BottomNavigationBarItem(icon: E2E(id: 'e2e_nav_search', button: true, child: Icon(Icons.search)), label: 'بحث'),
+          BottomNavigationBarItem(icon: E2E(id: 'e2e_nav_favorites', button: true, child: Icon(Icons.favorite)), label: 'المفضلة'),
+          BottomNavigationBarItem(icon: E2E(id: 'e2e_nav_profile', button: true, child: Icon(Icons.person)), label: 'حسابي'),
         ],
         onTap: (index) {
           if (index == 1) context.push('/search');

@@ -5,6 +5,7 @@ import '../../core/services/permission_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/admin_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/e2e.dart';
 
 /// شاشة أقسام الإدارة.
 ///
@@ -136,7 +137,10 @@ class _AdminSectionsScreenState extends State<AdminSectionsScreen> {
   }
 
   Widget _tile(IconData icon, String title, String route, {int badge = 0}) {
-    return ListTile(
+    return E2E(
+      id: e2eRouteId(route),
+      button: true,
+      child: ListTile(
       contentPadding: EdgeInsets.zero,
       leading: CircleAvatar(
         backgroundColor: AppTheme.primaryGold.withOpacity(0.12),
@@ -151,6 +155,7 @@ class _AdminSectionsScreenState extends State<AdminSectionsScreen> {
             )
           : const Icon(Icons.chevron_left, color: AppTheme.textGrey),
       onTap: () => context.push(route),
+      ),
     );
   }
 }

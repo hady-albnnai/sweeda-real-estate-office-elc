@@ -5,29 +5,30 @@ appId: com.sweeda.realestate
     env:
       E2E_USERNAME: "${LAWYER_USERNAME}"
       E2E_PASSWORD: "${LAWYER_PASSWORD}"
-      E2E_EXPECT: "لوحة المحامي"
-- tapOn: "إضافة مهمة"
+      E2E_EXPECT_ID: "e2e_screen_lawyer_dashboard"
+- tapOn: "e2e_lawyer_tab_create_task"
 - extendedWaitUntil:
-    visible: "تكليف معقب"
-    timeout: 10000
-- tapOn: "اختر المعقب"
+    visible: "e2e_lawyer_expediter_dropdown"
+    timeout: 12000
+- tapOn: "e2e_lawyer_expediter_dropdown"
+# مرر هنا جزءاً واضحاً من اسم/رقم المعقب كما يظهر في القائمة، ويفضل رقم الهاتف لأنه لاتيني/أرقام.
 - tapOn: "${EXPEDITER_LABEL}"
-- tapOn: "عقار"
-- tapOn: "رقم العقار"
+- tapOn: "e2e_task_type_property"
+- tapOn: "e2e_task_property_number"
 - inputText: "${TASK_NUMBER}"
-- tapOn: "المنطقة العقارية"
+- tapOn: "e2e_task_property_zone"
 - inputText: "${TASK_ZONE}"
 - scrollUntilVisible:
-    element: "إخراج قيد عقاري حديث"
+    element: "e2e_doc_extract"
     direction: DOWN
     timeout: 10000
-- tapOn: "إخراج قيد عقاري حديث"
-- tapOn: "بيان مساحة عقاري"
+- tapOn: "e2e_doc_extract"
+- tapOn: "e2e_doc_area_stmt"
 - scrollUntilVisible:
-    element: "إرسال للمعقب"
+    element: "e2e_lawyer_send_task"
     direction: DOWN
     timeout: 10000
-- tapOn: "إرسال للمعقب"
-- extendedWaitUntil:
-    visible: "تم إرسال المهمة"
-    timeout: 15000
+- tapOn: "e2e_lawyer_send_task"
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: lawyer_created_expediting_task

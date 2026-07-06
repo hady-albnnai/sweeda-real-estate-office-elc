@@ -1,9 +1,10 @@
 appId: com.sweeda.realestate
 ---
-# Smoke test: يفتح التطبيق من حالة نظيفة ويتأكد أن التطبيق لا يفشل عند الإقلاع.
-# لا نستخدم نصوص عربية هنا لأن PowerShell/Maestro على Windows قد يشوه الترميز.
 - launchApp:
     clearState: true
 - waitForAnimationToEnd:
     timeout: 10000
+- extendedWaitUntil:
+    visible: "e2e_nav_profile"
+    timeout: 35000
 - takeScreenshot: smoke_launch

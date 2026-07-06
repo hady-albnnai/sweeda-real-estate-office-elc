@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/admin_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/e2e.dart';
 
 class ResourceUsageScreen extends StatefulWidget {
   const ResourceUsageScreen({super.key});
@@ -60,7 +61,7 @@ class _ResourceUsageScreenState extends State<ResourceUsageScreen> {
       backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
         backgroundColor: AppTheme.scaffoldBackground,
-        title: const Text('استهلاك السيرفر والتخزين'),
+        title: const E2E(id: 'e2e_screen_resource_usage', child: Text('استهلاك السيرفر والتخزين')),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh, color: AppTheme.primaryGold),

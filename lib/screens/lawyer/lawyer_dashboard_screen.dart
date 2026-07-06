@@ -8,6 +8,7 @@ import '../../core/network/supabase_service.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/legal_provider.dart';
 import '../../models/expediting_task_model.dart';
+import '../../widgets/e2e.dart';
 
 class LawyerDashboardScreen extends StatefulWidget {
   const LawyerDashboardScreen({super.key});
@@ -380,7 +381,7 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
     return Scaffold(
       backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
-        title: const Text('⚖️ لوحة المحامي'), backgroundColor: AppTheme.scaffoldBackground,
+        title: const E2E(id: 'e2e_screen_lawyer_dashboard', child: Text('⚖️ لوحة المحامي')), backgroundColor: AppTheme.scaffoldBackground,
         actions: [
           IconButton(
             icon: const Icon(Icons.account_circle_outlined, color: AppTheme.primaryGold),
@@ -401,9 +402,9 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
         bottom: TabBar(controller: _tabCtrl, indicatorColor: AppTheme.primaryGold,
           labelColor: AppTheme.primaryGold, unselectedLabelColor: AppTheme.textGrey,
           tabs: const [
-            Tab(icon: Icon(Icons.calendar_month), text: 'مواعيدي'),
-            Tab(icon: Icon(Icons.add_task), text: 'إضافة مهمة'),
-            Tab(icon: Icon(Icons.assignment), text: 'المهام المرسلة'),
+            Tab(icon: E2E(id: 'e2e_lawyer_tab_appointments', button: true, child: Icon(Icons.calendar_month)), text: 'مواعيدي'),
+            Tab(icon: E2E(id: 'e2e_lawyer_tab_create_task', button: true, child: Icon(Icons.add_task)), text: 'إضافة مهمة'),
+            Tab(icon: E2E(id: 'e2e_lawyer_tab_sent_tasks', button: true, child: Icon(Icons.assignment)), text: 'المهام المرسلة'),
           ]),
       ),
       body: TabBarView(controller: _tabCtrl, children: [
@@ -504,42 +505,45 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
       const Text('📋 تكليف معقب', style: TextStyle(color: AppTheme.primaryGold, fontSize: 18, fontWeight: FontWeight.bold)),
       const SizedBox(height: 16), const Text('نوع المعاملة:', style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
       Row(children: [
-        Expanded(child: _Chip(label: '🏠 عقار', selected: _selectedItemType == 0, onTap: () => _changeItemType(0))),
+        Expanded(child: _Chip(label: '🏠 عقار', selected: _selectedItemType == 0, onTap: () => _changeItemType(0), e2eId: 'e2e_task_type_property')),
         const SizedBox(width: 12),
-        Expanded(child: _Chip(label: '🚗 سيارة', selected: _selectedItemType == 1, onTap: () => _changeItemType(1))),
+        Expanded(child: _Chip(label: '🚗 سيارة', selected: _selectedItemType == 1, onTap: () => _changeItemType(1), e2eId: 'e2e_task_type_vehicle')),
       ]), const SizedBox(height: 16), const Text('المعقب:', style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
       expediters.isEmpty
           ? Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(12),
               border: Border.all(color: Colors.orange.withOpacity(0.3))),
               child: const Row(children: [Icon(Icons.info_outline, color: Colors.orange, size: 18), SizedBox(width: 10),
                 Expanded(child: Text('لا يوجد معقبين. أضف معقباً من إدارة الموظفين.', style: TextStyle(color: AppTheme.textGrey, fontSize: 13)))]))
-          : DropdownButtonFormField<String>(value: _selectedExpediterUid, dropdownColor: AppTheme.surfaceBlack,
+          : E2E(
+              id: 'e2e_lawyer_expediter_dropdown',
+              child: DropdownButtonFormField<String>(value: _selectedExpediterUid, dropdownColor: AppTheme.surfaceBlack,
               style: const TextStyle(color: AppTheme.textWhite),
               decoration: const InputDecoration(labelText: 'اختر المعقب', prefixIcon: Icon(Icons.person_search, color: AppTheme.primaryGold)),
               items: expediters.map((e) => DropdownMenuItem(value: e['id']?.toString(), child: Text('${e['nm']} (${e['ph']})'))).toList(),
               onChanged: (v) => setState(() => _selectedExpediterUid = v)),
+            ),
       const SizedBox(height: 16),
       if (_selectedItemType == 0) ...[
-        TextField(controller: _taskPropertyCtrl, style: const TextStyle(color: AppTheme.textWhite),
-          decoration: const InputDecoration(labelText: 'رقم العقار', hintText: '12345')),
+        E2E(id: 'e2e_task_property_number', child: TextField(controller: _taskPropertyCtrl, style: const TextStyle(color: AppTheme.textWhite),
+          decoration: const InputDecoration(labelText: 'رقم العقار', hintText: '12345'))),
         const SizedBox(height: 12),
-        TextField(controller: _taskZoneCtrl, style: const TextStyle(color: AppTheme.textWhite),
-          decoration: const InputDecoration(labelText: 'المنطقة العقارية', hintText: 'السويداء')),
+        E2E(id: 'e2e_task_property_zone', child: TextField(controller: _taskZoneCtrl, style: const TextStyle(color: AppTheme.textWhite),
+          decoration: const InputDecoration(labelText: 'المنطقة العقارية', hintText: 'السويداء'))),
       ],
       if (_selectedItemType == 1)
-        TextField(controller: _taskPropertyCtrl, style: const TextStyle(color: AppTheme.textWhite),
-          decoration: const InputDecoration(labelText: 'رقم المركبة', hintText: '123456')),
+        E2E(id: 'e2e_task_vehicle_number', child: TextField(controller: _taskPropertyCtrl, style: const TextStyle(color: AppTheme.textWhite),
+          decoration: const InputDecoration(labelText: 'رقم المركبة', hintText: '123456'))),
       const SizedBox(height: 16),
       _buildChecklistSelector(),
       const SizedBox(height: 12),
-      TextField(controller: _taskNotesCtrl, style: const TextStyle(color: AppTheme.textWhite), maxLines: 3,
-        decoration: const InputDecoration(labelText: 'تعليمات', hintText: 'ملاحظات للمعقب...')),
+      E2E(id: 'e2e_task_notes', child: TextField(controller: _taskNotesCtrl, style: const TextStyle(color: AppTheme.textWhite), maxLines: 3,
+        decoration: const InputDecoration(labelText: 'تعليمات', hintText: 'ملاحظات للمعقب...'))),
       const SizedBox(height: 24),
-      SizedBox(width: double.infinity, height: 50, child: ElevatedButton.icon(
+      E2E(id: 'e2e_lawyer_send_task', button: true, child: SizedBox(width: double.infinity, height: 50, child: ElevatedButton.icon(
         onPressed: _creatingTask ? null : _createTask,
         icon: _creatingTask ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.send),
         label: Text(_creatingTask ? 'جاري...' : 'إرسال للمعقب', style: const TextStyle(fontWeight: FontWeight.bold)),
-        style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryGold, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))))),
+        style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryGold, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)))))),
     ]));
   }
 
@@ -563,7 +567,10 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
             final key = doc['key']!;
             final selected = _selectedChecklist.any((item) => item['key'] == key);
             final canDelete = !_isBaseDocument(key);
-            return Container(
+            return E2E(
+              id: 'e2e_doc_$key',
+              button: true,
+              child: Container(
               margin: const EdgeInsets.only(bottom: 8),
               decoration: BoxDecoration(
                 color: selected ? AppTheme.primaryGold.withOpacity(0.1) : AppTheme.scaffoldBackground,
@@ -593,6 +600,7 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
                       icon: const Icon(Icons.delete_outline, color: AppTheme.errorRed, size: 20),
                     ),
                 ],
+              ),
               ),
             );
           }),

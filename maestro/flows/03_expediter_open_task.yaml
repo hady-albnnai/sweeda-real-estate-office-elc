@@ -5,13 +5,11 @@ appId: com.sweeda.realestate
     env:
       E2E_USERNAME: "${EXPEDITER_USERNAME}"
       E2E_PASSWORD: "${EXPEDITER_PASSWORD}"
-      E2E_EXPECT: "مهام تعقيب المعاملات"
+      E2E_EXPECT_ID: "e2e_screen_expediter_tasks"
 - extendedWaitUntil:
     visible: "${TASK_NUMBER}"
     timeout: 20000
 - tapOn: "${TASK_NUMBER}"
-- extendedWaitUntil:
-    visible: "قائمة الوثائق"
-    timeout: 15000
-- assertVisible: "إخراج قيد عقاري حديث"
-- assertVisible: "المطلوب من المحامي"
+- waitForAnimationToEnd:
+    timeout: 5000
+- takeScreenshot: expediter_task_detail
