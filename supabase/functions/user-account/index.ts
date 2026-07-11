@@ -115,6 +115,89 @@ serve(async (req) => {
       return json({ success: data === true });
     }
 
+    // Email Magic Link: يجب أن يقرأ المستخدم من JWT مباشرة.
+    // لا نستدعي handle_email_auth_internal هنا لأن Supabase client المستخدم service_role
+    // ولا يمرر auth.uid()/auth.jwt() إلى داخل SQL.
+    if (action === "handle_email_auth") {
+      const authHeader = req.headers.get("Authorization") ?? "";
+      const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+      if (!bearer || bearer === "undefined" || bearer === "null" || bearer === "anon_key_here") {
+        return json({ success: false, error: "AUTH_TOKEN_REQUIRED" }, 401);
+      }
+
+      const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(bearer);
+      const authUser = userData?.user;
+      const authUid = authUser?.id;
+      const email = (authUser?.email ?? "").trim().toLowerCase();
+
+      if (userError || !authUid) return json({ success: false, error: "AUTH_TOKEN_INVALID" }, 401);
+      if (!email) return json({ success: false, error: "EMAIL_REQUIRED" }, 400);
+      if (email.endsWith("@whatsapp.local")) return json({ success: false, error: "PSEUDO_EMAIL_NOT_ALLOWED" }, 400);
+
+      const { data: existingById, error: byIdError } = await supabaseAdmin
+        .from("users")
+        .select("id, eml, usr, pwd, i_del")
+        .eq("id", authUid)
+        .eq("i_del", 0)
+        .maybeSingle();
+
+      if (byIdError) return json({ success: false, error: byIdError.message }, 400);
+
+      if (existingById) {
+        const existingEmail = (existingById.eml ?? "").toString().trim().toLowerCase();
+        if (existingEmail && existingEmail !== email) {
+          return json({ success: false, error: "AUTH_UID_EMAIL_CONFLICT" }, 409);
+        }
+
+        const { error: updateError } = await supabaseAdmin
+          .from("users")
+          .update({ eml: email, ts_upd: new Date().toISOString() })
+          .eq("id", authUid);
+        if (updateError) return json({ success: false, error: updateError.message }, 400);
+
+        return json({
+          success: true,
+          user_id: authUid,
+          is_new: false,
+          email,
+        });
+      }
+
+      const { data: existingByEmail, error: byEmailError } = await supabaseAdmin
+        .from("users")
+        .select("id")
+        .eq("eml", email)
+        .eq("i_del", 0)
+        .maybeSingle();
+
+      if (byEmailError) return json({ success: false, error: byEmailError.message }, 400);
+      if (existingByEmail && existingByEmail.id !== authUid) {
+        return json({ success: false, error: "EMAIL_ALREADY_LINKED_TO_DIFFERENT_AUTH_USER" }, 409);
+      }
+
+      const { error: insertError } = await supabaseAdmin
+        .from("users")
+        .insert({
+          id: authUid,
+          nm: "",
+          ph: "",
+          eml: email,
+          role: 0,
+          sts: 0,
+          i_del: 0,
+          ts_crt: new Date().toISOString(),
+          ts_upd: new Date().toISOString(),
+        });
+      if (insertError) return json({ success: false, error: insertError.message }, 400);
+
+      return json({
+        success: true,
+        user_id: authUid,
+        is_new: true,
+        email,
+      });
+    }
+
     // ----------------------------------------------------
     // دوال تتطلب مستخدم مسجل الدخول (JWT)
     // ----------------------------------------------------

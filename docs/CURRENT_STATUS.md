@@ -686,3 +686,18 @@ supabase functions deploy admin-dashboard
 ```bash
 supabase functions deploy user-account
 ```
+
+---
+
+## تحديث 2026-07-11 — إصلاح حاسم لمسار Email Magic Link عبر Edge
+
+- تم اكتشاف أن `user-account` كان يستدعي `handle_email_auth_internal()` عبر عميل `service_role`، وهذا لا يمرر `auth.uid()` و `auth.jwt()` إلى SQL، لذلك قد يبقى التطبيق على شاشة "تحقق من البريد" بعد الضغط على رابط الإيميل.
+- تم نقل منطق ربط/إنشاء مستخدم الإيميل إلى Edge Function نفسها بعد التحقق من JWT عبر `supabaseAdmin.auth.getUser(bearer)`.
+- المستخدم الجديد عبر الإيميل يُنشأ الآن بـ `users.id = authUser.id` و `eml = email` ثم ينتقل إلى شاشة إعداد اسم المستخدم وكلمة المرور.
+- المستخدم الموجود بنفس `auth.uid()` يتم تحديث بريده عند اللزوم ويرجع كتسجيل دخول مكتمل.
+- إذا كان الإيميل مربوطاً بمستخدم مختلف يرجع خطأ آمن `EMAIL_ALREADY_LINKED_TO_DIFFERENT_AUTH_USER` بدل إنشاء جلسة غير متطابقة.
+
+**يلزم نشر:**
+```bash
+supabase functions deploy user-account --project-ref vsgkgnjtebjxyqwpuopz
+```
