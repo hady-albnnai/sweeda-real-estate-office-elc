@@ -182,6 +182,14 @@ class AuthProvider with ChangeNotifier {
       _currentEmail = email;
       _channel = AuthChannel.email;
       final result = await AuthService().sendEmailMagicLink(email);
+      if (result['success'] != true) {
+        final err = result['error']?.toString() ?? '';
+        if (err == 'EMAIL_ALREADY_REGISTERED') {
+          _lastError = 'هذا الإيميل مسجل بحساب آخر — سجّل دخولك عبر رقم الهاتف';
+        } else {
+          _lastError = ErrorUtils.arabicMessage(Exception(err));
+        }
+      }
       notifyListeners();
       return result['success'] == true;
     } catch (e) {

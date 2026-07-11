@@ -89,14 +89,40 @@ class AuthService {
   // ════════════════════════════════════════════════════════════════════════
 
   /// إرسال رابط سحري إلى البريد الإلكتروني.
-  /// المستخدم يضغط الرابط في إيميله ويعود للتطبيق عبر deep link.
+  /// ✅ فحص مبدئي: إذا الإيميل مسجل عند مستخدم آخر → نمنع إرسال الرابط
+  /// لمنع إنشاء حساب مكرر بنفس الإيميل
   Future<Map<String, dynamic>> sendEmailMagicLink(String email) async {
     try {
+      // ✅ فحص أولي: هل الإيميل مسجل عند حساب موجود؟
+      final response = await SupabaseService().invokeFunction(
+        'user-account',
+        body: {
+          'action': 'check_email_exists',
+          'email': email.trim().toLowerCase(),
+        },
+      );
+      final data = response.data is Map
+          ? Map<String, dynamic>.from(response.data)
+          : null;
+
+      // إذا الإيميل موجود عند مستخدم آخر → نمنع الإرسال
+      if (data != null &&
+          data['exists'] == true &&
+          data['user_id'] != null &&
+          data['user_id'].toString() != _auth.currentUser?.id) {
+        return {
+          'success': false,
+          'error': 'EMAIL_ALREADY_REGISTERED',
+        };
+      }
+
       await _auth.signInWithOtp(
         email: email,
         emailRedirectTo: 'io.supabase.sweeda://login-callback',
-      );return {'success': true, 'channel': 'email'};
-    } catch (e) {return {'success': false, 'error': e.toString()};
+      );
+      return {'success': true, 'channel': 'email'};
+    } catch (e) {
+      return {'success': false, 'error': e.toString()};
     }
   }
 

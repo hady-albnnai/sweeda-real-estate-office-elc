@@ -84,13 +84,16 @@ serve(async (req) => {
     const action = (body.action ?? "").toString();
 
     // ✅ طلب تصوير عقار من مستخدم عادي (لا يحتاج صلاحية إدارة)
+    // الخدمة: طلب تصوير عقار قبل أو بعد النشر — مو مرتبطة بعرض موجود
     if (action === "request_photography") {
       const userUid = (body.user_uid ?? body.userUid)?.toString() ?? "";
-      const offerId = (body.offer_id ?? body.offerId)?.toString() ?? "";
+      const propertyDesc = (body.property_desc ?? "").toString();
+      const propertyLocation = (body.property_location ?? "").toString();
+      const contactPhone = (body.contact_phone ?? "").toString();
       const notes = (body.notes ?? "").toString();
 
-      if (!userUid || !offerId) {
-        return json({ success: false, error: "USER_UID_AND_OFFER_ID_REQUIRED" }, 400);
+      if (!userUid) {
+        return json({ success: false, error: "USER_UID_REQUIRED" }, 400);
       }
 
       // التحقق من هوية المستخدم عبر JWT أو staff_session_token
@@ -122,28 +125,11 @@ serve(async (req) => {
         return json({ success: false, error: "AUTH_REQUIRED" }, 401);
       }
 
-      // التحقق من أن العرض يخص المستخدم
-      const { data: offerRow, error: offerError } = await supabaseAdmin
-        .from("offers")
-        .select("id, usr_id, ttl, i_del")
-        .eq("id", offerId)
-        .single();
-
-      if (offerError || !offerRow) {
-        return json({ success: false, error: "OFFER_NOT_FOUND" }, 404);
-      }
-      if (offerRow.usr_id !== userUid) {
-        return json({ success: false, error: "NOT_YOUR_OFFER" }, 403);
-      }
-      if (offerRow.i_del === 1) {
-        return json({ success: false, error: "OFFER_DELETED" }, 400);
-      }
-
-      // التحقق من عدم وجود طلب تصوير نشط على هذا العرض
+      // التحقق من عدم وجود طلب تصوير نشط لنفس المستخدم
       const { data: existing, error: existError } = await supabaseAdmin
         .from("photography_tasks")
         .select("id")
-        .eq("off_id", offerId)
+        .eq("requested_by", userUid)
         .in("sts", [0, 1, 2]) // بانتظار / قيد التنفيذ / مرسلة للمكتب
         .limit(1);
 
@@ -151,14 +137,14 @@ serve(async (req) => {
         return json({ success: false, error: "ACTIVE_PHOTOGRAPHY_REQUEST_EXISTS" }, 400);
       }
 
-      // إنشاء طلب تصوير
+      // إنشاء طلب تصوير (off_id فارغ لأن العقار ممكن يكون مو منشور بعد)
       const { data: insertData, error: insertError } = await supabaseAdmin
         .from("photography_tasks")
         .insert({
-          off_id: offerId,
+          off_id: null,
           requested_by: userUid,
-          ttl: offerRow.ttl || "طلب تصوير عقار",
-          notes: notes,
+          ttl: propertyDesc || "طلب تصوير عقار",
+          notes: [propertyLocation, contactPhone, notes].filter(Boolean).join(" | "),
           sts: 0,
         })
         .select("id")

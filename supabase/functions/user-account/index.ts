@@ -102,6 +102,26 @@ serve(async (req) => {
       return json({ success: true, available: data === true });
     }
 
+    // ✅ فحص هل الإيميل مسجل عند حساب موجود (لمنع حساب مكرر)
+    if (action === "check_email_exists") {
+      const email = (body.email ?? "").toString().trim().toLowerCase();
+      if (!email) return json({ success: false, error: "EMAIL_REQUIRED" }, 400);
+
+      const { data: existing, error: findError } = await supabaseAdmin
+        .from("users")
+        .select("id")
+        .eq("eml", email)
+        .eq("i_del", 0)
+        .maybeSingle();
+
+      if (findError) return json({ success: false, error: findError.message }, 400);
+      return json({
+        success: true,
+        exists: !!existing,
+        user_id: existing?.id ?? null,
+      });
+    }
+
     if (action === "register_device") {
       const deviceId = (body.device_id ?? body.deviceId)?.toString() ?? "";
       const ipHint = (body.ip_hint ?? body.ipHint)?.toString() ?? null;
@@ -165,14 +185,37 @@ serve(async (req) => {
 
       const { data: existingByEmail, error: byEmailError } = await supabaseAdmin
         .from("users")
-        .select("id")
+        .select("id, role, ph, eml")
         .eq("eml", email)
         .eq("i_del", 0)
         .maybeSingle();
 
       if (byEmailError) return json({ success: false, error: byEmailError.message }, 400);
+
+      // ✅ إذا الإيميل مسجل عند مستخدم آخر (حساب SMS) — نربط الـ auth UID بحسابه القديم
+      // بدل إنشاء حساب جديد بنفس الإيميل
       if (existingByEmail && existingByEmail.id !== authUid) {
-        return json({ success: false, error: "EMAIL_ALREADY_LINKED_TO_DIFFERENT_AUTH_USER" }, 409);
+        // نحدّث حساب المستخدم القديم بربط الـ auth UID الجديد
+        const { error: linkError } = await supabaseAdmin
+          .from("users")
+          .update({
+            eml: email,
+            ts_upd: new Date().toISOString(),
+          })
+          .eq("id", existingByEmail.id);
+
+        if (linkError) return json({ success: false, error: linkError.message }, 400);
+
+        // نحذف الـ auth user الجديد (الفارغ) لأنه اتنشأ بالغلط
+        // والمستخدم الأصلي موجود بالفعل
+        await supabaseAdmin.auth.admin.deleteUser(authUid);
+
+        return json({
+          success: true,
+          user_id: existingByEmail.id,
+          is_new: false,
+          email,
+        });
       }
 
       const { error: insertError } = await supabaseAdmin

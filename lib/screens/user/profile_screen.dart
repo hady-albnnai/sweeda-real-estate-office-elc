@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../providers/auth_provider.dart';
-import '../../providers/offer_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/network/supabase_service.dart';
 import '../../models/user_model.dart';
@@ -554,92 +553,110 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ]);
   Widget _buildMenuItem({required IconData i, required String t, required String s, required VoidCallback o}) => ListTile(onTap: o, leading: Icon(i, color: AppTheme.primaryGold), title: Text(t, style: const TextStyle(color: AppTheme.textWhite, fontSize: 14, fontWeight: FontWeight.bold)), subtitle: Text(s, style: const TextStyle(color: AppTheme.textGrey, fontSize: 11)), trailing: const Icon(Icons.chevron_right, color: AppTheme.textGrey, size: 18));
 
-  /// طلب تصوير عقار — يفتح نافذة لاختيار العرض وكتابة ملاحظات
+  /// طلب تصوير عقار — خدمة مستقلة مو مرتبطة بعرض
   Future<void> _showPhotographyRequestDialog() async {
     final auth = context.read<AuthProvider>();
     final user = auth.userModel;
     if (user == null) return;
 
-    // جلب عروض المستخدم
-    final offers = await context.read<OfferProvider>().fetchUserOffers(user.uid);
-    if (offers.isEmpty) {
-      _snack('لا توجد عروض لديك لطلب تصويرها');
-      return;
-    }
-
-    String? selectedOfferId;
+    final descCtrl = TextEditingController();
+    final locCtrl = TextEditingController();
+    final phoneCtrl = TextEditingController(text: user.ph);
     final notesCtrl = TextEditingController();
 
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setS) => AlertDialog(
-          backgroundColor: AppTheme.surfaceBlack,
-          title: const Text('طلب تصوير عقار', style: TextStyle(color: AppTheme.textWhite)),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Text('اختر العرض الذي تريد تصويره:', style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<String>(
-                  value: selectedOfferId,
-                  dropdownColor: AppTheme.surfaceBlack,
-                  style: const TextStyle(color: AppTheme.textWhite),
-                  decoration: const InputDecoration(
-                    labelText: 'العروض',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: offers.map((o) => DropdownMenuItem(
-                    value: o.id,
-                    child: Text(o.ttl, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppTheme.textWhite, fontSize: 13)),
-                  )).toList(),
-                  onChanged: (v) => setS(() => selectedOfferId = v),
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surfaceBlack,
+        title: const Text('طلب تصوير عقار', style: TextStyle(color: AppTheme.textWhite)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                controller: descCtrl,
+                style: const TextStyle(color: AppTheme.textWhite),
+                decoration: const InputDecoration(
+                  labelText: 'وصف العقار *',
+                  hintText: 'مثال: شقة 3 غرف بالسويداء',
+                  border: OutlineInputBorder(),
                 ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: notesCtrl,
-                  maxLines: 3,
-                  style: const TextStyle(color: AppTheme.textWhite),
-                  decoration: const InputDecoration(
-                    labelText: 'ملاحظات (اختياري)',
-                    hintText: 'مثال: أفضل وقت بعد الظهر...',
-                    border: OutlineInputBorder(),
-                  ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: locCtrl,
+                style: const TextStyle(color: AppTheme.textWhite),
+                decoration: const InputDecoration(
+                  labelText: 'موقع العقار *',
+                  hintText: 'مثال: حي المطار، بجانب صيدلية النور',
+                  border: OutlineInputBorder(),
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: phoneCtrl,
+                keyboardType: TextInputType.phone,
+                style: const TextStyle(color: AppTheme.textWhite),
+                decoration: const InputDecoration(
+                  labelText: 'هاتف التواصل',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: notesCtrl,
+                maxLines: 2,
+                style: const TextStyle(color: AppTheme.textWhite),
+                decoration: const InputDecoration(
+                  labelText: 'ملاحظات (اختياري)',
+                  hintText: 'مثال: أفضل وقت بعد الظهر...',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('إلغاء', style: TextStyle(color: AppTheme.textGrey)),
-            ),
-            ElevatedButton(
-              onPressed: selectedOfferId == null ? null : () => Navigator.pop(ctx, true),
-              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryGold),
-              child: const Text('إرسال الطلب', style: TextStyle(color: AppTheme.deepBlack)),
-            ),
-          ],
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('إلغاء', style: TextStyle(color: AppTheme.textGrey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (descCtrl.text.trim().isEmpty || locCtrl.text.trim().isEmpty) {
+                return; // لازم وصف وموقع
+              }
+              Navigator.pop(ctx, true);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryGold),
+            child: const Text('إرسال الطلب', style: TextStyle(color: AppTheme.deepBlack)),
+          ),
+        ],
       ),
     );
 
-    if (confirmed != true || selectedOfferId == null || !mounted) return;
+    if (confirmed != true || !mounted) return;
 
     try {
       final response = await SupabaseService().invokeFunction('admin-photography', body: {
         'action': 'request_photography',
         'user_uid': user.uid,
-        'offer_id': selectedOfferId,
+        'property_desc': descCtrl.text.trim(),
+        'property_location': locCtrl.text.trim(),
+        'contact_phone': phoneCtrl.text.trim(),
         'notes': notesCtrl.text.trim(),
       });
       final data = response.data is Map ? Map<String, dynamic>.from(response.data) : null;
       if (data != null && data['success'] == true) {
         _snack('✅ تم إرسال طلب التصوير بنجاح');
       } else {
-        _snack('فشل إرسال طلب التصوير: ${data?['error'] ?? 'خطأ غير معروف'}');
+        final err = data?['error'] ?? 'خطأ غير معروف';
+        if (err == 'ACTIVE_PHOTOGRAPHY_REQUEST_EXISTS') {
+          _snack('لديك طلب تصوير نشط بالفعل — سيتم التواصل معك قريباً');
+        } else {
+          _snack('فشل إرسال طلب التصوير: $err');
+        }
       }
     } catch (e) {
       _snack('فشل إرسال طلب التصوير');
