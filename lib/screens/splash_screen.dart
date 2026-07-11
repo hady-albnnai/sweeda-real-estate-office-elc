@@ -81,6 +81,14 @@ class _SplashScreenState extends State<SplashScreen>
       }
     }
 
+    // ✅ إذا المستخدم قيد المعالجة (isNewUser) نوجّه فوراً
+    // بدون المرور بشاشة الزائر — يمنع الوميض
+    if (auth.isLoggedIn && auth.isNewUser) {
+      FCMService().setup();
+      context.go('/setup-profile');
+      return;
+    }
+
     // تهيئة FCM بعد التحقق من المستخدم (لتسجيل التوكن مع uid لو مسجّل دخول)
     FCMService().setup();
 

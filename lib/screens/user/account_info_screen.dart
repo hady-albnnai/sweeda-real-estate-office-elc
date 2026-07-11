@@ -436,12 +436,21 @@ class AccountInfoScreen extends StatelessWidget {
     final user = auth.userModel;
     if (user == null) return;
 
-    if (user.img.isEmpty || user.sid.isEmpty) {
+    // ✅ فحص اكتمال جميع البيانات المطلوبة قبل التوثيق
+    final missingFields = <String>[];
+    if (user.nm.isEmpty) missingFields.add('الاسم');
+    if (user.ph.isEmpty) missingFields.add('رقم الهاتف');
+    if (user.ad.isEmpty) missingFields.add('العنوان');
+    if (user.sid.isEmpty) missingFields.add('الرقم الوطني');
+    if (user.img.isEmpty) missingFields.add('صورة الهوية');
+
+    if (missingFields.isNotEmpty) {
       AppTheme.showSnackBar(context,
         SnackBar(
-          content: const Text(
-              'يجب رفع صورة الهوية + الرقم الوطني قبل طلب التوثيق'),
+          content: Text(
+              'يجب إكمال البيانات التالية قبل طلب التوثيق:\n${missingFields.join('، ')}'),
           backgroundColor: AppTheme.errorRed,
+          duration: const Duration(seconds: 4),
           action: SnackBarAction(
             label: 'إكمال',
             textColor: Colors.white,
@@ -482,6 +491,10 @@ class AccountInfoScreen extends StatelessWidget {
     );
     if (confirmed != true || !context.mounted) return;
 
+    // ✅ تعطيل الزر فوراً بتحديث vrf محلياً (optimistic update)
+    // هذا يمنع المستخدم من الضغط مرة ثانية أثناء انتظار الاستجابة
+    auth.setVerificationPending();
+
     try {
       await SupabaseService().invokeFunction('user-account', body: {'action': 'request_verification', 'p_user_uid': user.uid});
       await auth.refreshUser();
@@ -494,6 +507,8 @@ class AccountInfoScreen extends StatelessWidget {
       );
     } catch (e) {
       if (!context.mounted) return;
+      // ✅ إرجاع الحالة عند الفشل
+      auth.setVerificationReverted();
       final msg = e.toString();
       String userMsg = '❌ فشل إرسال الطلب';
       if (msg.contains('ALREADY_VERIFIED')) {

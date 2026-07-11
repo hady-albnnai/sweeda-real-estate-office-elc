@@ -364,4 +364,86 @@ class AuthProvider with ChangeNotifier {
       // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
     }
   }
+
+  /// ✅ تحديث متفائل: تعيين حالة التوثيق "قيد المراجعة" فوراً
+  /// يمنع المستخدم من الضغط على زر طلب التوثيق مرة ثانية أثناء الانتظار
+  void setVerificationPending() {
+    if (_userModel != null) {
+      // إنشاء نسخة جديدة بحالة vrf=1 (قيد المراجعة)
+      _userModel = UserModel(
+        uid: _userModel!.uid,
+        nm: _userModel!.nm,
+        ph: _userModel!.ph,
+        eml: _userModel!.eml,
+        ad: _userModel!.ad,
+        role: _userModel!.role,
+        sid: _userModel!.sid,
+        img: _userModel!.img,
+        pt: _userModel!.pt,
+        bg: _userModel!.bg,
+        bgTs: _userModel!.bgTs,
+        bPkg: _userModel!.bPkg,
+        pkgEnd: _userModel!.pkgEnd,
+        pkgGrace: _userModel!.pkgGrace,
+        brk: _userModel!.brk,
+        brkCls: _userModel!.brkCls,
+        brkNm: _userModel!.brkNm,
+        sts: _userModel!.sts,
+        banRsn: _userModel!.banRsn,
+        ntf: _userModel!.ntf,
+        stats: _userModel!.stats,
+        wkLgn: _userModel!.wkLgn,
+        strk: _userModel!.strk,
+        strkDt: _userModel!.strkDt,
+        iDel: _userModel!.iDel,
+        perm: _userModel!.perm,
+        tsCrt: _userModel!.tsCrt,
+        tsUpd: _userModel!.tsUpd,
+        vrf: 1, // ✅ قيد المراجعة
+        usr: _userModel!.usr,
+        pwd: _userModel!.pwd,
+      );
+      notifyListeners();
+    }
+  }
+
+  /// ✅ إرجاع حالة التوثيق عند فشل الطلب
+  void setVerificationReverted() {
+    if (_userModel != null) {
+      _userModel = UserModel(
+        uid: _userModel!.uid,
+        nm: _userModel!.nm,
+        ph: _userModel!.ph,
+        eml: _userModel!.eml,
+        ad: _userModel!.ad,
+        role: _userModel!.role,
+        sid: _userModel!.sid,
+        img: _userModel!.img,
+        pt: _userModel!.pt,
+        bg: _userModel!.bg,
+        bgTs: _userModel!.bgTs,
+        bPkg: _userModel!.bPkg,
+        pkgEnd: _userModel!.pkgEnd,
+        pkgGrace: _userModel!.pkgGrace,
+        brk: _userModel!.brk,
+        brkCls: _userModel!.brkCls,
+        brkNm: _userModel!.brkNm,
+        sts: _userModel!.sts,
+        banRsn: _userModel!.banRsn,
+        ntf: _userModel!.ntf,
+        stats: _userModel!.stats,
+        wkLgn: _userModel!.wkLgn,
+        strk: _userModel!.strk,
+        strkDt: _userModel!.strkDt,
+        iDel: _userModel!.iDel,
+        perm: _userModel!.perm,
+        tsCrt: _userModel!.tsCrt,
+        tsUpd: _userModel!.tsUpd,
+        vrf: 0, // ✅ غير موثق
+        usr: _userModel!.usr,
+        pwd: _userModel!.pwd,
+      );
+      notifyListeners();
+    }
+  }
 }
