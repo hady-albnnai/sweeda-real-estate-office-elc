@@ -277,15 +277,11 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       ]),
       const SizedBox(height: 15),
       if (_selectedType == 0) ...[
-        TextField(controller: _areaCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'المساحة م² (اختياري)', border: OutlineInputBorder())),
+        TextField(controller: _areaCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'المساحة م²', border: OutlineInputBorder())),
         const SizedBox(height: 12),
-        _dd('الإكساء (اختياري)', ['ملكي', 'سوبر ديلوكس', 'ديلوكس', 'عادي', 'هيكل'], (v) => setState(() => _finishing = v)),
+        _dd('الإكساء', ['ملكي', 'سوبر ديلوكس', 'ديلوكس', 'عادي', 'هيكل'], (v) => setState(() => _finishing = v)),
         const SizedBox(height: 12),
-        TextField(controller: _floorCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'الطابق (اختياري)', hintText: 'مثال: 3', border: OutlineInputBorder())),
-        const SizedBox(height: 12),
-        _dd('اتجاه العقار (اختياري)', ['شمالي', 'جنوبي', 'شرقي', 'غربي', 'شمالي شرقي', 'شمالي غربي', 'جنوبي شرقي', 'جنوبي غربي', 'مفتوح - 4 اتجاهات'], (v) => setState(() => _direction = v)),
-        const SizedBox(height: 12),
-        TextField(controller: _legalNotesCtrl, decoration: const InputDecoration(labelText: 'ملاحظات قانونية (اختياري)', hintText: 'طابو أخضر، كاتب عدل، حكم محكمة...', border: OutlineInputBorder())),
+        TextField(controller: _floorCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'الطابق', hintText: 'مثال: 3', border: OutlineInputBorder())),
       ],
       if (_selectedType == 1) ...[
         TextField(controller: _carYearCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'سنة الصنع (إلزامي)', border: OutlineInputBorder())),
@@ -430,7 +426,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             const Row(children: [Icon(Icons.monetization_on, color: AppTheme.primaryGold, size: 28), SizedBox(width: 10), Text('تنبيه بخصوص عمولة المكتب', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 15))]),
             const SizedBox(height: 8),
-            Text(_selectedTrans == 0 ? 'يتقاضى المكتب عمولة قدرها 3% من القيمة الإجمالية عند إتمام عملية البيع.' : 'يتقاضى المكتب عمولة تعادل أجرة نصف شهر عند إتمام عملية الإيجار.', style: const TextStyle(color: Colors.white, fontSize: 13, height: 1.4)),
+            Text(_selectedTrans == 0 ? 'يتقاضى المكتب عمولة قدرها 3% من القيمة الإجمالية عند إتمام عملية البيع.' : 'يتقاضى المكتب عمولة تعادل أجرة نصف شهر عند إتمام عملية الإيجار.', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 13, height: 1.4)),
           ]),
         ),
         const SizedBox(height: 15),
