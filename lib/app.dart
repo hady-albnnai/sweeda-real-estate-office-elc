@@ -148,8 +148,7 @@ class _MyAppState extends State<MyApp> {
           title: 'المكتب العقاري الالكتروني',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.darkTheme,
-          // ✅ غلاف آمن يمنع go_router من الانهيار عند استقبال روابط عميقة
-          routerConfig: _DeepLinkSafeRouterConfig(AppRouter.router),
+          routerConfig: AppRouter.router,
           locale: const Locale('ar', 'SY'),
           builder: (context, child) {
             if (_initError != null) {
@@ -195,80 +194,5 @@ class _MyAppState extends State<MyApp> {
         );
       }),
     );
-  }
-}
-
-// ════════════════════════════════════════════════════════════════════════
-// غلاف آمن لـ GoRouter يمنع الانهيار عند استقبال روابط عميقة
-// ════════════════════════════════════════════════════════════════════════
-//
-// المشكلة: عند فتح رابط الماجيك لينك (io.supabase.sweeda://login-callback?code=...)
-// يصل الرابط لـ GoRouteInformationProvider الذي يمرره لـ GoRouteInformationParser
-// الذي يستدعي uri.origin فيفشل لأن scheme ليس http/https.
-// النتيجة: StateError: Origin is only applicable to schemes http and https
-//
-// الحل: تصفية الروابط ذات scheme غير http/https عند مستوى
-// RouteInformationProvider لأن supabase_flutter يعالجها منفصلاً
-// عبر onAuthStateChange ولا نحتاج go_router لمعالجتها.
-// ════════════════════════════════════════════════════════════════════════
-
-class _DeepLinkSafeRouterConfig implements RouterConfig<RouteMatchList> {
-  final GoRouter _goRouter;
-  late final _DeepLinkSafeProvider _safeProvider;
-
-  _DeepLinkSafeRouterConfig(this._goRouter) {
-    _safeProvider = _DeepLinkSafeProvider(
-      _goRouter.routeInformationProvider!,
-    );
-  }
-
-  @override
-  RouteInformationProvider get routeInformationProvider => _safeProvider;
-
-  @override
-  RouteInformationParser<RouteMatchList> get routeInformationParser =>
-      _goRouter.routeInformationParser;
-
-  @override
-  RouterDelegate<RouteMatchList> get routerDelegate =>
-      _goRouter.routerDelegate;
-
-  @override
-  BackButtonDispatcher? get backButtonDispatcher =>
-      _goRouter.backButtonDispatcher;
-}
-
-class _DeepLinkSafeProvider extends RouteInformationProvider with ChangeNotifier {
-  final RouteInformationProvider _inner;
-  RouteInformation _currentValue;
-
-  _DeepLinkSafeProvider(this._inner) : _currentValue = _inner.value {
-    _inner.addListener(_onInnerChange);
-  }
-
-  void _onInnerChange() {
-    _currentValue = _inner.value;
-    notifyListeners();
-  }
-
-  @override
-  RouteInformation get value => _currentValue;
-
-  @override
-  void didPushRouteInformation(RouteInformation routeInformation) {
-    final uri = routeInformation.uri;
-    if (uri.scheme != 'http' && uri.scheme != 'https') {
-      // رابط عميق (deep link) — لا نمرره لـ go_router
-      // supabase_flutter يعالجه عبر onAuthStateChange
-      debugPrint('👉 [DEEP_LINK] Ignoring non-HTTP route: $uri');
-      return;
-    }
-    _currentValue = routeInformation;
-    _inner.didPushRouteInformation(routeInformation);
-  }
-
-  @override
-  void routerDelegateChanged() {
-    _inner.routerDelegateChanged();
   }
 }
