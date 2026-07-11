@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -7,8 +8,69 @@ import '../../core/theme/app_theme.dart';
 /// شاشة "تحقق من بريدك" — تظهر بعد إرسال Magic Link.
 /// المستخدم يفتح إيميله، يضغط الرابط، فيُفتح التطبيق عبر deep link
 /// ويتم إكمال تسجيل الدخول تلقائياً.
-class CheckEmailScreen extends StatelessWidget {
+class CheckEmailScreen extends StatefulWidget {
   const CheckEmailScreen({super.key});
+
+  @override
+  State<CheckEmailScreen> createState() => _CheckEmailScreenState();
+}
+
+class _CheckEmailScreenState extends State<CheckEmailScreen> {
+  Timer? _resendTimer;
+  int _resendCooldown = 0;
+  bool _sending = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // بدء فترة التبريد الأولى (60 ثانية بعد الإرسال الأولي)
+    _startResendCooldown();
+  }
+
+  @override
+  void dispose() {
+    _resendTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startResendCooldown() {
+    setState(() => _resendCooldown = 60);
+    _resendTimer?.cancel();
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_resendCooldown <= 1) {
+        timer.cancel();
+        if (mounted) setState(() => _resendCooldown = 0);
+      } else {
+        if (mounted) setState(() => _resendCooldown--);
+      }
+    });
+  }
+
+  Future<void> _resendLink() async {
+    final auth = context.read<AuthProvider>();
+    if (auth.currentEmail == null) return;
+
+    setState(() => _sending = true);
+    final ok = await auth.sendEmailMagicLink(auth.currentEmail!);
+    if (!mounted) return;
+    setState(() => _sending = false);
+
+    if (ok) {
+      _startResendCooldown();
+      if (mounted) {
+        AppTheme.showSnackBar(context,
+            const SnackBar(content: Text('تم إعادة إرسال الرابط')));
+      }
+    } else {
+      if (mounted) {
+        AppTheme.showSnackBar(
+            context,
+            const SnackBar(
+                content: Text('فشل إعادة الإرسال، حاول بعد قليل'),
+                backgroundColor: Colors.red));
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,16 +109,20 @@ class CheckEmailScreen extends StatelessWidget {
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    if (auth.currentEmail != null) {
-                      auth.sendEmailMagicLink(auth.currentEmail!);
-                      AppTheme.showSnackBar(context,
-                          const SnackBar(
-                              content: Text('تم إعادة إرسال الرابط')));
-                    }
-                  },
-                  icon: const Icon(Icons.refresh, color: Colors.black),
-                  label: const Text('إعادة الإرسال'),
+                  onPressed: _resendCooldown > 0 || _sending
+                      ? null
+                      : _resendLink,
+                  icon: _sending
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.black),
+                        )
+                      : const Icon(Icons.refresh, color: Colors.black),
+                  label: Text(_resendCooldown > 0
+                      ? 'إعادة الإرسال بعد $_resendCooldown ثانية'
+                      : 'إعادة الإرسال'),
                 ),
               ),
               const SizedBox(height: 12),

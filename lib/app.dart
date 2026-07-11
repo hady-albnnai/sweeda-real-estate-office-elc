@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/theme/app_theme.dart';
@@ -31,6 +32,10 @@ class _MyAppState extends State<MyApp> {
   String? _initError;
   StreamSubscription<AuthState>? _authSub;
 
+  // ✅ إنشاء AuthProvider كمتغير عضو للوصول المباشر من المستمع
+  // بدون الحاجة لـ BuildContext (السياق فوق MultiProvider لا يرى الـ Provider)
+  final AuthProvider _authProvider = AuthProvider();
+
   @override
   void initState() {
     super.initState();
@@ -50,46 +55,53 @@ class _MyAppState extends State<MyApp> {
   ///   - initialSession: عند فتح الرابط والتطبيق كان مغلقاً (cold start)
   void _listenAuthChanges() {
     _authSub?.cancel();
-    _authSub = SupabaseService().auth.onAuthStateChange.listen((data) {
-      final event = data.event;
-      // ✅ معالجة signedIn (warm start) + initialSession (cold start)
-      if (event == AuthChangeEvent.signedIn ||
-          event == AuthChangeEvent.initialSession) {
-        final session = data.session;
-        if (session?.user.email != null &&
-            !session!.user.email!.endsWith('@whatsapp.local')) {
-          if (!mounted) return;
-          // إيميل حقيقي → magic link
-          final auth = context.read<AuthProvider>();
-          if (!auth.isLoggedIn) {
-            auth.handleEmailSession().then((ok) {
-              if (!mounted || !ok) return;
-              _navigateAfterEmailAuth(auth);
-            });
+    _authSub = SupabaseService().auth.onAuthStateChange.listen(
+      (data) {
+        final event = data.event;
+        // ✅ معالجة signedIn (warm start) + initialSession (cold start)
+        if (event == AuthChangeEvent.signedIn ||
+            event == AuthChangeEvent.initialSession) {
+          final session = data.session;
+          if (session?.user.email != null &&
+              !session!.user.email!.endsWith('@whatsapp.local')) {
+            if (!mounted) return;
+            // إيميل حقيقي → magic link
+            // ✅ استخدام المتغير العضو مباشرة بدل context.read
+            if (!_authProvider.isLoggedIn) {
+              _authProvider.handleEmailSession().then((ok) {
+                if (!mounted || !ok) return;
+                _navigateAfterEmailAuth();
+              });
+            }
           }
         }
-      }
-    });
+      },
+      onError: (error) {
+        // تجاهل أخطاء انتهاء صلاحية الرابط بصمت
+        // (supabase_flutter يرمي AuthException داخلياً)
+        debugPrint('👉 [AUTH_LISTENER] Auth stream error: $error');
+      },
+    );
   }
 
   /// توجيه المستخدم بعد تسجيل الدخول عبر الإيميل
-  void _navigateAfterEmailAuth(AuthProvider auth) {
+  void _navigateAfterEmailAuth() {
     final go = AppRouter.router;
-    if (auth.isNewUser) {
+    if (_authProvider.isNewUser) {
       go.go('/setup-profile');
-    } else if (auth.isLawyer) {
+    } else if (_authProvider.isLawyer) {
       go.go('/lawyer/dashboard');
-    } else if (auth.isExpediter) {
+    } else if (_authProvider.isExpediter) {
       go.go('/expediter/tasks');
-    } else if (auth.isSenior) {
+    } else if (_authProvider.isSenior) {
       go.go('/admin/dashboard');
-    } else if (auth.isEmployee) {
+    } else if (_authProvider.isEmployee) {
       go.go('/employee/home');
-    } else if (auth.isSupervisor) {
+    } else if (_authProvider.isSupervisor) {
       go.go('/executor/tasks');
-    } else if (auth.isPhotographer) {
+    } else if (_authProvider.isPhotographer) {
       go.go('/photographer/tasks');
-    } else if (auth.isBroker) {
+    } else if (_authProvider.isBroker) {
       go.go('/broker/dashboard');
     } else {
       go.go('/user/home');
@@ -102,7 +114,6 @@ class _MyAppState extends State<MyApp> {
           url: supabaseUrl, publishableKey: supabasePublishableKey);
       await NotificationService.initialize();
       if (mounted) setState(() => _initialized = true);
-      // ملاحظة: الـ listener يُربط بأول build (له context)
     } catch (e) {
       if (mounted) setState(() => _initError = e.toString());
     }
@@ -112,7 +123,8 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        // ✅ استخدام .value لأننا أنشأنا المتغير مسبقاً
+        ChangeNotifierProvider.value(value: _authProvider),
         ChangeNotifierProvider(create: (_) => ConfigProvider()),
         ChangeNotifierProvider(create: (_) => OfferProvider()),
         ChangeNotifierProvider(create: (_) => RequestProvider()),
@@ -126,45 +138,137 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider(create: (_) => LegalProvider()),
       ],
       child: Builder(builder: (ctx) {
-        // ربط الـ listener مرة واحدة بعد ما يتوفر context الموجود فيه AuthProvider
+        // ربط الـ listener مرة واحدة بعد ما يتوفر context
         if (_initialized && _authSub == null) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) _listenAuthChanges();
           });
         }
         return MaterialApp.router(
-        title: 'المكتب العقاري الالكتروني',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.darkTheme,
-        routerConfig: AppRouter.router,
-        locale: const Locale('ar', 'SY'),
-        builder: (context, child) {
-          if (_initError != null) {
-            return Directionality(
-              textDirection: TextDirection.rtl,
-              child: Scaffold(
-                backgroundColor: AppTheme.scaffoldBackground,
-                body: Center(
-                  child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    const Icon(Icons.error_outline, color: Colors.red, size: 60),
-                    const SizedBox(height: 20),
-                    const Text('حدث خطأ في التهيئة', style: TextStyle(color: AppTheme.textWhite, fontSize: 18)),
-                    const SizedBox(height: 10),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 30),
-                      child: Text(_initError!, style: const TextStyle(color: AppTheme.textGrey, fontSize: 12), textAlign: TextAlign.center),
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton(onPressed: () => setState(() { _initError = null; _initializeApp(); }), child: const Text('إعادة المحاولة')),
-                  ]),
+          title: 'المكتب العقاري الالكتروني',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.darkTheme,
+          // ✅ غلاف آمن يمنع go_router من الانهيار عند استقبال روابط عميقة
+          routerConfig: _DeepLinkSafeRouterConfig(AppRouter.router),
+          locale: const Locale('ar', 'SY'),
+          builder: (context, child) {
+            if (_initError != null) {
+              return Directionality(
+                textDirection: TextDirection.rtl,
+                child: Scaffold(
+                  backgroundColor: AppTheme.scaffoldBackground,
+                  body: Center(
+                    child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.error_outline,
+                              color: Colors.red, size: 60),
+                          const SizedBox(height: 20),
+                          const Text('حدث خطأ في التهيئة',
+                              style: TextStyle(
+                                  color: AppTheme.textWhite, fontSize: 18)),
+                          const SizedBox(height: 10),
+                          Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 30),
+                            child: Text(_initError!,
+                                style: const TextStyle(
+                                    color: AppTheme.textGrey,
+                                    fontSize: 12),
+                                textAlign: TextAlign.center),
+                          ),
+                          const SizedBox(height: 20),
+                          ElevatedButton(
+                              onPressed: () => setState(() {
+                                    _initError = null;
+                                    _initializeApp();
+                                  }),
+                              child: const Text('إعادة المحاولة')),
+                        ]),
+                  ),
                 ),
-              ),
-            );
-          }
-          return Directionality(textDirection: TextDirection.rtl, child: child!);
-        },
-      );
+              );
+            }
+            return Directionality(
+                textDirection: TextDirection.rtl, child: child!);
+          },
+        );
       }),
     );
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// غلاف آمن لـ GoRouter يمنع الانهيار عند استقبال روابط عميقة
+// ════════════════════════════════════════════════════════════════════════
+//
+// المشكلة: عند فتح رابط الماجيك لينك (io.supabase.sweeda://login-callback?code=...)
+// يصل الرابط لـ GoRouteInformationProvider الذي يمرره لـ GoRouteInformationParser
+// الذي يستدعي uri.origin فيفشل لأن scheme ليس http/https.
+// النتيجة: StateError: Origin is only applicable to schemes http and https
+//
+// الحل: تصفية الروابط ذات scheme غير http/https عند مستوى
+// RouteInformationProvider لأن supabase_flutter يعالجها منفصلاً
+// عبر onAuthStateChange ولا نحتاج go_router لمعالجتها.
+// ════════════════════════════════════════════════════════════════════════
+
+class _DeepLinkSafeRouterConfig implements RouterConfig<RouteMatchList> {
+  final GoRouter _goRouter;
+  late final _DeepLinkSafeProvider _safeProvider;
+
+  _DeepLinkSafeRouterConfig(this._goRouter) {
+    _safeProvider = _DeepLinkSafeProvider(
+      _goRouter.routeInformationProvider!,
+    );
+  }
+
+  @override
+  RouteInformationProvider get routeInformationProvider => _safeProvider;
+
+  @override
+  RouteInformationParser<RouteMatchList> get routeInformationParser =>
+      _goRouter.routeInformationParser;
+
+  @override
+  RouterDelegate<RouteMatchList> get routerDelegate =>
+      _goRouter.routerDelegate;
+
+  @override
+  BackButtonDispatcher? get backButtonDispatcher =>
+      _goRouter.backButtonDispatcher;
+}
+
+class _DeepLinkSafeProvider extends RouteInformationProvider with ChangeNotifier {
+  final RouteInformationProvider _inner;
+  RouteInformation _currentValue;
+
+  _DeepLinkSafeProvider(this._inner) : _currentValue = _inner.value {
+    _inner.addListener(_onInnerChange);
+  }
+
+  void _onInnerChange() {
+    _currentValue = _inner.value;
+    notifyListeners();
+  }
+
+  @override
+  RouteInformation get value => _currentValue;
+
+  @override
+  void didPushRouteInformation(RouteInformation routeInformation) {
+    final uri = routeInformation.uri;
+    if (uri.scheme != 'http' && uri.scheme != 'https') {
+      // رابط عميق (deep link) — لا نمرره لـ go_router
+      // supabase_flutter يعالجه عبر onAuthStateChange
+      debugPrint('👉 [DEEP_LINK] Ignoring non-HTTP route: $uri');
+      return;
+    }
+    _currentValue = routeInformation;
+    _inner.didPushRouteInformation(routeInformation);
+  }
+
+  @override
+  void routerDelegateChanged() {
+    _inner.routerDelegateChanged();
   }
 }
