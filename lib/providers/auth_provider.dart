@@ -189,16 +189,27 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  /// يُستدعى تلقائياً عند فتح التطبيق من deep link الماجيك لينك
+  /// يُستدعى تلقائياً عند فتح التطبيق من deep link الماجيك لينك.
+  /// مهم: لا نعمل signOut هنا لأن Supabase يكون قد أنشأ جلسة الإيميل للتو؛
+  /// نكتفي بتنظيف الجلسة المحلية القديمة حتى لا يحدث AUTH_MISMATCH.
   Future<bool> handleEmailSession() async {
     try {
-      // تنظيف أي جلسات قديمة قبل تفعيل جلسة الماجيك لينك
-      await AuthService().signOut();
-      
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('user_id');
+      await prefs.remove('user_phone');
+      await prefs.remove('user_email');
+      await prefs.remove('auth_channel');
+      await prefs.remove('staff_session_token');
+      await prefs.remove('staff_session_expires_at');
+
       final result = await AuthService().handleEmailSession();
       if (result['success'] == true) {
-        _isNewUser = result['isNewUser'] as bool? ?? false;
+        final serverSaysNew = result['isNewUser'] as bool? ?? false;
         await _loadUserData(result['userId'] as String);
+        _isNewUser = serverSaysNew ||
+            !(_userModel?.hasUsername ?? false) ||
+            !(_userModel?.hasPassword ?? false);
+        notifyListeners();
         return true;
       }
       return false;

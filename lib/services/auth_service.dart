@@ -115,9 +115,12 @@ class AuthService {
           'action': 'handle_email_auth',
         },
       );
-      final data = result.data is Map ? Map<String, dynamic>.from(result.data) : null;
+      final root = result.data is Map ? Map<String, dynamic>.from(result.data) : null;
+      final data = root?['result'] is Map
+          ? Map<String, dynamic>.from(root!['result'] as Map)
+          : root;
       if (data == null || data['success'] != true) {
-        return {'success': false, 'error': data?['error'] ?? 'EMAIL_AUTH_FAILED'};
+        return {'success': false, 'error': data?['error'] ?? root?['error'] ?? 'EMAIL_AUTH_FAILED'};
       }
 
       final userId = data['user_id']?.toString();

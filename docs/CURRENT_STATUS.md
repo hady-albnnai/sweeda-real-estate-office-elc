@@ -670,3 +670,19 @@ supabase functions deploy legal-actions
 ```bash
 supabase functions deploy admin-dashboard
 ```
+
+---
+
+## تحديث 2026-07-10 — إصلاح توجيه Magic Link بعد تسجيل الإيميل
+
+- تم إصلاح مسار فتح التطبيق بعد الضغط على رابط الإيميل من Supabase/Resend.
+- السبب كان أن `AuthProvider.handleEmailSession()` كان ينفذ `signOut()` فور وصول جلسة Magic Link، فيمسح جلسة Supabase التي وصلت للتو، فيبقى المستخدم على شاشة "تحقق من بريدك".
+- تم استبدال ذلك بتنظيف الجلسة المحلية القديمة فقط (`SharedPreferences`) بدون تسجيل خروج من Supabase Auth.
+- تم تحديث تحليل رد `user-account.handle_email_auth` ليدعم الرد القديم `{success,result}` والرد الجديد المسطح.
+- تم تحديث Edge Function `user-account` ليعيد نتيجة `handle_email_auth_internal` بشكل مسطح يحتوي `user_id`, `is_new`, `email`.
+- الآن المستخدم الجديد عبر الإيميل يجب أن ينتقل إلى شاشة `/setup-profile` لإعداد اسم المستخدم وكلمة المرور.
+
+**يلزم نشر:**
+```bash
+supabase functions deploy user-account
+```

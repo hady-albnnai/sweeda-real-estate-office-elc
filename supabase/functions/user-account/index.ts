@@ -252,7 +252,11 @@ serve(async (req) => {
     if (action === "handle_email_auth") {
       const { data, error } = await supabaseAdmin.rpc("handle_email_auth_internal");
       if (error) return json({ success: false, error: error.message }, 400);
-      return json({ success: true, result: data });
+      if (data && typeof data === "object") {
+        const payload = data as Record<string, unknown>;
+        return json({ ...payload, success: payload.success !== false });
+      }
+      return json({ success: false, error: "EMAIL_AUTH_FAILED" }, 400);
     }
 
     if (action === "request_verification") {
