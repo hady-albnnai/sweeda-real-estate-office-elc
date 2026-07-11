@@ -10,6 +10,7 @@ CREATE OR REPLACE FUNCTION public.create_request_internal(
 RETURNS SETOF public.requests
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
   v_user public.users%ROWTYPE;
