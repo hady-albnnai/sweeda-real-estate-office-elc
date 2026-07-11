@@ -50,6 +50,16 @@ class _OfferCardState extends State<OfferCard> {
           AppUtils.showPointsAwarded(context, 10, label: 'نقطة إعجاب');
         }
       }
+    } else if (!added && mounted) {
+      // ✅ خصم 10 نقاط عند إزالة الإعجاب (منع الاستغلال)
+      final auth = context.read<AuthProvider>();
+      if (auth.isLoggedIn) {
+        await BusinessService().addPoints(auth.userModel!.uid, -10);
+        await auth.refreshUser();
+        if (mounted) {
+          AppUtils.showPointsAwarded(context, -10, label: 'إزالة إعجاب');
+        }
+      }
     }
   }
 
