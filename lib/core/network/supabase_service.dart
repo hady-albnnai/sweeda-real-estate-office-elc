@@ -60,9 +60,9 @@ class SupabaseService {
   Future<String?> getValidAccessToken() async {
     try {
       var session = auth.currentSession;
-      if (session != null) {
+      if (session != null && session.expiresAt != null) {
         final expiresAt = DateTime.fromMillisecondsSinceEpoch(
-          session.expiresAt * 1000,
+          session.expiresAt! * 1000,
         );
         final now = DateTime.now();
         if (now.isBefore(expiresAt.subtract(const Duration(minutes: 5)))) {
