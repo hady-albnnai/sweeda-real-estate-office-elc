@@ -173,6 +173,13 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       imageUrls = await _storage.uploadOfferImages(files: _pickedImages, userId: user.uid, onProgress: (done, total) {
         if (mounted) setState(() => _progressMsg = 'جاري رفع الصور ($done/$total)...');
       });
+      // ✅ إذا فشل رفع كل الصور، نُظهر خطأ صريح
+      if (imageUrls.isEmpty && _pickedImages.isNotEmpty) {
+        if (mounted) {
+          setState(() { _submitting = false; _progressMsg = ''; });
+          _snack('⚠️ فشل رفع الصور. سيتم نشر العرض بدون صور. يمكنك تعديله لاحقاً لإضافة الصور.');
+        }
+      }
     }
 
     final loc = _selectedType == 1 ? {'r': 0, 'd': '', 'city': _carGovernorate ?? ''} : {'r': 0, 'd': _locCtrl.text, 'city': _selectedCityArea == _customCityOption ? _customCityCtrl.text : _selectedCityArea};

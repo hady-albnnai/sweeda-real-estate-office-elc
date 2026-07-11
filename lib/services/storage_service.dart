@@ -123,13 +123,16 @@ class StorageService {
       // Headers
       final headers = <String, String>{
         'apikey': SupabaseService.publishableKey!,
-        'Authorization': 'Bearer ${SupabaseService.publishableKey!}',
       };
 
       // إذا كان المستخدم مسجل دخول بـ Supabase Auth (JWT) نضيفه
       final session = SupabaseService().client.auth.currentSession;
       if (session != null) {
         headers['Authorization'] = 'Bearer ${session.accessToken}';
+      } else {
+        // ✅ Fallback: نستخدم anon key كـ Authorization أساسي
+        // الـ Edge Function بيفحص JWT أولاً، وإذا فشل بيفحص staff_session_token
+        headers['Authorization'] = 'Bearer ${SupabaseService.publishableKey!}';
       }
 
       // إذا كان هناك staff_session_token (من AuthService) نضيفه
@@ -194,6 +197,11 @@ class StorageService {
         bytes = await (compressed ?? File(xfile.path)).readAsBytes();
       }
 
+      if (bytes.isEmpty) {
+        _setError('Compressed image is empty');
+        return null;
+      }
+
       final urls = await _uploadViaEdgeFunction(
         files: [(bytes: bytes, name: xfile.name)],
         userId: userId,
@@ -203,7 +211,8 @@ class StorageService {
       return urls.isNotEmpty ? urls.first : null;
     } catch (e) {
       _setError(e);
-      return null;
+      // ✅ لا نرجع null بصمت — نرمي الخطأ ليتم التقاطه في الشاشة
+      rethrow;
     }
   }
 
@@ -215,14 +224,28 @@ class StorageService {
     void Function(int done, int total)? onProgress,
   }) async {
     final urls = <String>[];
+    int failedCount = 0;
     for (var i = 0; i < files.length; i++) {
-      final url = await uploadOfferImage(
-        xfile: files[i],
-        userId: userId,
-        offerId: offerId,
-      );
-      if (url != null) urls.add(url);
+      try {
+        final url = await uploadOfferImage(
+          xfile: files[i],
+          userId: userId,
+          offerId: offerId,
+        );
+        if (url != null) {
+          urls.add(url);
+        } else {
+          failedCount++;
+        }
+      } catch (e) {
+        failedCount++;
+        _setError(e);
+      }
       onProgress?.call(i + 1, files.length);
+    }
+    // ✅ إذا كل الصور فشلت، نرمي استثناء صريح
+    if (failedCount == files.length && files.isNotEmpty) {
+      throw StorageException('رفع جميع الصور فشل — تحقق من اتصال الإنترنت وحاول مجدداً');
     }
     return urls;
   }
