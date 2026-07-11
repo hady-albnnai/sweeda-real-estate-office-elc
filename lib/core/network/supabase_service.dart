@@ -56,6 +56,36 @@ class SupabaseService {
   /// هل التطبيق جاهز؟
   bool get isReady => _initialized;
 
+  /// يحاول الحصول على access token صالح مع تحديث تلقائي إذا لزم
+  Future<String?> getValidAccessToken() async {
+    try {
+      var session = auth.currentSession;
+      if (session != null) {
+        final expiresAt = DateTime.fromMillisecondsSinceEpoch(
+          session.expiresAt * 1000,
+        );
+        final now = DateTime.now();
+        if (now.isBefore(expiresAt.subtract(const Duration(minutes: 5)))) {
+          return session.accessToken;
+        }
+      }
+
+      // التوكن منتهي أو غير موجود → حاول التحديث
+      try {
+        final response = await auth.refreshSession();
+        if (response.session != null) {
+          return response.session!.accessToken;
+        }
+      } catch (_) {}
+
+      // Last resort
+      session = auth.currentSession;
+      return session?.accessToken;
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// استدعاء Edge Function مع إضافة توكن الجلسة المخصص إذا لزم الأمر
   Future<dynamic> invokeFunction(
     String functionName, {
@@ -65,7 +95,9 @@ class SupabaseService {
     final prefs = await SharedPreferences.getInstance();
     final sessionToken = prefs.getString('staff_session_token');
     final storedUserId = prefs.getString('user_id') ?? currentUser?.id;
-    final jwt = auth.currentSession?.accessToken;
+
+    // ✅ نحصل على توكن صالح مع تحديث تلقائي
+    final jwt = await getValidAccessToken();
 
     final finalHeaders = Map<String, String>.from(headers ?? {});
 

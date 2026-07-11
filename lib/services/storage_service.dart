@@ -106,6 +106,11 @@ class StorageService {
     return '${SupabaseService.url!}/functions/v1/upload-offer-images';
   }
 
+  /// يحاول الحصول على access token صالح للرفع (يستخدم الدالة المركزية)
+  Future<String?> _getValidAccessToken() async {
+    return await SupabaseService().getValidAccessToken();
+  }
+
   /// رفع ملفات عبر Edge Function `upload-offer-images`.
   /// [files] : قائمة ملفات (Uint8List + اسم الملف).
   /// [userId] : مجلد المستخدم (uid).
@@ -125,20 +130,25 @@ class StorageService {
         'apikey': SupabaseService.publishableKey!,
       };
 
-      // إذا كان المستخدم مسجل دخول بـ Supabase Auth (JWT) نضيفه
-      final session = SupabaseService().client.auth.currentSession;
-      if (session != null) {
-        headers['Authorization'] = 'Bearer ${session.accessToken}';
-      } else {
-        // ✅ Fallback: نستخدم anon key كـ Authorization أساسي
-        // الـ Edge Function بيفحص JWT أولاً، وإذا فشل بيفحص staff_session_token
-        headers['Authorization'] = 'Bearer ${SupabaseService.publishableKey!}';
+      // ✅ نحصل على access token صالح (مع تحديث تلقائي إذا لزم)
+      final accessToken = await _getValidAccessToken();
+      if (accessToken != null) {
+        headers['Authorization'] = 'Bearer $accessToken';
       }
+      // ❌ لا نستخدم anon key كبديل لأن الـ Edge Function بتُرفضه حتماً
+      // إذا ما في توكن صالح، بنعتمد على staff_session_token فقط
 
       // إذا كان هناك staff_session_token (من AuthService) نضيفه
       final staffToken = await AuthService().getStaffSessionToken();
       if (staffToken != null && staffToken.isNotEmpty) {
         headers['x-staff-session-token'] = staffToken;
+      }
+
+      // ✅ إذا ما في JWT ولا staff_session_token → لا نستطيع الرفع
+      if (accessToken == null && (staffToken == null || staffToken.isEmpty)) {
+        throw StorageException(
+          'لا يوجد جلسة نشطة — سجّل دخولك مجدداً وحاول',
+        );
       }
 
       request.headers.addAll(headers);
