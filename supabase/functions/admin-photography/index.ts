@@ -93,6 +93,35 @@ serve(async (req) => {
         return json({ success: false, error: "USER_UID_AND_OFFER_ID_REQUIRED" }, 400);
       }
 
+      // التحقق من هوية المستخدم عبر JWT أو staff_session_token
+      const authHeader = req.headers.get("Authorization") ?? "";
+      const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+      let verifiedUid = "";
+
+      if (bearer && bearer !== "undefined" && bearer !== "null") {
+        const { data: userData } = await supabaseAdmin.auth.getUser(bearer);
+        verifiedUid = userData?.user?.id ?? "";
+      }
+
+      // إذا ما في JWT صالح، نحاول staff_session_token
+      if (!verifiedUid) {
+        const sessionToken = (body.staff_session_token ?? body.staffSessionToken)?.toString() ?? "";
+        if (sessionToken && userUid) {
+          const { data, error } = await supabaseAdmin.rpc("validate_staff_session", {
+            p_user_uid: userUid,
+            p_token: sessionToken,
+            p_min_role: 0,
+          });
+          if (!error && data?.success === true) {
+            verifiedUid = userUid;
+          }
+        }
+      }
+
+      if (!verifiedUid || verifiedUid !== userUid) {
+        return json({ success: false, error: "AUTH_REQUIRED" }, 401);
+      }
+
       // التحقق من أن العرض يخص المستخدم
       const { data: offerRow, error: offerError } = await supabaseAdmin
         .from("offers")
