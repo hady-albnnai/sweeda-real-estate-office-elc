@@ -46,8 +46,8 @@ class StorageService {
     try {
       return await _picker.pickImage(
         source: fromCamera ? ImageSource.camera : ImageSource.gallery,
-        imageQuality: 90,
-        maxWidth: 1920,
+        imageQuality: 60,
+        maxWidth: 1280,
       );
     } catch (e) {
       _setError(e);
@@ -58,7 +58,7 @@ class StorageService {
   /// اختيار عدة صور من المعرض (مع حد أقصى)
   Future<List<XFile>> pickMultiImages({int limit = maxImages}) async {
     try {
-      final files = await _picker.pickMultiImage(imageQuality: 90, maxWidth: 1920);
+      final files = await _picker.pickMultiImage(imageQuality: 60, maxWidth: 1280);
       if (files.length > limit) return files.sublist(0, limit);
       return files;
     } catch (e) {
@@ -72,7 +72,8 @@ class StorageService {
   // ═══════════════════════════════════════
 
   /// ضغط صورة (يتخطى الضغط على الويب لعدم توفّر المسارات)
-  Future<File?> compressImage(File file, {int quality = 70}) async {
+  /// الجودة الافتراضية 50% مع حد أقصى 1024 بكسل لضغط أقوى
+  Future<File?> compressImage(File file, {int quality = 50}) async {
     if (kIsWeb) return file;
     try {
       final dir = await getTemporaryDirectory();
@@ -82,8 +83,8 @@ class StorageService {
         file.absolute.path,
         target,
         quality: quality,
-        minWidth: 1280,
-        minHeight: 1280,
+        minWidth: 1024,
+        minHeight: 1024,
       );
       if (result == null) return file;
       return File(result.path);

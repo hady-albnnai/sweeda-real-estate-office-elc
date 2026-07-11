@@ -116,7 +116,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
               ),
             ),
             Text(
-              'شو بدك اليوم؟',
+              'اكتشف عقارك المثالي 🏠',
               style: TextStyle(
                 color: AppTheme.primaryGold.withOpacity(0.7),
                 fontSize: 12,

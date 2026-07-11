@@ -82,6 +82,66 @@ serve(async (req) => {
 
     const body = await req.json() as Record<string, unknown>;
     const action = (body.action ?? "").toString();
+
+    // ✅ طلب تصوير عقار من مستخدم عادي (لا يحتاج صلاحية إدارة)
+    if (action === "request_photography") {
+      const userUid = (body.user_uid ?? body.userUid)?.toString() ?? "";
+      const offerId = (body.offer_id ?? body.offerId)?.toString() ?? "";
+      const notes = (body.notes ?? "").toString();
+
+      if (!userUid || !offerId) {
+        return json({ success: false, error: "USER_UID_AND_OFFER_ID_REQUIRED" }, 400);
+      }
+
+      // التحقق من أن العرض يخص المستخدم
+      const { data: offerRow, error: offerError } = await supabaseAdmin
+        .from("offers")
+        .select("id, usr_id, ttl, i_del")
+        .eq("id", offerId)
+        .single();
+
+      if (offerError || !offerRow) {
+        return json({ success: false, error: "OFFER_NOT_FOUND" }, 404);
+      }
+      if (offerRow.usr_id !== userUid) {
+        return json({ success: false, error: "NOT_YOUR_OFFER" }, 403);
+      }
+      if (offerRow.i_del === 1) {
+        return json({ success: false, error: "OFFER_DELETED" }, 400);
+      }
+
+      // التحقق من عدم وجود طلب تصوير نشط على هذا العرض
+      const { data: existing, error: existError } = await supabaseAdmin
+        .from("photography_tasks")
+        .select("id")
+        .eq("off_id", offerId)
+        .in("sts", [0, 1, 2]) // بانتظار / قيد التنفيذ / مرسلة للمكتب
+        .limit(1);
+
+      if (!existError && existing && existing.length > 0) {
+        return json({ success: false, error: "ACTIVE_PHOTOGRAPHY_REQUEST_EXISTS" }, 400);
+      }
+
+      // إنشاء طلب تصوير
+      const { data: insertData, error: insertError } = await supabaseAdmin
+        .from("photography_tasks")
+        .insert({
+          off_id: offerId,
+          requested_by: userUid,
+          ttl: offerRow.ttl || "طلب تصوير عقار",
+          notes: notes,
+          sts: 0,
+        })
+        .select("id")
+        .single();
+
+      if (insertError) {
+        return json({ success: false, error: insertError.message }, 400);
+      }
+
+      return json({ success: true, task_id: insertData.id });
+    }
+
     const actor = await validateActor(req, supabaseAdmin, body, 3); // إدارة/موظف مكتبي
     if (!actor.ok) return actor.response;
 

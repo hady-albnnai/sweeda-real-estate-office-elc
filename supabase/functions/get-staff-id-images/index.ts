@@ -93,6 +93,33 @@ serve(async (req) => {
     );
 
     const body = await req.json();
+    const action = (body.action ?? "").toString();
+    
+    // دعم جلب signed URL مباشر لمسار صورة في ids_private
+    // يُستخدم من شاشة مراجعة التوثيق (minRole = 4)
+    if (action === "get_signed_url") {
+      const actor2 = await validateActor(req, supabaseAdmin, body, 4);
+      if (!actor2.ok) return actor2.response;
+      
+      const path = (body.path ?? "").toString();
+      if (!path) return json({ success: false, error: "PATH_REQUIRED" }, 400);
+      
+      // لا نسمح بجلب URLs خارجية عبر هذا endpoint
+      if (path.startsWith("http")) {
+        return json({ success: true, signed_url: path });
+      }
+      
+      const { data: signed, error: signError } = await supabaseAdmin.storage
+        .from("ids_private")
+        .createSignedUrl(path, 300);
+      if (signError) return json({ success: false, error: `SIGN_FAILED: ${signError.message}` }, 400);
+      if (signed?.signedUrl) {
+        return json({ success: true, signed_url: signed.signedUrl });
+      }
+      return json({ success: false, error: "NO_SIGNED_URL" }, 400);
+    }
+
+    // الدالة الأصلية: جلب كل صور هوية موظف/مستخدم
     const actor = await validateActor(req, supabaseAdmin, body, 5);
     if (!actor.ok) return actor.response;
 

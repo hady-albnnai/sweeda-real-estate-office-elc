@@ -47,13 +47,26 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
 
   Future<void> _approve(String userId, String name) async {
     final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
+    if (adminUid.isEmpty) {
+      AppTheme.showSnackBar(context,
+        const SnackBar(content: Text('❌ لا يمكن تحديد هوية المدير'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+    
     final ok = await context.read<AdminProvider>().approveVerification(adminUid, userId);
     if (!mounted) return;
-    AppTheme.showSnackBar(context, SnackBar(
-      content: Text(ok ? '✅ تم اعتماد توثيق $name' : '❌ فشل الاعتماد'),
-      backgroundColor: ok ? Colors.green : Colors.red,
-    ));
-    if (ok) _load();
+    if (ok) {
+      AppTheme.showSnackBar(context,
+        SnackBar(content: Text('✅ تم اعتماد توثيق $name'), backgroundColor: Colors.green),
+      );
+      _load();
+    } else {
+      final error = context.read<AdminProvider>().error ?? 'خطأ غير معروف';
+      AppTheme.showSnackBar(context,
+        SnackBar(content: Text('❌ فشل الاعتماد: $error'), backgroundColor: Colors.red, duration: const Duration(seconds: 5)),
+      );
+    }
   }
 
   Future<void> _reject(String userId, String name) async {
@@ -113,7 +126,7 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
     if (ok) _load();
   }
 
-  /// 🔒 Phase 9: عرض صورة هوية من bucket الخاص عبر signed URL مؤقت (60 ثانية).
+  /// 🔒 Phase 9: عرض صورة هوية من bucket الخاص عبر Edge Function (get-staff-id-images).
   /// الـpath قد يكون: (أ) URL كامل قديم، (ب) مسار جديد داخل ids_private.
   Future<void> _showIdImage(String imgPathOrUrl) async {
     String? displayUrl;
@@ -121,21 +134,47 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
       // مسار قديم (URL كامل) — للتوافق الخلفي
       displayUrl = imgPathOrUrl;
     } else {
-      // مسار جديد داخل ids_private — نجلب signed URL
+      // مسار جديد داخل ids_private — نحضر signed URL عبر Edge Function
+      // لأن العميل لا يملك صلاحية الوصول المباشر إلى الـ bucket الخاص
       try {
+        // نحاول أولاً جلب signed URL مباشرة (إذا سمحت RLS)
         displayUrl = await SupabaseService()
             .storage
             .from(StorageService.idsPrivateBucket)
             .createSignedUrl(imgPathOrUrl, 60);
       } catch (e) {
-        if (!mounted) return;
-        AppTheme.showSnackBar(context,
-          SnackBar(content: Text('❌ تعذّر فتح الصورة: $e')),
-        );
-        return;
+        // إذا فشل الوصول المباشر، نحاول عبر Edge Function
+        try {
+          final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
+          final response = await SupabaseService().invokeFunction(
+            'get-staff-id-images',
+            body: {
+              'action': 'get_signed_url',
+              'admin_uid': adminUid,
+              'target_uid': imgPathOrUrl.split('/').first,
+              'path': imgPathOrUrl,
+            },
+          );
+          final data = response.data is Map ? Map<String, dynamic>.from(response.data) : null;
+          if (data != null && data['success'] == true && data['signed_url'] != null) {
+            displayUrl = data['signed_url'].toString();
+          } else {
+            if (!mounted) return;
+            AppTheme.showSnackBar(context,
+              SnackBar(content: Text('❌ تعذّر فتح الصورة: ${data?['error'] ?? 'خطأ غير معروف'}')),
+            );
+            return;
+          }
+        } catch (e2) {
+          if (!mounted) return;
+          AppTheme.showSnackBar(context,
+            SnackBar(content: Text('❌ تعذّر فتح الصورة: $e2')),
+          );
+          return;
+        }
       }
     }
-    if (!mounted) return;
+    if (!mounted || displayUrl == null) return;
     showDialog(
       context: context,
       builder: (ctx) => Dialog(

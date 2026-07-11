@@ -438,6 +438,6 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     );
   }
 
-  Widget _thumb(XFile file) => kIsWeb ? Image.network(file.path, width: 70, height: 70, fit: BoxFit.cover) : Image.file(File(file.path), width: 70, height: 70, fit: BoxFit.cover, cacheWidth: 200);
+  Widget _thumb(XFile file) => kIsWeb ? Image.network(file.path, width: 70, height: 70, fit: BoxFit.cover) : Image.file(File(file.path), width: 70, height: 70, fit: BoxFit.cover, cacheWidth: 140);
   Widget _dd(String label, List<String> items, Function(String) on) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(label, style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)), const SizedBox(height: 5), DropdownButtonFormField<String>(items: items.map((i) => DropdownMenuItem(value: i, child: Text(i))).toList(), onChanged: (v) => on(v!), decoration: const InputDecoration(border: OutlineInputBorder()))]);
 }

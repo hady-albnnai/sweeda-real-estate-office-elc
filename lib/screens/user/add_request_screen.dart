@@ -151,7 +151,10 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
       'currency': request.cur,
     };
 
-    context.push('/matching-offers', extra: requestData);
+    // بعد إرسال الطلب، نذهب لشاشة العروض المطابقة
+    // وعند الضغط على رجوع من العروض المطابقة نذهب لمواعيدي بدل إضافة طلب
+    if (!mounted) return;
+    context.go('/matching-offers', extra: requestData);
   }
 
   void _snack(String m) {

@@ -179,6 +179,25 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
       return;
     }
     if (_submitting) return;
+
+    // ✅ فحص مسبق: هل لدى المستخدم موعد نشط (قيد الانتظار أو مؤكد) على هذا العرض؟
+    {
+      final existingAppts = context.read<AppointmentProvider>().myAppointments;
+      final hasActive = existingAppts.any((a) =>
+          a.offId == widget.offer.id && (a.sts == 0 || a.sts == 1));
+      if (hasActive) {
+        if (mounted) {
+          AppTheme.showSnackBar(context,
+            const SnackBar(
+              content: Text('لديك موعد نشط مسبقاً على هذا العرض. لا يمكنك حجز موعد آخر إلا بعد إلغائه أو رفضه.'),
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
+        return;
+      }
+    }
+
     setState(() => _submitting = true);
 
     final auth = context.read<AuthProvider>();

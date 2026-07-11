@@ -462,6 +462,10 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
       appBar: AppBar(
         title: Text('العروض المطابقة (${_filteredOffers.length})'),
         backgroundColor: AppTheme.scaffoldBackground,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios),
+          onPressed: () => context.go('/user/my-appointments'),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),

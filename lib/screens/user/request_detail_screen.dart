@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/request_provider.dart';
+import '../../providers/appointment_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/config_provider.dart';
 import '../../models/request_model.dart';
@@ -752,6 +753,21 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
           const SnackBar(content: Text('هذا العرض لا يحتوي مواعيد متاحة حالياً')));
       return;
     }
+
+    // ✅ فحص مسبق: هل لدى المستخدم موعد نشط على هذا العرض؟
+    final existingAppts = context.read<AppointmentProvider>().myAppointments;
+    final hasActive = existingAppts.any((a) =>
+        a.offId == offer.id && (a.sts == 0 || a.sts == 1));
+    if (hasActive) {
+      AppTheme.showSnackBar(context,
+        const SnackBar(
+          content: Text('لديك موعد نشط مسبقاً على هذا العرض. لا يمكنك حجز موعد آخر إلا بعد إلغائه أو رفضه.'),
+          duration: Duration(seconds: 4),
+        ),
+      );
+      return;
+    }
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
