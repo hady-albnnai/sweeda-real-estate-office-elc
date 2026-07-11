@@ -122,6 +122,8 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
           _snack('رقم هاتف العميل غير صالح، يرجى إدخال رقم سوري صحيح');
         } else if (msg.contains('QUOTA_EXCEEDED')) {
           _snack('وصلت للحد الأقصى لعدد الطلبات المسموحة في باقتك');
+        } else if (msg.contains('DUPLICATE_REQUEST')) {
+          _snack('لديك طلب مشابه تم إرساله مؤخراً — انتظر قليلاً قبل إرسال طلب جديد');
         } else if (msg.contains('CLIENT_NAME') || msg.contains('TOO_SHORT')) {
           _snack('اسم العميل قصير جداً (يجب أن يكون حرفين على الأقل)');
         } else {
