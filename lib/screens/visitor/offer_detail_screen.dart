@@ -1225,29 +1225,9 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                       ),
                     ),
                   ),
-                  // ⭐ تقييم المالك (لغير المالك والإدارة) — LOGIC_SPEC §3.3
-                  if (auth.isLoggedIn && !isOwner && !auth.isAdmin) ...[
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: () => RatingDialog.show(
-                          context: context,
-                          targetUid: offer.usrId,
-                          targetName: offer.ownerLabel ?? 'مالك العرض',
-                          refLabel: 'تجربتك مع هذا العرض',
-                        ),
-                        icon: const Icon(Icons.star_border,
-                            color: AppTheme.primaryGold),
-                        label: const Text('تقييم تجربتك مع هذا العرض',
-                            style: TextStyle(color: AppTheme.primaryGold)),
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: AppTheme.primaryGold),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
-                    ),
-                  ],
+                  // ⭐ تم إزالة زر التقييم من صفحة العرض — التقييم متاح فقط
+                  // من شاشة المواعيد/الصفقات المكتملة حيث يكون هناك تعامل فعلي
+                  // بين الطرفين (check_rating_valid trigger يمنع التقييم بدون صفقة)
                   const SizedBox(height: 30),
                 ],
               ),
