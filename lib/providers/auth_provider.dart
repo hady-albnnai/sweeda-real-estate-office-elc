@@ -15,6 +15,7 @@ class AuthProvider with ChangeNotifier {
   String? _currentOtp;
   AuthChannel _channel = AuthChannel.sms;
   bool _isNewUser = false;
+  bool _emailSessionHandled = false;
 
   String? _lastError;
 
@@ -192,7 +193,10 @@ class AuthProvider with ChangeNotifier {
   /// يُستدعى تلقائياً عند فتح التطبيق من deep link الماجيك لينك.
   /// مهم: لا نعمل signOut هنا لأن Supabase يكون قد أنشأ جلسة الإيميل للتو؛
   /// نكتفي بتنظيف الجلسة المحلية القديمة حتى لا يحدث AUTH_MISMATCH.
+  /// يتضمن حماية من الاستدعاء المزدوج عبر _emailSessionHandled.
   Future<bool> handleEmailSession() async {
+    if (_emailSessionHandled) return isLoggedIn;
+    _emailSessionHandled = true;
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('user_id');
@@ -212,8 +216,11 @@ class AuthProvider with ChangeNotifier {
         notifyListeners();
         return true;
       }
+      _emailSessionHandled = false; // السماح بإعادة المحاولة عند الفشل
       return false;
-    } catch (e) {return false;
+    } catch (e) {
+      _emailSessionHandled = false; // السماح بإعادة المحاولة عند الخطأ
+      return false;
     }
   }
 
@@ -344,6 +351,7 @@ class AuthProvider with ChangeNotifier {
     _currentEmail = null;
     _currentOtp = null;
     _isNewUser = false;
+    _emailSessionHandled = false;
     _lastDailyStreakCheckDate = null;
     notifyListeners();
   }

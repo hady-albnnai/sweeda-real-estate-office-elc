@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/theme/app_theme.dart';
+import '../core/network/supabase_service.dart';
 import '../providers/config_provider.dart';
 import '../providers/auth_provider.dart';
 import '../services/fcm_service.dart';
@@ -67,12 +68,27 @@ class _SplashScreenState extends State<SplashScreen>
     ]);
     if (!mounted) return;
 
+    // ✅ فحص جلسة إيميل نشطة غير معالجة (cold start من deep link)
+    // عندما يفتح التطبيق من رابط الماجيك لينك، قد تكون جلسة Supabase
+    // فعّالة لكن handleEmailSession لم تُستدعَ بعد.
+    if (!auth.isLoggedIn) {
+      final supabaseUser = SupabaseService().auth.currentUser;
+      if (supabaseUser != null &&
+          supabaseUser.email != null &&
+          !supabaseUser.email!.endsWith('@whatsapp.local')) {
+        await auth.handleEmailSession();
+        if (!mounted) return;
+      }
+    }
+
     // تهيئة FCM بعد التحقق من المستخدم (لتسجيل التوكن مع uid لو مسجّل دخول)
     FCMService().setup();
 
     // التوجّه حسب حالة المستخدم
     if (auth.isLoggedIn) {
-      if (auth.isLawyer) {
+      if (auth.isNewUser) {
+        context.go('/setup-profile');
+      } else if (auth.isLawyer) {
         context.go('/lawyer/dashboard');
       } else if (auth.isExpediter) {
         context.go('/expediter/tasks');

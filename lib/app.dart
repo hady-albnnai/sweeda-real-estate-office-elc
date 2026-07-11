@@ -45,43 +45,55 @@ class _MyAppState extends State<MyApp> {
 
   /// يستمع لتغيرات auth — ينفّذ تلقائياً تسجيل دخول الإيميل
   /// بعد ما يفتح المستخدم الـ Magic Link.
+  /// يدعم كلاً من:
+  ///   - signedIn: عند فتح الرابط والتطبيق قيد التشغيل (warm start)
+  ///   - initialSession: عند فتح الرابط والتطبيق كان مغلقاً (cold start)
   void _listenAuthChanges() {
     _authSub?.cancel();
     _authSub = SupabaseService().auth.onAuthStateChange.listen((data) {
       final event = data.event;
-      if (event == AuthChangeEvent.signedIn) {
+      // ✅ معالجة signedIn (warm start) + initialSession (cold start)
+      if (event == AuthChangeEvent.signedIn ||
+          event == AuthChangeEvent.initialSession) {
         final session = data.session;
         if (session?.user.email != null &&
             !session!.user.email!.endsWith('@whatsapp.local')) {
           if (!mounted) return;
           // إيميل حقيقي → magic link
           final auth = context.read<AuthProvider>();
-          auth.handleEmailSession().then((ok) {
-            if (!mounted || !ok) return;
-            final go = AppRouter.router;
-            if (auth.isNewUser) {
-              go.go('/setup-profile');
-            } else if (auth.isLawyer) {
-              go.go('/lawyer/dashboard');
-            } else if (auth.isExpediter) {
-              go.go('/expediter/tasks');
-            } else if (auth.isSenior) {
-              go.go('/admin/dashboard');
-            } else if (auth.isEmployee) {
-              go.go('/employee/home');
-            } else if (auth.isSupervisor) {
-              go.go('/executor/tasks');
-            } else if (auth.isPhotographer) {
-              go.go('/photographer/tasks');
-            } else if (auth.isBroker) {
-              go.go('/broker/dashboard');
-            } else {
-              go.go('/user/home');
-            }
-          });
+          if (!auth.isLoggedIn) {
+            auth.handleEmailSession().then((ok) {
+              if (!mounted || !ok) return;
+              _navigateAfterEmailAuth(auth);
+            });
+          }
         }
       }
     });
+  }
+
+  /// توجيه المستخدم بعد تسجيل الدخول عبر الإيميل
+  void _navigateAfterEmailAuth(AuthProvider auth) {
+    final go = AppRouter.router;
+    if (auth.isNewUser) {
+      go.go('/setup-profile');
+    } else if (auth.isLawyer) {
+      go.go('/lawyer/dashboard');
+    } else if (auth.isExpediter) {
+      go.go('/expediter/tasks');
+    } else if (auth.isSenior) {
+      go.go('/admin/dashboard');
+    } else if (auth.isEmployee) {
+      go.go('/employee/home');
+    } else if (auth.isSupervisor) {
+      go.go('/executor/tasks');
+    } else if (auth.isPhotographer) {
+      go.go('/photographer/tasks');
+    } else if (auth.isBroker) {
+      go.go('/broker/dashboard');
+    } else {
+      go.go('/user/home');
+    }
   }
 
   Future<void> _initializeApp() async {
