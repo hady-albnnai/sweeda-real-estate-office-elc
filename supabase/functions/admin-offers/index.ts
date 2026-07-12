@@ -123,6 +123,8 @@ serve(async (req) => {
       const approve = body.approve === true;
       const reason = (body.reason ?? "").toString();
       if (!offerId) return json({ success: false, error: "OFFER_ID_REQUIRED" }, 400);
+
+      // 1. تنفيذ المراجعة العادية (sts=2 + i_pub=1)
       const { data, error } = await supabaseAdmin.rpc("admin_review_offer_internal", {
         p_admin_uid: adminUid,
         p_offer_id: offerId,
@@ -130,6 +132,54 @@ serve(async (req) => {
         p_reject_reason: reason,
       });
       if (error) return json({ success: false, error: error.message }, 400);
+
+      if (approve && data === true) {
+        // 2. معالجة النشر التلقائي على السوشيال (المرحلة 1)
+        try {
+          const { data: offerRow } = await supabaseAdmin
+            .from('offers')
+            .select('i_soc, soc_txt, usr_id')
+            .eq('id', offerId)
+            .single();
+
+          const iSoc = (offerRow?.i_soc ?? 0) as number;
+          const socTxt = ((offerRow?.soc_txt as string) ?? '').trim();
+          const ownerUid = (offerRow?.usr_id as string) ?? '';
+
+          if (iSoc === 1 && socTxt.length > 10) {
+            // علم أن العرض جاهز للنشر الاجتماعي (soc_pub = 1)
+            await supabaseAdmin
+              .from('offers')
+              .update({ soc_pub: 1 })
+              .eq('id', offerId);
+
+            // منح نقاط النشر الاجتماعي (من pts.soc)
+            if (ownerUid) {
+              try {
+                await supabaseAdmin.rpc('award_points_safe', {
+                  p_user_uid: ownerUid,
+                  p_event_type: 'soc',
+                  p_points: 100,
+                });
+              } catch (_) {}
+            }
+
+            // سجل في activity_log
+            try {
+              await supabaseAdmin.rpc('log_admin_action', {
+                p_admin_uid: adminUid,
+                p_action: 105,
+                p_details: 'تم تفعيل النشر التلقائي على السوشيال (i_soc=1)',
+                p_target_id: offerId,
+                p_target_table: 'offers',
+              });
+            } catch (_) {}
+          }
+        } catch (_) {
+          // لا نوقف عملية الموافقة إذا فشل منطق السوشيال
+        }
+      }
+
       return json({ success: data === true });
     }
 

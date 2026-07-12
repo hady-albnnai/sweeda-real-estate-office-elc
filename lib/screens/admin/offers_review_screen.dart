@@ -108,7 +108,13 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
       } catch (_) {
       // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
     }
-      _snack('✅ تم نشر العرض');
+
+      // رسالة واضحة عن النشر الاجتماعي
+      String msg = '✅ تم نشر العرض';
+      if (o.iSoc == 1 && o.socTxt.isNotEmpty) {
+        msg += ' • 📣 تم تفعيل النشر التلقائي على فيسبوك وإنستغرام';
+      }
+      _snack(msg);
       _load();
     } else {
       _snack('فشل النشر');
@@ -379,6 +385,31 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                   ],
                 ),
                 const SizedBox(height: 8),
+
+                // شارة النشر الاجتماعي (إن كان مفعّل)
+                if (o.iSoc == 1 && o.socTxt.isNotEmpty) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    margin: const EdgeInsets.only(top: 4, bottom: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.blue.withOpacity(0.4)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.share, color: Colors.blue, size: 16),
+                        const SizedBox(width: 6),
+                        const Expanded(
+                          child: Text(
+                            '📣 سيُنشر تلقائياً على فيسبوك + إنستغرام (بعد الموافقة)',
+                            style: TextStyle(color: Colors.blue, fontSize: 12, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
 
                 // الوصف
                 if (o.descript.isNotEmpty) ...[
