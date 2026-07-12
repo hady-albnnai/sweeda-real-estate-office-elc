@@ -912,19 +912,92 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                   ],
                   const SizedBox(height: 20),
 
-                  // فيديو العرض (إذا موجود)
+                  // فيديو العرض — NOTICE + REQUEST BUTTON (NEVER PUBLICLY SHOWN OR DOWNLOADABLE)
+                  // Only appears on published offers if vdo exists.
+                  // "Watch video" button only visible to logged-in users.
+                  // Opens booking sheet with video context → enforces verified phone + auto WhatsApp after success.
                   if (offer.vdo.isNotEmpty) ...[
-                    const Row(children: [
-                      Icon(Icons.play_circle, color: AppTheme.primaryGold),
-                      SizedBox(width: 8),
-                      Text('فيديو العرض',
-                          style: TextStyle(
-                              color: AppTheme.primaryGold,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold)),
-                    ]),
-                    const SizedBox(height: 10),
-                    OfferVideoPlayer(videoUrl: offer.vdo),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryGold.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.35)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(children: [
+                            const Icon(Icons.videocam, color: AppTheme.primaryGold, size: 20),
+                            const SizedBox(width: 8),
+                            const Expanded(
+                              child: Text(
+                                'فيديو العرض متوفر',
+                                style: TextStyle(
+                                    color: AppTheme.primaryGold,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ]),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'يمكنك طلب مشاهدة الفيديو الخاص بهذا العرض بعد حجز موعد معاينة عليه. يتم إرسال الطلب تلقائياً إلى فريق المكتب بعد نجاح الحجز.',
+                            style: TextStyle(color: AppTheme.textWhite, fontSize: 13, height: 1.5),
+                          ),
+                          const SizedBox(height: 8),
+                          // Strong deterrent notice (per requirement)
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withOpacity(0.08),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.red.withOpacity(0.3)),
+                            ),
+                            child: const Text(
+                              '⚠️ حجز الموعد يُعتبر التزاماً. إلغاء متكرر أو عدم حضور قد يؤثر على صلاحية طلبات الفيديو المستقبلية. الفيديو يُرسل بشكل خاص بعد التحقق من الحجز.',
+                              style: TextStyle(
+                                color: Colors.redAccent,
+                                fontSize: 12,
+                                height: 1.4,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+
+                          // "Watch video" button — ONLY for logged-in users
+                          if (auth.isLoggedIn)
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: () => showModalBottomSheet(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  backgroundColor: Colors.transparent,
+                                  builder: (context) => BookAppointmentSheet(
+                                    offer: offer,
+                                    isVideoRequest: true,
+                                  ),
+                                ),
+                                icon: const Icon(Icons.play_circle_outline),
+                                label: const Text('مشاهدة الفيديو (حجز موعد أولاً)'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppTheme.primaryGold,
+                                  foregroundColor: AppTheme.deepBlack,
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                ),
+                              ),
+                            )
+                          else
+                            const Text(
+                              'سجّل الدخول لتتمكن من طلب الفيديو',
+                              style: TextStyle(color: AppTheme.textGrey, fontSize: 12),
+                            ),
+                        ],
+                      ),
+                    ),
                     const SizedBox(height: 20),
                   ],
 

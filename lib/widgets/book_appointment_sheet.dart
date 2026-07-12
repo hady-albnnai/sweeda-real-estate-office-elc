@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../providers/appointment_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/config_provider.dart';
@@ -11,7 +12,15 @@ import '../core/utils/app_utils.dart';
 class BookAppointmentSheet extends StatefulWidget {
   final OfferModel offer;
   final String? requestId;
-  const BookAppointmentSheet({super.key, required this.offer, this.requestId});
+  /// If true, after successful booking we will auto-launch WhatsApp video request
+  /// (with prefilled offer_number). Used only when opened from "Watch Video" path.
+  final bool isVideoRequest;
+  const BookAppointmentSheet({
+    super.key,
+    required this.offer,
+    this.requestId,
+    this.isVideoRequest = false,
+  });
 
   @override
   State<BookAppointmentSheet> createState() => _BookAppointmentSheetState();
@@ -24,6 +33,14 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
   List<String> _bookedSlots = [];
   bool _loadingSlots = false;
   bool _submitting = false;
+
+  // ── Phone verification step (enforced for ALL bookings) ──
+  final _phoneCtrl = TextEditingController();
+  final _otpCtrl = TextEditingController();
+  bool _otpSent = false;
+  bool _sendingOtp = false;
+  bool _verifyingOtp = false;
+  String? _phoneError;
 
   static const List<String> _weekKeys = [
     'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'
@@ -219,6 +236,30 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
     if (result.success) {
       final activeCount = result.activeCount;
       Navigator.pop(context);
+
+      // 🚀 AUTO WHATSAPP FOR VIDEO REQUEST PATH (only if opened from video button)
+      // Uses dedicated staff number (to be provided by user in config or here).
+      // Message contains offer_number automatically. No user input.
+      if (widget.isVideoRequest && widget.offer.offerNumber != null) {
+        final num = widget.offer.offerNumber!;
+        // Prefer dedicated video request number from app_config.texts.videoRequestWhatsApp
+        // Fallback to the old group (will be replaced by user-provided)
+        final cfg = context.read<ConfigProvider>().config;
+        String waNumber = (cfg?.texts['videoRequestWhatsApp']?.toString() ?? 
+                           cfg?.texts['videoWhatsAppGroup']?.toString() ?? 
+                           '963993000000').replaceAll(RegExp(r'[^0-9]'), '');
+        if (waNumber.startsWith('0')) waNumber = '963${waNumber.substring(1)}';
+        if (!waNumber.startsWith('963')) waNumber = '963$waNumber';
+
+        final prefilled = 'عرض #$num - طلب فيديو (حجز موعد تم بنجاح)';
+        final msg = Uri.encodeComponent(prefilled);
+        final waUrl = 'https://wa.me/$waNumber?text=$msg';
+
+        try {
+          await launchUrl(Uri.parse(waUrl), mode: LaunchMode.externalApplication);
+        } catch (_) {}
+      }
+
       AppTheme.showSnackBar(context,
         SnackBar(
           content: Text(
@@ -244,8 +285,202 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  void dispose() {
+    _phoneCtrl.dispose();
+    _otpCtrl.dispose();
+    super.dispose();
+  }
+
+  bool get _userHasVerifiedPhone {
+    final u = context.read<AuthProvider>().userModel;
+    if (u == null) return false;
+    final ph = u.ph.trim();
+    return ph.isNotEmpty && u.vrf != 0;
+  }
+
+  Future<void> _sendPhoneOtp() async {
+    final phone = _phoneCtrl.text.trim();
+    if (!AppUtils.isValidPhone(phone)) {
+      setState(() => _phoneError = 'أدخل رقم هاتف صحيح (09XXXXXXXX)');
+      return;
+    }
+    setState(() {
+      _sendingOtp = true;
+      _phoneError = null;
+    });
     final auth = context.read<AuthProvider>();
+    final ok = await auth.sendSMSOTP(phone);
+    if (!mounted) return;
+    setState(() {
+      _sendingOtp = false;
+      if (ok) {
+        _otpSent = true;
+        _phoneError = null;
+      } else {
+        _phoneError = auth.lastError ?? 'فشل إرسال الرمز';
+      }
+    });
+  }
+
+  Future<void> _verifyPhoneOtp() async {
+    final code = _otpCtrl.text.trim();
+    if (code.length != 6) {
+      setState(() => _phoneError = 'أدخل الرمز كاملاً (6 أرقام)');
+      return;
+    }
+    setState(() {
+      _verifyingOtp = true;
+      _phoneError = null;
+    });
+    final auth = context.read<AuthProvider>();
+    final ok = await auth.verifySMSOTP(code);
+    if (!mounted) return;
+    if (ok) {
+      // Refresh to get updated ph/vrf
+      await auth.refreshUser();
+      setState(() {
+        _verifyingOtp = false;
+        _otpSent = false;
+        _otpCtrl.clear();
+      });
+      // After successful verify, the build will switch to booking UI automatically
+      // because _userHasVerifiedPhone will now be true
+    } else {
+      setState(() {
+        _verifyingOtp = false;
+        _phoneError = auth.lastError ?? 'الرمز غير صحيح أو منتهي الصلاحية';
+      });
+    }
+  }
+
+  Widget _buildPhoneVerificationUI(AuthProvider auth) {
+    final phone = auth.userModel?.ph ?? '';
+    return SafeArea(
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: AppTheme.deepBlack,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Center(
+                child: Icon(Icons.phone_android, color: AppTheme.primaryGold, size: 48),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'تأكيد رقم الهاتف مطلوب',
+                style: TextStyle(
+                    color: AppTheme.textWhite,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'لحجز موعد معاينة يجب أن يكون رقم هاتفك متحققاً منه عبر رمز SMS. هذا الإجراء يضمن الجدية ويمنع الاستغلال.',
+                style: TextStyle(color: AppTheme.textGrey, fontSize: 14, height: 1.5),
+              ),
+              const SizedBox(height: 20),
+
+              if (phone.isEmpty) ...[
+                // Email-only user: enter phone
+                const Text('رقم الهاتف (09XXXXXXXX):',
+                    style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _phoneCtrl,
+                  keyboardType: TextInputType.phone,
+                  style: const TextStyle(color: AppTheme.textWhite, fontSize: 16),
+                  decoration: InputDecoration(
+                    hintText: '09XXXXXXXX',
+                    prefixIcon: const Icon(Icons.phone, color: AppTheme.primaryGold),
+                    filled: true,
+                    fillColor: AppTheme.surfaceBlack,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppTheme.primaryGold.withOpacity(0.3)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _sendingOtp ? null : _sendPhoneOtp,
+                    child: _sendingOtp
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.deepBlack))
+                        : const Text('إرسال رمز التحقق SMS'),
+                  ),
+                ),
+              ] else ...[
+                // Has phone but unverified? (rare)
+                Text('رقمك المسجل: $phone', style: const TextStyle(color: AppTheme.textWhite)),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _sendingOtp ? null : () async {
+                      final ok = await context.read<AuthProvider>().sendSMSOTP(phone);
+                      if (mounted && ok) setState(() => _otpSent = true);
+                    },
+                    child: _sendingOtp
+                        ? const CircularProgressIndicator(color: AppTheme.deepBlack)
+                        : const Text('إعادة إرسال رمز التحقق'),
+                  ),
+                ),
+              ],
+
+              if (_otpSent) ...[
+                const SizedBox(height: 16),
+                const Text('أدخل رمز التحقق المكون من 6 أرقام:',
+                    style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _otpCtrl,
+                  keyboardType: TextInputType.number,
+                  maxLength: 6,
+                  style: const TextStyle(color: AppTheme.textWhite, fontSize: 20, letterSpacing: 8),
+                  textAlign: TextAlign.center,
+                  decoration: const InputDecoration(
+                    hintText: '123456',
+                    counterText: '',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _verifyingOtp ? null : _verifyPhoneOtp,
+                    child: _verifyingOtp
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.deepBlack))
+                        : const Text('تحقق واستمر في الحجز'),
+                  ),
+                ),
+              ],
+
+              if (_phoneError != null) ...[
+                const SizedBox(height: 12),
+                Text(_phoneError!, style: const TextStyle(color: AppTheme.errorRed)),
+              ],
+
+              const SizedBox(height: 20),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('إلغاء', style: TextStyle(color: AppTheme.textGrey)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
     final isLoggedIn = auth.isLoggedIn;
 
     // الزائر غير المسجّل — نعرض رسالة تسجيل الدخول بدل الـ sheet
@@ -294,6 +529,13 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
           ),
         ),
       );
+    }
+
+    // ✅ NEW: Enforce verified phone for ALL appointment bookings (independent + video path)
+    // WhatsApp-registered users (ph present + vrf > 0) skip this.
+    // Email users (no ph or vrf=0): show phone entry + OTP flow.
+    if (!_userHasVerifiedPhone) {
+      return _buildPhoneVerificationUI(auth);
     }
 
     final days = _availableDays;
