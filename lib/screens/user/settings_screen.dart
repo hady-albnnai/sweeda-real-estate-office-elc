@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/config_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/network/supabase_service.dart';
 import '../../widgets/bottom_nav_bar.dart';
@@ -150,35 +152,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (user == null) return;
 
     final ntf = Map<String, dynamic>.from(user.ntf);
-    // 0 = مفعّل, 1 = معطّل (حسب SPEC)
     ntf[key] = value ? 0 : 1;
 
     try {
-      await SupabaseService().invokeFunction('user-notifications', body: {'action': 'update_settings', 'ntf': ntf}); //
-
+      await SupabaseService().invokeFunction('user-notifications', body: {'action': 'update_settings', 'ntf': ntf});
       await auth.refreshUser();
 
       if (!mounted) return;
       setState(() {
         switch (key) {
-          case 'off':
-            _notifOffers = value;
-            break;
-          case 'app':
-            _notifAppointments = value;
-            break;
-          case 'fin':
-            _notifFinance = value;
-            break;
-          case 'rat':
-            _notifRatings = value;
-            break;
+          case 'off': _notifOffers = value; break;
+          case 'app': _notifAppointments = value; break;
+          case 'fin': _notifFinance = value; break;
+          case 'rat': _notifRatings = value; break;
         }
       });
       AppTheme.showSnackBar(context,
         const SnackBar(content: Text('تم الحفظ ✅'), duration: Duration(seconds: 1)),
       );
-    } catch (e) {if (mounted) {
+    } catch (e) {
+      if (mounted) {
         AppTheme.showSnackBar(context,
           const SnackBar(content: Text('فشل الحفظ')),
         );
@@ -187,24 +180,190 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showAboutDialog() {
+    final configProv = Provider.of<ConfigProvider>(context, listen: false);
+    final config = configProv.config;
+    final facebook = config?.facebookPage ?? '';
+    final instagram = config?.instagramPage ?? '';
+    final devPhone = config?.developerPhone ?? '(سيتم إضافته لاحقاً)';
+    final extraSocials = config?.socialPages ?? {};
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
         title: const Text('عن التطبيق', style: TextStyle(color: AppTheme.primaryGold)),
-        content: const Text(
-          'عقارات السويداء — المكتب العقاري الإلكتروني\n\n'
-          'تطبيق لتصفح وعرض العقارات والسيارات في محافظة السويداء\n\n'
-          'الإصدار: 1.0.0\n'
-          'Backend: Supabase\n'
-          'Frontend: Flutter',
-          style: TextStyle(color: AppTheme.textGrey),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // من نحن
+              const Text(
+                'من نحن',
+                style: TextStyle(color: AppTheme.primaryGold, fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'نحن فريق من الشباب المبدعين الذين يؤمنون بتحويل تجربة الوساطة العقارية إلى نموذج يجمع بين الاحترافية العالية والأمان المطلق. نسعى لتحقيق أعلى معايير الشفافية، وحماية حقوق جميع الأطراف، وتسهيل كافة الإجراءات بأحدث التقنيات الرقمية.',
+                style: TextStyle(color: AppTheme.textWhite, fontSize: 13, height: 1.5),
+              ),
+              const SizedBox(height: 20),
+
+              // صفحات التواصل الاجتماعي
+              if (facebook.isNotEmpty || instagram.isNotEmpty || extraSocials.isNotEmpty) ...[
+                const Text(
+                  'تابعنا على',
+                  style: TextStyle(color: AppTheme.primaryGold, fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+                if (facebook.isNotEmpty)
+                  _socialLinkTile('فيسبوك', Icons.facebook, facebook, () => _launchUrl(facebook)),
+                if (instagram.isNotEmpty)
+                  _socialLinkTile('إنستغرام', Icons.camera_alt, instagram, () => _launchUrl(instagram)),
+                ...extraSocials.entries.map((e) {
+                  final label = e.key.toString();
+                  final url = e.value?.toString() ?? '';
+                  if (url.isEmpty) return const SizedBox.shrink();
+                  return _socialLinkTile(label, Icons.link, url, () => _launchUrl(url));
+                }),
+                const SizedBox(height: 16),
+              ],
+
+              // المطور
+              const Text(
+                'التطوير',
+                style: TextStyle(color: AppTheme.primaryGold, fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset(
+                      'assets/images/loraneem_tech_logo.png',
+                      width: 60,
+                      height: 60,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'loraneem-tech',
+                          style: TextStyle(
+                            color: AppTheme.textWhite,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'CODE • AI • LIMITLESS EVOLUTION',
+                          style: TextStyle(
+                            color: AppTheme.primaryGold,
+                            fontSize: 11,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'للتواصل مع المطور:',
+                style: TextStyle(color: AppTheme.textGrey, fontSize: 12),
+              ),
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppTheme.deepBlack,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppTheme.primaryGold.withOpacity(0.2)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.phone, color: AppTheme.primaryGold, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'رقم الهاتف: $devPhone',
+                        style: const TextStyle(color: AppTheme.textGrey, fontSize: 13),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // معلومات التطبيق
+              const Divider(color: Colors.white12),
+              const SizedBox(height: 8),
+              const Text(
+                'عقارات السويداء — المكتب العقاري الإلكتروني\n\n'
+                'تطبيق لتصفح وعرض العقارات والسيارات في محافظة السويداء',
+                style: TextStyle(color: AppTheme.textGrey, fontSize: 12),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'الإصدار: 1.0.0\nBackend: Supabase • Frontend: Flutter',
+                style: TextStyle(color: AppTheme.textGrey.withOpacity(0.7), fontSize: 11),
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('حسناً', style: TextStyle(color: AppTheme.primaryGold))),
         ],
       ),
     );
+  }
+
+  Widget _socialLinkTile(String label, IconData icon, String url, VoidCallback onTap) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: AppTheme.deepBlack,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppTheme.primaryGold.withOpacity(0.25)),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: AppTheme.primaryGold, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  label,
+                  style: const TextStyle(color: AppTheme.textWhite, fontSize: 14, fontWeight: FontWeight.w500),
+                ),
+              ),
+              const Icon(Icons.open_in_new, color: AppTheme.textGrey, size: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      if (mounted) {
+        AppTheme.showSnackBar(context, const SnackBar(content: Text('تعذر فتح الرابط')));
+      }
+    }
   }
 
   void _showLogoutDialog(BuildContext context) {

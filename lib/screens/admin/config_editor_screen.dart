@@ -30,6 +30,13 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
   final _videoWaNumber = TextEditingController();
   final _videoGroupLink = TextEditingController();
 
+  // ── صفحات التواصل الاجتماعي (قابلة للتوسعة) ──
+  final _facebookCtrl = TextEditingController();
+  final _instagramCtrl = TextEditingController();
+  final _developerPhoneCtrl = TextEditingController();
+  // للصفحات الإضافية: نستخدم قائمة بسيطة (key: label, value: url)
+  final List<Map<String, TextEditingController>> _extraSocialCtrls = [];
+
   @override
   void initState() {
     super.initState();
@@ -54,6 +61,23 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
         final txts = c.texts;
         _videoWaNumber.text = (txts['videoRequestWhatsApp'] ?? '').toString();
         _videoGroupLink.text = (txts['videoRequestGroupLink'] ?? '').toString();
+
+        // Social pages
+        _facebookCtrl.text = c.facebookPage;
+        _instagramCtrl.text = c.instagramPage;
+        _developerPhoneCtrl.text = c.developerPhone;
+
+        // Extra social pages (socialPages)
+        final extra = c.socialPages;
+        _extraSocialCtrls.clear();
+        extra.forEach((key, val) {
+          final labelCtrl = TextEditingController(text: key);
+          final urlCtrl = TextEditingController(text: val?.toString() ?? '');
+          _extraSocialCtrls.add({'label': labelCtrl, 'url': urlCtrl});
+        });
+        if (_extraSocialCtrls.isEmpty) {
+          _extraSocialCtrls.add({'label': TextEditingController(), 'url': TextEditingController()});
+        }
       });
     }
   }
@@ -70,8 +94,15 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
       _brokerOffersQuota,
       _videoWaNumber,
       _videoGroupLink,
+      _facebookCtrl,
+      _instagramCtrl,
+      _developerPhoneCtrl,
     ]) {
       c.dispose();
+    }
+    for (final map in _extraSocialCtrls) {
+      map['label']?.dispose();
+      map['url']?.dispose();
     }
     super.dispose();
   }
@@ -159,6 +190,119 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
                           fillColor: AppTheme.surfaceBlack,
                           prefixIcon: Icon(Icons.link, color: AppTheme.primaryGold),
                         ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // ── 📣 صفحات التواصل الاجتماعي (فيسبوك + إنستغرام + قابلة للتوسعة)
+                      _section('📣 صفحات التواصل الاجتماعي'),
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.green.withOpacity(0.3)),
+                        ),
+                        child: const Text(
+                          '• روابط الصفحات الرسمية تظهر في "عن التطبيق".\n'
+                          '• يمكنك إضافة صفحات جديدة (تيك توك، إلخ).\n'
+                          '• النشر التلقائي يعتمد على i_soc في العرض + socTxt الجاهز.',
+                          style: TextStyle(color: AppTheme.textWhite, fontSize: 12, height: 1.4),
+                        ),
+                      ),
+                      TextFormField(
+                        controller: _facebookCtrl,
+                        style: const TextStyle(color: AppTheme.textWhite),
+                        decoration: const InputDecoration(
+                          labelText: 'رابط صفحة فيسبوك الرسمية',
+                          hintText: 'https://facebook.com/sweeda.realestate',
+                          filled: true,
+                          fillColor: AppTheme.surfaceBlack,
+                          prefixIcon: Icon(Icons.facebook, color: AppTheme.primaryGold),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _instagramCtrl,
+                        style: const TextStyle(color: AppTheme.textWhite),
+                        decoration: const InputDecoration(
+                          labelText: 'رابط حساب إنستغرام الرسمي',
+                          hintText: 'https://instagram.com/sweeda.realestate',
+                          filled: true,
+                          fillColor: AppTheme.surfaceBlack,
+                          prefixIcon: Icon(Icons.camera_alt, color: AppTheme.primaryGold),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _developerPhoneCtrl,
+                        keyboardType: TextInputType.phone,
+                        style: const TextStyle(color: AppTheme.textWhite),
+                        decoration: const InputDecoration(
+                          labelText: 'رقم هاتف المطور (للتواصل في عن التطبيق)',
+                          hintText: '0933123456',
+                          filled: true,
+                          fillColor: AppTheme.surfaceBlack,
+                          prefixIcon: Icon(Icons.phone, color: AppTheme.primaryGold),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text('صفحات إضافية (تيك توك، إلخ — اكتب الاسم ثم الرابط):', style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                      ..._extraSocialCtrls.map((ctrls) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                flex: 2,
+                                child: TextFormField(
+                                  controller: ctrls['label']!,
+                                  style: const TextStyle(color: AppTheme.textWhite),
+                                  decoration: const InputDecoration(
+                                    hintText: 'الاسم (مثل tiktok)',
+                                    filled: true,
+                                    fillColor: AppTheme.surfaceBlack,
+                                    isDense: true,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                flex: 3,
+                                child: TextFormField(
+                                  controller: ctrls['url']!,
+                                  style: const TextStyle(color: AppTheme.textWhite),
+                                  decoration: const InputDecoration(
+                                    hintText: 'الرابط الكامل',
+                                    filled: true,
+                                    fillColor: AppTheme.surfaceBlack,
+                                    isDense: true,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.remove_circle, color: Colors.red),
+                                onPressed: () {
+                                  setState(() {
+                                    _extraSocialCtrls.remove(ctrls);
+                                    if (_extraSocialCtrls.isEmpty) {
+                                      _extraSocialCtrls.add({'label': TextEditingController(), 'url': TextEditingController()});
+                                    }
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                      TextButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _extraSocialCtrls.add({'label': TextEditingController(), 'url': TextEditingController()});
+                          });
+                        },
+                        icon: const Icon(Icons.add, color: AppTheme.primaryGold),
+                        label: const Text('إضافة صفحة تواصل جديدة', style: TextStyle(color: AppTheme.primaryGold)),
                       ),
                       const SizedBox(height: 20),
 
@@ -326,6 +470,23 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
     final txts = Map<String, dynamic>.from(current['txts'] ?? {});
     txts['videoRequestWhatsApp'] = _videoWaNumber.text.trim();
     txts['videoRequestGroupLink'] = _videoGroupLink.text.trim();
+
+    // ── حفظ صفحات التواصل الاجتماعي ──
+    txts['facebook'] = _facebookCtrl.text.trim();
+    txts['instagram'] = _instagramCtrl.text.trim();
+    txts['developerPhone'] = _developerPhoneCtrl.text.trim();
+
+    // صفحات إضافية
+    final extraSocial = <String, dynamic>{};
+    for (final map in _extraSocialCtrls) {
+      final lbl = map['label']!.text.trim();
+      final url = map['url']!.text.trim();
+      if (lbl.isNotEmpty && url.isNotEmpty) {
+        extraSocial[lbl] = url;
+      }
+    }
+    txts['socialPages'] = extraSocial;
+
     current['txts'] = txts;
 
     final ok = await prov.updateConfig(current);

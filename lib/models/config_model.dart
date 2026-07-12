@@ -85,6 +85,20 @@ class ConfigModel {
     return result;
   }
 
+  // ── صفحات التواصل الاجتماعي (قابلة للتوسعة) ──
+  /// رابط صفحة فيسبوك الرسمية (قابل للتعديل من الإدارة)
+  String get facebookPage => _getNested('txts.facebook', '');
+
+  /// رابط حساب إنستغرام الرسمي (قابل للتعديل من الإدارة)
+  String get instagramPage => _getNested('txts.instagram', '');
+
+  /// صفحات تواصل إضافية (تكتوك، تويتر، إلخ) — map قابل للتوسعة
+  /// مثال: { "tiktok": "https://tiktok.com/@sweeda", "linkedin": "..." }
+  Map<String, dynamic> get socialPages => _getNestedMap('txts.socialPages', {});
+
+  /// رقم هاتف المطور (قابل للتعديل من الإدارة — يظهر في "عن التطبيق")
+  String get developerPhone => _getNested('txts.developerPhone', '(سيتم إضافته لاحقاً)');
+
   int _getNested(String path, int defaultValue) {
     dynamic value = data;
     for (final key in path.split('.')) {

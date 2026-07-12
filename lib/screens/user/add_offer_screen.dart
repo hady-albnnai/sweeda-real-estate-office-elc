@@ -48,6 +48,9 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   bool _submitting = false;
   bool _anytimeReady = false;
 
+  // checkbox للنشر التلقائي على السوشيال (مفعل افتراضياً)
+  bool _autoPublishSocial = true;
+
   final _carBrandCtrl = TextEditingController();
   final _carModelCtrl = TextEditingController();
   final _carYearCtrl = TextEditingController();
@@ -184,6 +187,9 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
 
     final loc = _selectedType == 1 ? {'r': 0, 'd': '', 'city': _carGovernorate ?? ''} : {'r': 0, 'd': _locCtrl.text, 'city': _selectedCityArea == _customCityOption ? _customCityCtrl.text : _selectedCityArea};
 
+    // ── توليد نص المنشور الجاهز للسوشيال (فيسبوك + إنستغرام)
+    final socialText = _generateSocialPostText();
+
     final offer = OfferModel(
       id: '', usrId: user.uid, ttl: _ttlCtrl.text.isNotEmpty ? _ttlCtrl.text : 'عرض جديد',
       typ: _selectedType!, trx: _selectedTrans!, cat: _selectedMainCat!, sub: _selectedSubCat ?? 0,
@@ -196,6 +202,8 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       },
       imgs: imageUrls, vdo: '', exactLoc: _pickedLocation != null ? '${_pickedLocation!.latitude},${_pickedLocation!.longitude}' : '',
       docTp: _selectedDocType ?? 0, docImg: docUrl, avl: _buildAvl(), sts: OfferStatus.review, tsCrt: DateTime.now(),
+      iSoc: _autoPublishSocial ? 1 : 0,
+      socTxt: socialText,
     );
 
     try {
@@ -438,6 +446,32 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         ),
         const SizedBox(height: 15),
         CheckboxListTile(value: _agreePledge, onChanged: (v) => setState(() => _agreePledge = v ?? false), title: const Text('أوافق على الإقرار والتعهد وصحة البيانات المقدمة', style: TextStyle(color: Colors.white, fontSize: 13)), activeColor: AppTheme.primaryGold, contentPadding: EdgeInsets.zero, controlAffinity: ListTileControlAffinity.leading),
+
+        // ── تشيك بوكس النشر التلقائي على صفحات السوشيال (مفعل تلقائياً)
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: AppTheme.primaryGold.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3)),
+          ),
+          child: CheckboxListTile(
+            value: _autoPublishSocial,
+            onChanged: (v) => setState(() => _autoPublishSocial = v ?? true),
+            title: const Text(
+              'نشر العرض تلقائياً على صفحاتنا في فيسبوك وإنستغرام (وأي صفحات إضافية مضافة)',
+              style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+            ),
+            subtitle: const Text(
+              'سيتم إنشاء منشور جاهز من بيانات العرض ونشره بعد موافقة الإدارة (يمكنك إلغاء التفعيل).',
+              style: TextStyle(color: AppTheme.textGrey, fontSize: 11),
+            ),
+            activeColor: AppTheme.primaryGold,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            controlAffinity: ListTileControlAffinity.leading,
+          ),
+        ),
+
         const SizedBox(height: 10),
         SizedBox(width: double.infinity, height: 55, child: ElevatedButton(onPressed: _submitting ? null : _submit, child: const Text('نشر العرض للمراجعة الآن', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)))),
       ]),
@@ -447,4 +481,37 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
 
   Widget _thumb(XFile file) => kIsWeb ? Image.network(file.path, width: 70, height: 70, fit: BoxFit.cover) : Image.file(File(file.path), width: 70, height: 70, fit: BoxFit.cover, cacheWidth: 140);
   Widget _dd(String label, List<String> items, Function(String) on) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(label, style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)), const SizedBox(height: 5), DropdownButtonFormField<String>(items: items.map((i) => DropdownMenuItem(value: i, child: Text(i))).toList(), onChanged: (v) => on(v!), decoration: const InputDecoration(border: OutlineInputBorder()))]);
+
+  /// توليد قالب منشور جاهز للنشر على صفحات السوشيال (فيسبوك/إنستغرام)
+  /// يُستخدم عندما يكون _autoPublishSocial = true
+  String _generateSocialPostText() {
+    final priceStr = _cur == 0
+        ? '\$${_priceCtrl.text.isNotEmpty ? _priceCtrl.text : '---'}'
+        : '${_priceCtrl.text.isNotEmpty ? _priceCtrl.text : '---'} ل.س';
+
+    final typeName = _selectedType == 0 ? 'عقار' : 'سيارة';
+    final transName = _selectedTrans == 0 ? 'للبيع' : 'للإيجار';
+    final city = _selectedType == 1
+        ? (_carGovernorate ?? '')
+        : (_selectedCityArea == _customCityOption ? _customCityCtrl.text : (_selectedCityArea ?? ''));
+
+    final title = _ttlCtrl.text.isNotEmpty ? _ttlCtrl.text : 'عرض جديد';
+
+    final desc = _descCtrl.text.isNotEmpty ? _descCtrl.text : _locCtrl.text;
+
+    return '''
+🏠 عرض جديد على عقارات السويداء
+
+📍 $title
+$typeName $transName
+💰 السعر: $priceStr
+${city.isNotEmpty ? '📌 المنطقة: $city' : ''}
+
+${desc.isNotEmpty ? desc : ''}
+
+للتفاصيل والحجز:
+📱 تطبيق عقارات السويداء
+#عقارات_السويداء #عروض_عقارية
+'''.trim();
+  }
 }
