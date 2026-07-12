@@ -3,6 +3,7 @@
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { publishOfferToSocial } from "../_shared/social_publisher.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -108,6 +109,21 @@ serve(async (req) => {
       return json({ success: true, offers: data ?? [] });
     }
 
+    if (action === "list_social_queue") {
+      const { data, error } = await supabaseAdmin
+        .from("offers")
+        .select("*")
+        .eq("i_del", 0)
+        .eq("sts", 2)
+        .eq("i_pub", 1)
+        .eq("i_soc", 1)
+        .eq("soc_pub", 1)
+        .order("ts_pub", { ascending: false })
+        .limit(100);
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json({ success: true, offers: data ?? [] });
+    }
+
     if (action === "list_media_review") {
       const limit = Number(body.limit ?? 100);
       const { data, error } = await supabaseAdmin.rpc("get_admin_offers_internal", {
@@ -133,8 +149,9 @@ serve(async (req) => {
       });
       if (error) return json({ success: false, error: error.message }, 400);
 
+      let socialPublishResult: Record<string, unknown> | null = null;
       if (approve && data === true) {
-        // 2. معالجة النشر التلقائي على السوشيال (المرحلة 1)
+        // 2. معالجة النشر الاجتماعي (المرحلة 1 + النشر الحقيقي الاختياري)
         try {
           const { data: offerRow } = await supabaseAdmin
             .from('offers')
@@ -174,13 +191,29 @@ serve(async (req) => {
                 p_target_table: 'offers',
               });
             } catch (_) {}
+
+            // المرحلة 2: ينشر فوراً فقط إذا فعّل المدير المفتاح من app_config.
+            const { data: configRow } = await supabaseAdmin
+              .from('app_config')
+              .select('value')
+              .eq('key', 'main')
+              .single();
+            const configValue = (configRow?.value ?? {}) as Record<string, unknown>;
+            const socialConfig = (configValue.socialPublishing ?? {}) as Record<string, unknown>;
+            if (socialConfig.autoPublish === true) {
+              socialPublishResult = await publishOfferToSocial(supabaseAdmin, offerId) as unknown as Record<string, unknown>;
+            }
           }
-        } catch (_) {
-          // لا نوقف عملية الموافقة إذا فشل منطق السوشيال
+        } catch (socialError) {
+          // الموافقة تبقى ناجحة، ويعود خطأ النشر منفصلاً لإعادة المحاولة يدوياً.
+          socialPublishResult = {
+            success: false,
+            error: socialError instanceof Error ? socialError.message : String(socialError),
+          };
         }
       }
 
-      return json({ success: data === true });
+      return json({ success: data === true, social_publish: socialPublishResult });
     }
 
     if (action === "set_priority") {

@@ -34,6 +34,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
   final _facebookCtrl = TextEditingController();
   final _instagramCtrl = TextEditingController();
   final _developerPhoneCtrl = TextEditingController();
+  bool _socialAutoPublish = false;
   // للصفحات الإضافية: نستخدم قائمة بسيطة (key: label, value: url)
   final List<Map<String, TextEditingController>> _extraSocialCtrls = [];
 
@@ -66,6 +67,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
         _facebookCtrl.text = c.facebookPage;
         _instagramCtrl.text = c.instagramPage;
         _developerPhoneCtrl.text = c.developerPhone;
+        _socialAutoPublish = c.socialAutoPublish;
 
         // Extra social pages (socialPages)
         final extra = c.socialPages;
@@ -208,6 +210,26 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
                           '• يمكنك إضافة صفحات جديدة (تيك توك، إلخ).\n'
                           '• النشر التلقائي يعتمد على i_soc في العرض + socTxt الجاهز.',
                           style: TextStyle(color: AppTheme.textWhite, fontSize: 12, height: 1.4),
+                        ),
+                      ),
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: AppTheme.surfaceBlack,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.blue.withOpacity(0.35)),
+                        ),
+                        child: SwitchListTile(
+                          value: _socialAutoPublish,
+                          onChanged: (value) => setState(() => _socialAutoPublish = value),
+                          activeColor: AppTheme.primaryGold,
+                          secondary: const Icon(Icons.auto_awesome, color: Colors.blue),
+                          title: const Text('النشر التلقائي فور قبول العرض',
+                              style: TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold)),
+                          subtitle: const Text(
+                            'عند تعطيله يبقى العرض في قائمة «جاهز للنشر» ويُنشر من الزر اليدوي.',
+                            style: TextStyle(color: AppTheme.textGrey, fontSize: 11),
+                          ),
                         ),
                       ),
                       TextFormField(
@@ -488,6 +510,10 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
     txts['socialPages'] = extraSocial;
 
     current['txts'] = txts;
+    final socialPublishing = Map<String, dynamic>.from(
+        current['socialPublishing'] ?? <String, dynamic>{});
+    socialPublishing['autoPublish'] = _socialAutoPublish;
+    current['socialPublishing'] = socialPublishing;
 
     final ok = await prov.updateConfig(current);
     if (mounted) {

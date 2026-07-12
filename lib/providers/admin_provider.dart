@@ -74,6 +74,19 @@ class AdminProvider with ChangeNotifier {
     return list;
   }
 
+  Future<List<OfferModel>> getSocialQueue(String adminUid) async {
+    final list = await _offersAdmin.getSocialQueue(adminUid);
+    _syncOffersError();
+    return list;
+  }
+
+  Future<bool> publishOfferToSocial(String adminUid, String offerId) async {
+    final ok = await _offersAdmin.publishToSocial(adminUid, offerId);
+    _syncOffersError();
+    if (ok) notifyListeners();
+    return ok;
+  }
+
   Future<bool> reviewOffer(String adminUid, String offerId, bool approve,
       {String reason = ''}) async {
     final ok = await _offersAdmin.reviewOffer(

@@ -58,6 +58,41 @@ class OffersAdminService {
         .toList();
   }
 
+  Future<List<OfferModel>> getSocialQueue(String adminUid) async {
+    final data = await _invokeAdminOffers('list_social_queue', {'admin_uid': adminUid});
+    if (data['success'] != true || data['offers'] is! List) return [];
+    return (data['offers'] as List)
+        .map((d) => OfferModel.fromSupabase(
+            Map<String, dynamic>.from(d as Map), d['id'] as String))
+        .toList();
+  }
+
+  Future<bool> publishToSocial(String adminUid, String offerId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final body = <String, dynamic>{
+        'admin_uid': adminUid,
+        'offer_id': offerId,
+      };
+      final sessionToken = prefs.getString('staff_session_token');
+      if (sessionToken != null && sessionToken.isNotEmpty) {
+        body['staff_session_token'] = sessionToken;
+      }
+      final res = await SupabaseService()
+          .invokeFunction('publish-to-social', body: body);
+      final data = _asMap(res.data);
+      if (data?['success'] == true) {
+        clearError();
+        return true;
+      }
+      _setError(data?['error'] ?? 'SOCIAL_PUBLISH_FAILED');
+      return false;
+    } catch (e) {
+      _setError(e);
+      return false;
+    }
+  }
+
   Future<bool> reviewOffer(
     String adminUid,
     String offerId,

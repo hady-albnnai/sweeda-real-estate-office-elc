@@ -439,7 +439,7 @@
 | 2      | نُشر فعلياً على السوشيال (المرحلة 2) |
 
 **المرحلة 1 (منفذة الآن)**: فقط "جدولة + نقاط + سجل".
-**المرحلة 2 (لاحقاً)**: Edge Function `publish-to-social` + Meta Graph API + `soc_pub=2`.
+**المرحلة 2 (منفذة برمجياً 2026-07-13)**: Edge Function `publish-to-social` + Carousel حتى 10 صور + زر يدوي + نشر تلقائي اختياري + حماية من التكرار عبر `social_publications`. يصبح `soc_pub=2` بعد نجاح Facebook وInstagram معاً. التشغيل الفعلي ينتظر Meta Secrets/IDs وتطبيق Migration والنشر؛ راجع `SOCIAL_PUBLISH_PHASE2_2026-07-13.md`.
 
 #### ج. القالب المولّد (مثال)
 ```

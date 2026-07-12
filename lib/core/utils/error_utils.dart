@@ -37,6 +37,12 @@ class ErrorUtils {
       'USER_FROZEN',
       'EMPTY_RESPONSE',
       'METHOD_NOT_ALLOWED',
+      'META_SECRETS_NOT_CONFIGURED',
+      'OFFER_NOT_APPROVED',
+      'SOCIAL_PUBLISH_NOT_ENABLED',
+      'PUBLIC_IMAGE_REQUIRED',
+      'PUBLISH_IN_PROGRESS',
+      'PARTIAL_OR_TOTAL_FAILURE',
     ];
 
     for (final code in knownCodes) {
@@ -98,6 +104,18 @@ class ErrorUtils {
         return 'لم يصل رد صالح من السيرفر.';
       case 'METHOD_NOT_ALLOWED':
         return 'طريقة الطلب غير مسموحة.';
+      case 'META_SECRETS_NOT_CONFIGURED':
+        return 'بيانات ربط Meta غير مضبوطة على السيرفر بعد.';
+      case 'OFFER_NOT_APPROVED':
+        return 'يجب اعتماد العرض ونشره داخل التطبيق أولاً.';
+      case 'SOCIAL_PUBLISH_NOT_ENABLED':
+        return 'النشر الاجتماعي غير مفعّل لهذا العرض.';
+      case 'PUBLIC_IMAGE_REQUIRED':
+        return 'يحتاج إنستغرام إلى صورة عامة صالحة واحدة على الأقل.';
+      case 'PUBLISH_IN_PROGRESS':
+        return 'النشر قيد التنفيذ حالياً؛ انتظر قليلاً ثم حدّث القائمة.';
+      case 'PARTIAL_OR_TOTAL_FAILURE':
+        return 'تعذر النشر على منصة واحدة أو أكثر؛ أعد المحاولة بأمان.';
       default:
         return code;
     }

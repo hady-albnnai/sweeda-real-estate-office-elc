@@ -1,7 +1,7 @@
 # آلية النشر التلقائي على صفحات التواصل (فيسبوك + إنستغرام)
 
 **التاريخ:** 2026-07-13  
-**الحالة:** المرحلة 1 (جدولة + نقاط + إشارات) منفذة بالكامل
+**الحالة:** المرحلة 1 منفذة، والمرحلة 2 منفذة برمجياً وتنتظر إعداد Meta/الأسرار والنشر — راجع `SOCIAL_PUBLISH_PHASE2_2026-07-13.md`
 
 ---
 
@@ -93,24 +93,19 @@ if (iSoc === 1 && socTxt.length > 10) {
 
 ---
 
-## المرحلة 2 (النشر الحقيقي) — لاحقاً
+## المرحلة 2 (النشر الحقيقي) — منفذة برمجياً
 
-نحتاج:
-- Facebook Page Access Token (مع صلاحيات `pages_manage_posts`)
-- Instagram Business Account ID
-- Meta App معتمدة
+تمت إضافة:
+- Edge Function: `publish-to-social`.
+- زر نشر يدوي وقائمة للعروض الجاهزة.
+- مفتاح نشر تلقائي اختياري من الإدارة (معطل افتراضياً).
+- Carousel حتى 10 صور على Facebook وInstagram.
+- تحديث `soc_pub = 2` بعد نجاح المنصتين فقط.
+- حماية من التكرار وسجل مستقل لكل منصة في `social_publications`.
 
-ثم سنضيف:
-- Edge Function جديدة: `publish-to-social`
-- استدعاء Graph API:
-  ```ts
-  POST https://graph.facebook.com/v19.0/{page_id}/feed
-  {
-    message: socTxt,
-    link: "https://app.sweeda-realestate.com/offer/xxx"
-  }
-  ```
-- بعد نجاح النشر: `soc_pub = 2`
+ما يزال التشغيل الفعلي يحتاج إعداد Meta، وإضافة Edge Secrets، وتطبيق Migration ونشر الوظائف. التفاصيل والأوامر في:
+
+- `docs/SOCIAL_PUBLISH_PHASE2_2026-07-13.md`
 
 ---
 

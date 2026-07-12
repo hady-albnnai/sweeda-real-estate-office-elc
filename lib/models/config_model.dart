@@ -99,7 +99,14 @@ class ConfigModel {
   /// رقم هاتف المطور (قابل للتعديل من الإدارة — يظهر في "عن التطبيق")
   String get developerPhone => _getNested('txts.developerPhone', '(سيتم إضافته لاحقاً)');
 
-  int _getNested(String path, int defaultValue) {
+  /// إعدادات النشر الحقيقي على Meta. التوكنات لا تحفظ هنا؛ تبقى Edge Secrets.
+  Map<String, dynamic> get socialPublishing =>
+      _getNestedMap('socialPublishing', {'autoPublish': false});
+
+  /// عند true تحاول Edge Function النشر مباشرة بعد قبول العرض.
+  bool get socialAutoPublish => socialPublishing['autoPublish'] == true;
+
+  T _getNested<T>(String path, T defaultValue) {
     dynamic value = data;
     for (final key in path.split('.')) {
       if (value is Map && value.containsKey(key)) {
@@ -108,7 +115,8 @@ class ConfigModel {
         return defaultValue;
       }
     }
-    return (value is num) ? value.toInt() : defaultValue;
+    if (defaultValue is int && value is num) return value.toInt() as T;
+    return value is T ? value : defaultValue;
   }
 
   Map<String, dynamic> _getNestedMap(String path, Map<String, dynamic> defaultValue) {
