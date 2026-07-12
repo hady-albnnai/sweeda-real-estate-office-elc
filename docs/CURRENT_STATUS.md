@@ -701,3 +701,81 @@ supabase functions deploy user-account
 ```bash
 supabase functions deploy user-account --project-ref vsgkgnjtebjxyqwpuopz
 ```
+
+---
+
+## تحديث 2026-07-14 — إكمال النشر التلقائي على فيسبوك وإنستغرام (مفعّل افتراضياً)
+
+**الطلب:** جعل النشر يحدث تلقائياً فور موافقة الإدارة على العرض بدون خطوة يدوية إضافية.
+
+**ما تم تنفيذه:**
+
+1. **تفعيل تلقائي افتراضي:**
+   - `lib/models/config_model.dart`: تغيير default من `false` إلى `true` — `socialAutoPublish` الآن `!= false` (مفعّل إذا غير موجود).
+   - `lib/screens/admin/config_editor_screen.dart`: القيمة الابتدائية `_socialAutoPublish = true` مع شرح أوضح.
+   - Migration جديدة `2026_07_14_social_auto_publish_enable.sql`: تضبط `app_config.main.socialPublishing.autoPublish = true` حتى للسجلات الموجودة، وتضمن وجود جدول `social_publications` والدالة `claim_social_publication`.
+
+2. **تحسين Edge Function `admin-offers`:**
+   - المنطق الآن: عند `approve && i_soc==1 && socTxt>10` → يضبط `soc_pub=1` + نقاط + log 105.
+   - يقرأ `socialPublishing.autoPublish` من `app_config` — **افتراضي true** (ليس false كما كان).
+   - إذا مفعّل → يستدعي `publishOfferToSocial` فوراً ويسجل:
+     - نجاح → action 106 `تم النشر التلقائي الفوري`
+     - فشل → action 107 `فشل النشر التلقائي` + يبقى `soc_pub=1` في قائمة "جاهزة للنشر" لإعادة المحاولة.
+   - إذا معطل → يعيد `queued:true` مع رسالة `AUTO_PUBLISH_DISABLED`.
+
+3. **تحسين الواجهة `offers_review_screen.dart`:**
+   - دالة `_approve` أصبحت تقرأ نتيجة `social_publish` كاملة وتعرض:
+     - نجاح تلقائي → `✅ تم النشر داخلياً • 📣 ✅ تم النشر تلقائياً على فيسبوك وإنستغرام`
+     - `META_SECRETS_NOT_CONFIGURED` → تنبيه أن التوكنات غير مضبوطة والبقاء في الجاهزة
+     - `PUBLIC_IMAGE_REQUIRED` → تنبيه عدم وجود صورة عامة
+     - فشل عام → يعرض الخطأ ويبقي في الجاهزة
+     - معطل → `تمت جدولته فقط`
+   - إضافة حالة علوية توضح إن كان الوضع التلقائي مفعّل (أخضر) أو معطل (برتقالي).
+   - إضافة زر **نشر الكل** في قسم "جاهزة للنشر" عند وجود أكثر من عرض — ينشرهم واحداً تلو الآخر مع إحصائية نجاح/فشل.
+   - تغيير `reviewOffer` في `OffersAdminService` ليعيد Map كاملة مع `social_publish` بدل bool فقط — مع توافق خلفي عبر `reviewOfferLegacy`.
+
+4. **دليل إعداد Meta كامل:**
+   - ملف جديد `docs/SOCIAL_PUBLISH_SETUP_GUIDE_AR.md` يشرح خطوة بخطوة:
+     - إنشاء تطبيق Meta وإضافة Products.
+     - ربط الصفحة وحساب IG بالـ Business Manager.
+     - الصلاحيات المطلوبة `pages_manage_posts` إلخ.
+     - توليد Page Token طويل العمر عبر `fb_exchange_token` و `me/accounts`.
+     - الحصول على IG Business ID عبر `/{PAGE_ID}?fields=instagram_business_account`.
+     - ضبط Secrets في Supabase: `META_PAGE_ACCESS_TOKEN`, `PAGE_ID`, `IG_ID`, `GRAPH_VERSION`.
+     - أوامر `supabase db push` و `functions deploy`.
+     - اختبار دورة كاملة ومراجعة `social_publications`.
+
+5. **توثيق:**
+   - تحديث `LOGIC_SPEC.md` §7.3 ليعكس أن النشر التلقائي مفعّل افتراضياً مع تفاصيل الحماية من التكرار والـ Carousel.
+   - تحديث `SOCIAL_PUBLISH_MECHANISM_2026-07-13.md` بتاريخ 2026-07-14.
+
+**التدفق النهائي:**
+```
+مستخدم يضيف عرض (Checkbox مفعّل افتراضياً) → i_soc=1 + socTxt جاهز
+↓
+إدارة توافق (قبول) → admin-offers:
+  sts=2, i_pub=1, soc_pub=1, نقاط soc, log 105
+  إذا autoPublish != false:
+    publishOfferToSocial:
+      - يتحقق من SECRETS (3 متغيرات)
+      - ينقي الصور إلى https (حتى 10)
+      - يرفع على فيسبوك كـ unpublished ثم Feed Post مع attached_media
+      - يرفع على إنستغرام كـ child containers ثم carousel ثم publish
+      - Claim عبر social_publications لمنع التكرار (10 دقائق stale)
+      - إذا نجح الاثنتان → soc_pub=2, log 106
+      - إذا فشل إحدى المنصتين → يبقى soc_pub=1, log 107, يحفظ error_message وpost_id
+↓
+إدارة ترى رسالة فورية بنتيجة النشر + العرض يختفي من الجاهزة إذا نجح أو يبقى إذا فشل
+↓
+في حال الفشل: زر "نشر الآن" أو "نشر الكل" يعيد المحاولة بأمان (يتجاوز المنصة الناجحة)
+```
+
+**يلزم للتفعيل الحي:**
+```bash
+supabase db push
+supabase secrets set META_PAGE_ACCESS_TOKEN='...' META_FACEBOOK_PAGE_ID='...' META_INSTAGRAM_ACCOUNT_ID='...' META_GRAPH_API_VERSION='v25.0'
+supabase functions deploy publish-to-social
+supabase functions deploy admin-offers
+```
+
+**المراجع:** `SOCIAL_PUBLISH_SETUP_GUIDE_AR.md` + `SOCIAL_PUBLISH_PHASE2_2026-07-13.md`

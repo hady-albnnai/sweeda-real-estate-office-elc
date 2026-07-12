@@ -93,7 +93,7 @@ class OffersAdminService {
     }
   }
 
-  Future<bool> reviewOffer(
+  Future<Map<String, dynamic>> reviewOffer(
     String adminUid,
     String offerId,
     bool approve, {
@@ -105,6 +105,16 @@ class OffersAdminService {
       'approve': approve,
       'reason': reason,
     });
+    return data;
+  }
+
+  Future<bool> reviewOfferLegacy(
+    String adminUid,
+    String offerId,
+    bool approve, {
+    String reason = '',
+  }) async {
+    final data = await reviewOffer(adminUid, offerId, approve, reason: reason);
     return data['success'] == true;
   }
 

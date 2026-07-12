@@ -87,17 +87,25 @@ class AdminProvider with ChangeNotifier {
     return ok;
   }
 
-  Future<bool> reviewOffer(String adminUid, String offerId, bool approve,
+  Future<Map<String, dynamic>> reviewOffer(String adminUid, String offerId, bool approve,
       {String reason = ''}) async {
-    final ok = await _offersAdmin.reviewOffer(
+    final data = await _offersAdmin.reviewOffer(
       adminUid,
       offerId,
       approve,
       reason: reason,
     );
     _syncOffersError();
+    final ok = data['success'] == true;
     if (ok) notifyListeners();
-    return ok;
+    return data;
+  }
+
+  /// نسخة bool للتوافق مع الشاشات القديمة
+  Future<bool> reviewOfferBool(String adminUid, String offerId, bool approve,
+      {String reason = ''}) async {
+    final data = await reviewOffer(adminUid, offerId, approve, reason: reason);
+    return data['success'] == true;
   }
 
   Future<bool> setOfferPriority(String adminUid, String offerId, String priorityType) async {

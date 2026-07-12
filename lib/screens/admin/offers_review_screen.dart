@@ -13,7 +13,7 @@ import '../../core/theme/app_theme.dart';
 
 /// شاشة مراجعة العروض الجديدة للإدارة
 /// تعرض الصور + معلومات المرسل + التفاصيل + كشف العروض المكررة
-/// + إجراءات قبول/رفض بسبب
+/// + إجراءات قبول/رفض بسبب + نشر اجتماعي تلقائي بعد الموافقة
 class OffersReviewScreen extends StatefulWidget {
   const OffersReviewScreen({super.key});
 
@@ -26,6 +26,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
   List<OfferModel> _socialQueue = [];
   final Set<String> _publishingIds = {};
   bool _loading = true;
+  bool _bulkPublishing = false;
 
   // كاش بيانات المرسلين: userId → UserModel
   final Map<String, UserModel> _ownersCache = {};
@@ -63,8 +64,8 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
           _ownersCache[user.uid] = user;
         }
       } catch (e) {
-      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
-    }
+        // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
+      }
     }
 
     if (!mounted) return;
@@ -76,15 +77,19 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
   }
 
   Future<void> _approve(OfferModel o) async {
+    final config = context.read<ConfigProvider>().config;
+    final autoEnabled = config?.socialAutoPublish ?? true;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
         title: const Text('تأكيد القبول',
             style: TextStyle(color: AppTheme.textWhite)),
-        content: const Text(
-            'سيتم نشر العرض ليصبح مرئياً للجميع. هل أنت متأكد؟',
-            style: TextStyle(color: AppTheme.textGrey)),
+        content: Text(
+            autoEnabled && o.iSoc == 1
+                ? 'سيتم نشر العرض ليصبح مرئياً للجميع وسيتم نشره تلقائياً على فيسبوك وإنستغرام${o.imgs.isEmpty ? ' (يحتاج صورة للإنستغرام)' : ''}. هل أنت متأكد؟'
+                : 'سيتم نشر العرض ليصبح مرئياً للجميع. هل أنت متأكد؟',
+            style: const TextStyle(color: AppTheme.textGrey)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -104,25 +109,41 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
 
     final admin = context.read<AdminProvider>();
     final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
-    final ok = await admin.reviewOffer(adminUid, o.id, true);
+    final result = await admin.reviewOffer(adminUid, o.id, true);
     if (!mounted) return;
+    final ok = result['success'] == true;
     if (ok) {
       try {
-        final config = context.read<ConfigProvider>().config;
-        await BusinessService().awardEvent(o.usrId, config, 'addO', fallback: 500);
-      } catch (_) {
-      // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
-    }
+        final cfg = context.read<ConfigProvider>().config;
+        await BusinessService().awardEvent(o.usrId, cfg, 'addO', fallback: 500);
+      } catch (_) {}
 
-      // رسالة واضحة عن النشر الاجتماعي
-      String msg = '✅ تم نشر العرض';
+      // رسالة مفصلة عن النشر الاجتماعي
+      String msg = '✅ تم نشر العرض داخلياً';
       if (o.iSoc == 1 && o.socTxt.isNotEmpty) {
-        msg += ' • 📣 تمت معالجة خيار النشر الاجتماعي';
+        final social = result['social_publish'] as Map<String, dynamic>?;
+        if (social == null) {
+          msg += ' • 📣 تمت جدولته للنشر (الوضع التلقائي معطل)';
+        } else if (social['success'] == true) {
+          final already = social['alreadyPublished'] == true;
+          msg += already
+              ? ' • 📣 كان منشوراً مسبقاً على السوشيال'
+              : ' • 📣 ✅ تم النشر تلقائياً على فيسبوك وإنستغرام';
+        } else {
+          final err = (social['error'] ?? '').toString();
+          if (err.contains('META_SECRETS_NOT_CONFIGURED')) {
+            msg += ' • ⚠️ التوكنات غير مضبوطة، بقي في قائمة الجاهزة';
+          } else if (err.contains('PUBLIC_IMAGE_REQUIRED')) {
+            msg += ' • ⚠️ لا توجد صورة عامة للنشر، بقي في قائمة الجاهزة';
+          } else {
+            msg += ' • ⚠️ فشل النشر التلقائي (${err.isEmpty ? 'خطأ غير معروف' : err}). سيبقى في قائمة الجاهزة لإعادة المحاولة';
+          }
+        }
       }
       _snack(msg);
       _load();
     } else {
-      _snack('فشل النشر');
+      _snack(result['error']?.toString() ?? 'فشل النشر: ${admin.error ?? ''}');
     }
   }
 
@@ -172,19 +193,71 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
     }
   }
 
+  Future<void> _publishAllQueued() async {
+    if (_socialQueue.isEmpty || _bulkPublishing) return;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppTheme.surfaceBlack,
+        title: const Text('نشر جميع العروض الجاهزة',
+            style: TextStyle(color: AppTheme.textWhite)),
+        content: Text(
+          'سيتم محاولة نشر ${_socialQueue.length} عرض تلقائياً على فيسبوك وإنستغرام. المتابعة؟',
+          style: const TextStyle(color: AppTheme.textGrey),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('نشر الجميع'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+
+    setState(() => _bulkPublishing = true);
+    final admin = context.read<AdminProvider>();
+    final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
+    int successCount = 0;
+    int failCount = 0;
+
+    for (final offer in List<OfferModel>.from(_socialQueue)) {
+      if (offer.imgs.isEmpty) {
+        failCount++;
+        continue;
+      }
+      final ok = await admin.publishOfferToSocial(adminUid, offer.id);
+      if (ok) {
+        successCount++;
+      } else {
+        failCount++;
+      }
+    }
+
+    if (!mounted) return;
+    setState(() => _bulkPublishing = false);
+    _snack('📊 النتيجة: ✅ $successCount نجح • ❌ $failCount فشل/تخطي');
+    await _load();
+  }
+
   Future<void> _reject(OfferModel o) async {
     final reason = await _askReason();
     if (reason == null || !mounted) return;
 
     final admin = context.read<AdminProvider>();
     final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
-    final ok = await admin.reviewOffer(adminUid, o.id, false, reason: reason);
+    final result = await admin.reviewOffer(adminUid, o.id, false, reason: reason);
     if (!mounted) return;
+    final ok = result['success'] == true;
     if (ok) {
       _snack('تم رفض العرض');
       _load();
     } else {
-      _snack('فشل الرفض');
+      _snack(result['error']?.toString() ?? 'فشل الرفض');
     }
   }
 
@@ -262,10 +335,12 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
   }
 
   void _snack(String m) =>
-      AppTheme.showSnackBar(context, SnackBar(content: Text(m)));
+      AppTheme.showSnackBar(context, SnackBar(content: Text(m), duration: const Duration(seconds: 4)));
 
   @override
   Widget build(BuildContext context) {
+    final config = context.watch<ConfigProvider>().config;
+    final autoEnabled = config?.socialAutoPublish ?? true;
     return Scaffold(
       backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
@@ -305,11 +380,59 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                   child: ListView(
                     padding: const EdgeInsets.all(12),
                     children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: autoEnabled
+                              ? Colors.green.withOpacity(0.08)
+                              : Colors.orange.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                              color: autoEnabled
+                                  ? Colors.green.withOpacity(0.4)
+                                  : Colors.orange.withOpacity(0.4)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                                autoEnabled
+                                    ? Icons.auto_awesome
+                                    : Icons.pause_circle_outline,
+                                color: autoEnabled ? Colors.green : Colors.orange,
+                                size: 18),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                autoEnabled
+                                    ? 'الوضع التلقائي مفعّل: سيُنشر العرض تلقائياً على فيسبوك وإنستغرام بعد الموافقة'
+                                    : 'الوضع التلقائي معطل: العروض ستُجدول فقط وتحتاج نشر يدوي من قائمة الجاهزة',
+                                style: TextStyle(
+                                    color: autoEnabled ? Colors.green : Colors.orange,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                       if (_socialQueue.isNotEmpty) ...[
                         _listHeader(
                           '📣 جاهزة للنشر على فيسبوك + إنستغرام',
                           '${_socialQueue.length}',
                           Colors.blue,
+                          action: _socialQueue.length > 1
+                              ? TextButton.icon(
+                                  onPressed: _bulkPublishing ? null : _publishAllQueued,
+                                  icon: _bulkPublishing
+                                      ? const SizedBox(
+                                          width: 14,
+                                          height: 14,
+                                          child: CircularProgressIndicator(strokeWidth: 2))
+                                      : const Icon(Icons.publish_all, size: 16),
+                                  label: Text(_bulkPublishing ? 'جارٍ...' : 'نشر الكل'),
+                                )
+                              : null,
                         ),
                         ..._socialQueue.map((o) => _offerCard(o, socialOnly: true)),
                         const SizedBox(height: 10),
@@ -328,7 +451,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
     );
   }
 
-  Widget _listHeader(String title, String count, Color color) => Container(
+  Widget _listHeader(String title, String count, Color color, {Widget? action}) => Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
@@ -342,6 +465,8 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
               child: Text(title,
                   style: TextStyle(color: color, fontWeight: FontWeight.bold)),
             ),
+            if (action != null) action,
+            const SizedBox(width: 8),
             CircleAvatar(
               radius: 14,
               backgroundColor: color.withOpacity(0.2),
@@ -495,7 +620,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                           child: Text(
                             socialOnly
                                 ? '📣 العرض معتمد وجاهز للنشر الفعلي على فيسبوك + إنستغرام'
-                                : '📣 سيُجدول للنشر على فيسبوك + إنستغرام بعد الموافقة',
+                                : '📣 سيُنشر تلقائياً على فيسبوك + إنستغرام بعد الموافقة',
                             style: const TextStyle(color: Colors.blue, fontSize: 12, fontWeight: FontWeight.w600),
                           ),
                         ),
@@ -516,7 +641,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                   const SizedBox(height: 10),
                 ],
 
-                // تنويه داخلي: من أضاف العرض (إذا أضافته الإدارة)
+                // تنويه داخلي: من أضاف العرض
                 if (o.addedBy != null && o.addedBy!.isNotEmpty) ...[
                   const SizedBox(height: 6),
                   Container(
@@ -532,7 +657,6 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          // نعرض اسم الموظف إذا توفر، وإلا ID مختصر
                           'أُضيف بواسطة: ${_ownersCache[o.addedBy]?.nm.isNotEmpty == true ? _ownersCache[o.addedBy]!.nm : 'موظف (${o.addedBy!.substring(0, 8)})'}',
                           style: const TextStyle(color: Colors.amber, fontSize: 11),
                         ),
@@ -542,7 +666,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                   const SizedBox(height: 8),
                 ],
 
-                // المرسل (صاحب العرض)
+                // المرسل
                 const Divider(color: AppTheme.textGrey, height: 16),
                 Row(
                   children: [
@@ -637,7 +761,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                               : const Icon(Icons.share),
                           label: Text(_publishingIds.contains(o.id)
                               ? 'جارٍ النشر...'
-                              : 'نشر الآن على فيسبوك + إنستغرام'),
+                              : 'نشر الآن'),
                         ),
                       ),
                     ],

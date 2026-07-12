@@ -438,8 +438,13 @@
 | 1      | مفعّل + جاهز للنشر (بعد الموافقة) |
 | 2      | نُشر فعلياً على السوشيال (المرحلة 2) |
 
-**المرحلة 1 (منفذة الآن)**: فقط "جدولة + نقاط + سجل".
-**المرحلة 2 (منفذة برمجياً 2026-07-13)**: Edge Function `publish-to-social` + Carousel حتى 10 صور + زر يدوي + نشر تلقائي اختياري + حماية من التكرار عبر `social_publications`. يصبح `soc_pub=2` بعد نجاح Facebook وInstagram معاً. التشغيل الفعلي ينتظر Meta Secrets/IDs وتطبيق Migration والنشر؛ راجع `SOCIAL_PUBLISH_PHASE2_2026-07-13.md`.
+**المرحلة 1 (منفذة)**: فقط "جدولة + نقاط + سجل".
+**المرحلة 2 (منفذة ومفعّلة تلقائياً منذ 2026-07-14)**: Edge Function `publish-to-social` + Carousel حتى 10 صور + زر يدوي كاحتياط + نشر تلقائي مفعّل افتراضياً `autoPublish=true` + حماية من التكرار عبر `social_publications`. يصبح `soc_pub=2` بعد نجاح Facebook وInstagram معاً. 
+- عند الموافقة في `admin-offers` يتم تلقائياً: `soc_pub=1` → إن كان `autoPublish != false` ينشر فوراً عبر `publishOfferToSocial` → إذا نجح → `soc_pub=2` + سجل `activity_log` 106، إذا فشل → يبقى 1 في قائمة "جاهزة للنشر" + سجل 107.
+- الصور تُنقّى إلى https فقط (حتى 10) وتُنشر كـ Feed Post بواحد أو Carousel.
+- الحماية من التكرار عبر `claim_social_publication` و `social_publications` (حالة لكل منصة + post_id + محاولة + خطأ).
+- التشغيل الفعلي يحتاج Meta Secrets/IDs وتطبيق Migration والنشر؛ راجع `SOCIAL_PUBLISH_SETUP_GUIDE_AR.md` و `SOCIAL_PUBLISH_PHASE2_2026-07-13.md`.
+- الإعداد في `/admin/config` → مفتاح "النشر التلقائي فور قبول العرض" (افتراضي مفعّل).
 
 #### ج. القالب المولّد (مثال)
 ```

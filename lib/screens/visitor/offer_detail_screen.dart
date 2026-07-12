@@ -305,15 +305,19 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
   }
 
   Future<void> _approveOffer(OfferModel offer) async {
+    final config = context.read<ConfigProvider>().config;
+    final autoEnabled = config?.socialAutoPublish ?? true;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
         title: const Text('تأكيد القبول',
             style: TextStyle(color: AppTheme.textWhite)),
-        content: const Text(
-            'سيتم نشر العرض ليصبح مرئياً للجميع. هل أنت متأكد؟',
-            style: TextStyle(color: AppTheme.textGrey)),
+        content: Text(
+            autoEnabled && offer.iSoc == 1
+                ? 'سيتم نشر العرض ليصبح مرئياً للجميع وسيتم نشره تلقائياً على فيسبوك وإنستغرام. هل أنت متأكد؟'
+                : 'سيتم نشر العرض ليصبح مرئياً للجميع. هل أنت متأكد؟',
+            style: const TextStyle(color: AppTheme.textGrey)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -333,20 +337,34 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
 
     final admin = context.read<AdminProvider>();
     final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
-    final ok = await admin.reviewOffer(adminUid, offer.id, true);
+    final result = await admin.reviewOffer(adminUid, offer.id, true);
     if (!mounted) return;
+    final ok = result['success'] == true;
     if (ok) {
       try {
-        final config = context.read<ConfigProvider>().config;
-        await BusinessService().awardEvent(offer.usrId, config, 'addO', fallback: 500);
+        final cfg = context.read<ConfigProvider>().config;
+        await BusinessService().awardEvent(offer.usrId, cfg, 'addO', fallback: 500);
       } catch (_) {}
+      String msg = '✅ تم نشر العرض';
+      final social = result['social_publish'] as Map<String, dynamic>?;
+      if (offer.iSoc == 1 && social != null) {
+        if (social['success'] == true) {
+          msg += ' • 📣 تم النشر تلقائياً على فيسبوك وإنستغرام';
+        } else if ((social['error'] ?? '').toString().contains('META_SECRETS')) {
+          msg += ' • ⚠️ التوكنات غير مضبوطة — بقي في الجاهزة';
+        } else if (social['queued'] == true) {
+          msg += ' • 📣 مجدول للنشر';
+        } else if (social['error'] != null) {
+          msg += ' • ⚠️ فشل تلقائي: ${social['error']}';
+        }
+      }
       AppTheme.showSnackBar(context,
-        const SnackBar(content: Text('✅ تم نشر العرض'), backgroundColor: Colors.green),
+        SnackBar(content: Text(msg), backgroundColor: Colors.green, duration: const Duration(seconds: 4)),
       );
       _load();
     } else {
       AppTheme.showSnackBar(context,
-        SnackBar(content: Text('فشل النشر: ${admin.error ?? "خطأ غير معروف"}'), backgroundColor: AppTheme.errorRed),
+        SnackBar(content: Text('فشل النشر: ${result['error'] ?? admin.error ?? "خطأ غير معروف"}'), backgroundColor: AppTheme.errorRed),
       );
     }
   }
@@ -357,8 +375,9 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
 
     final admin = context.read<AdminProvider>();
     final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
-    final ok = await admin.reviewOffer(adminUid, offer.id, false, reason: reason);
+    final result = await admin.reviewOffer(adminUid, offer.id, false, reason: reason);
     if (!mounted) return;
+    final ok = result['success'] == true;
     if (ok) {
       AppTheme.showSnackBar(context,
         const SnackBar(content: Text('تم رفض العرض'), backgroundColor: Colors.orange),
@@ -366,7 +385,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
       _load();
     } else {
       AppTheme.showSnackBar(context,
-        SnackBar(content: Text('فشل الرفض: ${admin.error ?? "خطأ غير معروف"}'), backgroundColor: AppTheme.errorRed),
+        SnackBar(content: Text('فشل الرفض: ${result['error'] ?? admin.error ?? "خطأ غير معروف"}'), backgroundColor: AppTheme.errorRed),
       );
     }
   }

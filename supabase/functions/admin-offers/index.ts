@@ -1,5 +1,6 @@
-// Edge Function: admin-offers
-// الغرض: نقل عمليات إدارة العروض الحساسة من RPC مباشر إلى Edge Function تتحقق من جلسة الموظف.
+// Edge Function: admin-offers — إدارة العروض + النشر التلقائي على السوشيال
+// التحديث 2026-07-13: النشر التلقائي مفعّل افتراضياً (autoPublish != false).
+// الترتيب الإلزامي: db push ثم secrets ثم functions deploy.
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -151,11 +152,10 @@ serve(async (req) => {
 
       let socialPublishResult: Record<string, unknown> | null = null;
       if (approve && data === true) {
-        // 2. معالجة النشر الاجتماعي (المرحلة 1 + النشر الحقيقي الاختياري)
         try {
           const { data: offerRow } = await supabaseAdmin
             .from('offers')
-            .select('i_soc, soc_txt, usr_id')
+            .select('i_soc, soc_txt, usr_id, imgs')
             .eq('id', offerId)
             .single();
 
@@ -170,7 +170,7 @@ serve(async (req) => {
               .update({ soc_pub: 1 })
               .eq('id', offerId);
 
-            // منح نقاط النشر الاجتماعي (من pts.soc)
+            // منح نقاط النشر الاجتماعي
             if (ownerUid) {
               try {
                 await supabaseAdmin.rpc('award_points_safe', {
@@ -181,18 +181,18 @@ serve(async (req) => {
               } catch (_) {}
             }
 
-            // سجل في activity_log
+            // سجل جدولة
             try {
               await supabaseAdmin.rpc('log_admin_action', {
                 p_admin_uid: adminUid,
                 p_action: 105,
-                p_details: 'تم تفعيل النشر التلقائي على السوشيال (i_soc=1)',
+                p_details: 'تم تفعيل النشر التلقائي على السوشيال (i_soc=1) - مجدول',
                 p_target_id: offerId,
                 p_target_table: 'offers',
               });
             } catch (_) {}
 
-            // المرحلة 2: ينشر فوراً فقط إذا فعّل المدير المفتاح من app_config.
+            // قراءة إعداد الوضع التلقائي — افتراضي true منذ 2026-07-13
             const { data: configRow } = await supabaseAdmin
               .from('app_config')
               .select('value')
@@ -200,12 +200,35 @@ serve(async (req) => {
               .single();
             const configValue = (configRow?.value ?? {}) as Record<string, unknown>;
             const socialConfig = (configValue.socialPublishing ?? {}) as Record<string, unknown>;
-            if (socialConfig.autoPublish === true) {
-              socialPublishResult = await publishOfferToSocial(supabaseAdmin, offerId) as unknown as Record<string, unknown>;
+            const autoPublishEnabled = socialConfig.autoPublish !== false; // true افتراضياً
+
+            if (autoPublishEnabled) {
+              const result = await publishOfferToSocial(supabaseAdmin, offerId) as unknown as Record<string, unknown>;
+              socialPublishResult = result;
+
+              // سجل نتيجة النشر التلقائي
+              try {
+                const success = result.success === true;
+                await supabaseAdmin.rpc('log_admin_action', {
+                  p_admin_uid: adminUid,
+                  p_action: success ? 106 : 107,
+                  p_details: success
+                    ? '✅ تم النشر التلقائي الفوري على فيسبوك وإنستغرام بعد الموافقة'
+                    : `⚠️ فشل النشر التلقائي بعد الموافقة: ${(result.error as string) ?? 'UNKNOWN'} — سيبقى في قائمة الجاهزة`,
+                  p_target_id: offerId,
+                  p_target_table: 'offers',
+                });
+              } catch (_) {}
+            } else {
+              socialPublishResult = {
+                success: false,
+                queued: true,
+                error: 'AUTO_PUBLISH_DISABLED',
+                message: 'الوضع التلقائي معطل — تمت جدولة العرض فقط',
+              };
             }
           }
         } catch (socialError) {
-          // الموافقة تبقى ناجحة، ويعود خطأ النشر منفصلاً لإعادة المحاولة يدوياً.
           socialPublishResult = {
             success: false,
             error: socialError instanceof Error ? socialError.message : String(socialError),

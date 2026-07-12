@@ -34,7 +34,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
   final _facebookCtrl = TextEditingController();
   final _instagramCtrl = TextEditingController();
   final _developerPhoneCtrl = TextEditingController();
-  bool _socialAutoPublish = false;
+  bool _socialAutoPublish = true; // مفعّل افتراضياً منذ 2026-07-13
   // للصفحات الإضافية: نستخدم قائمة بسيطة (key: label, value: url)
   final List<Map<String, TextEditingController>> _extraSocialCtrls = [];
 

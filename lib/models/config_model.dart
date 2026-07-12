@@ -100,11 +100,12 @@ class ConfigModel {
   String get developerPhone => _getNested('txts.developerPhone', '(سيتم إضافته لاحقاً)');
 
   /// إعدادات النشر الحقيقي على Meta. التوكنات لا تحفظ هنا؛ تبقى Edge Secrets.
+  /// افتراضي true منذ 2026-07-13 — النشر التلقائي بعد الموافقة مباشرة.
   Map<String, dynamic> get socialPublishing =>
-      _getNestedMap('socialPublishing', {'autoPublish': false});
+      _getNestedMap('socialPublishing', {'autoPublish': true});
 
   /// عند true تحاول Edge Function النشر مباشرة بعد قبول العرض.
-  bool get socialAutoPublish => socialPublishing['autoPublish'] == true;
+  bool get socialAutoPublish => socialPublishing['autoPublish'] != false;
 
   T _getNested<T>(String path, T defaultValue) {
     dynamic value = data;
