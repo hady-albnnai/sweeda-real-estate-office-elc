@@ -8,12 +8,12 @@ import '../../models/user_model.dart';
 import '../../models/offer_model.dart';
 import '../../models/appointment_model.dart';
 import '../../core/network/supabase_service.dart';
-import '../../core/constants/db_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/app_utils.dart';
 
 /// شاشة تفاصيل المستخدم للإدارة
 /// تعرض: بياناته + إحصائياته + عروضه + مواعيده + التبليغات عليه + إجراءات سريعة
+/// تستخدم Edge Function (service_role) لتخطي RLS
 class UserDetailsScreen extends StatefulWidget {
   final String userId;
   const UserDetailsScreen({super.key, required this.userId});
@@ -47,69 +47,69 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
 
   Future<void> _load() async {
     setState(() => _loading = true);
-    final sb = SupabaseService().client;
     try {
-      // المستخدم
-      final userData = await sb
-          .from(DbTables.users)
-          .select()
-          .eq('id', widget.userId)
-          .maybeSingle();
-      if (userData == null) {
+      final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
+      final response = await SupabaseService().invokeFunction(
+        'admin-dashboard',
+        body: {
+          'action': 'admin_user_details',
+          'admin_uid': adminUid,
+          'target_uid': widget.userId,
+        },
+      );
+      final data = response.data is Map
+          ? Map<String, dynamic>.from(response.data)
+          : null;
+      if (data == null || data['success'] != true) {
         if (mounted) setState(() => _loading = false);
         return;
       }
-      _user = UserModel.fromSupabase(
-          Map<String, dynamic>.from(userData), widget.userId);
+
+      // بيانات المستخدم
+      final userRow = data['user'];
+      if (userRow is Map) {
+        _user = UserModel.fromSupabase(
+            Map<String, dynamic>.from(userRow), widget.userId);
+      }
 
       // العروض
-      final offData = await sb
-          .from(DbTables.offers)
-          .select()
-          .eq('usr_id', widget.userId)
-          .eq('i_del', 0)
-          .order('ts_crt', ascending: false);
-      _offers = (offData as List)
-          .map((d) => OfferModel.fromSupabase(
-              Map<String, dynamic>.from(d), d['id'] as String))
-          .toList();
+      final offersList = data['offers'];
+      if (offersList is List) {
+        _offers = offersList
+            .map((d) => OfferModel.fromSupabase(
+                Map<String, dynamic>.from(d as Map), d['id'] as String))
+            .toList();
+      }
 
-      // المواعيد: كمالك عرض أو كطالب موعد
-      final appData = await sb
-          .from(DbTables.appointments)
-          .select()
-          .or('own_id.eq.${widget.userId},req_uid.eq.${widget.userId}')
-          .order('ts_crt', ascending: false)
-          .limit(50);
-      _appointments = (appData as List)
-          .map((d) => AppointmentModel.fromSupabase(
-              Map<String, dynamic>.from(d), d['id'] as String))
-          .toList();
+      // المواعيد
+      final apptList = data['appointments'];
+      if (apptList is List) {
+        _appointments = apptList
+            .map((d) => AppointmentModel.fromSupabase(
+                Map<String, dynamic>.from(d as Map), d['id'] as String))
+            .toList();
+      }
 
-      // التبليغات عليه
-      final repData = await sb
-          .from(DbTables.reports)
-          .select()
-          .eq('tgt_uid', widget.userId)
-          .order('ts_crt', ascending: false);
-      _reports = (repData as List)
-          .map((d) => Map<String, dynamic>.from(d))
-          .toList();
+      // التبليغات
+      final repList = data['reports'];
+      if (repList is List) {
+        _reports = repList
+            .map((d) => Map<String, dynamic>.from(d as Map))
+            .toList();
+      }
 
       // النشاط
-      final actData = await sb
-          .from(DbTables.activityLog)
-          .select()
-          .eq('uid', widget.userId)
-          .order('ts_crt', ascending: false)
-          .limit(30);
-      _activity = (actData as List)
-          .map((d) => Map<String, dynamic>.from(d))
-          .toList();
+      final actList = data['activity'];
+      if (actList is List) {
+        _activity = actList
+            .map((d) => Map<String, dynamic>.from(d as Map))
+            .toList();
+      }
 
       if (!mounted) return;
       setState(() => _loading = false);
-    } catch (e) {if (mounted) setState(() => _loading = false);
+    } catch (e) {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -310,30 +310,12 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
               ],
             ],
           ),
-          const SizedBox(height: 12),
-          Wrap(spacing: 6, runSpacing: 6, children: [
-            _chip(u.roleName, Colors.blue),
-            _chip(u.badgeName, AppTheme.primaryGold),
+          const SizedBox(height: 8),
+          // شارات
+          Wrap(spacing: 6, runSpacing: 4, children: [
             _chip(statusInfo.$1, statusInfo.$2),
-            _chip('${u.pt} نقطة', Colors.purple),
-            if (u.isBroker) _chip('وسيط مفعّل', Colors.green),
-            // حالة الباقة مع grace period
-            if (u.effectivePkg > 0)
-              _chip(
-                u.isPkgActive
-                    ? '${u.effectivePkg == 1 ? 'فضي' : 'ذهبي'} — نشط'
-                    : u.isInGracePeriod
-                        ? 'سماح ${u.graceDaysLeft} يوم'
-                        : 'باقة مدفوعة',
-                u.isPkgActive
-                    ? AppTheme.primaryGold
-                    : u.isInGracePeriod
-                        ? Colors.orange
-                        : Colors.grey,
-              )
-            else
-              _chip('مجاني', Colors.grey),
-            // 🛡️ حالة التوثيق الرسمي (LOGIC_SPEC §2.1)
+            _chip(u.roleName, AppTheme.primaryGold),
+            _chip('⭐ ${u.pt}', Colors.amber),
             if (u.isVerifiedOfficial)
               _chip('✓ موثق رسمياً', Colors.green)
             else if (u.vrf == 1)

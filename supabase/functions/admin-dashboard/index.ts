@@ -170,7 +170,7 @@ serve(async (req) => {
       const search = (body.search ?? "").toString().trim();
       let query = supabaseAdmin
         .from("users")
-        .select("id, nm, ph, eml, role, sts, pt, brk, vrf, img, usr, ts_crt")
+        .select("id, nm, ph, eml, role, sts, pt, brk, vrf, img, usr, sid, ad, bg, strk, strk_dt, ts_crt, ts_upd")
         .eq("i_del", 0)
         .in("role", [0, 1]);
 
@@ -181,6 +181,61 @@ serve(async (req) => {
       const { data: users, error: usersError } = await query.order("ts_crt", { ascending: false });
       if (usersError) return json({ success: false, error: usersError.message }, 400);
       return json({ success: true, users: users ?? [] });
+    }
+
+    // ✅ جلب تفاصيل مستخدم كاملة (بيانات + عروض + مواعيد + تبليغات + نشاط)
+    if (action === "admin_user_details") {
+      const targetUid = (body.target_uid ?? body.targetUid)?.toString() ?? "";
+      if (!targetUid) return json({ success: false, error: "TARGET_UID_REQUIRED" }, 400);
+
+      // بيانات المستخدم
+      const { data: userRow, error: userError } = await supabaseAdmin
+        .from("users")
+        .select("*")
+        .eq("id", targetUid)
+        .eq("i_del", 0)
+        .maybeSingle();
+      if (userError || !userRow) return json({ success: false, error: userError?.message ?? "USER_NOT_FOUND" }, 404);
+
+      // عروضه
+      const { data: offers } = await supabaseAdmin
+        .from("offers")
+        .select("*")
+        .eq("usr_id", targetUid)
+        .eq("i_del", 0)
+        .order("ts_crt", { ascending: false });
+
+      // مواعيده (كمالك عرض أو كطالب)
+      const { data: appointments } = await supabaseAdmin
+        .from("appointments")
+        .select("*")
+        .or(`own_id.eq.${targetUid},req_uid.eq.${targetUid}`)
+        .order("ts_crt", { ascending: false })
+        .limit(50);
+
+      // تبليغات عليه
+      const { data: reports } = await supabaseAdmin
+        .from("reports")
+        .select("*")
+        .eq("tgt_uid", targetUid)
+        .order("ts_crt", { ascending: false });
+
+      // نشاطه
+      const { data: activity } = await supabaseAdmin
+        .from("activity_log")
+        .select("*")
+        .eq("uid", targetUid)
+        .order("ts_crt", { ascending: false })
+        .limit(30);
+
+      return json({
+        success: true,
+        user: userRow,
+        offers: offers ?? [],
+        appointments: appointments ?? [],
+        reports: reports ?? [],
+        activity: activity ?? [],
+      });
     }
 
     return json({ success: false, error: "UNKNOWN_ACTION" }, 400);
