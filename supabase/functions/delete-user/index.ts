@@ -92,7 +92,7 @@ serve(async (req) => {
     });
 
     if (error) return json({ success: false, error: error.message }, 400);
-    return json({ success: data?.success === true });
+    return json({ success: data === true });
   } catch (error) {
     return json({ success: false, error: error instanceof Error ? error.message : String(error) }, 500);
   }

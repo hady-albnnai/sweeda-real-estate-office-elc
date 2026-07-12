@@ -103,7 +103,7 @@ serve(async (req) => {
     if (error) return json({ success: false, error: error.message }, 400);
 
     return json({
-      success: data?.success === true,
+      success: data === true,
       new_password: newPassword,
     });
   } catch (error) {
