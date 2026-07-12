@@ -238,26 +238,50 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
       Navigator.pop(context);
 
       // 🚀 AUTO WHATSAPP FOR VIDEO REQUEST PATH (only if opened from video button)
-      // Uses dedicated staff number (to be provided by user in config or here).
-      // Message contains offer_number automatically. No user input.
+      // 1. Preferred: videoRequestWhatsApp (private dedicated number set by مدير / نائب المدير)
+      // 2. Fallback: videoRequestGroupLink (if provided as full wa.me or chat.whatsapp link)
+      // 3. Old fallback: videoWhatsAppGroup
+      // Message always contains offer_number automatically.
       if (widget.isVideoRequest && widget.offer.offerNumber != null) {
         final num = widget.offer.offerNumber!;
-        // Prefer dedicated video request number from app_config.texts.videoRequestWhatsApp
-        // Fallback to the old group (will be replaced by user-provided)
         final cfg = context.read<ConfigProvider>().config;
-        String waNumber = (cfg?.texts['videoRequestWhatsApp']?.toString() ?? 
-                           cfg?.texts['videoWhatsAppGroup']?.toString() ?? 
-                           '963993000000').replaceAll(RegExp(r'[^0-9]'), '');
-        if (waNumber.startsWith('0')) waNumber = '963${waNumber.substring(1)}';
-        if (!waNumber.startsWith('963')) waNumber = '963$waNumber';
 
-        final prefilled = 'عرض #$num - طلب فيديو (حجز موعد تم بنجاح)';
-        final msg = Uri.encodeComponent(prefilled);
-        final waUrl = 'https://wa.me/$waNumber?text=$msg';
+        String target = '';
+        final dedicated = (cfg?.videoRequestWhatsApp ?? '').trim();
+        final groupLink = (cfg?.videoRequestGroupLink ?? '').trim();
 
-        try {
-          await launchUrl(Uri.parse(waUrl), mode: LaunchMode.externalApplication);
-        } catch (_) {}
+        if (dedicated.isNotEmpty) {
+          // Clean phone number
+          target = dedicated.replaceAll(RegExp(r'[^0-9]'), '');
+          if (target.startsWith('0')) target = '963${target.substring(1)}';
+          if (!target.startsWith('963')) target = '963$target';
+          final prefilled = 'عرض #$num - طلب فيديو (حجز موعد تم بنجاح)';
+          final msg = Uri.encodeComponent(prefilled);
+          final waUrl = 'https://wa.me/$target?text=$msg';
+          try {
+            await launchUrl(Uri.parse(waUrl), mode: LaunchMode.externalApplication);
+          } catch (_) {}
+        } else if (groupLink.isNotEmpty) {
+          // Launch group link (full link) or convert to wa.me if possible
+          String url = groupLink;
+          if (!url.startsWith('http')) {
+            url = 'https://$url';
+          }
+          try {
+            await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+          } catch (_) {}
+        } else {
+          // Last resort old group
+          String old = (cfg?.texts['videoWhatsAppGroup']?.toString() ?? '963993000000').replaceAll(RegExp(r'[^0-9]'), '');
+          if (old.startsWith('0')) old = '963${old.substring(1)}';
+          if (!old.startsWith('963')) old = '963$old';
+          final prefilled = 'عرض #$num - طلب فيديو (حجز موعد تم بنجاح)';
+          final msg = Uri.encodeComponent(prefilled);
+          final waUrl = 'https://wa.me/$old?text=$msg';
+          try {
+            await launchUrl(Uri.parse(waUrl), mode: LaunchMode.externalApplication);
+          } catch (_) {}
+        }
       }
 
       AppTheme.showSnackBar(context,

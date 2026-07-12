@@ -26,6 +26,10 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
   final _userOffersQuota = TextEditingController();
   final _brokerOffersQuota = TextEditingController();
 
+  // ── Video request WhatsApp (مدير + نائب المدير فقط) ──
+  final _videoWaNumber = TextEditingController();
+  final _videoGroupLink = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -45,6 +49,11 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
         _sellCom.text = '${c.sellCommission}';
         _userOffersQuota.text = '${c.userQuotas['o'] ?? 1}';
         _brokerOffersQuota.text = '${c.brokerQuotas['o'] ?? 5}';
+
+        // Video WhatsApp dedicated + group link (for video requests)
+        final txts = c.texts;
+        _videoWaNumber.text = (txts['videoRequestWhatsApp'] ?? '').toString();
+        _videoGroupLink.text = (txts['videoRequestGroupLink'] ?? '').toString();
       });
     }
   }
@@ -59,6 +68,8 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
       _sellCom,
       _userOffersQuota,
       _brokerOffersQuota,
+      _videoWaNumber,
+      _videoGroupLink,
     ]) {
       c.dispose();
     }
@@ -106,6 +117,51 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
                       _numField('حصة المستخدم', _userOffersQuota),
                       _numField('حصة الوسيط', _brokerOffersQuota),
                       const SizedBox(height: 20),
+
+                      // ── 🎥 طلبات الفيديو (مدير + نائب المدير فقط)
+                      _section('🎥 طلبات الفيديو (خاصة)'),
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                        ),
+                        child: const Text(
+                          '⚠️ هذه الخانتان مخصصتان للمدير ونائب المدير فقط.\n'
+                          '• الرقم الأول: الواتساب الخاص بطلبات الفيديو (يفضل).\n'
+                          '• الرابط الثاني: مجموعة احتياطية في حال تم حظر الرقم.\n'
+                          'يتم استخدامهما تلقائياً بعد حجز الموعد من زر "مشاهدة الفيديو".',
+                          style: TextStyle(color: AppTheme.textWhite, fontSize: 12, height: 1.45),
+                        ),
+                      ),
+                      TextFormField(
+                        controller: _videoWaNumber,
+                        keyboardType: TextInputType.phone,
+                        style: const TextStyle(color: AppTheme.textWhite),
+                        decoration: const InputDecoration(
+                          labelText: 'رقم الواتساب المخصص لطلبات الفيديو (09xxxxxxxx أو +963...)',
+                          hintText: '0933123456',
+                          filled: true,
+                          fillColor: AppTheme.surfaceBlack,
+                          prefixIcon: Icon(Icons.phone, color: AppTheme.primaryGold),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _videoGroupLink,
+                        style: const TextStyle(color: AppTheme.textWhite),
+                        decoration: const InputDecoration(
+                          labelText: 'رابط المجموعة الاحتياطي (في حال حظر الرقم)',
+                          hintText: 'https://chat.whatsapp.com/XXXXX أو wa.me/963...',
+                          filled: true,
+                          fillColor: AppTheme.surfaceBlack,
+                          prefixIcon: Icon(Icons.link, color: AppTheme.primaryGold),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
                       _section('💳 قنوات الدفع'),
                       _navTile(
                         icon: Icons.payments,
@@ -265,6 +321,12 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
     qtaB['o'] = int.tryParse(_brokerOffersQuota.text.trim()) ?? qtaB['o'];
     qta['b'] = qtaB;
     current['qta'] = qta;
+
+    // ── حفظ حقول طلبات الفيديو (مدير + نائب) ──
+    final txts = Map<String, dynamic>.from(current['txts'] ?? {});
+    txts['videoRequestWhatsApp'] = _videoWaNumber.text.trim();
+    txts['videoRequestGroupLink'] = _videoGroupLink.text.trim();
+    current['txts'] = txts;
 
     final ok = await prov.updateConfig(current);
     if (mounted) {

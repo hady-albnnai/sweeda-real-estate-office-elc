@@ -83,7 +83,8 @@ class PermissionService {
     AppPermission(key: PermissionKeys.manageReports,   title: 'التبليغات',       group: 'التشغيل', minimumRoleForDefault: UserRole.employee),
 
     // — الإعدادات —
-    AppPermission(key: PermissionKeys.manageConfig, title: 'إعدادات التطبيق', group: 'الإعدادات', minimumRoleForDefault: UserRole.manager),
+    // مدير + نائب المدير يستطيعون تعديل إعدادات طلبات الفيديو (احتياطي ضد الحظر)
+    AppPermission(key: PermissionKeys.manageConfig, title: 'إعدادات التطبيق', group: 'الإعدادات', minimumRoleForDefault: UserRole.deputy),
 
     // — الوسيط — (brk==1 فقط، ليس بالـ role number)
     // ملاحظة: هذه الصلاحيات تُمنح تلقائياً لـ role=1 فقط

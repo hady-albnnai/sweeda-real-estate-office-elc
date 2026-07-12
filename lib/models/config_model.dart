@@ -41,6 +41,12 @@ class ConfigModel {
   Map<String, dynamic> get texts => _getNestedMap('txts', {});
   int get usdToSypRate => _getNested('fx.usd_syp', 15000);
 
+  /// رقم واتساب المحادثة الخاصة بطلبات الفيديو (الأساسي - يدخله المدير أو نائبه)
+  String get videoRequestWhatsApp => _getNested('txts.videoRequestWhatsApp', '');
+
+  /// رابط مجموعة الواتساب الاحتياطي (في حال حظر الرقم الخاص)
+  String get videoRequestGroupLink => _getNested('txts.videoRequestGroupLink', '');
+
   /// إعدادات حجز المواعيد (appt) — تُقرأ من app_config
   /// any_from/any_to: دوام المعاينة عندما يكون العرض "جاهز بأي وقت" (avl = any)
   /// gap_mins: الفارق الأدنى بين موعدين على نفس العرض/المشرف (قاعدة الساعة)
