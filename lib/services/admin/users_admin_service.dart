@@ -1,4 +1,3 @@
-import '../../core/constants/db_constants.dart';
 import '../../core/network/supabase_service.dart';
 import '../../core/utils/error_utils.dart';
 import '../../models/user_model.dart';
@@ -17,19 +16,24 @@ class UsersAdminService {
 
   Future<List<UserModel>> getAllUsers({String? search}) async {
     try {
-      var q = SupabaseService().client
-          .from(DbTables.users)
-          .select()
-          .eq('i_del', 0)
-          .inFilter('role', [0, 1]);
-      if (search != null && search.isNotEmpty) {
-        q = q.or('nm.ilike.%$search%,ph.ilike.%$search%');
+      final response = await SupabaseService().invokeFunction(
+        'admin-dashboard',
+        body: {
+          'action': 'admin_users',
+          'search': search ?? '',
+        },
+      );
+      final data = response.data is Map
+          ? Map<String, dynamic>.from(response.data)
+          : null;
+      if (data == null || data['success'] != true || data['users'] is! List) {
+        _setError(data?['error']?.toString() ?? 'FETCH_FAILED');
+        return [];
       }
-      final response = await q.order('ts_crt', ascending: false);
       clearError();
-      return (response as List)
-          .map((d) =>
-              UserModel.fromSupabase(Map<String, dynamic>.from(d), d['id'] as String))
+      return (data['users'] as List)
+          .map((d) => UserModel.fromSupabase(
+              Map<String, dynamic>.from(d as Map), d['id'] as String))
           .toList();
     } catch (e) {
       _setError(e);

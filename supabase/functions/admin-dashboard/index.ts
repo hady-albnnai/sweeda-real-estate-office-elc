@@ -165,6 +165,24 @@ serve(async (req) => {
       return json({ success: data === true });
     }
 
+    // ✅ جلب قائمة المستخدمين العاديين والوسطاء (role 0,1) للإدارة
+    if (action === "admin_users") {
+      const search = (body.search ?? "").toString().trim();
+      let query = supabaseAdmin
+        .from("users")
+        .select("id, nm, ph, eml, role, sts, pt, brk, vrf, img, usr, ts_crt")
+        .eq("i_del", 0)
+        .in("role", [0, 1]);
+
+      if (search) {
+        query = query.or(`nm.ilike.%${search}%,ph.ilike.%${search}%`);
+      }
+
+      const { data: users, error: usersError } = await query.order("ts_crt", { ascending: false });
+      if (usersError) return json({ success: false, error: usersError.message }, 400);
+      return json({ success: true, users: users ?? [] });
+    }
+
     return json({ success: false, error: "UNKNOWN_ACTION" }, 400);
   } catch (error) {
     return json({ success: false, error: error instanceof Error ? error.message : String(error) }, 500);
