@@ -45,4 +45,7 @@ BEGIN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION public.update_user_profile_internal(UUID, JSONB) TO anon, authenticated, service_role;
+-- ✅ فقط service_role يقدر يستدعيها (Edge Functions)
+-- anon و authenticated ما لازم يوصلوا مباشرة عبر REST API
+REVOKE EXECUTE ON FUNCTION public.update_user_profile_internal(UUID, JSONB) FROM anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.update_user_profile_internal(UUID, JSONB) TO service_role;
