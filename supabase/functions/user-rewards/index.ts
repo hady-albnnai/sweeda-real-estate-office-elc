@@ -123,19 +123,6 @@ serve(async (req) => {
         break;
       }
 
-      // ==================== SOCIAL PUBLISHED ====================
-      case "social_published": {
-        const { offer_id, text } = payload;
-        const { data, error } = await supabase.rpc("mark_social_published_internal", {
-          p_user_uid: user_uid,
-          p_offer_id: offer_id,
-          p_text: text,
-        });
-        if (error) throw error;
-        result = { success: true };
-        break;
-      }
-
       // ==================== RATING BONUS (5 stars) ====================
       case "rating_bonus": {
         const { target_uid, stars } = payload;

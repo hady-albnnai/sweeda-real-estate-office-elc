@@ -415,19 +415,50 @@ class BusinessService {
   }
 
   /// تعليم العرض بأنه جاهز/منشور على السوشال (soc_pub) + حفظ النص
+  /// يُستخدم كـ fallback عندما النشر التلقائي غير مُعد
   Future<bool> markSocialPublished(String offerId, String text,
       {String? userId}) async {
     try {
       if (userId == null || userId.isEmpty) return false;
-      // ✅ Via user-offers Edge (social_published action)
+      // ✅ Via user-offers Edge (mark_social_published action)
       final res = await _sb.invokeFunction('user-offers', body: {
-        'action': 'social_published',
+        'action': 'mark_social_published',
         'user_uid': userId,
         'offer_id': offerId,
         'text': text,
       });
       return res.data?['success'] == true;
-    } catch (e) {return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// النشر التلقائي على فيس بوك وانستغرام عبر Edge Function
+  /// يُرجع خريطة: {success, facebook, instagram, marked, points_awarded}
+  Future<Map<String, dynamic>> publishToSocial(
+      String offerId, String userId) async {
+    try {
+      if (userId.isEmpty) return {'success': false, 'error': 'NO_USER'};
+      final res = await _sb.invokeFunction('social-publish', body: {
+        'action': 'publish',
+        'user_uid': userId,
+        'offer_id': offerId,
+      });
+      return Map<String, dynamic>.from(res.data ?? {});
+    } catch (e) {
+      return {'success': false, 'error': e.toString()};
+    }
+  }
+
+  /// التحقق من إعدادات النشر التلقائي
+  Future<bool> isSocialPublishConfigured() async {
+    try {
+      final res = await _sb.invokeFunction('social-publish', body: {
+        'action': 'check_config',
+      });
+      return res.data?['configured'] == true;
+    } catch (e) {
+      return false;
     }
   }
 

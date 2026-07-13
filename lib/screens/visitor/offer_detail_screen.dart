@@ -36,6 +36,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
   int _ownerRatingCount = 0;
   bool _loading = true;
   bool _isFav = false;
+  bool _publishing = false;
   int _currentImg = 0;
   late final PageController _pageCtrl = PageController();
 
@@ -1181,19 +1182,41 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                     ),
                   ),
 
-                  // زر مشاركة على السوشال (للمالك خصوصاً)
+                  // زر نشر على السوشال (للمالك خصوصاً)
                   if (isOwner)
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
-                        onPressed: _shareAndMark,
-                        icon: const Icon(Icons.campaign,
-                            color: AppTheme.primaryGold),
-                        label: const Text('نشر على وسائل التواصل',
-                            style: TextStyle(color: AppTheme.primaryGold)),
+                        onPressed: _offer!.socPub == 1
+                            ? null
+                            : (_publishing ? null : _shareAndMark),
+                        icon: _publishing
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: AppTheme.primaryGold),
+                              )
+                            : Icon(
+                                _offer!.socPub == 1
+                                    ? Icons.check_circle
+                                    : Icons.campaign,
+                                color: AppTheme.primaryGold),
+                        label: Text(
+                          _publishing
+                              ? 'جاري النشر...'
+                              : (_offer!.socPub == 1
+                                  ? 'تم النشر ✅'
+                                  : 'نشر على وسائل التواصل'),
+                          style:
+                              const TextStyle(color: AppTheme.primaryGold),
+                        ),
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: AppTheme.primaryGold),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          side: const BorderSide(
+                              color: AppTheme.primaryGold),
+                          padding:
+                              const EdgeInsets.symmetric(vertical: 14),
                         ),
                       ),
                     ),
@@ -1331,39 +1354,128 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
   }
 
   Future<void> _shareAndMark() async {
-    if (_offer == null) return;
-    final config = context.read<ConfigProvider>().config;
-    final auth = context.read<AuthProvider>();
-    final text = BusinessService().generateSocialPost(_offer!, config: config);
-    final result = await SharePlus.instance.share(
-      ShareParams(text: text, subject: _offer!.ttl),
-    );
+    if (_offer == null || _publishing) return;
 
-    // منح النقاط فقط إذا تمت المشاركة فعلياً
-    if (result.status == ShareResultStatus.success) {
-      await BusinessService().markSocialPublished(
-        _offer!.id,
-        text,
-        userId: auth.userModel?.uid,
-      );
-      if (auth.userModel != null) {
-        final pts = config?.socialSharePoints ?? 100;
-        await BusinessService()
-            .awardEvent(auth.userModel!.uid, config, 'soc', fallback: 100);
-        if (mounted) {
-          AppTheme.showSnackBar(
-            context,
-            SnackBar(content: Text('تم مشاركة العرض ✅ (+$pts نقطة)')),
-          );
-        }
-      }
-    } else {
+    // ✅ منع التكرار: إذا تم النشر مسبقاً
+    if (_offer!.socPub == 1) {
       if (mounted) {
         AppTheme.showSnackBar(
           context,
-          const SnackBar(content: Text('لم تتم المشاركة')),
+          const SnackBar(
+              content: Text('تم نشر هذا العرض مسبقاً ✅'),
+              duration: Duration(seconds: 2)),
         );
       }
+      return;
+    }
+
+    setState(() => _publishing = true);
+
+    try {
+      final config = context.read<ConfigProvider>().config;
+      final auth = context.read<AuthProvider>();
+      final userId = auth.userModel?.uid ?? '';
+
+      // 🔄 محاولة النشر التلقائي أولاً
+      final publishResult =
+          await BusinessService().publishToSocial(_offer!.id, userId);
+
+      if (publishResult['success'] == true) {
+        // ✅ نجح النشر التلقائي
+        final pts = publishResult['points_awarded'] ??
+            config?.socialSharePoints ??
+            100;
+        await _load();
+        await auth.refreshUser();
+
+        if (mounted) {
+          final fbOk = publishResult['facebook'] is Map &&
+              publishResult['facebook']['success'] == true;
+          final igOk = publishResult['instagram'] is Map &&
+              publishResult['instagram']['success'] == true;
+
+          String msg = 'تم النشر ';
+          if (fbOk && igOk) {
+            msg += 'على فيس بوك وانستغرام ✅';
+          } else if (fbOk) {
+            msg += 'على فيس بوك ✅';
+          } else if (igOk) {
+            msg += 'على انستغرام ✅';
+          } else {
+            msg += 'بنجاح ✅';
+          }
+          msg += '\n+$pts نقطة';
+
+          AppTheme.showSnackBar(context, SnackBar(content: Text(msg)));
+        }
+        return;
+      }
+
+      // إذا العرض منشور مسبقاً
+      if (publishResult['error'] == 'ALREADY_PUBLISHED') {
+        await _load();
+        if (mounted) {
+          AppTheme.showSnackBar(
+            context,
+            const SnackBar(content: Text('تم نشر هذا العرض مسبقاً ✅')),
+          );
+        }
+        return;
+      }
+
+      // 📱 إذا الإعدادات غير مُعدّة → مشاركة يدوية (fallback)
+      if (publishResult['error'] == 'SOCIAL_NOT_CONFIGURED') {
+        final text =
+            BusinessService().generateSocialPost(_offer!, config: config);
+        await SharePlus.instance
+            .share(ShareParams(text: text, subject: _offer!.ttl));
+
+        // تعليم + منح نقاط (بغض النظر عن نتيجة المشاركة لأن أندرويد لا يعيد حالة موثوقة)
+        final marked = await BusinessService().markSocialPublished(
+          _offer!.id,
+          text,
+          userId: userId,
+        );
+        if (marked) {
+          final pts = config?.socialSharePoints ?? 100;
+          await BusinessService()
+              .awardEvent(userId, config, 'soc', fallback: pts);
+          await _load();
+          await auth.refreshUser();
+          if (mounted) {
+            AppTheme.showSnackBar(
+              context,
+              SnackBar(content: Text('تم المشاركة ✅ (+$pts نقطة)')),
+            );
+          }
+        } else {
+          await _load();
+          if (mounted) {
+            AppTheme.showSnackBar(
+              context,
+              const SnackBar(content: Text('تم نشر هذا العرض مسبقاً ✅')),
+            );
+          }
+        }
+        return;
+      }
+
+      // خطأ آخر
+      if (mounted) {
+        AppTheme.showSnackBar(
+          context,
+          const SnackBar(content: Text('حدث خطأ أثناء النشر، حاول لاحقاً')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        AppTheme.showSnackBar(
+          context,
+          SnackBar(content: Text('حدث خطأ أثناء النشر')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _publishing = false);
     }
   }
 

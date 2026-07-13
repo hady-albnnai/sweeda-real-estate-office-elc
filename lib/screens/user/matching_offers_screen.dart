@@ -580,9 +580,9 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
             SizedBox(
               width: double.infinity,
               child: TextButton.icon(
-                onPressed: () async {
+                  onPressed: () async {
                   final text = BusinessService().generateSocialPost(offer);
-                  await Share.share(text, subject: offer.ttl);
+                  await SharePlus.instance.share(ShareParams(text: text, subject: offer.ttl));
                 },
                 icon: const Icon(Icons.share, size: 18),
                 label: const Text('مشاركة'),
