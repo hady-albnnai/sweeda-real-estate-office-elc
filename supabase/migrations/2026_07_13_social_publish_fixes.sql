@@ -1,15 +1,10 @@
 -- ═══════════════════════════════════════════════════════════════════════
 -- إصلاحات ميزة النشر على السوشال — 2026-07-13
--- 1. إصلاح صلاحيات mark_social_published_internal (أمني)
--- 2. منع تكرار النشر (soc_pub = 0 فقط)
+-- 1. إعادة كتابة الدالة مع منع التكرار (soc_pub = 0 فقط)
+-- 2. إصلاح صلاحيات mark_social_published_internal (أمني)
 -- ═══════════════════════════════════════════════════════════════════════
 
--- 1️⃣ إصلاح الصلاحيات: فقط service_role يقدر يستدعيها
---    anon و authenticated كانوا يقدروا يتجاوزوا الـ Edge Function مباشرة!
-REVOKE ALL ON FUNCTION mark_social_published_internal(UUID, UUID, TEXT) FROM anon, authenticated, public;
-GRANT EXECUTE ON FUNCTION mark_social_published_internal(UUID, UUID, TEXT) TO service_role;
-
--- 2️⃣ إعادة كتابة الدالة مع منع التكرار
+-- 1️⃣ إعادة كتابة الدالة مع منع التكرار
 --    التغيير: WHERE soc_pub = 0 + إرجاع FALSE بدل EXCEPTION عند التكرار
 DROP FUNCTION IF EXISTS mark_social_published_internal(UUID, UUID, TEXT);
 
@@ -36,11 +31,13 @@ BEGIN
     AND soc_pub = 0;  -- ✅ منع التكرار: فقط إذا لم يُنشر سابقاً
 
   IF NOT FOUND THEN
-    -- العرض غير موجود أو تم نشره مسبقاً
     RETURN FALSE;
   END IF;
   RETURN TRUE;
 END;
 $$;
 
+-- 2️⃣ إصلاح الصلاحيات: فقط service_role يقدر يستدعيها
+--    ⚠️ لازم يكون بعد CREATE مباشرة لأن CREATE بيرجع يعطي PUBLIC افتراضياً
+REVOKE ALL ON FUNCTION mark_social_published_internal(UUID, UUID, TEXT) FROM anon, authenticated, public;
 GRANT EXECUTE ON FUNCTION mark_social_published_internal(UUID, UUID, TEXT) TO service_role;
