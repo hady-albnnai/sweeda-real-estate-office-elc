@@ -28,7 +28,7 @@ BEGIN
   WHERE id = p_offer_id
     AND usr_id = p_user_uid
     AND i_del = 0
-    AND soc_pub = 0;  -- ✅ منع التكرار: فقط إذا لم يُنشر سابقاً
+    AND soc_pub = 0;  -- ✅ منع التكرار: فقط إذا لم يُنشر/يُعلّم سابقاً
 
   IF NOT FOUND THEN
     RETURN FALSE;
