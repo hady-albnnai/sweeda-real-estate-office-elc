@@ -60,7 +60,11 @@ class SupabaseService {
   Future<String?> getValidAccessToken() async {
     try {
       var session = auth.currentSession;
-      if (session != null && session.expiresAt != null) {
+
+      // لا يوجد جلسة أصلاً → لا داعي لمحاولة التحديث
+      if (session == null) return null;
+
+      if (session.expiresAt != null) {
         final expiresAt = DateTime.fromMillisecondsSinceEpoch(
           session.expiresAt! * 1000,
         );
@@ -70,13 +74,15 @@ class SupabaseService {
         }
       }
 
-      // التوكن منتهي أو غير موجود → حاول التحديث
-      try {
-        final response = await auth.refreshSession();
-        if (response.session != null) {
-          return response.session!.accessToken;
-        }
-      } catch (_) {}
+      // التوكن منتهي → حاول التحديث فقط إذا يوجد refresh token
+      if (session.refreshToken != null && session.refreshToken!.isNotEmpty) {
+        try {
+          final response = await auth.refreshSession();
+          if (response.session != null) {
+            return response.session!.accessToken;
+          }
+        } catch (_) {}
+      }
 
       // Last resort
       session = auth.currentSession;

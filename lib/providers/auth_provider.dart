@@ -129,7 +129,13 @@ class AuthProvider with ChangeNotifier {
     try {
       // ✅ فحص أولي عند التسجيل: هل الرقم مسجل عند حساب موجود؟
       if (isSignUp) {
-        final checkResult = await AuthService().checkPhoneExists(phone);
+        debugPrint('👉 [SMS_SIGNUP] Checking if phone exists: $phone');
+        final checkResult = await AuthService().checkPhoneExists(phone)
+            .timeout(const Duration(seconds: 10), onTimeout: () {
+          debugPrint('👉 [SMS_SIGNUP] Phone check timed out, allowing signup');
+          return {'success': true, 'exists': false};
+        });
+        debugPrint('👉 [SMS_SIGNUP] Phone check result: $checkResult');
         if (checkResult['exists'] == true) {
           _lastError = 'هذا الرقم مسجل لدينا — سجّل دخولك بدلاً من إنشاء حساب جديد';
           notifyListeners();
