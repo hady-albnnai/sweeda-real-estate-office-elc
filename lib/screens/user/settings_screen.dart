@@ -310,7 +310,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: TextStyle(color: AppTheme.textGrey, fontSize: 12),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'الإصدار: 1.0.0\nBackend: Supabase • Frontend: Flutter',
                 style: TextStyle(color: AppTheme.textGrey.withValues(alpha: 0.7), fontSize: 11),
               ),
