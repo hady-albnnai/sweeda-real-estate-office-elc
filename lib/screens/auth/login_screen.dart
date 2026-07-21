@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../services/auth_service.dart';
 import '../../widgets/e2e.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -85,7 +86,21 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _regSMS() async {
     if (_phoneCtrl.text.length != 10 || !_phoneCtrl.text.startsWith('09')) { _snack('أدخل رقم هاتف صحيح'); return; }
     setState(() => _loading = true);
-    final ok = await context.read<AuthProvider>().sendSMSOTP(_phoneCtrl.text.trim(), isSignUp: true);
+
+    // ✅ فحص مباشر: هل الرقم مسجل عند حساب موجود؟
+    try {
+      final checkResult = await AuthService().checkPhoneExists(_phoneCtrl.text.trim())
+          .timeout(const Duration(seconds: 10), onTimeout: () => {'success': true, 'exists': false});
+      if (checkResult['exists'] == true) {
+        if (mounted) setState(() => _loading = false);
+        _snack('هذا الرقم مسجل لدينا — سجّل دخولك بدلاً من إنشاء حساب جديد');
+        return;
+      }
+    } catch (e) {
+      // إذا فشل الفحص، نسمح بالإرسال
+    }
+
+    final ok = await context.read<AuthProvider>().sendSMSOTP(_phoneCtrl.text.trim());
     if (mounted) setState(() => _loading = false);
     if (ok) {
       context.push('/otp');
