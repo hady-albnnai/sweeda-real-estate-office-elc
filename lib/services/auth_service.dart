@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
 import '../core/network/supabase_service.dart';
 import '../core/validation/input_validators.dart';
 
@@ -91,26 +93,44 @@ class AuthService {
   /// فحص هل الرقم مسجل عند حساب موجود (لمنع إنشاء حساب مكرر)
   Future<Map<String, dynamic>> checkPhoneExists(String phone) async {
     try {
+      final normalizedPhone = _normalizePhone(phone);
+      debugPrint('👉 [PHONE_CHECK] Checking phone: $normalizedPhone');
+
       final response = await SupabaseService().invokeFunction(
         'user-account',
         body: {
           'action': 'check_phone_exists',
-          'phone': _normalizePhone(phone),
+          'phone': normalizedPhone,
         },
       );
-      final data = response.data is Map
-          ? Map<String, dynamic>.from(response.data)
-          : null;
+
+      // ✅ معالجة response.data اللي ممكن يكون String أو Map
+      Map<String, dynamic>? data;
+      final rawData = response.data;
+      if (rawData is Map) {
+        data = Map<String, dynamic>.from(rawData);
+      } else if (rawData is String) {
+        try {
+          data = Map<String, dynamic>.from(jsonDecode(rawData) as Map);
+        } catch (e) {
+          debugPrint('👉 [PHONE_CHECK] Failed to decode String: $e');
+        }
+      }
+
+      debugPrint('👉 [PHONE_CHECK] Parsed data: $data');
 
       if (data != null && data['exists'] == true) {
+        debugPrint('👉 [PHONE_CHECK] Phone EXISTS! Blocking signup.');
         return {
           'success': true,
           'exists': true,
           'user_id': data['user_id']?.toString(),
         };
       }
+      debugPrint('👉 [PHONE_CHECK] Phone not found, allowing signup.');
       return {'success': true, 'exists': false};
     } catch (e) {
+      debugPrint('👉 [PHONE_CHECK] EXCEPTION: $e');
       // في حال فشل الفحص، نسمح بالإرسال (لا نمنع المستخدم بسبب خطأ شبكة)
       return {'success': true, 'exists': false};
     }

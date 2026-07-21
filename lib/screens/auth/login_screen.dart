@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -89,14 +90,20 @@ class _LoginScreenState extends State<LoginScreen> {
 
     // ✅ فحص مباشر: هل الرقم مسجل عند حساب موجود؟
     try {
+      debugPrint('👉 [REG_SMS] Starting phone check...');
       final checkResult = await AuthService().checkPhoneExists(_phoneCtrl.text.trim())
-          .timeout(const Duration(seconds: 10), onTimeout: () => {'success': true, 'exists': false});
+          .timeout(const Duration(seconds: 10), onTimeout: () {
+        debugPrint('👉 [REG_SMS] Phone check TIMED OUT');
+        return {'success': true, 'exists': false};
+      });
+      debugPrint('👉 [REG_SMS] Check result: $checkResult');
       if (checkResult['exists'] == true) {
         if (mounted) setState(() => _loading = false);
         _snack('هذا الرقم مسجل لدينا — سجّل دخولك بدلاً من إنشاء حساب جديد');
         return;
       }
     } catch (e) {
+      debugPrint('👉 [REG_SMS] Phone check error: $e');
       // إذا فشل الفحص، نسمح بالإرسال
     }
 
