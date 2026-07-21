@@ -85,9 +85,14 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _regSMS() async {
     if (_phoneCtrl.text.length != 10 || !_phoneCtrl.text.startsWith('09')) { _snack('أدخل رقم هاتف صحيح'); return; }
     setState(() => _loading = true);
-    final ok = await context.read<AuthProvider>().sendSMSOTP(_phoneCtrl.text.trim());
+    final ok = await context.read<AuthProvider>().sendSMSOTP(_phoneCtrl.text.trim(), isSignUp: true);
     if (mounted) setState(() => _loading = false);
-    if (ok) context.push('/otp');
+    if (ok) {
+      context.push('/otp');
+    } else {
+      final auth = context.read<AuthProvider>();
+      if (auth.lastError != null) _snack(auth.lastError!);
+    }
   }
 
   Future<void> _regMail() async {

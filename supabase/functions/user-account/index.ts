@@ -122,6 +122,31 @@ serve(async (req) => {
       });
     }
 
+    // ✅ فحص هل الرقم مسجل عند حساب موجود (لمنع حساب مكرر)
+    if (action === "check_phone_exists") {
+      const phone = (body.phone ?? "").toString().trim();
+      if (!phone) return json({ success: false, error: "PHONE_REQUIRED" }, 400);
+
+      // تطبيع الرقم باستخدام SQL function
+      const { data: normalized, error: normError } = await supabaseAdmin
+        .rpc("normalize_sy_phone", { p_phone: phone });
+      if (normError) return json({ success: false, error: normError.message }, 400);
+
+      const { data: existing, error: findError } = await supabaseAdmin
+        .from("users")
+        .select("id")
+        .eq("ph", normalized)
+        .eq("i_del", 0)
+        .maybeSingle();
+
+      if (findError) return json({ success: false, error: findError.message }, 400);
+      return json({
+        success: true,
+        exists: !!existing,
+        user_id: existing?.id ?? null,
+      });
+    }
+
     if (action === "register_device") {
       const deviceId = (body.device_id ?? body.deviceId)?.toString() ?? "";
       const ipHint = (body.ip_hint ?? body.ipHint)?.toString() ?? null;

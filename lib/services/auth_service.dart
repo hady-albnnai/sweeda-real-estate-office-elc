@@ -85,6 +85,38 @@ class AuthService {
   }
 
   // ════════════════════════════════════════════════════════════════════════
+  // 🔍 فحص وجود رقم / إيميل (لمنع إنشاء حساب مكرر)
+  // ════════════════════════════════════════════════════════════════════════
+
+  /// فحص هل الرقم مسجل عند حساب موجود (لمنع إنشاء حساب مكرر)
+  Future<Map<String, dynamic>> checkPhoneExists(String phone) async {
+    try {
+      final response = await SupabaseService().invokeFunction(
+        'user-account',
+        body: {
+          'action': 'check_phone_exists',
+          'phone': _normalizePhone(phone),
+        },
+      );
+      final data = response.data is Map
+          ? Map<String, dynamic>.from(response.data)
+          : null;
+
+      if (data != null && data['exists'] == true) {
+        return {
+          'success': true,
+          'exists': true,
+          'user_id': data['user_id']?.toString(),
+        };
+      }
+      return {'success': true, 'exists': false};
+    } catch (e) {
+      // في حال فشل الفحص، نسمح بالإرسال (لا نمنع المستخدم بسبب خطأ شبكة)
+      return {'success': true, 'exists': false};
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════════════════
   // 📧 Email Magic Link — Supabase Auth المدمج
   // ════════════════════════════════════════════════════════════════════════
 

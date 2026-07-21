@@ -125,8 +125,18 @@ class AuthProvider with ChangeNotifier {
   // 📱 SMS OTP
   // ════════════════════════════════════════════════════════════════════
 
-  Future<bool> sendSMSOTP(String phone) async {
+  Future<bool> sendSMSOTP(String phone, {bool isSignUp = false}) async {
     try {
+      // ✅ فحص أولي عند التسجيل: هل الرقم مسجل عند حساب موجود؟
+      if (isSignUp) {
+        final checkResult = await AuthService().checkPhoneExists(phone);
+        if (checkResult['exists'] == true) {
+          _lastError = 'هذا الرقم مسجل لدينا — سجّل دخولك بدلاً من إنشاء حساب جديد';
+          notifyListeners();
+          return false;
+        }
+      }
+
       _currentPhone = phone;
       _channel = AuthChannel.sms;
       final result = await AuthService().sendSMSOTP(phone);
