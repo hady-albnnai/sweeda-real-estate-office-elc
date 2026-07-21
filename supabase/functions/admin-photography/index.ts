@@ -87,6 +87,7 @@ serve(async (req) => {
     // الخدمة: طلب تصوير عقار قبل أو بعد النشر — مو مرتبطة بعرض موجود
     if (action === "request_photography") {
       const userUid = (body.user_uid ?? body.userUid)?.toString() ?? "";
+      const fullName = (body.full_name ?? "").toString();
       const propertyDesc = (body.property_desc ?? "").toString();
       const propertyLocation = (body.property_location ?? "").toString();
       const contactPhone = (body.contact_phone ?? "").toString();
@@ -138,13 +139,21 @@ serve(async (req) => {
       }
 
       // إنشاء طلب تصوير (off_id فارغ لأن العقار ممكن يكون مو منشور بعد)
+      const titleParts = [propertyDesc, fullName].filter(Boolean);
+      const notesParts = [
+        fullName ? `الاسم: ${fullName}` : "",
+        propertyLocation ? `الموقع: ${propertyLocation}` : "",
+        contactPhone ? `الهاتف: ${contactPhone}` : "",
+        notes ? `ملاحظات: ${notes}` : "",
+      ].filter(Boolean);
+
       const { data: insertData, error: insertError } = await supabaseAdmin
         .from("photography_tasks")
         .insert({
           off_id: null,
           requested_by: userUid,
-          ttl: propertyDesc || "طلب تصوير عقار",
-          notes: [propertyLocation, contactPhone, notes].filter(Boolean).join(" | "),
+          ttl: titleParts.join(" — ") || "طلب تصوير عقار",
+          notes: notesParts.join(" | "),
           sts: 0,
         })
         .select("id")

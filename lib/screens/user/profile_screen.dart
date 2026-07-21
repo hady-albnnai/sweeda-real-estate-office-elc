@@ -508,7 +508,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ? 'بيانات التعيين والتحقق الوظيفي ✅'
                 : 'معلوماتك الشخصية والتوثيق',
             o: () => context.push('/user/account-info')),
-        _buildMenuItem(
+        if (!u.isInternal)
+          _buildMenuItem(
             i: Icons.camera_alt_outlined,
             t: 'طلب تصوير عقار',
             s: 'احجز موعداً لمصور المكتب لتصوير عقارك',
@@ -559,6 +560,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final user = auth.userModel;
     if (user == null) return;
 
+    final nameCtrl = TextEditingController(text: user.nm);
     final descCtrl = TextEditingController();
     final locCtrl = TextEditingController();
     final phoneCtrl = TextEditingController(text: user.ph);
@@ -568,50 +570,97 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
-        title: const Text('طلب تصوير عقار', style: TextStyle(color: AppTheme.textWhite)),
+        title: Row(children: [
+          const Icon(Icons.camera_alt, color: AppTheme.primaryGold, size: 24),
+          const SizedBox(width: 10),
+          const Text('طلب تصوير عقار', style: TextStyle(color: AppTheme.textWhite)),
+        ]),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // الاسم الثلاثي
+              TextField(
+                controller: nameCtrl,
+                style: const TextStyle(color: AppTheme.textWhite),
+                decoration: const InputDecoration(
+                  labelText: 'الاسم الثلاثي *',
+                  hintText: 'مثال: محمد أحمد الخطيب',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.person, color: AppTheme.primaryGold, size: 20),
+                ),
+              ),
+              const SizedBox(height: 12),
+              // وصف العقار
               TextField(
                 controller: descCtrl,
                 style: const TextStyle(color: AppTheme.textWhite),
                 decoration: const InputDecoration(
                   labelText: 'وصف العقار *',
-                  hintText: 'مثال: شقة 3 غرف بالسويداء',
+                  hintText: 'مثال: شقة 3 غرف طابق ثاني',
                   border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.home_outlined, color: AppTheme.primaryGold, size: 20),
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
+              // موقع العقار — دقيق وتفصيلي
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryGold.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.info_outline, color: AppTheme.primaryGold, size: 18),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'حدد الموقع بدقة: المدينة → الحي → الشارع → أقرب معلم',
+                        style: TextStyle(color: AppTheme.primaryGold, fontSize: 11, height: 1.4),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
               TextField(
                 controller: locCtrl,
                 style: const TextStyle(color: AppTheme.textWhite),
+                maxLines: 2,
                 decoration: const InputDecoration(
-                  labelText: 'موقع العقار *',
-                  hintText: 'مثال: حي المطار، بجانب صيدلية النور',
+                  labelText: 'موقع العقار التفصيلي *',
+                  hintText: 'مثال: السويداء، حي المطار، شارع المدرسة الثانوية، بجانب صيدلية النور، بناية 4 طوابق لونها بيج',
                   border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.location_on, color: AppTheme.primaryGold, size: 20),
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
+              // هاتف التواصل
               TextField(
                 controller: phoneCtrl,
                 keyboardType: TextInputType.phone,
                 style: const TextStyle(color: AppTheme.textWhite),
                 decoration: const InputDecoration(
-                  labelText: 'هاتف التواصل',
+                  labelText: 'هاتف التواصل *',
+                  hintText: 'رقمك للتواصل وتأكيد الموعد',
                   border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.phone, color: AppTheme.primaryGold, size: 20),
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
+              // ملاحظات
               TextField(
                 controller: notesCtrl,
                 maxLines: 2,
                 style: const TextStyle(color: AppTheme.textWhite),
                 decoration: const InputDecoration(
-                  labelText: 'ملاحظات (اختياري)',
-                  hintText: 'مثال: أفضل وقت بعد الظهر...',
+                  labelText: 'ملاحظات إضافية (اختياري)',
+                  hintText: 'مثال: أفضل وقت بعد الظهر، العقار في الطابق 3 بدون مصعد...',
                   border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.note_alt_outlined, color: AppTheme.primaryGold, size: 20),
                 ),
               ),
             ],
@@ -624,9 +673,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           ElevatedButton(
             onPressed: () {
-              if (descCtrl.text.trim().isEmpty || locCtrl.text.trim().isEmpty) {
-                return; // لازم وصف وموقع
-              }
+              if (nameCtrl.text.trim().isEmpty) return;
+              if (descCtrl.text.trim().isEmpty) return;
+              if (locCtrl.text.trim().isEmpty) return;
+              if (phoneCtrl.text.trim().isEmpty) return;
               Navigator.pop(ctx, true);
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryGold),
@@ -642,6 +692,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final response = await SupabaseService().invokeFunction('admin-photography', body: {
         'action': 'request_photography',
         'user_uid': user.uid,
+        'full_name': nameCtrl.text.trim(),
         'property_desc': descCtrl.text.trim(),
         'property_location': locCtrl.text.trim(),
         'contact_phone': phoneCtrl.text.trim(),
