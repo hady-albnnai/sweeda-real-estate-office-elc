@@ -37,6 +37,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final isInternal = auth.userModel?.isInternal ?? false;
+
     return Scaffold(
       backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
@@ -53,10 +56,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           // قسم الإشعارات
           _sectionTitle('إعدادات الإشعارات', Icons.notifications_outlined),
-          _toggleTile('إشعارات العروض الجديدة', _notifOffers, (v) => _toggle('off', v)),
-          _toggleTile('إشعارات المواعيد', _notifAppointments, (v) => _toggle('app', v)),
-          _toggleTile('الإشعارات المالية', _notifFinance, (v) => _toggle('fin', v)),
-          _toggleTile('التقييمات والتعليقات', _notifRatings, (v) => _toggle('rat', v)),
+          if (isInternal) ...[
+            // الإدارة: فقط إشعارات المواعيد
+            _toggleTile('إشعارات المواعيد', _notifAppointments, (v) => _toggle('app', v)),
+          ] else ...[
+            // المستخدمون العاديون: كل الإشعارات
+            _toggleTile('إشعارات العروض الجديدة', _notifOffers, (v) => _toggle('off', v)),
+            _toggleTile('إشعارات المواعيد', _notifAppointments, (v) => _toggle('app', v)),
+            _toggleTile('الإشعارات المالية', _notifFinance, (v) => _toggle('fin', v)),
+            _toggleTile('التقييمات والتعليقات', _notifRatings, (v) => _toggle('rat', v)),
+          ],
 
           const SizedBox(height: 20),
 
@@ -64,16 +73,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _sectionTitle('الحساب', Icons.person_outline_rounded),
           _settingsTile('معلومات الحساب', Icons.person_outline, () => context.push('/user/account-info')),
           _settingsTile('تغيير كلمة المرور', Icons.lock_outline, () => context.push('/user/account-info')),
-          _settingsTile('الباقة الحالية', Icons.card_membership,
-              () => context.push('/user/packages')),
+          if (!isInternal)
+            _settingsTile('الباقة الحالية', Icons.card_membership,
+                () => context.push('/user/packages')),
 
           const SizedBox(height: 20),
 
           // قسم التطبيق
           _sectionTitle('التطبيق', Icons.phone_android_outlined),
           _settingsTile('عن التطبيق', Icons.info, () => _showAboutDialog()),
-          _settingsTile('سياسة الخصوصية', Icons.privacy_tip, () {}),
-          _settingsTile('شروط الاستخدام', Icons.gavel, () {}),
 
           const SizedBox(height: 30),
 
@@ -100,7 +108,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: const CustomBottomNavBar(currentIndex: 4),
+      bottomNavigationBar: CustomBottomNavBar(currentIndex: auth.userModel?.isInternal == true ? 0 : 4),
     );
   }
 
@@ -234,67 +242,60 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 'التطوير',
                 style: TextStyle(color: AppTheme.primaryGold, fontSize: 16, fontWeight: FontWeight.bold),
               ),
+              const SizedBox(height: 16),
+              // أيقونة لورانيم بسطر لحالها
+              Center(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image.asset(
+                    'assets/images/loraneem_tech_logo.png',
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.asset(
-                      'assets/images/loraneem_tech_logo.png',
-                      width: 60,
-                      height: 60,
-                      fit: BoxFit.cover,
+              const Center(
+                child: Column(
+                  children: [
+                    Text(
+                      'loraneem-tech',
+                      style: TextStyle(
+                        color: AppTheme.textWhite,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'loraneem-tech',
-                          style: TextStyle(
-                            color: AppTheme.textWhite,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 2),
-                        Text(
-                          'CODE • AI • LIMITLESS EVOLUTION',
-                          style: TextStyle(
-                            color: AppTheme.primaryGold,
-                            fontSize: 11,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ],
+                    SizedBox(height: 2),
+                    Text(
+                      'CODE • AI • LIMITLESS EVOLUTION',
+                      style: TextStyle(
+                        color: AppTheme.primaryGold,
+                        fontSize: 11,
+                        letterSpacing: 0.5,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'للتواصل مع المطور:',
-                style: TextStyle(color: AppTheme.textGrey, fontSize: 12),
-              ),
-              const SizedBox(height: 6),
+              // رقم المطور
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: AppTheme.deepBlack,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppTheme.primaryGold.withOpacity(0.2)),
+                  border: Border.all(color: AppTheme.primaryGold.withOpacity(0.25)),
                 ),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Icon(Icons.phone, color: AppTheme.primaryGold, size: 18),
                     const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'رقم الهاتف: $devPhone',
-                        style: const TextStyle(color: AppTheme.textGrey, fontSize: 13),
-                      ),
+                    Text(
+                      'رقم المطور: $devPhone',
+                      style: const TextStyle(color: AppTheme.textGrey, fontSize: 13),
                     ),
                   ],
                 ),

@@ -97,7 +97,7 @@ class ConfigModel {
   Map<String, dynamic> get socialPages => _getNestedMap('txts.socialPages', {});
 
   /// رقم هاتف المطور (قابل للتعديل من الإدارة — يظهر في "عن التطبيق")
-  String get developerPhone => _getNested('txts.developerPhone', '(سيتم إضافته لاحقاً)');
+  String get developerPhone => _getNested('txts.developerPhone', '0933713023');
 
   /// إعدادات النشر الحقيقي على Meta. التوكنات لا تحفظ هنا؛ تبقى Edge Secrets.
   /// افتراضي true منذ 2026-07-13 — النشر التلقائي بعد الموافقة مباشرة.

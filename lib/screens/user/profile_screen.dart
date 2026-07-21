@@ -183,10 +183,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                if (user.isInternal) _buildStaffStats(user)
+              if (user.isInternal) _buildStaffStats(user)
                 else ...[_buildUserStats(user), const SizedBox(height: 16), _buildActivityStats(user)],
                 const SizedBox(height: 20),
-                _buildMenuSection(user),
+                if (!user.isInternal) _buildMenuSection(user),
                 const SizedBox(height: 20),
                 _buildLogoutButton(auth),
                 const SizedBox(height: 40),

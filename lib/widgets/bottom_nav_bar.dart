@@ -6,12 +6,63 @@ import '../core/theme/app_theme.dart';
 import 'e2e.dart';
 
 /// شريط التنقل السفلي الرئيسي للتطبيق
+/// للمستخدمين العاديين والوسطاء: الرئيسية، طلباتي، مواعيدي، المفضلة، حسابي
+/// للإدارة والموظفين: مهامي، حسابي فقط
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
   const CustomBottomNavBar({super.key, required this.currentIndex});
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final isInternal = auth.userModel?.isInternal ?? false;
+
+    // الإدارة والموظفين: شريط مختصر (مهامي + حسابي)
+    if (isInternal) {
+      return BottomNavigationBar(
+        currentIndex: currentIndex > 0 ? 1 : 0,
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: AppTheme.scaffoldBackground,
+        selectedItemColor: AppTheme.primaryGold,
+        unselectedItemColor: AppTheme.textGrey,
+        selectedFontSize: 12,
+        unselectedFontSize: 11,
+        onTap: (index) {
+          if (index == 0) {
+            // مهامي — حسب الدور
+            if (auth.isLawyer) {
+              context.go('/lawyer/dashboard');
+            } else if (auth.isExpediter) {
+              context.go('/expediter/tasks');
+            } else if (auth.isSenior) {
+              context.go('/admin/dashboard');
+            } else if (auth.isPhotographer) {
+              context.go('/photographer/tasks');
+            } else if (auth.isSupervisor) {
+              context.go('/executor/tasks');
+            } else {
+              context.go('/employee/home');
+            }
+          } else {
+            context.go('/user/profile');
+          }
+        },
+        items: [
+          BottomNavigationBarItem(
+            icon: E2E(id: 'e2e_nav_home', button: true, child: Icon(Icons.task_alt_outlined)),
+            activeIcon: Icon(Icons.task_alt),
+            label: 'مهامي',
+          ),
+          BottomNavigationBarItem(
+            icon: E2E(id: 'e2e_nav_profile', button: true, child: Icon(Icons.person_outline)),
+            activeIcon: Icon(Icons.person),
+            label: 'حسابي',
+          ),
+        ],
+      );
+    }
+
+    // المستخدمون العاديون والوسطاء: شريط كامل
     return BottomNavigationBar(
       currentIndex: currentIndex,
       type: BottomNavigationBarType.fixed,
@@ -23,27 +74,10 @@ class CustomBottomNavBar extends StatelessWidget {
       onTap: (index) {
         switch (index) {
           case 0:
-            final auth = context.read<AuthProvider>();
-            if (auth.isLoggedIn) {
-              if (auth.isLawyer) {
-                context.go('/lawyer/dashboard');
-              } else if (auth.isExpediter) {
-                context.go('/expediter/tasks');
-              } else if (auth.isSenior) {
-                context.go('/admin/dashboard');
-              } else if (auth.isEmployee) {
-                context.go('/employee/home');
-              } else if (auth.isSupervisor) {
-                context.go('/executor/tasks');
-              } else if (auth.isPhotographer) {
-                context.go('/photographer/tasks');
-              } else if (auth.isBroker) {
-                context.go('/broker/dashboard');
-              } else {
-                context.go('/user/home');
-              }
+            if (auth.isBroker) {
+              context.go('/broker/dashboard');
             } else {
-              context.go('/home');
+              context.go('/user/home');
             }
             break;
           case 1: context.go('/user/my-requests'); break;
