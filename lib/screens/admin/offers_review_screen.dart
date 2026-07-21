@@ -429,7 +429,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                                           width: 14,
                                           height: 14,
                                           child: CircularProgressIndicator(strokeWidth: 2))
-                                      : const Icon(Icons.publish_all, size: 16),
+                                      : const Icon(Icons.publish, size: 16),
                                   label: Text(_bulkPublishing ? 'جارٍ...' : 'نشر الكل'),
                                 )
                               : null,

@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>دليل إعداد النشر التلقائي - المكتب العقاري الالكتروني</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+    background: #fff;
+    color: #1a1a2e;
+    line-height: 1.8;
+    font-size: 15px;
+    direction: rtl;
+  }
+  
+  .page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 40px 50px;
+  }
+  
+  /* Cover */
+  .cover {
+    text-align: center;
+    padding: 60px 20px 40px;
+    border-bottom: 4px solid #c9a84c;
+    margin-bottom: 40px;
+  }
+  .cover h1 {
+    font-size: 32px;
+    font-weight: 900;
+    color: #1a1a2e;
+    margin-bottom: 10px;
+  }
+  .cover .subtitle {
+    font-size: 18px;
+    color: #c9a84c;
+    font-weight: 700;
+    margin-bottom: 20px;
+  }
+  .cover .info {
+    font-size: 14px;
+    color: #666;
+    background: #f8f8f0;
+    display: inline-block;
+    padding: 12px 24px;
+    border-radius: 10px;
+    border: 1px solid #e0d9c0;
+  }
+  
+  /* Section headers */
+  h2 {
+    font-size: 22px;
+    font-weight: 900;
+    color: #1a1a2e;
+    margin: 35px 0 15px;
+    padding: 10px 18px;
+    background: linear-gradient(to left, #c9a84c15, transparent);
+    border-right: 5px solid #c9a84c;
+    border-radius: 0 8px 8px 0;
+  }
+  h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: #2d2d5e;
+    margin: 22px 0 10px;
+  }
+  
+  /* Steps */
+  .step {
+    background: #fafaf5;
+    border: 1px solid #e8e3d0;
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin: 12px 0;
+  }
+  .step-num {
+    display: inline-block;
+    background: #c9a84c;
+    color: #fff;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 32px;
+    font-weight: 700;
+    font-size: 14px;
+    margin-left: 10px;
+    vertical-align: middle;
+  }
+  .step-title {
+    font-weight: 700;
+    color: #1a1a2e;
+    vertical-align: middle;
+  }
+  .step-body {
+    margin-top: 10px;
+    padding-right: 42px;
+  }
+  
+  /* Info boxes */
+  .important {
+    background: #fff3e0;
+    border: 1px solid #ffb74d;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin: 14px 0;
+  }
+  .important::before {
+    content: "⚠️ هام: ";
+    font-weight: 700;
+    color: #e65100;
+  }
+  
+  .success {
+    background: #e8f5e9;
+    border: 1px solid #66bb6a;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin: 14px 0;
+  }
+  .success::before {
+    content: "✅ ";
+    font-weight: 700;
+    color: #2e7d32;
+  }
+  
+  .note {
+    background: #e3f2fd;
+    border: 1px solid #64b5f6;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin: 14px 0;
+  }
+  .note::before {
+    content: "ℹ️ ملاحظة: ";
+    font-weight: 700;
+    color: #1565c0;
+  }
+  
+  /* Code */
+  code {
+    background: #f0ede4;
+    padding: 2px 8px;
+    border-radius: 5px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 13px;
+    color: #c62828;
+    direction: ltr;
+    display: inline-block;
+    word-break: break-all;
+  }
+  .code-block {
+    background: #1a1a2e;
+    color: #e0e0e0;
+    padding: 16px 20px;
+    border-radius: 10px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 13px;
+    direction: ltr;
+    text-align: left;
+    margin: 12px 0;
+    overflow-x: auto;
+    line-height: 1.6;
+  }
+  .code-block .comment { color: #6a9955; }
+  .code-block .keyword { color: #569cd6; }
+  .code-block .string { color: #ce9178; }
+  
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 14px;
+  }
+  th {
+    background: #c9a84c;
+    color: #fff;
+    padding: 10px 14px;
+    text-align: right;
+    font-weight: 700;
+  }
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  tr:nth-child(even) { background: #fafaf5; }
+  
+  /* Checklist */
+  .checklist {
+    background: #f5f5f0;
+    border: 2px solid #c9a84c;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0;
+  }
+  .checklist h4 {
+    color: #c9a84c;
+    margin-bottom: 12px;
+    font-size: 16px;
+  }
+  .check-item {
+    padding: 6px 0;
+    font-size: 14px;
+  }
+  .check-item::before {
+    content: "☐ ";
+    color: #c9a84c;
+    font-size: 16px;
+  }
+  
+  /* Phase badge */
+  .phase {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .phase-green { background: #e8f5e9; color: #2e7d32; border: 1px solid #66bb6a; }
+  .phase-purple { background: #f3e5f5; color: #7b1fa2; border: 1px solid #ba68c8; }
+  .phase-blue { background: #e3f2fd; color: #1565c0; border: 1px solid #64b5f6; }
+  .phase-yellow { background: #fff8e1; color: #f57f17; border: 1px solid #ffd54f; }
+  .phase-red { background: #fce4ec; color: #c62828; border: 1px solid #ef9a9a; }
+  
+  /* Diagram */
+  .diagram {
+    background: #1a1a2e;
+    color: #e0e0e0;
+    padding: 24px;
+    border-radius: 12px;
+    text-align: center;
+    font-family: 'Consolas', monospace;
+    font-size: 13px;
+    line-height: 2;
+    direction: ltr;
+    margin: 16px 0;
+  }
+  .diagram .arrow { color: #c9a84c; }
+  .diagram .highlight { color: #c9a84c; font-weight: 700; }
+  
+  /* Page break */
+  .page-break { page-break-before: always; }
+  
+  /* Print */
+  @media print {
+    body { font-size: 13px; }
+    .page { padding: 20px 30px; }
+    h2 { page-break-after: avoid; }
+    .step, .important, .success, .note { page-break-inside: avoid; }
+    .code-block { font-size: 11px; }
+  }
+  
+  ul, ol {
+    padding-right: 24px;
+    margin: 8px 0;
+  }
+  li { margin: 4px 0; }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+<!-- COVER -->
+<div class="cover">
+  <div style="font-size:48px; margin-bottom:10px;">🏠</div>
+  <h1>دليل إعداد النشر التلقائي</h1>
+  <div class="subtitle">المكتب العقاري الالكتروني — Sweeda</div>
+  <div class="info">
+    <strong>لرفيقك في نيجيريا 🇳🇬</strong><br>
+    الخطوات المطلوبة لإعداد صفحات فيس بوك + انستغرام<br>
+    وربطها بالنشر التلقائي من التطبيق<br><br>
+    📅 تاريخ الإعداد: يوليو 2026
+  </div>
+</div>
+
+<!-- OVERVIEW -->
+<h2>📋 ملخص اللي رح نعمله</h2>
+
+<div class="diagram">
+حساب فيس بوك شخصي (تبعك)
+    <span class="arrow">│</span>
+    <span class="arrow">├──►</span> صفحة فيس بوك تجارية <span class="highlight">(المكتب العقاري الالكتروني)</span>
+    <span class="arrow">│</span>
+    <span class="arrow">├──►</span> حساب انستغرام تجاري <span class="highlight">(مرتبط بالصفحة)</span>
+    <span class="arrow">│</span>
+    <span class="arrow">├──►</span> Meta Business Suite <span class="highlight">(إدارة مركزية)</span>
+    <span class="arrow">│</span>
+    <span class="arrow">└──►</span> Meta Developer App <span class="highlight">(للحصول على التوكنز)</span>
+              <span class="arrow">│</span>
+              <span class="arrow">└──►</span> إدخال التوكنز بالسيرفر = <span class="highlight">نشر تلقائي 🎉</span>
+</div>
+
+<div class="checklist">
+  <h4>📝 قائمة المهام الكاملة</h4>
+  <div class="check-item">المرحلة 1: إنشاء صفحة فيس بوك تجارية</div>
+  <div class="check-item">المرحلة 2: إنشاء حساب انستغرام تجاري</div>
+  <div class="check-item">المرحلة 3: إنشاء تطبيق Meta Developer</div>
+  <div class="check-item">المرحلة 4: الحصول على التوكنز (الأهم!)</div>
+  <div class="check-item">المرحلة 5: اختبار التوكنز</div>
+  <div class="check-item">المرحلة 6: إرسال البيانات لحدي</div>
+</div>
+
+<!-- PHASE 1 -->
+<div class="page-break"></div>
+<h2><span class="phase phase-green">المرحلة 1</span> إنشاء صفحة فيس بوك تجارية</h2>
+<p>⏱️ الوقت المقدر: 10 دقائق</p>
+
+<div class="step">
+  <span class="step-num">1</span>
+  <span class="step-title">فتح Meta Business Suite</span>
+  <div class="step-body">
+    <ol>
+      <li>افتح المتصفح على الكمبيوتر</li>
+      <li>ادخل على: <code>business.facebook.com</code></li>
+      <li>سجّل دخول بحسابك الشخصي على فيس بوك</li>
+      <li>إذا سألك "Create a business portfolio" — اضغط <strong>Create Account</strong></li>
+    </ol>
+  </div>
+</div>
+
+<div class="step">
+  <span class="step-num">2</span>
+  <span class="step-title">إنشاء Business Portfolio</span>
+  <div class="step-body">
+    <ol>
+      <li><strong>Business portfolio name</strong>: المكتب العقاري الالكتروني</li>
+      <li><strong>Your full name</strong>: اسمك الحقيقي</li>
+      <li><strong>Business email</strong>: إيميلك (مو شرط نفس إيميل فيس بوك)</li>
+      <li>اضغط <strong>Submit</strong></li>
+    </ol>
+  </div>
+</div>
+
+<div class="step">
+  <span class="step-num">3</span>
+  <span class="step-title">إنشاء صفحة فيس بوك جديدة</span>
+  <div class="step-body">
+    <ol>
+      <li>من القائمة اليسار اضغط <strong>Settings</strong> ⚙️</li>
+      <li>اضغط <strong>Business assets</strong> → <strong>Pages</strong></li>
+      <li>اضغط <strong>Add assets</strong> → <strong>Facebook Page</strong> → <strong>Create a new Facebook Page</strong></li>
+      <li>املأ البيانات:
+        <ul>
+          <li><strong>Page name</strong>: المكتب العقاري الالكتروني</li>
+          <li><strong>Category</strong>: اكتب <code>Real Estate</code> واختار <code>Real Estate Agent</code></li>
+          <li><strong>Bio</strong>: منصتك العقارية الذكية — بيع، إيجار، وتصوير عقاري احترافي 🏠</li>
+        </ul>
+      </li>
+      <li>اضغط <strong>Create Page</strong></li>
+      <li>أضف <strong>صورة شعار التطبيق</strong> كصورة الملف (Profile picture)</li>
+      <li>أضف <strong>صورة غلاف</strong> (Cover photo) — ممكن أي صورة عقارية مؤقتة</li>
+    </ol>
+  </div>
+</div>
+
+<div class="step">
+  <span class="step-num">4</span>
+  <span class="step-title">إعدادات الصفحة المهمة</span>
+  <div class="step-body">
+    <ol>
+      <li>روح للصفحة الجديدة واضغط <strong>Settings</strong> → <strong>Page Access</strong></li>
+      <li>تأكد إنك <strong>Admin</strong> على الصفحة ✅</li>
+      <li>اضغط <strong>Settings</strong> → <strong>Privacy</strong></li>
+      <li>تأكد إنو الصفحة <strong>Published</strong> (منشورة) مش Unpublished</li>
+    </ol>
+  </div>
+</div>
+
+<div class="success">مرحلة 1 مكتملة! عندك صفحة فيس بوك تجارية باسم المكتب العقاري الالكتروني</div>
+
+<!-- PHASE 2 -->
+<h2><span class="phase phase-purple">المرحلة 2</span> إنشاء حساب انستغرام تجاري</h2>
+<p>⏱️ الوقت المقدر: 15 دقيقة</p>
+
+<div class="step">
+  <span class="step-num">1</span>
+  <span class="step-title">إنشاء حساب انستغرام جديد</span>
+  <div class="step-body">
+    <ol>
+      <li>حمّل تطبيق <strong>Instagram</strong> على موبايلك</li>
+      <li>اضغط <strong>Create new account</strong></li>
+      <li><strong>اسم المستخدم (Username)</strong>: <code>sweeda.real_estate</code> أو <code>sweeda.realestate</code> أو <code>elc.real.estate</code></li>
+      <li><strong>كلمة السر</strong>: اختار كلمة سر قوية واحفظها!</li>
+      <li><strong>الاسم الكامل</strong>: المكتب العقاري الالكتروني</li>
+    </ol>
+  </div>
+</div>
+
+<div class="step">
+  <span class="step-num">2</span>
+  <span class="step-title">التحويل لحساب تجاري (Business)</span>
+  <div class="step-body">
+    <ol>
+      <li>افتح البروفايل → اضغط <strong>≡</strong> (القائمة) أعلى اليمين</li>
+      <li>اضغط <strong>Settings and privacy</strong> → <strong>Account type and tools</strong></li>
+      <li>اضغط <strong>Switch to professional account</strong></li>
+      <li>اختار <strong>Business</strong></li>
+      <li>اختار التصنيف: <strong>Real Estate</strong></li>
+      <li><strong>اربط الحساب بصفحة فيس بوك</strong> اللي أنشأناها بالمرحلة 1
+        <br>بيطلب منك تسجيل دخول فيس بوك → اختار صفحة "المكتب العقاري الالكتروني"</li>
+      <li>اضغط <strong>Done</strong></li>
+    </ol>
+  </div>
+</div>
+
+<div class="step">
+  <span class="step-num">3</span>
+  <span class="step-title">إكمال البروفايل</span>
+  <div class="step-body">
+    <ol>
+      <li>أضف <strong>صورة الملف</strong> (نفس شعار التطبيق)</li>
+      <li>أضف <strong>Bio</strong>: 🏠 منصتك العقارية الذكية | بيع • إيجار • تصوير</li>
+      <li>أضف <strong>رابط</strong>: رابط التطبيق أو الموقع</li>
+    </ol>
+  </div>
+</div>
+
+<div class="important">تأكد من الربط: من الكمبيوتر ادخل على <code>business.facebook.com</code> → Settings → Business assets → Instagram accounts. المفروض تشوف حساب الانستغرام مربوط.</div>
+
+<div class="success">مرحلة 2 مكتملة! عندك حساب انستغرام تجاري مربوط بصفحة فيس بوك</div>
+
+<!-- PHASE 3 -->
+<div class="page-break"></div>
+<h2><span class="phase phase-blue">المرحلة 3</span> إنشاء Meta Developer App</h2>
+<p>⏱️ الوقت المقدر: 20 دقيقة</p>
+<p>🎯 هذه أهم مرحلة — منها بنحصل على التوكنز</p>
+
+<div class="step">
+  <span class="step-num">1</span>
+  <span class="step-title">التسجيل كمطور</span>
+  <div class="step-body">
+    <ol>
+      <li>افتح: <code>developers.facebook.com</code></li>
+      <li>سجّل دخول بحساب فيس بوك الشخصي</li>
+      <li>إذا أول مرة — بيطلب منك تسجل كمطور:
+        <ul>
+          <li>اضغط <strong>Get Started</strong></li>
+          <li>وافق على الشروط</li>
+          <li>أكّد الإيميل</li>
+        </ul>
+      </li>
+      <li>بعد التسجيل اضغط <strong>Create App</strong></li>
+    </ol>
+  </div>
+</div>
+
+<div class="step">
+  <span class="step-num">2</span>
+  <span class="step-title">إنشاء التطبيق</span>
+  <div class="step-body">
+    <ol>
+      <li>اختار نوع التطبيق: <strong>Business</strong></li>
+      <li>اضغط <strong>Next</strong></li>
+      <li>املأ البيانات:
+        <ul>
+          <li><strong>App name</strong>: Sweeda Real Estate Publisher</li>
+          <li><strong>App contact email</strong>: إيميلك</li>
+          <li><strong>Business portfolio</strong>: اختار portfolio اللي أنشأناها</li>
+        </ul>
+      </li>
+      <li>اضغط <strong>Create app</strong></li>
+      <li>ممكن يطلب كلمة سر فيس بوك للتأكيد</li>
+    </ol>
+  </div>
+</div>
+
+<div class="step">
+  <span class="step-num">3</span>
+  <span class="step-title">إضافة منتجات (Use Cases)</span>
+  <div class="step-body">
+    <ol>
+      <li>بعد إنشاء التطبيق، بيكون في Dashboard</li>
+      <li>اضغط <strong>Add use cases</strong> أو <strong>Customize</strong></li>
+      <li>اختار <strong>Manage everything on your Page</strong> ← هذا يضيف فيس بوك</li>
+      <li>اضغط <strong>Add use case</strong> مرة تانية</li>
+      <li>اختار <strong>Manage messaging & content on Instagram</strong> ← هذا يضيف انستغرام</li>
+      <li>لما يسأل عن API setup → اختار <strong>API setup with Facebook Login</strong></li>
+    </ol>
+  </div>
+</div>
+
+<div class="step">
+  <span class="step-num">4</span>
+  <span class="step-title">إعداد الصلاحيات (Permissions)</span>
+  <div class="step-body">
+    <p>من الـ Dashboard → <strong>Permissions and features</strong>:</p>
+    <p>اضغط <strong>Add</strong> بجانب كل صلاحية:</p>
+    <table>
+      <tr><th>الصلاحية</th><th>الوصف</th><th>مطلوب لـ</th></tr>
+      <tr><td><code>pages_show_list</code></td><td>عرض قائمة الصفحات</td><td>فيس بوك</td></tr>
+      <tr><td><code>pages_read_engagement</code></td><td>قراءة تفاعلات الصفحة</td><td>فيس بوك</td></tr>
+      <tr><td><code>pages_manage_posts</code></td><td>إنشاء/تعديل/حذف منشورات</td><td>فيس بوك ✅ مهم</td></tr>
+      <tr><td><code>instagram_basic</code></td><td>معلومات أساسية</td><td>انستغرام</td></tr>
+      <tr><td><code>instagram_content_publish</code></td><td>نشر محتوى</td><td>انستغرام ✅ مهم</td></tr>
+    </table>
+  </div>
+</div>
+
+<div class="note">بعض الصلاحيات تحتاج App Review (موافقة من ميتا) قبل الإنتاج. بس للـ testing + Admin حصري، منقدر نستخدمها بدون Review لأنو التطبيق في وضع Development.</div>
+
+<div class="step">
+  <span class="step-num">5</span>
+  <span class="step-title">حفظ بيانات التطبيق 🔑</span>
+  <div class="step-body">
+    <p>من <strong>Settings</strong> → <strong>Basic</strong>:</p>
+    <table>
+      <tr><th>البيانات</th><th>وين لقاها</th></tr>
+      <tr><td><strong>App ID</strong></td><td>معروض فوق</td></tr>
+      <tr><td><strong>App Secret</strong></td><td>اضغط <strong>Show</strong> بجانبه</td></tr>
+    </table>
+    <div class="important">احفظهم بمكان آمن — رح نحتاجهم بالمرحلة 4!</div>
+  </div>
+</div>
+
+<!-- PHASE 4 -->
+<div class="page-break"></div>
+<h2><span class="phase phase-yellow">المرحلة 4</span> الحصول على التوكنز</h2>
+<p>⏱️ الوقت المقدر: 30 دقيقة</p>
+<p>🎯 هذه المرحلة الأكثر تعقيداً — اتبع خطوة بخطوة</p>
+
+<h3>كيف تعمل التوكنز؟</h3>
+<div class="diagram">
+Short-lived User Token <span class="highlight">(ساعة واحدة)</span>
+    <span class="arrow">│</span>
+    <span class="arrow">▼</span> نستبدله بـ
+Long-lived User Token <span class="highlight">(60 يوم)</span>
+    <span class="arrow">│</span>
+    <span class="arrow">▼</span> نستبدله بـ
+Long-lived Page Token <span class="highlight">(لا ينتهي أبداً! ✅)</span>
+</div>
+
+<div class="step">
+  <span class="step-num">1</span>
+  <span class="step-title">الحصول على Short-lived User Token</span>
+  <div class="step-body">
+    <ol>
+      <li>افتح: <code>developers.facebook.com/tools/explorer/</code></li>
+      <li>اختار التطبيق: <strong>Sweeda Real Estate Publisher</strong> (من القائمة يمين فوق)</li>
+      <li>اضغط <strong>User or Page</strong> → <strong>User Token</strong></li>
+      <li>اضغط <strong>Generate Access Token</strong></li>
+      <li>بيظهر قائمة الصلاحيات — اختار <strong>كل</strong> الصلاحيات الخمسة بالجدول فوق</li>
+      <li>وافق على الأذونات</li>
+      <li><strong>انسخ التوكن</strong> اللي ظهر ← هذا هو <strong>Short-lived User Token</strong></li>
+    </ol>
+  </div>
+</div>
+
+<div class="step">
+  <span class="step-num">2</span>
+  <span class="step-title">استبداله بـ Long-lived User Token</span>
+  <div class="step-body">
+    <p>افتح Terminal أو موجه الأوامر ونفّذ:</p>
+    <div class="code-block">
+curl -X GET \
+  "https://graph.facebook.com/v21.0/oauth/access_token\
+?grant_type=fb_exchange_token\
+&client_id=<span style="color:#ce9178">APP_ID</span>\
+&client_secret=<span style="color:#ce9178">APP_SECRET</span>\
+&fb_exchange_token=<span style="color:#ce9178">SHORT_LIVED_TOKEN</span>"
+    </div>
+    <p>استبدل:</p>
+    <ul>
+      <li><code>APP_ID</code> ← من المرحلة 3 خطوة 5</li>
+      <li><code>APP_SECRET</code> ← من المرحلة 3 خطوة 5</li>
+      <li><code>SHORT_LIVED_TOKEN</code> ← من الخطوة 1 فوق</li>
+    </ul>
+    <p>النتيجة رح تكون JSON فيها <code>access_token</code> جديد — هذا هو <strong>Long-lived User Token</strong> (60 يوم)</p>
+    <div class="success">انسخه واحفظه!</div>
+  </div>
+</div>
+
+<div class="step">
+  <span class="step-num">3</span>
+  <span class="step-title">الحصول على Page ID</span>
+  <div class="step-body">
+    <div class="code-block">
+curl -X GET \
+  "https://graph.facebook.com/v21.0/me/accounts?fields=id,name\
+&access_token=<span style="color:#ce9178">LONG_LIVED_USER_TOKEN</span>"
+    </div>
+    <p>النتيجة:</p>
+    <div class="code-block">
+{
+  "data": [
+    {
+      "id": "<span style="color:#c9a84c">123456789012345</span>",
+      "name": "المكتب العقاري الالكتروني"
+    }
+  ]
+}
+    </div>
+    <div class="success">انسخ الـ id — هذا هو Facebook Page ID</div>
+  </div>
+</div>
+
+<div class="step">
+  <span class="step-num">4</span>
+  <span class="step-title">الحصول على Long-lived Page Token (لا ينتهي! 🎉)</span>
+  <div class="step-body">
+    <div class="code-block">
+curl -X GET \
+  "https://graph.facebook.com/v21.0/<span style="color:#ce9178">PAGE_ID</span>?fields=access_token\
+&access_token=<span style="color:#ce9178">LONG_LIVED_USER_TOKEN</span>"
+    </div>
+    <p>النتيجة:</p>
+    <div class="code-block">
+{
+  "access_token": "<span style="color:#c9a84c">EAAxxxxxxxxxxxxxxxxxxxxxx</span>",
+  "id": "123456789012345"
+}
+    </div>
+    <div class="success">هذا هو Long-lived Page Token — لا ينتهي أبداً! 🔑 احفظه بمكان آمن جداً</div>
+  </div>
+</div>
+
+<div class="step">
+  <span class="step-num">5</span>
+  <span class="step-title">الحصول على Instagram Business Account ID</span>
+  <div class="step-body">
+    <div class="code-block">
+curl -X GET \
+  "https://graph.facebook.com/v21.0/<span style="color:#ce9178">PAGE_ID</span>?fields=instagram_business_account\
+&access_token=<span style="color:#ce9178">PAGE_TOKEN</span>"
+    </div>
+    <p>النتيجة:</p>
+    <div class="code-block">
+{
+  "instagram_business_account": {
+    "id": "<span style="color:#c9a84c">17841400000000000</span>"
+  },
+  "id": "123456789012345"
+}
+    </div>
+    <div class="success">انسخ الـ id داخل instagram_business_account — هذا هو Instagram Business Account ID</div>
+  </div>
+</div>
+
+<!-- PHASE 5 -->
+<div class="page-break"></div>
+<h2><span class="phase phase-red">المرحلة 5</span> اختبار التوكنز</h2>
+<p>قبل ما تبعت البيانات، لازم تتأكد إنو التوكنز شغالة!</p>
+
+<h3>اختبار فيس بوك — إنشاء منشور تجريبي</h3>
+<div class="code-block">
+curl -X POST \
+  "https://graph.facebook.com/v21.0/<span style="color:#ce9178">PAGE_ID</span>/feed\
+?message=🏠 تجربة النشر التلقائي من المكتب العقاري الالكتروني\
+&access_token=<span style="color:#ce9178">PAGE_TOKEN</span>"
+</div>
+<p>إذا رجع:</p>
+<div class="code-block">{"id": "123456789012345_987654321"}</div>
+<div class="success">فيس بوك شغال! احذف المنشور التجريبي من الصفحة يدوياً</div>
+
+<h3>اختبار انستغرام — إنشاء منشور صورة تجريبي</h3>
+<div class="important">انستغرام لازم رابط صورة عامة (URL)، مش رفع مباشر</div>
+
+<div class="code-block">
+<span class="comment">// الخطوة 1: إنشاء حاوية</span>
+curl -X POST \
+  "https://graph.facebook.com/v21.0/<span style="color:#ce9178">IG_BUSINESS_ID</span>/media\
+?image_url=https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Camponotus_flavomarginatus_ant.jpg/320px-Camponotus_flavomarginatus_ant.jpg\
+&caption=🏠 تجربة النشر التلقائي #عقارات\
+&access_token=<span style="color:#ce9178">PAGE_TOKEN</span>"
+</div>
+<p>بيرجع container ID. انتظر 10-15 ثانية ثم:</p>
+<div class="code-block">
+<span class="comment">// الخطوة 2: نشر الحاوية</span>
+curl -X POST \
+  "https://graph.facebook.com/v21.0/<span style="color:#ce9178">IG_BUSINESS_ID</span>/media_publish\
+?creation_id=<span style="color:#ce9178">CONTAINER_ID</span>\
+&access_token=<span style="color:#ce9178">PAGE_TOKEN</span>"
+</div>
+<div class="success">إذا ظهر المنشور على الانستغرام — كل شيء شغال!</div>
+
+<!-- PHASE 6 -->
+<h2><span class="phase phase-yellow">المرحلة 6</span> إرسال البيانات لحدي</h2>
+
+<div class="important">أرسللي هاد البيانات الخمسة بعد ما تخلص كل المراحل:</div>
+
+<table>
+  <tr><th>#</th><th>البيانات</th><th>مثال</th><th>من وين جبته</th></tr>
+  <tr><td>1️⃣</td><td><strong>Facebook Page ID</strong></td><td><code>123456789012345</code></td><td>المرحلة 4 خطوة 3</td></tr>
+  <tr><td>2️⃣</td><td><strong>Facebook Page Token</strong></td><td><code>EAAxxxx...</code></td><td>المرحلة 4 خطوة 4</td></tr>
+  <tr><td>3️⃣</td><td><strong>Instagram Business ID</strong></td><td><code>17841400...</code></td><td>المرحلة 4 خطوة 5</td></tr>
+  <tr><td>4️⃣</td><td><strong>App ID</strong></td><td><code>987654321</code></td><td>المرحلة 3 خطوة 5</td></tr>
+  <tr><td>5️⃣</td><td><strong>App Secret</strong></td><td><code>abc123...</code></td><td>المرحلة 3 خطوة 5</td></tr>
+</table>
+
+<div class="note">
+  <strong>⚠️ أمن البيانات:</strong> الـ Page Token و App Secret بيانات حساسة. أرسلهم فقط عبر رسالة خاصة مششفة، ومسح المحادثة بعد الإرسال.
+</div>
+
+<!-- AFTER -->
+<div class="page-break"></div>
+<h2>🔄 ماذا يحدث بعد الإرسال؟</h2>
+
+<div class="diagram">
+رفيقك يرسل التوكنز
+    <span class="arrow">▼</span>
+حدي يدخلها كـ Edge Function Secrets
+    <span class="arrow">▼</span>
+ينفّذ migration 2026_07_14 بالسيرفر
+    <span class="arrow">▼</span>
+<span class="highlight">النشر التلقائي يشتغل! 🎉</span>
+    <span class="arrow">▼</span>
+لما الأدمن يوافق على عرض:
+  ├── يُنشر تلقائياً على فيس بوك ✅
+  └── يُنشر تلقائياً على انستغرام ✅
+</div>
+
+<h2>❓ أسئلة شائعة</h2>
+
+<h3>هل التوكن رح ينتهي؟</h3>
+<p>الـ <strong>Page Token</strong> <strong>لا ينتهي أبداً</strong> طالما التطبيق فعال على ميتا. بس الـ <strong>App Secret</strong> ممكن يتغير إذا غيّرت كلمة سر فيس بوك، فلازم تحدّثو.</p>
+
+<h3>هل أحتاج App Review؟</h3>
+<p>للـ testing مع Admin فقط — <strong>لا</strong>. بس لو بدك مستخدمين آخرين يستخدمو التطبيق — <strong>نعم</strong>، لازم تقدم على App Review من الداشبورد. بيآخذ 3-10 أيام.</p>
+
+<h3>انستغرام بينشر نص بس؟</h3>
+<p><strong>لا</strong> — انستغرام لازم صورة على الأقل. النشر التلقائي رح يستخدم أول صورة من العرض. إذا العرض ما فيه صور → ينشر على فيس بوك بس.</p>
+
+<h3>هل أقدر أشوف المنشورات اللي اتنشرت؟</h3>
+<p>اي، من <strong>Meta Business Suite</strong> → <strong>Planner</strong> أو <strong>Content</strong> تقدر تشوف كل المنشورات المجدولة والمنشورة.</p>
+
+</div>
+
+</body>
+</html>
