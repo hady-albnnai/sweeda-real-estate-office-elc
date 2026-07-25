@@ -149,7 +149,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return;
     }
     setState(() => _isBusy = true);
-    final ok = await context.read<AuthProvider>().sendEmailMagicLink(email);
+    final auth = context.read<AuthProvider>();
+    final ok = await auth.sendEmailMagicLink(email);
     if (mounted) {
       setState(() => _isBusy = false);
     }
@@ -157,7 +158,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _snack('تم إرسال الرابط — إذا لم تجده خلال دقيقة افحص البريد غير المرغوب فيه');
       context.push('/check-email');
     } else {
-      _snack('فشل إرسال رابط الإيميل');
+      _snack(auth.lastError ?? 'فشل إرسال رابط الإيميل');
     }
   }
 

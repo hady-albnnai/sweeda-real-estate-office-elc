@@ -120,11 +120,14 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _regMail() async {
     if (_emailCtrl.text.isEmpty || !_emailCtrl.text.contains('@')) { _snack('أدخل بريداً صحيحاً'); return; }
     setState(() => _loading = true);
-    final ok = await context.read<AuthProvider>().sendEmailMagicLink(_emailCtrl.text.trim());
+    final auth = context.read<AuthProvider>();
+    final ok = await auth.sendEmailMagicLink(_emailCtrl.text.trim());
     if (mounted) setState(() => _loading = false);
     if (ok) {
       _snack('تم إرسال الرابط — إذا لم تجده خلال دقيقة افحص البريد غير المرغوب فيه');
       if (mounted) context.push('/check-email');
+    } else {
+      _snack(auth.lastError ?? 'فشل إرسال رابط الإيميل');
     }
   }
 
