@@ -24,6 +24,20 @@ class AddOfferScreen extends StatefulWidget {
 class _AddOfferScreenState extends State<AddOfferScreen> {
   static const String _customCityOption = '__custom_city__';
 
+  /// المحافظات السورية الأربع عشرة — للوحات السيارات (اللوحة تتبع لمحافظة)
+  static const List<String> _syrianGovernorates = [
+    'دمشق', 'ريف دمشق', 'حلب', 'حماة', 'حمص', 'اللاذقية', 'طرطوس',
+    'إدلب', 'دير الزور', 'الرقة', 'الحسكة', 'درعا', 'القنيطرة', 'السويداء',
+  ];
+
+  /// نص الإقرار والتعهد الكامل — يجب أن يقرأه المستخدم قبل الموافقة
+  static const String _pledgeFullText = 'أقرّ أنا صاحب هذا العرض وأتعهد بما يلي:\n'
+      '١) جميع البيانات المدخلة (النوع، المواصفات، السعر، الموقع، الصور، السند) صحيحة ودقيقة، وأتحمّل كامل المسؤولية القانونية عن أي خطأ أو تضليل فيها.\n'
+      '٢) أنا المالك الشرعي للعقار/المركبة أو مخوَّل رسمياً بعرضه، وهو خالٍ من أي إشارات أو نزاعات تمنع البيع أو الإيجار.\n'
+      '٣) ألتزم بتسديد عمولة المكتب كاملةً عند إتمام الصفقة عبره أو بوساطته — ٣٪ من قيمة البيع، وما يعادل أجرة نصف شهر عند الإيجار — ولو تمّت المعاملة لاحقاً مع طرف تعرّفت عليه عبر التطبيق.\n'
+      '٤) أتعهد بعدم الالتفاف على المكتب بإتمام المعاملة مباشرةً مع الزبائن دون علمه.\n'
+      '٥) يحق للإدارة حذف العرض أو تقييد الحساب عند ثبوت أي مخالفة لما تقدّم.';
+
   int _currentStep = 0;
   int? _selectedType;
   int? _selectedTrans;
@@ -34,7 +48,6 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   final _priceCtrl = TextEditingController();
   final _locCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
-  final _specCtrl = TextEditingController();
   final _ttlCtrl  = TextEditingController();
   final _customSubCtrl = TextEditingController();
   final _contactPhoneCtrl = TextEditingController();
@@ -108,7 +121,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
 
   @override
   void dispose() {
-    _priceCtrl.dispose(); _locCtrl.dispose(); _descCtrl.dispose(); _specCtrl.dispose();
+    _priceCtrl.dispose(); _locCtrl.dispose(); _descCtrl.dispose();
     _ttlCtrl.dispose(); _customSubCtrl.dispose(); _contactPhoneCtrl.dispose();
     _customCityCtrl.dispose(); _carBrandCtrl.dispose(); _carModelCtrl.dispose();
     _carYearCtrl.dispose(); _carColorCtrl.dispose(); _carKmCtrl.dispose();
@@ -208,7 +221,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       contactPh: effectivePhone, prc: double.tryParse(InputValidators.normalizeDigits(_priceCtrl.text).replaceAll(',', '')) ?? 0, cur: _cur, loc: loc,
       descript: _descCtrl.text.isNotEmpty ? _descCtrl.text : _locCtrl.text,
       specs: {
-        'details': _specCtrl.text,
+        if (_selectedSubCat == -1 && _customSubCtrl.text.trim().isNotEmpty) 'custom_sub': _customSubCtrl.text.trim(),
         if (_selectedType == 0) ...{'area': InputValidators.normalizeDigits(_areaCtrl.text), 'floor': InputValidators.normalizeDigits(_floorCtrl.text), 'finishing': _finishing, 'direction': _direction, 'legal_notes': _legalNotesCtrl.text},
         if (_selectedType == 1) ...{'plate': InputValidators.normalizeDigits(_carPlateCtrl.text), 'brand': _carBrandCtrl.text, 'model': _carModelCtrl.text, 'year': InputValidators.normalizeDigits(_carYearCtrl.text), 'color': _carColorCtrl.text, 'fuel': _carFuel, 'transmission': _carTransmission, 'plate_type': _selectedPlateType},
       },
@@ -411,16 +424,22 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         DropdownButtonFormField<int>(value: _selectedMainCat, items: mainCatItems, onChanged: mainCatItems.isEmpty ? null : (v) => setState(() { _selectedMainCat = v; _selectedSubCat = null; }), decoration: const InputDecoration(labelText: 'التصنيف الرئيسي', border: OutlineInputBorder())),
         if (mainCatItems.isEmpty) _warnBox('تعذّر تحميل التصنيفات من السيرفر'),
         const SizedBox(height: 15),
-        if (_selectedMainCat != null)
+        if (_selectedMainCat != null) ...[
            DropdownButtonFormField<int>(
              value: _selectedSubCat,
              items: [
                ...(_subListOf(catsSource, _selectedMainCat!).asMap().entries.map((e) => DropdownMenuItem<int>(value: e.key, child: Text(e.value.toString())))),
                const DropdownMenuItem(value: -1, child: Text('آخر'))
              ],
-             onChanged: (v) => setState(() => _selectedSubCat = v),
+             onChanged: (v) => setState(() { _selectedSubCat = v; if (v != -1) _customSubCtrl.clear(); }),
              decoration: const InputDecoration(labelText: 'التصنيف الفرعي', border: OutlineInputBorder()),
            ),
+           if (_selectedSubCat == -1)
+             Padding(
+               padding: const EdgeInsets.only(top: 10),
+               child: TextField(controller: _customSubCtrl, decoration: const InputDecoration(labelText: 'اكتب التصنيف الفرعي يدوياً', hintText: 'مثال: جرار صغير، مقطورة...', border: OutlineInputBorder())),
+             ),
+        ],
         const SizedBox(height: 15),
         TextField(controller: _contactPhoneCtrl, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'رقم الهاتف للتواصل (إلزامي)', hintText: 'مثال: 09xxxxxxxx', border: OutlineInputBorder(), prefixIcon: Icon(Icons.phone))),
         const SizedBox(height: 15),
@@ -437,12 +456,12 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           const SizedBox(height: 10),
           TextField(controller: _carModelCtrl, decoration: const InputDecoration(labelText: 'الموديل (إلزامي)', hintText: 'سيراتو، لاندكروزر، أكسنت...', border: OutlineInputBorder())),
           const SizedBox(height: 10),
-          // المحافظة — كانت حقلاً يتيمًا (لا ويدجت تعبئه) فتُحفظ سيارة بلا موقع
+          // المحافظة — للوحة السيارة (تتبع لأي محافظة سورية وليست مناطق العقارات)
           DropdownButtonFormField<String>(
             value: _carGovernorate,
-            items: (config?.locations ?? const []).map((e) => DropdownMenuItem<String>(value: e.toString(), child: Text(e.toString()))).toList(),
+            items: _syrianGovernorates.map((g) => DropdownMenuItem<String>(value: g, child: Text(g))).toList(),
             onChanged: (v) => setState(() => _carGovernorate = v),
-            decoration: const InputDecoration(labelText: 'المحافظة', border: OutlineInputBorder()),
+            decoration: const InputDecoration(labelText: 'المحافظة (لوحة السيارة)', border: OutlineInputBorder()),
           ),
         ],
         _navRow(onNext: () { if (_validateBasics()) setState(() => _currentStep = 1); }),
@@ -474,7 +493,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         const SizedBox(height: 10),
         _dd('نوع الوقود (اختياري)', ['بنزين', 'ديزل', 'هجين', 'كهرباء'], _carFuel, (v) => setState(() => _carFuel = v)),
         const SizedBox(height: 10),
-        _dd('ناقل الحركة (اختياري)', ['عادي', 'أوتوماتيك', 'نصف أوتوماتيك'], _carTransmission, (v) => setState(() => _carTransmission = v)),
+        _dd('ناقل الحركة (اختياري)', ['عادي', 'أوتوماتيك'], _carTransmission, (v) => setState(() => _carTransmission = v)),
         const SizedBox(height: 10),
         TextField(controller: _carColorCtrl, decoration: const InputDecoration(labelText: 'اللون (اختياري)', border: OutlineInputBorder())),
         const SizedBox(height: 10),
@@ -482,8 +501,6 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       ],
       const SizedBox(height: 15),
       TextField(controller: _descCtrl, maxLines: 3, decoration: const InputDecoration(labelText: 'وصف إضافي (اختياري)', hintText: 'أي مميزات أو تفاصيل أخرى تود ذكرها للزبائن...', border: OutlineInputBorder())),
-      const SizedBox(height: 15),
-      TextField(controller: _specCtrl, maxLines: 2, decoration: const InputDecoration(labelText: 'مواصفات إضافية (اختياري)', hintText: 'مثال: 3 غرف، 2 حمام، بلكون، مصعد...', border: OutlineInputBorder())),
       const SizedBox(height: 20),
       if (_selectedType == 0) ...[
         const Text('الموقع الدقيق على الخريطة (اختياري)', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 14)),
@@ -625,15 +642,52 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           ]),
         ),
         const SizedBox(height: 15),
-        CheckboxListTile(value: _agreePledge, onChanged: (v) => setState(() => _agreePledge = v ?? false), title: const Text('أوافق على الإقرار والتعهد وصحة البيانات المقدمة', style: TextStyle(color: Colors.white, fontSize: 13)), activeColor: AppTheme.primaryGold, contentPadding: EdgeInsets.zero, controlAffinity: ListTileControlAffinity.leading),
+        // ── تنويه الخدمات القانونية (منقول من تفاصيل العرض بطلب المدير + إضافة الاستشارات المأجورة) ──
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppTheme.primaryGold.withOpacity(0.5), width: 1.2)),
+          child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [Icon(Icons.gavel, color: AppTheme.primaryGold, size: 22), SizedBox(width: 8), Expanded(child: Text('الضمان والتوثيق القانوني المعتمد ⚖️', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 14)))]),
+            SizedBox(height: 8),
+            Text('يقدم المكتب خدمة التوثيق القانوني المأجور وتنظيم العقود أصولاً لضمان حق الطرفين: تدقيق سندات الملكية (طابو، حكم محكمة، مواصلات) وخلوّها من الإشارات والنزاعات قبل إتمام الصفقة، إضافةً إلى تقديم الاستشارات القانونية المأجورة على يد محامين مختصين.', style: TextStyle(color: AppTheme.textWhite, fontSize: 12, height: 1.6)),
+            SizedBox(height: 6),
+            Text('توثيق قانوني • عقود معتمدة • استشارات قانونية مأجورة', style: TextStyle(color: Colors.green, fontSize: 11, fontWeight: FontWeight.bold)),
+          ]),
+        ),
+        const SizedBox(height: 15),
+        // ── الإقرار والتعهد — مقروء قبل الموافقة (كان نصاً أبيض بلا حاوية فيختفي، والآن داخل بطاقة داكنة) ──
+        Container(
+          decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(10), border: Border.all(color: AppTheme.primaryGold.withOpacity(0.5), width: 1.2)),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Theme(
+              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+              child: const ExpansionTile(
+                leading: Icon(Icons.description, color: AppTheme.primaryGold, size: 20),
+                title: Text('الإقرار والتعهد — اضغط للقراءة قبل الموافقة', style: TextStyle(color: AppTheme.primaryGold, fontSize: 13, fontWeight: FontWeight.bold)),
+                iconColor: AppTheme.primaryGold, collapsedIconColor: AppTheme.primaryGold,
+                childrenPadding: EdgeInsets.fromLTRB(14, 0, 14, 12),
+                children: [Text(_pledgeFullText, style: TextStyle(color: AppTheme.textWhite, fontSize: 12, height: 1.7))],
+              ),
+            ),
+            CheckboxListTile(
+              value: _agreePledge, onChanged: (v) => setState(() => _agreePledge = v ?? false),
+              title: const Text('أوافق على الإقرار والتعهد وصحة البيانات المقدمة', style: TextStyle(color: AppTheme.textWhite, fontSize: 13)),
+              activeColor: AppTheme.primaryGold, checkColor: AppTheme.deepBlack,
+              side: const BorderSide(color: AppTheme.primaryGold, width: 1.5),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 8), controlAffinity: ListTileControlAffinity.leading,
+            ),
+          ]),
+        ),
 
         // ── تشيك بوكس النشر التلقائي على صفحات السوشيال (مفعل تلقائياً)
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: AppTheme.primaryGold.withOpacity(0.08),
+            // خلفية داكنة صريحة بدل تظليل ذهبي شفاف — كان النص الأبيض غير مقروء عليها
+            color: AppTheme.surfaceBlack,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3)),
+            border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
           ),
           child: CheckboxListTile(
             value: _autoPublishSocial,
