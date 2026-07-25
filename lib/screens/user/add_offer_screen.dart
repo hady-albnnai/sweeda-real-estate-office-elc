@@ -173,15 +173,27 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
 
     List<String> imageUrls = [];
     if (_pickedImages.isNotEmpty) {
-      imageUrls = await _storage.uploadOfferImages(files: _pickedImages, userId: user.uid, onProgress: (done, total) {
-        if (mounted) setState(() => _progressMsg = 'جاري رفع الصور ($done/$total)...');
-      });
-      // ✅ إذا فشل رفع كل الصور، نُظهر خطأ صريح
-      if (imageUrls.isEmpty && _pickedImages.isNotEmpty) {
+      String? uploadError;
+      try {
+        imageUrls = await _storage.uploadOfferImages(files: _pickedImages, userId: user.uid, onProgress: (done, total) {
+          if (mounted) setState(() => _progressMsg = 'جاري رفع الصور ($done/$total)...');
+        });
+      } catch (e) {
+        // uploadOfferImages يرمي استثناء عند فشل كل الصور — كان يُكسر هنا سابقاً بدون التقاط
+        // فيبقى المستخدم عالقاً على شاشة "جاري رفع الصور" للأبد
+        uploadError = _storage.lastError ?? e.toString();
+      }
+      // فشل كل الصور → نوقف ونطلب إعادة المحاولة (لا ننشر عرضاً بدون صور رغماً عن المستخدم)
+      if (imageUrls.isEmpty) {
         if (mounted) {
           setState(() { _submitting = false; _progressMsg = ''; });
-          _snack('⚠️ فشل رفع الصور. سيتم نشر العرض بدون صور. يمكنك تعديله لاحقاً لإضافة الصور.');
+          _snack('❌ فشل رفع الصور: ${uploadError ?? 'تحقق من الاتصال وحاول مجدداً'} — أعد المحاولة');
         }
+        return;
+      }
+      // نجاح جزئي → نكمل بالصور الناجحة ونوضح للمستخدم
+      if (imageUrls.length < _pickedImages.length) {
+        _snack('تم رفع ${imageUrls.length} من ${_pickedImages.length} صور — سينشر العرض بالصور الناجحة');
       }
     }
 
@@ -227,7 +239,48 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           controlsBuilder: (context, details) => const SizedBox.shrink(),
           steps: [_step1(), _step2(), _step3(), if (_selectedType != 1) _stepAvl(), _step4()],
         ),
-        if (_submitting) Container(color: Colors.black54, child: Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [const CircularProgressIndicator(color: AppTheme.primaryGold), const SizedBox(height: 16), Text(_progressMsg, style: const TextStyle(color: AppTheme.textWhite))]))),
+        if (_submitting)
+          Container(
+            color: Colors.black.withOpacity(0.82),
+            child: Center(
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 42),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 26, vertical: 28),
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceBlack,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                      color: AppTheme.primaryGold.withOpacity(0.4), width: 1.2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.5),
+                      blurRadius: 24,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: CircularProgressIndicator(
+                          color: AppTheme.primaryGold, strokeWidth: 3),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      _progressMsg,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                          color: AppTheme.textWhite, fontSize: 14, height: 1.5),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
       ]),
     );
   }

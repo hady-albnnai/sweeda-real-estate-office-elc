@@ -170,7 +170,13 @@ class StorageService {
         );
       }
 
-      final response = await request.send();
+      // مهلة زمنية صريحة — وإلا قد يبقى الرفع معلقاً للأبد على اتصال متقطع
+      final response = await request.send().timeout(
+        const Duration(seconds: 75),
+        onTimeout: () => throw StorageException(
+          'انتهت مهلة رفع الصور — تحقق من جودة الاتصال بالإنترنت وحاول مجدداً',
+        ),
+      );
       final body = await response.stream.bytesToString();
       final data = jsonDecode(body) as Map<String, dynamic>;
 

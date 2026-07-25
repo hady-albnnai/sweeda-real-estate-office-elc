@@ -23,7 +23,9 @@ function json(body: Record<string, unknown>, status = 200): Response {
   });
 }
 
-// التحقق من الموظف عبر staff_session_token + admin_uid (من form data)
+// التحقق من حامل staff_session_token (موظف أو مستخدم عادي بدخول مخصص).
+// ملاحظة: نوافق أي حامل جلسة صالحة (min_role 0) — التصنيف يتم لاحقاً:
+// دور >= 2 → موظف (يرفع لأي مجلد)؛ إلا → مستخدم عادي (مجلده فقط).
 async function validateStaff(
   supabaseAdmin: ReturnType<typeof createClient>,
   adminUid: string,
@@ -36,7 +38,7 @@ async function validateStaff(
   const { data, error } = await supabaseAdmin.rpc("validate_staff_session", {
     p_user_uid: adminUid,
     p_token: staffToken,
-    p_min_role: 2,
+    p_min_role: 0,
   });
 
   if (error || data?.success !== true) {
@@ -90,7 +92,8 @@ serve(async (req) => {
       const staff = await validateStaff(supabaseAdmin, adminUid, staffToken);
       if (!staff.ok) return staff.response;
       actorUid = staff.uid;
-      isStaff = true;
+      // الموظف فقط (role >= 2) يرفع لأي مجلد — المستخدم العادي يبقى مقيداً بمجلده
+      isStaff = staff.role >= 2;
     } else {
       const user = await validateUser(req, supabaseAdmin);
       if (!user.ok) return user.response;
