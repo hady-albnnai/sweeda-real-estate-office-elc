@@ -2269,3 +2269,22 @@ get_resource_usage_internal(p_admin_uid uuid)
 
 - أقسام الإدارة.
 - عمليات المكتب.
+
+---
+
+## 2026-07-25 — إضافة إجراءات التوثيق بالهوية وطلبات التصوير للمستخدم
+
+### `user-account` → action: `upload_id_images`
+رفع وثائق الهوية للمستخدم (رقم وطني + صورة أمامية و/أو خلفية) عبر `service_role` لأن الرفع المباشر من العميل إلى `ids_private` محظور بـ RLS (جلسات مخصصة لا تحمل `auth.uid()`).
+
+- **المدخلات:** `action`, `user_uid`, `sid` (إلزامي), `front_b64` و/أو `back_b64`, `front_ext`/`back_ext` اختياري (`jpg|png|webp`).
+- **التحقق:** نفس بوابة `validateUser` (JWT أو `staff_session_token`).
+- **السلوك:** فك base64 والتحقق من الحجم؛ فحص/إنشاء bucket `ids_private` (private) احتياطياً؛ رفع بمسار `{uid}/id_{front|back}_{ts}.ext`؛ دمج مع الصور القديمة وحذف المستبدلة بعد نجاح الحفظ؛ تحديث `users.sid` و `users.img` (JSON array `[أمامي, خلفي]` عند الوجهين).
+- **الأخطاء:** `SID_REQUIRED`, `SID_TOO_LONG`, `IMAGES_REQUIRED`, `IMAGE_TOO_LARGE`, `INVALID_IMAGE_DATA`, `EMPTY_IMAGE`, `ID_UPLOAD_FAILED:*`, `SAVE_FAILED:*`, `BUCKET_UNAVAILABLE:*`.
+
+### `admin-photography` → action: `my_photo_requests`
+جلب طلبات التصوير الخاصة بالمستخدم نفسه (شاشة خدمة التصوير `/user/photography`).
+
+- **المدخلات:** `action`, `user_uid` (+ `staff_session_token` تلقائياً من العميل).
+- **التحقق:** نفس منطق `request_photography` (JWT أو `validate_staff_session` بـ `p_min_role=0`).
+- **الإرجاع:** حتى 20 مهمة من `photography_tasks` حيث `requested_by = userUid` (id, ttl, notes, sts, ts_scheduled, ts_submit, ts_done, ts_crt).

@@ -22,6 +22,7 @@ import '../../screens/user/my_offers_screen.dart';
 import '../../screens/user/add_offer_screen.dart';
 import '../../screens/user/my_requests_screen.dart';
 import '../../screens/user/my_appointments_screen.dart';
+import '../../screens/user/photography_service_screen.dart';
 import '../../screens/user/favorites_screen.dart';
 import '../../screens/user/profile_screen.dart';
 import '../../screens/user/account_info_screen.dart';
@@ -138,6 +139,7 @@ class AppRouter {
       return PermissionKeys.userRequests;
     }
     if (path == '/user/my-appointments') return PermissionKeys.userAppointments;
+    if (path == '/user/photography') return PermissionKeys.userPhotography;
     if (path == '/user/profile' ||
         path == '/user/account-info' ||
         path == '/user/settings' ||
@@ -236,6 +238,7 @@ class AppRouter {
         },
       ),
       GoRoute(path: '/user/my-appointments', builder: (context, state) => const MyAppointmentsScreen()),
+      GoRoute(path: '/user/photography', builder: (context, state) => const PhotographyServiceScreen()),
       GoRoute(path: '/user/favorites', builder: (context, state) => const FavoritesScreen()),
       GoRoute(path: '/user/profile', builder: (context, state) => const ProfileScreen()),
       GoRoute(path: '/user/account-info', builder: (context, state) => const AccountInfoScreen()),

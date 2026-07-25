@@ -108,7 +108,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: CustomBottomNavBar(currentIndex: auth.userModel?.isInternal == true ? 0 : 4),
+      bottomNavigationBar: CustomBottomNavBar(currentIndex: auth.userModel?.isInternal == true ? 0 : 5),
     );
   }
 

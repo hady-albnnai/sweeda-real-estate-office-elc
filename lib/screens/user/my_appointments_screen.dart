@@ -90,7 +90,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
                 _buildOwnerList(),
               ],
             ),
-      bottomNavigationBar: const CustomBottomNavBar(currentIndex: 2),
+      bottomNavigationBar: const CustomBottomNavBar(currentIndex: 3),
     );
   }
 

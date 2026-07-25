@@ -166,6 +166,53 @@ serve(async (req) => {
       return json({ success: true, task_id: insertData.id });
     }
 
+    // جلب طلبات التصوير الخاصة بالمستخدم نفسه (لشاشة خدمة التصوير)
+    if (action === "my_photo_requests") {
+      const userUid = (body.user_uid ?? body.userUid)?.toString() ?? "";
+      if (!userUid) {
+        return json({ success: false, error: "USER_UID_REQUIRED" }, 400);
+      }
+
+      // نفس منطق التحقق المستخدم في request_photography (JWT أو staff_session_token)
+      const authHeader2 = req.headers.get("Authorization") ?? "";
+      const bearer2 = authHeader2.startsWith("Bearer ") ? authHeader2.slice(7) : "";
+      let verifiedUid = "";
+
+      if (bearer2 && bearer2 !== "undefined" && bearer2 !== "null") {
+        const { data: userData } = await supabaseAdmin.auth.getUser(bearer2);
+        verifiedUid = userData?.user?.id ?? "";
+      }
+
+      if (!verifiedUid) {
+        const sessionToken = (body.staff_session_token ?? body.staffSessionToken)?.toString() ?? "";
+        if (sessionToken && userUid) {
+          const { data, error } = await supabaseAdmin.rpc("validate_staff_session", {
+            p_user_uid: userUid,
+            p_token: sessionToken,
+            p_min_role: 0,
+          });
+          if (!error && data?.success === true) {
+            verifiedUid = userUid;
+          }
+        }
+      }
+
+      if (!verifiedUid || verifiedUid !== userUid) {
+        return json({ success: false, error: "AUTH_REQUIRED" }, 401);
+      }
+
+      const { data: tasks, error: tasksError } = await supabaseAdmin
+        .from("photography_tasks")
+        .select("id, ttl, notes, sts, ts_scheduled, ts_submit, ts_done, ts_crt")
+        .eq("requested_by", userUid)
+        .order("ts_crt", { ascending: false })
+        .limit(20);
+      if (tasksError) {
+        return json({ success: false, error: tasksError.message }, 400);
+      }
+      return json({ success: true, tasks: tasks ?? [] });
+    }
+
     const actor = await validateActor(req, supabaseAdmin, body, 3); // إدارة/موظف مكتبي
     if (!actor.ok) return actor.response;
 

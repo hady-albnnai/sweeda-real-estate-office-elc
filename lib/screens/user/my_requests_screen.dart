@@ -64,7 +64,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
         icon: const Icon(Icons.add),
         label: const Text('طلب جديد', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
-      bottomNavigationBar: const CustomBottomNavBar(currentIndex: 1),
+      bottomNavigationBar: const CustomBottomNavBar(currentIndex: 2),
     );
   }
 

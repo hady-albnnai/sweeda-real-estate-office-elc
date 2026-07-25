@@ -6,7 +6,8 @@ import '../core/theme/app_theme.dart';
 import 'e2e.dart';
 
 /// شريط التنقل السفلي الرئيسي للتطبيق
-/// للمستخدمين العاديين والوسطاء: الرئيسية، طلباتي، مواعيدي، المفضلة، حسابي
+/// للمستخدمين العاديين والوسطاء: الرئيسية، عروضي، طلباتي، مواعيدي، تصوير، حسابي
+/// (المفضلة انتقلت لأيقونة قلب في أعلى الشاشة الرئيسية)
 /// للإدارة والموظفين: مهامي، حسابي فقط
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -62,15 +63,15 @@ class CustomBottomNavBar extends StatelessWidget {
       );
     }
 
-    // المستخدمون العاديون والوسطاء: شريط كامل
+    // المستخدمون العاديون والوسطاء: شريط كامل (6 تبويبات)
     return BottomNavigationBar(
       currentIndex: currentIndex,
       type: BottomNavigationBarType.fixed,
       backgroundColor: AppTheme.scaffoldBackground,
       selectedItemColor: AppTheme.primaryGold,
       unselectedItemColor: AppTheme.textGrey,
-      selectedFontSize: 12,
-      unselectedFontSize: 11,
+      selectedFontSize: 11,
+      unselectedFontSize: 10,
       onTap: (index) {
         switch (index) {
           case 0:
@@ -80,17 +81,19 @@ class CustomBottomNavBar extends StatelessWidget {
               context.go('/user/home');
             }
             break;
-          case 1: context.go('/user/my-requests'); break;
-          case 2: context.go('/user/my-appointments'); break;
-          case 3: context.go('/user/favorites'); break;
-          case 4: context.go('/user/profile'); break;
+          case 1: context.go('/user/my-offers'); break;
+          case 2: context.go('/user/my-requests'); break;
+          case 3: context.go('/user/my-appointments'); break;
+          case 4: context.go('/user/photography'); break;
+          case 5: context.go('/user/profile'); break;
         }
       },
       items: const [
         BottomNavigationBarItem(icon: E2E(id: 'e2e_nav_home', button: true, child: Icon(Icons.home_outlined)), activeIcon: Icon(Icons.home), label: 'الرئيسية'),
+        BottomNavigationBarItem(icon: E2E(id: 'e2e_nav_offers', button: true, child: Icon(Icons.home_work_outlined)), activeIcon: Icon(Icons.home_work), label: 'عروضي'),
         BottomNavigationBarItem(icon: E2E(id: 'e2e_nav_requests', button: true, child: Icon(Icons.assignment_outlined)), activeIcon: Icon(Icons.assignment), label: 'طلباتي'),
         BottomNavigationBarItem(icon: E2E(id: 'e2e_nav_appointments', button: true, child: Icon(Icons.calendar_today_outlined)), activeIcon: Icon(Icons.calendar_today), label: 'مواعيدي'),
-        BottomNavigationBarItem(icon: E2E(id: 'e2e_nav_favorites', button: true, child: Icon(Icons.favorite_outline)), activeIcon: Icon(Icons.favorite), label: 'المفضلة'),
+        BottomNavigationBarItem(icon: E2E(id: 'e2e_nav_photography', button: true, child: Icon(Icons.photo_camera_outlined)), activeIcon: Icon(Icons.photo_camera), label: 'تصوير'),
         BottomNavigationBarItem(icon: E2E(id: 'e2e_nav_profile', button: true, child: Icon(Icons.person_outline)), activeIcon: Icon(Icons.person), label: 'حسابي'),
       ],
     );

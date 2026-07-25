@@ -169,9 +169,11 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
               );
             },
           ),
+          // المفضلة — نقلت من الشريط السفلي لأيقونة هنا (إضافة عرض صارت بتبويب عروضي)
           IconButton(
-            icon: const Icon(Icons.add_circle, color: AppTheme.primaryGold, size: 28),
-            onPressed: () => context.push('/user/add-offer'),
+            icon: const Icon(Icons.favorite_outline, color: AppTheme.primaryGold),
+            tooltip: 'المفضلة',
+            onPressed: () => context.push('/user/favorites'),
           ),
         ],
       ),

@@ -102,7 +102,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     );
                   },
                 ),
-      bottomNavigationBar: const CustomBottomNavBar(currentIndex: 3),
+      // المفضلة خرجت من الشريط السفلي — تُفتح من أيقونة القلب بالشاشة الرئيسية
+      bottomNavigationBar: const CustomBottomNavBar(currentIndex: 0),
     );
   }
 }

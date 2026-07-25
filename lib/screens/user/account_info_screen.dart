@@ -445,19 +445,8 @@ class AccountInfoScreen extends StatelessWidget {
     if (user.img.isEmpty) missingFields.add('صورة الهوية');
 
     if (missingFields.isNotEmpty) {
-      AppTheme.showSnackBar(context,
-        SnackBar(
-          content: Text(
-              'يجب إكمال البيانات التالية قبل طلب التوثيق:\n${missingFields.join('، ')}'),
-          backgroundColor: AppTheme.errorRed,
-          duration: const Duration(seconds: 4),
-          action: SnackBarAction(
-            label: 'إكمال',
-            textColor: Colors.white,
-            onPressed: () => context.push('/setup-identity'),
-          ),
-        ),
-      );
+      // توجيه مباشر لشاشة وثائق الهوية — التنويه بالمطلوب موجود داخلها بشكل ثابت
+      context.push('/setup-identity');
       return;
     }
 

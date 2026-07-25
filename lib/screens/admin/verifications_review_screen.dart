@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/user_model.dart';
@@ -246,6 +247,26 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
     );
   }
 
+  /// users.img قد يكون: مسار مفرد، أو JSON array لمسارين [أمامي, خلفي].
+  List<String> _parseIdImages(String img) {
+    final s = img.trim();
+    if (s.isEmpty) return const [];
+    if (s.startsWith('[')) {
+      try {
+        final decoded = jsonDecode(s);
+        if (decoded is List) {
+          return decoded
+              .map((e) => e.toString())
+              .where((e) => e.trim().isNotEmpty)
+              .toList();
+        }
+      } catch (_) {
+        // قيمة غير صالحة — نتعامل معها كمسار مفرد
+      }
+    }
+    return [s];
+  }
+
   Widget _buildCard(Map<String, dynamic> u) {
     final id = u['id'] as String;
     final name = (u['nm'] as String?)?.trim().isNotEmpty == true
@@ -254,6 +275,7 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
     final phone = u['ph'] as String? ?? '';
     final sid = u['sid'] as String? ?? '';
     final img = u['img'] as String? ?? '';
+    final idImages = _parseIdImages(img);
     final isBroker = (u['brk'] ?? 0) == 1;
     final role = u['role'] ?? 0;
     final brkNm = u['brk_nm'] as String? ?? '';
@@ -314,37 +336,49 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
           _infoRow(Icons.phone, 'الهاتف', phone),
           _infoRow(Icons.badge, 'الرقم الوطني', sid.isEmpty ? '—' : sid),
           const SizedBox(height: 10),
-          // ── صورة الهوية ──
-          if (img.isNotEmpty) ...[
-            // 🔒 Phase 9: للأمان، لا نُحمّل صورة الهوية تلقائياً.
+          // ── صور الهوية (أمامي + خلفي) ──
+          if (idImages.isNotEmpty) ...[
+            // 🔒 Phase 9: للأمان، لا نُحمّل صور الهوية تلقائياً.
             // الأدمن يضغط زراً يفتح signed URL مؤقت (60s).
-            InkWell(
-              onTap: () => _showIdImage(img),
-              child: Container(
-                height: 90,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: AppTheme.deepBlack,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppTheme.primaryGold),
-                ),
-                child: const Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.badge_outlined,
-                        color: AppTheme.primaryGold, size: 32),
-                    SizedBox(height: 4),
-                    Text('اضغط لعرض صورة الهوية',
-                        style: TextStyle(
-                            color: AppTheme.primaryGold,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600)),
-                    Text('(رابط مؤقت 60 ثانية)',
-                        style: TextStyle(
-                            color: AppTheme.textGrey, fontSize: 10)),
-                  ],
-                ),
-              ),
+            Row(
+              children: [
+                for (var i = 0; i < idImages.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 8),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => _showIdImage(idImages[i]),
+                      child: Container(
+                        height: 90,
+                        decoration: BoxDecoration(
+                          color: AppTheme.deepBlack,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppTheme.primaryGold),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.badge_outlined,
+                                color: AppTheme.primaryGold, size: 28),
+                            const SizedBox(height: 4),
+                            Text(
+                              idImages.length == 2
+                                  ? (i == 0 ? 'الوجه الأمامي' : 'الوجه الخلفي')
+                                  : 'صورة الهوية',
+                              style: const TextStyle(
+                                  color: AppTheme.primaryGold,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600),
+                            ),
+                            const Text('(رابط مؤقت 60 ثانية)',
+                                style: TextStyle(
+                                    color: AppTheme.textGrey, fontSize: 9)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ] else
             Container(

@@ -5,6 +5,7 @@ import '../../providers/offer_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/offer_model.dart';
 import '../../core/theme/app_theme.dart';
+import '../../widgets/bottom_nav_bar.dart';
 
 /// شاشة عروضي — تعرض كل عروض المستخدم مع فلترة بالحالة
 /// + إمكانية التعديل/الترقية/مشاهدة التفاصيل.
@@ -93,6 +94,7 @@ class _MyOffersScreenState extends State<MyOffersScreen>
           if (mounted) _refresh();
         },
       ),
+      bottomNavigationBar: const CustomBottomNavBar(currentIndex: 1),
       body: _loading
           ? const Center(
               child: CircularProgressIndicator(color: AppTheme.primaryGold),

@@ -356,6 +356,132 @@ serve(async (req) => {
       return json(typeof data === "object" && data !== null ? data : { success: data === true });
     }
 
+    // 🔒 رفع وثائق الهوية (رقم وطني + صورة أمامية/خلفية) عبر service_role —
+    // الرفع المباشر من العميل لـ ids_private محظور بـ RLS لأن المستخدمين
+    // يعملون بجلسات مخصصة (staff_session_token) لا بجلسة Supabase Auth.
+    if (action === "upload_id_images") {
+      const sid = (body.sid ?? "").toString().trim();
+      const frontB64 = (body.front_b64 ?? body.frontBase64 ?? "").toString();
+      const backB64 = (body.back_b64 ?? body.backBase64 ?? "").toString();
+
+      if (!sid) return json({ success: false, error: "SID_REQUIRED" }, 400);
+      if (sid.length > 30) return json({ success: false, error: "SID_TOO_LONG" }, 400);
+      if (!frontB64 && !backB64) {
+        return json({ success: false, error: "IMAGES_REQUIRED" }, 400);
+      }
+
+      // الصور الحالية — تُدمج مع الجديدة وتُحذف المستبدلة بعد النجاح
+      const { data: currentUser, error: currentUserError } = await supabaseAdmin
+        .from("users")
+        .select("img")
+        .eq("id", uid)
+        .eq("i_del", 0)
+        .maybeSingle();
+      if (currentUserError) return json({ success: false, error: currentUserError.message }, 400);
+      if (!currentUser) return json({ success: false, error: "USER_NOT_FOUND" }, 404);
+
+      const parseImgPaths = (img: unknown): { front: string | null; back: string | null } => {
+        const s = (img ?? "").toString().trim();
+        if (!s) return { front: null, back: null };
+        if (s.startsWith("[")) {
+          try {
+            const arr = JSON.parse(s);
+            if (Array.isArray(arr)) {
+              return {
+                front: arr[0]?.toString() ?? null,
+                back: arr[1]?.toString() ?? null,
+              };
+            }
+          } catch { /* قيمة غير صالحة — نتعامل معها كمسار مفرد */ }
+        }
+        return { front: s, back: null };
+      };
+      const oldPaths = parseImgPaths(currentUser.img);
+
+      // التأكد من وجود bucket خاص (يدرأ فشل "bucket not found" إن لم تُطبق الهجرة)
+      const { error: bucketCheckError } = await supabaseAdmin.storage.getBucket("ids_private");
+      if (bucketCheckError) {
+        const { error: createBucketError } = await supabaseAdmin.storage.createBucket(
+          "ids_private",
+          { public: false },
+        );
+        if (createBucketError) {
+          return json({ success: false, error: `BUCKET_UNAVAILABLE: ${createBucketError.message}` }, 400);
+        }
+      }
+
+      const contentTypeFor = (ext: string): string =>
+        ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg";
+      const safeExt = (ext: string): string =>
+        ext === "png" || ext === "webp" ? ext : "jpg";
+
+      const uploads: Array<{ key: "front" | "back"; b64: string; ext: string }> = [];
+      if (frontB64) uploads.push({ key: "front", b64: frontB64, ext: (body.front_ext ?? "jpg").toString().toLowerCase() });
+      if (backB64) uploads.push({ key: "back", b64: backB64, ext: (body.back_ext ?? "jpg").toString().toLowerCase() });
+
+      const newPaths: Record<string, string> = {};
+      const ts = Date.now();
+      for (const up of uploads) {
+        if (up.b64.length > 14_000_000) {
+          return json({ success: false, error: "IMAGE_TOO_LARGE" }, 400);
+        }
+        let bytes: Uint8Array;
+        try {
+          bytes = Uint8Array.from(atob(up.b64), (c) => c.charCodeAt(0));
+        } catch {
+          return json({ success: false, error: "INVALID_IMAGE_DATA" }, 400);
+        }
+        if (bytes.length === 0) {
+          return json({ success: false, error: "EMPTY_IMAGE" }, 400);
+        }
+        const path = `${uid}/id_${up.key}_${ts}.${safeExt(up.ext)}`;
+        const { error: uploadError } = await supabaseAdmin.storage
+          .from("ids_private")
+          .upload(path, bytes, {
+            contentType: contentTypeFor(up.ext),
+            cacheControl: "3600",
+            upsert: true,
+          });
+        if (uploadError) {
+          return json({ success: false, error: `ID_UPLOAD_FAILED: ${uploadError.message}` }, 400);
+        }
+        newPaths[up.key] = path;
+      }
+
+      // دمج مع المسارات القديمة — الوجه غير المُعاد رفعه يبقى كما هو
+      const finalFront = newPaths.front ?? oldPaths.front;
+      const finalBack = newPaths.back ?? oldPaths.back;
+      const storedImg = finalFront && finalBack
+        ? JSON.stringify([finalFront, finalBack])
+        : (finalFront ?? finalBack ?? "");
+
+      const { error: updateError } = await supabaseAdmin
+        .from("users")
+        .update({ sid, img: storedImg, ts_upd: new Date().toISOString() })
+        .eq("id", uid)
+        .eq("i_del", 0);
+      if (updateError) {
+        return json({ success: false, error: `SAVE_FAILED: ${updateError.message}` }, 400);
+      }
+
+      // حذف الصور القديمة المستبدلة بعد نجاح الحفظ
+      const toDelete: string[] = [];
+      if (newPaths.front && oldPaths.front && oldPaths.front !== newPaths.front) {
+        toDelete.push(oldPaths.front);
+      }
+      if (newPaths.back && oldPaths.back && oldPaths.back !== newPaths.back) {
+        toDelete.push(oldPaths.back);
+      }
+      if (toDelete.length > 0) {
+        await supabaseAdmin.storage.from("ids_private").remove(toDelete);
+      }
+
+      return json({
+        success: true,
+        paths: [finalFront, finalBack].filter(Boolean),
+      });
+    }
+
     if (action === "get_device_tokens") {
       const { data, error } = await supabaseAdmin.rpc("get_user_device_tokens", { p_uid: uid });
       if (error) return json({ success: false, error: error.message }, 400);

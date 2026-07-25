@@ -31,6 +31,7 @@ class PermissionKeys {
   static const userOffers = 'user_offers';
   static const userRequests = 'user_requests';
   static const userAppointments = 'user_appointments';
+  static const userPhotography = 'user_photography';
   static const userProfile = 'user_profile';
 }
 
@@ -101,6 +102,7 @@ class PermissionService {
     AppPermission(key: PermissionKeys.userOffers, title: 'عروضي', group: 'المستخدم', minimumRoleForDefault: UserRole.user),
     AppPermission(key: PermissionKeys.userRequests, title: 'طلباتي', group: 'المستخدم', minimumRoleForDefault: UserRole.user),
     AppPermission(key: PermissionKeys.userAppointments, title: 'مواعيدي', group: 'المستخدم', minimumRoleForDefault: UserRole.user),
+    AppPermission(key: PermissionKeys.userPhotography, title: 'خدمة التصوير', group: 'المستخدم', minimumRoleForDefault: UserRole.user),
     AppPermission(key: PermissionKeys.userProfile, title: 'الملف الشخصي', group: 'المستخدم', minimumRoleForDefault: UserRole.user),
   ];
 
