@@ -75,6 +75,8 @@ class _AdminSectionsScreenState extends State<AdminSectionsScreen> {
                     _tile(Icons.admin_panel_settings_outlined, 'الصلاحيات', '/admin/permissions'),
                   if (PermissionService.has(user, PermissionKeys.officeOperations))
                     _tile(Icons.support_agent_outlined, 'عمليات المكتب', '/admin/office-operations'),
+                  if (PermissionService.has(user, PermissionKeys.addOfferAdmin))
+                    _tile(Icons.add_home_work, 'إضافة عرض', '/admin/add-offer'),
                 ]),
                 _section('المراجعات والرقابة', [
                   if (PermissionService.has(user, PermissionKeys.reviewOffers))

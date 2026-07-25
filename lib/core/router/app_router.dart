@@ -98,7 +98,7 @@ class AppRouter {
     if (path == '/admin/permissions') return PermissionKeys.managePermissions;
     if (path.startsWith('/admin/users') || path.startsWith('/admin/user/')) return PermissionKeys.manageUsers;
     if (path == '/admin/review-offers') return PermissionKeys.reviewOffers;
-    if (path == '/admin/add-offer')   return PermissionKeys.reviewOffers;
+    if (path == '/admin/add-offer')   return PermissionKeys.addOfferAdmin;
     if (path == '/admin/requests')    return PermissionKeys.manageRequests;
     if (path == '/admin/review-verifications') return PermissionKeys.reviewVerifications;
     if (path == '/admin/media-review') return PermissionKeys.mediaReview;

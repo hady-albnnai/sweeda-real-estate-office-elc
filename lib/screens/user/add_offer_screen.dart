@@ -228,17 +228,111 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
 
   void _snack(String m) => AppTheme.showSnackBar(context, SnackBar(content: Text(m)));
 
+  /// آخر خطوة فعلياً: للسيارة 4 خطوات (بدون معاينة) وللعقار 5
+  int get _lastStep => _selectedType == 1 ? 3 : 4;
+
+  /// بناء عناصر dropdown رقمية المفاتيح بأمان — يتجاهل المفاتيح غير الرقمية
+  /// والمكررة بدل ما يرمي FormatException ويجمّد الشاشة كلها
+  List<DropdownMenuItem<int>> _intDropdownItems(Map<dynamic, dynamic> m) {
+    final items = <DropdownMenuItem<int>>[];
+    final seen = <int>{};
+    for (final e in m.entries) {
+      final k = int.tryParse(e.key.toString());
+      if (k == null || !seen.add(k)) continue;
+      items.add(DropdownMenuItem<int>(value: k, child: Text(e.value.toString())));
+    }
+    return items;
+  }
+
+  /// استخراج التصنيفات الفرعية بأمان — يدعم List و Map (داتا قديمة/مشوهة)
+  List<dynamic> _subListOf(Map<dynamic, dynamic> cats, int mainCat) {
+    final main = cats[mainCat.toString()];
+    if (main is Map) {
+      final s = main['sub'] ?? main['children'];
+      if (s is List) return s;
+      if (s is Map) return s.values.toList();
+    }
+    return const [];
+  }
+
+  /// اسم التصنيف الرئيسي بأمان مهما كان شكل القيمة (Map أو نص)
+  String _mainCatName(dynamic v) {
+    if (v is Map) return v['nm']?.toString() ?? v.toString();
+    return v.toString();
+  }
+
+  /// صندوق تحذير عند فشل تحميل قسم من الإعدادات + زر إعادة التحميل
+  Widget _warnBox(String msg) => Container(
+        margin: const EdgeInsets.only(top: 8),
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.red.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.red.withOpacity(0.35)),
+        ),
+        child: Row(children: [
+          const Icon(Icons.error_outline, color: Colors.redAccent, size: 16),
+          const SizedBox(width: 8),
+          Expanded(child: Text(msg, style: const TextStyle(color: Colors.redAccent, fontSize: 12))),
+          TextButton(
+            onPressed: () => context.read<ConfigProvider>().loadConfig(force: true),
+            child: const Text('إعادة التحميل', style: TextStyle(fontSize: 12)),
+          ),
+        ]),
+      );
+
+  /// أزرار تنقّل واضحة بين الخطوات (كانت مفقودة — التنقل كان بالضغط على
+  /// عنوان الخطوة فقط فوُهم أن الشاشة "لا تعمل" بعد تبويب الأساسيات)
+  Widget _navRow({VoidCallback? onBack, VoidCallback? onNext}) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Row(children: [
+        if (onBack != null)
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: onBack,
+              icon: const Icon(Icons.arrow_forward, size: 16),
+              label: const Text('رجوع'),
+            ),
+          ),
+        if (onBack != null && onNext != null) const SizedBox(width: 10),
+        if (onNext != null)
+          Expanded(
+            flex: 2,
+            child: ElevatedButton.icon(
+              onPressed: onNext,
+              icon: const Icon(Icons.arrow_back, size: 16),
+              label: const Text('التالي', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ),
+      ]),
+    );
+  }
+
+  /// تحقق الحد الأدنى قبل مغادرة خطوة الأساسيات
+  bool _validateBasics() {
+    if (_selectedType == null) { _snack('اختر نوع العرض (عقار / سيارة) أولاً'); return false; }
+    if (_selectedTrans == null) { _snack('اختر نوع المعاملة (بيع / إيجار) أولاً'); return false; }
+    if (_selectedMainCat == null) { _snack('اختر التصنيف الرئيسي أولاً'); return false; }
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('إضافة عرض جديد'), backgroundColor: Colors.transparent),
       body: Stack(children: [
-        Stepper(
-          type: StepperType.vertical, currentStep: _currentStep,
-          onStepTapped: (s) => setState(() => _currentStep = s),
-          controlsBuilder: (context, details) => const SizedBox.shrink(),
-          steps: [_step1(), _step2(), _step3(), if (_selectedType != 1) _stepAvl(), _step4()],
-        ),
+        Builder(builder: (context) {
+          final steps = [_step1(), _step2(), _step3(), if (_selectedType != 1) _stepAvl(), _step4()];
+          // حماية من RangeError: التبديل عقار (5 خطوات) → سيارة (4) وأنت بآخر خطوة
+          final current = _currentStep.clamp(0, steps.length - 1);
+          return Stepper(
+            type: StepperType.vertical, currentStep: current,
+            onStepTapped: (s) => setState(() => _currentStep = s),
+            controlsBuilder: (context, details) => const SizedBox.shrink(),
+            steps: steps,
+          );
+        }),
         if (_submitting)
           Container(
             color: Colors.black.withOpacity(0.82),
@@ -286,12 +380,20 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   }
 
   Step _step1() {
-    final config = context.read<ConfigProvider>().config;
+    // watch وليس read: التصنيفات تصل من السيرفر بعد فتح الشاشة — بدون watch
+    // تبقى القوائم فارغة حتى أول تفاعل من المستخدم
+    final config = context.watch<ConfigProvider>().config;
     final cityItems = (config?.locations ?? const []).map((e) => DropdownMenuItem<String>(value: e.toString(), child: Text(e.toString()))).toList();
     cityItems.add(const DropdownMenuItem(value: _customCityOption, child: Text('آخر (إدخال حر)')));
 
     final Map<String, dynamic> catsSource = _selectedType == 1 ? (config?.vehicleCategories ?? const {}) : (config?.propertyCategories ?? const {});
-    final mainCatItems = catsSource.entries.map((e) => DropdownMenuItem<int>(value: int.tryParse(e.key), child: Text(e.value['nm']?.toString() ?? ''))).toList();
+    final mainCatItems = <DropdownMenuItem<int>>[];
+    final seenCatKeys = <int>{};
+    for (final e in catsSource.entries) {
+      final k = int.tryParse(e.key.toString());
+      if (k == null || !seenCatKeys.add(k)) continue;
+      mainCatItems.add(DropdownMenuItem<int>(value: k, child: Text(_mainCatName(e.value))));
+    }
 
     return Step(
       title: const Text('الأساسيات', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
@@ -300,13 +402,14 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         const SizedBox(height: 15),
         _dd('نوع المعاملة', ['بيع', 'إيجار'], (v) => setState(() => _selectedTrans = v == 'بيع' ? 0 : 1)),
         const SizedBox(height: 15),
-        DropdownButtonFormField<int>(value: _selectedMainCat, items: mainCatItems, onChanged: (v) => setState(() { _selectedMainCat = v; _selectedSubCat = null; }), decoration: const InputDecoration(labelText: 'التصنيف الرئيسي', border: OutlineInputBorder())),
+        DropdownButtonFormField<int>(value: _selectedMainCat, items: mainCatItems, onChanged: mainCatItems.isEmpty ? null : (v) => setState(() { _selectedMainCat = v; _selectedSubCat = null; }), decoration: const InputDecoration(labelText: 'التصنيف الرئيسي', border: OutlineInputBorder())),
+        if (mainCatItems.isEmpty) _warnBox('تعذّر تحميل التصنيفات من السيرفر'),
         const SizedBox(height: 15),
         if (_selectedMainCat != null)
            DropdownButtonFormField<int>(
              value: _selectedSubCat,
              items: [
-               ...((catsSource[_selectedMainCat.toString()]?['sub'] as List? ?? []).asMap().entries.map((e) => DropdownMenuItem<int>(value: e.key, child: Text(e.value.toString())))),
+               ...(_subListOf(catsSource, _selectedMainCat!).asMap().entries.map((e) => DropdownMenuItem<int>(value: e.key, child: Text(e.value.toString())))),
                const DropdownMenuItem(value: -1, child: Text('آخر'))
              ],
              onChanged: (v) => setState(() => _selectedSubCat = v),
@@ -327,7 +430,16 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           TextField(controller: _carBrandCtrl, decoration: const InputDecoration(labelText: 'الماركة (إلزامي)', hintText: 'كيا، تويوتا، مرسيدس...', border: OutlineInputBorder())),
           const SizedBox(height: 10),
           TextField(controller: _carModelCtrl, decoration: const InputDecoration(labelText: 'الموديل (إلزامي)', hintText: 'سيراتو، لاندكروزر، أكسنت...', border: OutlineInputBorder())),
+          const SizedBox(height: 10),
+          // المحافظة — كانت حقلاً يتيمًا (لا ويدجت تعبئه) فتُحفظ سيارة بلا موقع
+          DropdownButtonFormField<String>(
+            value: _carGovernorate,
+            items: (config?.locations ?? const []).map((e) => DropdownMenuItem<String>(value: e.toString(), child: Text(e.toString()))).toList(),
+            onChanged: (v) => setState(() => _carGovernorate = v),
+            decoration: const InputDecoration(labelText: 'المحافظة', border: OutlineInputBorder()),
+          ),
         ],
+        _navRow(onNext: () { if (_validateBasics()) setState(() => _currentStep = 1); }),
       ]),
       isActive: _currentStep >= 0,
     );
@@ -372,6 +484,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         const SizedBox(height: 8),
         LocationPicker(initial: _pickedLocation, onPicked: (loc) => setState(() => _pickedLocation = loc), height: 250),
       ],
+      _navRow(onBack: () => setState(() => _currentStep = 0), onNext: () => setState(() => _currentStep = 2)),
     ]),
     isActive: _currentStep >= 1,
   );
@@ -386,6 +499,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       const Text('🎬 فيديو العرض (اختياري)', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 13)),
       const SizedBox(height: 8),
       OutlinedButton.icon(onPressed: _openWhatsAppVideoGroup, icon: const Icon(Icons.video_library), label: const Text('إرسال فيديو عبر واتساب المكتب')),
+      _navRow(onBack: () => setState(() => _currentStep = 1), onNext: () => setState(() => _currentStep = 3)),
     ]),
     isActive: _currentStep >= 2,
   );
@@ -441,6 +555,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           );
         }),
       ],
+      _navRow(onBack: () => setState(() => _currentStep = 2), onNext: () => setState(() => _currentStep = 4)),
     ]),
     isActive: _currentStep >= 3,
   );
@@ -461,11 +576,14 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     final Map<String, dynamic> rawCarDocTp = config?.carDocumentTypes ?? const {};
     final Map<String, dynamic> rawPlateTp = config?.plateTypes ?? const {};
 
-    // فلترة السندات لمنع تداخل السيارات بالعقارات
+    // فلترة السندات لمنع تداخل السيارات بالعقارات — بقراءة آمنة بدون int.parse
+    // (المفاتيح غير الرقمية كانت ترمي FormatException أثناء build فتجمّد الشاشة كلها)
     final propertyDocs = rawDocTp.entries
-        .where((e) => int.tryParse(e.key) != null && int.parse(e.key) < 6)
-        .map((e) => DropdownMenuItem<int>(value: int.parse(e.key), child: Text(e.value.toString())))
+        .where((e) => (int.tryParse(e.key.toString()) ?? 99) < 6)
+        .map((e) => DropdownMenuItem<int>(value: int.parse(e.key.toString()), child: Text(e.value.toString())))
         .toList();
+    final carDocs = _intDropdownItems(rawCarDocTp);
+    final plateTypes = _intDropdownItems(rawPlateTp);
 
     return Step(
       title: const Text('السند والعمولة', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
@@ -473,15 +591,18 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         if (_selectedType == 1) ...[
           const Text('سند ملكية السيارة (إلزامي)', style: TextStyle(color: AppTheme.primaryGold, fontSize: 13, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
-          DropdownButtonFormField<int>(value: _selectedCarDocType, items: rawCarDocTp.entries.map((e) => DropdownMenuItem(value: int.parse(e.key), child: Text(e.value.toString()))).toList(), onChanged: (v) => setState(() { _selectedCarDocType = v; _selectedDocType = v; }), decoration: const InputDecoration(border: OutlineInputBorder())),
+          DropdownButtonFormField<int>(value: _selectedCarDocType, items: carDocs, onChanged: carDocs.isEmpty ? null : (v) => setState(() { _selectedCarDocType = v; _selectedDocType = v; }), decoration: const InputDecoration(border: OutlineInputBorder())),
+          if (carDocs.isEmpty) _warnBox('أنواع سندات السيارات غير محمّلة من السيرفر'),
           const SizedBox(height: 12),
           const Text('نوع النمرة (إلزامي)', style: TextStyle(color: AppTheme.primaryGold, fontSize: 13, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
-          DropdownButtonFormField<int>(value: _selectedPlateType, items: rawPlateTp.entries.map((e) => DropdownMenuItem(value: int.parse(e.key), child: Text(e.value.toString()))).toList(), onChanged: (v) => setState(() => _selectedPlateType = v), decoration: const InputDecoration(border: OutlineInputBorder())),
+          DropdownButtonFormField<int>(value: _selectedPlateType, items: plateTypes, onChanged: plateTypes.isEmpty ? null : (v) => setState(() => _selectedPlateType = v), decoration: const InputDecoration(border: OutlineInputBorder())),
+          if (plateTypes.isEmpty) _warnBox('أنواع النمر غير محمّلة من السيرفر'),
         ] else ...[
           const Text('سند ملكية العقار (إلزامي)', style: TextStyle(color: AppTheme.primaryGold, fontSize: 13, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
-          DropdownButtonFormField<int>(value: _selectedDocType, items: propertyDocs, onChanged: (v) => setState(() => _selectedDocType = v), decoration: const InputDecoration(border: OutlineInputBorder())),
+          DropdownButtonFormField<int>(value: _selectedDocType, items: propertyDocs, onChanged: propertyDocs.isEmpty ? null : (v) => setState(() => _selectedDocType = v), decoration: const InputDecoration(border: OutlineInputBorder())),
+          if (propertyDocs.isEmpty) _warnBox('أنواع سندات الملكية غير محمّلة من السيرفر'),
         ],
         const SizedBox(height: 15),
         const Text('صورة سند الملكية (اختياري)', style: TextStyle(color: AppTheme.primaryGold, fontSize: 13, fontWeight: FontWeight.bold)),
@@ -526,9 +647,11 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         ),
 
         const SizedBox(height: 10),
+        _navRow(onBack: () => setState(() => _currentStep = _selectedType == 1 ? 2 : 3)),
+        const SizedBox(height: 4),
         SizedBox(width: double.infinity, height: 55, child: ElevatedButton(onPressed: _submitting ? null : _submit, child: const Text('نشر العرض للمراجعة الآن', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)))),
       ]),
-      isActive: _currentStep >= 4,
+      isActive: _currentStep >= _lastStep,
     );
   }
 
