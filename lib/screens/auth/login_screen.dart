@@ -122,7 +122,10 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _loading = true);
     final ok = await context.read<AuthProvider>().sendEmailMagicLink(_emailCtrl.text.trim());
     if (mounted) setState(() => _loading = false);
-    if (ok) context.push('/check-email');
+    if (ok) {
+      _snack('تم إرسال الرابط — إذا لم تجده خلال دقيقة افحص البريد غير المرغوب فيه');
+      if (mounted) context.push('/check-email');
+    }
   }
 
   void _snack(String m) => AppTheme.showSnackBar(context, SnackBar(content: Text(m)));
@@ -187,7 +190,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 _buildOption(
                   id: 2, title: 'عن طريق الإيميل', icon: Icons.alternate_email,
                   child: Column(children: [
-                    const Text('سيصلك رابط تفعيل إلى بريدك الإلكتروني', style: TextStyle(color: Colors.black87, fontSize: 11)),
+                    const Text(
+                      'سيصلك رابط تفعيل إلى بريدك الإلكتروني. إذا لم يظهر في الوارد خلال دقيقة افحص Spam / البريد غير المرغوب فيه.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.black87, fontSize: 11, height: 1.4),
+                    ),
                     const SizedBox(height: 12),
                     _input(_emailCtrl, 'example@mail.com', Icons.email_outlined, dark: true),
                     const SizedBox(height: 12),

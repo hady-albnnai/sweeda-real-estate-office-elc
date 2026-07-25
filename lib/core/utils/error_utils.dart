@@ -16,6 +16,11 @@ class ErrorUtils {
       'UNAUTHORIZED',
       'NOT_AUTHORIZED',
       'AUTH_MISMATCH',
+      'AUTH_TOKEN_REQUIRED',
+      'AUTH_TOKEN_INVALID',
+      'UNAUTHORIZED_ACCESS',
+      'EMAIL_ALREADY_LINKED_TO_DIFFERENT_AUTH_USER',
+      'PHONE_ALREADY_EXISTS',
       'USER_NOT_FOUND',
       'USER_NOT_FOUND_OR_INACTIVE',
       'USER_INACTIVE',
@@ -64,7 +69,12 @@ class ErrorUtils {
       case 'NOT_AUTHORIZED':
         return 'ليست لديك صلاحية لتنفيذ هذه العملية.';
       case 'AUTH_MISMATCH':
-        return 'جلسة المستخدم لا تطابق منفذ العملية.';
+      case 'AUTH_TOKEN_REQUIRED':
+      case 'AUTH_TOKEN_INVALID':
+      case 'UNAUTHORIZED_ACCESS':
+        return 'جلسة المستخدم غير صالحة أو انتهت. أعد تسجيل الدخول.';
+      case 'EMAIL_ALREADY_LINKED_TO_DIFFERENT_AUTH_USER':
+        return 'هذا البريد مربوط بحساب آخر. استخدم بريدًا آخر أو سجّل دخولك بالحساب الموجود.';
       case 'USER_NOT_FOUND':
       case 'USER_NOT_FOUND_OR_INACTIVE':
         return 'المستخدم غير موجود أو غير نشط.';
@@ -81,6 +91,7 @@ class ErrorUtils {
       case 'INVALID_STATUS':
         return 'حالة الحساب غير صالحة.';
       case 'PHONE_EXISTS':
+      case 'PHONE_ALREADY_EXISTS':
         return 'رقم الهاتف مستخدم مسبقاً.';
       case 'PHONE_REQUIRED':
         return 'رقم الهاتف مطلوب.';

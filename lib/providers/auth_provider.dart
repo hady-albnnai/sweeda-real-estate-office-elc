@@ -182,6 +182,9 @@ class AuthProvider with ChangeNotifier {
       _currentEmail = email;
       _channel = AuthChannel.email;
       final result = await AuthService().sendEmailMagicLink(email);
+      if (result['success'] == true) {
+        _lastError = null;
+      }
       if (result['success'] != true) {
         final err = result['error']?.toString() ?? '';
         if (err == 'EMAIL_ALREADY_REGISTERED') {
@@ -216,6 +219,7 @@ class AuthProvider with ChangeNotifier {
 
       final result = await AuthService().handleEmailSession();
       if (result['success'] == true) {
+        _lastError = null;
         final serverSaysNew = result['isNewUser'] as bool? ?? false;
         await _loadUserData(result['userId'] as String);
         _isNewUser = serverSaysNew ||
@@ -224,10 +228,16 @@ class AuthProvider with ChangeNotifier {
         notifyListeners();
         return true;
       }
+      _lastError = ErrorUtils.arabicMessage(
+        Exception(result['error']?.toString() ?? 'EMAIL_AUTH_FAILED'),
+      );
       _emailSessionHandled = false; // السماح بإعادة المحاولة عند الفشل
+      notifyListeners();
       return false;
     } catch (e) {
+      _lastError = ErrorUtils.arabicMessage(e);
       _emailSessionHandled = false; // السماح بإعادة المحاولة عند الخطأ
+      notifyListeners();
       return false;
     }
   }

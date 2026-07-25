@@ -154,7 +154,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() => _isBusy = false);
     }
     if (ok) {
-      _snack('تم إرسال رابط التفعيل لبريدك');
+      _snack('تم إرسال الرابط — إذا لم تجده خلال دقيقة افحص البريد غير المرغوب فيه');
       context.push('/check-email');
     } else {
       _snack('فشل إرسال رابط الإيميل');
@@ -244,7 +244,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ])),
                   const SizedBox(height: 12),
                   _buildInnerOption(id: 2, title: 'تسجيل عن طريق الإيميل', icon: Icons.alternate_email, child: Column(children: [
-                    const Text('سيصلك رابط تفعيل إلى بريدك الإلكتروني', style: TextStyle(color: Colors.black87, fontSize: 11)),
+                    const Text(
+                      'سيصلك رابط تفعيل إلى بريدك الإلكتروني. إذا لم يظهر في الوارد خلال دقيقة افحص Spam / البريد غير المرغوب فيه.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.black87, fontSize: 11, height: 1.4),
+                    ),
                     const SizedBox(height: 12),
                     _buildInput(_signupEmailCtrl, 'example@mail.com', Icons.email_outlined, dark: true),
                     const SizedBox(height: 12),

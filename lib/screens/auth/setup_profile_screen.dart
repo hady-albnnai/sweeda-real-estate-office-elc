@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -29,6 +31,9 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
   bool _usernameAvailable = false;
   bool _checkingUsername = false;
   bool _checkFailed = false;
+  String? _usernameInputError;
+  Timer? _usernameDebounce;
+  int _usernameCheckSerial = 0;
 
   @override
   void initState() {
@@ -42,6 +47,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
 
   @override
   void dispose() {
+    _usernameDebounce?.cancel();
     _nameController.dispose();
     _phoneController.dispose();
     _usernameController.dispose();
@@ -50,12 +56,60 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
     super.dispose();
   }
 
-  /// فحص توفر اسم المستخدم لحظياً
-  Future<void> _checkUsername() async {
-    final usr = _usernameController.text.trim().toLowerCase();
-    if (usr.length < 3) {
+  /// تنظيف اسم المستخدم أثناء الكتابة.
+  /// يمنع الفراغات عملياً حتى لو وصلت عبر لصق النص، ويحوّل الأحرف اللاتينية
+  /// إلى lowercase حتى يكون الفحص والحفظ بنفس القيمة التي يراها المستخدم.
+  void _onUsernameChanged(String value) {
+    final hadWhitespace = RegExp(r'\s').hasMatch(value);
+    final cleaned = value.replaceAll(RegExp(r'\s+'), '').toLowerCase();
+
+    if (cleaned != value) {
+      final oldOffset = _usernameController.selection.baseOffset;
+      final safeOffset = oldOffset < 0 ? value.length : oldOffset.clamp(0, value.length).toInt();
+      final removedBeforeCursor = RegExp(r'\s')
+          .allMatches(value.substring(0, safeOffset))
+          .length;
+      final newOffset = (safeOffset - removedBeforeCursor).clamp(0, cleaned.length).toInt();
+      _usernameController.value = TextEditingValue(
+        text: cleaned,
+        selection: TextSelection.collapsed(offset: newOffset),
+      );
+    }
+
+    final username = cleaned.trim();
+    final localError = username.isEmpty ? null : InputValidators.validateUsername(username);
+
+    _usernameDebounce?.cancel();
+    _usernameCheckSerial++;
+
+    setState(() {
+      _usernameInputError = localError;
+      _usernameAvailable = false;
+      _checkFailed = false;
+      _checkingUsername = false;
+    });
+
+    if (hadWhitespace) {
+      _snack('لا يسمح بالفراغات داخل اسم المستخدم — تم حذفها تلقائياً');
+    }
+
+    if (username.length < 3 || localError != null) return;
+
+    _usernameDebounce = Timer(
+      const Duration(milliseconds: 450),
+      () => _checkUsername(username),
+    );
+  }
+
+  /// فحص توفر اسم المستخدم لحظياً بعد تحقق القواعد المحلية.
+  Future<void> _checkUsername(String username) async {
+    if (!mounted) return;
+    final usr = username.trim().toLowerCase();
+    final localError = InputValidators.validateRequiredUsername(usr);
+    if (localError != null) {
       if (mounted) {
         setState(() {
+          _usernameInputError = localError;
           _usernameAvailable = false;
           _checkFailed = false;
           _checkingUsername = false;
@@ -63,23 +117,29 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
       }
       return;
     }
+
+    final requestSerial = ++_usernameCheckSerial;
     setState(() {
       _checkingUsername = true;
       _checkFailed = false;
     });
     try {
-      final res = await SupabaseService().invokeFunction('user-account', body: {'action': 'check_username', 'username': usr});
+      final res = await SupabaseService().invokeFunction(
+        'user-account',
+        body: {'action': 'check_username', 'username': usr},
+      );
       final data = res.data is Map ? Map<String, dynamic>.from(res.data) : null;
       final ok = data != null && data['success'] == true && data['available'] == true;
-      if (mounted) {
+      if (mounted && requestSerial == _usernameCheckSerial) {
         setState(() {
           _usernameAvailable = ok;
           _checkFailed = false;
           _checkingUsername = false;
+          _usernameInputError = null;
         });
       }
     } catch (_) {
-      if (mounted) {
+      if (mounted && requestSerial == _usernameCheckSerial) {
         setState(() {
           _usernameAvailable = false;
           _checkFailed = true;
@@ -104,12 +164,31 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
       return;
     }
 
+    final auth = context.read<AuthProvider>();
+    final user = auth.userModel;
+    if (user == null) {
+      _snack('انتهت صلاحية الجلسة، أعد تسجيل الدخول');
+      return;
+    }
+
     // 3) اسم المستخدم
     final username = _usernameController.text.trim().toLowerCase();
     final usernameError = InputValidators.validateRequiredUsername(username);
     if (usernameError != null) {
       _snack(usernameError);
       return;
+    }
+    if (_usernameInputError != null) {
+      _snack(_usernameInputError!);
+      return;
+    }
+    if (_checkingUsername) {
+      _snack('انتظر لحظة حتى يكتمل فحص اسم المستخدم');
+      return;
+    }
+    if (!_usernameAvailable) {
+      await _checkUsername(username);
+      if (!mounted) return;
     }
     if (_checkFailed) {
       _snack('تعذر التحقق من توفر اسم المستخدم، يرجى فحص الاتصال بالإنترنت');
@@ -152,15 +231,21 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
     if (save != true) return;
 
     setState(() => _loading = true);
-    final auth = context.read<AuthProvider>();
-    final user = auth.userModel;
-    if (user == null) {
-      setState(() => _loading = false);
-      _snack('انتهت صلاحية الجلسة، أعد تسجيل الدخول');
-      return;
-    }
 
     try {
+      // فحص مبكر لمنع رسالة عامة عند استخدام رقم مسجل لحساب آخر.
+      final phoneCheckRes = await SupabaseService().invokeFunction(
+        'user-account',
+        body: {'action': 'check_phone_exists', 'phone': phone},
+      );
+      final phoneCheck = phoneCheckRes.data is Map
+          ? Map<String, dynamic>.from(phoneCheckRes.data)
+          : null;
+      final phoneOwner = phoneCheck?['user_id']?.toString();
+      if (phoneCheck?['exists'] == true && phoneOwner != null && phoneOwner != user.uid) {
+        throw Exception('PHONE_ALREADY_EXISTS');
+      }
+
       // خطوة 1: حفظ الاسم والهاتف
       final profileRes = await SupabaseService().invokeFunction('user-account', body: {
         'action': 'update_profile',
@@ -205,6 +290,8 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
       final msg = e.toString();
       if (msg.contains('USERNAME_TAKEN')) {
         _snack('اسم المستخدم محجوز، اختر اسماً آخر');
+      } else if (msg.contains('PHONE_ALREADY_EXISTS') || msg.contains('users_unique_phone_active') || msg.contains('duplicate key')) {
+        _snack('رقم الهاتف مستخدم في حساب آخر — استخدم رقمك غير المسجل أو سجّل دخولك بالحساب الموجود');
       } else if (msg.contains('PASSWORD_TOO_SHORT') || msg.contains('6') || msg.contains('8')) {
         _snack('كلمة المرور قصيرة، يجب أن تكون 8 أحرف على الأقل');
       } else if (msg.contains('USERNAME_INVALID_CHARS')) {
@@ -213,8 +300,10 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
         _snack('اسم المستخدم يجب أن يكون بين 3 و 30 حرفاً');
       } else if (msg.contains('PHONE_INVALID') || msg.contains('PHONE_REQUIRED')) {
         _snack('رقم الهاتف غير صالح');
-      } else if (msg.contains('AUTH_TOKEN_REQUIRED') || msg.contains('401') || msg.contains('403')) {
-        _snack('انتهت صلاحية الجلسة، الرجاء إعادة تسجيل الدخول');
+      } else if (msg.contains('AUTH_UID_MISMATCH') || msg.contains('UNAUTHORIZED_ACCESS') || msg.contains('AUTH_TOKEN_REQUIRED') || msg.contains('AUTH_TOKEN_INVALID') || msg.contains('401') || msg.contains('403')) {
+        _snack('انتهت صلاحية جلسة الرابط السحري، الرجاء إعادة إرسال الرابط وفتحه من نفس الجهاز');
+      } else if (msg.contains('USER_NOT_FOUND')) {
+        _snack('تعذر العثور على الحساب، أعد فتح رابط التفعيل أو سجّل من جديد');
       } else {
         _snack('حدث خطأ أثناء إعداد الحساب، حاول مرة أخرى');
       }
@@ -342,7 +431,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                       fontSize: 13)),
               const SizedBox(height: 4),
               const Text(
-                'أحرف عربية أو إنجليزية + أرقام + _ + . (3–30 حرف)',
+                'بدون فراغات — أحرف عربية أو إنجليزية + أرقام + _ + . (3–30 حرف)',
                 style: TextStyle(color: AppTheme.textGrey, fontSize: 11),
               ),
               const SizedBox(height: 8),
@@ -354,6 +443,16 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                     color: AppTheme.textWhite, letterSpacing: 1),
                 decoration: InputDecoration(
                   hintText: 'مثلاً: ahmed_123',
+                  errorText: _usernameInputError,
+                  helperText: _usernameController.text.isEmpty
+                      ? null
+                      : (_usernameAvailable
+                          ? 'اسم المستخدم متاح ✅'
+                          : (_checkingUsername ? 'جاري فحص توفر الاسم...' : null)),
+                  helperStyle: TextStyle(
+                    color: _usernameAvailable ? Colors.green : AppTheme.textGrey,
+                    fontSize: 11,
+                  ),
                   prefixIcon: const Icon(Icons.alternate_email,
                       color: AppTheme.primaryGold),
                   suffixIcon: _checkingUsername
@@ -385,7 +484,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12)),
                 ),
-                onChanged: (_) => _checkUsername(),
+                onChanged: _onUsernameChanged,
               ),
               const SizedBox(height: 16),
 

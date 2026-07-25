@@ -99,11 +99,28 @@ class _CheckEmailScreenState extends State<CheckEmailScreen> {
                       fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
               Text(
-                'أرسلنا رابط تسجيل دخول إلى:\n${auth.currentEmail ?? ''}\n\nافتح بريدك واضغط الرابط لإكمال الدخول.',
+                'أرسلنا رابط تسجيل دخول إلى:\n${auth.currentEmail ?? ''}\n\nافتح بريدك واضغط الرابط لإكمال الدخول. إذا لم يظهر في الوارد خلال دقيقة افحص Spam / البريد غير المرغوب فيه.',
                 textAlign: TextAlign.center,
                 style:
                     const TextStyle(color: AppTheme.textGrey, fontSize: 14),
               ),
+              if (auth.lastError != null) ...[
+                const SizedBox(height: 14),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.10),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.red.withOpacity(0.35)),
+                  ),
+                  child: Text(
+                    auth.lastError!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+                  ),
+                ),
+              ],
               const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,
@@ -135,19 +152,20 @@ class _CheckEmailScreenState extends State<CheckEmailScreen> {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: AppTheme.surfaceBlack,
+                  color: Colors.orange.withOpacity(0.10),
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.orange.withOpacity(0.45)),
                 ),
                 child: const Row(
                   children: [
-                    Icon(Icons.info_outline,
-                        color: AppTheme.primaryGold, size: 18),
+                    Icon(Icons.warning_amber_rounded,
+                        color: Colors.orange, size: 20),
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'لم يصل الرابط؟ تحقّق من مجلد الـ Spam / غير المرغوب فيه.',
+                        'مهم: أحياناً يصل رابط التفعيل إلى Spam / البريد غير المرغوب فيه. إذا لم تجده في الوارد، افتح هذا المجلد وانقل الرسالة إلى الوارد.',
                         style:
-                            TextStyle(color: AppTheme.textGrey, fontSize: 12),
+                            TextStyle(color: AppTheme.textWhite, fontSize: 12, height: 1.4),
                       ),
                     ),
                   ],

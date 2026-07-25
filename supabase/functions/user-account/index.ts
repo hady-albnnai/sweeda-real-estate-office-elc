@@ -217,30 +217,14 @@ serve(async (req) => {
 
       if (byEmailError) return json({ success: false, error: byEmailError.message }, 400);
 
-      // ✅ إذا الإيميل مسجل عند مستخدم آخر (حساب SMS) — نربط الـ auth UID بحسابه القديم
-      // بدل إنشاء حساب جديد بنفس الإيميل
+      // إذا الإيميل مربوط بسجل مستخدم آخر فلا نعيد user_id مختلفاً عن JWT.
+      // إرجاع معرف مختلف يكسر الخطوات التالية (update_profile/register_password)
+      // لأن التحقق الأمني يطابق JWT مع user_uid المطلوب.
       if (existingByEmail && existingByEmail.id !== authUid) {
-        // نحدّث حساب المستخدم القديم بربط الـ auth UID الجديد
-        const { error: linkError } = await supabaseAdmin
-          .from("users")
-          .update({
-            eml: email,
-            ts_upd: new Date().toISOString(),
-          })
-          .eq("id", existingByEmail.id);
-
-        if (linkError) return json({ success: false, error: linkError.message }, 400);
-
-        // نحذف الـ auth user الجديد (الفارغ) لأنه اتنشأ بالغلط
-        // والمستخدم الأصلي موجود بالفعل
-        await supabaseAdmin.auth.admin.deleteUser(authUid);
-
         return json({
-          success: true,
-          user_id: existingByEmail.id,
-          is_new: false,
-          email,
-        });
+          success: false,
+          error: "EMAIL_ALREADY_LINKED_TO_DIFFERENT_AUTH_USER",
+        }, 409);
       }
 
       const { error: insertError } = await supabaseAdmin
