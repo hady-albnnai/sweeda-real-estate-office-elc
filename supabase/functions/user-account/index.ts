@@ -21,6 +21,20 @@ function json(body: Record<string, unknown>, status = 200): Response {
   });
 }
 
+function isBlank(value: unknown): boolean {
+  return value === null || value === undefined || value.toString().trim() === "";
+}
+
+function isIncompleteEmailSignup(row: Record<string, unknown> | null | undefined): boolean {
+  if (!row) return false;
+  const role = Number(row.role ?? 0);
+  return role === 0 &&
+    isBlank(row.nm) &&
+    isBlank(row.ph) &&
+    isBlank(row.usr) &&
+    isBlank(row.pwd);
+}
+
 // دالة التحقق من الـ JWT
 async function validateUser(
   req: Request,
@@ -109,15 +123,20 @@ serve(async (req) => {
 
       const { data: existing, error: findError } = await supabaseAdmin
         .from("users")
-        .select("id")
+        .select("id, role, nm, ph, eml, usr, pwd")
         .eq("eml", email)
         .eq("i_del", 0)
         .maybeSingle();
 
       if (findError) return json({ success: false, error: findError.message }, 400);
+
+      const incomplete = isIncompleteEmailSignup(existing as Record<string, unknown> | null);
+      // الحساب الإيميلي الناقص (أنشئ بعد Magic Link ولم يكمل setup-profile)
+      // يجب أن لا يمنع إعادة إرسال الرابط حتى يستطيع المستخدم إكمال التسجيل.
       return json({
         success: true,
-        exists: !!existing,
+        exists: !!existing && !incomplete,
+        incomplete,
         user_id: existing?.id ?? null,
       });
     }
@@ -210,7 +229,7 @@ serve(async (req) => {
 
       const { data: existingByEmail, error: byEmailError } = await supabaseAdmin
         .from("users")
-        .select("id, role, ph, eml")
+        .select("id, role, nm, ph, eml, usr, pwd")
         .eq("eml", email)
         .eq("i_del", 0)
         .maybeSingle();
@@ -218,13 +237,29 @@ serve(async (req) => {
       if (byEmailError) return json({ success: false, error: byEmailError.message }, 400);
 
       // إذا الإيميل مربوط بسجل مستخدم آخر فلا نعيد user_id مختلفاً عن JWT.
-      // إرجاع معرف مختلف يكسر الخطوات التالية (update_profile/register_password)
-      // لأن التحقق الأمني يطابق JWT مع user_uid المطلوب.
+      // الاستثناء الوحيد: حساب إيميلي ناقص لم يكمل setup-profile؛ نؤرشفه
+      // كي يستطيع المستخدم إعادة طلب الرابط والمتابعة بحساب Auth الجديد.
       if (existingByEmail && existingByEmail.id !== authUid) {
-        return json({
-          success: false,
-          error: "EMAIL_ALREADY_LINKED_TO_DIFFERENT_AUTH_USER",
-        }, 409);
+        const incomplete = isIncompleteEmailSignup(existingByEmail as Record<string, unknown> | null);
+        if (!incomplete) {
+          return json({
+            success: false,
+            error: "EMAIL_ALREADY_LINKED_TO_DIFFERENT_AUTH_USER",
+          }, 409);
+        }
+
+        const archivedEmail = `orphaned_${existingByEmail.id}_${email}`;
+        const { error: archiveError } = await supabaseAdmin
+          .from("users")
+          .update({
+            i_del: 1,
+            eml: archivedEmail,
+            ts_upd: new Date().toISOString(),
+          })
+          .eq("id", existingByEmail.id)
+          .eq("i_del", 0);
+
+        if (archiveError) return json({ success: false, error: archiveError.message }, 400);
       }
 
       const { error: insertError } = await supabaseAdmin
