@@ -158,11 +158,32 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     if (files.isNotEmpty) setState(() => _pickedImages.addAll(files));
   }
 
+  /// فتح وجهة إرسال فيديو العرض — المالك يرسل الفيديو لمجموعة واتساب المكتب
+  /// (توفير مساحة السيرفر: الفيديو لا يُرفع لـ storage إطلاقاً).
+  /// الأولوية: رابط المجموعة ← الرقم الخاص (wa.me) ← المفتاح القديم (توافقية) ← تنبيه.
   Future<void> _openWhatsAppVideoGroup() async {
-    final config = context.read<ConfigProvider>().config;
-    final texts = config?.texts ?? const <String, dynamic>{};
-    final groupUrl = texts['videoWhatsAppGroup']?.toString();
-    final uri = Uri.parse(groupUrl ?? 'https://wa.me/');
+    final cfg = context.read<ConfigProvider>().config;
+    final dedicated = (cfg?.videoRequestWhatsApp ?? '').trim();
+    final groupLink = (cfg?.videoRequestGroupLink ?? '').trim();
+
+    String? url;
+    if (groupLink.isNotEmpty) {
+      url = groupLink.startsWith('http') ? groupLink : 'https://$groupLink';
+    } else if (dedicated.isNotEmpty) {
+      var target = dedicated.replaceAll(RegExp(r'[^0-9]'), '');
+      if (target.startsWith('0')) target = '963${target.substring(1)}';
+      if (!target.startsWith('963')) target = '963$target';
+      url = 'https://wa.me/$target';
+    } else {
+      final old = (cfg?.texts['videoWhatsAppGroup']?.toString() ?? '').trim();
+      if (old.isNotEmpty) url = old.startsWith('http') ? old : 'https://$old';
+    }
+
+    if (url == null) {
+      if (mounted) _snack('لم تضبط الإدارة رابط/رقم واتساب الفيديو بعد');
+      return;
+    }
+    final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 

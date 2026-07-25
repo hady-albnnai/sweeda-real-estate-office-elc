@@ -4240,6 +4240,10 @@ SET value = $defaults$
     "2": "سند مؤقت",
     "3": "أخرى"
   },
+  "txts": {
+    "videoRequestWhatsApp": "",
+    "videoRequestGroupLink": ""
+  },
   "plateTp": {
     "0": "خصوصي",
     "1": "عمومي",
