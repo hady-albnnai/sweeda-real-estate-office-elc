@@ -90,10 +90,16 @@ serve(async (req) => {
 
     if (staffToken) {
       const staff = await validateStaff(supabaseAdmin, adminUid, staffToken);
-      if (!staff.ok) return staff.response;
-      actorUid = staff.uid;
-      // الموظف فقط (role >= 2) يرفع لأي مجلد — المستخدم العادي يبقى مقيداً بمجلده
-      isStaff = staff.role >= 2;
+      if (staff.ok) {
+        actorUid = staff.uid;
+        // الموظف فقط (role >= 2) يرفع لأي مجلد — المستخدم العادي يبقى مقيداً بمجلده
+        isStaff = staff.role >= 2;
+      } else {
+        // تراجع إلى JWT: توكن موظف منتهي/تالف لا يجب أن يحجب جلسة إيميل صالحة
+        const user = await validateUser(req, supabaseAdmin);
+        if (!user.ok) return staff.response; // نعيد خطأ الجلسة الأصلي أوضح من AUTH_TOKEN_REQUIRED
+        actorUid = user.uid;
+      }
     } else {
       const user = await validateUser(req, supabaseAdmin);
       if (!user.ok) return user.response;
