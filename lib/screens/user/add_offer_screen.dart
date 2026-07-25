@@ -326,7 +326,13 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           final steps = [_step1(), _step2(), _step3(), if (_selectedType != 1) _stepAvl(), _step4()];
           // حماية من RangeError: التبديل عقار (5 خطوات) → سيارة (4) وأنت بآخر خطوة
           final current = _currentStep.clamp(0, steps.length - 1);
+          // ⚠️ مهم: Stepper بفلاتر فيه assert صارم (widget.steps.length == oldWidget.steps.length)
+          // تغيير عدد الخطوات (عقار=5 / سيارة=4) على نفس الودجت يرمي exception أثناء البناء
+          // فيتوقف بناء الفريم الجديد وتبقى الشاشة معلّقة على الفريم القديم — وهذا هو سبب
+          // بلاغ "اخترت سيارة فطلعت تصنيفات عقارات وما عاد اشتغل شي" + تراكب الخطأ الأحمر.
+          // الحل: مفتاح يتغير مع النوع → الـ Stepper يُبنى من جديد كنودجت مستقل بلا مقارنة.
           return Stepper(
+            key: ValueKey('offer_steps_${_selectedType ?? -1}'),
             type: StepperType.vertical, currentStep: current,
             onStepTapped: (s) => setState(() => _currentStep = s),
             controlsBuilder: (context, details) => const SizedBox.shrink(),
