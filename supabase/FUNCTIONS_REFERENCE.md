@@ -2304,3 +2304,15 @@ get_resource_usage_internal(p_admin_uid uuid)
 - **السلوك:** تحديث `photographer_id` + `ts_scheduled` فقط للمهام التي `sts = 0`.
 - **الأخطاء:** `MISSING_REQUIRED_FIELDS`, `PHOTOGRAPHER_NOT_FOUND`, `USER_NOT_A_PHOTOGRAPHER`, `TASK_NOT_PENDING`.
 - **ملاحظة:** `my_photo_requests` أصبح يعيد `media` أيضاً لعرض الوسائط للمستخدم بعد الاعتماد (sts=3).
+
+### `admin-photography` → action: `cancel_photo_request` (2026-07-25 — جولة 3)
+إلغاء طلب تصوير من صاحبه — فقط للمهام بانتظار (`sts = 0`) والمملوكة له.
+
+- **التحقق:** نفس `verifyUserUid` (JWT أو staff_session_token).
+- **المدخلات:** `user_uid`, `task_id`.
+- **السلوك:** `sts = 5` + `ts_done`؛ يشعر المصور المُسند إن وُجد.
+
+### إشعارات دورة التصوير (2026-07-25 — جولة 3)
+- طلب جديد → إشعار كل موظف نشط `role>=3`.
+- إسناد → إشعار المصور. نتيجة نهائية (3/4/5) أو ربط بالعرض → إشعار صاحب الطلب. إلغاء من المالك → إشعار المصور المُسند.
+- كلها ثانوية (try/catch) ولا تكسر العملية الأساسية.

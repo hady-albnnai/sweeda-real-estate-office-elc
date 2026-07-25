@@ -1777,6 +1777,54 @@ $function$
 REVOKE ALL ON FUNCTION create_payment_internal(p_user_uid uuid, p_payment jsonb) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION create_payment_internal(p_user_uid uuid, p_payment jsonb) TO service_role;
 
+-- ═════════════════════════════════════════════════════════════════════
+-- التعريف المرجعي الموحد لجدول مهام التصوير (مطابق للهجرة 2026_06_10_photography_tasks.sql)
+-- ملاحظة: كان الجدول موثقاً فقط بالهجرات؛ نُزّل هنا كمرجع وحيد للحقيقة
+CREATE TABLE IF NOT EXISTS public.photography_tasks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  off_id UUID REFERENCES public.offers(id) ON DELETE CASCADE,
+  photographer_id UUID REFERENCES public.users(id) ON DELETE SET NULL,
+  requested_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
+  ttl TEXT NOT NULL DEFAULT '',
+  notes TEXT NOT NULL DEFAULT '',
+  loc JSONB DEFAULT '{}'::jsonb,
+  media JSONB NOT NULL DEFAULT '[]'::jsonb,
+  photographer_note TEXT NOT NULL DEFAULT '',
+  office_note TEXT NOT NULL DEFAULT '',
+  sts INTEGER NOT NULL DEFAULT 0 CHECK (sts BETWEEN 0 AND 5),
+  ts_scheduled TIMESTAMPTZ,
+  ts_submit TIMESTAMPTZ,
+  ts_done TIMESTAMPTZ,
+  ts_crt TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  ts_upd TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_photo_tasks_offer ON public.photography_tasks(off_id);
+CREATE INDEX IF NOT EXISTS idx_photo_tasks_photographer ON public.photography_tasks(photographer_id, sts);
+CREATE INDEX IF NOT EXISTS idx_photo_tasks_status ON public.photography_tasks(sts, ts_crt DESC);
+
+ALTER TABLE public.photography_tasks ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Photography tasks read" ON public.photography_tasks;
+CREATE POLICY "Photography tasks read" ON public.photography_tasks
+FOR SELECT USING (
+  auth.uid() = photographer_id
+  OR auth.uid() = requested_by
+  OR EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role >= 2 AND i_del = 0)
+);
+
+DROP POLICY IF EXISTS "Admin can insert photography tasks" ON public.photography_tasks;
+CREATE POLICY "Admin can insert photography tasks" ON public.photography_tasks
+FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role >= 2 AND i_del = 0)
+);
+
+DROP POLICY IF EXISTS "Admin or photographer can update photography tasks" ON public.photography_tasks;
+CREATE POLICY "Admin or photographer can update photography tasks" ON public.photography_tasks
+FOR UPDATE USING (
+  auth.uid() = photographer_id
+  OR EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role >= 2 AND i_del = 0)
+);
+
 CREATE OR REPLACE FUNCTION public.create_photography_task_internal(p_admin_uid uuid, p_offer_id uuid, p_photographer_id uuid, p_notes text, p_ts_scheduled timestamp with time zone)
  RETURNS SETOF photography_tasks
  LANGUAGE plpgsql
@@ -1791,7 +1839,7 @@ BEGIN
   SELECT * INTO v_offer FROM offers WHERE id = p_offer_id AND i_del = 0;
   IF NOT FOUND THEN RAISE EXCEPTION 'OFFER_NOT_FOUND'; END IF;
   RETURN QUERY
-  INSERT INTO photography_tasks (offer_id, photographer_id, assigned_by, title, notes, loc, sts, ts_scheduled, ts_crt, ts_upd)
+  INSERT INTO public.photography_tasks (off_id, photographer_id, requested_by, ttl, notes, loc, sts, ts_scheduled, ts_crt, ts_upd)
   VALUES (p_offer_id, p_photographer_id, p_admin_uid, v_offer.ttl, COALESCE(p_notes,''), COALESCE(v_offer.loc,'{}'::jsonb), 0, p_ts_scheduled, NOW(), NOW())
   RETURNING *;
 END; $function$
@@ -2998,7 +3046,13 @@ BEGIN
   IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN RAISE EXCEPTION 'AUTH_MISMATCH'; END IF;
   SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
   IF v_role IS NULL OR v_role < 3 THEN RAISE EXCEPTION 'NOT_AUTHORIZED'; END IF;
-  UPDATE photography_tasks SET sts = p_status, office_note = COALESCE(p_office_note,''), ts_upd = NOW() WHERE id = p_task_id;
+  IF p_status < 0 OR p_status > 5 THEN RAISE EXCEPTION 'INVALID_STATUS'; END IF;
+  UPDATE photography_tasks
+  SET sts = p_status,
+      office_note = COALESCE(p_office_note,''),
+      ts_done = CASE WHEN p_status IN (3, 4, 5) THEN NOW() ELSE ts_done END,
+      ts_upd = NOW()
+  WHERE id = p_task_id;
   RETURN FOUND;
 END; $function$
 
@@ -3319,6 +3373,7 @@ DECLARE
     'user_offers',
     'user_requests',
     'user_appointments',
+    'user_photography',
     'user_profile'
   ];
 BEGIN

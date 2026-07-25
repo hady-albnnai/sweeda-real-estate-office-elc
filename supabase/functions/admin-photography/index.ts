@@ -69,6 +69,62 @@ async function validateActor(
   return { ok: true, uid: requestedUid, role: Number(data.role) };
 }
 
+// تحقق هوية المستخدم العادي (JWT أو staff_session_token) — لإجراءات المستخدم على طلباته
+async function verifyUserUid(
+  req: Request,
+  supabaseAdmin: ReturnType<typeof createClient>,
+  body: Record<string, unknown>,
+  userUid: string,
+): Promise<boolean> {
+  const authHeader = req.headers.get("Authorization") ?? "";
+  const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+  if (bearer && bearer !== "undefined" && bearer !== "null") {
+    const { data: userData } = await supabaseAdmin.auth.getUser(bearer);
+    const uid = userData?.user?.id;
+    if (uid) return uid === userUid;
+  }
+  const sessionToken = (body.staff_session_token ?? body.staffSessionToken)?.toString() ?? "";
+  if (sessionToken && userUid) {
+    const { data, error } = await supabaseAdmin.rpc("validate_staff_session", {
+      p_user_uid: userUid,
+      p_token: sessionToken,
+      p_min_role: 0,
+    });
+    if (!error && data?.success === true) return true;
+  }
+  return false;
+}
+
+// إشعار داخلي (ثانوي — لا يكسر العملية الأساسية عند فشله)
+async function notifyUsers(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  uids: string[],
+  tp: number,
+  ttl: string,
+  bdy: string,
+  refId: string,
+  act: string,
+): Promise<void> {
+  const unique = [...new Set(uids.filter((u) => !!u))];
+  if (unique.length === 0) return;
+  try {
+    const rows = unique.map((uid) => ({
+      uid,
+      tp,
+      ttl,
+      bdy,
+      ref_id: refId,
+      act,
+      i_rd: 0,
+      i_del: 0,
+      ts_crt: new Date().toISOString(),
+    }));
+    await supabaseAdmin.from("notifications").insert(rows);
+  } catch {
+    // تجاهل — الإشعار إجراء ثانوي
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ success: false, error: "METHOD_NOT_ALLOWED" }, 405);
@@ -163,7 +219,69 @@ serve(async (req) => {
         return json({ success: false, error: insertError.message }, 400);
       }
 
+      // إشعار المكتب (مشرف/موظف/نائب/مدير نشط) بوصول طلب تصوير جديد
+      const { data: staff } = await supabaseAdmin
+        .from("users")
+        .select("id")
+        .gte("role", 3)
+        .eq("sts", 0)
+        .eq("i_del", 0);
+      if (staff && staff.length > 0) {
+        await notifyUsers(
+          supabaseAdmin,
+          staff.map((s) => s.id?.toString() ?? ""),
+          1,
+          "طلب تصوير عقار جديد",
+          `${fullName || "مستخدم"} يطلب تصوير: ${propertyDesc} — ${propertyLocation}`,
+          insertData.id,
+          "photography_request_new",
+        );
+      }
+
       return json({ success: true, task_id: insertData.id });
+    }
+
+    // إلغاء طلب تصوير من صاحبه (فقط المهام بانتظار sts=0)
+    if (action === "cancel_photo_request") {
+      const userUid = (body.user_uid ?? body.userUid)?.toString() ?? "";
+      const taskId = (body.task_id ?? body.taskId)?.toString() ?? "";
+      if (!userUid || !taskId) {
+        return json({ success: false, error: "MISSING_REQUIRED_FIELDS" }, 400);
+      }
+      if (!(await verifyUserUid(req, supabaseAdmin, body, userUid))) {
+        return json({ success: false, error: "AUTH_REQUIRED" }, 401);
+      }
+
+      const { data: cancelled, error: cancelError } = await supabaseAdmin
+        .from("photography_tasks")
+        .update({
+          sts: 5,
+          ts_done: new Date().toISOString(),
+          ts_upd: new Date().toISOString(),
+        })
+        .eq("id", taskId)
+        .eq("requested_by", userUid)
+        .eq("sts", 0)
+        .select("id, ttl, photographer_id")
+        .maybeSingle();
+      if (cancelError) return json({ success: false, error: cancelError.message }, 400);
+      if (!cancelled) return json({ success: false, error: "TASK_NOT_PENDING" }, 400);
+
+      // إشعار المصور إن كان مسنداً للمهمة الملغاة
+      const pid = cancelled.photographer_id?.toString() ?? "";
+      if (pid) {
+        await notifyUsers(
+          supabaseAdmin,
+          [pid],
+          2,
+          "إلغاء مهمة تصوير",
+          `ألغى العميل طلب التصوير: ${cancelled.ttl ?? ""}`,
+          cancelled.id,
+          "photography_request_cancelled",
+        );
+      }
+
+      return json({ success: true });
     }
 
     // جلب طلبات التصوير الخاصة بالمستخدم نفسه (لشاشة خدمة التصوير)
@@ -270,10 +388,21 @@ serve(async (req) => {
         })
         .eq("id", taskId)
         .eq("sts", 0)
-        .select("id")
+        .select("id, ttl")
         .maybeSingle();
       if (taskError) return json({ success: false, error: taskError.message }, 400);
       if (!task) return json({ success: false, error: "TASK_NOT_PENDING" }, 400);
+
+      // إشعار المصور بالمهمة المسندة
+      await notifyUsers(
+        supabaseAdmin,
+        [photographerId],
+        2,
+        "مهمة تصوير مسندة لك",
+        `أُسندت لك مهمة تصوير: ${task.ttl ?? ""}${scheduledAt ? " — راجع الموعد المجدول" : ""}`,
+        task.id,
+        "photography_task_assigned",
+      );
 
       return json({ success: true });
     }
@@ -315,6 +444,33 @@ serve(async (req) => {
       });
 
       if (error) return json({ success: false, error: error.message }, 400);
+
+      // إشعار صاحب الطلب بالنتيجة النهائية (اعتماد/رفض/إلغاء)
+      if (data === true && (status === 3 || status === 4 || status === 5)) {
+        const { data: task } = await supabaseAdmin
+          .from("photography_tasks")
+          .select("requested_by, ttl, office_note")
+          .eq("id", taskId)
+          .maybeSingle();
+        const requester = task?.requested_by?.toString() ?? "";
+        if (requester) {
+          const msg = status === 3
+            ? `تم اعتماد تصوير عقارك — الوسائط متاحة الآن في طلبك (${task?.ttl ?? ""})`
+            : status === 4
+              ? `تم رفض طلب التصوير (${task?.ttl ?? ""})${task?.office_note ? " — " + task.office_note : ""}`
+              : `تم إلغاء طلب التصوير (${task?.ttl ?? ""})`;
+          await notifyUsers(
+            supabaseAdmin,
+            [requester],
+            1,
+            "تحديث طلب تصوير العقار",
+            msg,
+            taskId,
+            "photography_request_result",
+          );
+        }
+      }
+
       return json({ success: data === true });
     }
 
@@ -328,6 +484,28 @@ serve(async (req) => {
       });
 
       if (error) return json({ success: false, error: error.message }, 400);
+
+      // إشعار صاحب الطلب عند اعتماد التصوير وربط الوسائط بالعرض
+      if (data === true) {
+        const { data: task } = await supabaseAdmin
+          .from("photography_tasks")
+          .select("requested_by, ttl")
+          .eq("id", taskId)
+          .maybeSingle();
+        const requester = task?.requested_by?.toString() ?? "";
+        if (requester) {
+          await notifyUsers(
+            supabaseAdmin,
+            [requester],
+            1,
+            "تم اعتماد تصوير عقارك",
+            `اعتُمدت وسائط التصوير ورُبطت بعرضك (${task?.ttl ?? ""})`,
+            taskId,
+            "photography_request_result",
+          );
+        }
+      }
+
       return json({ success: data === true });
     }
 

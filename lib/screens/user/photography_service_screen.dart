@@ -444,6 +444,60 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
     );
   }
 
+  Future<void> _cancelRequest(PhotographyTaskModel t) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surfaceBlack,
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('إلغاء طلب التصوير',
+            style: TextStyle(color: AppTheme.textWhite, fontSize: 16)),
+        content: const Text(
+          'رح يتم إلغاء طلب التصوير المعلّق. تقدر تقدّم طلب جديد بعدها.\nمتأكد؟',
+          style: TextStyle(color: AppTheme.textGrey, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child:
+                const Text('تراجع', style: TextStyle(color: AppTheme.textGrey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('إلغاء الطلب',
+                style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    final uid = context.read<AuthProvider>().userModel?.uid ?? '';
+    try {
+      final response = await SupabaseService().invokeFunction(
+        'admin-photography',
+        body: {
+          'action': 'cancel_photo_request',
+          'user_uid': uid,
+          'task_id': t.id,
+        },
+      );
+      final data =
+          response.data is Map ? Map<String, dynamic>.from(response.data) : null;
+      if (!mounted) return;
+      if (data != null && data['success'] == true) {
+        _snack('✅ تم إلغاء طلب التصوير', ok: true);
+        _loadMyRequests();
+      } else {
+        _snack('تعذر الإلغاء — الطلب لم يعد بانتظار');
+      }
+    } catch (e) {
+      _snack('فشل الإلغاء — تحقق من الاتصال وحاول مجدداً');
+    }
+  }
+
   Widget _explainRow(IconData icon, String text) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -563,6 +617,20 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                     ),
                   ),
                 ),
+              ),
+            ),
+          ],
+          // زر الإلغاء — فقط للطلبات المعلّقة (لم يبدأ المصور بعد)
+          if (t.sts == 0) ...[
+            const SizedBox(height: 10),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => _cancelRequest(t),
+                icon: const Icon(Icons.cancel_outlined,
+                    color: Colors.red, size: 16),
+                label: const Text('إلغاء الطلب',
+                    style: TextStyle(color: Colors.red, fontSize: 12)),
               ),
             ),
           ],

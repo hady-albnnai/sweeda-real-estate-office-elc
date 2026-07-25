@@ -91,3 +91,23 @@ supabase functions deploy admin-photography
 2. تنظيف `setup.sql`/`functions_dump.sql` من تعريف `create_photography_task_internal` القديم بأسماء أعمدة عتيقة (offer_id/assigned_by/title) وتوثيق الجدول الفعلي — حالياً الهجرة `2026_06_10_photography_tasks.sql` هي المرجع الحقيقي.
 3. إضافة `user_photography` لقائمة الصلاحيات البيضاء في RPC القديم `admin_update_user_permissions` (المسار الفعلي عبر Edge Function لا يتأثر).
 4. للمستخدم: خيار إلغاء طلب بانتظار.
+
+---
+
+## جولة 3 (2026-07-25 لاحقاً) — التحسينات المقترحة من التقرير
+
+### 1) إشعارات فورية عبر جدول `notifications`
+جميعها تُنفذ داخل `admin-photography` عبر `service_role`، وهي إجراءات ثانوية لا تكسر العملية الأساسية عند فشلها:
+- **وصول طلب تصوير جديد** → إشعار لكل موظف نشط `role >= 3` (`act: photography_request_new`, tp=1).
+- **إسناد مصور** → إشعار للمصور (`act: photography_task_assigned`, tp=2).
+- **النتيجة النهائية (اعتماد/رفض/إلغاء)** → إشعار لصاحب الطلب، سواء عبر `update_status` (sts=3/4/5) أو `attach_media` (`act: photography_request_result`, tp=1).
+- **إلغاء الطلب من صاحبه** → إشعار للمصور المُسند إن وُجد (`act: photography_request_cancelled`, tp=2).
+
+### 2) إلغاء الطلب من المستخدم
+- action جديد `cancel_photo_request` (مصادقة مستخدم كما في `my_photo_requests`): يسمح بالإلغاء فقط للمهام `sts = 0` المملوكة للطالب (يضبط sts=5 وts_done) → الزر يظهر في بطاقة الطلب المعلّق بشاشة خدمة التصوير، وبعده يمكن تقديم طلب جديد (فحص التكرار 0-2).
+
+### 3) تنظيف `supabase/setup.sql`
+- إضافة التعريف المرجعي الموحد لجدول `photography_tasks` وسياسات RLS (كان يفتقدها الملف — الهجرة كانت المرجع الوحيد).
+- تصحيح `create_photography_task_internal` لأسماء الأعمدة الحقيقية (`off_id/requested_by/ttl` بدل `offer_id/assigned_by/title`).
+- تصحيح `update_photography_task_status_internal` ليطابق المطبق فعلياً (تحقق 0-5 + `ts_done` عند الحالات النهائية).
+- إضافة `user_photography` للقائمة البيضاء في `admin_update_user_permissions` القديمة.
