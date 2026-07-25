@@ -111,3 +111,16 @@ supabase functions deploy admin-photography
 - تصحيح `create_photography_task_internal` لأسماء الأعمدة الحقيقية (`off_id/requested_by/ttl` بدل `offer_id/assigned_by/title`).
 - تصحيح `update_photography_task_status_internal` ليطابق المطبق فعلياً (تحقق 0-5 + `ts_done` عند الحالات النهائية).
 - إضافة `user_photography` للقائمة البيضاء في `admin_update_user_permissions` القديمة.
+
+---
+
+## توثيق فحص السيرفر الميداني (2026-07-25) — 4 استعلامات على الإنتاج
+
+| # | الفحص | النتيجة |
+|---|---|---|
+| 1 | أعمدة `photography_tasks` (information_schema) | ✅ مطابقة تماماً للهجرة والكود (off_id, requested_by, ttl, media, sts 0-5, ts_crt DEFAULT now()) |
+| 2 | تعريف `create_photography_task_internal` على الإنتاج | ⚠️ كانت النسخة القديمة المعطوبة (أعمدة offer_id/assigned_by/title) — **تم تطبيق التعريف المصحح على السيرفر** + REVOKE FROM PUBLIC + GRANT service_role |
+| 3 | وجود دوال مسار التصوير الست | ✅ كلها موجودة (create, start, submit, update_status, attach_media, get_photographer_tasks) |
+| 4 | bucket صور الهوية `ids_private` | ✅ موجود وخاص (public=false) |
+
+**خلاصة:** دورة التصوير ودورة توثيق الهوية موثقتان بالكامل من العميل إلى السيرفر. العطل الوحيد الذي ظهر أثناء الفحص (دالة الإنشاء القديمة) أُصلح مباشرة على الإنتاج، وكان سيظهر عند استخدام زر "إنشاء مهمة" من لوحة الإدارة.
