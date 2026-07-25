@@ -52,15 +52,16 @@ DELETE FROM users WHERE id <> '53701a2a-26ba-4b35-8f7d-f0a8f3956a98';
 -- ─── 4) حسابات Supabase Auth اليتيمة (identities/sessions تُحذف CASCADE) ───
 DELETE FROM auth.users WHERE id NOT IN (SELECT id FROM public.users);
 
--- ─── 5) كل ملفات التخزين (صور العروض/الهويات/الوثائق/الوسائط) ───
--- Supabase يمنع الحذف المباشر via trigger اسمه protect_objects_delete
--- (تحققنا من اسمه حيّاً 2026-07-26) → نعطّله مؤقتاً داخل نفس المعاملة الذرّية
--- ونُعيد تفعيله فوراً بعد الحذف. التعطيل هنا ليس دائماً ولا يتجاوز المعاملة.
--- ملاحظة: الملفات الفعلية بـ S3 قد تبقى يتيمة بلا أثر وظيفي على التطبيق،
--- ويمكن مسحها لاحقاً من Dashboard → Storage إن رغبت بتصفير استهلاك المساحة.
-ALTER TABLE storage.objects DISABLE TRIGGER protect_objects_delete;
-DELETE FROM storage.objects;
-ALTER TABLE storage.objects ENABLE TRIGGER protect_objects_delete;
+-- ─── 5) ملفات التخزين — خطوة منفصلة تُشغَّل بعد هذا السكربت ───
+-- ⚠️ تحذير تاريخي (2026-07-26): يفشل كلٌّ من:
+--   DELETE FROM storage.objects            → trigger protect_objects_delete (42501)
+--   ALTER TABLE storage.objects DISABLE…   → must be owner (المالك supabase_storage_admin)
+-- لذلك أُخرج محو التخزين من هذا السكربت. التشخيص والحل:
+--   1) افحص آلية الالتفاف الرسمية:
+--      SELECT prosrc FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+--      WHERE n.nspname='storage' AND p.proname='protect_delete';
+--   2) طبّق الحل المناسب (GUC bypass أو حذف عبر Storage API / Dashboard).
+-- ملاحظة: الملفات يتيمة بلا أثر وظيفي بعد حذف مالكيها — لا تظهر بالتطبيق أبداً.
 
 -- ─── 6) تصفير كل العدادات التسلسلية + عداد رقم العرض في الإعدادات ───
 DO $$
