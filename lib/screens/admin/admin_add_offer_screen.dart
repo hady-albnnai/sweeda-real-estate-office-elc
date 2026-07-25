@@ -453,13 +453,14 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
               color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
       content: SingleChildScrollView(
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          _dd('نوع العرض', ['عقار', 'سيارة'], (v) => setState(() {
+          _dd('نوع العرض', ['عقار', 'سيارة'], _selectedType == null ? null : (_selectedType == 0 ? 'عقار' : 'سيارة'), (v) => setState(() {
                 _selectedType = v == 'عقار' ? 0 : 1;
                 _selectedMainCat = null;
                 _selectedSubCat  = null;
               })),
           const SizedBox(height: 16),
           _dd('نوع المعاملة', ['بيع', 'إيجار'],
+              _selectedTrans == null ? null : (_selectedTrans == 0 ? 'بيع' : 'إيجار'),
               (v) => setState(() => _selectedTrans = v == 'بيع' ? 0 : 1)),
           const SizedBox(height: 16),
           DropdownButtonFormField<int>(
@@ -1086,12 +1087,12 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
     );
   }
 
-  Widget _dd(String label, List<String> items, Function(String) on) =>
+  Widget _dd(String label, List<String> items, String? value, Function(String) on) =>
       Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(label, style: const TextStyle(color: AppTheme.textGrey)),
         const SizedBox(height: 5),
         DropdownButtonFormField<String>(
-          value: null,
+          value: value, // كانت null دائماً — القائمة تظهر فاضية بعد الاختيار
           items: items
               .map((i) => DropdownMenuItem(value: i, child: Text(i)))
               .toList(),

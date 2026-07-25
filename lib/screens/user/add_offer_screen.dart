@@ -398,9 +398,9 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     return Step(
       title: const Text('الأساسيات', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
       content: Column(children: [
-        _dd('نوع العرض', ['عقار', 'سيارة'], (v) => setState(() { _selectedType = v == 'عقار' ? 0 : 1; _selectedMainCat = null; _selectedSubCat = null; })),
+        _dd('نوع العرض', ['عقار', 'سيارة'], _selectedType == null ? null : (_selectedType == 0 ? 'عقار' : 'سيارة'), (v) => setState(() { _selectedType = v == 'عقار' ? 0 : 1; _selectedMainCat = null; _selectedSubCat = null; })),
         const SizedBox(height: 15),
-        _dd('نوع المعاملة', ['بيع', 'إيجار'], (v) => setState(() => _selectedTrans = v == 'بيع' ? 0 : 1)),
+        _dd('نوع المعاملة', ['بيع', 'إيجار'], _selectedTrans == null ? null : (_selectedTrans == 0 ? 'بيع' : 'إيجار'), (v) => setState(() => _selectedTrans = v == 'بيع' ? 0 : 1)),
         const SizedBox(height: 15),
         DropdownButtonFormField<int>(value: _selectedMainCat, items: mainCatItems, onChanged: mainCatItems.isEmpty ? null : (v) => setState(() { _selectedMainCat = v; _selectedSubCat = null; }), decoration: const InputDecoration(labelText: 'التصنيف الرئيسي', border: OutlineInputBorder())),
         if (mainCatItems.isEmpty) _warnBox('تعذّر تحميل التصنيفات من السيرفر'),
@@ -459,16 +459,16 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       if (_selectedType == 0) ...[
         TextField(controller: _areaCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'المساحة م²', border: OutlineInputBorder())),
         const SizedBox(height: 12),
-        _dd('الإكساء', ['ملكي', 'سوبر ديلوكس', 'ديلوكس', 'عادي', 'هيكل'], (v) => setState(() => _finishing = v)),
+        _dd('الإكساء', ['ملكي', 'سوبر ديلوكس', 'ديلوكس', 'عادي', 'هيكل'], _finishing, (v) => setState(() => _finishing = v)),
         const SizedBox(height: 12),
         TextField(controller: _floorCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'الطابق', hintText: 'مثال: 3', border: OutlineInputBorder())),
       ],
       if (_selectedType == 1) ...[
         TextField(controller: _carYearCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'سنة الصنع (إلزامي)', border: OutlineInputBorder())),
         const SizedBox(height: 10),
-        _dd('نوع الوقود (اختياري)', ['بنزين', 'ديزل', 'هجين', 'كهرباء'], (v) => setState(() => _carFuel = v)),
+        _dd('نوع الوقود (اختياري)', ['بنزين', 'ديزل', 'هجين', 'كهرباء'], _carFuel, (v) => setState(() => _carFuel = v)),
         const SizedBox(height: 10),
-        _dd('ناقل الحركة (اختياري)', ['عادي', 'أوتوماتيك', 'نصف أوتوماتيك'], (v) => setState(() => _carTransmission = v)),
+        _dd('ناقل الحركة (اختياري)', ['عادي', 'أوتوماتيك', 'نصف أوتوماتيك'], _carTransmission, (v) => setState(() => _carTransmission = v)),
         const SizedBox(height: 10),
         TextField(controller: _carColorCtrl, decoration: const InputDecoration(labelText: 'اللون (اختياري)', border: OutlineInputBorder())),
         const SizedBox(height: 10),
@@ -656,7 +656,10 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   }
 
   Widget _thumb(XFile file) => kIsWeb ? Image.network(file.path, width: 70, height: 70, fit: BoxFit.cover) : Image.file(File(file.path), width: 70, height: 70, fit: BoxFit.cover, cacheWidth: 140);
-  Widget _dd(String label, List<String> items, Function(String) on) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(label, style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)), const SizedBox(height: 5), DropdownButtonFormField<String>(items: items.map((i) => DropdownMenuItem(value: i, child: Text(i))).toList(), onChanged: (v) => on(v!), decoration: const InputDecoration(border: OutlineInputBorder()))]);
+
+  /// قائمة منسدلة بعنوان — كانت بلا value فتظهر فاضية بعد الاختيار
+  /// (يوحي للمستخدم أن الشاشة "لا تعمل")، الآن تعرض الاختيار الحالي
+  Widget _dd(String label, List<String> items, String? value, Function(String) on) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(label, style: TextStyle(color: value != null ? AppTheme.primaryGold : AppTheme.textGrey, fontSize: 12, fontWeight: value != null ? FontWeight.bold : FontWeight.normal)), const SizedBox(height: 5), DropdownButtonFormField<String>(value: value, items: items.map((i) => DropdownMenuItem(value: i, child: Text(i))).toList(), onChanged: (v) => on(v!), decoration: const InputDecoration(border: OutlineInputBorder()))]);
 
   /// توليد قالب منشور جاهز للنشر على صفحات السوشيال (فيسبوك/إنستغرام)
   /// يُستخدم عندما يكون _autoPublishSocial = true
