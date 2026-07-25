@@ -533,6 +533,39 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
               ],
             ),
           ],
+          // الوسائط المعتمدة تظهر للمستخدم بعد اكتمال الجلسة
+          if (t.sts == 3 && t.media.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            const Text('وسائط جلسة التصوير:',
+                style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+            const SizedBox(height: 6),
+            SizedBox(
+              height: 72,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: t.media.length,
+                itemBuilder: (_, i) => Padding(
+                  padding: const EdgeInsets.only(left: 6),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      t.media[i],
+                      width: 72,
+                      height: 72,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        width: 72,
+                        height: 72,
+                        color: AppTheme.deepBlack,
+                        child: const Icon(Icons.broken_image,
+                            color: AppTheme.textGrey, size: 20),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

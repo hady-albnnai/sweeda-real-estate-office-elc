@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import '../core/constants/db_constants.dart';
 import '../core/network/supabase_service.dart';
 import '../models/offer_model.dart';
 import '../models/photography_task_model.dart';
@@ -17,22 +16,65 @@ class PhotographyProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// عرض كل مهام التصوير للإدارة عبر Edge Function (service_role)
+  /// لأن الاستعلام المباشر محظور بـ RLS على جلسات مخصصة (auth.uid() = NULL).
   Future<List<PhotographyTaskModel>> getAllTasks({int? status}) async {
     try {
-      var query = SupabaseService().client
-          .from(DbTables.photographyTasks)
-          .select();
-      if (status != null) query = query.eq('sts', status);
-      final response = await query.order('ts_crt', ascending: false);
-      return (response as List)
+      final token = await AuthService().getStaffSessionToken();
+      final res = await SupabaseService().invokeFunction(
+        'admin-photography',
+        body: {
+          'action': 'list_tasks',
+          'staff_session_token': token,
+          if (status != null) 'status': status,
+        },
+      );
+      final data = res.data;
+      if (data == null || data['success'] != true) {
+        _error = data?['error'] ?? 'Unknown error';
+        return [];
+      }
+      return (data['tasks'] as List)
           .map((row) => PhotographyTaskModel.fromSupabase(
                 Map<String, dynamic>.from(row),
-                row['id'] as String,
+                row['id'].toString(),
               ))
           .toList();
     } catch (e) {
       _error = e.toString();
       return [];
+    }
+  }
+
+  /// إسناد مصور لمهمة بانتظار (يدعم طلبات المستخدم بلا عرض)
+  Future<bool> assignTask({
+    required String taskId,
+    required String photographerId,
+    DateTime? scheduledAt,
+  }) async {
+    try {
+      final token = await AuthService().getStaffSessionToken();
+      final res = await SupabaseService().invokeFunction(
+        'admin-photography',
+        body: {
+          'action': 'assign_photographer',
+          'staff_session_token': token,
+          'task_id': taskId,
+          'photographer_id': photographerId,
+          if (scheduledAt != null)
+            'ts_scheduled': scheduledAt.toIso8601String(),
+        },
+      );
+      final data = res.data;
+      if (data != null && data['success'] == true) {
+        notifyListeners();
+        return true;
+      }
+      _error = data?['error']?.toString();
+      return false;
+    } catch (e) {
+      _error = e.toString();
+      return false;
     }
   }
 

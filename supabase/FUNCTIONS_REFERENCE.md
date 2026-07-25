@@ -2288,3 +2288,19 @@ get_resource_usage_internal(p_admin_uid uuid)
 - **المدخلات:** `action`, `user_uid` (+ `staff_session_token` تلقائياً من العميل).
 - **التحقق:** نفس منطق `request_photography` (JWT أو `validate_staff_session` بـ `p_min_role=0`).
 - **الإرجاع:** حتى 20 مهمة من `photography_tasks` حيث `requested_by = userUid` (id, ttl, notes, sts, ts_scheduled, ts_submit, ts_done, ts_crt).
+
+### `admin-photography` → action: `list_tasks` (2026-07-25 — جولة 2)
+عرض كل مهام التصوير للإدارة عبر `service_role` لأن الاستعلام المباشر من العميل محظور بـ RLS (جلسات مخصصة لا تحمل `auth.uid()`).
+
+- **التحقق:** `validateActor` بدور ≥ 3.
+- **المدخلات:** `admin_uid`, `status` اختياري (sts 0..5).
+- **الإرجاع:** حتى 200 مهمة كاملة الأعمدة مرتبة بـ `ts_crt DESC`.
+
+### `admin-photography` → action: `assign_photographer` (2026-07-25 — جولة 2)
+إسناد مصور لمهمة بانتظار (sts=0) — يغلق الحلقة لطلبات التصوير القادمة من المستخدمين (`off_id = null`).
+
+- **التحقق:** دور ≥ 3 + التحقق أن المُسند إليه مؤهل (`role >= 2` أو `perm` يحوي `photographer_tasks`) وغير محذوف/موقوف.
+- **المدخلات:** `admin_uid`, `task_id`, `photographer_id`, `ts_scheduled` اختياري.
+- **السلوك:** تحديث `photographer_id` + `ts_scheduled` فقط للمهام التي `sts = 0`.
+- **الأخطاء:** `MISSING_REQUIRED_FIELDS`, `PHOTOGRAPHER_NOT_FOUND`, `USER_NOT_A_PHOTOGRAPHER`, `TASK_NOT_PENDING`.
+- **ملاحظة:** `my_photo_requests` أصبح يعيد `media` أيضاً لعرض الوسائط للمستخدم بعد الاعتماد (sts=3).

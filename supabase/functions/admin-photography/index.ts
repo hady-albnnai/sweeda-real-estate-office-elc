@@ -203,7 +203,7 @@ serve(async (req) => {
 
       const { data: tasks, error: tasksError } = await supabaseAdmin
         .from("photography_tasks")
-        .select("id, ttl, notes, sts, ts_scheduled, ts_submit, ts_done, ts_crt")
+        .select("id, ttl, notes, sts, ts_scheduled, ts_submit, ts_done, ts_crt, media")
         .eq("requested_by", userUid)
         .order("ts_crt", { ascending: false })
         .limit(20);
@@ -217,6 +217,66 @@ serve(async (req) => {
     if (!actor.ok) return actor.response;
 
     const adminUid = actor.uid;
+
+    // عرض كل مهام التصوير للإدارة — الاستعلام المباشر من العميل محظور بـ RLS
+    // (جلسات مخصصة لا تحمل auth.uid())، فكان المكتب يرى قائمة فارغة.
+    if (action === "list_tasks") {
+      const statusFilter = body.status ?? body.sts;
+      let query = supabaseAdmin
+        .from("photography_tasks")
+        .select("*")
+        .order("ts_crt", { ascending: false });
+      if (statusFilter !== undefined && statusFilter !== null && statusFilter !== "") {
+        query = query.eq("sts", Number(statusFilter));
+      }
+      const { data, error } = await query.limit(200);
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json({ success: true, tasks: data ?? [] });
+    }
+
+    // إسناد مصور لمهمة تصوير بانتظار (يدعم طلبات المستخدم بلا عرض off_id=null)
+    if (action === "assign_photographer") {
+      const taskId = (body.task_id ?? body.taskId)?.toString() ?? "";
+      const photographerId = (body.photographer_id ?? body.photographerId)?.toString() ?? "";
+      const scheduledAt = body.ts_scheduled?.toString() ?? null;
+      if (!taskId || !photographerId) {
+        return json({ success: false, error: "MISSING_REQUIRED_FIELDS" }, 400);
+      }
+
+      // التحقق أن المُسند إليه مؤهل للتصوير (role >= 2 أو صلاحية photographer_tasks)
+      const { data: photographer, error: photographerError } = await supabaseAdmin
+        .from("users")
+        .select("id, role, perm, sts, i_del")
+        .eq("id", photographerId)
+        .eq("i_del", 0)
+        .maybeSingle();
+      if (photographerError) return json({ success: false, error: photographerError.message }, 400);
+      if (!photographer || Number(photographer.sts) !== 0) {
+        return json({ success: false, error: "PHOTOGRAPHER_NOT_FOUND" }, 400);
+      }
+      const permList = Array.isArray(photographer.perm) ? photographer.perm : [];
+      const qualified = Number(photographer.role) >= 2 || permList.includes("photographer_tasks");
+      if (!qualified) {
+        return json({ success: false, error: "USER_NOT_A_PHOTOGRAPHER" }, 400);
+      }
+
+      // الإسناد مسموح فقط للمهام بانتظار (sts=0) حتى لا تُكسر مهمة قيد التنفيذ
+      const { data: task, error: taskError } = await supabaseAdmin
+        .from("photography_tasks")
+        .update({
+          photographer_id: photographerId,
+          ts_scheduled: scheduledAt,
+          ts_upd: new Date().toISOString(),
+        })
+        .eq("id", taskId)
+        .eq("sts", 0)
+        .select("id")
+        .maybeSingle();
+      if (taskError) return json({ success: false, error: taskError.message }, 400);
+      if (!task) return json({ success: false, error: "TASK_NOT_PENDING" }, 400);
+
+      return json({ success: true });
+    }
 
     if (action === "create") {
       const offerId = (body.offer_id ?? body.offerId)?.toString() ?? "";

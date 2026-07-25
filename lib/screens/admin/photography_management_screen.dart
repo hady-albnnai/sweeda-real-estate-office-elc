@@ -150,14 +150,32 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
                     children: [
                       Text(task.ttl.isEmpty ? 'مهمة تصوير' : task.ttl,
                           style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold)),
-                      Text(task.statusLabel, style: TextStyle(color: color, fontSize: 12)),
+                      Row(
+                        children: [
+                          Text(task.statusLabel, style: TextStyle(color: color, fontSize: 12)),
+                          if (task.offId.isEmpty) ...[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryGold.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
+                              ),
+                              child: const Text('طلب مستخدم',
+                                  style: TextStyle(color: AppTheme.primaryGold, fontSize: 10)),
+                            ),
+                          ],
+                        ],
+                      ),
                     ],
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.open_in_new, color: AppTheme.primaryGold),
-                  onPressed: () => context.push('/offer/${task.offId}'),
-                ),
+                if (task.offId.isNotEmpty)
+                  IconButton(
+                    icon: const Icon(Icons.open_in_new, color: AppTheme.primaryGold),
+                    onPressed: () => context.push('/offer/${task.offId}'),
+                  ),
               ],
             ),
             if (task.notes.isNotEmpty) ...[
@@ -191,6 +209,28 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
                       child: Image.network(task.media[index], width: 76, height: 76, fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => Container(width: 76, height: 76, color: AppTheme.deepBlack, child: const Icon(Icons.broken_image, color: AppTheme.textGrey))),
                     ),
+                  ),
+                ),
+              ),
+            ],
+            if (task.sts == 0) ...[
+              const Divider(color: Colors.white12, height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => _assignPhotographer(task),
+                  icon: const Icon(Icons.person_add_alt_1,
+                      color: AppTheme.primaryGold, size: 18),
+                  label: Text(
+                    task.photographerId.isEmpty
+                        ? 'إسناد مصوّر'
+                        : 'إعادة إسناد مصوّر',
+                    style: const TextStyle(color: AppTheme.primaryGold),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(
+                        color: AppTheme.primaryGold.withOpacity(0.5)),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
                   ),
                 ),
               ),
@@ -324,9 +364,98 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
 
   Future<void> _approveAndAttach(PhotographyTaskModel task) async {
     final adminId = context.read<AuthProvider>().userModel?.uid ?? '';
-    final ok = await context.read<PhotographyProvider>().attachMediaToOffer(adminId, task);
-    _snack(ok ? 'تم اعتماد التصوير وربطه بالعرض' : 'فشل اعتماد التصوير');
+    // المهام المرتبطة بعرض: اعتماد + ربط الوسائط بالعرض
+    // طلبات المستخدم بلا عرض: اعتماد فقط (لا يوجد عرض للربط)
+    final ok = task.offId.isNotEmpty
+        ? await context.read<PhotographyProvider>().attachMediaToOffer(adminId, task)
+        : await context.read<PhotographyProvider>().updateStatus(adminId, task.id, 3,
+            officeNote: 'تم اعتماد التصوير');
+    _snack(ok
+        ? (task.offId.isNotEmpty ? 'تم اعتماد التصوير وربطه بالعرض' : 'تم اعتماد التصوير')
+        : 'فشل اعتماد التصوير');
     _load();
+  }
+
+  /// إسناد مصور لمهمة بانتظار — يخدم بشكل خاص طلبات التصوير القادمة من المستخدمين
+  Future<void> _assignPhotographer(PhotographyTaskModel task) async {
+    if (_photographers.isEmpty) {
+      _snack('لا يوجد مستخدمون لديهم صلاحية photographer_tasks');
+      return;
+    }
+    UserModel? selected;
+    DateTime? scheduledAt;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppTheme.surfaceBlack,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheet) => Padding(
+          padding: EdgeInsets.only(
+            left: 16, right: 16, top: 16,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text('إسناد مصوّر',
+                  style: TextStyle(color: AppTheme.primaryGold, fontSize: 17, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<UserModel>(
+                dropdownColor: AppTheme.surfaceBlack,
+                style: const TextStyle(color: AppTheme.textWhite),
+                decoration: const InputDecoration(labelText: 'المصور'),
+                items: _photographers
+                    .map((u) => DropdownMenuItem(value: u, child: Text(u.nm.isEmpty ? u.ph : u.nm)))
+                    .toList(),
+                onChanged: (v) => setSheet(() => selected = v),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () async {
+                  final date = await showDatePicker(
+                    context: ctx,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime.now(),
+                    lastDate: DateTime.now().add(const Duration(days: 365)),
+                  );
+                  if (date == null) return;
+                  final time = await showTimePicker(context: ctx, initialTime: TimeOfDay.now());
+                  if (time == null) return;
+                  setSheet(() => scheduledAt = DateTime(date.year, date.month, date.day, time.hour, time.minute));
+                },
+                icon: const Icon(Icons.schedule, color: AppTheme.primaryGold),
+                label: Text(
+                  scheduledAt == null ? 'تحديد موعد اختياري' : _fmtDate(scheduledAt!),
+                  style: const TextStyle(color: AppTheme.primaryGold),
+                ),
+              ),
+              const SizedBox(height: 14),
+              ElevatedButton.icon(
+                onPressed: () async {
+                  if (selected == null) {
+                    _snack('اختر المصور');
+                    return;
+                  }
+                  final ok = await context.read<PhotographyProvider>().assignTask(
+                        taskId: task.id,
+                        photographerId: selected!.uid,
+                        scheduledAt: scheduledAt,
+                      );
+                  if (!mounted) return;
+                  Navigator.pop(ctx);
+                  _snack(ok ? 'تم إسناد المهمة للمصور' : 'فشل الإسناد');
+                  _load();
+                },
+                icon: const Icon(Icons.person_add_alt_1),
+                label: const Text('إسناد المهمة'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _rejectTask(PhotographyTaskModel task) async {
