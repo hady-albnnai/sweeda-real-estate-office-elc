@@ -103,7 +103,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
             path,
             bytes,
             fileOptions:
-                const FileOptions(cacheControl: '3600', upsert: true),
+                // upsert:false — إلزامي: وضع upsert بالسيرفر يتطلب سياسة SELECT
+                // التي تفتح خصوصية الوثائق؛ أسماء الملفات فريدة فلا حاجة له.
+                const FileOptions(cacheControl: '3600', upsert: false),
           );
       // bucket خاص → نُرجع المسار فقط (admin يستخدم signed URL أو direct access)
       return path;

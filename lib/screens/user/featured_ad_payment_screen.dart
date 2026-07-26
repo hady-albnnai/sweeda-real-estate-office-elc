@@ -105,7 +105,8 @@ class _FeaturedAdPaymentScreenState extends State<FeaturedAdPaymentScreen> {
             path,
             bytes,
             fileOptions:
-                const FileOptions(cacheControl: '3600', upsert: true),
+                // upsert:false — انظر payment_screen.dart (سياسة SELECT مرفوضة أمنياً)
+                const FileOptions(cacheControl: '3600', upsert: false),
           );
       return path;
     } catch (e) {
