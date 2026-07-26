@@ -626,7 +626,7 @@ $function$
 REVOKE ALL ON FUNCTION admin_handle_report_internal(p_admin_uid uuid, p_report_id uuid, p_action integer, p_note text, p_duration integer) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION admin_handle_report_internal(p_admin_uid uuid, p_report_id uuid, p_action integer, p_note text, p_duration integer) TO service_role;
 
-CREATE OR REPLACE FUNCTION public.admin_reject_payment_internal(p_admin_uid uuid, p_payment_id uuid)
+CREATE OR REPLACE FUNCTION public.admin_reject_payment_internal(p_admin_uid uuid, p_payment_id uuid, p_reason text DEFAULT '')
  RETURNS boolean
  LANGUAGE plpgsql
  SECURITY DEFINER
@@ -637,15 +637,22 @@ BEGIN
   IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN RAISE EXCEPTION 'AUTH_MISMATCH'; END IF;
   SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
   IF v_role IS NULL OR v_role < 5 THEN RAISE EXCEPTION 'NOT_AUTHORIZED'; END IF;
-  UPDATE payments SET sts = 2, appr_by = p_admin_uid WHERE id = p_payment_id AND sts = 0;
+  UPDATE payments
+  SET sts = 2, appr_by = p_admin_uid,
+      meta = COALESCE(meta, '{}'::jsonb) || jsonb_build_object(
+        'reject_reason', COALESCE(NULLIF(BTRIM(p_reason), ''), ''),
+        'reject_ts', NOW())
+  WHERE id = p_payment_id AND sts = 0;
   IF FOUND THEN
-    PERFORM public.log_admin_action(p_admin_uid, 106, 'رفض إيصال التحويل البنكي والدفعة', p_payment_id::TEXT, 'payments');
+    PERFORM public.log_admin_action(p_admin_uid, 106,
+      'رفض دفعة — السبب: ' || LEFT(COALESCE(NULLIF(BTRIM(p_reason), ''), 'بدون سبب'), 120),
+      p_payment_id::TEXT, 'payments');
   END IF;
   RETURN FOUND;
-END; $function$
+END; $function$;
 
-REVOKE ALL ON FUNCTION admin_reject_payment_internal(p_admin_uid uuid, p_payment_id uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION admin_reject_payment_internal(p_admin_uid uuid, p_payment_id uuid) TO service_role;
+REVOKE EXECUTE ON FUNCTION public.admin_reject_payment_internal(p_admin_uid uuid, p_payment_id uuid, p_reason text) FROM anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_reject_payment_internal(p_admin_uid uuid, p_payment_id uuid, p_reason text) TO service_role;
 
 CREATE OR REPLACE FUNCTION public.admin_reset_staff_password(p_admin_uid uuid, p_target_uid uuid, p_new_password text)
  RETURNS jsonb
@@ -4642,233 +4649,73 @@ CREATE OR REPLACE FUNCTION public.approve_payment_final(p_payment_id uuid, p_adm
  SET search_path TO 'public', 'extensions', 'pg_temp'
 AS $function$
 DECLARE
-  v_user_id UUID;
-  v_pkg_id INT;
-  v_pkg_duration INT;
-  v_grace_days INT;
-  v_config JSONB;
-  v_admin_role INT;
-  v_payment_status INT;
-  v_payment_type INT;
-  v_meta JSONB;
-  v_offer_id UUID;
-  v_weeks INT;
+  v_user_id UUID; v_pkg_id INT; v_admin_role INT;
+  v_payment_status INT; v_payment_type INT; v_meta JSONB;
+  v_config JSONB; v_pkg_duration INT; v_grace_days INT;
+  v_old_pkg INT; v_old_end TIMESTAMPTZ;
+  v_offer UUID; v_weeks INT; v_base TIMESTAMPTZ; v_new_end TIMESTAMPTZ;
 BEGIN
   IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_id THEN
     RETURN jsonb_build_object('success', false, 'error', 'AUTH_UID_MISMATCH');
   END IF;
-
   SELECT role INTO v_admin_role FROM users WHERE id = p_admin_id AND i_del = 0;
   IF v_admin_role IS NULL OR v_admin_role < 5 THEN
     RETURN jsonb_build_object('success', false, 'error', 'FORBIDDEN');
   END IF;
-
-  SELECT uid, pkg, sts, tp, meta
-  INTO v_user_id, v_pkg_id, v_payment_status, v_payment_type, v_meta
+  SELECT uid, pkg, sts, tp, meta INTO v_user_id, v_pkg_id, v_payment_status, v_payment_type, v_meta
   FROM payments WHERE id = p_payment_id;
-
-  IF v_user_id IS NULL THEN
-    RETURN jsonb_build_object('success', false, 'error', 'PAYMENT_NOT_FOUND');
-  END IF;
-  IF COALESCE(v_payment_status, -1) <> 0 THEN
-    RETURN jsonb_build_object('success', false, 'error', 'PAYMENT_NOT_PENDING');
-  END IF;
+  IF v_user_id IS NULL THEN RETURN jsonb_build_object('success', false, 'error', 'PAYMENT_NOT_FOUND'); END IF;
+  IF COALESCE(v_payment_status, -1) <> 0 THEN RETURN jsonb_build_object('success', false, 'error', 'PAYMENT_NOT_PENDING'); END IF;
+  SELECT value INTO v_config FROM app_config WHERE key = 'main';
 
   IF COALESCE(v_payment_type, -1) = 0 THEN
-    -- تفعيل باقة (المنطق الأصلي بلا تغيير)
-    SELECT value INTO v_config FROM app_config WHERE key = 'main';
     v_pkg_duration := (v_config->'pkg'->(v_pkg_id::text)->>'d')::INT;
     v_grace_days := COALESCE((v_config->'pkg'->>'grace_days')::INT, 3);
-
-    IF v_pkg_duration IS NULL THEN
-      RETURN jsonb_build_object('success', false, 'error', 'PKG_DURATION_NOT_FOUND');
+    IF v_pkg_duration IS NULL THEN RETURN jsonb_build_object('success', false, 'error', 'PKG_DURATION_NOT_FOUND'); END IF;
+    SELECT b_pkg, pkg_end INTO v_old_pkg, v_old_end FROM users WHERE id = v_user_id;
+    -- سياسة الاستبدال الفوري: الترقية تبدأ من الآن ويُلغى المتبقي من الباقة السابقة
+    -- أما تجديد نفس الباقة الفعالة فيجمع المدة فوق المتبقي
+    IF v_old_pkg = v_pkg_id AND v_old_end IS NOT NULL AND v_old_end > NOW() THEN
+      v_base := v_old_end;
+    ELSE
+      v_base := NOW();
     END IF;
-
+    v_new_end := v_base + (v_pkg_duration || ' days')::interval;
     UPDATE payments SET sts = 1, appr_by = p_admin_id WHERE id = p_payment_id AND sts = 0;
-
-    UPDATE users
-    SET b_pkg = v_pkg_id,
-        pkg_end = GREATEST(COALESCE(pkg_end, NOW()), NOW()) + (v_pkg_duration || ' days')::interval,
-        pkg_grace = GREATEST(COALESCE(pkg_end, NOW()), NOW()) + ((v_pkg_duration + v_grace_days) || ' days')::interval,
-        ts_upd = NOW()
+    UPDATE users SET b_pkg = v_pkg_id, pkg_end = v_new_end,
+      pkg_grace = v_new_end + (v_grace_days || ' days')::interval, ts_upd = NOW()
     WHERE id = v_user_id;
+    RETURN jsonb_build_object('success', true, 'type', 'package', 'pkg', v_pkg_id,
+      'until', to_char(v_new_end, 'YYYY-MM-DD'),
+      'upgraded', (v_old_pkg <> v_pkg_id AND v_old_end IS NOT NULL AND v_old_end > NOW()));
+  END IF;
 
-    RETURN jsonb_build_object('success', true, 'message', 'Package activated', 'duration', v_pkg_duration);
-
-  ELSIF v_payment_type = 1 THEN
-    -- تفعيل إعلان مميز: تحقق ثم تنفيذ (التحقق أولاً لأن RETURN لا يرجع التحديثات)
-    v_offer_id := NULLIF(v_meta->>'offer_id', '')::UUID;
+  IF COALESCE(v_payment_type, -1) = 1 THEN
+    -- إعلان مميز: meta = {"offer_id": "...", "weeks": N}
+    v_offer := NULLIF(v_meta->>'offer_id', '')::UUID;
     v_weeks := COALESCE((v_meta->>'weeks')::INT, 0);
-    IF v_offer_id IS NULL OR v_weeks < 1 OR v_weeks > 4 THEN
-      RETURN jsonb_build_object('success', false, 'error', 'INVALID_FEATURED_AD_META');
+    IF v_offer IS NULL OR v_weeks < 1 THEN
+      RETURN jsonb_build_object('success', false, 'error', 'FEATURED_META_INVALID');
     END IF;
-    IF NOT EXISTS (SELECT 1 FROM offers WHERE id = v_offer_id AND usr_id = v_user_id AND i_del = 0) THEN
-      RETURN jsonb_build_object('success', false, 'error', 'OFFER_NOT_FOUND');
-    END IF;
-
-    UPDATE payments SET sts = 1, appr_by = p_admin_id WHERE id = p_payment_id AND sts = 0;
-
     UPDATE offers
-    SET i_fms = 1,
-        fms_end = GREATEST(COALESCE(fms_end, NOW()), NOW()) + ((v_weeks * 7) || ' days')::INTERVAL
-    WHERE id = v_offer_id AND usr_id = v_user_id AND i_del = 0;
-
-    RETURN jsonb_build_object('success', true, 'message', 'Featured ad activated', 'weeks', v_weeks, 'offer_id', v_offer_id);
+    SET fms_end = GREATEST(NOW(), COALESCE(fms_end, NOW())) + ((v_weeks * 7) || ' days')::interval
+    WHERE id = v_offer AND i_del = 0
+    RETURNING fms_end INTO v_new_end;
+    IF v_new_end IS NULL THEN
+      RAISE EXCEPTION 'OFFER_NOT_FOUND';
+    END IF;
+    UPDATE payments SET sts = 1, appr_by = p_admin_id WHERE id = p_payment_id AND sts = 0;
+    RETURN jsonb_build_object('success', true, 'type', 'featured', 'offer_id', v_offer,
+      'until', to_char(v_new_end, 'YYYY-MM-DD'));
   END IF;
 
   RETURN jsonb_build_object('success', false, 'error', 'UNSUPPORTED_PAYMENT_TYPE');
 EXCEPTION WHEN OTHERS THEN
   RETURN jsonb_build_object('success', false, 'error', SQLERRM);
-END;
-$function$;
-REVOKE ALL ON FUNCTION approve_payment_final(p_payment_id uuid, p_admin_id uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION approve_payment_final(p_payment_id uuid, p_admin_id uuid) TO service_role;
-
--- إشعار الموافقة/الرفض: نص مخصص لدفعات الإعلان المميز
-CREATE OR REPLACE FUNCTION public.trg_payment_approved()
- RETURNS trigger
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public', 'extensions', 'pg_temp'
-AS $function$
-DECLARE
-  v_title TEXT;
-  v_body TEXT;
-  v_pkg_name TEXT;
-  v_weeks_label TEXT;
-BEGIN
-  IF NEW.sts = OLD.sts THEN RETURN NEW; END IF;
-
-  v_pkg_name := CASE NEW.pkg
-    WHEN 1 THEN 'الفضية'
-    WHEN 2 THEN 'الذهبية'
-    ELSE 'المجانية'
-  END;
-
-  IF NEW.tp = 1 THEN
-    v_weeks_label := CASE COALESCE((NEW.meta->>'weeks')::INT, 1)
-      WHEN 1 THEN 'أسبوع واحد'
-      WHEN 2 THEN 'أسبوعين'
-      ELSE (COALESCE((NEW.meta->>'weeks')::INT, 1))::TEXT || ' أسابيع'
-    END;
-    IF NEW.sts = 1 THEN
-      v_title := '⭐ تم تفعيل إعلانك المميز';
-      v_body := 'تم اعتماد دفعتك وتفعيل الإعلان المميز لعرضك لمدة ' || v_weeks_label || '.';
-    ELSIF NEW.sts = 2 THEN
-      v_title := '❌ تم رفض دفعة الإعلان المميز';
-      v_body := 'لم تُقبل الدفعة. يرجى مراجعة بيانات الدفع والمحاولة مرة أخرى.';
-    ELSE
-      RETURN NEW;
-    END IF;
-  ELSE
-    IF NEW.sts = 1 THEN
-      v_title := '✅ تم تفعيل اشتراكك';
-      v_body := 'تم تفعيل الباقة ' || v_pkg_name || ' بنجاح. استمتع بالمزايا الجديدة!';
-    ELSIF NEW.sts = 2 THEN
-      v_title := '❌ تم رفض الدفعة';
-      v_body := 'لم تُقبل الدفعة. يرجى مراجعة بيانات الدفع والمحاولة مرة أخرى.';
-    ELSE
-      RETURN NEW;
-    END IF;
-  END IF;
-
-  PERFORM notify_user(NEW.uid, 3, v_title, v_body, NEW.id::text, 'payment');
-  PERFORM send_push_notification(
-    NEW.uid, v_title, v_body,
-    jsonb_build_object('type', 'payment', 'id', NEW.id::text)
-  );
-
-  RETURN NEW;
-END;
-$function$;
-
--- ════════════════════════════════════════════════════════════════════
--- حظر الإبلاغ عن المحتوى الخاص (قرار المالك 2026-07-26): CANNOT_REPORT_OWN
--- يغطي: tgt_uid=المبلِّغ مباشرة + tgt_id يشير لعرض يملكه المبلِّغ
--- ════════════════════════════════════════════════════════════════════
-CREATE OR REPLACE FUNCTION public.create_report_internal(p_reporter_uid uuid, p_report jsonb)
- RETURNS SETOF reports
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public', 'extensions', 'pg_temp'
-AS $function$
-DECLARE
-  v_target UUID;
-  v_tgt_id UUID;
-  v_offer_owner UUID;
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_reporter_uid THEN
-    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
-  END IF;
-
-  -- (1) الهدف مستخدم = المبلِّغ نفسه
-  v_target := NULLIF(p_report->>'tgt_uid', '')::UUID;
-  IF v_target IS NOT NULL AND v_target = p_reporter_uid THEN
-    RAISE EXCEPTION 'CANNOT_REPORT_OWN';
-  END IF;
-
-  -- (2) الهدف عرضاً يملكه المبلِّغ (tgt_id قد لا يكون UUID — نتجاهل بأمان)
-  BEGIN
-    v_tgt_id := NULLIF(p_report->>'tgt_id', '')::UUID;
-  EXCEPTION WHEN OTHERS THEN
-    v_tgt_id := NULL;
-  END;
-  IF v_tgt_id IS NOT NULL THEN
-    SELECT usr_id INTO v_offer_owner FROM public.offers WHERE id = v_tgt_id AND i_del = 0;
-    IF v_offer_owner IS NOT NULL AND v_offer_owner = p_reporter_uid THEN
-      RAISE EXCEPTION 'CANNOT_REPORT_OWN';
-    END IF;
-  END IF;
-
-  RETURN QUERY
-  INSERT INTO reports (
-    rep_uid, tgt_uid, tgt_tp, tgt_id, rsn, det, sts, act, act_dur, note, act_by, ts_crt
-  ) VALUES (
-    p_reporter_uid,
-    v_target,
-    COALESCE((p_report->>'tgt_tp')::INT, 0),
-    COALESCE(p_report->>'tgt_id', ''),
-    COALESCE((p_report->>'rsn')::INT, 0),
-    COALESCE(p_report->>'det', ''),
-    0,
-    0,
-    0,
-    '',
-    NULL,
-    NOW()
-  ) RETURNING *;
-END;
-$function$;
-
-REVOKE ALL ON FUNCTION create_report_internal(p_reporter_uid uuid, p_report jsonb) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION create_report_internal(p_reporter_uid uuid, p_report jsonb) TO service_role;
-
-
--- ============================================================
--- علامة «الفيديو متوفر» للعرض (واتساب المكتب) — ميزة الفيديو 2026-07-27
--- تُستدعى من admin-offers الإجراء set_video_flag
--- vdo = 'wa' تعني: الفيديو موجود لدى المكتب ويُرسل خاصاً بعد التحقق من الحجز
--- ============================================================
-CREATE OR REPLACE FUNCTION public.admin_set_offer_video(p_admin_uid uuid, p_offer_id uuid, p_has_video boolean)
- RETURNS boolean
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public', 'extensions', 'pg_temp'
-AS $function$
-DECLARE v_role INT;
-BEGIN
-  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN RAISE EXCEPTION 'AUTH_MISMATCH'; END IF;
-  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
-  IF v_role IS NULL OR v_role < 4 THEN RAISE EXCEPTION 'NOT_AUTHORIZED'; END IF;
-  UPDATE offers
-  SET vdo = CASE WHEN p_has_video THEN 'wa' ELSE '' END
-  WHERE id = p_offer_id AND i_del = 0;
-  PERFORM public.log_admin_action(p_admin_uid,
-    CASE WHEN p_has_video THEN 110 ELSE 111 END,
-    CASE WHEN p_has_video THEN 'تفعيل علامة توفر الفيديو للعرض (واتساب المكتب)' ELSE 'إلغاء علامة توفر الفيديو للعرض' END,
-    p_offer_id::TEXT, 'offers');
-  RETURN FOUND;
 END; $function$;
+
+REVOKE EXECUTE ON FUNCTION public.approve_payment_final(p_payment_id uuid, p_admin_id uuid) FROM anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.approve_payment_final(p_payment_id uuid, p_admin_id uuid) TO service_role;
 
 REVOKE ALL ON FUNCTION admin_set_offer_video(p_admin_uid uuid, p_offer_id uuid, p_has_video boolean) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION admin_set_offer_video(p_admin_uid uuid, p_offer_id uuid, p_has_video boolean) TO service_role;

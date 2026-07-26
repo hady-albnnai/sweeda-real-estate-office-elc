@@ -599,7 +599,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         controlAffinity: ListTileControlAffinity.leading,
         contentPadding: EdgeInsets.zero,
         activeColor: AppTheme.primaryGold,
-        title: const Text('بدي أرفق فيديو للعرض (عبر واتساب المكتب)', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+        title: const Text('بدي أرفق فيديو للعرض (عبر واتساب المكتب)', style: TextStyle(color: Colors.black87, fontSize: 13, fontWeight: FontWeight.bold)),
       ),
       if (_wantVideo) ...[
         Container(
@@ -613,7 +613,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('⚠️ إرسال الفيديو بيتم عبر تطبيق واتساب — تأكد إنو التطبيق مثبّت عندك', style: TextStyle(color: AppTheme.textGrey, fontSize: 12, height: 1.5)),
             SizedBox(height: 6),
-            Text('ℹ️ رح ينفتح واتساب تلقائياً بعد ما تنهي إضافة العرض، والرسالة بتكون جاهزة فيها رقم عرضك — بس أرفق الفيديو وابعت', style: TextStyle(color: AppTheme.textGrey, fontSize: 12, height: 1.5)),
+            Text('ℹ️ رح ينفتح واتساب تلقائياً بعد ما تنهي إضافة العرض، والرسالة بتكون جاهزة فيها رقم العرض الخاص بك — بس أرفق الفيديو وابعت', style: TextStyle(color: AppTheme.textGrey, fontSize: 12, height: 1.5)),
           ]),
         ),
       ],

@@ -70,10 +70,11 @@ class PaymentsAdminService {
     return data['success'] == true;
   }
 
-  Future<bool> rejectPayment(String paymentId, String adminId) async {
+  Future<bool> rejectPayment(String paymentId, String adminId, [String reason = '']) async {
     final data = await _invokeAdminPayments('reject', {
       'admin_uid': adminId,
       'payment_id': paymentId,
+      'reason': reason,
     });
     return data['success'] == true;
   }

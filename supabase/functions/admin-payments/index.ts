@@ -65,6 +65,45 @@ async function validateActor(
   return { ok: true, adminUid: requestedAdminUid, role: Number(data.role) };
 }
 
+// إشعار المستخدم بنتيجة دفعته — أي فشل هنا لا يُفشل القبول/الرفض نفسه.
+async function notifyPaymentDecision(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  paymentId: string,
+  kind: "approve" | "reject",
+  result: Record<string, unknown> | null,
+  reason: string,
+): Promise<void> {
+  try {
+    const { data: pay } = await supabaseAdmin
+      .from("payments")
+      .select("uid, tp")
+      .eq("id", paymentId)
+      .maybeSingle();
+    const uid = (pay?.uid ?? "").toString();
+    if (!uid) return;
+    const until = (result?.until ?? "").toString();
+    let title: string;
+    let bodyText: string;
+    if (kind === "reject") {
+      title = "❌ تم رفض طلب الدفع";
+      bodyText = `السبب: ${reason || "غير محدد"} — يمكنك التصحيح وإعادة الطلب من «سجل دفعاتي».`;
+    } else if (pay.tp === 1) {
+      title = "✅ إعلانك المميز مفعّل";
+      bodyText = `تم تفعيل الإعلان المميز لعرضك${until ? ` حتى ${until}` : ""}.`;
+    } else {
+      title = "✅ تم تفعيل باقتك";
+      bodyText = `باقتك مفعّلة${until ? ` حتى ${until}` : ""}${
+        result?.upgraded === true ? " — تمت الترقية واستبدال الباقة السابقة" : ""
+      }.`;
+    }
+    await supabaseAdmin.functions.invoke("send-push-notification", {
+      body: { uid, title, body: bodyText, data: { screen: "my_payments" } },
+    });
+  } catch (e) {
+    console.error("notifyPaymentDecision failed:", e);
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ success: false, error: "METHOD_NOT_ALLOWED" }, 405);
@@ -100,17 +139,26 @@ serve(async (req) => {
       });
       if (error) return json({ success: false, error: error.message }, 400);
       const result = data && typeof data === "object" ? data as Record<string, unknown> : { success: data === true };
+      if (result.success === true) {
+        await notifyPaymentDecision(supabaseAdmin, paymentId, "approve", result, "");
+      }
       return json(result);
     }
 
     if (action === "reject") {
       const paymentId = (body.payment_id ?? body.paymentId)?.toString() ?? "";
       if (!paymentId) return json({ success: false, error: "PAYMENT_ID_REQUIRED" }, 400);
+      // سبب الرفض يُخزَّن في meta ويصل للمستخدم كإشعار
+      const reason = (body.reason ?? "")?.toString() ?? "";
       const { data, error } = await supabaseAdmin.rpc("admin_reject_payment_internal", {
         p_admin_uid: adminUid,
         p_payment_id: paymentId,
+        p_reason: reason,
       });
       if (error) return json({ success: false, error: error.message }, 400);
+      if (data === true) {
+        await notifyPaymentDecision(supabaseAdmin, paymentId, "reject", null, reason);
+      }
       return json({ success: data === true });
     }
 

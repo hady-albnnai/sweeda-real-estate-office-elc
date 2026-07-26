@@ -364,10 +364,56 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
 
   Future<void> _reject(PaymentModel p) async {
     final adminId = context.read<AuthProvider>().userModel?.uid ?? '';
-    if (await context.read<AdminProvider>().rejectPayment(p.id, adminId)) {
-      _snack('تم رفض الدفعة');
+    final reason = await _askRejectReason();
+    if (reason == null || reason.trim().isEmpty) return;
+    if (await context.read<AdminProvider>().rejectPayment(p.id, adminId, reason.trim())) {
+      _snack('تم رفض الدفعة وإشعار المستخدم بالسبب');
       _load();
     }
+  }
+
+  /// دايالوغ سبب الرفض — إلزامي، مع أسباب جاهزة + نص حر
+  Future<String?> _askRejectReason() {
+    final ctrl = TextEditingController();
+    const presets = ['صورة الإيصال غير واضحة', 'المبلغ المدفوع ناقص', 'رقم المرجع غير صحيح'];
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surfaceBlack,
+        title: const Text('سبب الرفض (إلزامي)',
+            style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 16)),
+        content: StatefulBuilder(
+          builder: (ctx2, setS) => Column(mainAxisSize: MainAxisSize.min, children: [
+            Wrap(spacing: 6, runSpacing: 4, children: [
+              for (final r in presets)
+                ActionChip(
+                  label: Text(r, style: const TextStyle(fontSize: 11)),
+                  onPressed: () => setS(() => ctrl.text = r),
+                ),
+            ]),
+            const SizedBox(height: 10),
+            TextField(
+              controller: ctrl,
+              maxLines: 2,
+              style: const TextStyle(color: AppTheme.textWhite, fontSize: 13),
+              decoration: const InputDecoration(
+                hintText: 'اكتب السبب أو اختر من الأعلى…',
+                hintStyle: TextStyle(color: AppTheme.textGrey, fontSize: 12),
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ]),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إلغاء')),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, ctrl.text),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+            child: const Text('رفض وإشعار المستخدم'),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _row(String label, String value) {

@@ -153,7 +153,9 @@ class _MyPaymentsScreenState extends State<MyPaymentsScreen> {
                   p.sts == 1
                       ? 'تم قبول دفعتك وتفعيل الباقة. شكراً!'
                       : p.sts == 2
-                          ? 'لم تُقبل الدفعة. يرجى التحقق من البيانات والمحاولة مجدداً أو التواصل مع الإدارة.'
+                          ? ((p.meta['reject_reason'] ?? '').toString().isNotEmpty
+                              ? 'سبب الرفض: ${p.meta['reject_reason']} — يمكنك التصحيح وإعادة الطلب.'
+                              : 'لم تُقبل الدفعة. يرجى التحقق من البيانات والمحاولة مجدداً أو التواصل مع الإدارة.')
                           : 'دفعتك قيد المراجعة من الإدارة. عادةً خلال 24 ساعة.',
                   style: TextStyle(color: stsColor, fontSize: 12, height: 1.4),
                 ),

@@ -59,6 +59,13 @@ class _PackagesScreenState extends State<PackagesScreen> {
         .where((p) => p.sts == 0 && p.tp == 0)
         .toList();
 
+    // طلبات إعلان مميز معلقة (لكل عرض) — تمنع إعادة الطلب لنفس العرض قبل البت
+    final pendingFeaturedIds = payProv.payments
+        .where((p) => p.sts == 0 && p.tp == 1)
+        .map((p) => (p.meta['offer_id'] ?? '').toString())
+        .where((s) => s.isNotEmpty)
+        .toSet();
+
     return Scaffold(
       backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
@@ -92,7 +99,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
             ],
 
             // ⭐ الإعلان المميز المدفوع — بيع مباشر أول الشاشة (قرار المالك 2026-07-26)
-            _featuredAdSection(config),
+            _featuredAdSection(config, pendingFeaturedIds),
             const SizedBox(height: 20),
 
             const Text(
@@ -116,6 +123,8 @@ class _PackagesScreenState extends State<PackagesScreen> {
                   config: config,
                   pendingPkgIds:
                       pendingPayments.map((pp) => pp.pkg).toSet(),
+                  // أي طلب باقة معلق يحجب كل الأزرار — طلب واحد معلق بالمرة
+                  anyPkgPending: pendingPayments.isNotEmpty,
                 )),
 
             const SizedBox(height: 20),
@@ -141,7 +150,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
   }
 
   // ─── ⭐ بطاقة الإعلان المميز المدفوع — اختر عرضك وتابع للدفع مباشرة ───
-  Widget _featuredAdSection(ConfigModel? config) {
+  Widget _featuredAdSection(ConfigModel? config, Set<String> pendingFeaturedIds) {
     final prices = config?.featuredAdPrices ??
         const {'w1': 50000, 'w2': 95000, 'w3': 135000, 'w4': 180000};
     int priceOf(int w) {
@@ -225,7 +234,10 @@ class _PackagesScreenState extends State<PackagesScreen> {
               ),
               items: _activeOffers.map((o) {
                 final active = o.fmsEnd != null && o.fmsEnd!.isAfter(DateTime.now());
-                final label = active ? '${o.ttl}  ✓ مميز' : o.ttl;
+                final pend = pendingFeaturedIds.contains(o.id);
+                final label = pend
+                    ? '${o.ttl}  ⏳ طلبك قيد المراجعة'
+                    : (active ? '${o.ttl}  ✓ مميز' : o.ttl);
                 return DropdownMenuItem<String>(
                   value: o.id,
                   child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
@@ -237,7 +249,8 @@ class _PackagesScreenState extends State<PackagesScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: _selectedOfferId == null
+                onPressed: _selectedOfferId == null ||
+                        pendingFeaturedIds.contains(_selectedOfferId)
                     ? null
                     : () {
                         final oid = _selectedOfferId!;
@@ -372,6 +385,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
     UserModel? user, {
     ConfigModel? config,
     required Set<int> pendingPkgIds,
+    required bool anyPkgPending,
   }) {
     final effectivePkg  = user?.effectivePkg ?? 0;
     final isCurrent     = pkg.id == effectivePkg && pkg.id > 0;
@@ -427,6 +441,8 @@ class _PackagesScreenState extends State<PackagesScreen> {
                         pkg.id == user?.bPkg &&
                         !isCurrent)
                       _badge('فترة السماح', Colors.orange),
+                    if (!isCurrent && !isFree && effectivePkg > pkg.id)
+                      _badge('أقل من باقتك الحالية', Colors.grey),
                   ],
                 ),
               ),
@@ -465,7 +481,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
               height: 46,
               child: ElevatedButton(
                 onPressed: _btnAction(
-                    context, pkg, isCurrent, isFree, isPending, price),
+                    context, pkg, isCurrent, isFree, isPending || anyPkgPending, price),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: isPending
                       ? Colors.blue.withOpacity(0.3)
@@ -495,6 +511,9 @@ class _PackagesScreenState extends State<PackagesScreen> {
   VoidCallback? _btnAction(BuildContext ctx, _PackageData pkg, bool isCurrent,
       bool isFree, bool isPending, double price) {
     if (isCurrent || isFree) return null;
+    // منع التنازل: لا يمكن طلب باقة أدنى من الباقة الفعالة (تُحجب حتى انتهاء المدة)
+    final activePkg = ctx.read<AuthProvider>().userModel?.effectivePkg ?? 0;
+    if (activePkg > pkg.id) return null;
     if (isPending) {
       return () => ctx.push('/user/my-payments');
     }

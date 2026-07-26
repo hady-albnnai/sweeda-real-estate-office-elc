@@ -386,8 +386,8 @@ class AdminProvider with ChangeNotifier {
     return ok;
   }
 
-  Future<bool> rejectPayment(String paymentId, String adminId) async {
-    final ok = await _paymentsAdmin.rejectPayment(paymentId, adminId);
+  Future<bool> rejectPayment(String paymentId, String adminId, [String reason = '']) async {
+    final ok = await _paymentsAdmin.rejectPayment(paymentId, adminId, reason);
     _syncPaymentsError();
     if (ok) notifyListeners();
     return ok;
