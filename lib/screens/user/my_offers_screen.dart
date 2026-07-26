@@ -105,9 +105,7 @@ class _MyOffersScreenState extends State<MyOffersScreen>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('وصلت لحد العروض المسموح', style: TextStyle(color: AppTheme.textWhite)),
         content: Text(
-          'تجاوزت عدد العروض المسموح بها لحسابك (الحد الحالي: $limit عرض).
-
-'
+          'تجاوزت عدد العروض المسموح بها لحسابك (الحد الحالي: $limit عرض).\n\n'
           'لإضافة المزيد من العروض، اشترك بإحدى الباقات واستفد من حصة أكبر ومزايا إضافية.',
           style: const TextStyle(color: AppTheme.textGrey, height: 1.5),
         ),
