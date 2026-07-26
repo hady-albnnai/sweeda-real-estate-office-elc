@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/config_provider.dart';
+import '../../core/constants/db_constants.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/network/supabase_service.dart';
 import '../../core/utils/app_utils.dart';
@@ -47,6 +49,12 @@ class AccountInfoScreen extends StatelessWidget {
           children: [
             // ─── معلومات الحساب ───
             _buildInfoCard(user, context),
+
+            // ─── بطاقة «باقتي» (مخفية للموظفين الداخليين) ───
+            if (!user.isInternal) ...[
+              const SizedBox(height: 16),
+              _buildPackageCard(user, context),
+            ],
 
             if (user.isLawyer || user.isExpediter) ...[
               const SizedBox(height: 16),
@@ -117,30 +125,6 @@ class AccountInfoScreen extends StatelessWidget {
           _infoRow(Icons.calendar_today_outlined, 'تاريخ التسجيل',
               AppUtils.formatTimestamp(user.tsCrt), context),
 
-          // الباقة — للمستخدمين فقط
-          if (!user.isInternal) ...[
-            const Divider(
-                color: Colors.white12, height: 20, thickness: 0.5),
-            _infoRow(Icons.workspace_premium_outlined, 'الباقة',
-                _packageText(user), context),
-            if (user.pkgEnd != null && user.bPkg > 0)
-              _infoRow(
-                user.isPkgActive
-                    ? Icons.timer_outlined
-                    : Icons.warning_amber_rounded,
-                user.isPkgActive
-                    ? 'انتهاء الباقة'
-                    : user.isInGracePeriod
-                        ? 'فترة السماح حتى'
-                        : 'انتهت',
-                user.isPkgActive
-                    ? AppUtils.formatTimestamp(user.pkgEnd!)
-                    : user.isInGracePeriod
-                        ? AppUtils.formatTimestamp(user.pkgGrace!)
-                        : AppUtils.formatTimestamp(user.pkgEnd!),
-                context,
-              ),
-          ],
         ],
       ),
     );
@@ -319,14 +303,161 @@ class AccountInfoScreen extends StatelessWidget {
     );
   }
 
-  String _packageText(UserModel user) {
-    if (user.bPkg == 0) return 'مجانية';
-    final name = user.bPkg == 1 ? 'فضي' : 'ذهبي';
-    if (user.isPkgActive) return name;
-    if (user.isInGracePeriod) {
-      return '$name — سماح ${user.graceDaysLeft} يوم';
+  // ═══════════════════════════════════════════════════════════════
+  //  بطاقة «باقتي» — الاسم من إعدادات السيرفر، الحصة المستهلكة، زر الترقية
+  // ═══════════════════════════════════════════════════════════════
+  int _pkgLimit(UserModel user, Map<String, dynamic> pkgMap, bool pkgLive) {
+    if (pkgLive) {
+      final p = pkgMap['${user.bPkg}'];
+      final o = p is Map ? p['o'] : null;
+      return o is int ? o : int.tryParse('$o') ?? 5;
     }
-    return 'منتهية ($name)';
+    // مرآة منطق create_offer_internal: الوسيط 5 عروض، غيره مجاني من الإعدادات
+    if (user.role == 1) return 5;
+    final p0 = pkgMap['0'];
+    final o0 = p0 is Map ? p0['o'] : null;
+    return o0 is int ? o0 : int.tryParse('$o0') ?? 1;
+  }
+
+  Future<int> _countActiveOffers(String uid) async {
+    final rows = await SupabaseService()
+        .client
+        .from(DbTables.offers)
+        .select('id')
+        .eq('usr_id', uid)
+        .eq('i_del', 0)
+        .inFilter('sts', [0, 1, 2, 5]);
+    return (rows as List).length;
+  }
+
+  Widget _buildPackageCard(UserModel user, BuildContext context) {
+    final config = Provider.of<ConfigProvider>(context).config;
+    final pkgMap = config?.packages ?? const <String, dynamic>{};
+    final pkgLive =
+        user.bPkg > 0 && (user.isPkgActive || user.isInGracePeriod);
+    final entry = pkgMap['${user.bPkg}'];
+    final pkgName = (entry is Map ? entry['nm'] : null)?.toString() ??
+        (user.bPkg == 0 ? 'مجاني' : 'باقة ${user.bPkg}');
+
+    String statusLabel;
+    Color statusColor;
+    if (user.bPkg == 0) {
+      statusLabel = 'مجانية';
+      statusColor = AppTheme.textGrey;
+    } else if (user.isPkgActive) {
+      statusLabel = 'فعّالة';
+      statusColor = Colors.green;
+    } else if (user.isInGracePeriod) {
+      statusLabel = 'سماح ${user.graceDaysLeft} يوم';
+      statusColor = Colors.orange;
+    } else {
+      statusLabel = 'منتهية';
+      statusColor = AppTheme.errorRed;
+    }
+
+    final limit = _pkgLimit(user, pkgMap, pkgLive);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceBlack,
+        borderRadius: BorderRadius.circular(16),
+        border:
+            Border.all(color: AppTheme.primaryGold.withOpacity(0.12)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            Icon(Icons.workspace_premium_outlined,
+                color: AppTheme.primaryGold.withOpacity(0.8), size: 18),
+            const SizedBox(width: 8),
+            const Expanded(
+              child: Text('باقتي',
+                  style: TextStyle(
+                      color: AppTheme.primaryGold,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600)),
+            ),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: statusColor.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(statusLabel,
+                  style: TextStyle(
+                      color: statusColor,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.bold)),
+            ),
+          ]),
+          const SizedBox(height: 10),
+          Text(pkgName,
+              style: const TextStyle(
+                  color: AppTheme.textWhite,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold)),
+          if (user.bPkg > 0 && user.pkgEnd != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              user.isPkgActive
+                  ? 'تنتهي: ${AppUtils.formatTimestamp(user.pkgEnd!)}'
+                  : user.isInGracePeriod
+                      ? 'فترة السماح حتى: ${AppUtils.formatTimestamp(user.pkgGrace!)}'
+                      : 'انتهت بتاريخ: ${AppUtils.formatTimestamp(user.pkgEnd!)}',
+              style:
+                  const TextStyle(color: AppTheme.textGrey, fontSize: 11.5),
+            ),
+          ],
+          const SizedBox(height: 12),
+          FutureBuilder<int>(
+            future: _countActiveOffers(user.uid),
+            builder: (ctx, snap) {
+              final used = snap.data ?? 0;
+              final lim = limit <= 0 ? 1 : limit;
+              final ratio = (used / lim).clamp(0.0, 1.0);
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('عروضك الفعّالة: $used / $limit',
+                      style: const TextStyle(
+                          color: AppTheme.textGrey, fontSize: 12)),
+                  const SizedBox(height: 6),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: ratio,
+                      minHeight: 6,
+                      backgroundColor: Colors.white10,
+                      valueColor: AlwaysStoppedAnimation(
+                          ratio >= 1.0
+                              ? AppTheme.errorRed
+                              : AppTheme.primaryGold),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => context.push('/user/packages'),
+              icon: const Icon(Icons.upgrade_rounded, size: 18),
+              label: Text(
+                  user.bPkg > 0 ? 'تغيير / تجديد الباقة' : 'ترقية الباقة',
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryGold,
+                foregroundColor: Colors.black,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   // ═══════════════════════════════════════════════════════════════
