@@ -651,6 +651,7 @@ BEGIN
   RETURN FOUND;
 END; $function$;
 
+REVOKE ALL ON FUNCTION public.admin_reject_payment_internal(p_admin_uid uuid, p_payment_id uuid, p_reason text) FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.admin_reject_payment_internal(p_admin_uid uuid, p_payment_id uuid, p_reason text) FROM anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.admin_reject_payment_internal(p_admin_uid uuid, p_payment_id uuid, p_reason text) TO service_role;
 
@@ -1723,8 +1724,9 @@ BEGIN
 END;
 $function$
 
-REVOKE ALL ON FUNCTION create_offer_internal(p_user_uid uuid, p_offer jsonb) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION create_offer_internal(p_user_uid uuid, p_offer jsonb) TO service_role;
+REVOKE ALL ON FUNCTION public.create_offer_internal(p_user_uid uuid, p_offer jsonb) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.create_offer_internal(p_user_uid uuid, p_offer jsonb) FROM anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.create_offer_internal(p_user_uid uuid, p_offer jsonb) TO service_role;
 
 CREATE OR REPLACE FUNCTION public.create_payment_internal(p_user_uid uuid, p_payment jsonb)
  RETURNS SETOF payments
@@ -4736,6 +4738,7 @@ EXCEPTION WHEN OTHERS THEN
   RETURN jsonb_build_object('success', false, 'error', SQLERRM);
 END; $function$;
 
+REVOKE ALL ON FUNCTION public.approve_payment_final(p_payment_id uuid, p_admin_id uuid) FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.approve_payment_final(p_payment_id uuid, p_admin_id uuid) FROM anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.approve_payment_final(p_payment_id uuid, p_admin_id uuid) TO service_role;
 
