@@ -8,7 +8,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/network/supabase_service.dart';
 
 /// شاشة ترقيات العرض (spd)
-/// 5 خيارات: تجديد / تثبيت / Boost / خصم 5% / عرض مميّز
+/// 5 خيارات: تمديد/تجديد / تثبيت / Boost / خصم 5% / عرض مميّز
 class BoostOfferScreen extends StatefulWidget {
   final String offerId;
   const BoostOfferScreen({super.key, required this.offerId});
@@ -230,12 +230,42 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
 
                 _boostCard(
                   icon: Icons.refresh,
-                  title: 'تجديد العرض',
-                  description: 'تمديد العرض لـ 30 يوم إضافية',
+                  title: _renCost(spd) == 0 ? 'تجديد مجاني ✨' : 'تمديد العرض',
+                  description: _renCost(spd) == 0
+                      ? 'يتبقى يومان أو أقل على الانتهاء — 30 يوم إضافية مجاناً'
+                      : 'إضافة 30 يوم فوق المدة المتبقية بالكامل',
                   cost: _renCost(spd),
                   active: false,
                   boostType: 'ren',
                   color: Colors.blue,
+                ),
+                // ⓘ تنويه المصطلحات: تمديد مدفوع (+30 فوق المتبقي بأي وقت) / تجديد مجاني (قبل يومين)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(10),
+                    border:
+                        Border.all(color: Colors.blue.withOpacity(0.3)),
+                  ),
+                  child: const Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.info_outline, color: Colors.blue, size: 16),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '«تمديد» مدفوع: يضيف 30 يوم فوق المدة المتبقية بأي وقت.\n«تجديد» مجاني: عندما يتبقى يومان أو أقل على انتهاء العرض.',
+                          style: TextStyle(
+                              color: AppTheme.textGrey,
+                              fontSize: 11.5,
+                              height: 1.5),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 _boostCard(
                   icon: Icons.push_pin,
@@ -494,10 +524,14 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
                     : Icon(isEnabled ? Icons.money_off : Icons.lock,
                         color: Colors.black, size: 16),
                 label: Text(!isEnabled
-                    ? 'التجديد متاح قبل يومين من الانتهاء'
+                    ? 'التجديد المجاني قبل يومين من الانتهاء'
                     : cost == 0
                         ? 'تجديد مجاني ✨'
-                        : (canAfford ? 'شراء بـ $cost نقطة' : 'نقاطك غير كافية'),
+                        : (canAfford
+                            ? (boostType == 'ren'
+                                ? 'تمديد بـ $cost نقطة'
+                                : 'شراء بـ $cost نقطة')
+                            : 'نقاطك غير كافية'),
                     style: const TextStyle(
                         color: Colors.black,
                         fontWeight: FontWeight.bold,

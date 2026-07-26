@@ -4380,6 +4380,8 @@ GRANT EXECUTE ON FUNCTION request_verification_by_uid(p_user_uid uuid) TO servic
 -- purchase_offer_boost (live-only drift) + منطق التجديد المجاني (قرار المالك 2026-07-26):
 -- باقة فعالة → تجديد مجاني دائماً | بلا باقة + العرض الوحيد + آخر يومين (غير منتهٍ) → مجاني |
 -- زيادة عن الحق بدون باقة أو عرض منتهي الصلاحية → spd.ren نقطة (500 افتراضياً)
+-- ترميم 2026-07-26 (باگ التجديد التراكمي): أساس التجديد والمجانية = تاريخ الانتهاء الفعلي
+-- (ts_end المحفوظ، وإلا تاريخ النشر/الإنشاء + 30 يوم — مطابق لمنطق الإكسبايري والتطبيق) ثم +30 يوم إضافية.
 CREATE OR REPLACE FUNCTION public.purchase_offer_boost(p_uid uuid, p_offer_id uuid, p_boost_type text)
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -4401,12 +4403,16 @@ DECLARE
   v_has_pkg BOOLEAN;
   v_others INT;
   v_ts_end TIMESTAMPTZ;
+  v_ts_pub TIMESTAMPTZ;
+  v_ts_crt TIMESTAMPTZ;
+  v_exp TIMESTAMPTZ;
 BEGIN
   IF auth.uid() IS NOT NULL AND auth.uid() <> p_uid THEN
     RETURN jsonb_build_object('success', false, 'error', 'AUTH_UID_MISMATCH');
   END IF;
 
-  SELECT usr_id, sts INTO v_owner_id, v_offer_status
+  SELECT usr_id, sts, ts_end, ts_pub, ts_crt
+  INTO v_owner_id, v_offer_status, v_ts_end, v_ts_pub, v_ts_crt
   FROM public.offers WHERE id = p_offer_id AND i_del = 0;
 
   IF v_owner_id IS NULL THEN
@@ -4431,7 +4437,8 @@ BEGIN
       AND ( (v_pkg_end IS NOT NULL AND v_pkg_end > v_now)
          OR (v_pkg_grace IS NOT NULL AND v_pkg_grace > v_now) );
 
-    SELECT ts_end INTO v_ts_end FROM public.offers WHERE id = p_offer_id;
+    -- تاريخ الانتهاء الفعلي: المحفوظ، وإلا (النشر أو الإنشاء) + 30 يوم — مطابق لمنطق الإكسبايري والتطبيق
+    v_exp := COALESCE(v_ts_end, COALESCE(v_ts_pub, v_ts_crt) + INTERVAL '30 days');
 
     IF v_has_pkg THEN
       v_cost := 0;
@@ -4439,12 +4446,11 @@ BEGIN
       SELECT COUNT(*) INTO v_others FROM public.offers
       WHERE usr_id = p_uid AND i_del = 0 AND id <> p_offer_id AND sts IN (0,1,2,5);
 
-      IF COALESCE(v_others, 0) = 0 AND v_ts_end IS NOT NULL
-         AND v_ts_end >= v_now AND v_ts_end <= v_now + INTERVAL '2 days' THEN
+      IF COALESCE(v_others, 0) = 0
+         AND v_exp >= v_now AND v_exp <= v_now + INTERVAL '2 days' THEN
         -- (2) بلا باقة + عرض وحيد + ضمن آخر يومين ولم ينتهِ → مجاني
         v_cost := 0;
-      ELSIF COALESCE(v_others, 0) = 0 AND v_ts_end IS NOT NULL
-            AND v_ts_end > v_now + INTERVAL '2 days' THEN
+      ELSIF COALESCE(v_others, 0) = 0 AND v_exp > v_now + INTERVAL '2 days' THEN
         -- مجاني خارج نافذة اليومين → مرفوض (الواجهة تعطّل أساساً، هذا حسم خادمي)
         RETURN jsonb_build_object('success', false, 'error', 'RENEW_TOO_EARLY');
       ELSE
@@ -4482,12 +4488,13 @@ BEGIN
   CASE p_boost_type
     WHEN 'ren' THEN
       UPDATE public.offers
-      SET ts_end = GREATEST(COALESCE(ts_end, v_now), v_now) + INTERVAL '30 days',
+      SET ts_end = GREATEST(v_exp, v_now) + INTERVAL '30 days',
           ts_ren = v_now,
           sts = CASE WHEN sts = 4 THEN 2 ELSE sts END,
           i_pub = CASE WHEN sts = 4 THEN 1 ELSE i_pub END
       WHERE id = p_offer_id AND usr_id = p_uid AND i_del = 0;
-      v_result := jsonb_build_object('boost_type', 'ren', 'duration_days', 30);
+      v_result := jsonb_build_object('boost_type', 'ren', 'duration_days', 30,
+        'new_end', (GREATEST(v_exp, v_now) + INTERVAL '30 days')::TEXT);
 
     WHEN 'pin' THEN
       UPDATE public.offers
