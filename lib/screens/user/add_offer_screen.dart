@@ -811,6 +811,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     final title = _ttlCtrl.text.isNotEmpty ? _ttlCtrl.text : 'عرض جديد';
     final desc = _descCtrl.text.isNotEmpty ? _descCtrl.text : _locCtrl.text;
     final wa = (config?.videoRequestWhatsApp ?? '').trim();
+    final appLink = (config?.appDownloadLink ?? '').trim();
 
     return '''
 $emoji $title
@@ -825,6 +826,7 @@ ${desc.isNotEmpty ? desc : ''}
 
 📱 التواصل والمعاينة حصراً عبر واتساب المكتب العقاري الإلكتروني:
 ${wa.isNotEmpty ? wa : ''}
+${appLink.isNotEmpty ? '📲 لمتابعة كل العروض حمّل تطبيق «عقارات السويداء»:\n$appLink' : ''}
 #عقارات_السويداء #السويداء ${isProperty ? '#عقارات' : '#سيارات'}
 '''.trim();
   }

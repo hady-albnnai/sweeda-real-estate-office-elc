@@ -412,7 +412,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
             keyboardType: TextInputType.phone,
             decoration: const InputDecoration(
               labelText: 'هاتف العميل (إلزامي)',
-              hintText: 'مثال: 0938862469',
+              hintText: 'مثال: 09xxxxxxxx',
               filled: true,
               fillColor: AppTheme.surfaceBlack,
               border: OutlineInputBorder(),

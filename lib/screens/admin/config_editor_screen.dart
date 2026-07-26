@@ -29,6 +29,8 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
 
   // ── Video request WhatsApp (مدير + نائب المدير فقط) ──
   final _videoWaNumber = TextEditingController();
+  /// رابط تحميل التطبيق — يظهر أسفل منشورات السوشيال (فارغ بانتظار نشر المتجر)
+  final _appLinkCtrl = TextEditingController();
   final _videoGroupLink = TextEditingController();
 
   // ── صفحات التواصل الاجتماعي (قابلة للتوسعة) ──
@@ -62,6 +64,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
         // Video WhatsApp dedicated + group link (for video requests)
         final txts = c.texts;
         _videoWaNumber.text = (txts['videoRequestWhatsApp'] ?? '').toString();
+        _appLinkCtrl.text = (txts['appDownloadLink'] ?? '').toString();
         _videoGroupLink.text = (txts['videoRequestGroupLink'] ?? '').toString();
 
         // Social pages
@@ -97,6 +100,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
       _brokerOffersQuota,
       _videoWaNumber,
       _videoGroupLink,
+      _appLinkCtrl,
       _facebookCtrl,
       _instagramCtrl,
       _developerPhoneCtrl,
@@ -180,6 +184,18 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
                           filled: true,
                           fillColor: AppTheme.surfaceBlack,
                           prefixIcon: Icon(Icons.phone, color: AppTheme.primaryGold),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _appLinkCtrl,
+                        style: const TextStyle(color: AppTheme.textWhite),
+                        decoration: const InputDecoration(
+                          labelText: 'رابط تحميل التطبيق (يُدرج بمنشورات التواصل عند تعبئته)',
+                          hintText: 'يُترك فارغاً الآن — يُعبّأ برابط المتجر بعد النشر',
+                          filled: true,
+                          fillColor: AppTheme.surfaceBlack,
+                          prefixIcon: Icon(Icons.download, color: AppTheme.primaryGold),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -470,6 +486,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
         'texts': {
           'videoRequestWhatsApp': _videoWaNumber.text.trim(),
           'videoRequestGroupLink': _videoGroupLink.text.trim(),
+          'appDownloadLink': _appLinkCtrl.text.trim(),
         },
       });
       final d = res.data;

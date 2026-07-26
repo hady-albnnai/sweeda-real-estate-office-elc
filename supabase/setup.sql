@@ -4207,6 +4207,10 @@ INSERT INTO public.app_config (key, value, description)
 VALUES ('main', '{}'::jsonb, 'إعدادات التطبيق الرئيسية')
 ON CONFLICT (key) DO NOTHING;
 
+-- ⚠️ ملاحظة عن "pkg" بالافتراضيات أعلاه: لا يوجد مفتاح "0" (المجاني) قصداً —
+-- غيابه يفعّل fallback الدالة: مستخدم عادي (role 0) ← حصة 1، وسيط (role 1) ← حصة 5.
+-- وجود "0" بقيمة o:5 على السيرفر الحي (قيمة يدوية قديمة) كان سبب بلاغ «النشر بلا حدود»
+-- بتاريخ 2026-07-26 ويُعالج بـ UPDATE مستقل: UPDATE app_config SET value = value #- '{pkg,0}' WHERE key='main';
 UPDATE public.app_config
 SET value = $defaults$
 {
@@ -4242,7 +4246,13 @@ SET value = $defaults$
   },
   "txts": {
     "videoRequestWhatsApp": "",
-    "videoRequestGroupLink": ""
+    "videoRequestGroupLink": "",
+    "appDownloadLink": ""
+  },
+  "pkg": {
+    "1": {"d": 45, "o": 15, "nm": "فضي", "pr": 10},
+    "2": {"d": 60, "o": 40, "nm": "ذهبي", "pr": 25},
+    "grace_days": 3
   },
   "plateTp": {
     "0": "خصوصي",

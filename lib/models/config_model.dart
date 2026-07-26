@@ -43,6 +43,8 @@ class ConfigModel {
 
   /// رقم واتساب المحادثة الخاصة بطلبات الفيديو (الأساسي - يدخله المدير أو نائبه)
   String get videoRequestWhatsApp => _getNested('txts.videoRequestWhatsApp', '');
+  /// رابط تحميل التطبيق — يُدرج أسفل منشورات السوشيال عند تعبئته من الإعدادات (فارغ بانتظار نشر المتجر)
+  String get appDownloadLink => _getNested('txts.appDownloadLink', '');
 
   /// رابط مجموعة الواتساب الاحتياطي (في حال حظر الرقم الخاص)
   String get videoRequestGroupLink => _getNested('txts.videoRequestGroupLink', '');

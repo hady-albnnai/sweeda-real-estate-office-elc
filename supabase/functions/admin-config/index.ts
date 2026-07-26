@@ -4,7 +4,7 @@
 //        فكان الحفظ من شاشة الإعدادات يفشل بصمت — هذه الدالة تكتب عبر service_role
 //        بعد التحقق من الجلسة (JWT أو staff session) بحد أدنى role≥5 (مدير/نائب).
 // الأمان: whitelist حصرية للمفاتيح النصية المسموح تعديلها في هذه المرحلة:
-//         txts.videoRequestWhatsApp / txts.videoRequestGroupLink
+//         txts.videoRequestWhatsApp / txts.videoRequestGroupLink / txts.appDownloadLink
 //         (تُوسَّع لاحقاً لباقي أقسام الإعدادات بمراحل منفصلة ومراجعة مستقلة)
 // ترتيب النشر: functions deploy فقط — لا تغييرات قاعدة بيانات.
 
@@ -21,6 +21,7 @@ const corsHeaders = {
 const ALLOWED_TEXT_KEYS = new Set([
   "videoRequestWhatsApp",
   "videoRequestGroupLink",
+  "appDownloadLink",
 ]);
 
 // كود سجل التدقيق لتغيير إعدادات txts (أكواد 101-107 مستخدمة للعروض/السوشيال)

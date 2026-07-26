@@ -420,6 +420,14 @@ class BusinessService {
     buffer.writeln('📱 التواصل والمعاينة حصراً عبر واتساب المكتب العقاري الإلكتروني:');
     if (wa.isNotEmpty) buffer.writeln(wa);
 
+    // 📲 رابط تحميل التطبيق — يُدرج فقط إذا ضُبط من الإعدادات (فارغ الآن بانتظار نشر المتجر)
+    final appLink = (config?.appDownloadLink ?? '').trim();
+    if (appLink.isNotEmpty) {
+      buffer.writeln('');
+      buffer.writeln('📲 لمتابعة كل العروض حمّل تطبيق «عقارات السويداء»:');
+      buffer.writeln(appLink);
+    }
+
     // هاشتاغات
     buffer.writeln('');
     buffer.write('#عقارات_السويداء #السويداء ');
