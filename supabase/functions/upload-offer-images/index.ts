@@ -129,10 +129,14 @@ serve(async (req) => {
       const arrayBuffer = await file.arrayBuffer();
       const bytes = new Uint8Array(arrayBuffer);
 
+      // ملاحظة: uploadBinary غير موجودة في عميل supabase-js للـ Deno
+      // (موجودة فقط في عميل Dart) — نستخدم upload القياسية مثل باقي دوال المشروع
       const { error: uploadError } = await supabaseAdmin.storage
         .from("offer_images")
-        .uploadBinary(fullPath, bytes, {
-          fileOptions: { cacheControl: "3600", upsert: true },
+        .upload(fullPath, bytes, {
+          contentType: file.type || "image/jpeg",
+          cacheControl: "3600",
+          upsert: true,
         });
 
       if (uploadError) {

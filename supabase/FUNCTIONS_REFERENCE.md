@@ -262,7 +262,7 @@ SELECT * FROM cron.job_run_details ORDER BY start_time DESC LIMIT 10;
 | 10 | `reset-user-password` 🆕 | توليد كلمة سر جديدة وتحديث `users.pwd` | `{ admin_uid, staff_session_token?, user_id }` | `{ success, new_password }` | ✅ منشور |
 | 11 | `delete-user` 🆕 | حذف منطقي لموظف داخلي | `{ admin_uid, staff_session_token?, user_id }` | `{ success }` | ✅ منشور |
 | 12 | `update-user-permissions` 🆕 | تحديث صلاحيات مستخدم عبر جلسة موظف | `{ admin_uid, staff_session_token?, user_id, permissions }` | `{ success }` | ✅ منشور |
-| 13 | `upload-offer-images` 🆕🔒 | رفع صور العروض بأمان عبر service_role (يتحقق من staff_session_token أو JWT) | `multipart/form-data: files, user_id, offer_id?, folder?, admin_uid?` | `{ success, urls, count }` | ✅ منشور — يحتاج إعادة نشر بعد آخر تعديل |
+| 13 | `upload-offer-images` 🆕🔒 | رفع صور العروض بأمان عبر service_role (يتحقق من staff_session_token أو JWT) | `multipart/form-data: files, user_id, offer_id?, folder?, admin_uid?` | `{ success, urls, count }` | ⚠️ يُنشر **حصراً** بـ `--no-verify-jwt` (راجع بروتوكول النشر بالدستور — بدونه البوابة ترد 401 `UNAUTHORIZED_NO_AUTH_HEADER` قبل الدالة)؛ الرفع عبر `.upload()` القياسية (`uploadBinary` غير موجودة في عميل JS للـ Deno — 2026-07-26) |
 | 14 | `legal-actions` ⚖️🔒 | عمليات المحامي والمعقب: ملف المحامي، إرسال مهمة، تحديث checklist، إتمام مهمة، اعتمادها | `{ action, user_uid, staff_session_token?, ... }` | `{ success, ... }` | ✅ منشور — يحتاج إعادة نشر بعد آخر تعديل |
 
 > ⚠️ **`generate_otp` / `verify_otp` القديمة** ما زالت موجودة للتوافق الخلفي فقط — استخدم النسخة V2 في الكود الجديد.

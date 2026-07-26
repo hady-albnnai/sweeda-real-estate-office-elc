@@ -39,6 +39,20 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       '٥) يحق للإدارة حذف العرض أو تقييد الحساب عند ثبوت أي مخالفة لما تقدّم.';
 
   int _currentStep = 0;
+
+  /// تحكّم بتمرير الـ Stepper — بدونه عند الانتقال لخطوة جديدة يبقى الـ ListView
+  /// على موضعه القديم فيفتح المستخدم الخطوة من نص الشاشة ويضطر يطلع يدوياً
+  final ScrollController _stepScroll = ScrollController();
+
+  /// انتقال لخطوة + إعادة التمرير للأعلى (بعد اكتمال بناء الفريم)
+  void _goToStep(int step) {
+    setState(() => _currentStep = step);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_stepScroll.hasClients) return;
+      _stepScroll.animateTo(0,
+          duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
+    });
+  }
   int? _selectedType;
   int? _selectedTrans;
   int? _selectedMainCat;
@@ -126,6 +140,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     _customCityCtrl.dispose(); _carBrandCtrl.dispose(); _carModelCtrl.dispose();
     _carYearCtrl.dispose(); _carColorCtrl.dispose(); _carKmCtrl.dispose();
     _carPlateCtrl.dispose(); _areaCtrl.dispose(); _floorCtrl.dispose(); _legalNotesCtrl.dispose();
+    _stepScroll.dispose();
     super.dispose();
   }
 
@@ -368,7 +383,8 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           return Stepper(
             key: ValueKey('offer_steps_${_selectedType ?? -1}'),
             type: StepperType.vertical, currentStep: current,
-            onStepTapped: (s) => setState(() => _currentStep = s),
+            controller: _stepScroll,
+            onStepTapped: (s) => _goToStep(s),
             controlsBuilder: (context, details) => const SizedBox.shrink(),
             steps: steps,
           );
@@ -471,7 +487,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           TextField(controller: _locCtrl, maxLines: 2, decoration: const InputDecoration(labelText: 'وصف دقيق للموقع (إلزامي)', hintText: 'بجانب مدرسة... شارع... الطابق...', border: OutlineInputBorder())),
         ],
         if (_selectedType == 1) ...[
-          TextField(controller: _carPlateCtrl, decoration: const InputDecoration(labelText: 'لوحة السيارة (إلزامي)', hintText: 'مثال: 123456', border: OutlineInputBorder())),
+          TextField(controller: _carPlateCtrl, decoration: const InputDecoration(labelText: 'رقم لوحة السيارة (إلزامي)', hintText: 'مثال: 123456', border: OutlineInputBorder())),
           const SizedBox(height: 10),
           TextField(controller: _carBrandCtrl, decoration: const InputDecoration(labelText: 'الماركة (إلزامي)', hintText: 'كيا، تويوتا، مرسيدس...', border: OutlineInputBorder())),
           const SizedBox(height: 10),
@@ -485,7 +501,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
             decoration: const InputDecoration(labelText: 'المحافظة (لوحة السيارة)', border: OutlineInputBorder()),
           ),
         ],
-        _navRow(onNext: () { if (_validateBasics()) setState(() => _currentStep = 1); }),
+        _navRow(onNext: () { if (_validateBasics()) _goToStep(1); }),
       ]),
       isActive: _currentStep >= 0,
     );
@@ -528,7 +544,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         const SizedBox(height: 8),
         LocationPicker(initial: _pickedLocation, onPicked: (loc) => setState(() => _pickedLocation = loc), height: 250),
       ],
-      _navRow(onBack: () => setState(() => _currentStep = 0), onNext: () => setState(() => _currentStep = 2)),
+      _navRow(onBack: () => _goToStep(0), onNext: () => _goToStep(2)),
     ]),
     isActive: _currentStep >= 1,
   );
@@ -543,7 +559,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       const Text('🎬 فيديو العرض (اختياري)', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 13)),
       const SizedBox(height: 8),
       OutlinedButton.icon(onPressed: _openWhatsAppVideoGroup, icon: const Icon(Icons.video_library), label: const Text('إرسال فيديو عبر واتساب المكتب')),
-      _navRow(onBack: () => setState(() => _currentStep = 1), onNext: () => setState(() => _currentStep = 3)),
+      _navRow(onBack: () => _goToStep(1), onNext: () => _goToStep(3)),
     ]),
     isActive: _currentStep >= 2,
   );
@@ -599,7 +615,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           );
         }),
       ],
-      _navRow(onBack: () => setState(() => _currentStep = 2), onNext: () => setState(() => _currentStep = 4)),
+      _navRow(onBack: () => _goToStep(2), onNext: () => _goToStep(4)),
     ]),
     isActive: _currentStep >= 3,
   );
@@ -728,7 +744,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         ),
 
         const SizedBox(height: 10),
-        _navRow(onBack: () => setState(() => _currentStep = _selectedType == 1 ? 2 : 3)),
+        _navRow(onBack: () => _goToStep(_selectedType == 1 ? 2 : 3)),
         const SizedBox(height: 4),
         SizedBox(width: double.infinity, height: 55, child: ElevatedButton(onPressed: _submitting ? null : _submit, child: const Text('نشر العرض للمراجعة الآن', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)))),
       ]),
