@@ -4842,3 +4842,33 @@ $function$;
 
 REVOKE ALL ON FUNCTION create_report_internal(p_reporter_uid uuid, p_report jsonb) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION create_report_internal(p_reporter_uid uuid, p_report jsonb) TO service_role;
+
+
+-- ============================================================
+-- علامة «الفيديو متوفر» للعرض (واتساب المكتب) — ميزة الفيديو 2026-07-27
+-- تُستدعى من admin-offers الإجراء set_video_flag
+-- vdo = 'wa' تعني: الفيديو موجود لدى المكتب ويُرسل خاصاً بعد التحقق من الحجز
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.admin_set_offer_video(p_admin_uid uuid, p_offer_id uuid, p_has_video boolean)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE v_role INT;
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN RAISE EXCEPTION 'AUTH_MISMATCH'; END IF;
+  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
+  IF v_role IS NULL OR v_role < 4 THEN RAISE EXCEPTION 'NOT_AUTHORIZED'; END IF;
+  UPDATE offers
+  SET vdo = CASE WHEN p_has_video THEN 'wa' ELSE '' END
+  WHERE id = p_offer_id AND i_del = 0;
+  PERFORM public.log_admin_action(p_admin_uid,
+    CASE WHEN p_has_video THEN 110 ELSE 111 END,
+    CASE WHEN p_has_video THEN 'تفعيل علامة توفر الفيديو للعرض (واتساب المكتب)' ELSE 'إلغاء علامة توفر الفيديو للعرض' END,
+    p_offer_id::TEXT, 'offers');
+  RETURN FOUND;
+END; $function$;
+
+REVOKE ALL ON FUNCTION admin_set_offer_video(p_admin_uid uuid, p_offer_id uuid, p_has_video boolean) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION admin_set_offer_video(p_admin_uid uuid, p_offer_id uuid, p_has_video boolean) TO service_role;

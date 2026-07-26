@@ -25,6 +25,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
   List<OfferModel> _offers = [];
   List<OfferModel> _socialQueue = [];
   final Set<String> _publishingIds = {};
+  final Set<String> _videoBusyIds = {}; // 🎥 عروض جاري تقليب علامة الفيديو لها
   bool _loading = true;
   bool _bulkPublishing = false;
 
@@ -746,6 +747,8 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                         ),
                       ),
                       Container(width: 1, height: 36, color: AppTheme.deepBlack),
+                      Expanded(child: _videoFlagBtn(o)),
+                      Container(width: 1, height: 36, color: AppTheme.deepBlack),
                       Expanded(
                         flex: 2,
                         child: ElevatedButton.icon(
@@ -786,6 +789,8 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                         ),
                       ),
                       Container(width: 1, height: 36, color: AppTheme.deepBlack),
+                      Expanded(child: _videoFlagBtn(o)),
+                      Container(width: 1, height: 36, color: AppTheme.deepBlack),
                       Expanded(
                         child: TextButton.icon(
                           onPressed: () => _approve(o),
@@ -799,6 +804,50 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  /// 🎥 قلب علامة «فيديو متوفر» (واتساب المكتب) — ميزة الفيديو 2026-07-27
+  Future<void> _toggleVideoFlag(OfferModel o) async {
+    final has = o.vdo.isEmpty; // الحالة الجديدة المطلوبة
+    setState(() => _videoBusyIds.add(o.id));
+    try {
+      final res = await SupabaseService().invokeFunction('admin-offers', body: {
+        'action': 'set_video_flag',
+        'offer_id': o.id,
+        'has_video': has,
+      });
+      if (!mounted) return;
+      if (res.data?['success'] == true) {
+        _snack(has
+            ? '🎥 تم تفعيل الفيديو — ستظهر بطاقته بصفحة العرض للزوار'
+            : 'تم إلغاء علامة الفيديو');
+        await _load();
+      } else {
+        _snack(res.data?['error']?.toString() ?? 'فشل تغيير علامة الفيديو');
+      }
+    } catch (e) {
+      if (mounted) _snack('خطأ: $e');
+    } finally {
+      if (mounted) setState(() => _videoBusyIds.remove(o.id));
+    }
+  }
+
+  Widget _videoFlagBtn(OfferModel o) {
+    final busy = _videoBusyIds.contains(o.id);
+    final active = o.vdo.isNotEmpty;
+    return TextButton.icon(
+      onPressed: busy ? null : () => _toggleVideoFlag(o),
+      icon: busy
+          ? const SizedBox(
+              width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+          : Icon(active ? Icons.videocam : Icons.videocam_off_outlined,
+              color: active ? AppTheme.primaryGold : AppTheme.textGrey, size: 20),
+      label: Text(active ? 'فيديو ✓' : 'فيديو',
+          style: TextStyle(
+              color: active ? AppTheme.primaryGold : AppTheme.textGrey,
+              fontSize: 12,
+              fontWeight: active ? FontWeight.bold : FontWeight.normal)),
     );
   }
 

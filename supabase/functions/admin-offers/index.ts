@@ -257,6 +257,20 @@ serve(async (req) => {
       return json({ success: data === true });
     }
 
+    if (action === "set_video_flag") {
+      // 🎥 علامة «فيديو متوفر» (واتساب المكتب) — ميزة الفيديو 2026-07-27
+      const offerId = (body.offer_id ?? body.offerId)?.toString() ?? "";
+      const hasVideo = body.has_video === true || body.hasVideo === true;
+      if (!offerId) return json({ success: false, error: "OFFER_ID_REQUIRED" }, 400);
+      const { data, error } = await supabaseAdmin.rpc("admin_set_offer_video", {
+        p_admin_uid: adminUid,
+        p_offer_id: offerId,
+        p_has_video: hasVideo,
+      });
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json({ success: data === true });
+    }
+
     if (action === "delete") {
       const offerId = (body.offer_id ?? body.offerId)?.toString() ?? "";
       if (!offerId) return json({ success: false, error: "OFFER_ID_REQUIRED" }, 400);
