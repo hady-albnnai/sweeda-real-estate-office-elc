@@ -193,6 +193,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final facebook = config?.facebookPage ?? '';
     final instagram = config?.instagramPage ?? '';
     final devPhone = config?.developerPhone ?? '(سيتم إضافته لاحقاً)';
+    final devPhone2 = config?.developerPhone2 ?? '';
     final extraSocials = config?.socialPages ?? {};
 
     showDialog(
@@ -249,9 +250,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   borderRadius: BorderRadius.circular(10),
                   child: Image.asset(
                     'assets/images/loraneem_tech_logo.png',
-                    width: 80,
-                    height: 80,
-                    fit: BoxFit.cover,
+                    // الصورة أصلها عريضة (1200×520) — contain بلا قص
+                    width: 150,
+                    fit: BoxFit.contain,
                   ),
                 ),
               ),
@@ -300,6 +301,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
                 ),
               ),
+              // رقم المطور الثاني (يُخفى إذا النص فارغ من لوحة الأدمن)
+              if (devPhone2.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.deepBlack,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                        color: AppTheme.primaryGold.withOpacity(0.25)),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.phone,
+                          color: AppTheme.primaryGold, size: 18),
+                      const SizedBox(width: 8),
+                      Text(
+                        'رقم المطور الثاني: $devPhone2',
+                        style: const TextStyle(
+                            color: AppTheme.textGrey, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 20),
 
               // معلومات التطبيق

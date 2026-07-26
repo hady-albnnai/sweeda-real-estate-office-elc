@@ -37,6 +37,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
   final _facebookCtrl = TextEditingController();
   final _instagramCtrl = TextEditingController();
   final _developerPhoneCtrl = TextEditingController();
+  final _developerPhone2Ctrl = TextEditingController();
   bool _socialAutoPublish = true; // مفعّل افتراضياً منذ 2026-07-13
   // للصفحات الإضافية: نستخدم قائمة بسيطة (key: label, value: url)
   final List<Map<String, TextEditingController>> _extraSocialCtrls = [];
@@ -71,6 +72,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
         _facebookCtrl.text = c.facebookPage;
         _instagramCtrl.text = c.instagramPage;
         _developerPhoneCtrl.text = c.developerPhone;
+        _developerPhone2Ctrl.text = c.developerPhone2;
         _socialAutoPublish = c.socialAutoPublish;
 
         // Extra social pages (socialPages)
@@ -104,6 +106,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
       _facebookCtrl,
       _instagramCtrl,
       _developerPhoneCtrl,
+      _developerPhone2Ctrl,
     ]) {
       c.dispose();
     }
@@ -280,6 +283,19 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
                         decoration: const InputDecoration(
                           labelText: 'رقم هاتف المطور (للتواصل في عن التطبيق)',
                           hintText: '0933123456',
+                          filled: true,
+                          fillColor: AppTheme.surfaceBlack,
+                          prefixIcon: Icon(Icons.phone, color: AppTheme.primaryGold),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _developerPhone2Ctrl,
+                        keyboardType: TextInputType.phone,
+                        style: const TextStyle(color: AppTheme.textWhite),
+                        decoration: const InputDecoration(
+                          labelText: 'رقم هاتف المطور الثاني (اتركه فارغاً لإخفائه)',
+                          hintText: '0938123456',
                           filled: true,
                           fillColor: AppTheme.surfaceBlack,
                           prefixIcon: Icon(Icons.phone, color: AppTheme.primaryGold),
@@ -547,6 +563,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
     txts['facebook'] = _facebookCtrl.text.trim();
     txts['instagram'] = _instagramCtrl.text.trim();
     txts['developerPhone'] = _developerPhoneCtrl.text.trim();
+    txts['developerPhone2'] = _developerPhone2Ctrl.text.trim();
 
     // صفحات إضافية
     final extraSocial = <String, dynamic>{};

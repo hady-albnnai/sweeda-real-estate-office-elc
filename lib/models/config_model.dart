@@ -101,6 +101,9 @@ class ConfigModel {
   /// رقم هاتف المطور (قابل للتعديل من الإدارة — يظهر في "عن التطبيق")
   String get developerPhone => _getNested('txts.developerPhone', '0933713023');
 
+  /// رقم هاتف المطور الثاني (قابل للتعديل من الإدارة — نص فارغ يخفيه من "عن التطبيق")
+  String get developerPhone2 => _getNested('txts.developerPhone2', '0938862469');
+
   /// إعدادات النشر الحقيقي على Meta. التوكنات لا تحفظ هنا؛ تبقى Edge Secrets.
   /// افتراضي true منذ 2026-07-13 — النشر التلقائي بعد الموافقة مباشرة.
   Map<String, dynamic> get socialPublishing =>
