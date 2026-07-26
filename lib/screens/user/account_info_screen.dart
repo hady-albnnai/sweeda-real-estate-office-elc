@@ -485,7 +485,13 @@ class AccountInfoScreen extends StatelessWidget {
     auth.setVerificationPending();
 
     try {
-      await SupabaseService().invokeFunction('user-account', body: {'action': 'request_verification', 'p_user_uid': user.uid});
+      // الإصلاح الجذري: الدالة تقرأ user_uid فقط — إرسال p_user_uid كان يُرفض صامتاً (USER_UID_REQUIRED)
+      // والنجاح كان يُعرض زوراً لأن invokeFunction لا ترمي عند 4xx والرد لم يكن يُفحص أبداً
+      final res = await SupabaseService().invokeFunction('user-account', body: {'action': 'request_verification', 'user_uid': user.uid});
+      final body = res.data;
+      if (body is! Map || body['success'] != true) {
+        throw Exception((body is Map ? body['error'] : null)?.toString() ?? 'VERIFICATION_REQUEST_FAILED');
+      }
       await auth.refreshUser();
       if (!context.mounted) return;
       AppTheme.showSnackBar(context,

@@ -918,7 +918,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                         if ((offer.specs['km'] ?? '').toString().isNotEmpty) _spec(Icons.speed, 'الكيلومترات', '${offer.specs['km']} كم'),
                         if ((offer.specs['fuel'] ?? '').toString().isNotEmpty) _spec(Icons.local_gas_station, 'الوقود', offer.specs['fuel'].toString()),
                         if ((offer.specs['transmission'] ?? '').toString().isNotEmpty) _spec(Icons.settings, 'ناقل الحركة', offer.specs['transmission'].toString()),
-                        if ((offer.specs['plate'] ?? '').toString().isNotEmpty) _spec(Icons.confirmation_number, 'اللوحة', offer.specs['plate'].toString()),
+                        if ((offer.specs['plate'] ?? '').toString().isNotEmpty) _spec(Icons.confirmation_number, 'رقم اللوحة والمحافظة', offer.specs['plate'].toString()),
                       ],
                     ]),
                     if ((offer.specs['legal_notes'] ?? '').toString().isNotEmpty) ...[

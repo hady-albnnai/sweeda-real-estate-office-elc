@@ -24,12 +24,6 @@ class AddOfferScreen extends StatefulWidget {
 class _AddOfferScreenState extends State<AddOfferScreen> {
   static const String _customCityOption = '__custom_city__';
 
-  /// المحافظات السورية الأربع عشرة — للوحات السيارات (اللوحة تتبع لمحافظة)
-  static const List<String> _syrianGovernorates = [
-    'دمشق', 'ريف دمشق', 'حلب', 'حماة', 'حمص', 'اللاذقية', 'طرطوس',
-    'إدلب', 'دير الزور', 'الرقة', 'الحسكة', 'درعا', 'القنيطرة', 'السويداء',
-  ];
-
   /// نص الإقرار والتعهد الكامل — يجب أن يقرأه المستخدم قبل الموافقة
   static const String _pledgeFullText = 'أقرّ أنا صاحب هذا العرض وأتعهد بما يلي:\n'
       '١) جميع البيانات المدخلة (النوع، المواصفات، السعر، الموقع، الصور، السند) صحيحة ودقيقة، وأتحمّل كامل المسؤولية القانونية عن أي خطأ أو تضليل فيها.\n'
@@ -66,6 +60,8 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   final _customSubCtrl = TextEditingController();
   final _contactPhoneCtrl = TextEditingController();
   final _customCityCtrl = TextEditingController();
+  /// إدخال حر لمنطقة السيارة عند اختيار «آخر (إدخال حر)»
+  final _carCustomCityCtrl = TextEditingController();
 
   final List<XFile> _pickedImages = [];
   XFile? _docImage;
@@ -86,7 +82,8 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   final _carPlateCtrl = TextEditingController();
   String? _carFuel;
   String? _carTransmission;
-  String? _carGovernorate;
+  /// منطقة تواجد السيارة — إلزامية (نفس مفهوم «المنطقة الرئيسية» للعقار)
+  String? _carCityArea;
   int? _selectedCarDocType;
   int? _selectedPlateType;
 
@@ -140,6 +137,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     _customCityCtrl.dispose(); _carBrandCtrl.dispose(); _carModelCtrl.dispose();
     _carYearCtrl.dispose(); _carColorCtrl.dispose(); _carKmCtrl.dispose();
     _carPlateCtrl.dispose(); _areaCtrl.dispose(); _floorCtrl.dispose(); _legalNotesCtrl.dispose();
+    _carCustomCityCtrl.dispose();
     _stepScroll.dispose();
     super.dispose();
   }
@@ -217,6 +215,14 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     final effectivePhone = InputValidators.normalizeDigits(_contactPhoneCtrl.text.trim().isNotEmpty ? _contactPhoneCtrl.text.trim() : user.ph.trim());
     if (!RegExp(r'^09[3-9]\d{7}$').hasMatch(effectivePhone)) { _snack('يرجى إدخال رقم هاتف سوري صحيح (09xxxxxxxx)'); return; }
 
+    // حقول السيارة الإلزامية — اللوحة إلزامية بتسميتها لكن لم يكن هناك فرض برمجي، والمنطقة إلزامية بطلب المالك
+    String? carCity;
+    if (_selectedType == 1) {
+      if (_carPlateCtrl.text.trim().isEmpty) { _snack('يرجى إدخال رقم اللوحة والمحافظة (إلزامي)'); return; }
+      carCity = _carCityArea == _customCityOption ? _carCustomCityCtrl.text.trim() : (_carCityArea ?? '');
+      if (carCity.isEmpty) { _snack('يرجى اختيار المنطقة الرئيسية للسيارة (إلزامي)'); return; }
+    }
+
     setState(() { _submitting = true; _progressMsg = 'جاري رفع البيانات...'; });
     final docUrl = await _uploadDocImage(user.uid) ?? '';
 
@@ -246,7 +252,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       }
     }
 
-    final loc = _selectedType == 1 ? {'r': 0, 'd': '', 'city': _carGovernorate ?? ''} : {'r': 0, 'd': _locCtrl.text, 'city': _selectedCityArea == _customCityOption ? _customCityCtrl.text : _selectedCityArea};
+    final loc = _selectedType == 1 ? {'r': 0, 'd': '', 'city': carCity ?? ''} : {'r': 0, 'd': _locCtrl.text, 'city': _selectedCityArea == _customCityOption ? _customCityCtrl.text : _selectedCityArea};
 
     // ── توليد نص المنشور الجاهز للسوشيال (فيسبوك + إنستغرام)
     final socialText = _generateSocialPostText();
@@ -487,19 +493,15 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           TextField(controller: _locCtrl, maxLines: 2, decoration: const InputDecoration(labelText: 'وصف دقيق للموقع (إلزامي)', hintText: 'بجانب مدرسة... شارع... الطابق...', border: OutlineInputBorder())),
         ],
         if (_selectedType == 1) ...[
-          TextField(controller: _carPlateCtrl, decoration: const InputDecoration(labelText: 'رقم لوحة السيارة (إلزامي)', hintText: 'مثال: 123456', border: OutlineInputBorder())),
+          TextField(controller: _carPlateCtrl, decoration: const InputDecoration(labelText: 'رقم اللوحة والمحافظة (إلزامي)', hintText: 'مثال: 123456 - السويداء', border: OutlineInputBorder())),
           const SizedBox(height: 10),
           TextField(controller: _carBrandCtrl, decoration: const InputDecoration(labelText: 'الماركة (إلزامي)', hintText: 'كيا، تويوتا، مرسيدس...', border: OutlineInputBorder())),
           const SizedBox(height: 10),
           TextField(controller: _carModelCtrl, decoration: const InputDecoration(labelText: 'الموديل (إلزامي)', hintText: 'سيراتو، لاندكروزر، أكسنت...', border: OutlineInputBorder())),
           const SizedBox(height: 10),
-          // المحافظة — للوحة السيارة (تتبع لأي محافظة سورية وليست مناطق العقارات)
-          DropdownButtonFormField<String>(
-            value: _carGovernorate,
-            items: _syrianGovernorates.map((g) => DropdownMenuItem<String>(value: g, child: Text(g))).toList(),
-            onChanged: (v) => setState(() => _carGovernorate = v),
-            decoration: const InputDecoration(labelText: 'المحافظة (لوحة السيارة)', border: OutlineInputBorder()),
-          ),
+          // منطقة تواجد السيارة — إلزامية (نفس مصدر مناطق العقار: قائمة locs من الإعدادات)
+          DropdownButtonFormField<String>(value: _carCityArea, items: cityItems, onChanged: (v) => setState(() => _carCityArea = v), decoration: const InputDecoration(labelText: 'المنطقة الرئيسية للسيارة (إلزامي)', border: OutlineInputBorder())),
+          if (_carCityArea == _customCityOption) Padding(padding: const EdgeInsets.only(top: 10), child: TextField(controller: _carCustomCityCtrl, decoration: const InputDecoration(labelText: 'اكتب المنطقة يدوياً', border: OutlineInputBorder()))),
         ],
         _navRow(onNext: () { if (_validateBasics()) _goToStep(1); }),
       ]),
@@ -768,7 +770,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     final typeName = _selectedType == 0 ? 'عقار' : 'سيارة';
     final transName = _selectedTrans == 0 ? 'للبيع' : 'للإيجار';
     final city = _selectedType == 1
-        ? (_carGovernorate ?? '')
+        ? (_carCityArea == _customCityOption ? _carCustomCityCtrl.text.trim() : (_carCityArea ?? ''))
         : (_selectedCityArea == _customCityOption ? _customCityCtrl.text : (_selectedCityArea ?? ''));
 
     final title = _ttlCtrl.text.isNotEmpty ? _ttlCtrl.text : 'عرض جديد';
