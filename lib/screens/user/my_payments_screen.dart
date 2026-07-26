@@ -79,6 +79,9 @@ class _MyPaymentsScreenState extends State<MyPaymentsScreen> {
         : p.pkg == 2
             ? 'الذهبية'
             : 'المجانية';
+    final weeks = p.meta['weeks']?.toString() ?? '?';
+    final typeLabel =
+        p.tp == 1 ? '⭐ إعلان مميز — $weeks أسبوع' : 'باقة $pkgName';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
@@ -96,7 +99,7 @@ class _MyPaymentsScreenState extends State<MyPaymentsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'باقة $pkgName',
+                typeLabel,
                 style: const TextStyle(
                     color: AppTheme.textWhite,
                     fontWeight: FontWeight.bold,

@@ -104,6 +104,10 @@ class ConfigModel {
   /// رقم هاتف المطور الثاني (قابل للتعديل من الإدارة — نص فارغ يخفيه من "عن التطبيق")
   String get developerPhone2 => _getNested('txts.developerPhone2', '0938862469');
 
+  /// أسعار «الإعلان المميز» المدفوع بالأسبوع (ل.س) — قابلة للتعديل من السيرفر (fmsp)
+  Map<String, dynamic> get featuredAdPrices => _getNestedMap(
+      'fmsp', {'w1': 50000, 'w2': 95000, 'w3': 135000, 'w4': 180000});
+
   /// إعدادات النشر الحقيقي على Meta. التوكنات لا تحفظ هنا؛ تبقى Edge Secrets.
   /// افتراضي true منذ 2026-07-13 — النشر التلقائي بعد الموافقة مباشرة.
   Map<String, dynamic> get socialPublishing =>

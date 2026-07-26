@@ -30,6 +30,7 @@ import '../../screens/user/settings_screen.dart';
 import '../../screens/user/notifications_screen.dart';
 import '../../screens/user/add_request_screen.dart';
 import '../../screens/user/packages_screen.dart';
+import '../../screens/user/featured_ad_payment_screen.dart';
 import '../../screens/user/payment_screen.dart';
 import '../../screens/user/edit_offer_screen.dart';
 import '../../screens/user/become_broker_screen.dart';
@@ -246,6 +247,7 @@ class AppRouter {
       GoRoute(path: '/user/notifications', builder: (context, state) => const NotificationsScreen()),
       GoRoute(path: '/user/packages', builder: (context, state) => const PackagesScreen()),
       GoRoute(path: '/user/payment', builder: (context, state) => PaymentScreen(packageId: int.tryParse(state.uri.queryParameters['pkg'] ?? '0') ?? 0)),
+      GoRoute(path: '/user/featured-payment', builder: (context, state) => FeaturedAdPaymentScreen(offerId: state.uri.queryParameters['offer'] ?? '')),
       GoRoute(path: '/user/edit-offer/:id', builder: (context, state) => EditOfferScreen(offerId: state.pathParameters['id']!)),
       GoRoute(path: '/user/become-broker', builder: (context, state) => const BecomeBrokerScreen()),
       GoRoute(path: '/user/request/:id', builder: (context, state) => RequestDetailScreen(requestId: state.pathParameters['id']!)),

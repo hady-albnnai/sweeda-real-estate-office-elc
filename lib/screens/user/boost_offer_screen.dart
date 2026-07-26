@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/config_provider.dart';
 import '../../providers/offer_provider.dart';
@@ -297,16 +298,8 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
                   boostType: 'dsc5',
                   color: Colors.green,
                 ),
-                _boostCard(
-                  icon: Icons.star,
-                  title: 'عرض مميّز (Featured)',
-                  description: 'شارة مميّز + ظهور في قسم خاص لمدة 30 يوم',
-                  cost: (spd['fms'] ?? 8000) as int,
-                  active: _offer!.iFms == 1,
-                  activeUntil: _offer!.fmsEnd,
-                  boostType: 'fms',
-                  color: AppTheme.primaryGold,
-                ),
+                // ⭐ الإعلان المميز أصبح مدفوعاً فقط (قرار المالك 2026-07-26 — لا نسخة نقاط)
+                _featuredAdCard(),
                 const SizedBox(height: 16),
                 _infoBox(),
                 const SizedBox(height: 20),
@@ -542,6 +535,90 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  /// بطاقة الإعلان المميز المدفوع — شراء بالمدة (1-4 أسابيع) عبر مسار الدفع اليدوي
+  Widget _featuredAdCard() {
+    final ending = _offer!.fmsEnd;
+    final active = _offer!.iFms == 1 &&
+        ending != null &&
+        ending.isAfter(DateTime.now());
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceBlack,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+            color: AppTheme.primaryGold.withOpacity(active ? 0.6 : 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            const Icon(Icons.star, color: AppTheme.primaryGold, size: 20),
+            const SizedBox(width: 8),
+            const Expanded(
+              child: Text('إعلان مميز',
+                  style: TextStyle(
+                      color: AppTheme.textWhite,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold)),
+            ),
+            if (active)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text('فعّال',
+                    style: TextStyle(
+                        color: Colors.green,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold)),
+              ),
+          ]),
+          const SizedBox(height: 6),
+          Text(
+            active
+                ? 'إعلانك المميز فعّال حتى: '
+                    '${ending.day}/${ending.month}/${ending.year}'
+                : 'شارة مميّز + ظهور في قسم خاص — شراء مدفوع بالمدة (1-4 أسابيع)',
+            style:
+                const TextStyle(color: AppTheme.textGrey, fontSize: 11.5),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            height: 38,
+            child: ElevatedButton.icon(
+              onPressed: active
+                  ? null
+                  : () => context
+                      .push('/user/featured-payment?offer=${_offer!.id}'),
+              icon: Icon(
+                active ? Icons.check_circle : Icons.shopping_cart,
+                size: 16,
+                color: Colors.black,
+              ),
+              label: Text(
+                active ? 'الإعلان المميز فعّال ✓' : 'شراء إعلان مميز',
+                style: const TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor:
+                    active ? Colors.grey : AppTheme.primaryGold,
+              ),
+            ),
+          ),
         ],
       ),
     );

@@ -25,6 +25,14 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   int _filter = 0; // 0=معلّق(افتراضي), -1=الكل, 1=مقبول, 2=مرفوض
 
   static const _pkgNames = {0: 'مجاني', 1: 'فضي', 2: 'ذهبي'};
+
+  String _typeLabel(p) {
+    if (p.tp == 1) {
+      final w = p.meta['weeks']?.toString() ?? '?';
+      return '⭐ إعلان مميز — ' + w + ' أسبوع';
+    }
+    return 'باقة ' + (_pkgNames[p.pkg] ?? '—');
+  }
   static const _stsNames = {0: 'معلّق', 1: 'مقبول', 2: 'مرفوض'};
 
   @override
@@ -189,7 +197,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                   : _short(p.uid)),
           if (_usersCache[p.uid]?.ph.isNotEmpty == true)
             _row('الهاتف', _usersCache[p.uid]!.ph),
-          _row('الباقة', _pkgNames[p.pkg] ?? '—'),
+          _row('النوع', _typeLabel(p)),
           // السعر المدفوع مقابل المفترض
           Builder(builder: (ctx) {
             final config = ctx.read<ConfigProvider>().config;
@@ -349,7 +357,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     if (await context
         .read<AdminProvider>()
         .approvePayment(p.id, adminId)) {
-      _snack('تمت الموافقة وتفعيل الباقة');
+      _snack('تمت الموافقة والتفعيل بنجاح');
       _load();
     }
   }

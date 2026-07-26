@@ -117,7 +117,7 @@ CREATE TABLE IF NOT EXISTS payments (
   tp INTEGER NOT NULL CHECK (tp BETWEEN 0 AND 2), pkg INTEGER DEFAULT 0 CHECK (pkg BETWEEN 0 AND 2),
   amt NUMERIC(10,2) NOT NULL DEFAULT 0, cur INTEGER DEFAULT 1 CHECK (cur BETWEEN 0 AND 2),
   mtd INTEGER DEFAULT 0 CHECK (mtd BETWEEN 0 AND 2),
-  proof TEXT DEFAULT '', ref TEXT DEFAULT '',
+  proof TEXT DEFAULT '', ref TEXT DEFAULT '', meta JSONB NOT NULL DEFAULT '{}',
   sts INTEGER DEFAULT 0 CHECK (sts BETWEEN 0 AND 2), appr_by UUID,
   ts_crt TIMESTAMPTZ DEFAULT NOW()
 );
@@ -4542,3 +4542,242 @@ END;
 $function$;
 REVOKE ALL ON FUNCTION purchase_offer_boost(p_uid uuid, p_offer_id uuid, p_boost_type text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION purchase_offer_boost(p_uid uuid, p_offer_id uuid, p_boost_type text) TO service_role;
+
+-- ════════════════════════════════════════════════════════════════════
+-- الإعلان المميز المدفوع (قرار المالك 2026-07-26): payments.tp=1
+-- المدة 1-4 أسابيع بالمصاري عبر نفس مسار الدفع اليدوي، التفعيل عند موافقة الأدمن
+-- ════════════════════════════════════════════════════════════════════
+ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS meta JSONB NOT NULL DEFAULT '{}';
+
+-- إنشاء دفعة: نفس الأصل + دعم tp=1 (إعلان مميز) مع تحقق الملكية والمدة ومنع التكرار
+CREATE OR REPLACE FUNCTION public.create_payment_internal(p_user_uid uuid, p_payment jsonb)
+ RETURNS SETOF payments
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE
+  v_user        users%ROWTYPE;
+  v_pending_cnt INT;
+  v_tp          INT;
+  v_offer_id    UUID;
+  v_weeks       INT;
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
+  SELECT * INTO v_user
+  FROM users WHERE id = p_user_uid AND i_del = 0 AND sts = 0;
+  IF v_user.id IS NULL THEN
+    RAISE EXCEPTION 'USER_NOT_ACTIVE_OR_NOT_FOUND';
+  END IF;
+
+  IF COALESCE(trim(p_payment->>'proof'), '') = '' OR
+     COALESCE(trim(p_payment->>'ref'),   '') = '' THEN
+    RAISE EXCEPTION 'MISSING_PAYMENT_PROOF_OR_REFERENCE';
+  END IF;
+
+  v_tp := COALESCE((p_payment->>'tp')::INT, 0);
+
+  IF v_tp = 1 THEN
+    -- إعلان مميز: عرض + مدة (1-4 أسابيع) إلزاميان
+    v_offer_id := NULLIF(p_payment->'meta'->>'offer_id', '')::UUID;
+    v_weeks := COALESCE((p_payment->'meta'->>'weeks')::INT, 0);
+    IF v_offer_id IS NULL OR v_weeks < 1 OR v_weeks > 4 THEN
+      RAISE EXCEPTION 'INVALID_FEATURED_AD_META';
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM offers WHERE id = v_offer_id AND usr_id = p_user_uid AND i_del = 0) THEN
+      RAISE EXCEPTION 'NOT_OFFER_OWNER';
+    END IF;
+    -- منع دفعتين معلقتين لنفس العرض
+    SELECT COUNT(*) INTO v_pending_cnt
+    FROM payments
+    WHERE uid = p_user_uid AND sts = 0 AND tp = 1
+      AND meta->>'offer_id' = v_offer_id::TEXT;
+    IF v_pending_cnt > 0 THEN
+      RAISE EXCEPTION 'PENDING_PAYMENT_EXISTS';
+    END IF;
+  ELSE
+    -- المنطق الأصلي: منع الدفعة المزدوجة المعلقة لنفس الباقة
+    SELECT COUNT(*) INTO v_pending_cnt
+    FROM payments
+    WHERE uid = p_user_uid
+      AND sts = 0
+      AND pkg = COALESCE((p_payment->>'pkg')::INT, 0)
+      AND tp  = 0;
+    IF v_pending_cnt > 0 THEN
+      RAISE EXCEPTION 'PENDING_PAYMENT_EXISTS';
+    END IF;
+  END IF;
+
+  RETURN QUERY
+  INSERT INTO payments (
+    uid, tp, pkg, amt, cur, mtd, channel, proof, ref, meta, sts, appr_by, ts_crt
+  ) VALUES (
+    p_user_uid,
+    v_tp,
+    COALESCE((p_payment->>'pkg')::INT,     0),
+    COALESCE((p_payment->>'amt')::NUMERIC, 0),
+    COALESCE((p_payment->>'cur')::INT,     1),
+    COALESCE((p_payment->>'mtd')::INT,     0),
+    COALESCE(p_payment->>'channel', ''),
+    COALESCE(p_payment->>'proof',   ''),
+    COALESCE(p_payment->>'ref',     ''),
+    COALESCE(p_payment->'meta', '{}'::jsonb),
+    0,
+    NULL,
+    NOW()
+  ) RETURNING *;
+END;
+$function$;
+REVOKE ALL ON FUNCTION create_payment_internal(p_user_uid uuid, p_payment jsonb) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION create_payment_internal(p_user_uid uuid, p_payment jsonb) TO service_role;
+
+-- موافقة الأدمن: tp=0 تفعيل باقة (كما كان) | tp=1 تفعيل إعلان مميز للعرض بالمدة المدفوعة
+CREATE OR REPLACE FUNCTION public.approve_payment_final(p_payment_id uuid, p_admin_id uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE
+  v_user_id UUID;
+  v_pkg_id INT;
+  v_pkg_duration INT;
+  v_grace_days INT;
+  v_config JSONB;
+  v_admin_role INT;
+  v_payment_status INT;
+  v_payment_type INT;
+  v_meta JSONB;
+  v_offer_id UUID;
+  v_weeks INT;
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_id THEN
+    RETURN jsonb_build_object('success', false, 'error', 'AUTH_UID_MISMATCH');
+  END IF;
+
+  SELECT role INTO v_admin_role FROM users WHERE id = p_admin_id AND i_del = 0;
+  IF v_admin_role IS NULL OR v_admin_role < 5 THEN
+    RETURN jsonb_build_object('success', false, 'error', 'FORBIDDEN');
+  END IF;
+
+  SELECT uid, pkg, sts, tp, meta
+  INTO v_user_id, v_pkg_id, v_payment_status, v_payment_type, v_meta
+  FROM payments WHERE id = p_payment_id;
+
+  IF v_user_id IS NULL THEN
+    RETURN jsonb_build_object('success', false, 'error', 'PAYMENT_NOT_FOUND');
+  END IF;
+  IF COALESCE(v_payment_status, -1) <> 0 THEN
+    RETURN jsonb_build_object('success', false, 'error', 'PAYMENT_NOT_PENDING');
+  END IF;
+
+  IF COALESCE(v_payment_type, -1) = 0 THEN
+    -- تفعيل باقة (المنطق الأصلي بلا تغيير)
+    SELECT value INTO v_config FROM app_config WHERE key = 'main';
+    v_pkg_duration := (v_config->'pkg'->(v_pkg_id::text)->>'d')::INT;
+    v_grace_days := COALESCE((v_config->'pkg'->>'grace_days')::INT, 3);
+
+    IF v_pkg_duration IS NULL THEN
+      RETURN jsonb_build_object('success', false, 'error', 'PKG_DURATION_NOT_FOUND');
+    END IF;
+
+    UPDATE payments SET sts = 1, appr_by = p_admin_id WHERE id = p_payment_id AND sts = 0;
+
+    UPDATE users
+    SET b_pkg = v_pkg_id,
+        pkg_end = GREATEST(COALESCE(pkg_end, NOW()), NOW()) + (v_pkg_duration || ' days')::interval,
+        pkg_grace = GREATEST(COALESCE(pkg_end, NOW()), NOW()) + ((v_pkg_duration + v_grace_days) || ' days')::interval,
+        ts_upd = NOW()
+    WHERE id = v_user_id;
+
+    RETURN jsonb_build_object('success', true, 'message', 'Package activated', 'duration', v_pkg_duration);
+
+  ELSIF v_payment_type = 1 THEN
+    -- تفعيل إعلان مميز: تحقق ثم تنفيذ (التحقق أولاً لأن RETURN لا يرجع التحديثات)
+    v_offer_id := NULLIF(v_meta->>'offer_id', '')::UUID;
+    v_weeks := COALESCE((v_meta->>'weeks')::INT, 0);
+    IF v_offer_id IS NULL OR v_weeks < 1 OR v_weeks > 4 THEN
+      RETURN jsonb_build_object('success', false, 'error', 'INVALID_FEATURED_AD_META');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM offers WHERE id = v_offer_id AND usr_id = v_user_id AND i_del = 0) THEN
+      RETURN jsonb_build_object('success', false, 'error', 'OFFER_NOT_FOUND');
+    END IF;
+
+    UPDATE payments SET sts = 1, appr_by = p_admin_id WHERE id = p_payment_id AND sts = 0;
+
+    UPDATE offers
+    SET i_fms = 1,
+        fms_end = GREATEST(COALESCE(fms_end, NOW()), NOW()) + ((v_weeks * 7) || ' days')::INTERVAL
+    WHERE id = v_offer_id AND usr_id = v_user_id AND i_del = 0;
+
+    RETURN jsonb_build_object('success', true, 'message', 'Featured ad activated', 'weeks', v_weeks, 'offer_id', v_offer_id);
+  END IF;
+
+  RETURN jsonb_build_object('success', false, 'error', 'UNSUPPORTED_PAYMENT_TYPE');
+EXCEPTION WHEN OTHERS THEN
+  RETURN jsonb_build_object('success', false, 'error', SQLERRM);
+END;
+$function$;
+REVOKE ALL ON FUNCTION approve_payment_final(p_payment_id uuid, p_admin_id uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION approve_payment_final(p_payment_id uuid, p_admin_id uuid) TO service_role;
+
+-- إشعار الموافقة/الرفض: نص مخصص لدفعات الإعلان المميز
+CREATE OR REPLACE FUNCTION public.trg_payment_approved()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE
+  v_title TEXT;
+  v_body TEXT;
+  v_pkg_name TEXT;
+  v_weeks_label TEXT;
+BEGIN
+  IF NEW.sts = OLD.sts THEN RETURN NEW; END IF;
+
+  v_pkg_name := CASE NEW.pkg
+    WHEN 1 THEN 'الفضية'
+    WHEN 2 THEN 'الذهبية'
+    ELSE 'المجانية'
+  END;
+
+  IF NEW.tp = 1 THEN
+    v_weeks_label := CASE COALESCE((NEW.meta->>'weeks')::INT, 1)
+      WHEN 1 THEN 'أسبوع واحد'
+      WHEN 2 THEN 'أسبوعين'
+      ELSE (COALESCE((NEW.meta->>'weeks')::INT, 1))::TEXT || ' أسابيع'
+    END;
+    IF NEW.sts = 1 THEN
+      v_title := '⭐ تم تفعيل إعلانك المميز';
+      v_body := 'تم اعتماد دفعتك وتفعيل الإعلان المميز لعرضك لمدة ' || v_weeks_label || '.';
+    ELSIF NEW.sts = 2 THEN
+      v_title := '❌ تم رفض دفعة الإعلان المميز';
+      v_body := 'لم تُقبل الدفعة. يرجى مراجعة بيانات الدفع والمحاولة مرة أخرى.';
+    ELSE
+      RETURN NEW;
+    END IF;
+  ELSE
+    IF NEW.sts = 1 THEN
+      v_title := '✅ تم تفعيل اشتراكك';
+      v_body := 'تم تفعيل الباقة ' || v_pkg_name || ' بنجاح. استمتع بالمزايا الجديدة!';
+    ELSIF NEW.sts = 2 THEN
+      v_title := '❌ تم رفض الدفعة';
+      v_body := 'لم تُقبل الدفعة. يرجى مراجعة بيانات الدفع والمحاولة مرة أخرى.';
+    ELSE
+      RETURN NEW;
+    END IF;
+  END IF;
+
+  PERFORM notify_user(NEW.uid, 3, v_title, v_body, NEW.id::text, 'payment');
+  PERFORM send_push_notification(
+    NEW.uid, v_title, v_body,
+    jsonb_build_object('type', 'payment', 'id', NEW.id::text)
+  );
+
+  RETURN NEW;
+END;
+$function$;

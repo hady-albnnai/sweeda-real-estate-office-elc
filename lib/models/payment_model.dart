@@ -12,6 +12,8 @@ class PaymentModel {
   final int sts;
   final String? apprBy;
   final DateTime tsCrt;
+  /// بيانات النوع الممتدة (tp=1 إعلان مميز: {offer_id, weeks})
+  final Map<String, dynamic> meta;
 
   PaymentModel({
     required this.id,
@@ -27,6 +29,7 @@ class PaymentModel {
     this.sts = 0,
     this.apprBy,
     required this.tsCrt,
+    this.meta = const {},
   });
 
   factory PaymentModel.fromSupabase(Map<String, dynamic> data, String id) {
@@ -44,6 +47,9 @@ class PaymentModel {
       sts: data['sts'] ?? 0,
       apprBy: data['appr_by'],
       tsCrt: DateTime.parse(data['ts_crt']),
+      meta: data['meta'] is Map
+          ? Map<String, dynamic>.from(data['meta'])
+          : const {},
     );
   }
 
@@ -61,6 +67,7 @@ class PaymentModel {
       'sts': sts,
       'appr_by': apprBy,
       'ts_crt': tsCrt.toIso8601String(),
+      if (meta.isNotEmpty) 'meta': meta,
     };
   }
 
