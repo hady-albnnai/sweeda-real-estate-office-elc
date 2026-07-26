@@ -762,34 +762,70 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
 
   /// توليد قالب منشور جاهز للنشر على صفحات السوشيال (فيسبوك/إنستغرام)
   /// يُستخدم عندما يكون _autoPublishSocial = true
+  /// ⚠️ قاعدة صارمة بطلب المالك: لا هاتف للعميل/صاحب العرض أبداً — التواصل حصراً عبر واتساب المكتب
   String _generateSocialPostText() {
+    final config = context.read<ConfigProvider>().config;
     final priceStr = _cur == 0
-        ? '\$${_priceCtrl.text.isNotEmpty ? _priceCtrl.text : '---'}'
+        ? '\${_priceCtrl.text.isNotEmpty ? _priceCtrl.text : '---'}'
         : '${_priceCtrl.text.isNotEmpty ? _priceCtrl.text : '---'} ل.س';
 
-    final typeName = _selectedType == 0 ? 'عقار' : 'سيارة';
+    final isProperty = _selectedType == 0;
+    final typeName = isProperty ? 'عقار' : 'سيارة';
+    final emoji = isProperty ? '🏠' : '🚗';
     final transName = _selectedTrans == 0 ? 'للبيع' : 'للإيجار';
     final city = _selectedType == 1
         ? (_carCityArea == _customCityOption ? _carCustomCityCtrl.text.trim() : (_carCityArea ?? ''))
         : (_selectedCityArea == _customCityOption ? _customCityCtrl.text : (_selectedCityArea ?? ''));
 
-    final title = _ttlCtrl.text.isNotEmpty ? _ttlCtrl.text : 'عرض جديد';
+    // التصنيف من الإعدادات (رئيسي — فرعي)
+    final cats = isProperty ? (config?.propertyCategories ?? const {}) : (config?.vehicleCategories ?? const {});
+    final entry = cats[(_selectedMainCat ?? -1).toString()];
+    var mainCat = '';
+    if (entry is Map) { mainCat = (entry['nm'] ?? '').toString(); } else if (entry != null) { mainCat = entry.toString(); }
+    var subCat = _selectedSubCat == -1 ? _customSubCtrl.text.trim() : '';
+    if (subCat.isEmpty && entry is Map && entry['sub'] is List) {
+      final subs = entry['sub'] as List;
+      if (_selectedSubCat != null && _selectedSubCat! >= 0 && _selectedSubCat! < subs.length) {
+        subCat = subs[_selectedSubCat!].toString();
+      }
+    }
+    final catJoined = [mainCat, subCat].where((e) => e.isNotEmpty).join(' — ');
 
+    // المواصفات (بدون اللوحة والمستندات — بيانات حساسة لا تنشر)
+    final specParts = <String>[
+      if (isProperty) ...[
+        if (_areaCtrl.text.trim().isNotEmpty) 'مساحة ${_areaCtrl.text.trim()} م²',
+        if ((_finishing ?? '').toString().trim().isNotEmpty) 'إكساء $_finishing',
+        if (_floorCtrl.text.trim().isNotEmpty) 'طابق ${_floorCtrl.text.trim()}',
+        if ((_direction ?? '').toString().trim().isNotEmpty) 'اتجاه $_direction',
+      ] else ...[
+        if (_carBrandCtrl.text.trim().isNotEmpty) 'ماركة ${_carBrandCtrl.text.trim()}',
+        if (_carModelCtrl.text.trim().isNotEmpty) 'موديل ${_carModelCtrl.text.trim()}',
+        if (_carYearCtrl.text.trim().isNotEmpty) 'سنة ${_carYearCtrl.text.trim()}',
+        if (_carColorCtrl.text.trim().isNotEmpty) 'اللون ${_carColorCtrl.text.trim()}',
+        if ((_carFuel ?? '').toString().trim().isNotEmpty) 'وقود $_carFuel',
+        if ((_carTransmission ?? '').toString().trim().isNotEmpty) 'ناقل $_carTransmission',
+      ],
+    ];
+
+    final title = _ttlCtrl.text.isNotEmpty ? _ttlCtrl.text : 'عرض جديد';
     final desc = _descCtrl.text.isNotEmpty ? _descCtrl.text : _locCtrl.text;
+    final wa = (config?.videoRequestWhatsApp ?? '').trim();
 
     return '''
-🏠 عرض جديد على عقارات السويداء
+$emoji $title
 
-📍 $title
-$typeName $transName
+📌 $typeName $transName
+${catJoined.isNotEmpty ? '🏷️ التصنيف: $catJoined' : ''}
 💰 السعر: $priceStr
-${city.isNotEmpty ? '📌 المنطقة: $city' : ''}
+${city.isNotEmpty ? '📍 المنطقة: $city' : ''}
+${specParts.isNotEmpty ? '${isProperty ? '📐' : '🔧'} المواصفات: ${specParts.join(' • ')}' : ''}
 
 ${desc.isNotEmpty ? desc : ''}
 
-للتفاصيل والحجز:
-📱 تطبيق عقارات السويداء
-#عقارات_السويداء #عروض_عقارية
+📱 التواصل والمعاينة حصراً عبر واتساب المكتب العقاري الإلكتروني:
+${wa.isNotEmpty ? wa : ''}
+#عقارات_السويداء #السويداء ${isProperty ? '#عقارات' : '#سيارات'}
 '''.trim();
   }
 }

@@ -375,29 +375,50 @@ class BusinessService {
   // ═══════════════════════════════════════
 
   /// توليد نص جاهز للنشر على وسائل التواصل من بيانات العرض.
+  /// توليد نص جاهز للنشر على وسائل التواصل من بيانات العرض.
+  /// ⚠️ قاعدة صارمة بطلب المالك: لا معلومات تواصل لصاحب العرض أبداً —
+  /// نتجاهل offer.contactPh تماماً، والتواصل حصراً عبر واتساب المكتب.
   String generateSocialPost(OfferModel offer, {ConfigModel? config}) {
     final buffer = StringBuffer();
     final isProperty = offer.typ == 0;
     final trx = offer.trx == 0 ? 'للبيع' : 'للإيجار';
     final emoji = isProperty ? '🏠' : '🚗';
     final cur = offer.cur == 0 ? '\$' : 'ل.س';
+    final title = offer.ttl.trim().isNotEmpty
+        ? offer.ttl.trim()
+        : '${isProperty ? 'عقار' : 'سيارة'} $trx';
 
-    buffer.writeln('$emoji ${offer.ttl}');
+    buffer.writeln('$emoji $title');
     buffer.writeln('');
     buffer.writeln('📌 $trx');
+
+    // التصنيف الرئيسي/الفرعي من الإعدادات
+    final catLine = _categoryLine(offer, config);
+    if (catLine != null) buffer.writeln(catLine);
+
     if (offer.prc > 0) {
       buffer.writeln('💰 السعر: ${_fmtPrice(offer.prc)} $cur');
     }
-    final loc = offer.loc['d'];
-    if (loc is String && loc.isNotEmpty) {
-      buffer.writeln('📍 الموقع: $loc');
-    }
+
+    final city = offer.loc['city']?.toString().trim() ?? '';
+    if (city.isNotEmpty) buffer.writeln('📍 المنطقة: $city');
+    final d = offer.loc['d']?.toString().trim() ?? '';
+    if (d.isNotEmpty) buffer.writeln('📍 الموقع: $d');
+
+    // المواصفات حسب النوع (بدون لوحة/سند — بيانات حساسة لا تنشر)
+    final specsLine = isProperty ? _propertySpecsLine(offer) : _carSpecsLine(offer);
+    if (specsLine != null) buffer.writeln(specsLine);
+
     if (offer.descript.isNotEmpty) {
       buffer.writeln('');
       buffer.writeln(offer.descript);
     }
+
+    // التواصل — حصراً واتساب المكتب (رقم من الإعدادات، قابل للتغيير من التطبيق)
     buffer.writeln('');
-    buffer.writeln('📞 للتواصل والمعاينة عبر المكتب العقاري الالكتروني');
+    final wa = (config?.videoRequestWhatsApp ?? '').trim();
+    buffer.writeln('📱 التواصل والمعاينة حصراً عبر واتساب المكتب العقاري الإلكتروني:');
+    if (wa.isNotEmpty) buffer.writeln(wa);
 
     // هاشتاغات
     buffer.writeln('');
@@ -405,6 +426,58 @@ class BusinessService {
     buffer.write(isProperty ? '#عقارات #${offer.trx == 0 ? 'بيع' : 'إيجار'}' : '#سيارات #مركبات');
 
     return buffer.toString();
+  }
+
+  /// سطر التصنيف: «🏷️ التصنيف: سيارة — سياحية» (يحل الاسم من خرائط الإعدادات بأمان)
+  String? _categoryLine(OfferModel offer, ConfigModel? config) {
+    final cats = offer.typ == 0
+        ? (config?.propertyCategories ?? const {})
+        : (config?.vehicleCategories ?? const {});
+    final entry = cats[offer.cat.toString()];
+    var main = '';
+    if (entry is Map) {
+      main = (entry['nm'] ?? '').toString();
+    } else if (entry != null) {
+      main = entry.toString();
+    }
+    var sub = offer.specs['custom_sub']?.toString().trim() ?? '';
+    if (sub.isEmpty && entry is Map && entry['sub'] is List) {
+      final subs = entry['sub'] as List;
+      if (offer.sub >= 0 && offer.sub < subs.length) sub = subs[offer.sub].toString();
+    }
+    if (main.isEmpty && sub.isEmpty) return null;
+    final joined = [main, sub].where((e) => e.isNotEmpty).join(' — ');
+    return '🏷️ التصنيف: $joined';
+  }
+
+  /// سطر مواصفات السيارة (بدون اللوحة — بيانات توثيق لا تنشر)
+  String? _carSpecsLine(OfferModel offer) {
+    final s = offer.specs;
+    String g(String k) => s[k]?.toString().trim() ?? '';
+    final parts = <String>[
+      if (g('brand').isNotEmpty) 'ماركة ${g('brand')}',
+      if (g('model').isNotEmpty) 'موديل ${g('model')}',
+      if (g('year').isNotEmpty) 'سنة ${g('year')}',
+      if (g('color').isNotEmpty) 'اللون ${g('color')}',
+      if (g('fuel').isNotEmpty) 'وقود ${g('fuel')}',
+      if (g('transmission').isNotEmpty) 'ناقل ${g('transmission')}',
+    ];
+    if (parts.isEmpty) return null;
+    return '🔧 المواصفات: ${parts.join(' • ')}';
+  }
+
+  /// سطر مواصفات العقار (بدون الملاحظات القانونية — بيانات حساسة لا تنشر)
+  String? _propertySpecsLine(OfferModel offer) {
+    final s = offer.specs;
+    String g(String k) => s[k]?.toString().trim() ?? '';
+    final parts = <String>[
+      if (g('area').isNotEmpty) 'مساحة ${g('area')} م²',
+      if (g('finishing').isNotEmpty) 'إكساء ${g('finishing')}',
+      if (g('floor').isNotEmpty) 'طابق ${g('floor')}',
+      if (g('direction').isNotEmpty) 'اتجاه ${g('direction')}',
+    ];
+    if (parts.isEmpty) return null;
+    return '📐 المواصفات: ${parts.join(' • ')}';
   }
 
   String _fmtPrice(double p) {
