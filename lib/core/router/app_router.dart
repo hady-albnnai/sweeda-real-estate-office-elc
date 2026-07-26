@@ -169,6 +169,7 @@ class AppRouter {
           path == '/login' ||
           path == '/otp' ||
           path == '/user/profile' || // فك الحظر عن صفحة الحساب
+          path == '/user/favorites' || // المفضلة محلية — متاحة للزائر كذلك
           path == '/check-email';
       if (isPublicPath) return null;
 

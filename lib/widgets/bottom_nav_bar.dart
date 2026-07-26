@@ -18,6 +18,42 @@ class CustomBottomNavBar extends StatelessWidget {
     final auth = context.watch<AuthProvider>();
     final isInternal = auth.userModel?.isInternal ?? false;
 
+    // 🧭 الزائر (غير مسجّل): شريط عام بالكامل — كل وجهاته مفتوحة فلا ارتداد ولا «علِق» (إصلاح 2026-07-26)
+    if (!auth.isLoggedIn) {
+      final loc = GoRouterState.of(context).uri.path;
+      var gi = 3; // حسابي
+      if (loc == '/home') {
+        gi = 0;
+      } else if (loc == '/search') {
+        gi = 1;
+      } else if (loc == '/user/favorites') {
+        gi = 2;
+      }
+      return BottomNavigationBar(
+        currentIndex: gi,
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: AppTheme.scaffoldBackground,
+        selectedItemColor: AppTheme.primaryGold,
+        unselectedItemColor: AppTheme.textGrey,
+        selectedFontSize: 12,
+        unselectedFontSize: 11,
+        onTap: (index) {
+          switch (index) {
+            case 0: context.go('/home'); break;
+            case 1: context.go('/search'); break;
+            case 2: context.go('/user/favorites'); break;
+            default: context.go('/user/profile');
+          }
+        },
+        items: [
+          BottomNavigationBarItem(icon: E2E(id: 'e2e_nav_home', button: true, child: Icon(Icons.home_outlined)), activeIcon: Icon(Icons.home), label: 'الرئيسية'),
+          BottomNavigationBarItem(icon: E2E(id: 'e2e_nav_search', button: true, child: Icon(Icons.search)), activeIcon: Icon(Icons.search), label: 'بحث'),
+          BottomNavigationBarItem(icon: E2E(id: 'e2e_nav_favorites', button: true, child: Icon(Icons.favorite_border)), activeIcon: Icon(Icons.favorite), label: 'المفضلة'),
+          BottomNavigationBarItem(icon: E2E(id: 'e2e_nav_profile', button: true, child: Icon(Icons.person_outline)), activeIcon: Icon(Icons.person), label: 'حسابي'),
+        ],
+      );
+    }
+
     // الإدارة والموظفين: شريط مختصر (مهامي + حسابي)
     if (isInternal) {
       return BottomNavigationBar(
