@@ -435,14 +435,17 @@ class _PackagesScreenState extends State<PackagesScreen> {
                     ),
                     if (isCurrent)
                       _badge('باقتك الحالية', Colors.green),
+                    if (isCurrent && (user?.pkgXoff ?? 0) > 0)
+                      _badge(
+                          '🎯 السقف الفعلي: ${pkg.offers + (user?.pkgXoff ?? 0)} عرض (منها +${user?.pkgXoff ?? 0} مضافة بالتراكم)',
+                          Colors.lightGreen),
                     if (isPending && !isCurrent)
                       _badge('دفعة معلقة ⏳', Colors.blue),
                     if (user?.isInGracePeriod == true &&
                         pkg.id == user?.bPkg &&
                         !isCurrent)
                       _badge('فترة السماح', Colors.orange),
-                    if (!isCurrent && !isFree && effectivePkg > pkg.id)
-                      _badge('أقل من باقتك الحالية', Colors.grey),
+                    // الشراء الأدنى مسموح — بنظام التجميع ينضاف سقف وأيام للرصيد
                   ],
                 ),
               ),
@@ -511,9 +514,6 @@ class _PackagesScreenState extends State<PackagesScreen> {
   VoidCallback? _btnAction(BuildContext ctx, _PackageData pkg, bool isCurrent,
       bool isFree, bool isPending, double price) {
     if (isCurrent || isFree) return null;
-    // منع التنازل: لا يمكن طلب باقة أدنى من الباقة الفعالة (تُحجب حتى انتهاء المدة)
-    final activePkg = ctx.read<AuthProvider>().userModel?.effectivePkg ?? 0;
-    if (activePkg > pkg.id) return null;
     if (isPending) {
       return () => ctx.push('/user/my-payments');
     }

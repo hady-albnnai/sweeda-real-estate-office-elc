@@ -93,7 +93,7 @@ async function notifyPaymentDecision(
     } else {
       title = "✅ تم تفعيل باقتك";
       bodyText = `باقتك مفعّلة${until ? ` حتى ${until}` : ""}${
-        result?.upgraded === true ? " — تمت الترقية واستبدال الباقة السابقة" : ""
+        result?.stacked === true ? " — تمت إضافة المدة والسقف إلى رصيد باقتك" : ""
       }.`;
     }
     await supabaseAdmin.functions.invoke("send-push-notification", {

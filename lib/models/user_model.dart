@@ -51,6 +51,7 @@ class UserModel {
   final int bg;
   final DateTime? bgTs;
   final int bPkg;
+  final int pkgXoff; // السقف الإضافي من الباقات المكدّسة (التجميع 2026-07-27)
   final DateTime? pkgEnd;
   final DateTime? pkgGrace; // نهاية فترة السماح (pkg_end + 3 أيام)
   final int brk;
@@ -88,6 +89,7 @@ class UserModel {
     this.bg = 0,
     this.bgTs,
     this.bPkg = 0,
+    this.pkgXoff = 0,
     this.pkgEnd,
     this.pkgGrace,
     this.brk = 0,
@@ -138,6 +140,7 @@ class UserModel {
       bg: data['bg'] ?? 0,
       bgTs: data['bg_ts'] != null ? DateTime.parse(data['bg_ts']) : null,
       bPkg: data['b_pkg'] ?? 0,
+      pkgXoff: data['pkg_xoff'] ?? 0,
       pkgEnd:   data['pkg_end']   != null ? DateTime.parse(data['pkg_end'])   : null,
       pkgGrace: data['pkg_grace'] != null ? DateTime.parse(data['pkg_grace']) : null,
       brk: data['brk'] ?? 0,
@@ -169,7 +172,7 @@ class UserModel {
     return {
       'nm': nm, 'ph': ph, 'ad': ad, 'role': role, 'sid': sid,
       'img': img, 'pt': pt, 'bg': bg,
-      'bg_ts': bgTs?.toIso8601String(), 'b_pkg': bPkg,
+      'bg_ts': bgTs?.toIso8601String(), 'b_pkg': bPkg, 'pkg_xoff': pkgXoff,
       'pkg_end':   pkgEnd?.toIso8601String(),
       'pkg_grace': pkgGrace?.toIso8601String(),
       'brk': brk,

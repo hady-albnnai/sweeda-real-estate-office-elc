@@ -1642,7 +1642,9 @@ BEGIN
     END;
 
     v_limit := COALESCE((v_config->'pkg'->(v_effective_pkg::TEXT)->>'o')::INT,
-      CASE WHEN COALESCE(v_user.role, 0) = 1 THEN 5 ELSE 1 END);
+      CASE WHEN COALESCE(v_user.role, 0) = 1 THEN 5 ELSE 1 END)
+      -- التجميع (2026-07-27): السقف الإضافي من الباقات المكدّسة يُحتسب ما دامت الباقة فعالة
+      + CASE WHEN v_effective_pkg > 0 THEN COALESCE(v_user.pkg_xoff, 0) ELSE 0 END;
 
     SELECT COUNT(*) INTO v_used
     FROM offers
@@ -4652,8 +4654,10 @@ DECLARE
   v_user_id UUID; v_pkg_id INT; v_admin_role INT;
   v_payment_status INT; v_payment_type INT; v_meta JSONB;
   v_config JSONB; v_pkg_duration INT; v_grace_days INT;
-  v_old_pkg INT; v_old_end TIMESTAMPTZ;
+  v_old_pkg INT; v_old_end TIMESTAMPTZ; v_old_xoff INT;
   v_offer UUID; v_weeks INT; v_base TIMESTAMPTZ; v_new_end TIMESTAMPTZ;
+  v_new_pkg INT; v_new_xoff INT; v_o_old INT; v_o_new INT;
+  v_active BOOLEAN; v_upgraded BOOLEAN := false;
 BEGIN
   IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_id THEN
     RETURN jsonb_build_object('success', false, 'error', 'AUTH_UID_MISMATCH');
@@ -4672,26 +4676,44 @@ BEGIN
     v_pkg_duration := (v_config->'pkg'->(v_pkg_id::text)->>'d')::INT;
     v_grace_days := COALESCE((v_config->'pkg'->>'grace_days')::INT, 3);
     IF v_pkg_duration IS NULL THEN RETURN jsonb_build_object('success', false, 'error', 'PKG_DURATION_NOT_FOUND'); END IF;
-    SELECT b_pkg, pkg_end INTO v_old_pkg, v_old_end FROM users WHERE id = v_user_id;
-    -- سياسة الاستبدال الفوري: الترقية تبدأ من الآن ويُلغى المتبقي من الباقة السابقة
-    -- أما تجديد نفس الباقة الفعالة فيجمع المدة فوق المتبقي
-    IF v_old_pkg = v_pkg_id AND v_old_end IS NOT NULL AND v_old_end > NOW() THEN
+    SELECT b_pkg, pkg_end, COALESCE(pkg_xoff, 0)
+      INTO v_old_pkg, v_old_end, v_old_xoff
+      FROM users WHERE id = v_user_id;
+
+    -- نموذج التجميع (2026-07-27): الباقة الجديدة تُضاف للرصيد، ولا يُلغى شيء مدفوع.
+    -- ترقية ← سقف القديمة ينتقل للإضافي (pkg_xoff) وتصبح الجديدة الأساس.
+    -- تجديد/شراء أدنى ← سقف المشترى يُضاف للإضافي والأساس يبقى الأعلى.
+    -- الأيام تُضاف فوق المتبقي دائماً. عند الانتهاء يسقط الكل مع التاريخ الموحد.
+    v_active := COALESCE(v_old_pkg, 0) > 0 AND v_old_end IS NOT NULL AND v_old_end > NOW();
+    IF v_active THEN
       v_base := v_old_end;
+      v_o_old := (v_config->'pkg'->(v_old_pkg::text)->>'o')::INT;
+      v_o_new := (v_config->'pkg'->(v_pkg_id::text)->>'o')::INT;
+      IF v_pkg_id > v_old_pkg THEN
+        v_new_pkg := v_pkg_id;
+        v_new_xoff := v_old_xoff + COALESCE(v_o_old, 0);
+        v_upgraded := true;
+      ELSE
+        v_new_pkg := GREATEST(v_old_pkg, v_pkg_id);
+        v_new_xoff := v_old_xoff + COALESCE(v_o_new, 0);
+      END IF;
     ELSE
       v_base := NOW();
+      v_new_pkg := v_pkg_id;
+      v_new_xoff := 0;
     END IF;
     v_new_end := v_base + (v_pkg_duration || ' days')::interval;
     UPDATE payments SET sts = 1, appr_by = p_admin_id WHERE id = p_payment_id AND sts = 0;
-    UPDATE users SET b_pkg = v_pkg_id, pkg_end = v_new_end,
+    UPDATE users SET b_pkg = v_new_pkg, pkg_xoff = v_new_xoff, pkg_end = v_new_end,
       pkg_grace = v_new_end + (v_grace_days || ' days')::interval, ts_upd = NOW()
     WHERE id = v_user_id;
-    RETURN jsonb_build_object('success', true, 'type', 'package', 'pkg', v_pkg_id,
+    RETURN jsonb_build_object('success', true, 'type', 'package', 'pkg', v_new_pkg,
       'until', to_char(v_new_end, 'YYYY-MM-DD'),
-      'upgraded', (v_old_pkg <> v_pkg_id AND v_old_end IS NOT NULL AND v_old_end > NOW()));
+      'upgraded', v_upgraded, 'stacked', v_active,
+      'quota', ((v_config->'pkg'->(v_new_pkg::text)->>'o')::INT + v_new_xoff));
   END IF;
 
   IF COALESCE(v_payment_type, -1) = 1 THEN
-    -- إعلان مميز: meta = {"offer_id": "...", "weeks": N}
     v_offer := NULLIF(v_meta->>'offer_id', '')::UUID;
     v_weeks := COALESCE((v_meta->>'weeks')::INT, 0);
     IF v_offer IS NULL OR v_weeks < 1 THEN
