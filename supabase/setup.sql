@@ -4265,3 +4265,56 @@ SET value = $defaults$
 }
 $defaults$::jsonb || value
 WHERE key = 'main';
+-- =====================================================================
+-- توثيق الحسابات: اعتماد / رفض (تستدعى حصراً عبر edge function admin-verifications)
+-- ملاحظة: tp=4 (حساب) مطابق لـ NotificationType.account والقيد CHECK (tp BETWEEN 0 AND 5)
+-- =====================================================================
+CREATE OR REPLACE FUNCTION public.admin_approve_verification_by_admin(p_admin_uid uuid, p_target_uid uuid)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE v_role INT;
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN RAISE EXCEPTION 'AUTH_MISMATCH'; END IF;
+  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
+  IF v_role IS NULL OR v_role < 4 THEN RAISE EXCEPTION 'NOT_AUTHORIZED'; END IF;
+  UPDATE users SET vrf = 2, ts_upd = NOW() WHERE id = p_target_uid AND i_del = 0 AND vrf = 1;
+  IF FOUND THEN
+    INSERT INTO notifications (uid, tp, ttl, bdy, ts_crt)
+    VALUES (p_target_uid, 4, 'تم اعتماد توثيقك', 'تهانينا! تم اعتماد حسابك رسمياً ✓', NOW());
+    PERFORM public.log_admin_action(p_admin_uid, 103, 'اعتماد توثيق الهوية والحساب رسمياً', p_target_uid::TEXT, 'users');
+  END IF;
+  RETURN FOUND;
+END;
+$function$;
+REVOKE ALL ON FUNCTION admin_approve_verification_by_admin(p_admin_uid uuid, p_target_uid uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION admin_approve_verification_by_admin(p_admin_uid uuid, p_target_uid uuid) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.admin_reject_verification_by_admin(p_admin_uid uuid, p_target_uid uuid, p_reason text DEFAULT ''::text)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE v_role INT;
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_admin_uid THEN RAISE EXCEPTION 'AUTH_MISMATCH'; END IF;
+  SELECT role INTO v_role FROM users WHERE id = p_admin_uid AND i_del = 0;
+  IF v_role IS NULL OR v_role < 4 THEN RAISE EXCEPTION 'NOT_AUTHORIZED'; END IF;
+  IF COALESCE(trim(p_reason), '') = '' THEN
+    RAISE EXCEPTION 'REJECTION_REASON_REQUIRED';
+  END IF;
+  UPDATE users SET vrf = 0, ts_upd = NOW() WHERE id = p_target_uid AND i_del = 0;
+  IF FOUND THEN
+    INSERT INTO notifications (uid, tp, ttl, bdy, ts_crt)
+    VALUES (p_target_uid, 4, 'تم رفض طلب التوثيق', COALESCE(NULLIF(trim(p_reason),''), 'لم يتم قبول الوثائق المرفقة'), NOW());
+    PERFORM public.log_admin_action(p_admin_uid, 104, 'رفض توثيق الهوية: ' || trim(p_reason), p_target_uid::TEXT, 'users');
+  END IF;
+  RETURN FOUND;
+END;
+$function$;
+REVOKE ALL ON FUNCTION admin_reject_verification_by_admin(p_admin_uid uuid, p_target_uid uuid, p_reason text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION admin_reject_verification_by_admin(p_admin_uid uuid, p_target_uid uuid, p_reason text) TO service_role;
+
