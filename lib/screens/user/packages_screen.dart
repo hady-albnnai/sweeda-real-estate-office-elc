@@ -183,12 +183,10 @@ class _PackagesScreenState extends State<PackagesScreen> {
                         textAlign: TextAlign.center,
                         style: const TextStyle(color: AppTheme.textGrey, fontSize: 10)),
                     const SizedBox(height: 3),
-                    Text(AppUtils.formatPrice(priceOf(wi)),
+                    // currency:1 → ل.س فقط (العملة الجديدة، بلا $)
+                    Text(AppUtils.formatPrice(priceOf(wi), currency: 1),
                         textAlign: TextAlign.center,
                         style: const TextStyle(color: AppTheme.primaryGold, fontSize: 12, fontWeight: FontWeight.bold)),
-                    const Text('ل.س',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: AppTheme.textGrey, fontSize: 9)),
                   ]),
                 ),
             ],
@@ -436,10 +434,15 @@ class _PackagesScreenState extends State<PackagesScreen> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    isFree ? 'مجاناً' : '\$${price.toStringAsFixed(0)}',
+                    // السعر المعروض بالليرة فقط: USD من Config × سعر الصرف
+                    isFree
+                        ? 'مجاناً'
+                        : AppUtils.formatPrice(
+                            price * ((config?.usdToSypRate ?? 150).toDouble()),
+                            currency: 1),
                     style: TextStyle(
                         color: gradient[1],
-                        fontSize: 26,
+                        fontSize: 22,
                         fontWeight: FontWeight.bold),
                   ),
                   if (!isFree)

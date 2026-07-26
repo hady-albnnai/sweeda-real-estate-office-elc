@@ -70,6 +70,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   bool _agreePledge = false;
   bool _submitting = false;
   bool _anytimeReady = false;
+  bool _wantVideo = false; // تشك بوكس إرفاق الفيديو عبر واتساب المكتب
 
   // checkbox للنشر التلقائي على السوشيال (مفعل افتراضياً)
   bool _autoPublishSocial = true;
@@ -172,40 +173,47 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   }
 
   /// فتح وجهة إرسال فيديو العرض — المالك يرسل الفيديو لمجموعة واتساب المكتب
-  /// (توفير مساحة السيرفر: الفيديو لا يُرفع لـ storage إطلاقاً).
-  /// الأولوية: رابط المجموعة ← الرقم الخاص (wa.me) ← المفتاح القديم (توافقية) ← تنبيه.
-  Future<void> _openWhatsAppVideoGroup() async {
+  /// رابط واتساب الفيديو: مجموعة ← رقم خاص wa.me (مع نص جاهز) ← المفتاح القديم (توافقية).
+  /// يعيد null إذا لم تضبط الإدارة أي وجهة. (الفيديو لا يُرفع لـ storage إطلاقاً)
+  String? _videoWhatsAppUrl(String message) {
     final cfg = context.read<ConfigProvider>().config;
-    final dedicated = (cfg?.videoRequestWhatsApp ?? '').trim();
     final groupLink = (cfg?.videoRequestGroupLink ?? '').trim();
-
-    String? url;
     if (groupLink.isNotEmpty) {
-      url = groupLink.startsWith('http') ? groupLink : 'https://$groupLink';
-    } else if (dedicated.isNotEmpty) {
+      return groupLink.startsWith('http') ? groupLink : 'https://$groupLink';
+    }
+    final dedicated = (cfg?.videoRequestWhatsApp ?? '').trim();
+    if (dedicated.isNotEmpty) {
       var target = dedicated.replaceAll(RegExp(r'[^0-9]'), '');
       if (target.startsWith('0')) target = '963${target.substring(1)}';
       if (!target.startsWith('963')) target = '963$target';
-      // نص تعريفي جاهز: الفيديو يصل للمكتب بدون رقم عرض لأن العرض لم يُحفظ بعد —
-      // التطابق يتم بالاسم/الهاتف/العنوان.
-      final u = context.read<AuthProvider>().userModel;
-      final phone = _contactPhoneCtrl.text.trim().isNotEmpty
-          ? _contactPhoneCtrl.text.trim()
-          : (u?.ph ?? '');
-      final msg =
-          '🎬 فيديو عرض جديد\nالعنوان: ${_ttlCtrl.text.trim()}\nالمعلن: ${u?.nm ?? ''}\nالهاتف: $phone';
-      url = 'https://wa.me/$target?text=${Uri.encodeComponent(msg)}';
-    } else {
-      final old = (cfg?.texts['videoWhatsAppGroup']?.toString() ?? '').trim();
-      if (old.isNotEmpty) url = old.startsWith('http') ? old : 'https://$old';
+      return 'https://wa.me/$target?text=${Uri.encodeComponent(message)}';
     }
+    final old = (cfg?.texts['videoWhatsAppGroup']?.toString() ?? '').trim();
+    if (old.isNotEmpty) return old.startsWith('http') ? old : 'https://$old';
+    return null;
+  }
 
-    if (url == null) {
-      if (mounted) _snack('لم تضبط الإدارة رابط/رقم واتساب الفيديو بعد');
-      return;
+  /// فتح واتساب المكتب مع نص تعريفي. بعد حفظ العرض يُمرّر رقمه فيُذكر حرفياً بالرسالة.
+  /// true=انفتح واتساب، false=لا وجهة مضبوطة أو واتساب غير متاح.
+  Future<bool> _launchVideoWhatsApp({int? offerNum}) async {
+    final u = context.read<AuthProvider>().userModel;
+    final phone = _contactPhoneCtrl.text.trim().isNotEmpty
+        ? _contactPhoneCtrl.text.trim()
+        : (u?.ph ?? '');
+    final title = _ttlCtrl.text.trim();
+    final msg = offerNum != null
+        ? '🎬 فيديو للعرض #$offerNum\nالعنوان: $title\nالمعلن: ${u?.nm ?? ''}\nالهاتف: $phone'
+        : '🎬 فيديو عرض جديد\nالعنوان: $title\nالمعلن: ${u?.nm ?? ''}\nالهاتف: $phone';
+    final url = _videoWhatsAppUrl(msg);
+    if (url == null) return false;
+    try {
+      final uri = Uri.parse(url);
+      if (!await canLaunchUrl(uri)) return false;
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+      return true;
+    } catch (_) {
+      return false;
     }
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   Future<void> _submit() async {
@@ -282,8 +290,27 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     );
 
     try {
-      await offerProv.addOffer(offer);
-      if (mounted) { Navigator.pop(context); _snack('تم إرسال العرض للمراجعة بنجاح ✅'); }
+      final created = await offerProv.addOffer(offer);
+      if (!mounted) return;
+      if (created == null) {
+        setState(() => _submitting = false);
+        _snack('❌ تعذر إنشاء العرض — تحقق من الاتصال وحاول مجدداً');
+        return;
+      }
+      if (_wantVideo) {
+        // المستخدم طلب إرفاق فيديو ← نفتح واتساب المكتب مع نص فيه رقم العرض الفعلي
+        final num0 = created.offerNumber ?? 0;
+        final launched = await _launchVideoWhatsApp(offerNum: num0);
+        if (!mounted) return;
+        Navigator.pop(context);
+        final waNum = (context.read<ConfigProvider>().config?.videoRequestWhatsApp ?? '').trim();
+        _snack(launched
+            ? 'تم إرسال العرض #$num0 للمراجعة ✅ — أكمل إرفاق الفيديو في واتساب'
+            : 'تم إرسال العرض #$num0 ✅ — واتساب غير متاح حالياً؛ أرسل الفيديو يدوياً ${waNum.isNotEmpty ? 'على $waNum' : 'لمكتب العقارات'} واذكر رقم عرضك');
+      } else {
+        Navigator.pop(context);
+        _snack('تم إرسال العرض للمراجعة بنجاح ✅');
+      }
     } catch (e) {
       if (mounted) { setState(() => _submitting = false); _snack('خطأ في النشر: $e'); }
     }
@@ -566,8 +593,30 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       if (_pickedImages.isNotEmpty) Wrap(spacing: 8, children: _pickedImages.asMap().entries.map((e) => Stack(children: [ClipRRect(borderRadius: BorderRadius.circular(8), child: _thumb(e.value)), Positioned(top: -5, left: -5, child: IconButton(icon: const Icon(Icons.cancel, color: Colors.red), onPressed: () => setState(() => _pickedImages.removeAt(e.key))))])).toList()),
       const SizedBox(height: 20),
       const Text('🎬 فيديو العرض (اختياري)', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 13)),
-      const SizedBox(height: 8),
-      OutlinedButton.icon(onPressed: _openWhatsAppVideoGroup, icon: const Icon(Icons.video_library), label: const Text('إرسال فيديو عبر واتساب المكتب')),
+      CheckboxListTile(
+        value: _wantVideo,
+        onChanged: (v) => setState(() => _wantVideo = v ?? false),
+        controlAffinity: ListTileControlAffinity.leading,
+        contentPadding: EdgeInsets.zero,
+        activeColor: AppTheme.primaryGold,
+        title: const Text('بدي أرفق فيديو للعرض (عبر واتساب المكتب)', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+      ),
+      if (_wantVideo) ...[
+        Container(
+          padding: const EdgeInsets.all(10),
+          margin: const EdgeInsets.only(bottom: 8),
+          decoration: BoxDecoration(
+            color: AppTheme.primaryGold.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3)),
+          ),
+          child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('⚠️ إرسال الفيديو بيتم عبر تطبيق واتساب — تأكد إنو التطبيق مثبّت عندك', style: TextStyle(color: AppTheme.textGrey, fontSize: 12, height: 1.5)),
+            SizedBox(height: 6),
+            Text('ℹ️ رح ينفتح واتساب تلقائياً بعد ما تنهي إضافة العرض، والرسالة بتكون جاهزة فيها رقم عرضك — بس أرفق الفيديو وابعت', style: TextStyle(color: AppTheme.textGrey, fontSize: 12, height: 1.5)),
+          ]),
+        ),
+      ],
       _navRow(onBack: () => _goToStep(1), onNext: () => _goToStep(3)),
     ]),
     isActive: _currentStep >= 2,

@@ -578,6 +578,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
 
                 // النوع + المعاملة
                 Wrap(spacing: 6, children: [
+                  _chip('#${o.offerNumber ?? 0}', Colors.teal),
                   _chip(o.typ == 0 ? '🏠 عقار' : '🚗 سيارة', Colors.blue),
                   _chip(o.trx == 0 ? 'بيع' : 'إيجار', Colors.purple),
                   if (o.imgs.isNotEmpty)
