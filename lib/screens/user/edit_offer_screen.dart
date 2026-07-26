@@ -363,13 +363,28 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
                 decoration: const InputDecoration(border: OutlineInputBorder())),
             const SizedBox(height: 16),
 
-            // ── نوع العرض ──
+            // ── نوع العرض ── قراءة فقط: تغيير النوع بعد الإنشاء ممنوع بطلب المالك
+            // (نقل عرض عقار ↔ سيارة يخرب بنية المواصفات ويلتفّ على مراجعة الإدارة)
             _label('نوع العرض'),
-            Row(children: [
-              Expanded(child: _radioChip('عقار',  _typ == 0, () => setState(() => _typ = 0))),
-              const SizedBox(width: 10),
-              Expanded(child: _radioChip('سيارة', _typ == 1, () => setState(() => _typ = 1))),
-            ]),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+              decoration: BoxDecoration(
+                color: AppTheme.surfaceBlack,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppTheme.textGrey.withOpacity(0.25)),
+              ),
+              child: Row(children: [
+                Icon(_typ == 1 ? Icons.directions_car : Icons.home_outlined,
+                    color: AppTheme.primaryGold, size: 18),
+                const SizedBox(width: 8),
+                Text(_typ == 1 ? 'سيارة' : 'عقار',
+                    style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold)),
+                const Spacer(),
+                const Text('لا يمكن تغييره',
+                    style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+              ]),
+            ),
             const SizedBox(height: 12),
 
             // ── نوع المعاملة ──
