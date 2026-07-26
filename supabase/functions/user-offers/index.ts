@@ -80,6 +80,22 @@ serve(async (req) => {
       const offerId = (body.offer_id ?? body.offerId)?.toString() ?? "";
       if (!offerId) return json({ success: false, error: "OFFER_ID_REQUIRED" }, 400);
 
+      // قاعدة المالك 2026-07-26: مشاهدة المالك لعرضه لا تُحتسب.
+      // لا توثيق هنا عمداً (الزوّار يُحتسبون): أسوأ استغلال ممكن هو تمرير viewer_uid
+      // لشخص آخر لتخطّي عدّ مشاهدات عرضه — أي "تقليل" عداد لا نفع منه للمهاجم.
+      const viewerUid = (body.viewer_uid ?? body.viewerUid)?.toString() ?? "";
+      if (viewerUid) {
+        const { data: offerRow } = await supabaseAdmin
+          .from("offers")
+          .select("usr_id")
+          .eq("id", offerId)
+          .eq("i_del", 0)
+          .maybeSingle();
+        if (offerRow && (offerRow as Record<string, unknown>).usr_id === viewerUid) {
+          return json({ success: true, skipped: "OWNER_VIEW" });
+        }
+      }
+
       const { data, error } = await supabaseAdmin.rpc("increment_offer_views_internal", {
         p_offer_id: offerId,
       });

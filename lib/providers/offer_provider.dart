@@ -389,13 +389,14 @@ class OfferProvider with ChangeNotifier {
 
   Future<bool> softDeleteOffer(String offerId) => updateOffer(offerId, {'i_del': 1});
 
-  Future<void> incrementViews(String offerId) async {
+  Future<void> incrementViews(String offerId, {String? viewerUid}) async {
     try {
       await SupabaseService().invokeFunction(
         'user-offers',
         body: {
           'action': 'increment_views',
           'offer_id': offerId,
+          if (viewerUid != null) 'viewer_uid': viewerUid,
         },
       );
     } catch (e) {

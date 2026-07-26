@@ -60,7 +60,10 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
     var offer = provider.getOfferById(widget.offerId);
     offer ??= await provider.fetchOfferById(widget.offerId, userId: userId);
     if (offer != null) {
-      provider.incrementViews(widget.offerId);
+      // مشاهدة المالك لعرضه لا تُحتسب (قاعدة المالك 2026-07-26) — والسيرفر يحسم أيضاً
+      if (userId == null || userId != offer.usrId) {
+        provider.incrementViews(widget.offerId, viewerUid: userId);
+      }
 
       // جلب بيانات المالك لتوليد التسمية المهنية (لا يُعرض اسمه أبداً)
       try {
