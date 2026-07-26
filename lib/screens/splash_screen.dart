@@ -127,8 +127,13 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.sizeOf(context);
-    // تكبير الشعار ليأخذ مساحة أكبر
-    final logoSize = (screenSize.shortestSide * 0.85).clamp(280.0, 480.0);
+    // تكبير الشعار ليأخذ مساحة أكبر — مع سقف آمن للشاشات القصيرة
+    // (كان يفيض ~34px على أجهزة مثل TECNO KI7: RenderFlex overflow)
+    var logoSize = (screenSize.shortestSide * 0.85).clamp(280.0, 480.0);
+    final hAllowance = screenSize.height - 300; // حجز النصوص واللودر تحت الشعار
+    if (logoSize > hAllowance) {
+      logoSize = hAllowance.clamp(180.0, logoSize);
+    }
 
     return Scaffold(
       backgroundColor: AppTheme.scaffoldBackground,

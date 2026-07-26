@@ -27,6 +27,17 @@ class _OfferCardState extends State<OfferCard> {
   }
 
   Future<void> _toggleFav() async {
+    // 🚫 عرضي الخاص: لا إعجاب ولا نقاط (حسم نهائي عند السيرفر أيضاً)
+    final myUid = context.read<AuthProvider>().userModel?.uid;
+    if (myUid != null && widget.offer.usrId == myUid) {
+      if (mounted) {
+        AppTheme.showSnackBar(context, const SnackBar(
+          content: Text('لا يمكن الإعجاب بعرضك الخاص 👌'),
+          duration: Duration(seconds: 1),
+        ));
+      }
+      return;
+    }
     final added = await LocalCacheService().toggleFavorite(widget.offer.id);
     if (mounted) setState(() => _isFav = added);
     if (mounted) {
@@ -44,6 +55,7 @@ class _OfferCardState extends State<OfferCard> {
           config,
           'like',
           fallback: 10,
+          offerId: widget.offer.id,
         );
         if (awarded && mounted) {
           auth.refreshUser();
@@ -311,22 +323,33 @@ class _OfferCardState extends State<OfferCard> {
                         ),
                       ),
 
-                      // زر المفضلة
-                      GestureDetector(
-                        onTap: _toggleFav,
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: _isFav ? Colors.red.withOpacity(0.1) : Colors.white.withOpacity(0.05),
-                            shape: BoxShape.circle,
+                      // زر المفضلة (يتعتّم على عروضك الخاصة)
+                      Builder(builder: (ctx) {
+                        final own = ctx.read<AuthProvider>().userModel?.uid ==
+                            widget.offer.usrId;
+                        return GestureDetector(
+                          onTap: _toggleFav,
+                          child: Opacity(
+                            opacity: own ? 0.35 : 1,
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: _isFav
+                                    ? Colors.red.withOpacity(0.1)
+                                    : Colors.white.withOpacity(0.05),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                _isFav
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                color: _isFav ? Colors.red : AppTheme.textGrey,
+                                size: 20,
+                              ),
+                            ),
                           ),
-                          child: Icon(
-                            _isFav ? Icons.favorite : Icons.favorite_border,
-                            color: _isFav ? Colors.red : AppTheme.textGrey,
-                            size: 20,
-                          ),
-                        ),
-                      ),
+                        );
+                      }),
                     ],
                   ),
                 ],

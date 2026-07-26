@@ -431,7 +431,7 @@ class _PackageData {
         ? Map<String, dynamic>.from(raw)
         : <String, dynamic>{};
     const defaults = {
-      0: {'nm': 'مجاني',  'o': 5,  'd': 30, 'pr': 0},
+      0: {'nm': 'مجاني',  'o': 1,  'd': 30, 'pr': 0},
       1: {'nm': 'فضي',   'o': 15, 'd': 45, 'pr': 10},
       2: {'nm': 'ذهبي',  'o': 40, 'd': 60, 'pr': 25},
     };

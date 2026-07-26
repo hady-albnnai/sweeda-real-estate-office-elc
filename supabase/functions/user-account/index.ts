@@ -323,6 +323,20 @@ serve(async (req) => {
       const points = (body.points ?? 0);
       if (!eventType) return json({ success: false, error: "EVENT_TYPE_REQUIRED" }, 400);
 
+      // 🚫 منع نقاط الإعجاب بالذات — السيرفر يستخرج مالك العرض بنفسه
+      const awardOfferId = (body.offer_id ?? body.offerId ?? "").toString();
+      if (awardOfferId) {
+        const { data: off } = await supabaseAdmin
+          .from("offers")
+          .select("usr_id")
+          .eq("id", awardOfferId)
+          .eq("i_del", 0)
+          .maybeSingle();
+        if (off && off.usr_id === uid) {
+          return json({ success: false, error: "SELF_ACTION" }, 200);
+        }
+      }
+
       const { data, error } = await supabaseAdmin.rpc("award_points_safe", {
         p_uid: uid,
         p_event_type: eventType,

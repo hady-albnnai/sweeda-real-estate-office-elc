@@ -81,6 +81,8 @@ serve(async (req) => {
     if (!actor.ok) return actor.response;
 
     let result: any = { success: false };
+    const offerId = (payload?.offer_id ?? payload?.offerId)?.toString() ?? "";
+    let targetChecked = false;
 
     switch (action) {
       // ==================== DAILY STREAK ====================
@@ -99,6 +101,24 @@ serve(async (req) => {
       case "award_points": {
         const { event_key, points } = payload;
         if (!event_key || !points) throw new Error("MISSING_EVENT_OR_POINTS");
+
+        // 🚫 منع نقاط الإعجاب/المشاركة على عروضك الخاصة —
+        // الكلاينت يمرر offer_id والسيرفر يقرر الملكية (لا يعتمد على بيانات العميل للملكية)
+        if (!targetChecked && offerId) {
+          targetChecked = true;
+          const { data: off } = await supabase
+            .from("offers")
+            .select("usr_id")
+            .eq("id", offerId)
+            .eq("i_del", 0)
+            .maybeSingle();
+          if (off && (off as Record<string, unknown>).usr_id === user_uid) {
+            return new Response(
+              JSON.stringify({ success: false, error: "SELF_ACTION" }),
+              { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+        }
 
         const { data, error } = await supabase.rpc("award_points_safe", {
           p_uid: user_uid,

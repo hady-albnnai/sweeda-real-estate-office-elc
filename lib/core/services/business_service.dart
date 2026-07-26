@@ -60,7 +60,7 @@ class BusinessService {
   /// منح نقاط حدث معيّن باستخدام مفاتيح الـ Config (pts.*)
   /// أمثلة المفاتيح: 'sgn','wkL','addO','dlD','strk','soc','att','ref'
   Future<bool> awardEvent(String uid, ConfigModel? config, String eventKey,
-      {int fallback = 0}) async {
+      {int fallback = 0, String? offerId}) async {
     // الإدارة لا تحتاج نقاط
     try {
       final user = await _sb.client.from(DbTables.users).select('role').eq('id', uid).maybeSingle();
@@ -73,11 +73,13 @@ class BusinessService {
 
     // ✅ Via user-rewards Edge Function
     try {
+      // offer_id يمرّر حتى يحسم السيرفر ملكية العرض (منع نقاط الإعجاب بالذات)
       final res = await _sb.invokeFunction('user-rewards', body: {
         'action': 'award_points',
         'user_uid': uid,
         'event_key': eventKey,
         'points': pts,
+        if (offerId != null) 'offer_id': offerId,
       });
       return res.data?['success'] == true;
     } catch (_) {
