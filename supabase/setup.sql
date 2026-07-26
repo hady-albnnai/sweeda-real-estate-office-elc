@@ -4318,3 +4318,61 @@ $function$;
 REVOKE ALL ON FUNCTION admin_reject_verification_by_admin(p_admin_uid uuid, p_target_uid uuid, p_reason text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION admin_reject_verification_by_admin(p_admin_uid uuid, p_target_uid uuid, p_reason text) TO service_role;
 
+-- =====================================================================
+-- [drift-closure] دوال موجودة على السيرفر الحي فقط — نسخها إلى setup.sql
+-- النسخة مطابقة للـ functions_dump.sql (المصدر الحي الموثوق)
+-- =====================================================================
+
+-- الملف الشخصي الكامل (يُستخدم من user-account.get_full_profile و login)
+CREATE OR REPLACE FUNCTION public.get_user_full_by_id(p_uid uuid)
+ RETURNS SETOF jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+BEGIN
+  RETURN QUERY
+    SELECT jsonb_build_object(
+      'id', u.id, 'nm', u.nm, 'ph', u.ph, 'eml', u.eml, 'ad', u.ad, 'role', u.role,
+      'sid', u.sid, 'img', u.img, 'pt', u.pt, 'bg', u.bg, 'bg_ts', u.bg_ts,
+      'b_pkg', u.b_pkg, 'pkg_end', u.pkg_end, 'pkg_grace', u.pkg_grace,
+      'brk', u.brk, 'brk_cls', u.brk_cls, 'brk_nm', u.brk_nm, 'sts', u.sts, 'ban_rsn', u.ban_rsn,
+      'ntf', u.ntf, 'stats', u.stats, 'wk_lgn', u.wk_lgn, 'strk', u.strk, 'strk_dt', u.strk_dt,
+      'i_del', u.i_del, 'perm', u.perm, 'ts_crt', u.ts_crt, 'ts_upd', u.ts_upd,
+      'vrf', u.vrf, 'ref_by', u.ref_by, 'ref_cnt', u.ref_cnt,
+      'usr', u.usr,
+      'pwd', CASE WHEN u.pwd IS NOT NULL THEN 'set' ELSE NULL END,
+      'rl', u.rl, 'device_id', u.device_id, 'last_ip', u.last_ip, 'signup_ip', u.signup_ip,
+      'device_history', u.device_history
+    )
+    FROM users u
+    WHERE u.id = p_uid AND u.i_del = 0;
+END;
+$function$;
+REVOKE ALL ON FUNCTION get_user_full_by_id(p_uid uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION get_user_full_by_id(p_uid uuid) TO service_role;
+
+-- طلب التوثيق الرسمي (يُستدعى من user-account.request_verification عبر service role فقط)
+-- يرفع vrf من 0 إلى 1 بعد التحقق من الرقم الوطني والصورة، مع أخطاء مترجمة بالكلاينت:
+-- ALREADY_VERIFIED / ALREADY_PENDING / MISSING_DOCUMENTS
+CREATE OR REPLACE FUNCTION public.request_verification_by_uid(p_user_uid uuid)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE v RECORD;
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN RAISE EXCEPTION 'AUTH_UID_MISMATCH'; END IF;
+  SELECT id, sid, img, vrf INTO v FROM users WHERE id = p_user_uid AND i_del = 0;
+  IF v.id IS NULL THEN RAISE EXCEPTION 'USER_NOT_FOUND'; END IF;
+  IF v.vrf = 2 THEN RAISE EXCEPTION 'ALREADY_VERIFIED'; END IF;
+  IF v.vrf = 1 THEN RAISE EXCEPTION 'ALREADY_PENDING'; END IF;
+  IF COALESCE(btrim(v.sid), '') = '' OR COALESCE(btrim(v.img), '') = '' THEN RAISE EXCEPTION 'MISSING_DOCUMENTS'; END IF;
+  UPDATE users SET vrf = 1, ts_upd = NOW() WHERE id = p_user_uid;
+  RETURN TRUE;
+END;
+$function$;
+REVOKE ALL ON FUNCTION request_verification_by_uid(p_user_uid uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION request_verification_by_uid(p_user_uid uuid) TO service_role;
+
