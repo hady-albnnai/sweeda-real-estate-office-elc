@@ -21,6 +21,7 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
   OfferModel? _offer;
   bool _loading = true;
   bool _processing = false;
+  int _othersCount = 0; // عروضه النشطة الأخرى (لحسم التجديد المجاني)
 
   @override
   void initState() {
@@ -33,9 +34,24 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
     final userId = context.read<AuthProvider>().userModel?.uid;
     var offer = prov.getOfferById(widget.offerId);
     offer ??= await prov.fetchOfferById(widget.offerId, userId: userId);
+    var others = 0;
+    if (userId != null) {
+      try {
+        final rows = await SupabaseService().client
+            .from('offers')
+            .select('id')
+            .eq('usr_id', userId)
+            .eq('i_del', 0)
+            .inFilter('sts', [0, 1, 2, 5]);
+        others = (rows as List)
+            .where((r) => r['id']?.toString() != widget.offerId)
+            .length;
+      } catch (_) {}
+    }
     if (!mounted) return;
     setState(() {
       _offer = offer;
+      _othersCount = others;
       _loading = false;
     });
   }
@@ -62,9 +78,11 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
               style: TextStyle(color: AppTheme.textWhite)),
         ]),
         content: Text(
-          'هل تريد شراء "$label" بـ $cost نقطة؟\n\n'
-          'رصيدك الحالي: ${user.pt} نقطة\n'
-          'الرصيد بعد الشراء: ${user.pt - cost} نقطة',
+          cost == 0
+              ? 'سيتم تجديد العرض مجاناً لمدة 30 يوم إضافية.\n\nهل تريد المتابعة؟'
+              : 'هل تريد شراء "$label" بـ $cost نقطة؟\n\n'
+                  'رصيدك الحالي: ${user.pt} نقطة\n'
+                  'الرصيد بعد الشراء: ${user.pt - cost} نقطة',
           style: const TextStyle(color: AppTheme.textGrey),
         ),
         actions: [
@@ -75,8 +93,8 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('شراء',
-                style: TextStyle(fontWeight: FontWeight.bold)),
+            child: Text(cost == 0 ? 'تجديد' : 'شراء',
+                style: const TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -127,6 +145,8 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
         return 'ليس لديك صلاحية';
       case 'INVALID_BOOST_TYPE':
         return 'نوع غير صالح';
+      case 'RENEW_TOO_EARLY':
+        return 'التجديد المجاني متاح فقط قبل يومين من الانتهاء';
       default:
         return code;
     }
@@ -135,6 +155,27 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
   void _snack(String m) {
     if (!mounted) return;
     AppTheme.showSnackBar(context, SnackBar(content: Text(m)));
+  }
+
+  /// باقة فعالة (تشمل فترة السماح) — مطابق لمنطق السيرفر
+  bool get _hasActivePkg {
+    final u = context.read<AuthProvider>().userModel;
+    if (u == null || u.bPkg == 0) return false;
+    final now = DateTime.now();
+    return (u.pkgEnd?.isAfter(now) ?? false) ||
+        (u.pkgGrace?.isAfter(now) ?? false);
+  }
+
+  /// تكلفة التجديد الفعلية — قاعدة المالك (مطابقة لـ purchase_offer_boost):
+  /// باقة فعالة ⇒ 0 | بلا باقة + عرض وحيد + آخر يومين (غير منتهٍ) ⇒ 0 | غير ذلك ⇒ spd.ren
+  int _renCost(Map<String, dynamic> spd) {
+    final base = (spd['ren'] ?? 500) as int;
+    if (_hasActivePkg) return 0;
+    final expired =
+        _offer?.expirationDate.isBefore(DateTime.now()) ?? false;
+    final daysLeft = _offer?.daysUntilExpiration ?? 30;
+    if (_othersCount == 0 && !expired && daysLeft <= 2) return 0;
+    return base;
   }
 
   @override
@@ -191,7 +232,7 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
                   icon: Icons.refresh,
                   title: 'تجديد العرض',
                   description: 'تمديد العرض لـ 30 يوم إضافية',
-                  cost: (spd['ren'] ?? 500) as int,
+                  cost: _renCost(spd),
                   active: false,
                   boostType: 'ren',
                   color: Colors.blue,
@@ -350,11 +391,14 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
     final user = context.watch<AuthProvider>().userModel;
     final canAfford = (user?.pt ?? 0) >= cost;
 
-    // تقييد التجديد (ren): متاح للمدفوع دائماً، وللمجاني قبل يومين من الانتهاء فقط
+    // تقييد التجديد (ren): المشترك دائماً (مجاني)، صاحب العرض الوحيد بلا باقة خلال يومين فقط (مجاني)،
+    // أصحاب العروض الزائدة/المنتهية يجددون بالنقاط في أي وقت (السيرفر يحسم التكلفة)
     bool isEnabled = true;
-    if (boostType == 'ren' && user?.bPkg == 0) {
+    if (boostType == 'ren' && !_hasActivePkg) {
+      final expired =
+          _offer?.expirationDate.isBefore(DateTime.now()) ?? false;
       final daysLeft = _offer?.daysUntilExpiration ?? 30;
-      if (daysLeft > 2) {
+      if (_othersCount == 0 && !expired && daysLeft > 2) {
         isEnabled = false;
       }
     }
@@ -451,7 +495,9 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
                         color: Colors.black, size: 16),
                 label: Text(!isEnabled
                     ? 'التجديد متاح قبل يومين من الانتهاء'
-                    : (canAfford ? 'شراء بـ $cost نقطة' : 'نقاطك غير كافية'),
+                    : cost == 0
+                        ? 'تجديد مجاني ✨'
+                        : (canAfford ? 'شراء بـ $cost نقطة' : 'نقاطك غير كافية'),
                     style: const TextStyle(
                         color: Colors.black,
                         fontWeight: FontWeight.bold,
