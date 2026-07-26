@@ -4781,3 +4781,64 @@ BEGIN
   RETURN NEW;
 END;
 $function$;
+
+-- ════════════════════════════════════════════════════════════════════
+-- حظر الإبلاغ عن المحتوى الخاص (قرار المالك 2026-07-26): CANNOT_REPORT_OWN
+-- يغطي: tgt_uid=المبلِّغ مباشرة + tgt_id يشير لعرض يملكه المبلِّغ
+-- ════════════════════════════════════════════════════════════════════
+CREATE OR REPLACE FUNCTION public.create_report_internal(p_reporter_uid uuid, p_report jsonb)
+ RETURNS SETOF reports
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE
+  v_target UUID;
+  v_tgt_id UUID;
+  v_offer_owner UUID;
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_reporter_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+
+  -- (1) الهدف مستخدم = المبلِّغ نفسه
+  v_target := NULLIF(p_report->>'tgt_uid', '')::UUID;
+  IF v_target IS NOT NULL AND v_target = p_reporter_uid THEN
+    RAISE EXCEPTION 'CANNOT_REPORT_OWN';
+  END IF;
+
+  -- (2) الهدف عرضاً يملكه المبلِّغ (tgt_id قد لا يكون UUID — نتجاهل بأمان)
+  BEGIN
+    v_tgt_id := NULLIF(p_report->>'tgt_id', '')::UUID;
+  EXCEPTION WHEN OTHERS THEN
+    v_tgt_id := NULL;
+  END;
+  IF v_tgt_id IS NOT NULL THEN
+    SELECT usr_id INTO v_offer_owner FROM public.offers WHERE id = v_tgt_id AND i_del = 0;
+    IF v_offer_owner IS NOT NULL AND v_offer_owner = p_reporter_uid THEN
+      RAISE EXCEPTION 'CANNOT_REPORT_OWN';
+    END IF;
+  END IF;
+
+  RETURN QUERY
+  INSERT INTO reports (
+    rep_uid, tgt_uid, tgt_tp, tgt_id, rsn, det, sts, act, act_dur, note, act_by, ts_crt
+  ) VALUES (
+    p_reporter_uid,
+    v_target,
+    COALESCE((p_report->>'tgt_tp')::INT, 0),
+    COALESCE(p_report->>'tgt_id', ''),
+    COALESCE((p_report->>'rsn')::INT, 0),
+    COALESCE(p_report->>'det', ''),
+    0,
+    0,
+    0,
+    '',
+    NULL,
+    NOW()
+  ) RETURNING *;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION create_report_internal(p_reporter_uid uuid, p_report jsonb) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION create_report_internal(p_reporter_uid uuid, p_report jsonb) TO service_role;

@@ -586,10 +586,12 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
           backgroundColor: Colors.green,
         ),
       );
-    } catch (e) {if (!mounted) return;
-      AppTheme.showSnackBar(context,
-        const SnackBar(content: Text('فشل إرسال التبليغ، حاول مرة أخرى')),
-      );
+    } catch (e) {
+      if (!mounted) return;
+      final msg = e.toString().contains('CANNOT_REPORT_OWN')
+          ? 'لا يمكن التبليغ عن عرضك الخاص 👌'
+          : 'فشل إرسال التبليغ، حاول مرة أخرى';
+      AppTheme.showSnackBar(context, SnackBar(content: Text(msg)));
     }
   }
 
@@ -737,11 +739,14 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                 icon: const Icon(Icons.arrow_back_ios),
                 onPressed: () => Navigator.pop(context)),
             actions: [
-              IconButton(
-                icon: const Icon(Icons.flag_outlined),
-                tooltip: 'تبليغ',
-                onPressed: _reportOffer,
-              ),
+              // لا تبليغ عن عرضك الخاص — والسيرفر يحسم أيضاً (CANNOT_REPORT_OWN)
+              if (_offer != null &&
+                  context.read<AuthProvider>().userModel?.uid != _offer!.usrId)
+                IconButton(
+                  icon: const Icon(Icons.flag_outlined),
+                  tooltip: 'تبليغ',
+                  onPressed: _reportOffer,
+                ),
               IconButton(
                 icon: const Icon(Icons.share),
                 onPressed: _share,
