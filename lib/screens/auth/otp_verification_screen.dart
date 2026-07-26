@@ -124,7 +124,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> with Code
           padding: const EdgeInsets.all(30),
           child: Column(children: [
             const SizedBox(height: 20),
-            const Icon(Icons.sms_outlined, color: AppTheme.primaryGold, size: 72),
+            const Icon(Icons.sms_outlined, color: AppTheme.primaryGold, size: 56),
             const SizedBox(height: 24),
             const Text('تحقق من الرمز', style: TextStyle(color: AppTheme.textWhite, fontSize: 28, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
@@ -133,7 +133,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> with Code
               textAlign: TextAlign.center,
               style: const TextStyle(color: AppTheme.textGrey, fontSize: 14, height: 1.5),
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 20),
             Directionality(
               textDirection: TextDirection.rtl,
               child: Row(
@@ -160,7 +160,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> with Code
                 )),
               ),
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 20),
             SizedBox(width: double.infinity, height: 56, child: ElevatedButton(onPressed: _loading ? null : _verify, style: ElevatedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))), child: _loading ? const CircularProgressIndicator(color: Colors.black) : const Text('تحقق الآن', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)))),
             const SizedBox(height: 20),
             TextButton(

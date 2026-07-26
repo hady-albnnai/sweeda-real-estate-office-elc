@@ -33,7 +33,7 @@ class PaymentScreen extends StatefulWidget {
 
 class _PaymentScreenState extends State<PaymentScreen> {
   String _channel = ''; // مفتاح القناة المختارة
-  int _currency = 0; // 0=$, 1=ل.س
+  static const int _currency = 1; // عملة موحدة: ل.س (الدفع بالعملة المحلية فقط)
   final _refCtrl = TextEditingController();
   XFile? _proofImage;
   bool _uploading = false;
@@ -151,14 +151,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
     setState(() => _progress = 'جارٍ تسجيل الدفعة...');
 
     final config = context.read<ConfigProvider>().config;
-    final usdToSypRate = (config?.usdToSypRate ?? 15000).toDouble();
+    final usdToSypRate = (config?.usdToSypRate ?? 150).toDouble();
 
     final payment = PaymentModel(
       id: '',
       uid: user.uid,
       tp: 0, // 0 = اشتراك باقة
       pkg: widget.packageId,
-      amt: _currency == 0 ? _priceFromConfig(config) : (_priceFromConfig(config) * usdToSypRate),
+      amt: _priceFromConfig(config) * usdToSypRate,
       cur: _currency,
       mtd: 0, // legacy
       channel: _channel,
@@ -258,15 +258,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   const SizedBox(height: 20),
                   _channelDetailsCard(_findChannel(channels, _channel)),
                   const SizedBox(height: 20),
-                  _sectionTitle('💱 العملة'),
-                  Row(
-                    children: [
-                      Expanded(child: _currencyTile(0, 'دولار \$')),
-                      const SizedBox(width: 10),
-                      Expanded(child: _currencyTile(1, 'ليرة سورية')),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
+
                   _sectionTitle('🔢 رقم العملية / المرجع'),
                   TextField(
                     controller: _refCtrl,
@@ -373,14 +365,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   String _getDisplayAmount() {
-    if (_currency == 0) {
-      final config = context.read<ConfigProvider>().config;
-      return '\$${_priceFromConfig(config).toStringAsFixed(0)}';
-    } else {
-      final config = context.read<ConfigProvider>().config;
-      final rate2 = (config?.usdToSypRate ?? 15000).toDouble();
-      return '${(_priceFromConfig(config) * rate2).toStringAsFixed(0)} ل.س';
-    }
+    final config = context.read<ConfigProvider>().config;
+    final rate2 = (config?.usdToSypRate ?? 150).toDouble();
+    return '${(_priceFromConfig(config) * rate2).toStringAsFixed(0)} ل.س';
   }
 
 
@@ -493,6 +480,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
         }
         if ((data['account_number'] ?? '').toString().isNotEmpty) {
           fields.add(_kv('رقم الحساب', data['account_number'].toString()));
+        }
+        break;
+      case 'syriatel_cash':
+        if ((data['number'] ?? '').toString().isNotEmpty) {
+          fields.add(_kv('رقم التحويل', data['number'].toString()));
         }
         break;
       case 'balance':
@@ -609,30 +601,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     padding: EdgeInsets.all(30),
                     child: CircularProgressIndicator(),
                   ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _currencyTile(int id, String label) {
-    final selected = _currency == id;
-    return GestureDetector(
-      onTap: () => setState(() => _currency = id),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color:
-              selected ? AppTheme.primaryGold : AppTheme.surfaceBlack,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: TextStyle(
-              color: selected ? Colors.black : AppTheme.textWhite,
-              fontWeight: FontWeight.bold,
-            ),
           ),
         ),
       ),

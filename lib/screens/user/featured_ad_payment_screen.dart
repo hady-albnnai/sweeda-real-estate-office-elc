@@ -27,6 +27,23 @@ class FeaturedAdPaymentScreen extends StatefulWidget {
 }
 
 class _FeaturedAdPaymentScreenState extends State<FeaturedAdPaymentScreen> {
+  /// أرقام التحويل المهيكلة لأي قناة تُعرض عند توفرها (كود/رقم/سيرياتل/MTN)
+  List<(String, String)> _channelNumbers(Map<String, dynamic> ch) {
+    const fields = {
+      'account_number': 'الكود / رقم الحساب',
+      'number': 'الرقم',
+      'syriatel_number': 'سيرياتل',
+      'mtn_number': 'MTN',
+    };
+    final out = <(String, String)>[];
+    for (final e in fields.entries) {
+      final v = (ch[e.key] ?? '').toString();
+      if (v.isNotEmpty) out.add((e.value, v));
+    }
+    return out;
+  }
+
+
   int _weeks = 1; // المدة المختارة (1-4)
   String _channel = '';
   final _refCtrl = TextEditingController();
@@ -364,6 +381,16 @@ class _FeaturedAdPaymentScreenState extends State<FeaturedAdPaymentScreen> {
                                 fontSize: 12,
                                 height: 1.5)),
                       ],
+                      if (selected)
+                        for (final kv in _channelNumbers(ch))
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text('${kv.$1}: ${kv.$2}',
+                                style: const TextStyle(
+                                    color: AppTheme.primaryGold,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold)),
+                          ),
                     ],
                   ),
                 ),

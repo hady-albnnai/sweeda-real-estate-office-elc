@@ -37,6 +37,7 @@ class _PaymentChannelsEditorScreenState
   static const Map<String, List<String>> _channelFields = {
     'haram': ['recipient_name', 'recipient_phone'],
     'sham_cash': ['account_number'], // qr_image_url منفصل
+    'syriatel_cash': ['number'],
     'balance': ['syriatel_number', 'mtn_number'],
     'bank': [
       'bank_name',
@@ -51,6 +52,7 @@ class _PaymentChannelsEditorScreenState
     'recipient_name': 'اسم المستقبل (ثلاثي)',
     'recipient_phone': 'رقم هاتف المستقبل',
     'account_number': 'رقم الحساب',
+    'number': 'رقم التحويل',
     'syriatel_number': 'رقم سيرياتل',
     'mtn_number': 'رقم MTN',
     'bank_name': 'اسم البنك',

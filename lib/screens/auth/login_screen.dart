@@ -156,7 +156,7 @@ class _LoginScreenState extends State<LoginScreen> {
             )),
             const SizedBox(height: 10),
             Text('المكتب العقاري الإلكتروني', style: GoogleFonts.cairo(color: AppTheme.primaryGold, fontSize: 26, fontWeight: FontWeight.w900)),
-            const SizedBox(height: 50),
+            const SizedBox(height: 24),
 
             // ── القائمة 1: تسجيل الدخول ──
             _buildBlock(
@@ -206,7 +206,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ]),
             ),
-            const SizedBox(height: 60),
+            const SizedBox(height: 24),
           ]),
         ),
       ),

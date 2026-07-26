@@ -186,7 +186,15 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       var target = dedicated.replaceAll(RegExp(r'[^0-9]'), '');
       if (target.startsWith('0')) target = '963${target.substring(1)}';
       if (!target.startsWith('963')) target = '963$target';
-      url = 'https://wa.me/$target';
+      // نص تعريفي جاهز: الفيديو يصل للمكتب بدون رقم عرض لأن العرض لم يُحفظ بعد —
+      // التطابق يتم بالاسم/الهاتف/العنوان.
+      final u = context.read<AuthProvider>().userModel;
+      final phone = _contactPhoneCtrl.text.trim().isNotEmpty
+          ? _contactPhoneCtrl.text.trim()
+          : (u?.ph ?? '');
+      final msg =
+          '🎬 فيديو عرض جديد\nالعنوان: ${_ttlCtrl.text.trim()}\nالمعلن: ${u?.nm ?? ''}\nالهاتف: $phone';
+      url = 'https://wa.me/$target?text=${Uri.encodeComponent(msg)}';
     } else {
       final old = (cfg?.texts['videoWhatsAppGroup']?.toString() ?? '').trim();
       if (old.isNotEmpty) url = old.startsWith('http') ? old : 'https://$old';
@@ -344,10 +352,9 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       child: Row(children: [
         if (onBack != null)
           Expanded(
-            child: OutlinedButton.icon(
+            child: OutlinedButton(
               onPressed: onBack,
-              icon: const Icon(Icons.arrow_forward, size: 16),
-              label: const Text('رجوع'),
+              child: const Text('رجوع', maxLines: 1, softWrap: false, overflow: TextOverflow.fade),
             ),
           ),
         if (onBack != null && onNext != null) const SizedBox(width: 10),
