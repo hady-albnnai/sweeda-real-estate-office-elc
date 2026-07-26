@@ -513,12 +513,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ? 'بيانات التعيين والتحقق الوظيفي ✅'
                 : 'معلوماتك الشخصية والتوثيق',
             o: () => context.push('/user/account-info')),
-        if (!u.isInternal)
-          _buildMenuItem(
-            i: Icons.camera_alt_outlined,
-            t: 'خدمة التصوير العقاري',
-            s: 'صوّر عقارك باحتراف مع مصور المكتب',
-            o: () => context.push('/user/photography')),
         _buildMenuItem(
             i: Icons.star_outline,
             t: 'تقييماتي المستلمة',
