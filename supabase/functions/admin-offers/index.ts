@@ -185,10 +185,10 @@ serve(async (req) => {
             try {
               await supabaseAdmin.rpc('log_admin_action', {
                 p_admin_uid: adminUid,
-                p_action: 105,
-                p_details: 'تم تفعيل النشر التلقائي على السوشيال (i_soc=1) - مجدول',
-                p_target_id: offerId,
-                p_target_table: 'offers',
+                p_act: 105,
+                p_det: 'تم تفعيل النشر التلقائي على السوشيال (i_soc=1) - مجدول',
+                p_ref_id: offerId,
+                p_ref_col: 'offers',
               });
             } catch (_) {}
 
@@ -211,12 +211,12 @@ serve(async (req) => {
                 const success = result.success === true;
                 await supabaseAdmin.rpc('log_admin_action', {
                   p_admin_uid: adminUid,
-                  p_action: success ? 106 : 107,
-                  p_details: success
+                  p_act: success ? 106 : 107,
+                  p_det: success
                     ? '✅ تم النشر التلقائي الفوري على فيسبوك وإنستغرام بعد الموافقة'
                     : `⚠️ فشل النشر التلقائي بعد الموافقة: ${(result.error as string) ?? 'UNKNOWN'} — سيبقى في قائمة الجاهزة`,
-                  p_target_id: offerId,
-                  p_target_table: 'offers',
+                  p_ref_id: offerId,
+                  p_ref_col: 'offers',
                 });
               } catch (_) {}
             } else {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/config_provider.dart';
+import '../../core/network/supabase_service.dart';
 import '../../core/theme/app_theme.dart';
 import 'payment_channels_editor_screen.dart';
 
@@ -460,9 +461,41 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
     );
   }
 
+  /// حفظ قيمتي واتساب الفيديو عبر Edge Function `admin-config` (action: update_texts).
+  /// invokeFunction يحقن staff_session_token وadmin_uid تلقائياً لدوال admin-*.
+  Future<bool> _saveVideoTexts() async {
+    try {
+      final res = await SupabaseService().invokeFunction('admin-config', body: {
+        'action': 'update_texts',
+        'texts': {
+          'videoRequestWhatsApp': _videoWaNumber.text.trim(),
+          'videoRequestGroupLink': _videoGroupLink.text.trim(),
+        },
+      });
+      final d = res.data;
+      return d is Map && d['success'] == true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
+
+    // ── حفظ رقم/رابط واتساب الفيديو عبر admin-config (service_role) ──
+    // الكتابة المباشرة على app_config مرفوضة بسياسة RLS لجلسات الهاتف (لا يوجد auth.uid)،
+    // لذا تُحفظ هاتان القيمتان عبر الدالة الجديدة كي يعمل تعديلهما من التطبيق
+    // للمدير/النائب (دخول هاتف) — مؤكد حياً 2026-07-26 أن المسار القديم كان يفشل بصمت.
+    final videoSaved = await _saveVideoTexts();
+    if (!videoSaved) {
+      if (mounted) {
+        setState(() => _saving = false);
+        AppTheme.showSnackBar(context, const SnackBar(
+            content: Text('❌ فشل حفظ رقم/رابط واتساب الفيديو — تأكد أنك مدير/نائب وأن دالة admin-config منشورة')));
+      }
+      return;
+    }
 
     final prov = context.read<ConfigProvider>();
     // ندمج التعديلات فوق نسخة من الـ config الحالي للحفاظ على باقي المفاتيح

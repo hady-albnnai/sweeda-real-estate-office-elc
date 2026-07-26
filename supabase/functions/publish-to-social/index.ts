@@ -73,12 +73,12 @@ serve(async (req) => {
     try {
       await supabaseAdmin.rpc("log_admin_action", {
         p_admin_uid: actor.adminUid,
-        p_action: result.success ? 106 : 107,
-        p_details: result.success
+        p_act: result.success ? 106 : 107,
+        p_det: result.success
           ? "تم النشر الفعلي على فيسبوك وإنستغرام"
           : `فشل/تعذر النشر الاجتماعي: ${result.error ?? "UNKNOWN"}`,
-        p_target_id: offerId,
-        p_target_table: "offers",
+        p_ref_id: offerId,
+        p_ref_col: "offers",
       });
     } catch (_) {}
 

@@ -2322,3 +2322,28 @@ get_resource_usage_internal(p_admin_uid uuid)
 - `role >= 2` → موظف: يرفع لأي مجلد كما السابق.
 - `role < 2` → مستخدم عادي: فحص `UNAUTHORIZED_FOLDER` يلزمه بمجلده الخاص فقط (`{folder}/{uid}/...`).
 السبب: كان رفع صور العروض مكسوراً كلياً للمستخدمين العاديين بالهاتف (401 لكل ملف).
+
+## 2026-07-26 — دالة جديدة: `admin-config` (كتابة آمنة لإعدادات app_config)
+
+### السبب (مؤكد حياً نفس اليوم)
+سياسة كتابة `app_config` تشترط `auth.uid()` مع role≥6، وجلسات الهاتف (staff sessions) لا تملك `auth.uid()`
+↔ شاشة إعدادات التطبيق كانت تفشل بالحفظ بصمت للمدير والنائب. الحل: كتابة عبر service_role بعد تحقق الجلسة.
+
+### `admin-config` → action: `update_texts`
+تحديث مفاتيح نصية داخل `txts.*` بقائمة بيضاء حصرية (تمنع الكتابة العشوائية بالإعدادات):
+
+- **القائمة البيضاء (مرحلة 1):** `videoRequestWhatsApp`, `videoRequestGroupLink`.
+- **التحقق:** `validateActor` بدور ≥ 5 (JWT أو staff_session_token) — صاحب صلاحية "إعدادات التطبيق".
+- **المدخلات:** `admin_uid`, `action: "update_texts"`, `texts: { key: value }`.
+- **التنظيف:** إزالة محارف التحكم + قص 300 حرف كحد أقصى لكل قيمة.
+- **السلوك:** يقرأ `value` الحالي، يدمج `txts` فقط (باقي الأقسام لا تُمس)، ويكتب upsert على `key='main'`.
+- **التدقيق:** `log_admin_action` كود `120` (توسعة أكواد: 101-107 للعروض/السوشيال)، ref=`app_config/main` — أفضل-جهد.
+- **الأخطاء:** `ADMIN_SESSION_REQUIRED`, `INVALID_ADMIN_SESSION`, `TEXTS_OBJECT_REQUIRED`, `KEY_NOT_ALLOWED`, `NO_KEYS_PROVIDED`, `UNKNOWN_ACTION`.
+- **ملاحظة توسعية:** باقي أقسام الإعدادات (نقاط/حصص/سوشيال...) تُنقل لاحقاً كأفعال whitelist إضافية بمراحل منفصلة.
+
+### إصلاح مصاحب: أسماء معاملات `log_admin_action` (2026-07-26)
+التواقيع الحية المؤكدة: `(p_admin_uid, p_act, p_det, p_ref_id, p_ref_col)`.
+كان `admin-offers` (موضعان) و`publish-to-social` (موضع) ينادونها بـ
+`p_action/p_details/p_target_id/p_target_table` → PostgREST لا يطابق أسماء المعاملات
+والأخطاء تُبتلع داخل try/catch → سجلات تدقيق ضائعة بصمت. صُححت الأسماء في الثلاثة.
+(نداءات `p_action` في `admin-reports` و`user-appointments` صحيحة — تعود لدوال أخرى، لم تُمس.)
