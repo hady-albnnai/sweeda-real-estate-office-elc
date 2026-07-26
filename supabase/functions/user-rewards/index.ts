@@ -102,6 +102,15 @@ serve(async (req) => {
         const { event_key, points } = payload;
         if (!event_key || !points) throw new Error("MISSING_EVENT_OR_POINTS");
 
+        // تحصين 2026-07-26: نقاط الإعجاب بلا offer_id مرفوضة كلياً —
+        // أي مسار كلاينت ناسي التمرير يُحسم هنا قبل أي منح
+        if (event_key === "like" && !offerId) {
+          return new Response(
+            JSON.stringify({ success: false, error: "OFFER_ID_REQUIRED" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
         // 🚫 منع نقاط الإعجاب/المشاركة على عروضك الخاصة —
         // الكلاينت يمرر offer_id والسيرفر يقرر الملكية (لا يعتمد على بيانات العميل للملكية)
         if (!targetChecked && offerId) {

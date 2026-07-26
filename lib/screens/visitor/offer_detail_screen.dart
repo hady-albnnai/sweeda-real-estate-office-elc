@@ -112,6 +112,18 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
   }
 
   Future<void> _toggleFav() async {
+    // 🚫 عرضي الخاص: لا إعجاب جديد ولا نقاط (والسيرفر يحسم أيضاً عبر offer_id)
+    final myUid = context.read<AuthProvider>().userModel?.uid;
+    final isOwn = _offer != null && myUid != null && _offer!.usrId == myUid;
+    if (isOwn && !_isFav) {
+      if (mounted) {
+        AppTheme.showSnackBar(context, const SnackBar(
+          content: Text('لا يمكن الإعجاب بعرضك الخاص 👌'),
+          duration: Duration(seconds: 1),
+        ));
+      }
+      return;
+    }
     final added = await LocalCacheService().toggleFavorite(widget.offerId);
     setState(() => _isFav = added);
     if (mounted) {
@@ -120,6 +132,8 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
         duration: const Duration(seconds: 1),
       ));
     }
+    // عرضي الخاص (كان مضافاً للمفضلة قبل الحماية): إزالة محلية فقط — بدون أي نقاط
+    if (isOwn) return;
     if (added && mounted) {
       final auth = context.read<AuthProvider>();
       if (auth.isLoggedIn) {
@@ -129,6 +143,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
           config,
           'like',
           fallback: 10,
+          offerId: widget.offerId, // يمكّن حارس SELF_ACTION بالسيرفر
         );
         if (awarded && mounted) {
           auth.refreshUser();
@@ -751,11 +766,20 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                 icon: const Icon(Icons.share),
                 onPressed: _share,
               ),
-              IconButton(
-                icon: Icon(_isFav ? Icons.favorite : Icons.favorite_border,
-                    color: _isFav ? AppTheme.errorRed : null),
-                onPressed: _toggleFav,
-              ),
+              // ❤️ القلب يتعتّم على عروضك الخاصة (والسيرفر يرفض النقاط كذلك)
+              Builder(builder: (ctx) {
+                final own = _offer != null &&
+                    ctx.read<AuthProvider>().userModel?.uid == _offer!.usrId;
+                return IconButton(
+                  icon: Opacity(
+                    opacity: own ? 0.35 : 1,
+                    child: Icon(
+                        _isFav ? Icons.favorite : Icons.favorite_border,
+                        color: _isFav ? AppTheme.errorRed : null),
+                  ),
+                  onPressed: _toggleFav,
+                );
+              }),
             ],
           ),
           SliverToBoxAdapter(
