@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/offer_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/config_provider.dart';
+import '../../core/constants/db_constants.dart';
 import '../../models/offer_model.dart';
 import '../../core/theme/app_theme.dart';
 import '../../widgets/bottom_nav_bar.dart';
@@ -60,6 +62,75 @@ class _MyOffersScreenState extends State<MyOffersScreen>
     return offers.where((o) => o.sts == status).toList();
   }
 
+  /// بوابة قبولية مسبقة بطلب المالك: المنع يظهر عند الضغط على «إضافة عرض» مباشرةً،
+  /// لا بعد تعبئة البيانات — مع فتح شاشة الاشتراك بالباقات فوراً.
+  /// ⚠️ الحارس الحقيقي يبقى سيرفرياً (create_offer_internal) — هذه البوابة تحسين تجربة
+  /// وتسويق، وتطبّق نفس قواعده تقريبياً: عدّاد sts في {draft,review,published,reserved}،
+  /// إعفاء role>=4، fallback مستخدم=1 / وسيط=5، حصة الباقة الفعالة من config.pkg.
+  /// (المحذوفة خلال 24 ساعة لا يعرفها العميل — يحسمها السيرفر عند النشر)
+  Future<void> _tryAddOffer() async {
+    final auth = context.read<AuthProvider>();
+    final config = context.read<ConfigProvider>().config;
+    final user = auth.userModel;
+
+    var limited = false;
+    var limit = 1;
+    if (user != null && user.role < 4) {
+      const counted = {OfferStatus.draft, OfferStatus.review, OfferStatus.published, OfferStatus.reserved};
+      final used = _myOffers.where((o) => o.iDel == 0 && counted.contains(o.sts)).length;
+
+      final now = DateTime.now();
+      var effectivePkg = 0;
+      if (user.bPkg != 0 &&
+          ((user.pkgEnd?.isAfter(now) ?? false) || (user.pkgGrace?.isAfter(now) ?? false))) {
+        effectivePkg = user.bPkg;
+      }
+      final pkgMap = config?.data['pkg'];
+      final pkgEntry = pkgMap is Map ? pkgMap['$effectivePkg'] : null;
+      limit = (pkgEntry is Map ? (pkgEntry['o'] as num?)?.toInt() : null) ?? (user.role == 1 ? 5 : 1);
+      limited = used >= limit;
+    }
+
+    if (!limited) {
+      await context.push('/user/add-offer');
+      if (mounted) _refresh();
+      return;
+    }
+
+    if (!mounted) return;
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surfaceBlack,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('وصلت لحد العروض المسموح', style: TextStyle(color: AppTheme.textWhite)),
+        content: Text(
+          'تجاوزت عدد العروض المسموح بها لحسابك (الحد الحالي: $limit عرض).
+
+'
+          'لإضافة المزيد من العروض، اشترك بإحدى الباقات واستفد من حصة أكبر ومزايا إضافية.',
+          style: const TextStyle(color: AppTheme.textGrey, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('لاحقاً', style: TextStyle(color: AppTheme.textGrey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryGold),
+            child: const Text('الاشتراك بباقة',
+                style: TextStyle(color: AppTheme.deepBlack, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+    if (go == true && mounted) {
+      await context.push('/user/packages');
+      if (mounted) _refresh();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -89,10 +160,7 @@ class _MyOffersScreenState extends State<MyOffersScreen>
         foregroundColor: Colors.black,
         icon: const Icon(Icons.add),
         label: const Text('عرض جديد'),
-        onPressed: () async {
-          await context.push('/user/add-offer');
-          if (mounted) _refresh();
-        },
+        onPressed: _tryAddOffer,
       ),
       bottomNavigationBar: const CustomBottomNavBar(currentIndex: 1),
       body: _loading
@@ -125,10 +193,7 @@ class _MyOffersScreenState extends State<MyOffersScreen>
                 style: TextStyle(color: AppTheme.textGrey, fontSize: 16)),
             const SizedBox(height: 16),
             ElevatedButton.icon(
-              onPressed: () async {
-                await context.push('/user/add-offer');
-                if (mounted) _refresh();
-              },
+              onPressed: _tryAddOffer,
               icon: const Icon(Icons.add, color: Colors.black),
               label: const Text('أضف عرضك الأول'),
             ),

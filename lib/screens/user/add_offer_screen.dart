@@ -766,7 +766,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   String _generateSocialPostText() {
     final config = context.read<ConfigProvider>().config;
     final priceStr = _cur == 0
-        ? '\${_priceCtrl.text.isNotEmpty ? _priceCtrl.text : '---'}'
+        ? '\$${_priceCtrl.text.isNotEmpty ? _priceCtrl.text : '---'}'
         : '${_priceCtrl.text.isNotEmpty ? _priceCtrl.text : '---'} ل.س';
 
     final isProperty = _selectedType == 0;
