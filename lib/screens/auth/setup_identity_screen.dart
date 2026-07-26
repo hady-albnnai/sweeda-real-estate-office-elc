@@ -256,6 +256,7 @@ class _SetupIdentityScreenState extends State<SetupIdentityScreen> {
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().userModel;
     final hasServerImages = (user?.img ?? '').isNotEmpty;
+    final vrf = user?.vrf ?? 0;
 
     return Scaffold(
       backgroundColor: AppTheme.scaffoldBackground,
@@ -274,6 +275,43 @@ class _SetupIdentityScreenState extends State<SetupIdentityScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // ─── حالة طلب التوثيق (قيد المراجعة / موثق) ───
+              if (vrf == 1 || vrf == 2) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: (vrf == 2 ? Colors.green : Colors.orange)
+                        .withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                        color: (vrf == 2 ? Colors.green : Colors.orange)
+                            .withOpacity(0.45)),
+                  ),
+                  child: Row(children: [
+                    Icon(
+                        vrf == 2
+                            ? Icons.verified_rounded
+                            : Icons.hourglass_top_rounded,
+                        color: vrf == 2 ? Colors.green : Colors.orange,
+                        size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        vrf == 2
+                            ? 'حسابك موثق رسمياً ✓'
+                            : 'طلبك قيد المراجعة من الإدارة — لا حاجة لتعديل البيانات إلا إذا طُلب منك ذلك.',
+                        style: TextStyle(
+                            color: vrf == 2 ? Colors.green : Colors.orange,
+                            fontSize: 12,
+                            height: 1.5),
+                      ),
+                    ),
+                  ]),
+                ),
+                const SizedBox(height: 16),
+              ],
+
               // ─── تنويه إلزامية البيانات (بدل رسالة التنبيه الغامضة) ───
               Container(
                 padding: const EdgeInsets.all(14),
@@ -346,8 +384,8 @@ class _SetupIdentityScreenState extends State<SetupIdentityScreen> {
                             fontSize: 13)),
                   ),
                   if (hasServerImages && _frontImage == null && _backImage == null)
-                    const Text('موجودة على السيرفر ✓',
-                        style: TextStyle(color: Colors.green, fontSize: 11)),
+                    const Icon(Icons.check_circle_rounded,
+                        color: Colors.green, size: 20),
                 ],
               ),
               const SizedBox(height: 8),

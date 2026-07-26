@@ -353,7 +353,7 @@ class AccountInfoScreen extends StatelessWidget {
       case 1:
         color = Colors.orange;
         icon = Icons.hourglass_top_rounded;
-        title = 'طلب التوثيق قيد المراجعة';
+        title = 'طلبك قيد المراجعة';
         subtitle = 'الإدارة تراجع وثائقك حالياً. ستصلك إشعار بالنتيجة.';
         showAction = false;
         break;
@@ -436,17 +436,44 @@ class AccountInfoScreen extends StatelessWidget {
     final user = auth.userModel;
     if (user == null) return;
 
-    // ✅ فحص اكتمال جميع البيانات المطلوبة قبل التوثيق
+    // ✅ فحص البيانات المطلوبة فعلياً للتوثيق — مطابق لشرط السيرفر (رقم وطني + صورة هوية فقط)
     final missingFields = <String>[];
-    if (user.nm.isEmpty) missingFields.add('الاسم');
-    if (user.ph.isEmpty) missingFields.add('رقم الهاتف');
-    if (user.ad.isEmpty) missingFields.add('العنوان');
     if (user.sid.isEmpty) missingFields.add('الرقم الوطني');
     if (user.img.isEmpty) missingFields.add('صورة الهوية');
 
     if (missingFields.isNotEmpty) {
-      // توجيه مباشر لشاشة وثائق الهوية — التنويه بالمطلوب موجود داخلها بشكل ثابت
-      context.push('/setup-identity');
+      // نظهر للمستخدم شو ناقص بالاسم بدل التوجيه الأصم الذي كان يضيّعه
+      final goComplete = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: AppTheme.surfaceBlack,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16)),
+          title: const Text('بيانات ناقصة',
+              style: TextStyle(color: AppTheme.textWhite)),
+          content: Text(
+            'لإرسال طلب التوثيق أكمل أولاً:\n• ${missingFields.join('\n• ')}',
+            style: const TextStyle(color: AppTheme.textGrey, height: 1.6),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('إلغاء',
+                  style: TextStyle(color: AppTheme.textGrey)),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryGold),
+              child: const Text('استكمال البيانات',
+                  style: TextStyle(color: AppTheme.deepBlack)),
+            ),
+          ],
+        ),
+      );
+      if (goComplete == true && context.mounted) {
+        await context.push('/setup-identity');
+      }
       return;
     }
 
