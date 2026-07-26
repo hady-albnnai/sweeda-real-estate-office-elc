@@ -8,6 +8,8 @@ import '../../models/user_model.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/app_utils.dart';
 import '../../models/config_model.dart';
+import '../../providers/offer_provider.dart';
+import '../../models/offer_model.dart';
 
 /// شاشة الباقات — مع دعم grace period + دفعة معلقة + السعر من Config
 class PackagesScreen extends StatefulWidget {
@@ -23,6 +25,11 @@ class _PackagesScreenState extends State<PackagesScreen> {
     2: [Color(0xFFD4AF37), Color(0xFFFFD700)],
   };
 
+  // ⭐ قسم الإعلان المميز المدفوع (بيع مباشر بدون الدخول على العرض — 2026-07-26)
+  List<OfferModel> _activeOffers = [];
+  bool _offersLoading = true;
+  String? _selectedOfferId;
+
   @override
   void initState() {
     super.initState();
@@ -30,6 +37,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
       final uid = context.read<AuthProvider>().userModel?.uid;
       if (uid != null) {
         context.read<PaymentProvider>().fetchPayments(uid);
+        _loadActiveOffers(uid);
       }
     });
   }
@@ -54,7 +62,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
     return Scaffold(
       backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
-        title: const Text('باقات الاشتراك'),
+        title: const Text('الباقات والإعلان المميز'),
         backgroundColor: AppTheme.scaffoldBackground,
         elevation: 0,
         actions: [
@@ -83,6 +91,10 @@ class _PackagesScreenState extends State<PackagesScreen> {
               const SizedBox(height: 12),
             ],
 
+            // ⭐ الإعلان المميز المدفوع — بيع مباشر أول الشاشة (قرار المالك 2026-07-26)
+            _featuredAdSection(config),
+            const SizedBox(height: 20),
+
             const Text(
               'اختر الباقة الأنسب لاحتياجك',
               textAlign: TextAlign.center,
@@ -110,6 +122,137 @@ class _PackagesScreenState extends State<PackagesScreen> {
             _infoBox(config),
           ],
         ),
+      ),
+    );
+  }
+
+  Future<void> _loadActiveOffers(String uid) async {
+    try {
+      final offers = await context.read<OfferProvider>().fetchUserOffers(uid);
+      if (!mounted) return;
+      setState(() {
+        // العروض المنشورة فقط (sts=2) — قرار المالك: لا نعرض المعلّق/المنتهي
+        _activeOffers = offers.where((o) => o.sts == 2).toList();
+        _offersLoading = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _offersLoading = false);
+    }
+  }
+
+  // ─── ⭐ بطاقة الإعلان المميز المدفوع — اختر عرضك وتابع للدفع مباشرة ───
+  Widget _featuredAdSection(ConfigModel? config) {
+    final prices = config?.featuredAdPrices ??
+        const {'w1': 50000, 'w2': 95000, 'w3': 135000, 'w4': 180000};
+    int priceOf(int w) {
+      final p = prices['w$w'];
+      if (p is int) return p;
+      return int.tryParse('$p') ?? 0;
+    }
+
+    const weekLabels = {1: 'أسبوع واحد', 2: 'أسبوعين', 3: '3 أسابيع', 4: '4 أسابيع'};
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceBlack,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.6), width: 1.2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Row(children: [
+            Icon(Icons.star, color: AppTheme.primaryGold, size: 22),
+            SizedBox(width: 8),
+            Text('إعلان مميز لعرضك ✨',
+                style: TextStyle(color: AppTheme.primaryGold, fontSize: 16, fontWeight: FontWeight.bold)),
+          ]),
+          const SizedBox(height: 6),
+          const Text(
+            'عرضك المميز يظهر بقسم خاص بأعلى الرئيسية ونتائج البحث طوال المدة',
+            style: TextStyle(color: AppTheme.textGrey, fontSize: 12),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              for (var wi = 1; wi <= 4; wi++)
+                Expanded(
+                  child: Column(children: [
+                    Text(weekLabels[wi] ?? '',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: AppTheme.textGrey, fontSize: 10)),
+                    const SizedBox(height: 3),
+                    Text(AppUtils.formatPrice(priceOf(wi)),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: AppTheme.primaryGold, fontSize: 12, fontWeight: FontWeight.bold)),
+                    const Text('ل.س',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: AppTheme.textGrey, fontSize: 9)),
+                  ]),
+                ),
+            ],
+          ),
+          const Divider(height: 20, color: AppTheme.textGrey),
+          if (_offersLoading)
+            const Center(child: Padding(
+              padding: EdgeInsets.all(8),
+              child: SizedBox(width: 18, height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primaryGold)),
+            ))
+          else if (_activeOffers.isEmpty) ...[
+            const Text('لا تملك عروضاً منشورة حالياً — أضف عرضاً أولاً لتروّجه ⭐',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: () => context.push('/user/add-offer'),
+              icon: const Icon(Icons.add, color: AppTheme.primaryGold, size: 18),
+              label: const Text('إضافة عرض', style: TextStyle(color: AppTheme.primaryGold)),
+              style: OutlinedButton.styleFrom(side: const BorderSide(color: AppTheme.primaryGold)),
+            ),
+          ] else ...[
+            DropdownButtonFormField<String>(
+              value: _selectedOfferId,
+              isExpanded: true,
+              dropdownColor: AppTheme.surfaceBlack,
+              style: const TextStyle(color: AppTheme.textWhite, fontSize: 13),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: AppTheme.deepBlack,
+                hintText: 'اختر العرض المراد إعلانه ⭐',
+                hintStyle: const TextStyle(color: AppTheme.textGrey, fontSize: 13),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              ),
+              items: _activeOffers.map((o) {
+                final active = o.fmsEnd != null && o.fmsEnd!.isAfter(DateTime.now());
+                final label = active ? '${o.ttl}  ✓ مميز' : o.ttl;
+                return DropdownMenuItem<String>(
+                  value: o.id,
+                  child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+                );
+              }).toList(),
+              onChanged: (v) => setState(() => _selectedOfferId = v),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _selectedOfferId == null
+                    ? null
+                    : () {
+                        final oid = _selectedOfferId!;
+                        context.push('/user/featured-payment?offer=$oid');
+                      },
+                icon: const Icon(Icons.payment, color: AppTheme.deepBlack),
+                label: const Text('تابع للدفع — تختار المدة وقناة الدفع بالخطوة التالية 💳',
+                    style: TextStyle(color: AppTheme.deepBlack, fontWeight: FontWeight.bold, fontSize: 12)),
+                style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryGold),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
