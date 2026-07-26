@@ -190,6 +190,29 @@ class AppRouter {
         return '/user/home';
       }
 
+      // 🚧 بوابات البوادئ الداخلية (P1 2026-07-26): كانت مفتوحة لأي مستخدم مسجّل —
+      // أي شخص كان يستطيع فتح شاشات الموظفين نظرياً. الداتا محمية بالسيرفر، والواجهة الآن كذلك.
+      if (path.startsWith('/employee') &&
+          !(auth.isEmployee || auth.isSenior)) {
+        return '/user/home';
+      }
+
+      if (path.startsWith('/deputy') && !auth.isSenior) {
+        return '/user/home';
+      }
+
+      if (path.startsWith('/executor') && !(auth.isSupervisor || auth.isAdmin)) {
+        return '/user/home';
+      }
+
+      if (path.startsWith('/photographer') && !(auth.isPhotographer || auth.isAdmin)) {
+        return '/user/home';
+      }
+
+      if (path.startsWith('/legal') && !(auth.isLawyer || auth.isSenior)) {
+        return '/user/home';
+      }
+
       if (path.startsWith('/admin')) {
         if (auth.isLawyer) return '/lawyer/dashboard';
         if (auth.isExpediter) return '/expediter/tasks';
