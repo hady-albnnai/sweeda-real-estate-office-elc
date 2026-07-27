@@ -4,6 +4,11 @@
 **الفرع:** `main`
 **الحالة العامة:** ✅ **جاهز للإطلاق** — كل المسارات الجوهرية مُثبتة حياً بأدلة رقمية، والسحب الأمني الشامل أخضر بالكامل (172 دالة).
 
+### 🔔 عاجل — إصلاح سلسلة Push (commit `93f18ad`، بانتظار خطوات المالك للتفعيل)
+- **العلة الجذر:** تسجيل التوكن من `fcm_service.dart` كان يكتب مباشرةً في `user_devices` عبر anon (محظور RLS منذ 2026-06-28، والخطأ يُبتلع بصمت) ⇒ **صفر أجهزة نشطة بالنظام** ⇒ Push الداخلي يصل والخارجي ميت.
+- **الإصلاح (٤ قطع):** ① RPC `register_fcm_token` + ② `unregister_fcm_token` (محصّنة service_role، عبر `user-account`) · ③ قفل edge `send-push-notification` بسر `x-push-secret` (كان relay مفتوح) + cleanup مقيّد بـ uid · ④ سبب الرفض الحقيقي من `meta` بإشعار الرفض · حذف `notifyPaymentDecision` المكرر من `admin-payments` (المصدر الوحيد = trigger).
+- **على المالك:** لصق `supabase/migrations/2026_07_27_fcm_push_fix.sql` كاملاً ← قراءة `push_secret` من `internal_config` ← `supabase secrets set INTERNAL_PUSH_SECRET=…` ← إعادة تطبيق 3 edges ← **APK جديد (تعديل Dart إجباري)** ← فتح التطبيق بحساب عادي (يسجل التوكن) ← اختبار بوش والتطبيق مسكر.
+
 ---
 
 ## 🌙 جولة 2026-07-27 — الاختبار الشامل عن بُعد (الوكيل نفّذ بالكامل، المالك وافقات لفظية فقط)
