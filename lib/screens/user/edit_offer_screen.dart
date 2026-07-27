@@ -79,11 +79,13 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
     final result = <String, List<String>>{};
     for (final day in _weekDays) {
       final key = day.$1;
-      if (_avlDaysEnabled[key] == true && _avlSlots[key]!.isNotEmpty) {
-        result[key] = _avlSlots[key]!
+      if (_avlDaysEnabled[key] == true) {
+        final slots = _avlSlots[key]!
             .where((s) => s['from']!.isNotEmpty && s['to']!.isNotEmpty)
             .map((s) => '${s['from']}-${s['to']}')
             .toList();
+        // يوم مفعّل بلا فترة مكتملة يُهمل بالكامل — لا نكتب {"mon":[]} أبداً
+        if (slots.isNotEmpty) result[key] = slots;
       }
     }
     return result;
@@ -173,6 +175,13 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
       _snack('رقم الهاتف للتواصل إلزامي'); return;
     }
 
+    // التوفر إلزامي — حفظ بلا مواعيد يجعل العرض غير قابل للحجز («لا توجد مواعيد متاحة»)
+    final avlMap = _buildAvl();
+    if (avlMap.isEmpty) {
+      _snack('حدد مواعيد المعاينة: فعّل «أنا جاهز للمعاينة في أي وقت» أو اختر يوماً واحداً على الأقل مع فترة مكتملة (من — إلى)');
+      return;
+    }
+
     setState(() { _saving = true; _progress = 'جارٍ رفع الصور الجديدة...'; });
 
     List<String> newUrls = [];
@@ -204,7 +213,7 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
       'trx':        _trx,
       'cur':        _cur,
       'imgs':       allImages,
-      'avl':        _buildAvl(),
+      'avl':        avlMap,
       // أي تعديل يعيد العرض إلى مسار مراجعة المكتب
       'sts':        OfferStatus.review,
       'i_pub':      0,
@@ -436,7 +445,7 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
                 value: _anytimeReady,
                 onChanged: (v) => setState(() => _anytimeReady = v),
                 title: const Text('أنا جاهز للمعاينة في أي وقت',
-                    style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                    style: TextStyle(color: AppTheme.textWhite, fontSize: 14, fontWeight: FontWeight.bold)),
                 subtitle: const Text('سيتمكن الزبائن من طلب موعد في أي وقت تراه الإدارة مناسباً',
                     style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
                 activeColor: AppTheme.primaryGold,
@@ -510,7 +519,7 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: enabled ? AppTheme.primaryGold.withOpacity(0.5) : Colors.white12,
+          color: enabled ? AppTheme.primaryGold.withOpacity(0.5) : AppTheme.textGrey.withOpacity(0.2),
         ),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

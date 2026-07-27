@@ -69,7 +69,8 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   int? _selectedDocType;
   bool _agreePledge = false;
   bool _submitting = false;
-  bool _anytimeReady = false;
+  // افتراضي «جاهز بأي وقت» بقرار المالك — أقل احتكاك للمستخدم؛ التخصيص بالأيام اختياري (بطفّي السويتش)
+  bool _anytimeReady = true;
   bool _wantVideo = false; // تشك بوكس إرفاق الفيديو عبر واتساب المكتب
 
   // checkbox للنشر التلقائي على السوشيال (مفعل افتراضياً)
@@ -111,11 +112,14 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     final result = <String, List<String>>{};
     for (final day in _weekDays) {
       final key = day.$1;
-      if (_avlDaysEnabled[key] == true && _avlSlots[key]!.isNotEmpty) {
-        result[key] = _avlSlots[key]!
+      if (_avlDaysEnabled[key] == true) {
+        final slots = _avlSlots[key]!
             .where((s) => s['from']!.isNotEmpty && s['to']!.isNotEmpty)
             .map((s) => '${s['from']}-${s['to']}')
             .toList();
+        // يوم مفعّل بلا فترة مكتملة يُهمل بالكامل — كان يُكتب كمصفوفة فارغة
+        // {"mon":[]} فيصير الزر مفعّل (avl مو فارغة) بس ما في أي فترة للحجز
+        if (slots.isNotEmpty) result[key] = slots;
       }
     }
     return result;
@@ -239,6 +243,15 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       if (carCity.isEmpty) { _snack('يرجى اختيار المنطقة الرئيسية للسيارة (إلزامي)'); return; }
     }
 
+    // التوفر إلزامي — عرض بلا مواعيد معاينة = زر حجز يعمل ورسالة «لا توجد مواعيد متاحة حالياً»
+    // (نفس البلاغ اللي صار على العروض المضافة قبل هالإصلاح — avl كانت تُحفظ {} بصمت)
+    final avlMap = _buildAvl();
+    if (avlMap.isEmpty) {
+      if (_selectedType != 1) _goToStep(3); // خطوة التوفر موجودة فقط بمسار العقارات
+      _snack('حدد مواعيد المعاينة: فعّل «أنا جاهز للمعاينة في أي وقت» أو اختر يوماً واحداً على الأقل مع فترة مكتملة (من — إلى)');
+      return;
+    }
+
     setState(() { _submitting = true; _progressMsg = 'جاري رفع البيانات...'; });
     final docUrl = await _uploadDocImage(user.uid) ?? '';
 
@@ -284,7 +297,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         if (_selectedType == 1) ...{'plate': InputValidators.normalizeDigits(_carPlateCtrl.text), 'brand': _carBrandCtrl.text, 'model': _carModelCtrl.text, 'year': InputValidators.normalizeDigits(_carYearCtrl.text), 'color': _carColorCtrl.text, 'fuel': _carFuel, 'transmission': _carTransmission, 'plate_type': _selectedPlateType},
       },
       imgs: imageUrls, vdo: '', exactLoc: _pickedLocation != null ? '${_pickedLocation!.latitude},${_pickedLocation!.longitude}' : '',
-      docTp: _selectedDocType ?? 0, docImg: docUrl, avl: _buildAvl(), sts: OfferStatus.review, tsCrt: DateTime.now(),
+      docTp: _selectedDocType ?? 0, docImg: docUrl, avl: avlMap, sts: OfferStatus.review, tsCrt: DateTime.now(),
       iSoc: _autoPublishSocial ? 1 : 0,
       socTxt: socialText,
     );
@@ -631,7 +644,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         child: SwitchListTile(
           value: _anytimeReady,
           onChanged: (v) => setState(() => _anytimeReady = v),
-          title: const Text('أنا جاهز للمعاينة في أي وقت', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+          title: const Text('أنا جاهز للمعاينة في أي وقت', style: TextStyle(color: AppTheme.textWhite, fontSize: 14, fontWeight: FontWeight.bold)),
           subtitle: const Text('سيتمكن الزبائن من طلب موعد في أي وقت تراه الإدارة مناسباً', style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
           activeColor: AppTheme.primaryGold,
           contentPadding: EdgeInsets.zero,
@@ -779,7 +792,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            // خلفية داكنة صريحة بدل تظليل ذهبي شفاف — كان النص الأبيض غير مقروء عليها
+            // سطح فاتح مع حد ذهبي — بالثيم الجديد surfaceBlack = أبيض (النص الداكن textWhite)
             color: AppTheme.surfaceBlack,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
@@ -789,7 +802,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
             onChanged: (v) => setState(() => _autoPublishSocial = v ?? true),
             title: const Text(
               'نشر العرض تلقائياً على صفحاتنا في فيسبوك وإنستغرام (وأي صفحات إضافية مضافة)',
-              style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+              style: TextStyle(color: AppTheme.textWhite, fontSize: 13, fontWeight: FontWeight.w500),
             ),
             subtitle: const Text(
               'سيتم إنشاء منشور جاهز من بيانات العرض ونشره بعد موافقة الإدارة (يمكنك إلغاء التفعيل).',
