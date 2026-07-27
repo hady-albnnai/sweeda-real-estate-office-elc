@@ -373,7 +373,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
             child: const Text('نشر',
-                style: TextStyle(color: Colors.white)),
+                style: TextStyle(color: AppTheme.deepBlack, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -499,7 +499,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                 },
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 child: const Text('رفض',
-                    style: TextStyle(color: Colors.white)),
+                    style: TextStyle(color: AppTheme.scaffoldBackground, fontWeight: FontWeight.bold)),
               ),
             ],
           );
@@ -592,7 +592,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
               child: const Text('إرسال التبليغ',
-                  style: TextStyle(color: Colors.white)),
+                  style: TextStyle(color: AppTheme.scaffoldBackground, fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -706,7 +706,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                           decoration: BoxDecoration(
                             color: _currentImg == i
                                 ? AppTheme.primaryGold
-                                : Colors.white.withOpacity(0.5),
+                                : AppTheme.scaffoldBackground.withOpacity(0.5),
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),
@@ -722,7 +722,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(color: Colors.black45, shape: BoxShape.circle),
-                        child: const Icon(Icons.chevron_left, color: Colors.white, size: 24),
+                        child: const Icon(Icons.chevron_left, color: AppTheme.scaffoldBackground, size: 24),
                       ),
                     )),
                   ),
@@ -733,7 +733,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(color: Colors.black45, shape: BoxShape.circle),
-                        child: const Icon(Icons.chevron_right, color: Colors.white, size: 24),
+                        child: const Icon(Icons.chevron_right, color: AppTheme.scaffoldBackground, size: 24),
                       ),
                     )),
                   ),
@@ -751,9 +751,9 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: const Row(mainAxisSize: MainAxisSize.min, children: [
-                          Icon(Icons.fullscreen, color: Colors.white, size: 18),
+                          Icon(Icons.fullscreen, color: AppTheme.scaffoldBackground, size: 18),
                           SizedBox(width: 4),
-                          Text('عرض الصور', style: TextStyle(color: Colors.white, fontSize: 12)),
+                          Text('عرض الصور', style: TextStyle(color: AppTheme.scaffoldBackground, fontSize: 12)),
                         ]),
                       ),
                     ),
@@ -770,7 +770,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                       ),
                       child: Text(
                         '${_currentImg + 1}/${offer.imgs.length}',
-                        style: const TextStyle(color: Colors.white, fontSize: 12),
+                        style: const TextStyle(color: AppTheme.scaffoldBackground, fontSize: 12),
                       ),
                     ),
                   ),
@@ -801,7 +801,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
             child: Container(
               padding: const EdgeInsets.all(20),
               decoration: const BoxDecoration(
-                  color: AppTheme.deepBlack,
+                  color: AppTheme.scaffoldBackground,
                   borderRadius:
                       BorderRadius.vertical(top: Radius.circular(30))),
               child: Column(
@@ -1159,7 +1159,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
                         colors: [
-                          Color(0xFF1A160A),
+                          AppTheme.lightGold,
                           AppTheme.surfaceBlack,
                         ],
                         begin: Alignment.topRight,
@@ -1334,13 +1334,13 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                           child: ElevatedButton.icon(
                             onPressed: () => _showAdminPrioritySheet(context, offer),
                             icon: const Icon(Icons.admin_panel_settings,
-                                color: AppTheme.textWhite),
+                                color: AppTheme.deepBlack),
                             label: const Text('أولوية (إدارة)',
                                 style: TextStyle(
-                                    color: AppTheme.textWhite,
+                                    color: AppTheme.deepBlack,
                                     fontWeight: FontWeight.bold, fontSize: 13)),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blueGrey.shade800,
+                              backgroundColor: AppTheme.lightGold,
                               padding: const EdgeInsets.symmetric(vertical: 14),
                             ),
                           ),
@@ -1349,10 +1349,10 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                         ElevatedButton(
                           onPressed: () => _showAdminDeleteDialog(context, offer),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.errorRed.withOpacity(0.8),
+                            backgroundColor: AppTheme.errorRed,
                             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
                           ),
-                          child: const Icon(Icons.delete_forever, color: AppTheme.textWhite),
+                          child: const Icon(Icons.delete_forever, color: AppTheme.scaffoldBackground),
                         ),
                       ],
                     ),
@@ -1528,12 +1528,12 @@ class _FullScreenImageViewerState extends State<_FullScreenImageViewer> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.white, size: 28),
+          icon: const Icon(Icons.close, color: AppTheme.scaffoldBackground, size: 28),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           '${_current + 1} / ${widget.images.length}',
-          style: const TextStyle(color: Colors.white, fontSize: 16),
+          style: const TextStyle(color: AppTheme.scaffoldBackground, fontSize: 16),
         ),
         centerTitle: true,
       ),
