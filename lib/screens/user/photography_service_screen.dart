@@ -445,34 +445,83 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
   }
 
   Future<void> _cancelRequest(PhotographyTaskModel t) async {
-    final confirmed = await showDialog<bool>(
+    // شاشة إدخال سبب الإلغاء الإلزامي
+    final reasonCtrl = TextEditingController();
+    String? validationError;
+
+    final reason = await showDialog<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.surfaceBlack,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('إلغاء طلب التصوير',
-            style: TextStyle(color: AppTheme.textWhite, fontSize: 16)),
-        content: const Text(
-          'رح يتم إلغاء طلب التصوير المعلّق. تقدر تقدّم طلب جديد بعدها.\nمتأكد؟',
-          style: TextStyle(color: AppTheme.textGrey, height: 1.5),
+      barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: AppTheme.surfaceBlack,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Row(
+            children: [
+              Icon(Icons.cancel_outlined, color: Colors.red, size: 22),
+              SizedBox(width: 8),
+              Text('إلغاء طلب التصوير',
+                  style: TextStyle(color: AppTheme.textWhite, fontSize: 16)),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'إلغاء الطلب نهائي ولن تتمكن من استعادته.',
+                style: TextStyle(color: AppTheme.textGrey, fontSize: 13),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: reasonCtrl,
+                maxLines: 3,
+                autofocus: true,
+                style: const TextStyle(color: AppTheme.textWhite, fontSize: 14),
+                decoration: InputDecoration(
+                  labelText: 'سبب الإلغاء *',
+                  hintText: 'مثال: غيرت رأيي، لا أحتاج الخدمة...',
+                  errorText: validationError,
+                  filled: true,
+                  fillColor: AppTheme.deepBlack,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.edit_note,
+                      color: AppTheme.primaryGold),
+                ),
+                onChanged: (_) {
+                  if (validationError != null) {
+                    setDialogState(() => validationError = null);
+                  }
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('تراجع',
+                  style: TextStyle(color: AppTheme.textGrey)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final txt = reasonCtrl.text.trim();
+                if (txt.isEmpty) {
+                  setDialogState(
+                      () => validationError = 'سبب الإلغاء مطلوب');
+                  return;
+                }
+                Navigator.pop(ctx, txt);
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: const Text('تأكيد الإلغاء',
+                  style: TextStyle(color: Colors.white)),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child:
-                const Text('تراجع', style: TextStyle(color: AppTheme.textGrey)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('إلغاء الطلب',
-                style: TextStyle(color: Colors.white)),
-          ),
-        ],
       ),
     );
-    if (confirmed != true || !mounted) return;
+    if (reason == null || !mounted) return;
 
     final uid = context.read<AuthProvider>().userModel?.uid ?? '';
     try {
@@ -482,6 +531,7 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
           'action': 'cancel_photo_request',
           'user_uid': uid,
           'task_id': t.id,
+          'cancel_reason': reason,
         },
       );
       final data =

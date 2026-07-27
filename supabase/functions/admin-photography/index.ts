@@ -245,8 +245,12 @@ serve(async (req) => {
     if (action === "cancel_photo_request") {
       const userUid = (body.user_uid ?? body.userUid)?.toString() ?? "";
       const taskId = (body.task_id ?? body.taskId)?.toString() ?? "";
+      const cancelReason = (body.cancel_reason ?? body.cancelReason)?.toString() ?? "";
       if (!userUid || !taskId) {
         return json({ success: false, error: "MISSING_REQUIRED_FIELDS" }, 400);
+      }
+      if (!cancelReason) {
+        return json({ success: false, error: "CANCEL_REASON_REQUIRED" }, 400);
       }
       if (!(await verifyUserUid(req, supabaseAdmin, body, userUid))) {
         return json({ success: false, error: "AUTH_REQUIRED" }, 401);
@@ -256,6 +260,7 @@ serve(async (req) => {
         .from("photography_tasks")
         .update({
           sts: 5,
+          office_note: "إلغاء من العميل: " + cancelReason,
           ts_done: new Date().toISOString(),
           ts_upd: new Date().toISOString(),
         })
@@ -267,15 +272,14 @@ serve(async (req) => {
       if (cancelError) return json({ success: false, error: cancelError.message }, 400);
       if (!cancelled) return json({ success: false, error: "TASK_NOT_PENDING" }, 400);
 
-      // إشعار المصور إن كان مسنداً للمهمة الملغاة
       const pid = cancelled.photographer_id?.toString() ?? "";
       if (pid) {
         await notifyUsers(
           supabaseAdmin,
           [pid],
           2,
-          "إلغاء مهمة تصوير",
-          `ألغى العميل طلب التصوير: ${cancelled.ttl ?? ""}`,
+          "📸 إلغاء مهمة تصوير",
+          "ألغى العميل طلب التصوير \"" + (cancelled.ttl ?? "") + "\" — السبب: " + cancelReason,
           cancelled.id,
           "photography_request_cancelled",
         );
