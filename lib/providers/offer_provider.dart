@@ -362,16 +362,23 @@ class OfferProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> updateOffer(String offerId, Map<String, dynamic> data) async {
+  Future<bool> updateOffer(String offerId, Map<String, dynamic> data, {required String userUid}) async {
     try {
-      // offers لا يحتوي ts_upd — نرسل البيانات بدونه
-      await SupabaseService().client.from(DbTables.offers)
-          .update(data).eq('id', offerId);
-
-      // منع تجديد العروض المرفوضة (sts == 3) إلا إذا تغيرت الحالة
-      if (data.containsKey('ts_ren') && data['sts'] == null) {
-        final offer = await fetchOfferById(offerId);
-        if (offer != null && offer.sts == 3) return false;
+      // 2026-07-27: الحفظ عبر الإيدج — قناة PATCH المباشرة بصلاحية anon كانت مرفوضة
+      // خادمياً (42501 بعد سحب RLS) فما كان أي تعديل ينحفظ إطلاقاً.
+      // الإيدج يفرض: الجلسة + الملكية + whitelist + إعادة العرض تلقائياً للمراجعة.
+      final cleaned = Map<String, dynamic>.from(data)
+        ..removeWhere((k, _) => const {'sts', 'i_pub', 'ts_pub', 'i_del', 'usr_id', 'id', 'ts_ren'}.contains(k));
+      final res = await SupabaseService().invokeFunction('user-offers', body: {
+        'action': 'update_offer',
+        'user_uid': userUid,
+        'offer_id': offerId,
+        'data': cleaned,
+      });
+      final m = res.data;
+      if (m is! Map || m['success'] != true) {
+        _setError(Exception(m is Map ? (m['error'] ?? 'UPDATE_FAILED') : 'UPDATE_FAILED'));
+        return false;
       }
 
       final index = _offers.indexWhere((o) => o.id == offerId);
@@ -387,7 +394,27 @@ class OfferProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> softDeleteOffer(String offerId) => updateOffer(offerId, {'i_del': 1});
+  Future<bool> softDeleteOffer(String offerId, {required String userUid}) async {
+    try {
+      // 2026-07-27: الحذف عبر الإيدج (نفس قناة التعديل الموثقة)
+      final res = await SupabaseService().invokeFunction('user-offers', body: {
+        'action': 'delete_offer',
+        'user_uid': userUid,
+        'offer_id': offerId,
+      });
+      final m = res.data;
+      if (m is! Map || m['success'] != true) {
+        _setError(Exception(m is Map ? (m['error'] ?? 'DELETE_FAILED') : 'DELETE_FAILED'));
+        return false;
+      }
+      _offers.removeWhere((o) => o.id == offerId);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _setError(e);
+      return false;
+    }
+  }
 
   Future<void> incrementViews(String offerId, {String? viewerUid}) async {
     try {

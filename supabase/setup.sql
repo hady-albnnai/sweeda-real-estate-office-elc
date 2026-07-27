@@ -4997,3 +4997,40 @@ $$;
 REVOKE ALL ON FUNCTION public.send_push_notification(p_uid uuid, p_title text, p_body text, p_data jsonb) FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.send_push_notification(p_uid uuid, p_title text, p_body text, p_data jsonb) FROM anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.send_push_notification(p_uid uuid, p_title text, p_body text, p_data jsonb) TO service_role;
+
+-- ============================================================
+-- 2026-07-27 — منحة نقاط صاحب العرض عند الاعتماد (تريغر سيرفري)
+-- المرايا مع supabase/migrations/2026_07_27_offer_approve_award_points.sql
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.trg_offer_approved_award_points()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $$
+DECLARE
+  v_pts INT := 500;
+  v_cfg JSONB;
+BEGIN
+  IF NEW.sts = 2 AND (OLD.sts IS DISTINCT FROM 2) THEN
+    IF NEW.usr_id IS NOT NULL AND NEW.i_del = 0 THEN
+      SELECT value INTO v_cfg FROM public.app_config WHERE key = 'main';
+      IF v_cfg IS NOT NULL AND (v_cfg -> 'pts' ->> 'addO') ~ '^\d+$' THEN
+        v_pts := (v_cfg -> 'pts' ->> 'addO')::INT;
+      END IF;
+      PERFORM public.award_points_safe(NEW.usr_id, 'add_offer', v_pts);
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_offer_approved_award_points ON public.offers;
+CREATE TRIGGER trg_offer_approved_award_points
+  AFTER UPDATE OF sts ON public.offers
+  FOR EACH ROW
+  EXECUTE FUNCTION public.trg_offer_approved_award_points();
+
+REVOKE ALL ON FUNCTION public.trg_offer_approved_award_points() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.trg_offer_approved_award_points() FROM anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.trg_offer_approved_award_points() TO service_role;

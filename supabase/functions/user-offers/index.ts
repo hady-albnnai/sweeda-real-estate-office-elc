@@ -203,6 +203,60 @@ serve(async (req) => {
       return json({ success: data === true });
     }
 
+    // ── 2026-07-27: تعديل/حذف العرض عبر الإيدج ──
+    // القناة القديمة (PATCH مباشر من الكلاينت بصلاحية anon) مقفولة 42501 بعد سحب RLS،
+    // فلا تعديل ولا حذف كان ينحفظ إطلاقاً — القناة الآن هنا: جلسة + ملكية + whitelist.
+    if (action === "update_offer" || action === "delete_offer") {
+      const offerId = (body.offer_id ?? body.offerId)?.toString() ?? "";
+      if (!offerId) return json({ success: false, error: "OFFER_ID_REQUIRED" }, 400);
+
+      const { data: offerRow, error: fErr } = await supabaseAdmin
+        .from("offers")
+        .select("id, usr_id, sts, i_del")
+        .eq("id", offerId)
+        .maybeSingle();
+      if (fErr) return json({ success: false, error: fErr.message }, 400);
+      if (!offerRow) return json({ success: false, error: "OFFER_NOT_FOUND" }, 404);
+      const o = offerRow as Record<string, unknown>;
+      if (o["i_del"] === 1) return json({ success: false, error: "OFFER_NOT_FOUND" }, 404);
+      if (o["usr_id"] !== uid) return json({ success: false, error: "NOT_OFFER_OWNER" }, 403);
+      const stsNow = Number(o["sts"] ?? 0);
+      if (stsNow === 5 || stsNow === 6) {
+        // محجوز (معاملة قيد الإتمام) أو مكتمل — نفس حارس الشاشة، مفروض سيرفرياً
+        return json({ success: false, error: "OFFER_LOCKED" }, 409);
+      }
+
+      let patch: Record<string, unknown>;
+      if (action === "delete_offer") {
+        patch = { i_del: 1 };
+      } else {
+        // whitelist صارمة — لا sts/i_pub/ts_pub/i_del/usr_id/id/ts_ren من العميل إطلاقاً
+        const ALLOWED = [
+          "ttl", "prc", "loc", "descript", "contact_ph",
+          "specs", "typ", "trx", "cur", "imgs", "avl",
+        ];
+        const incoming = (body.data ?? {}) as Record<string, unknown>;
+        patch = {};
+        for (const k of ALLOWED) {
+          if (Object.prototype.hasOwnProperty.call(incoming, k)) patch[k] = incoming[k];
+        }
+        if (Object.keys(patch).length === 0) {
+          return json({ success: false, error: "NO_VALID_FIELDS" }, 400);
+        }
+        // أي تعديل يعيد العرض لمسار المراجعة — يُفرض سيرفرياً (لا يقبل من العميل)
+        patch["sts"] = 1;   // OfferStatus.review
+        patch["i_pub"] = 0;
+        patch["ts_pub"] = null;
+      }
+
+      const { error: uErr } = await supabaseAdmin
+        .from("offers")
+        .update(patch)
+        .eq("id", offerId);
+      if (uErr) return json({ success: false, error: uErr.message }, 400);
+      return json({ success: true, deleted: action === "delete_offer" });
+    }
+
     return json({ success: false, error: "UNKNOWN_ACTION" }, 400);
   } catch (error) {
     return json({ success: false, error: error instanceof Error ? error.message : String(error) }, 500);

@@ -220,7 +220,7 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
       'ts_pub':     null,
     };
 
-    final ok = await offerProv.updateOffer(_offer!.id, updateData);
+    final ok = await offerProv.updateOffer(_offer!.id, updateData, userUid: user.uid);
 
     if (!mounted) return;
     setState(() => _saving = false);
@@ -274,7 +274,8 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
     if (confirm != true || !mounted) return;
     final offerProv = context.read<OfferProvider>();
     setState(() { _saving = true; _progress = 'جارٍ الحذف...'; });
-    final ok = await offerProv.softDeleteOffer(_offer!.id);
+    final ok = await offerProv.softDeleteOffer(_offer!.id,
+        userUid: context.read<AuthProvider>().userModel?.uid ?? '');
     if (!mounted) return;
     setState(() => _saving = false);
     if (ok) { _snack('تم حذف العرض'); Navigator.pop(context, true); }
