@@ -254,6 +254,13 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 15),
               children: [
+                // 🎛️ الفلاتر الكاملة أول الصف حتى تبقى ظاهرة دائماً (مع عدّاد الفلاتر الفعّالة)
+                _buildChip(
+                  _activeAdvCount > 0 ? '⚙️ فلاتر (${_activeAdvCount})' : '⚙️ فلاتر كاملة',
+                  _activeAdvCount > 0,
+                  _showAdvancedFilters,
+                ),
+                const SizedBox(width: 8),
                 _buildChip('الكل', _filterType == null && _filterTrx == null, () {
                   setState(() { _filterType = null; _filterTrx = null; });
                   _doSearch();
@@ -278,13 +285,6 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                   setState(() => _filterTrx = _filterTrx == 1 ? null : 1);
                   _doSearch();
                 }),
-                const SizedBox(width: 8),
-                // 🎛️ الفلاتر الكاملة (معايير مطابقة الطلبات) مع عدّاد الفلاتر الفعّالة
-                _buildChip(
-                  _activeAdvCount > 0 ? '⚙️ فلاتر (${_activeAdvCount})' : '⚙️ فلاتر كاملة',
-                  _activeAdvCount > 0,
-                  _showAdvancedFilters,
-                ),
               ],
             ),
           ),
