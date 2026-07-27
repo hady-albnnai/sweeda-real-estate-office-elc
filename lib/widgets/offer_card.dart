@@ -92,7 +92,11 @@ class _OfferCardState extends State<OfferCard> {
         );
         if (awarded && mounted) {
           auth.refreshUser();
-          AppUtils.showPointsAwarded(context, 10, label: 'نقطة إعجاب');
+          AppUtils.showPointsAwarded(
+            context,
+            BusinessService().pointsFor(config, 'like', 10),
+            label: 'نقطة إعجاب',
+          );
         }
       }
     }

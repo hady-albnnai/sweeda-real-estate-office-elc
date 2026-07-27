@@ -90,11 +90,16 @@ class BusinessService {
   int _ptsFromConfig(ConfigModel? config, String key, int fallback) {
     if (config == null) return fallback;
     final ptsMap = config.data['pts'];
-    if (ptsMap is Map && ptsMap[key] is num) {
-      return (ptsMap[key] as num).toInt();
-    }
+    final v = ptsMap is Map ? ptsMap[key] : null;
+    // القيم المهيكلة {l, p} (مثل like/cmt/shr) تُقرأ من p
+    if (v is num) return v.toInt();
+    if (v is Map && v['p'] is num) return (v['p'] as num).toInt();
     return fallback;
   }
+
+  /// قيمة نقاط حدث ما من الكونفغ (بنية {l,p} مدعومة) — للعرض الصحيح في الرسائل
+  int pointsFor(ConfigModel? config, String key, int fallback) =>
+      _ptsFromConfig(config, key, fallback);
 
   /// خصم نقاط (عقوبة) — pen.* في الـ Config (قيم سالبة)
   Future<bool> applyPenalty(String uid, ConfigModel? config, String penKey,
