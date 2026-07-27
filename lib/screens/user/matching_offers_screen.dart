@@ -488,9 +488,44 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : _filteredOffers.isEmpty
-              ? const Center(child: Text('لا توجد عروض مطابقة حالياً', style: TextStyle(color: AppTheme.textGrey)))
-              : ListView.builder(
+          : Column(
+              children: [
+                // تنويه الفلاتر
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  color: AppTheme.primaryGold.withOpacity(0.08),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.tune, color: AppTheme.primaryGold, size: 16),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'يمكنك استخدام زر الفلاتر 🔽 لتصفية العروض حسب السعر والموقع والمواصفات',
+                          style: TextStyle(
+                            color: AppTheme.primaryGold.withOpacity(0.9),
+                            fontSize: 12,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: _filteredOffers.isEmpty
+                      ? const Center(child: Text('لا توجد عروض مطابقة حالياً', style: TextStyle(color: AppTheme.textGrey)))
+                      : ListView.builder(
+                          padding: const EdgeInsets.all(12),
+                          itemCount: _filteredOffers.length,
+                          itemBuilder: (context, index) {
+                            final offer = _filteredOffers[index];
+                            return _buildOfferCard(offer);
+                          },
+                        ),
+                ),
+              ],
+            ),
                   padding: const EdgeInsets.all(12),
                   itemCount: _filteredOffers.length,
                   itemBuilder: (context, index) {
