@@ -183,7 +183,9 @@ serve(async (req) => {
           p_points: cfgPts, // سيرفرياً
         });
         if (error) throw error;
-        result = { success: true, data };
+        // لا تغلّف بـ success:true — مرّر نتيجة الدالة كما هي (DAILY_LIMIT_REACHED وغيرها)
+        // حتى لا تعرض الواجهة «+نقاط» كاذبة عند رفض السيرفر (2026-07-27)
+        result = (data && typeof data === "object") ? data : { success: data === true };
         break;
       }
 

@@ -11,6 +11,30 @@ import '../../models/user_model.dart';
 ///
 /// تعتمد على دوال RPC الموجودة في Supabase حيثما أمكن:
 /// `add_points`, `update_user_badge`, `calculate_commission`, `check_offer_duplicate`.
+/// نتيجة منح نقاط مفصّلة (2026-07-27): تميّز النجاح عن بلوغ الحد اليومي عن الرفض
+class AwardResult {
+  final bool awarded;
+  final bool limitReached;
+  final int limit;
+  final int points;
+  final String? error;
+
+  const AwardResult._({
+    required this.awarded,
+    this.limitReached = false,
+    this.limit = 0,
+    this.points = 0,
+    this.error,
+  });
+
+  const AwardResult.awarded(int pts)
+      : this._(awarded: true, points: pts);
+  const AwardResult.dailyLimit(int limit)
+      : this._(awarded: false, limitReached: true, limit: limit);
+  const AwardResult.rejected(String err)
+      : this._(awarded: false, error: err);
+}
+
 class BusinessService {
   BusinessService._internal();
   static final BusinessService _instance = BusinessService._internal();
@@ -61,15 +85,27 @@ class BusinessService {
   /// أمثلة المفاتيح: 'sgn','wkL','addO','dlD','strk','soc','att','ref'
   Future<bool> awardEvent(String uid, ConfigModel? config, String eventKey,
       {int fallback = 0, String? offerId}) async {
+    final r = await awardEventDetailed(uid, config, eventKey,
+        fallback: fallback, offerId: offerId);
+    return r.awarded;
+  }
+
+  /// نسخة مفصّلة: تميّز «نجح» عن «بلغ الحد اليومي» عن رفض آخر —
+  /// حتى لا تعرض الواجهة منحة وهمية عند رفض السيرفر (2026-07-27)
+  Future<AwardResult> awardEventDetailed(
+      String uid, ConfigModel? config, String eventKey,
+      {int fallback = 0, String? offerId}) async {
     // الإدارة لا تحتاج نقاط
     try {
       final user = await _sb.client.from(DbTables.users).select('role').eq('id', uid).maybeSingle();
-      if (user != null && (user['role'] as int? ?? 0) >= UserRole.minAdmin) return false;
+      if (user != null && (user['role'] as int? ?? 0) >= UserRole.minAdmin) {
+        return const AwardResult.rejected('admin_role');
+      }
     } catch (_) {
       // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
     }
     final pts = _ptsFromConfig(config, eventKey, fallback);
-    if (pts == 0) return false;
+    if (pts == 0) return const AwardResult.rejected('no_points');
 
     // ✅ Via user-rewards Edge Function
     try {
@@ -78,12 +114,23 @@ class BusinessService {
         'action': 'award_points',
         'user_uid': uid,
         'event_key': eventKey,
-        'points': pts,
+        'points': pts, // يتجاهلها السيرفر بعد تحصين 2026-07-27 (القيمة من الكونفغ هناك)
         if (offerId != null) 'offer_id': offerId,
       });
-      return res.data?['success'] == true;
+      final data = res.data;
+      if (data is Map) {
+        if (data['success'] == true) return AwardResult.awarded(pts);
+        final err = (data['error'] ?? '').toString();
+        if (err == 'DAILY_LIMIT_REACHED') {
+          return AwardResult.dailyLimit((data['limit'] as num?)?.toInt() ?? 0);
+        }
+        return AwardResult.rejected(err.isEmpty ? 'rejected' : err);
+      }
+      return data == true
+          ? AwardResult.awarded(pts)
+          : const AwardResult.rejected('rejected');
     } catch (_) {
-      return false;
+      return const AwardResult.rejected('network');
     }
   }
 

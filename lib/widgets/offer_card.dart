@@ -83,20 +83,28 @@ class _OfferCardState extends State<OfferCard> {
       final auth = context.read<AuthProvider>();
       if (auth.isLoggedIn) {
         final config = context.read<ConfigProvider>().config;
-        final awarded = await BusinessService().awardEvent(
+        final result = await BusinessService().awardEventDetailed(
           auth.userModel!.uid,
           config,
           'like',
           fallback: 10,
           offerId: widget.offer.id,
         );
-        if (awarded && mounted) {
+        if (!mounted) return;
+        if (result.awarded) {
           auth.refreshUser();
           AppUtils.showPointsAwarded(
             context,
             BusinessService().pointsFor(config, 'like', 10),
             label: 'نقطة إعجاب',
           );
+        } else if (result.limitReached) {
+          // بلغ الحد اليومي — الإعجاب انحفظ، بس بلا منحة وهمية
+          AppTheme.showSnackBar(context, SnackBar(
+            content: Text(
+                'إعجابك انحفظ ❤️ — بس وصلت للحد اليومي (${result.limit} إعجابات)، النقاط ترجع بكرا 🌙'),
+            duration: const Duration(seconds: 2),
+          ));
         }
       }
     }
