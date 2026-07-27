@@ -41,6 +41,20 @@ class OfferProvider with ChangeNotifier {
     _error = ErrorUtils.arabicMessage(error);
   }
 
+  /// 📌 ترتيب العروض حسب الأولوية (مثبّت أولاً، ثم مميّز، ثم Boost، ثم الأحدث)
+  void _sortByPriority() {
+    _offers.sort((a, b) {
+      // i_pin تنازلي (1=مثبّت قبل 0)
+      if (a.iPin != b.iPin) return b.iPin.compareTo(a.iPin);
+      // i_fms تنازلي
+      if (a.iFms != b.iFms) return b.iFms.compareTo(a.iFms);
+      // i_bst تنازلي
+      if (a.iBst != b.iBst) return b.iBst.compareTo(a.iBst);
+      // الأحدث أولاً
+      return b.tsCrt.compareTo(a.tsCrt);
+    });
+  }
+
   /// 🏢 إثراء قائمة العروض بتسميات الملاك المهنية (هوية المكتب).
   /// يجلب الملاك في استعلام واحد batch، ثم يحقن ownerLabel في كل عرض.
   /// مرجع: docs/LOGIC_SPEC.md §1
@@ -90,6 +104,7 @@ class OfferProvider with ChangeNotifier {
         _offers = cached
             .map((d) => OfferModel.fromSupabase(d, d['id'] as String))
             .toList();
+        _sortByPriority(); // ترتيب: المثبّت أولاً
         _fromCache = true;
         notifyListeners();
       }
@@ -199,6 +214,7 @@ class OfferProvider with ChangeNotifier {
           // تحديث القائمة فقط إذا لم يكن المستخدم في وضع البحث
           if (!_isSearching) {
             _offers = published;
+            _sortByPriority(); // ترتيب: المثبّت أولاً (الـ stream ما بيدعم sort ب i_pin)
             _fromCache = false;
             // 🏢 إثراء بهوية المكتب (fire-and-forget لا يعطل التدفق)
             _enrichOwnerLabels(_offers).then((_) => notifyListeners());
@@ -353,6 +369,7 @@ class OfferProvider with ChangeNotifier {
       final row = Map<String, dynamic>.from(response.first as Map);
       final created = OfferModel.fromSupabase(row, row['id'] as String);
       _offers.insert(0, created);
+      _sortByPriority(); // ترتيب: المثبّت أولاً حتى لو أُضيف عرض جديد
       
       notifyListeners();
       return created;
