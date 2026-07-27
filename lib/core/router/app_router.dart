@@ -28,6 +28,7 @@ import '../../screens/user/profile_screen.dart';
 import '../../screens/user/account_info_screen.dart';
 import '../../screens/user/settings_screen.dart';
 import '../../screens/user/notifications_screen.dart';
+import '../../screens/user/push_channels_screen.dart';
 import '../../screens/user/add_request_screen.dart';
 import '../../screens/user/packages_screen.dart';
 import '../../screens/user/featured_ad_payment_screen.dart';
@@ -269,6 +270,7 @@ class AppRouter {
       GoRoute(path: '/user/account-info', builder: (context, state) => const AccountInfoScreen()),
       GoRoute(path: '/user/settings', builder: (context, state) => const SettingsScreen()),
       GoRoute(path: '/user/notifications', builder: (context, state) => const NotificationsScreen()),
+      GoRoute(path: '/user/push-channels', builder: (context, state) => const PushChannelsScreen()),
       GoRoute(path: '/user/packages', builder: (context, state) => const PackagesScreen()),
       GoRoute(path: '/user/payment', builder: (context, state) => PaymentScreen(packageId: int.tryParse(state.uri.queryParameters['pkg'] ?? '0') ?? 0)),
       GoRoute(path: '/user/featured-payment', builder: (context, state) => FeaturedAdPaymentScreen(offerId: state.uri.queryParameters['offer'] ?? '')),

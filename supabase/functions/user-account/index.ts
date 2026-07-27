@@ -672,6 +672,37 @@ serve(async (req) => {
       return json(typeof data === "object" && data !== null ? data : { success: data === true });
     }
 
+    // 📡 notification_settings — بروفايل قنوات البوش + دليل التنقل «الإشعار-بلس» (2026-07-27)
+    if (action === "notification_settings") {
+      // دليل فقط (الدستور: لا شاشة تحتل navigate) — الزبون يحسم الURL النهائي
+      const result: Record<string, unknown> = {
+        success: true,
+        navigate: "/user/push-channels",
+        def_navigate: "/user/settings",
+        push_allowed: false,
+        push_allowed_by: [] as string[],
+        channels: {} as Record<string, boolean>,
+      };
+      try {
+        // «وش انوّر جرس التطبيق؟»: قبول-البوش الفعلي = جهاز نشط مسجّل عند FCM بفصيلة المنصة
+        const { data: devs } = await supabaseAdmin
+          .from("user_devices")
+          .select("platform, is_active")
+          .eq("uid", uid);
+        const fams = new Set<string>();
+        for (const d of (devs ?? []) as Array<Record<string, unknown>>) {
+          if (d["is_active"] !== true) continue;
+          const p = (d["platform"] ?? "").toString().toLowerCase();
+          if (p === "android") fams.add("fam1");
+          else if (p === "ios") fams.add("fam2");
+          else if (p === "web") fams.add("fam0");
+        }
+        result.push_allowed_by = [...fams].map((f) => `${f}-device`);
+        result.push_allowed = fams.size > 0;
+      } catch (_) { /* تدهور رشيق — دليل التنقل يبقى صالحاً حتى لو تغيّر الجدول */ }
+      return json(result);
+    }
+
     return json({ success: false, error: "UNKNOWN_ACTION" }, 400);
   } catch (error) {
     return json({ success: false, error: error instanceof Error ? error.message : String(error) }, 500);
