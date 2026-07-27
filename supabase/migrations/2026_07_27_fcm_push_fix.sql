@@ -26,6 +26,13 @@ REVOKE ALL ON public.internal_config FROM PUBLIC;
 REVOKE ALL ON public.internal_config FROM anon;
 REVOKE ALL ON public.internal_config FROM authenticated;
 
+-- سياسة رفض صريحة لأدوار العميل: توثّق «default-deny» بالسكيما نفسها وتُخضر linter 0008
+-- (لا تغيّر سلوكاً: anon/authenticated كانوا مرفوضين أصلاً؛ service_role والمالك لا تمسهم)
+DROP POLICY IF EXISTS internal_config_client_deny ON public.internal_config;
+CREATE POLICY internal_config_client_deny ON public.internal_config
+  FOR ALL TO anon, authenticated
+  USING (false) WITH CHECK (false);
+
 -- توليد سر الإرسال (48 محرف hex). لا يُكتب في المستودع أبداً.
 INSERT INTO public.internal_config(key, value)
 VALUES ('push_secret', encode(extensions.gen_random_bytes(24), 'hex'))

@@ -57,8 +57,9 @@
 - **إثبات متكامل عن بُعد (2026-07-27):** حجز فعلي عبر الإيدج ← `appointment_id` + مشرف مُسند تلقائياً + `list_user_appointments` يعرضه + `get_booked_slots` يُظهر الفترة محجوزة ← cancel نظّف ✅ — سلسلة الحجز خضرا من الطرف للطرف.
 - **⚠️ اكتشاف مفتوح (بانتظار قرار المالك):** `OfferProvider.updateOffer()` PATCH مباشر بـ anon ⇒ السيرفر يرفض `42501` — تعديل/حذف العرض من شاشة المستخدم **لا يُحفظ** (قديم، مو من إصلاحات اليوم). الإصلاح المقترح: action `update_offer` بإيدج `user-offers` (جلسة + ملكية + whitelist، بلا SQL).
 
-### 🛡️ تحذيرا linter 0011 (2026-07-27) — مُعالَجان
-- `public.trg_payment_approved` + `public.send_push_notification` خرجتا للحي بلا `search_path` مثبّت (نسيان بمايغريشن Push). أُصلحتا حياً بـ ALTER FUNCTION (`docs/archive/executed_sql_2026-07-27/search_path_pin_fcm_fns.sql` — تحقق pg_proc: 0 دوال غير مثبتة) + صُححتا بالمايغريشن وsetup.sql. **الدستور: ثلاثي التحصين صار رباعياً** (الـ pin إلزامي) — `DEVELOPMENT_GUIDELINES.md` §7.
+### 🛡️ linter (2026-07-27) — 0011 و0008 مُعالَجان، Dashboard أخضر ✅
+- **`0011`](دالتان بلا pin):** `public.trg_payment_approved` + `public.send_push_notification` خرجتا للحي بلا `search_path` مثبّت (نسيان بمايغريشن Push، بعكس شقيقاتهما register/unregister). **الفيكس:** ALTER FUNCTION ×2 (`docs/archive/executed_sql_2026-07-27/search_path_pin_fcm_fns.sql`) — تحقق pg_proc المدمج قبل: الدالتان بالضبط / بعد: 0 صفوف ✅. والدستور صار **رباعي تحصين** (§7 بـ DEVELOPMENT_GUIDELINES).
+- **`0008` (جدول بلا سياسات — INFO):** `public.internal_config` مصمم هكذا (default-deny لأدوار العميل؛ المالك + service_role يقرؤون — البوش الحي إثبات). أُضيفت سياسة رفض صريحة `internal_config_client_deny` (`FOR ALL TO anon, authenticated USING(false)`) — توثّق النية بالسكيما وتُسكت التنبيه بلا أي تغيير سلوكي.
 
 ### ⚠️ على المالك عند الإطلاق
 - ريسيت كامل للبيانات + حساب أدمن جديد للإطلاق (كما قرر المالك).
