@@ -4885,7 +4885,11 @@ GRANT EXECUTE ON FUNCTION public.unregister_fcm_token(p_user_uid uuid, p_token t
 
 -- ── D) ④ trg_payment_approved — سبب الرفض الحقيقي في جسم الإشعار ────────────
 CREATE OR REPLACE FUNCTION public.trg_payment_approved()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $$
 DECLARE
   v_title TEXT;
   v_body TEXT;
@@ -4924,7 +4928,7 @@ BEGIN
 
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- ── E) ③ send_push_notification — ترويسة x-push-secret لقفل الـ edge ────────
 CREATE OR REPLACE FUNCTION public.send_push_notification(
@@ -4933,7 +4937,11 @@ CREATE OR REPLACE FUNCTION public.send_push_notification(
   p_body TEXT,
   p_data JSONB DEFAULT '{}'::jsonb
 )
-RETURNS BIGINT AS $$
+RETURNS BIGINT
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $$
 DECLARE
   v_config JSONB;
   v_secret TEXT;
@@ -4977,7 +4985,7 @@ EXCEPTION WHEN OTHERS THEN
   RAISE WARNING 'send_push_notification failed: %', SQLERRM;
   RETURN NULL;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- إبقاء التحصين الحي (مُثبت ببروبات PGRST202) كدفاع إضافي
 REVOKE ALL ON FUNCTION public.send_push_notification(p_uid uuid, p_title text, p_body text, p_data jsonb) FROM PUBLIC;

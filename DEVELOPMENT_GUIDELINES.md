@@ -120,13 +120,20 @@ supabase functions deploy <function-name> --no-verify-jwt
 - **CREATE OR REPLACE بتوقيع مختلف = overload جديد** — إلزامياً `DROP FUNCTION IF EXISTS` للتوقيع القديم قبله (درس دالة الرفض 2026-07-27).
 - كل كتلة idempotent (`IF EXISTS/IF NOT EXISTS`)، برأس شرح، وملف workspace مطابق 1:1 لنص الشات.
 
-### 7) ثلاثي التحصين (إلزامي لكل SECURITY DEFINER جديد)
+### 7) رباعي التحصين (إلزامي لكل SECURITY DEFINER جديد)
 ```sql
-REVOKE ALL ON FUNCTION public.f(sig) FROM PUBLIC;
-REVOKE EXECUTE ON FUNCTION public.f(sig) FROM anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.f(sig) TO service_role;
+CREATE OR REPLACE FUNCTION public.f(...)
+RETURNS ... SECURITY DEFINER
+SET search_path TO 'public', 'extensions', 'pg_temp'   -- ① pin إلزامي (linter 0011)
+AS $$ ... $$;
+
+REVOKE ALL ON FUNCTION public.f(sig) FROM PUBLIC;      -- ②
+REVOKE EXECUTE ON FUNCTION public.f(sig) FROM anon, authenticated;  -- ③
+GRANT EXECUTE ON FUNCTION public.f(sig) TO service_role;            -- ④
 ```
-- **لماذا الثلاثة؟** بوستغرس يمنح `PUBLIC=X` مدمجاً للدوال الجديدة، وSupabase يضيف منح `anon,authenticated` عبر default privileges لحظة الإنشاء. سحب anon/authenticated لحاله **لا يقطع مسار PUBLIC** (أُثبت حياً: دالة الرفض الجديدة نُفذت anon رغم السحب)، وسحب PUBLIC لحاله لا يقطع المنح الصريحة للأدوار المسماة.
+- **لماذا المنح الثلاثة؟** بوستغرس يمنح `PUBLIC=X` مدمجاً للدوال الجديدة، وSupabase يضيف منح `anon,authenticated` عبر default privileges لحظة الإنشاء. سحب anon/authenticated لحاله **لا يقطع مسار PUBLIC** (أُثبت حياً: دالة الرفض الجديدة نُفذت anon رغم السحب)، وسحب PUBLIC لحاله لا يقطع المنح الصريحة للأدوار المسماة.
+- **لماذا الـ pin؟** linter 0011 (Function Search Path Mutable) — دالة بلا path مثبّت قابلة لاختطاف الحلول عبر shadowing بسكيمات أبكر بالمسار. `pg_temp` آخر عنصر دائماً (لا يسبق سكيما ثابتة). تثبيته في رأس الدالة يخلي التنبيه أخضر ولا يغيّر سلوكاً إن كانت المراجع public/extensions أو مؤهلة schema.
+- **درس 2026-07-27:** دالتا `trg_payment_approved` و`send_push_notification` (مايغريشن Push) خرجتا للحي بلا pin لأن الاقتران كان سطراً يدوياً — ثبّتتا بـ ALTER FUNCTION (لصقة `docs/archive/executed_sql_2026-07-27/search_path_pin_fcm_fns.sql`). القاعدة صارت رباعية موثقة هنا.
 - التطبيق **لا ينادي أي RPC مباشرة إطلاقاً** (كله عبر Edge بمفتاح الخدمة) — فالقفل لـ service_role آمن شامل.
 
 ### 8) Git والنشر

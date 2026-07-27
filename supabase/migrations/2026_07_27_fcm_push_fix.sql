@@ -165,7 +165,8 @@ BEGIN
 
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path TO 'public', 'extensions', 'pg_temp';
 
 -- ── E) ③ send_push_notification — ترويسة x-push-secret لقفل الـ edge ────────
 CREATE OR REPLACE FUNCTION public.send_push_notification(
@@ -218,7 +219,8 @@ EXCEPTION WHEN OTHERS THEN
   RAISE WARNING 'send_push_notification failed: %', SQLERRM;
   RETURN NULL;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER
+SET search_path TO 'public', 'extensions', 'pg_temp';
 
 -- إبقاء التحصين الحي (مُثبت ببروبات PGRST202) كدفاع إضافي
 REVOKE ALL ON FUNCTION public.send_push_notification(p_uid uuid, p_title text, p_body text, p_data jsonb) FROM PUBLIC;
