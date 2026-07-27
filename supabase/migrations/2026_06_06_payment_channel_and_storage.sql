@@ -19,18 +19,11 @@
 -- 1️⃣ عمود channel
 ALTER TABLE payments ADD COLUMN IF NOT EXISTS channel TEXT;
 
--- 2️⃣ CHECK constraint
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint
-    WHERE conname = 'payments_channel_check'
-  ) THEN
-    ALTER TABLE payments
-      ADD CONSTRAINT payments_channel_check
-      CHECK (channel IS NULL OR channel IN ('haram', 'sham_cash', 'balance', 'bank'));
-  END IF;
-END $$;
+-- 2️⃣ CHECK constraint (كامل مجموعة القنوات — محدّث 2026-07-27: إضافة syriatel_cash)
+ALTER TABLE payments DROP CONSTRAINT IF EXISTS payments_channel_check;
+ALTER TABLE payments
+  ADD CONSTRAINT payments_channel_check
+  CHECK (channel IS NULL OR channel IN ('haram', 'sham_cash', 'balance', 'bank', 'syriatel_cash'));
 
 -- 3️⃣ Index على channel
 CREATE INDEX IF NOT EXISTS idx_payments_channel ON payments(channel) WHERE channel IS NOT NULL;
