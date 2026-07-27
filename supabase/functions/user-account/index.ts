@@ -502,6 +502,33 @@ serve(async (req) => {
       return json({ success: true, tokens: data ?? [] });
     }
 
+    // تسجيل توكن FCM — استبدل الكتابة المباشرة المحظورة RLS في fcm_service (2026-07-27)
+    if (action === "register_fcm_token") {
+      const token = (body.device_token ?? body.deviceToken ?? body.fcm_token ?? body.fcmToken)?.toString() ?? "";
+      const platform = (body.platform ?? "android").toString();
+      if (!token) return json({ success: false, error: "DEVICE_TOKEN_REQUIRED" }, 400);
+
+      const { data, error } = await supabaseAdmin.rpc("register_fcm_token", {
+        p_user_uid: uid,
+        p_token: token,
+        p_platform: platform,
+      });
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json({ success: data === true });
+    }
+
+    if (action === "unregister_fcm_token") {
+      const token = (body.device_token ?? body.deviceToken ?? body.fcm_token ?? body.fcmToken)?.toString() ?? "";
+      if (!token) return json({ success: false, error: "DEVICE_TOKEN_REQUIRED" }, 400);
+
+      const { data, error } = await supabaseAdmin.rpc("unregister_fcm_token", {
+        p_user_uid: uid,
+        p_token: token,
+      });
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json({ success: data === true });
+    }
+
     if (action === "register_password") {
       const username = (body.username ?? "").toString();
       const password = (body.password ?? "").toString();

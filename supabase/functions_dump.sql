@@ -8,9 +8,14 @@
 --  الدوال الثلاث أعلاه + admin_set_offer_video + get_user_full_by_id
 --  + 8 دوال helpers (app_assert_* ×5, app_clean_text, normalize_sy_phone,
 --   normalize_arabic_username) — كلها service_role فقط
+-- ⚠️ تصحيح يدوي موثق 2026-07-27 (إصلاح سلسلة FCM — مايغريشن 2026_07_27_fcm_push_fix.sql):
+--  + register_fcm_token + unregister_fcm_token (service_role فقط) — تسجيل الأجهزة
+--    انتقل من كتابة مباشرة محظورة RLS في التطبيق إلى RPC محصّن عبر user-account
+--  ~ trg_payment_approved: جسم الرفض يقرأ meta->>'reject_reason'
+--  ~ send_push_notification: ترويسة x-push-secret من public.internal_config
 -- ═══════════════════════════════════════════════════════════════════
 -- Functions Dump — السيرفر الحي
--- التاريخ: 2026-07-05 | عدد الدوال: 173
+-- التاريخ: 2026-07-27 | عدد الدوال: 175
 
 CREATE OR REPLACE FUNCTION public._admin_employee_assert_actor(p_admin_uid uuid, p_min_role integer DEFAULT 5)
  RETURNS integer
@@ -6741,3 +6746,55 @@ BEGIN
   RETURN FALSE;
 END;
 $function$
+
+CREATE OR REPLACE FUNCTION public.register_fcm_token(p_user_uid uuid, p_token text, p_platform text DEFAULT 'android'::text)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+DECLARE
+  v_token TEXT;
+  v_exists BOOLEAN;
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+  SELECT TRUE INTO v_exists FROM public.users WHERE id = p_user_uid AND i_del = 0;
+  IF v_exists IS NULL THEN RAISE EXCEPTION 'USER_NOT_FOUND'; END IF;
+  v_token := BTRIM(COALESCE(p_token, ''));
+  IF LENGTH(v_token) < 20 OR LENGTH(v_token) > 512 THEN RAISE EXCEPTION 'DEVICE_TOKEN_INVALID'; END IF;
+  IF COALESCE(p_platform, '') NOT IN ('android', 'ios', 'web') THEN RAISE EXCEPTION 'PLATFORM_INVALID'; END IF;
+  UPDATE public.user_devices SET is_active = FALSE, ts_upd = NOW()
+    WHERE uid = p_user_uid AND device_token <> v_token AND is_active = TRUE;
+  INSERT INTO public.user_devices (uid, device_token, platform, is_active, ts_crt, ts_upd)
+  VALUES (p_user_uid, v_token, p_platform, TRUE, NOW(), NOW())
+  ON CONFLICT (device_token) DO UPDATE
+    SET uid = EXCLUDED.uid, platform = EXCLUDED.platform, is_active = TRUE, ts_upd = NOW();
+  RETURN TRUE;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.register_fcm_token(p_user_uid uuid, p_token text, p_platform text) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.register_fcm_token(p_user_uid uuid, p_token text, p_platform text) FROM anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.register_fcm_token(p_user_uid uuid, p_token text, p_platform text) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.unregister_fcm_token(p_user_uid uuid, p_token text)
+ RETURNS boolean
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'extensions', 'pg_temp'
+AS $function$
+BEGIN
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_uid THEN
+    RAISE EXCEPTION 'AUTH_UID_MISMATCH';
+  END IF;
+  UPDATE public.user_devices SET is_active = FALSE, ts_upd = NOW()
+    WHERE device_token = BTRIM(COALESCE(p_token, '')) AND uid = p_user_uid;
+  RETURN TRUE;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.unregister_fcm_token(p_user_uid uuid, p_token text) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.unregister_fcm_token(p_user_uid uuid, p_token text) FROM anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.unregister_fcm_token(p_user_uid uuid, p_token text) TO service_role;

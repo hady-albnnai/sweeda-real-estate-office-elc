@@ -5,7 +5,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/network/supabase_service.dart';
-import '../core/constants/db_constants.dart';
 import '../core/router/app_router.dart';
 import '../core/utils/error_utils.dart';
 
@@ -233,14 +232,17 @@ class FCMService {
     }
   }
 
-  /// تسجيل التوكن في جدول user_devices
-  /// + تشطيب كل التوكنز القديمة لنفس المستخدم (يضمن جهاز واحد نشط لكل user)
+  /// تسجيل التوكن عبر Edge Function (user-account/register_fcm_token)
+  /// إصلاح 2026-07-27: الكتابة المباشرة في user_devices كانت محظورة بـ RLS
+  /// (منذ تشديد 2026-06-28) ويُبتلع خطؤها بصمت → صفر أجهزة مسجلة = بلا Push.
+  /// التشطيب/التفعيل/إعادة الإسناد تتم كلها داخل RPC register_fcm_token.
   Future<void> _registerDeviceToken(String token) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final uid = prefs.getString('user_id');
 
-      if (uid == null) {return;
+      if (uid == null) {
+        return;
       }
 
       final platform = defaultTargetPlatform == TargetPlatform.iOS
@@ -249,29 +251,14 @@ class FCMService {
               ? 'android'
               : 'web';
 
-      final sb = SupabaseService().client;
-
-      // 1) إلغاء أي توكن نشط آخر لنفس المستخدم (غير التوكن الحالي)
-      try {
-        await sb
-            .from(DbTables.userDevices)
-            .update({'is_active': false})
-            .eq('uid', uid)
-            .neq('device_token', token);
-      } catch (e) {
-        _setError(e);
-      }
-
-      // 2) Upsert التوكن الحالي
-      await sb.from(DbTables.userDevices).upsert(
-        {
-          'uid': uid,
+      await SupabaseService().invokeFunction(
+        'user-account',
+        body: {
+          'action': 'register_fcm_token',
+          'user_uid': uid,
           'device_token': token,
           'platform': platform,
-          'is_active': true,
-          'ts_upd': DateTime.now().toIso8601String(),
         },
-        onConflict: 'device_token',
       );
     } catch (e) {
       _setError(e);
@@ -287,11 +274,17 @@ class FCMService {
   Future<void> unregisterDevice() async {
     if (_currentToken == null) return;
     try {
-      await SupabaseService()
-          .client
-          .from(DbTables.userDevices)
-          .update({'is_active': false})
-          .eq('device_token', _currentToken!);
+      final prefs = await SharedPreferences.getInstance();
+      final uid = prefs.getString('user_id');
+      if (uid == null) return;
+      await SupabaseService().invokeFunction(
+        'user-account',
+        body: {
+          'action': 'unregister_fcm_token',
+          'user_uid': uid,
+          'device_token': _currentToken!,
+        },
+      );
     } catch (e) {
       _setError(e);
     }

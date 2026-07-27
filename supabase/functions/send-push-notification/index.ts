@@ -13,7 +13,7 @@ import { create, getNumericDate } from "https://deno.land/x/djwt@v3.0.1/mod.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-push-secret",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -121,6 +121,18 @@ serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  // 🔒 قفل داخلي (2026-07-27): المتصل الشرعي الوحيد = دالة send_push_notification
+  // في قاعدة البيانات عبر pg_net وترسل x-push-secret من public.internal_config.
+  // بدون القفل كان الـ edge relay مفتوح للسبام لأي حامل anon key.
+  const expectedSecret = Deno.env.get("INTERNAL_PUSH_SECRET");
+  if (!expectedSecret) {
+    console.error("INTERNAL_PUSH_SECRET not configured");
+    return json({ success: false, error: "PUSH_SECRET_NOT_CONFIGURED" }, 500);
+  }
+  if (req.headers.get("x-push-secret") !== expectedSecret) {
+    return json({ success: false, error: "UNAUTHORIZED" }, 401);
+  }
+
   try {
     const { uid, title, body, data } = (await req.json()) as NotifyPayload;
     if (!uid || !title || !body) {
@@ -204,12 +216,14 @@ serve(async (req) => {
       }
     }
 
-    // 4) إلغاء التوكنز الفاسدة تلقائياً
+    // 4) إلغاء التوكنز الفاسدة تلقائياً — مقيّد بـ uid حتى لا تُشطَّب
+    //    سجلات مستخدمين آخرين عند أي 404 عابر من FCM (2026-07-27)
     if (invalidTokens.length > 0) {
       try {
         await supabase
           .from("user_devices")
           .update({ is_active: false })
+          .eq("uid", uid)
           .in("device_token", invalidTokens);
         console.log(`🧹 Deactivated ${invalidTokens.length} invalid tokens`);
       } catch (e) {
