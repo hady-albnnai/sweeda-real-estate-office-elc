@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../providers/offer_provider.dart';
 import '../../models/offer_model.dart';
 import '../../core/theme/app_theme.dart';
@@ -61,6 +62,18 @@ class _SearchScreenState extends State<SearchScreen> {
       backgroundColor: AppTheme.scaffoldBackground,
       appBar: AppBar(
         backgroundColor: AppTheme.scaffoldBackground,
+        // رجوع صريح: الوصول للبحث من شريط التنقل السفلي (context.go) يمسح الستاك
+        // فلا يظهر سهم تلقائي — نرجع للرئيسية عند غياب ما يُغلَق
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppTheme.textWhite),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/home');
+            }
+          },
+        ),
         title: const Text('بحث'),
       ),
       body: Column(

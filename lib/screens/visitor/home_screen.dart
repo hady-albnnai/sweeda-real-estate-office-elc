@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/offer_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/config_provider.dart';
 import '../../widgets/offer_card.dart';
+import '../../widgets/offer_filters.dart';
 import '../../widgets/shimmer_loading.dart';
 import '../../core/theme/app_theme.dart';
 import '../../widgets/e2e.dart';
@@ -21,6 +23,9 @@ class _HomeScreenState extends State<HomeScreen> {
   int? _filterTrx;  // null=الكل, 0=بيع, 1=إيجار
   bool _isSearching = false;
 
+  // 🎛️ الفلاتر المتقدمة — الودجت المشترك offer_filters.dart (نفس معايير شاشة المستخدم)
+  final OfferFiltersData _advF = OfferFiltersData();
+
   @override
   void initState() {
     super.initState();
@@ -30,7 +35,24 @@ class _HomeScreenState extends State<HomeScreen> {
       if (offerProv.offers.isEmpty) {
         offerProv.fetchOffers();
       }
+      // مصادر تصنيفات الفلاتر (catProp/docTp/carDocTp) — لازمة لقوائم نافذة الفلاتر
+      context.read<ConfigProvider>().loadConfig();
     });
+  }
+
+  // 🎛️ فتح نافذة الفلاتر الكاملة (الودجت المشترك)
+  void _openFilters() {
+    final data = (context.read<ConfigProvider>().config?.data ?? <String, dynamic>{});
+    showOfferFiltersSheet(
+      context,
+      f: _advF,
+      showProp: _filterType != 1,
+      showCar:  _filterType != 0,
+      catPropSrc: (data['catProp'] ?? <String, dynamic>{}) as Map<String, dynamic>,
+      docTpSrc:   (data['docTp']   ?? <String, dynamic>{}) as Map<String, dynamic>,
+      carDocTpSrc:(data['carDocTp']?? <String, dynamic>{}) as Map<String, dynamic>,
+      onChanged: () { if (mounted) setState(() {}); },
+    );
   }
 
   @override
@@ -70,6 +92,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final offerProvider = context.watch<OfferProvider>();
     final auth = context.watch<AuthProvider>();
+    // القائمة المرئية = عروض المزوّد بعد تطبيق الفلاتر المتقدمة (المشتركة)
+    final offers = _advF.apply(offerProvider.offers);
 
     return Scaffold(
       backgroundColor: AppTheme.scaffoldBackground,
@@ -101,35 +125,40 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: Column(children: [
-        // ── شريط البحث ──
+        // ── شريط البحث + زر الفلاتر الذهبي (المشترك مع شاشة المستخدم) ──
         Padding(
           padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
-          child: TextField(
-            controller: _searchCtrl,
-            style: const TextStyle(color: AppTheme.textWhite),
-            textInputAction: TextInputAction.search,
-            onSubmitted: (_) => _doSearch(),
-            decoration: InputDecoration(
-              hintText: 'ابحث عن عقار أو سيارة...',
-              hintStyle: const TextStyle(color: AppTheme.textGrey),
-              prefixIcon: const Icon(Icons.search, color: AppTheme.primaryGold),
-              suffixIcon: _searchCtrl.text.isNotEmpty || _isSearching
-                  ? IconButton(
-                      icon: const Icon(Icons.close, color: AppTheme.textGrey),
-                      onPressed: _clearSearch,
-                    )
-                  : IconButton(
-                      icon: const Icon(Icons.tune, color: AppTheme.primaryGold),
-                      onPressed: () => context.push('/search'),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _searchCtrl,
+                  style: const TextStyle(color: AppTheme.textWhite),
+                  textInputAction: TextInputAction.search,
+                  onSubmitted: (_) => _doSearch(),
+                  decoration: InputDecoration(
+                    hintText: 'ابحث عن عقار أو سيارة...',
+                    hintStyle: const TextStyle(color: AppTheme.textGrey),
+                    prefixIcon: const Icon(Icons.search, color: AppTheme.primaryGold),
+                    suffixIcon: _searchCtrl.text.isNotEmpty || _isSearching
+                        ? IconButton(
+                            icon: const Icon(Icons.close, color: AppTheme.textGrey),
+                            onPressed: _clearSearch,
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: AppTheme.surfaceBlack,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
                     ),
-              filled: true,
-              fillColor: AppTheme.surfaceBlack,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
+                  ),
+                  onChanged: (_) => setState(() {}),
+                ),
               ),
-            ),
-            onChanged: (_) => setState(() {}),
+              const SizedBox(width: 8),
+              OfferFiltersButton(count: _advF.activeCount, onTap: _openFilters),
+            ],
           ),
         ),
 
@@ -159,12 +188,12 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
 
         // ── القائمة ──
-        // عداد النتائج عند الفلترة
-        if (_isSearching && !offerProvider.isLoading)
+        // عداد النتائج عند الفلترة (نصية أو متقدمة)
+        if ((_isSearching || _advF.activeCount > 0) && !offerProvider.isLoading)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Text(
-              '${offerProvider.offers.length} نتيجة',
+              '${offers.length} نتيجة',
               style: const TextStyle(color: AppTheme.textGrey, fontSize: 13),
             ),
           ),
@@ -214,10 +243,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         },
                         child: ListView.builder(
                           padding: const EdgeInsets.symmetric(horizontal: 15),
-                          itemCount: offerProvider.offers.length +
+                          itemCount: offers.length +
                               (offerProvider.hasMore ? 1 : 0),
                           itemBuilder: (context, index) {
-                            if (index >= offerProvider.offers.length) {
+                            if (index >= offers.length) {
                               return const Padding(
                                 padding: EdgeInsets.symmetric(vertical: 20),
                                 child: Center(
@@ -226,7 +255,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               );
                             }
-                            return OfferCard(offer: offerProvider.offers[index]);
+                            return OfferCard(offer: offers[index]);
                           },
                         ),
                       ),

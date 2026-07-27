@@ -28,6 +28,25 @@ class OfferModel {
   final int iSoc;
   final int? offerNumber; // رقم العرض التسلسلي — يظهر للجمهور
   final int socPub;
+
+  /// تحليل متسامح لمواعيد المعاينة — أي قيمة غير متوقعة (boolean/نص/خراب)
+  /// تُحوَّل لصيغة آمنة أو تُتجاهل بدل ما تكسّر جلبة العروض كاملة (درس 2026-07-27).
+  static Map<String, List<String>> _parseAvl(dynamic raw) {
+    if (raw is! Map) return {};
+    final out = <String, List<String>>{};
+    raw.forEach((k, v) {
+      final key = k.toString();
+      if (v is List) {
+        out[key] = v.map((e) => e.toString()).toList();
+      } else if (key == 'any') {
+        // أي قيمة غير-قائمة على مفتاح any (مثل {"any": true} من لصقة يدوية قديمة)
+        // = «جاهز بأي وقت» — نفس النافذة التي يكتبها التطبيق
+        out[key] = const ['00:00-23:59'];
+      }
+      // أي مفتاح آخر بقيمة خراب يُتجاهل بصمت — لا نكسّر الجلبة بسببه أبداً
+    });
+    return out;
+  }
   final String socTxt;
   final int iDup;
   final String dupOf;
@@ -167,10 +186,7 @@ class OfferModel {
       socTxt: data['soc_txt'] ?? '',
       iDup: data['i_dup'] ?? 0,
       dupOf: data['dup_of'] ?? '',
-      avl: data['avl'] != null
-          ? (data['avl'] as Map).map((k, v) =>
-              MapEntry(k.toString(), List<String>.from(v as List)))
-          : {},
+      avl: _parseAvl(data['avl']),
       addedBy: data['added_by'],
       iPin: data['i_pin'] ?? 0,
       iBst: data['i_bst'] ?? 0,
