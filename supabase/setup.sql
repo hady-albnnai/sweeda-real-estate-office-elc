@@ -1023,7 +1023,8 @@ END;
 $function$
 
 REVOKE ALL ON FUNCTION app_assert_password(p_password text, p_min integer) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION app_assert_password(p_password text, p_min integer) TO anon, authenticated, PUBLIC, service_role;
+REVOKE EXECUTE ON FUNCTION public.app_assert_password(p_password text, p_min integer) FROM anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.app_assert_password(p_password text, p_min integer) TO service_role;
 
 CREATE OR REPLACE FUNCTION public.app_assert_phone(p_phone text)
  RETURNS text
@@ -1046,7 +1047,8 @@ END;
 $function$
 
 REVOKE ALL ON FUNCTION app_assert_phone(p_phone text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION app_assert_phone(p_phone text) TO anon, authenticated, PUBLIC, service_role;
+REVOKE EXECUTE ON FUNCTION public.app_assert_phone(p_phone text) FROM anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.app_assert_phone(p_phone text) TO service_role;
 
 CREATE OR REPLACE FUNCTION public.app_assert_price(p_value numeric, p_required boolean DEFAULT true)
  RETURNS numeric
@@ -1072,7 +1074,8 @@ END;
 $function$
 
 REVOKE ALL ON FUNCTION app_assert_price(p_value numeric, p_required boolean) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION app_assert_price(p_value numeric, p_required boolean) TO anon, authenticated, PUBLIC, service_role;
+REVOKE EXECUTE ON FUNCTION public.app_assert_price(p_value numeric, p_required boolean) FROM anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.app_assert_price(p_value numeric, p_required boolean) TO service_role;
 
 CREATE OR REPLACE FUNCTION public.app_assert_text_len(p_value text, p_field text, p_min integer DEFAULT 0, p_max integer DEFAULT 1000)
  RETURNS text
@@ -1098,7 +1101,8 @@ END;
 $function$
 
 REVOKE ALL ON FUNCTION app_assert_text_len(p_value text, p_field text, p_min integer, p_max integer) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION app_assert_text_len(p_value text, p_field text, p_min integer, p_max integer) TO anon, authenticated, PUBLIC, service_role;
+REVOKE EXECUTE ON FUNCTION public.app_assert_text_len(p_value text, p_field text, p_min integer, p_max integer) FROM anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.app_assert_text_len(p_value text, p_field text, p_min integer, p_max integer) TO service_role;
 
 CREATE OR REPLACE FUNCTION public.app_assert_username(p_username text, p_required boolean DEFAULT true)
  RETURNS text
@@ -1128,7 +1132,8 @@ END;
 $function$
 
 REVOKE ALL ON FUNCTION app_assert_username(p_username text, p_required boolean) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION app_assert_username(p_username text, p_required boolean) TO anon, authenticated, PUBLIC, service_role;
+REVOKE EXECUTE ON FUNCTION public.app_assert_username(p_username text, p_required boolean) FROM anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.app_assert_username(p_username text, p_required boolean) TO service_role;
 
 CREATE OR REPLACE FUNCTION public.app_clean_text(p_value text, p_max_len integer DEFAULT 1000)
  RETURNS text
@@ -1151,7 +1156,8 @@ END;
 $function$
 
 REVOKE ALL ON FUNCTION app_clean_text(p_value text, p_max_len integer) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION app_clean_text(p_value text, p_max_len integer) TO anon, authenticated, PUBLIC, service_role;
+REVOKE EXECUTE ON FUNCTION public.app_clean_text(p_value text, p_max_len integer) FROM anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.app_clean_text(p_value text, p_max_len integer) TO service_role;
 
 CREATE OR REPLACE FUNCTION public.attach_photography_media_to_offer_internal(p_admin_uid uuid, p_task_id uuid)
  RETURNS boolean
@@ -2754,7 +2760,8 @@ END;
 $function$
 
 REVOKE ALL ON FUNCTION normalize_sy_phone(p_phone text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION normalize_sy_phone(p_phone text) TO anon, authenticated, PUBLIC, service_role;
+REVOKE EXECUTE ON FUNCTION public.normalize_sy_phone(p_phone text) FROM anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.normalize_sy_phone(p_phone text) TO service_role;
 
 CREATE OR REPLACE FUNCTION public.register_daily_streak_internal(p_user_uid uuid, p_points integer DEFAULT 50)
  RETURNS jsonb

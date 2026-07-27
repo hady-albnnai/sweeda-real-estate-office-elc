@@ -49,7 +49,8 @@ BEGIN
   RETURN v;
 END;
 $function$;
-GRANT EXECUTE ON FUNCTION public.normalize_sy_phone(TEXT) TO anon, authenticated, service_role;
+REVOKE EXECUTE ON FUNCTION public.normalize_sy_phone(TEXT) FROM anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.normalize_sy_phone(TEXT) TO service_role;
 
 -- 2. دالة تطبيع أسماء المستخدمين العربية لمنع الانتحال عبر التشابه البصري والتشكيل
 CREATE OR REPLACE FUNCTION public.normalize_arabic_username(p_str TEXT)
@@ -73,7 +74,8 @@ BEGIN
   RETURN v;
 END;
 $function$;
-GRANT EXECUTE ON FUNCTION public.normalize_arabic_username(TEXT) TO anon, authenticated, service_role;
+REVOKE EXECUTE ON FUNCTION public.normalize_arabic_username(TEXT) FROM anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.normalize_arabic_username(TEXT) TO service_role;
 
 -- 3. تحديث app_assert_username للسماح بالعربية ومنع خلط اللغات (Script Mixing Prohibition)
 CREATE OR REPLACE FUNCTION public.app_assert_username(p_username text, p_required boolean DEFAULT true)
@@ -102,7 +104,8 @@ BEGIN
   RETURN v;
 END;
 $function$;
-GRANT EXECUTE ON FUNCTION public.app_assert_username(TEXT, BOOLEAN) TO anon, authenticated, service_role;
+REVOKE EXECUTE ON FUNCTION public.app_assert_username(TEXT, BOOLEAN) FROM anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.app_assert_username(TEXT, BOOLEAN) TO service_role;
 
 -- 4. تحديث check_username_available لاعتماد المقارنة الموحدة normalize_arabic_username
 CREATE OR REPLACE FUNCTION public.check_username_available(p_username text)
