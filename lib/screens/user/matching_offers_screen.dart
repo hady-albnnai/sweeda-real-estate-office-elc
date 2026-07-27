@@ -526,13 +526,6 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
                 ),
               ],
             ),
-                  padding: const EdgeInsets.all(12),
-                  itemCount: _filteredOffers.length,
-                  itemBuilder: (context, index) {
-                    final offer = _filteredOffers[index];
-                    return _buildOfferCard(offer);
-                  },
-                ),
     );
   }
 
