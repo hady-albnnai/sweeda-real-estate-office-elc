@@ -216,34 +216,82 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       ),
       body: Column(
         children: [
-          // شريط البحث
+          // شريط البحث + زر الفلاتر الظاهر (يفتح الفلاتر الكاملة — معايير مطابقة الطلبات)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-            child: TextField(
-              controller: _searchCtrl,
-              style: const TextStyle(color: AppTheme.textWhite),
-              textInputAction: TextInputAction.search,
-              onSubmitted: (_) => _doSearch(),
-              decoration: InputDecoration(
-                hintText: 'ابحث عن عقار أو سيارة...',
-                prefixIcon: const Icon(Icons.search, color: AppTheme.primaryGold),
-                suffixIcon: _searchCtrl.text.isNotEmpty || _isSearching
-                    ? IconButton(
-                        icon: const Icon(Icons.close, color: AppTheme.textGrey),
-                        onPressed: _clearSearch,
-                      )
-                    : IconButton(
-                        icon: const Icon(Icons.tune, color: AppTheme.primaryGold),
-                        onPressed: () => context.push('/search'),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchCtrl,
+                    style: const TextStyle(color: AppTheme.textWhite),
+                    textInputAction: TextInputAction.search,
+                    onSubmitted: (_) => _doSearch(),
+                    decoration: InputDecoration(
+                      hintText: 'ابحث عن عقار أو سيارة...',
+                      prefixIcon: const Icon(Icons.search, color: AppTheme.primaryGold),
+                      suffixIcon: _searchCtrl.text.isNotEmpty || _isSearching
+                          ? IconButton(
+                              icon: const Icon(Icons.close, color: AppTheme.textGrey),
+                              onPressed: _clearSearch,
+                            )
+                          : null,
+                      filled: true,
+                      fillColor: AppTheme.surfaceBlack,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
                       ),
-                filled: true,
-                fillColor: AppTheme.surfaceBlack,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+                    ),
+                    onChanged: (_) => setState(() {}),
+                  ),
                 ),
-              ),
-              onChanged: (_) => setState(() {}),
+                const SizedBox(width: 8),
+                // زر «فلاتر» واضح ومخصص — المستخدم يفهم فوراً أن في فلترة متقدمة
+                Material(
+                  color: AppTheme.primaryGold,
+                  borderRadius: BorderRadius.circular(12),
+                  child: InkWell(
+                    onTap: _showAdvancedFilters,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.tune, color: AppTheme.deepBlack, size: 20),
+                          const SizedBox(width: 6),
+                          const Text('فلاتر',
+                              style: TextStyle(
+                                  color: AppTheme.deepBlack,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13)),
+                          if (_activeAdvCount > 0) ...[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+                              decoration: BoxDecoration(
+                                color: AppTheme.surfaceBlack,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: AppTheme.primaryGold, width: 1.5),
+                              ),
+                              child: Text(
+                                '$_activeAdvCount',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                    color: AppTheme.deepBlack,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
 
@@ -254,13 +302,6 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 15),
               children: [
-                // 🎛️ الفلاتر الكاملة أول الصف حتى تبقى ظاهرة دائماً (مع عدّاد الفلاتر الفعّالة)
-                _buildChip(
-                  _activeAdvCount > 0 ? '⚙️ فلاتر (${_activeAdvCount})' : '⚙️ فلاتر كاملة',
-                  _activeAdvCount > 0,
-                  _showAdvancedFilters,
-                ),
-                const SizedBox(width: 8),
                 _buildChip('الكل', _filterType == null && _filterTrx == null, () {
                   setState(() { _filterType = null; _filterTrx = null; });
                   _doSearch();
