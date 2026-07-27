@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 /// خدمة التخزين المحلي (Hive) — للكاش + دعم العمل دون اتصال
@@ -34,6 +35,11 @@ class LocalCacheService {
   }
 
   bool get isReady => _ready && _box != null;
+
+  /// مُستمع حي لمفتاح المفضلة — أي كتابة عليه تُشعِر الواجهات فوراً
+  /// (حل مزامنة القلب بين بطاقات القوائم وشاشة التفاصيل — 2026-07-27)
+  ValueListenable<Box>? get favoritesListenable =>
+      isReady ? _box!.listenable(keys: const [_kFavorites]) : null;
 
   // ═══════════════════════════════════════
   // Config

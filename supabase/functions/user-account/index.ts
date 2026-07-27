@@ -25,6 +25,31 @@ function isBlank(value: unknown): boolean {
   return value === null || value === undefined || value.toString().trim() === "";
 }
 
+// ─── نقاط من الكونفغ سيرفرياً (تحصين 2026-07-27): العميل لا يقرر قيمة النقاط ───
+const POINTS_DEFAULTS: Record<string, number> = {
+  like: 5, cmt: 20, shr: 10, soc: 100, strk: 50, ref: 1500,
+  wkL: 100, addO: 500, sgn: 1000, att: 300, dlD: 2000,
+};
+const SELF_EVENTS = new Set(["like", "cmt", "shr", "soc"]);
+
+async function loadPointsMap(
+  supabaseAdmin: ReturnType<typeof createClient>,
+): Promise<Record<string, number>> {
+  const out: Record<string, number> = { ...POINTS_DEFAULTS };
+  try {
+    const { data } = await supabaseAdmin
+      .from("app_config").select("value").eq("key", "main").maybeSingle();
+    const raw = (data as Record<string, any> | null)?.value?.pts;
+    if (raw && typeof raw === "object") {
+      for (const [k, v] of Object.entries(raw)) {
+        if (typeof v === "number") out[k] = v;
+        else if (v && typeof (v as any).p === "number") out[k] = (v as any).p;
+      }
+    }
+  } catch (_) { /* الاحتياطيات تكفي */ }
+  return out;
+}
+
 function isIncompleteEmailSignup(row: Record<string, unknown> | null | undefined): boolean {
   if (!row) return false;
   const role = Number(row.role ?? 0);
@@ -309,10 +334,10 @@ serve(async (req) => {
     }
 
     if (action === "register_weekly_login") {
-      const pts = (body.pts ?? 100);
+      const ptsMap = await loadPointsMap(supabaseAdmin);
       const { data, error } = await supabaseAdmin.rpc("register_weekly_login", {
         p_uid: uid,
-        p_pts: pts,
+        p_pts: ptsMap["wkL"] ?? 100, // سيرفرياً من الكونفغ — لا قيمة من العميل
       });
       if (error) return json({ success: false, error: error.message }, 400);
       return json({ success: data === true });
@@ -320,11 +345,43 @@ serve(async (req) => {
 
     if (action === "award_points") {
       const eventType = (body.event_type ?? "").toString();
-      const points = (body.points ?? 0);
       if (!eventType) return json({ success: false, error: "EVENT_TYPE_REQUIRED" }, 400);
+
+      // تحصين 2026-07-27 (سد سكب النقاط):
+      //  ١) الحدث معرّف بالكونفغ سيرفرياً (أو manual_add للإدارة فقط role≥5) — لا أحداث/قيم حرة
+      //  ٢) قيمة النقاط من الكونفغ — نقاط body.points تُتجاهل لأي حدث معرّف
+      let points: number;
+      if (eventType === "manual_add") {
+        const { data: me } = await supabaseAdmin
+          .from("users").select("role").eq("id", uid).eq("i_del", 0).maybeSingle();
+        if (Number((me as Record<string, unknown> | null)?.role ?? 0) < 5) {
+          return json({ success: false, error: "ADMIN_ONLY_EVENT" }, 403);
+        }
+        points = Math.trunc(Number(body.points ?? 0));
+        if (!points || Math.abs(points) > 10000) {
+          return json({ success: false, error: "POINTS_INVALID" }, 400);
+        }
+      } else {
+        const ptsMap = await loadPointsMap(supabaseAdmin);
+        const cfgPts = ptsMap[eventType];
+        if (cfgPts == null) {
+          return json({ success: false, error: "EVENT_NOT_ALLOWED" }, 403);
+        }
+        if (!SELF_EVENTS.has(eventType)) {
+          const { data: me } = await supabaseAdmin
+            .from("users").select("role").eq("id", uid).eq("i_del", 0).maybeSingle();
+          if (Number((me as Record<string, unknown> | null)?.role ?? 0) < 5) {
+            return json({ success: false, error: "ADMIN_ONLY_EVENT" }, 403);
+          }
+        }
+        points = cfgPts;
+      }
 
       // 🚫 منع نقاط الإعجاب بالذات — السيرفر يستخرج مالك العرض بنفسه
       const awardOfferId = (body.offer_id ?? body.offerId ?? "").toString();
+      if (eventType === "like" && !awardOfferId) {
+        return json({ success: false, error: "OFFER_ID_REQUIRED" }, 400);
+      }
       if (awardOfferId) {
         const { data: off } = await supabaseAdmin
           .from("offers")

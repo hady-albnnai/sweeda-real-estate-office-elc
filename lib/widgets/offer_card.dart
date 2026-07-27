@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart' show Box;
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../models/offer_model.dart';
@@ -18,12 +19,44 @@ class OfferCard extends StatefulWidget {
 }
 
 class _OfferCardState extends State<OfferCard> {
-  late bool _isFav;
+  // لا نخزّن حالة القلب — تُقرأ حيّاً من favoritesListenable حتى تتزامن البطاقة
+  // مع شاشة التفاصيل وأي شاشة ثانية تلقائياً (إصلاح 2026-07-27)
 
-  @override
-  void initState() {
-    super.initState();
-    _isFav = LocalCacheService().isFavorite(widget.offer.id);
+  Widget _favButton(BuildContext ctx, bool isFav, bool own) {
+    return GestureDetector(
+      onTap: _toggleFav,
+      child: Opacity(
+        opacity: own ? 0.35 : 1,
+        child: Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: isFav
+                ? Colors.red.withOpacity(0.1)
+                : Colors.white.withOpacity(0.05),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            isFav ? Icons.favorite : Icons.favorite_border,
+            color: isFav ? Colors.red : AppTheme.textGrey,
+            size: 20,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFavButton(BuildContext ctx) {
+    final own =
+        ctx.read<AuthProvider>().userModel?.uid == widget.offer.usrId;
+    final listenable = LocalCacheService().favoritesListenable;
+    if (listenable == null) {
+      return _favButton(ctx, LocalCacheService().isFavorite(widget.offer.id), own);
+    }
+    return ValueListenableBuilder<Box>(
+      valueListenable: listenable,
+      builder: (_, __, ___) => _favButton(
+          ctx, LocalCacheService().isFavorite(widget.offer.id), own),
+    );
   }
 
   Future<void> _toggleFav() async {
@@ -39,7 +72,7 @@ class _OfferCardState extends State<OfferCard> {
       return;
     }
     final added = await LocalCacheService().toggleFavorite(widget.offer.id);
-    if (mounted) setState(() => _isFav = added);
+    // لا setState — الـ listenable يعيد بناء القلب تلقائياً
     if (mounted) {
       AppTheme.showSnackBar(context, SnackBar(
         content: Text(added ? 'أُضيف للمفضلة ❤️' : 'أُزيل من المفضلة'),
@@ -62,17 +95,9 @@ class _OfferCardState extends State<OfferCard> {
           AppUtils.showPointsAwarded(context, 10, label: 'نقطة إعجاب');
         }
       }
-    } else if (!added && mounted) {
-      // ✅ خصم 10 نقاط عند إزالة الإعجاب (منع الاستغلال)
-      final auth = context.read<AuthProvider>();
-      if (auth.isLoggedIn) {
-        await BusinessService().addPoints(auth.userModel!.uid, -10);
-        await auth.refreshUser();
-        if (mounted) {
-          AppUtils.showPointsAwarded(context, -10, label: 'إزالة إعجاب');
-        }
-      }
     }
+    // إزالة الإعجاب لا تخصم نقاط (2026-07-27): المنح محدود سيرفرياً بـ ١٠ إعجابات/يوم
+    // والخصم كان يعاقب حتى من لم تقُبل نقاطه أصلاً (سقف يومي/رفض السيرفر).
   }
 
   static Widget _boostBadge(String text, Color color) {
@@ -323,33 +348,8 @@ class _OfferCardState extends State<OfferCard> {
                         ),
                       ),
 
-                      // زر المفضلة (يتعتّم على عروضك الخاصة)
-                      Builder(builder: (ctx) {
-                        final own = ctx.read<AuthProvider>().userModel?.uid ==
-                            widget.offer.usrId;
-                        return GestureDetector(
-                          onTap: _toggleFav,
-                          child: Opacity(
-                            opacity: own ? 0.35 : 1,
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: _isFav
-                                    ? Colors.red.withOpacity(0.1)
-                                    : Colors.white.withOpacity(0.05),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                _isFav
-                                    ? Icons.favorite
-                                    : Icons.favorite_border,
-                                color: _isFav ? Colors.red : AppTheme.textGrey,
-                                size: 20,
-                              ),
-                            ),
-                          ),
-                        );
-                      }),
+                      // زر المفضلة (يتعتّم على عروضك الخاصة) — حيّ ومتزامن مع كل الشاشات
+                      Builder(builder: _buildFavButton),
                     ],
                   ),
                 ],

@@ -18,11 +18,32 @@ class FavoritesScreen extends StatefulWidget {
 class _FavoritesScreenState extends State<FavoritesScreen> {
   List<String> _favIds = [];
   bool _isLoading = true;
+  VoidCallback? _favListener;
 
   @override
   void initState() {
     super.initState();
     _loadFavorites();
+    // تحديث حي: أي إعجاب/إزالة من أي شاشة (تفاصيل/بطاقة) ينعكس هنا فوراً
+    final listenable = LocalCacheService().favoritesListenable;
+    if (listenable != null) {
+      _favListener = () {
+        if (mounted) {
+          _favIds = LocalCacheService().getFavorites();
+          setState(() {});
+        }
+      };
+      listenable.addListener(_favListener!);
+    }
+  }
+
+  @override
+  void dispose() {
+    final listenable = LocalCacheService().favoritesListenable;
+    if (listenable != null && _favListener != null) {
+      listenable.removeListener(_favListener!);
+    }
+    super.dispose();
   }
 
   Future<void> _loadFavorites() async {

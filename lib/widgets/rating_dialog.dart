@@ -92,17 +92,8 @@ class _RatingDialogState extends State<RatingDialog> {
 
       if (!mounted) return;
 
-      // ✅ Award bonus points via user-rewards (5 stars = 200 pts)
-      if (_stars == 5) {
-        try {
-          await SupabaseService().invokeFunction('user-rewards', body: {
-            'action': 'rating_bonus',
-            'user_uid': auth.userModel!.uid,
-            'target_uid': widget.targetUid,
-            'stars': _stars,
-          });
-        } catch (_) {}
-      }
+      // ✅ منحة الـ ٥ نجوم (+200) تُمنح سيرفرياً من trigger جدول ratings —
+      // أُزيل استدعاء rating_bonus المكرر (كان يضاعف المنحة +200 ×2 ومسار سكب).
 
       Navigator.pop(context, true);
       AppTheme.showSnackBar(context,

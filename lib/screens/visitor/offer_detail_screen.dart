@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart' show Box;
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:go_router/go_router.dart';
@@ -35,7 +36,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
   double? _ownerAvgRating;
   int _ownerRatingCount = 0;
   bool _loading = true;
-  bool _isFav = false;
+  // حالة القلب تُقرأ حيّاً من favoritesListenable (لا حقل محلي — إصلاح مزامنة 2026-07-27)
   bool _publishing = false;
   int _currentImg = 0;
   late final PageController _pageCtrl = PageController();
@@ -43,7 +44,6 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _isFav = LocalCacheService().isFavorite(widget.offerId);
     WidgetsBinding.instance.addPostFrameCallback((_) => _load());
   }
 
@@ -111,11 +111,34 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
     }
   }
 
+  Widget _favIconButton(BuildContext ctx) {
+    final own = _offer != null &&
+        ctx.read<AuthProvider>().userModel?.uid == _offer!.usrId;
+    final listenable = LocalCacheService().favoritesListenable;
+    Widget buildBtn(bool isFav) => IconButton(
+          icon: Opacity(
+            opacity: own ? 0.35 : 1,
+            child: Icon(isFav ? Icons.favorite : Icons.favorite_border,
+                color: isFav ? AppTheme.errorRed : null),
+          ),
+          onPressed: _toggleFav,
+        );
+    if (listenable == null) {
+      return buildBtn(LocalCacheService().isFavorite(widget.offerId));
+    }
+    return ValueListenableBuilder<Box>(
+      valueListenable: listenable,
+      builder: (_, __, ___) =>
+          buildBtn(LocalCacheService().isFavorite(widget.offerId)),
+    );
+  }
+
   Future<void> _toggleFav() async {
     // 🚫 عرضي الخاص: لا إعجاب جديد ولا نقاط (والسيرفر يحسم أيضاً عبر offer_id)
     final myUid = context.read<AuthProvider>().userModel?.uid;
     final isOwn = _offer != null && myUid != null && _offer!.usrId == myUid;
-    if (isOwn && !_isFav) {
+    final isFavNow = LocalCacheService().isFavorite(widget.offerId);
+    if (isOwn && !isFavNow) {
       if (mounted) {
         AppTheme.showSnackBar(context, const SnackBar(
           content: Text('لا يمكن الإعجاب بعرضك الخاص 👌'),
@@ -125,7 +148,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
       return;
     }
     final added = await LocalCacheService().toggleFavorite(widget.offerId);
-    setState(() => _isFav = added);
+    // لا setState للقلب — الـ listenable يعيد بنائه تلقائياً
     if (mounted) {
       AppTheme.showSnackBar(context, SnackBar(
         content: Text(added ? 'أُضيف للمفضلة ❤️' : 'أُزيل من المفضلة'),
@@ -150,17 +173,8 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
           AppUtils.showPointsAwarded(context, 10, label: 'نقطة إعجاب');
         }
       }
-    } else if (!added && mounted) {
-      // ✅ خصم 10 نقاط عند إزالة الإعجاب (منع الاستغلال)
-      final auth = context.read<AuthProvider>();
-      if (auth.isLoggedIn) {
-        await BusinessService().addPoints(auth.userModel!.uid, -10);
-        await auth.refreshUser();
-        if (mounted) {
-          AppUtils.showPointsAwarded(context, -10, label: 'إزالة إعجاب');
-        }
-      }
     }
+    // إزالة الإعجاب لا تخصم نقاط (2026-07-27): توحيد المنطق بين البطاقة والتفاصيل.
   }
 
   Future<void> _share() async {
@@ -767,19 +781,8 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                 onPressed: _share,
               ),
               // ❤️ القلب يتعتّم على عروضك الخاصة (والسيرفر يرفض النقاط كذلك)
-              Builder(builder: (ctx) {
-                final own = _offer != null &&
-                    ctx.read<AuthProvider>().userModel?.uid == _offer!.usrId;
-                return IconButton(
-                  icon: Opacity(
-                    opacity: own ? 0.35 : 1,
-                    child: Icon(
-                        _isFav ? Icons.favorite : Icons.favorite_border,
-                        color: _isFav ? AppTheme.errorRed : null),
-                  ),
-                  onPressed: _toggleFav,
-                );
-              }),
+              // زر القلب — حيّ ومتزامن مع البطاقات بالقوائم (فئة المفضلة)
+              Builder(builder: (ctx) => _favIconButton(ctx)),
             ],
           ),
           SliverToBoxAdapter(
