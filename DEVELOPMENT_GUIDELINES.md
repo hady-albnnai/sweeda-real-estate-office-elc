@@ -181,3 +181,15 @@ GRANT EXECUTE ON FUNCTION public.f(sig) TO service_role;            -- ④
 4. **محاكاة الـ analyzer قبل الرفع:** اقرأ الملفات المعدلة كاملة وتأكد أن `flutter analyze` سيمر. إذا كان فيه أي `import` يشير لملف غير موجود — **لا ترفع**.
 
 5. **التدرّج:** لا ترفع أكثر من تغيير واحد بدون اختبار كل تغيير. أي كود يسبب `build failed` = خطأ تشغيلي، والوكيل مسؤول عن إصلاحه فوراً دون أن يطلبه المالك.
+
+### 15) قاعدة عدم تعديل بيئة المالك — أُضيفت 2026-07-28 بعد حادثة flutter upgrade
+
+**ممنوع منعاً باتاً** طلب `flutter upgrade` / `flutter downgrade` / تغيير إصدار Java أو Gradle من المالك.
+
+- بيئة المالك (Flutter SDK, Android SDK, Java, Gradle) هي **بيئة مستقرة** — لا تُلمس.
+- أي مشكلة بناء سببها بيئة المالك (Gradle lock, AGP mismatch, storage.googleapis.com blocked) تحل بـ:
+  1. قتل عمليات Gradle العالقة (Task Manager)
+  2. `flutter clean` + `pub get` داخل المشروع
+  3. إعادة تشغيل الجهاز
+  4. تعديل ملفات `android/settings.gradle.kts` و `android/app/build.gradle.kts` في الريبو لتوافق بيئة المالك
+- إذا تعذّر الحل، الحل الوحيد المسموح هو `flutter downgrade` — ويُترك للمالك ينفذه بملء إرادته مع شرح المخاطر.
