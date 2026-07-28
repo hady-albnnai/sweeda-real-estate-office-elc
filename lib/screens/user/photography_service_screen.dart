@@ -631,10 +631,14 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                 const Icon(Icons.event_available,
                     size: 13, color: Colors.green),
                 const SizedBox(width: 4),
-                Text(
-                  'الموعد المجدول: ${_fmtDate(t.tsScheduled!)}',
-                  style:
-                      const TextStyle(color: Colors.green, fontSize: 11),
+                Expanded(
+                  child: Text(
+                    'موعد التصوير: ${_fmtDateTime(t.tsScheduled!)}',
+                    style: const TextStyle(
+                        color: Colors.green,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold),
+                  ),
                 ),
               ],
             ),
@@ -712,4 +716,13 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
 
   String _fmtDate(DateTime dt) =>
       '${dt.year}/${dt.month.toString().padLeft(2, '0')}/${dt.day.toString().padLeft(2, '0')}';
+
+  /// 📅 التاريخ **مع الساعة** بتوقيت الجهاز (دمشق) — موعد التصوير بلا ساعة لا معنى له.
+  /// مرجع الإصلاح: بلاغ المالك 2026-07-28 «مو محدد الساعة».
+  String _fmtDateTime(DateTime dt) {
+    final l = dt.toLocal();
+    final h = l.hour.toString().padLeft(2, '0');
+    final m = l.minute.toString().padLeft(2, '0');
+    return '${_fmtDate(l)} — الساعة $h:$m';
+  }
 }

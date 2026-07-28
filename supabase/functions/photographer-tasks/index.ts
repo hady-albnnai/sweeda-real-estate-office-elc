@@ -21,6 +21,49 @@ function json(body: Record<string, unknown>, status = 200): Response {
   });
 }
 
+// إشعار داخلي + 🔔 بوش خارجي (ثانوي — فشله لا يكسر العملية)
+// أُضيف 2026-07-28: مسار المصوّر كان صامتاً تماماً (بدء/تسليم بلا أي إشعار).
+async function notifyUsers(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  uids: string[],
+  tp: number,
+  ttl: string,
+  bdy: string,
+  refId: string,
+  act: string,
+): Promise<void> {
+  const unique = [...new Set(uids.filter((u) => !!u))];
+  if (unique.length === 0) return;
+  try {
+    const rows = unique.map((uid) => ({
+      uid,
+      tp,
+      ttl,
+      bdy,
+      ref_id: refId,
+      act,
+      i_rd: 0,
+      i_del: 0,
+      ts_crt: new Date().toISOString(),
+    }));
+    await supabaseAdmin.from("notifications").insert(rows);
+  } catch {
+    // تجاهل — الإشعار إجراء ثانوي
+  }
+  for (const uid of unique) {
+    try {
+      await supabaseAdmin.rpc("send_push_notification", {
+        p_uid: uid,
+        p_title: ttl,
+        p_body: bdy,
+        p_data: { act, ref_id: refId },
+      });
+    } catch {
+      // تجاهل — البوش إجراء ثانوي
+    }
+  }
+}
+
 async function validateActor(
   req: Request,
   supabaseAdmin: ReturnType<typeof createClient>,
@@ -102,6 +145,32 @@ serve(async (req) => {
         p_task_id: taskId,
       });
       if (error) return json({ success: false, error: error.message }, 400);
+
+      // 🔔 إشعار صاحب الطلب ببدء التنفيذ (كان معدوماً — فجوة 2026-07-28)
+      if (data === true) {
+        const { data: task } = await supabaseAdmin
+          .from("photography_tasks")
+          .select("id, ttl, requested_by")
+          .eq("id", taskId)
+          .maybeSingle();
+        const reqUid = task?.requested_by?.toString() ?? "";
+        if (reqUid) {
+          const { data: ph } = await supabaseAdmin
+            .from("users").select("nm, ph").eq("id", uid).maybeSingle();
+          await notifyUsers(
+            supabaseAdmin,
+            [reqUid],
+            1,
+            "📸 المصوّر بدأ تنفيذ طلبك",
+            [
+              `بدأ العمل على طلب التصوير: ${task?.ttl ?? ""}`,
+              `👤 المصوّر: ${ph?.nm ?? "—"}${ph?.ph ? ` — ${ph.ph}` : ""}`,
+            ].join("\n"),
+            taskId,
+            "photography_task_started",
+          );
+        }
+      }
       return json({ success: data === true });
     }
 
@@ -121,6 +190,41 @@ serve(async (req) => {
         p_photographer_note: note,
       });
       if (error) return json({ success: false, error: error.message }, 400);
+
+      // 🔔 إشعار المكتب بوصول صور للمراجعة (كان معدوماً — صور تنتظر بلا علم أحد)
+      if (data === true) {
+        const { data: task } = await supabaseAdmin
+          .from("photography_tasks")
+          .select("id, ttl, requested_by")
+          .eq("id", taskId)
+          .maybeSingle();
+        const { data: staff } = await supabaseAdmin
+          .from("users").select("id").gte("role", 3).eq("sts", 0).eq("i_del", 0);
+        if (staff && staff.length > 0) {
+          await notifyUsers(
+            supabaseAdmin,
+            staff.map((s) => s.id?.toString() ?? ""),
+            1,
+            "📥 صور جاهزة للمراجعة",
+            `سلّم المصوّر ${media.length} ملف للمهمة: ${task?.ttl ?? ""} — بانتظار الاعتماد.`,
+            taskId,
+            "photography_task_submitted",
+          );
+        }
+        // وإعلام صاحب الطلب أن التصوير انتهى ودخل المراجعة
+        const reqUid = task?.requested_by?.toString() ?? "";
+        if (reqUid) {
+          await notifyUsers(
+            supabaseAdmin,
+            [reqUid],
+            1,
+            "📸 انتهى التصوير",
+            `تم رفع صور طلبك (${task?.ttl ?? ""}) وهي قيد مراجعة المكتب — سنعلمك فور اعتمادها.`,
+            taskId,
+            "photography_task_submitted_client",
+          );
+        }
+      }
       return json({ success: data === true });
     }
 

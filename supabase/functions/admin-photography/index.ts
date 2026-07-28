@@ -95,7 +95,33 @@ async function verifyUserUid(
   return false;
 }
 
-// إشعار داخلي (ثانوي — لا يكسر العملية الأساسية عند فشله)
+// 🕐 تنسيق موعد بتوقيت دمشق — «2026/07/30 الساعة 11:00»
+// السيرفر يخزّن UTC؛ العرض دائماً بتوقيت دمشق (دستور: التوقيت Asia/Damascus).
+function fmtDamascus(iso: string | null | undefined): string {
+  if (!iso) return "";
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return "";
+    const p = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Damascus",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).formatToParts(d);
+    const g = (t: string) => p.find((x) => x.type === t)?.value ?? "";
+    return `${g("year")}/${g("month")}/${g("day")} الساعة ${g("hour")}:${g("minute")}`;
+  } catch {
+    return "";
+  }
+}
+
+// إشعار داخلي + 🔔 بوش خارجي (ثانوي — لا يكسر العملية الأساسية عند فشله)
+// إصلاح 2026-07-28: كان يكتب صف notifications فقط بلا أي استدعاء للبوش،
+// فلا يصل إشعار خارجي للجهاز إطلاقاً (بلاغ المالك). الآن يُستدعى
+// send_push_notification لكل مستخدم بعد الإدراج — نفس قناة المواعيد/الدفعات المُثبتة.
 async function notifyUsers(
   supabaseAdmin: ReturnType<typeof createClient>,
   uids: string[],
@@ -122,6 +148,19 @@ async function notifyUsers(
     await supabaseAdmin.from("notifications").insert(rows);
   } catch {
     // تجاهل — الإشعار إجراء ثانوي
+  }
+  // 🔔 البوش الخارجي: مستقل عن نجاح الإدراج، وفشله لا يكسر العملية
+  for (const uid of unique) {
+    try {
+      await supabaseAdmin.rpc("send_push_notification", {
+        p_uid: uid,
+        p_title: ttl,
+        p_body: bdy,
+        p_data: { act, ref_id: refId },
+      });
+    } catch {
+      // تجاهل — البوش إجراء ثانوي
+    }
   }
 }
 
@@ -392,21 +431,71 @@ serve(async (req) => {
         })
         .eq("id", taskId)
         .eq("sts", 0)
-        .select("id, ttl")
+        .select("id, ttl, notes, requested_by")
         .maybeSingle();
       if (taskError) return json({ success: false, error: taskError.message }, 400);
       if (!task) return json({ success: false, error: "TASK_NOT_PENDING" }, 400);
 
-      // إشعار المصور بالمهمة المسندة
+      // ── إشعارات الإسناد الغنية للطرفين (2026-07-28 بطلب المالك) ──
+      // الهدف: كل طرف يعرف الموعد بالساعة + الموقع + اسم ورقم الطرف الآخر
+      // ليتمكنا من التواصل والتنسيق قبل الموعد.
+      const whenTxt = fmtDamascus(scheduledAt);
+      const reqUid = task.requested_by?.toString() ?? "";
+
+      // بيانات المصور (للطالب) وبيانات الطالب (للمصور)
+      const { data: parties } = await supabaseAdmin
+        .from("users")
+        .select("id, nm, ph")
+        .in("id", [photographerId, reqUid].filter(Boolean));
+      const photog = parties?.find((u) => u.id?.toString() === photographerId);
+      const requesterRow = parties?.find((u) => u.id?.toString() === reqUid);
+
+      // الموقع والهاتف مخزّنان داخل notes بصيغة «الاسم: … | الموقع: … | الهاتف: …»
+      const notesStr = (task.notes ?? "").toString();
+      const pick = (label: string): string => {
+        const seg = notesStr.split("|").find((s) => s.includes(`${label}:`));
+        return seg ? seg.split(`${label}:`)[1]?.trim() ?? "" : "";
+      };
+      const locTxt = pick("الموقع");
+      const reqPhone = pick("الهاتف") || (requesterRow?.ph?.toString() ?? "");
+      const reqName = (requesterRow?.nm?.toString() || pick("الاسم")) || "العميل";
+
+      // ① للمصوّر: الموعد + الموقع + اسم وهاتف طالب التصوير
+      const photogLines = [
+        `📸 مهمة تصوير: ${task.ttl ?? ""}`,
+        whenTxt ? `📅 ${whenTxt}` : "📅 الموعد غير محدد — نسّق مع المكتب",
+        locTxt ? `📍 الموقع: ${locTxt}` : "",
+        `📞 طالب التصوير: ${reqName}${reqPhone ? ` — ${reqPhone}` : ""}`,
+        "يرجى التواصل معه قبل الموعد لتأكيد الوصول.",
+      ].filter(Boolean);
       await notifyUsers(
         supabaseAdmin,
         [photographerId],
         2,
-        "مهمة تصوير مسندة لك",
-        `أُسندت لك مهمة تصوير: ${task.ttl ?? ""}${scheduledAt ? " — راجع الموعد المجدول" : ""}`,
+        "📸 مهمة تصوير مسندة لك",
+        photogLines.join("\n"),
         task.id,
         "photography_task_assigned",
       );
+
+      // ② لصاحب الطلب: الموعد + اسم وهاتف المصوّر (كان معدوماً تماماً قبل اليوم)
+      if (reqUid) {
+        const clientLines = [
+          `تم تعيين مصوّر لطلبك: ${task.ttl ?? ""}`,
+          whenTxt ? `📅 موعد التصوير: ${whenTxt}` : "📅 سيتم تحديد الموعد قريباً",
+          `👤 المصوّر: ${photog?.nm ?? "—"}${photog?.ph ? ` — ${photog.ph}` : ""}`,
+          "يرجى التواجد بالموقع قبل الموعد بعشر دقائق، وللتنسيق تواصل مع المصوّر مباشرة.",
+        ].filter(Boolean);
+        await notifyUsers(
+          supabaseAdmin,
+          [reqUid],
+          1,
+          "📸 تم تعيين مصوّر لطلبك",
+          clientLines.join("\n"),
+          task.id,
+          "photography_photographer_assigned",
+        );
+      }
 
       return json({ success: true });
     }

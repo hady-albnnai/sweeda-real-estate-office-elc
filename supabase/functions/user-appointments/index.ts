@@ -86,7 +86,52 @@ serve(async (req) => {
     if (action === "list_user_appointments") {
       const { data, error } = await supabaseAdmin.rpc("get_user_appointments_internal", { p_user_uid: uid });
       if (error) return json({ success: false, error: error.message }, 400);
-      return json({ success: true, appointments: data ?? [] });
+
+      // 📸 دمج مواعيد التصوير المجدولة ضمن «مواعيدي» (طلب المالك 2026-07-28).
+      // مهام التصوير بجدول منفصل (photography_tasks) فكانت غائبة كلياً عن الشاشة.
+      // تُصاغ بشكل صف موعد (نفس مفاتيح appointments) حتى يبتلعها AppointmentModel
+      // بلا أي تغيير ببنية الجدول أو بالنموذج. معرّفها هو معرّف المهمة نفسه.
+      // sts: مهمة 0/1 (بانتظار/قيد التنفيذ) ⇒ 1 «مؤكد»، وغيرها ⇒ 3 «منتهي».
+      let merged = (data ?? []) as Record<string, unknown>[];
+      try {
+        const { data: photos } = await supabaseAdmin
+          .from("photography_tasks")
+          .select("id, ttl, notes, sts, ts_scheduled, ts_crt, photographer_id, requested_by")
+          .eq("requested_by", uid)
+          .not("ts_scheduled", "is", null)
+          .in("sts", [0, 1, 2, 3]);
+        if (photos && photos.length > 0) {
+          const asAppt = photos.map((t) => ({
+            id: t.id,
+            off_id: null,
+            req_id: null,
+            req_uid: t.requested_by,
+            own_id: null,
+            bkr_id: null,
+            dt: t.ts_scheduled,
+            dt_end: null,
+            sts: Number(t.sts) <= 1 ? 1 : 3,
+            cnl_by: null,
+            cnl_rsn: null,
+            fbk_own: 0, fbk_req: 0,
+            fbk_own_dt: null, fbk_req_dt: null,
+            fbk_own_dur: 0, fbk_req_dur: 0,
+            admin_nt: `📸 موعد تصوير — ${t.ttl ?? ""}`,
+            i_force: 0, force_by: null,
+            rmnd_24: 0, rmnd_2: 0, rmnd_qtr: 0, rmnd_end: 0,
+            ts_crt: t.ts_crt,
+            supervisor_uid: t.photographer_id,
+            neog: [],
+            kind: "photography", // وسم للعميل إن أراد تمييزها لاحقاً
+          }));
+          merged = [...merged, ...asAppt].sort((a, b) =>
+            String(a.dt ?? "").localeCompare(String(b.dt ?? ""))
+          );
+        }
+      } catch {
+        // الدمج إثراء ثانوي — فشله لا يمنع عرض المواعيد الأصلية
+      }
+      return json({ success: true, appointments: merged });
     }
 
     if (action === "list_owner_appointments") {
