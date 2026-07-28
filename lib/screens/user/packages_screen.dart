@@ -226,7 +226,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
               style: const TextStyle(color: AppTheme.textWhite, fontSize: 13),
               decoration: InputDecoration(
                 filled: true,
-                fillColor: AppTheme.deepBlack,
+                fillColor: AppTheme.scaffoldBackground,
                 hintText: 'اختر العرض المراد إعلانه ⭐',
                 hintStyle: const TextStyle(color: AppTheme.textGrey, fontSize: 13),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),

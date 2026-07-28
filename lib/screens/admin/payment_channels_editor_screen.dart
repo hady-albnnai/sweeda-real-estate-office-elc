@@ -378,7 +378,7 @@ class _PaymentChannelsEditorScreenState
         decoration: InputDecoration(
           labelText: label,
           filled: true,
-          fillColor: AppTheme.deepBlack,
+          fillColor: AppTheme.scaffoldBackground,
           labelStyle: const TextStyle(color: AppTheme.textGrey, fontSize: 13),
         ),
       ),

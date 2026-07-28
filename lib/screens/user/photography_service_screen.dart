@@ -481,10 +481,12 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                 style: const TextStyle(color: AppTheme.textWhite, fontSize: 14),
                 decoration: InputDecoration(
                   labelText: 'سبب الإلغاء *',
+                  labelStyle: const TextStyle(color: AppTheme.textGrey),
                   hintText: 'مثال: غيرت رأيي، لا أحتاج الخدمة...',
+                  hintStyle: const TextStyle(color: AppTheme.textGrey),
                   errorText: validationError,
                   filled: true,
-                  fillColor: AppTheme.deepBlack,
+                  fillColor: AppTheme.scaffoldBackground,
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.edit_note,
                       color: AppTheme.primaryGold),
