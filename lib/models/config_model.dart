@@ -108,6 +108,10 @@ class ConfigModel {
   Map<String, dynamic> get featuredAdPrices => _getNestedMap(
       'fmsp', {'w1': 500, 'w2': 950, 'w3': 1350, 'w4': 1800}); // العملة الجديدة (حذف صفرين)
 
+  /// 📸 أجر خدمة التصوير العقاري (ل.س) — قابل للتعديل من الإدارة (photoPrice).
+  /// 0 يعني الخدمة مجانية فيُخفى ذكر الأجر من شاشة المستخدم.
+  int get photographyPrice => _getNested('photoPrice', 1000);
+
   /// إعدادات النشر الحقيقي على Meta. التوكنات لا تحفظ هنا؛ تبقى Edge Secrets.
   /// افتراضي true منذ 2026-07-13 — النشر التلقائي بعد الموافقة مباشرة.
   Map<String, dynamic> get socialPublishing =>

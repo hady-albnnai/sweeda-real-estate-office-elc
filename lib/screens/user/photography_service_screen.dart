@@ -4,6 +4,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/network/supabase_service.dart';
 import '../../models/photography_task_model.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/config_provider.dart';
 import '../../widgets/bottom_nav_bar.dart';
 
 /// ════════════════════════════════════════════════════════════════════
@@ -31,6 +32,14 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
 
   bool get _hasActiveRequest =>
       _myRequests.any((t) => t.sts == 0 || t.sts == 1 || t.sts == 2);
+
+  /// 💰 أجر التصوير من إعدادات الإدارة (photoPrice) — 0 يعني مجاني.
+  int get _photoFee =>
+      context.watch<ConfigProvider>().config?.photographyPrice ?? 1000;
+
+  /// الأجر بفواصل الآلاف: 1000 → «1,000»
+  String get _photoFeeTxt => _photoFee.toString().replaceAllMapped(
+      RegExp(r'(\d)(?=(\d{3})+$)'), (m) => '${m[1]},');
 
   Future<void> _loadMyRequests() async {
     final uid = context.read<AuthProvider>().userModel?.uid ?? '';
@@ -185,6 +194,26 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
               _field(notesCtrl, 'ملاحظات إضافية (اختياري)',
                   'مثال: أفضل وقت بعد الظهر...', Icons.note_alt_outlined,
                   maxLines: 2),
+              // 💰 تذكير بالأجر قبل التأكيد — لا مفاجآت عند وصول المصوّر
+              if (_photoFee > 0) ...[
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    const Icon(Icons.payments_outlined,
+                        color: AppTheme.primaryGold, size: 18),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'أجر التصوير $_photoFeeTxt ل.س، يُدفع للمصوّر عند وصوله.',
+                        style: const TextStyle(
+                            color: AppTheme.primaryGold,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               const SizedBox(height: 18),
               Row(
                 children: [
@@ -340,6 +369,49 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                   const SizedBox(height: 8),
                   _explainRow(Icons.trending_up_rounded,
                       'وسائط عالية الجودة تُنشر في عرضك وتزيد فرص البيع أو الإيجار'),
+                  // 💰 أجر الخدمة — يُقرأ من إعدادات الإدارة (photoPrice)؛ 0 = مجاني فيُخفى
+                  if (_photoFee > 0) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryGold.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                            color: AppTheme.primaryGold.withOpacity(0.45)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.payments_outlined,
+                              color: AppTheme.primaryGold, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'الخدمة مأجورة — $_photoFeeTxt ل.س',
+                                  style: const TextStyle(
+                                    color: AppTheme.primaryGold,
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                const Text(
+                                  'تُدفع للمصوّر عند وصوله لموقع العقار.',
+                                  style: TextStyle(
+                                      color: AppTheme.textGrey, fontSize: 11.5),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

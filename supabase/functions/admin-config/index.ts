@@ -110,6 +110,44 @@ serve(async (req) => {
     if (!actor.ok) return actor.response;
     const adminUid = actor.adminUid;
 
+    // ─── Action: update_photo_price — أجر خدمة التصوير العقاري (ل.س) ───
+    // أُضيف 2026-07-29: العميل كان يكتب app_config بـ PATCH مباشر بمفتاح anon
+    // والسيرفر يرفضه 42501 ⇒ زر الحفظ كان معطّلاً فعلياً. المسار الآن عبر الإيدج
+    // بمفتاح الخدمة، بنطاق ضيّق (مفتاح واحد) ومع تحقق دور ≥5 وسجل تدقيق.
+    if (action === "update_photo_price") {
+      const raw = body.photo_price ?? body.photoPrice;
+      const price = Number(raw);
+      if (!Number.isFinite(price) || !Number.isInteger(price) || price < 0 || price > 100000000) {
+        return json({ success: false, error: "INVALID_PHOTO_PRICE" }, 400);
+      }
+
+      const { data: row, error: readErr } = await supabaseAdmin
+        .from("app_config").select("value").eq("key", "main").maybeSingle();
+      if (readErr) return json({ success: false, error: readErr.message }, 400);
+
+      const value = (row?.value && typeof row.value === "object" && !Array.isArray(row.value))
+        ? { ...(row.value as Record<string, unknown>) }
+        : {};
+      const oldPrice = value.photoPrice ?? null;
+      value.photoPrice = price;
+
+      const { error: upErr } = await supabaseAdmin
+        .from("app_config").update({ value }).eq("key", "main");
+      if (upErr) return json({ success: false, error: upErr.message }, 400);
+
+      try {
+        await supabaseAdmin.rpc("log_admin_action", {
+          p_admin_uid: adminUid,
+          p_act: ACT_UPDATE_CONFIG_TEXTS,
+          p_det: `photoPrice: ${oldPrice ?? "—"} → ${price}`,
+          p_ref_id: "main",
+          p_ref_col: "app_config",
+        });
+      } catch { /* سجل التدقيق ثانوي */ }
+
+      return json({ success: true, photo_price: price });
+    }
+
     // ─── Action: update_texts — تحديث مفاتيح نصية ضمن txts.* ───
     if (action === "update_texts") {
       const incoming = body.texts;

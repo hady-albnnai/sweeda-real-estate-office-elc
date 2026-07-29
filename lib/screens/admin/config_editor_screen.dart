@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/config_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../core/network/supabase_service.dart';
 import '../../core/theme/app_theme.dart';
 import 'payment_channels_editor_screen.dart';
@@ -38,6 +39,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
   final _instagramCtrl = TextEditingController();
   final _developerPhoneCtrl = TextEditingController();
   final _developerPhone2Ctrl = TextEditingController();
+  final _photoPriceCtrl = TextEditingController();
   bool _socialAutoPublish = true; // مفعّل افتراضياً منذ 2026-07-13
   // للصفحات الإضافية: نستخدم قائمة بسيطة (key: label, value: url)
   final List<Map<String, TextEditingController>> _extraSocialCtrls = [];
@@ -73,6 +75,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
         _instagramCtrl.text = c.instagramPage;
         _developerPhoneCtrl.text = c.developerPhone;
         _developerPhone2Ctrl.text = c.developerPhone2;
+        _photoPriceCtrl.text = c.photographyPrice.toString();
         _socialAutoPublish = c.socialAutoPublish;
 
         // Extra social pages (socialPages)
@@ -107,6 +110,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
       _instagramCtrl,
       _developerPhoneCtrl,
       _developerPhone2Ctrl,
+      _photoPriceCtrl,
     ]) {
       c.dispose();
     }
@@ -299,6 +303,21 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
                           filled: true,
                           fillColor: AppTheme.surfaceBlack,
                           prefixIcon: Icon(Icons.phone, color: AppTheme.primaryGold),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      // 📸 أجر خدمة التصوير العقاري — يظهر للمستخدم بشاشة الخدمة
+                      TextFormField(
+                        controller: _photoPriceCtrl,
+                        keyboardType: TextInputType.number,
+                        style: const TextStyle(color: AppTheme.textWhite),
+                        decoration: const InputDecoration(
+                          labelText: 'أجر خدمة التصوير العقاري (ل.س)',
+                          hintText: '1000 — اكتب 0 لجعل الخدمة مجانية',
+                          filled: true,
+                          fillColor: AppTheme.surfaceBlack,
+                          prefixIcon: Icon(Icons.payments_outlined,
+                              color: AppTheme.primaryGold),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -582,7 +601,26 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
     socialPublishing['autoPublish'] = _socialAutoPublish;
     current['socialPublishing'] = socialPublishing;
 
-    final ok = await prov.updateConfig(current);
+    // 📸 أجر خدمة التصوير العقاري (ل.س) — 0 يجعل الخدمة مجانية فيُخفى الأجر.
+    // يُحفظ عبر الإيدج بمفتاح الخدمة: الكتابة المباشرة على app_config يرفضها
+    // السيرفر (42501) لأن anon لا يملك UPDATE — لذلك لا تُمرَّر ضمن current.
+    final photoPrice = int.tryParse(_photoPriceCtrl.text.trim()) ?? 1000;
+    bool priceOk = true;
+    if (photoPrice != (prov.config?.photographyPrice ?? 1000)) {
+      try {
+        final res = await SupabaseService().invokeFunction('admin-config', body: {
+          'action': 'update_photo_price',
+          'admin_uid': context.read<AuthProvider>().userModel?.uid ?? '',
+          'photo_price': photoPrice,
+        });
+        priceOk = (res is Map && res['success'] == true);
+      } catch (_) {
+        priceOk = false;
+      }
+      if (priceOk) current['photoPrice'] = photoPrice;
+    }
+
+    final ok = await prov.updateConfig(current) && priceOk;
     if (mounted) {
       setState(() => _saving = false);
       AppTheme.showSnackBar(context,
