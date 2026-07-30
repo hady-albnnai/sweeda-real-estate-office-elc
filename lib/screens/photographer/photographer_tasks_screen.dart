@@ -111,6 +111,96 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
     });
   }
 
+  /// 🔄 اعتذار عن المهمة بسبب إلزامي — ترجع لطابور المكتب ويُشعَرون فوراً.
+  Future<void> _declineTask(PhotographyTaskModel task) async {
+    final ctrl = TextEditingController();
+    String? err;
+
+    final reason = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDlg) => AlertDialog(
+          backgroundColor: AppTheme.surfaceBlack,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16)),
+          title: const Row(
+            children: [
+              Icon(Icons.event_busy, color: AppTheme.errorRed, size: 22),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text('اعتذار عن المهمة',
+                    style: TextStyle(
+                        color: AppTheme.textWhite, fontSize: 16)),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'سترجع المهمة للمكتب لإسنادها لمصوّر آخر، وسيُبلَّغون بسببك.',
+                style: TextStyle(color: AppTheme.textGrey, fontSize: 13),
+              ),
+              const SizedBox(height: 14),
+              TextField(
+                controller: ctrl,
+                maxLines: 3,
+                autofocus: true,
+                style: const TextStyle(
+                    color: AppTheme.textWhite, fontSize: 14),
+                decoration: InputDecoration(
+                  labelText: 'سبب الاعتذار *',
+                  labelStyle: const TextStyle(color: AppTheme.textGrey),
+                  hintText: 'مثال: عندي التزام طارئ بنفس الموعد',
+                  hintStyle: const TextStyle(color: AppTheme.textGrey),
+                  errorText: err,
+                  filled: true,
+                  fillColor: AppTheme.scaffoldBackground,
+                  border: const OutlineInputBorder(),
+                ),
+                onChanged: (_) {
+                  if (err != null) setDlg(() => err = null);
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('تراجع',
+                  style: TextStyle(color: AppTheme.textGrey)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final txt = ctrl.text.trim();
+                if (txt.isEmpty) {
+                  setDlg(() => err = 'سبب الاعتذار مطلوب');
+                  return;
+                }
+                Navigator.pop(ctx, txt);
+              },
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.errorRed),
+              child: const Text('تأكيد الاعتذار',
+                  style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (reason == null || !mounted) return;
+
+    final uid = context.read<AuthProvider>().userModel?.uid ?? '';
+    final ok = await context
+        .read<PhotographyProvider>()
+        .declineTask(uid, task.id, reason);
+    if (!mounted) return;
+    _snack(ok ? 'تم الاعتذار — رجعت المهمة للمكتب' : 'تعذّر الاعتذار');
+    if (ok) _load();
+  }
+
   Future<void> _pickMedia(String taskHash) async {
     final files = await StorageService().pickMultiImages(limit: 20);
     if (files.isNotEmpty) {
@@ -398,13 +488,31 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
           // زر بدء المهمة أو واجهة الرفع
           if (!isExpanded && (task.isPending || task.isInProgress)) ...[
             const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => _startTask(task),
-                icon: const Icon(Icons.play_arrow),
-                label: const Text('بدء المهمة'),
-              ),
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _startTask(task),
+                    icon: const Icon(Icons.play_arrow),
+                    label: const Text('بدء المهمة'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // 🔄 مخرج للمصوّر عند التعذّر — ترجع المهمة للمكتب بدل ما تبقى
+                // مسكّرة عليه بلا علم أحد (أُضيف 2026-07-30)
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _declineTask(task),
+                    icon: const Icon(Icons.event_busy,
+                        color: AppTheme.errorRed, size: 18),
+                    label: const Text('اعتذار',
+                        style: TextStyle(color: AppTheme.errorRed)),
+                    style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppTheme.errorRed)),
+                  ),
+                ),
+              ],
             ),
           ],
 

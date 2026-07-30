@@ -136,6 +136,56 @@ serve(async (req) => {
       return json({ success: true, tasks: data ?? [] });
     }
 
+    // ─── Action: decline — اعتذار المصوّر عن مهمة (2026-07-30) ───
+    // كان المصوّر لا يملك أي مخرج: بس list/start/submit. لو مرض أو تعذّر وصوله
+    // تبقى المهمة مسكّرة عليه والمكتب لا يعلم. الآن يعتذر بسبب، فترجع المهمة
+    // لطابور المكتب (sts=0 بلا مصوّر) ويُشعَر المكتب فوراً لإعادة الإسناد.
+    if (action === "decline") {
+      const taskId = (body.task_id ?? body.taskId)?.toString() ?? "";
+      const reason = (body.reason ?? body.decline_reason ?? "").toString().trim();
+      if (!taskId) return json({ success: false, error: "TASK_ID_REQUIRED" }, 400);
+      if (!reason) return json({ success: false, error: "DECLINE_REASON_REQUIRED" }, 400);
+
+      // الملكية + الحالة يُفرضان بالاستعلام نفسه: مهامه هو فقط، وغير المسلّمة
+      const { data: task, error } = await supabaseAdmin
+        .from("photography_tasks")
+        .update({
+          photographer_id: null,
+          sts: 0,
+          ts_scheduled: null,
+          office_note: `اعتذار المصوّر: ${reason}`,
+          ts_upd: new Date().toISOString(),
+        })
+        .eq("id", taskId)
+        .eq("photographer_id", uid)
+        .in("sts", [0, 1])
+        .select("id, ttl, requested_by")
+        .maybeSingle();
+      if (error) return json({ success: false, error: error.message }, 400);
+      if (!task) return json({ success: false, error: "TASK_NOT_FOUND_OR_NOT_ALLOWED" }, 400);
+
+      const { data: me } = await supabaseAdmin
+        .from("users").select("nm").eq("id", uid).maybeSingle();
+      const { data: staff } = await supabaseAdmin
+        .from("users").select("id").gte("role", 3).eq("sts", 0).eq("i_del", 0);
+      if (staff && staff.length > 0) {
+        await notifyUsers(
+          supabaseAdmin,
+          staff.map((s) => s.id?.toString() ?? ""),
+          1,
+          "🔄 اعتذار مصوّر عن مهمة",
+          [
+            `اعتذر ${me?.nm ?? "المصوّر"} عن مهمة: ${task.ttl ?? ""}`,
+            `السبب: ${reason}`,
+            "المهمة رجعت لقائمة الانتظار — يرجى إسناد مصوّر آخر.",
+          ].join("\n"),
+          taskId,
+          "photography_task_declined",
+        );
+      }
+      return json({ success: true });
+    }
+
     if (action === "start") {
       const taskId = (body.task_id ?? body.taskId)?.toString() ?? "";
       if (!taskId) return json({ success: false, error: "TASK_ID_REQUIRED" }, 400);

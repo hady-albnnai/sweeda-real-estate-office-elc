@@ -476,6 +476,19 @@ serve(async (req) => {
         return json({ success: false, error: "MISSING_REQUIRED_FIELDS" }, 400);
       }
 
+      // 🕐 رفض أي موعد بالماضي (2026-07-30): كان يُقبل بلا اعتراض — أُسندت مهمة
+      // بموعد 2020 ونجحت ⇒ ضغطة غلط بالتقويم تُفسد الموعد والتذكير معاً.
+      if (scheduledAt) {
+        const when = new Date(scheduledAt);
+        if (isNaN(when.getTime())) {
+          return json({ success: false, error: "INVALID_SCHEDULE_DATE" }, 400);
+        }
+        // هامش 5 دقائق يستوعب فرق ساعة الجهاز
+        if (when.getTime() < Date.now() - 5 * 60 * 1000) {
+          return json({ success: false, error: "SCHEDULE_IN_THE_PAST" }, 400);
+        }
+      }
+
       // التحقق أن المُسند إليه مؤهل للتصوير (role >= 2 أو صلاحية photographer_tasks)
       const { data: photographer, error: photographerError } = await supabaseAdmin
         .from("users")
@@ -493,20 +506,46 @@ serve(async (req) => {
         return json({ success: false, error: "USER_NOT_A_PHOTOGRAPHER" }, 400);
       }
 
-      // الإسناد مسموح فقط للمهام بانتظار (sts=0) حتى لا تُكسر مهمة قيد التنفيذ
+      // 🔁 إعادة الإسناد/التأجيل مسموحان للمهام بانتظار (0) أو قيد التنفيذ (1)
+      // — أُضيف 2026-07-30: كان الشرط sts=0 فقط، فإذا اعتذر المصوّر أو طلب
+      // العميل تأجيلاً بعد بدء التنفيذ تصير المهمة مقفولة ولا حل إلا تعديل
+      // مباشر بقاعدة البيانات. المهام المسلّمة/المعتمدة/الملغاة تبقى مقفلة.
+      const { data: prevTask } = await supabaseAdmin
+        .from("photography_tasks")
+        .select("photographer_id, sts, ts_scheduled")
+        .eq("id", taskId)
+        .maybeSingle();
+      const prevPhotographer = prevTask?.photographer_id?.toString() ?? "";
+      const isReassign = prevPhotographer !== "" && prevPhotographer !== photographerId;
+
       const { data: task, error: taskError } = await supabaseAdmin
         .from("photography_tasks")
         .update({
           photographer_id: photographerId,
           ts_scheduled: scheduledAt,
+          // إعادة الإسناد لمصوّر آخر تُرجع المهمة لنقطة البدء عنده
+          sts: isReassign ? 0 : (prevTask?.sts ?? 0),
           ts_upd: new Date().toISOString(),
         })
         .eq("id", taskId)
-        .eq("sts", 0)
+        .in("sts", [0, 1])
         .select("id, ttl, notes, requested_by")
         .maybeSingle();
       if (taskError) return json({ success: false, error: taskError.message }, 400);
-      if (!task) return json({ success: false, error: "TASK_NOT_PENDING" }, 400);
+      if (!task) return json({ success: false, error: "TASK_NOT_ASSIGNABLE" }, 400);
+
+      // إشعار المصوّر السابق أن المهمة سُحبت منه
+      if (isReassign) {
+        await notifyUsers(
+          supabaseAdmin,
+          [prevPhotographer],
+          2,
+          "🔄 أُعيد إسناد مهمة تصوير",
+          `سُحبت منك مهمة «${task.ttl ?? ""}» وأُسندت لمصوّر آخر — لا حاجة لمتابعتها.`,
+          task.id,
+          "photography_task_reassigned",
+        );
+      }
 
       // ── إشعارات الإسناد الغنية للطرفين (2026-07-28 بطلب المالك) ──
       // الهدف: كل طرف يعرف الموعد بالساعة + الموقع + اسم ورقم الطرف الآخر

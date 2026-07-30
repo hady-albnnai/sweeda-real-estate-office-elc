@@ -131,6 +131,35 @@ class PhotographyProvider with ChangeNotifier {
     }
   }
 
+  /// 🔄 اعتذار المصوّر عن مهمة — ترجع للمكتب (sts=0 بلا مصوّر) مع إشعارهم.
+  /// السبب إلزامي سيرفرياً (DECLINE_REASON_REQUIRED).
+  Future<bool> declineTask(
+      String photographerUid, String taskId, String reason) async {
+    try {
+      final token = await AuthService().getStaffSessionToken();
+      final res = await SupabaseService().invokeFunction(
+        'photographer-tasks',
+        body: {
+          'action': 'decline',
+          'user_uid': photographerUid,
+          'staff_session_token': token,
+          'task_id': taskId,
+          'reason': reason,
+        },
+      );
+      final data = res.data;
+      if (data != null && data['success'] == true) {
+        notifyListeners();
+        return true;
+      }
+      _error = data?['error'] ?? 'Unknown error';
+      return false;
+    } catch (e) {
+      _error = e.toString();
+      return false;
+    }
+  }
+
   Future<bool> createTask({
     required OfferModel offer,
     required String photographerId,
