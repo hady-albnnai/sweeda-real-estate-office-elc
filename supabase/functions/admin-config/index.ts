@@ -110,6 +110,74 @@ serve(async (req) => {
     if (!actor.ok) return actor.response;
     const adminUid = actor.adminUid;
 
+    // ─── Action: update_sections — حفظ أقسام محرر الإعدادات ───
+    // أُضيف 2026-07-29: ConfigProvider.updateConfig كان يكتب app_config بـ PATCH
+    // مباشر بمفتاح anon والسيرفر يرفضه 42501 ⇒ زر «حفظ الإعدادات» معطّل بالكامل
+    // (كل الأقسام: النقاط/العمولات/الحصص/النصوص/النشر التلقائي).
+    // الحل: الحفظ عبر مفتاح الخدمة، بقائمة بيضاء للأقسام تمنع الكتابة العشوائية،
+    // ودمج على مستوى القسم (لا استبدال كامل) فلا تُفقد مفاتيح لم يرسلها العميل.
+    if (action === "update_sections") {
+      const incoming = body.sections;
+      if (!incoming || typeof incoming !== "object" || Array.isArray(incoming)) {
+        return json({ success: false, error: "SECTIONS_OBJECT_REQUIRED" }, 400);
+      }
+
+      const ALLOWED_SECTIONS = new Set([
+        "pts", "com", "qta", "txts", "socialPublishing", "photoPrice",
+      ]);
+      const entries = Object.entries(incoming as Record<string, unknown>);
+      const rejected = entries.map(([k]) => k).filter((k) => !ALLOWED_SECTIONS.has(k));
+      if (rejected.length > 0) {
+        return json({ success: false, error: "SECTION_NOT_ALLOWED", keys: rejected }, 403);
+      }
+      if (entries.length === 0) {
+        return json({ success: false, error: "NO_SECTIONS_PROVIDED" }, 400);
+      }
+
+      const { data: row, error: readErr } = await supabaseAdmin
+        .from("app_config").select("value").eq("key", "main").maybeSingle();
+      if (readErr) return json({ success: false, error: readErr.message }, 400);
+
+      const value = (row?.value && typeof row.value === "object" && !Array.isArray(row.value))
+        ? { ...(row.value as Record<string, unknown>) }
+        : {};
+
+      for (const [k, v] of entries) {
+        if (k === "photoPrice") {
+          const p = Number(v);
+          if (!Number.isInteger(p) || p < 0 || p > 100000000) {
+            return json({ success: false, error: "INVALID_PHOTO_PRICE" }, 400);
+          }
+          value[k] = p;
+          continue;
+        }
+        // دمج القسم مع الموجود بدل استبداله (حماية من فقدان مفاتيح)
+        if (v && typeof v === "object" && !Array.isArray(v)) {
+          const cur = (value[k] && typeof value[k] === "object" && !Array.isArray(value[k]))
+            ? (value[k] as Record<string, unknown>) : {};
+          value[k] = { ...cur, ...(v as Record<string, unknown>) };
+        } else {
+          return json({ success: false, error: "SECTION_MUST_BE_OBJECT", key: k }, 400);
+        }
+      }
+
+      const { error: upErr } = await supabaseAdmin
+        .from("app_config").update({ value }).eq("key", "main");
+      if (upErr) return json({ success: false, error: upErr.message }, 400);
+
+      try {
+        await supabaseAdmin.rpc("log_admin_action", {
+          p_admin_uid: adminUid,
+          p_act: ACT_UPDATE_CONFIG_TEXTS,
+          p_det: `config sections: ${entries.map(([k]) => k).join(",")}`,
+          p_ref_id: "main",
+          p_ref_col: "app_config",
+        });
+      } catch { /* سجل التدقيق ثانوي */ }
+
+      return json({ success: true, updated: entries.map(([k]) => k), value });
+    }
+
     // ─── Action: update_photo_price — أجر خدمة التصوير العقاري (ل.س) ───
     // أُضيف 2026-07-29: العميل كان يكتب app_config بـ PATCH مباشر بمفتاح anon
     // والسيرفر يرفضه 42501 ⇒ زر الحفظ كان معطّلاً فعلياً. المسار الآن عبر الإيدج

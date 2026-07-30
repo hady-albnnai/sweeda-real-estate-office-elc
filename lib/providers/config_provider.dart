@@ -63,6 +63,15 @@ class ConfigProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// يطبّق الإعدادات كما أعادها السيرفر بعد حفظ ناجح عبر الإيدج.
+  /// (الحفظ نفسه يتم بمفتاح الخدمة — الكتابة المباشرة يرفضها السيرفر 42501)
+  void applyServerConfig(Map<String, dynamic> serverConfig) {
+    _config = ConfigModel.fromJson(serverConfig);
+    _fromCache = false;
+    LocalCacheService().saveConfig(serverConfig);
+    notifyListeners();
+  }
+
   Future<bool> updateConfig(Map<String, dynamic> newConfig) async {
     try {
       await SupabaseService()

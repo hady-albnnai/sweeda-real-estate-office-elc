@@ -602,25 +602,35 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
     current['socialPublishing'] = socialPublishing;
 
     // 📸 أجر خدمة التصوير العقاري (ل.س) — 0 يجعل الخدمة مجانية فيُخفى الأجر.
-    // يُحفظ عبر الإيدج بمفتاح الخدمة: الكتابة المباشرة على app_config يرفضها
-    // السيرفر (42501) لأن anon لا يملك UPDATE — لذلك لا تُمرَّر ضمن current.
     final photoPrice = int.tryParse(_photoPriceCtrl.text.trim()) ?? 1000;
-    bool priceOk = true;
-    if (photoPrice != (prov.config?.photographyPrice ?? 1000)) {
-      try {
-        final res = await SupabaseService().invokeFunction('admin-config', body: {
-          'action': 'update_photo_price',
-          'admin_uid': context.read<AuthProvider>().userModel?.uid ?? '',
-          'photo_price': photoPrice,
-        });
-        priceOk = (res is Map && res['success'] == true);
-      } catch (_) {
-        priceOk = false;
-      }
-      if (priceOk) current['photoPrice'] = photoPrice;
-    }
+    current['photoPrice'] = photoPrice;
 
-    final ok = await prov.updateConfig(current) && priceOk;
+    // ⚠️ الحفظ يمر عبر الإيدج بمفتاح الخدمة إلزامياً:
+    // الكتابة المباشرة على app_config يرفضها السيرفر (42501) لأن anon لا يملك
+    // UPDATE — فكان زر الحفظ معطّلاً فعلياً رغم رسالة النجاح. (أُصلح 2026-07-29)
+    // نرسل الأقسام المسموحة فقط، والسيرفر يدمجها مع الموجود بلا فقدان مفاتيح.
+    bool ok = false;
+    try {
+      final res = await SupabaseService().invokeFunction('admin-config', body: {
+        'action': 'update_sections',
+        'admin_uid': context.read<AuthProvider>().userModel?.uid ?? '',
+        'sections': {
+          'pts': pts,
+          'com': com,
+          'qta': qta,
+          'txts': txts,
+          'socialPublishing': socialPublishing,
+          'photoPrice': photoPrice,
+        },
+      });
+      ok = (res is Map && res['success'] == true);
+      // تحديث الحالة محلياً من القيمة التي أعادها السيرفر (المصدر الموثوق)
+      if (ok && res['value'] is Map) {
+        prov.applyServerConfig(Map<String, dynamic>.from(res['value'] as Map));
+      }
+    } catch (_) {
+      ok = false;
+    }
     if (mounted) {
       setState(() => _saving = false);
       AppTheme.showSnackBar(context,
