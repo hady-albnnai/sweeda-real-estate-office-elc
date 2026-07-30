@@ -65,14 +65,14 @@ class BrokerProvider with ChangeNotifier {
               : 'pending';
       if (action == 'pending') return false;
 
-      // ✅ Secure via broker-actions Edge Function
+      // ✅ Secure via user-appointments Edge Function (broker_handle action)
       await SupabaseService().invokeFunction(
-        'broker-actions',
+        'user-appointments',
         body: {
-          'action': 'handle_appointment',
-          'broker_uid': brokerUid,
+          'action': 'broker_handle',
+          'user_uid': brokerUid,
           'appointment_id': apptId,
-          'sub_action': action,
+          'handle_action': action,
         },
       );
       notifyListeners();
@@ -84,14 +84,14 @@ class BrokerProvider with ChangeNotifier {
 
   Future<bool> completeAppointment(String brokerUid, String apptId) async {
     try {
-      // ✅ Secure via broker-actions Edge Function
+      // ✅ Secure via user-appointments Edge Function (broker_handle action)
       await SupabaseService().invokeFunction(
-        'broker-actions',
+        'user-appointments',
         body: {
-          'action': 'handle_appointment',
-          'broker_uid': brokerUid,
+          'action': 'broker_handle',
+          'user_uid': brokerUid,
           'appointment_id': apptId,
-          'sub_action': 'complete',
+          'handle_action': 'complete',
         },
       );
       notifyListeners();

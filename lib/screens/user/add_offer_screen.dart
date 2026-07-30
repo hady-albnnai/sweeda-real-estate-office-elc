@@ -34,12 +34,24 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   static const String _customCityOption = '__custom_city__';
 
   /// نص الإقرار والتعهد الكامل — يجب أن يقرأه المستخدم قبل الموافقة
-  static const String _pledgeFullText = 'أقرّ أنا صاحب هذا العرض وأتعهد بما يلي:\n'
-      '١) جميع البيانات المدخلة (النوع، المواصفات، السعر، الموقع، الصور، السند) صحيحة ودقيقة، وأتحمّل كامل المسؤولية القانونية عن أي خطأ أو تضليل فيها.\n'
-      '٢) أنا المالك الشرعي للعقار/المركبة أو مخوَّل رسمياً بعرضه، وهو خالٍ من أي إشارات أو نزاعات تمنع البيع أو الإيجار.\n'
-      '٣) ألتزم بتسديد عمولة المكتب كاملةً عند إتمام الصفقة عبره أو بوساطته — ٣٪ من قيمة البيع، وما يعادل أجرة نصف شهر عند الإيجار — ولو تمّت المعاملة لاحقاً مع طرف تعرّفت عليه عبر التطبيق.\n'
-      '٤) أتعهد بعدم الالتفاف على المكتب بإتمام المعاملة مباشرةً مع الزبائن دون علمه.\n'
-      '٥) يحق للإدارة حذف العرض أو تقييد الحساب عند ثبوت أي مخالفة لما تقدّم.';
+  /// نص الإقرار والتعهد — يتغير حسب الدور (الوسيط معفى من العمولة)
+  String get _pledgeFullText {
+    final isBroker = context.read<AuthProvider>().isBroker;
+    if (isBroker) {
+      return 'أقرّ أنا الوسيط صاحب هذا العرض وأتعهد بما يلي:\n'
+          '١) جميع البيانات المدخلة (النوع، المواصفات، السعر، الموقع، الصور، السند) صحيحة ودقيقة، وأتحمّل كامل المسؤولية القانونية عن أي خطأ أو تضليل فيها.\n'
+          '٢) أنا المالك الشرعي للعقار/المركبة أو مخوَّل رسمياً بعرضه، وهو خالٍ من أي إشارات أو نزاعات تمنع البيع أو الإيجار.\n'
+          '٣) أقرّ بأنني وسيط معتمد وبأن عروضي معفاة من عمولة المكتب.\n'
+          '٤) ألتزم بعدم الالتفاف على المكتب بإتمام المعاملة مباشرةً مع الزبائن دون علمه.\n'
+          '٥) يحق للإدارة حذف العرض أو تقييد الحساب عند ثبوت أي مخالفة لما تقدّم.';
+    }
+    return 'أقرّ أنا صاحب هذا العرض وأتعهد بما يلي:\n'
+        '١) جميع البيانات المدخلة (النوع، المواصفات، السعر، الموقع، الصور، السند) صحيحة ودقيقة، وأتحمّل كامل المسؤولية القانونية عن أي خطأ أو تضليل فيها.\n'
+        '٢) أنا المالك الشرعي للعقار/المركبة أو مخوَّل رسمياً بعرضه، وهو خالٍ من أي إشارات أو نزاعات تمنع البيع أو الإيجار.\n'
+        '٣) ألتزم بتسديد عمولة المكتب كاملةً عند إتمام الصفقة عبره أو بوساطته — ٣٪ من قيمة البيع، وما يعادل أجرة نصف شهر عند الإيجار — ولو تمّت المعاملة لاحقاً مع طرف تعرّفت عليه عبر التطبيق.\n'
+        '٤) أتعهد بعدم الالتفاف على المكتب بإتمام المعاملة مباشرةً مع الزبائن دون علمه.\n'
+        '٥) يحق للإدارة حذف العرض أو تقييد الحساب عند ثبوت أي مخالفة لما تقدّم.';
+  }
 
   int _currentStep = 0;
 
@@ -925,6 +937,8 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         const SizedBox(height: 6),
         GestureDetector(onTap: _pickDocImage, child: Container(height: 120, width: double.infinity, decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(10), border: Border.all(color: _docImage != null ? Colors.green : AppTheme.primaryGold.withOpacity(0.5))), child: _docImage == null ? const Center(child: Icon(Icons.upload_file, size: 40, color: AppTheme.primaryGold)) : ClipRRect(borderRadius: BorderRadius.circular(10), child: kIsWeb ? Image.network(_docImage!.path, fit: BoxFit.cover) : Image.file(File(_docImage!.path), fit: BoxFit.cover, cacheWidth: 800)))),
         const SizedBox(height: 20),
+        // ── تنبيه عمولة المكتب (يُخفى للوسيط — عروضه معفاة) ──
+        if (!context.read<AuthProvider>().isBroker) ...[
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(color: AppTheme.primaryGold.withOpacity(0.1), borderRadius: BorderRadius.circular(12), border: Border.all(color: AppTheme.primaryGold, width: 1.5)),
@@ -935,6 +949,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           ]),
         ),
         const SizedBox(height: 15),
+        ],
         // ── تنويه الخدمات القانونية (منقول من تفاصيل العرض بطلب المدير + إضافة الاستشارات المأجورة) ──
         Container(
           width: double.infinity,

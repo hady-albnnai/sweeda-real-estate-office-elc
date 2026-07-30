@@ -518,6 +518,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
             t: 'تقييماتي المستلمة',
             s: 'شاهد تقييمات العملاء لك',
             o: () => context.push('/user/my-ratings')),
+        // 🤝 الوسيط: لوحة التحكم أو الانضمام
+        if (u.isBroker)
+          _buildMenuItem(
+              i: Icons.handshake_outlined,
+              t: 'لوحة الوسيط',
+              s: 'عروضي، صفقاتي، مواعيدي، إحصائياتي',
+              o: () => context.go('/broker/dashboard'))
+        else if (!u.isInternal)
+          _buildMenuItem(
+              i: Icons.handshake_outlined,
+              t: 'انضم كوسيط',
+              s: u.isVerifiedOfficial
+                  ? '📋 قدّم طلبك — هويتك موثّقة ✅'
+                  : 'قدّم طلب وساطة عقارية — يشترط توثيق الهوية',
+              o: () => context.push('/user/become-broker')),
         if (u.isInternal)
           _buildMenuItem(
               i: u.isLawyer
