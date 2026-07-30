@@ -178,6 +178,98 @@ serve(async (req) => {
     const body = await req.json() as Record<string, unknown>;
     const action = (body.action ?? "").toString();
 
+    // ✅ طلب تصوير مرتبط بعرض موجود (من شاشة إضافة العرض بوضع التصوير)
+    // المستخدم عبّى بيانات العرض الكاملة + حدد الموقع على الخريطة → العرض أُنشئ كـ review
+    // هذا الأكشن ينشئ مهمة تصوير مرتبطة بالعرض (off_id) + يُشعر المكتب.
+    if (action === "request_photography_for_offer") {
+      const userUid = (body.user_uid ?? body.userUid)?.toString() ?? "";
+      const offerId = (body.offer_id ?? body.offerId)?.toString() ?? "";
+      if (!userUid || !offerId) {
+        return json({ success: false, error: "MISSING_REQUIRED_FIELDS" }, 400);
+      }
+
+      // التحقق من هوية المستخدم
+      const authHeader = req.headers.get("Authorization") ?? "";
+      const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+      let verifiedUid = "";
+      if (bearer && bearer !== "undefined" && bearer !== "null") {
+        const { data: userData } = await supabaseAdmin.auth.getUser(bearer);
+        verifiedUid = userData?.user?.id ?? "";
+      }
+      if (!verifiedUid) {
+        const sessionToken = (body.staff_session_token ?? body.staffSessionToken)?.toString() ?? "";
+        if (sessionToken && userUid) {
+          const { data, error } = await supabaseAdmin.rpc("validate_staff_session", {
+            p_user_uid: userUid,
+            p_token: sessionToken,
+            p_min_role: 0,
+          });
+          if (!error && data?.success === true) verifiedUid = userUid;
+        }
+      }
+      if (!verifiedUid || verifiedUid !== userUid) {
+        return json({ success: false, error: "AUTH_REQUIRED" }, 401);
+      }
+
+      // التحقق أن العرض موجود ومملوك للمستخدم
+      const { data: offer, error: offerError } = await supabaseAdmin
+        .from("offers")
+        .select("id, ttl, loc, usr_id")
+        .eq("id", offerId)
+        .eq("usr_id", userUid)
+        .eq("i_del", 0)
+        .maybeSingle();
+      if (offerError) return json({ success: false, error: offerError.message }, 400);
+      if (!offer) return json({ success: false, error: "OFFER_NOT_FOUND_OR_NOT_OWNED" }, 404);
+
+      // منع التكرار: مهمة تصوير نشطة لنفس العرض
+      const { data: existing } = await supabaseAdmin
+        .from("photography_tasks")
+        .select("id")
+        .eq("off_id", offerId)
+        .in("sts", [0, 1, 2])
+        .limit(1);
+      if (existing && existing.length > 0) {
+        return json({ success: false, error: "ACTIVE_PHOTOGRAPHY_REQUEST_EXISTS" }, 400);
+      }
+
+      // إنشاء مهمة تصوير مرتبطة بالعرض
+      const { data: insertData, error: insertError } = await supabaseAdmin
+        .from("photography_tasks")
+        .insert({
+          off_id: offerId,
+          requested_by: userUid,
+          ttl: offer.ttl ?? "طلب تصوير عقار",
+          notes: "",
+          loc: offer.loc ?? {},
+          sts: 0,
+        })
+        .select("id")
+        .single();
+      if (insertError) return json({ success: false, error: insertError.message }, 400);
+
+      // إشعار المكتب بطلب تصوير جديد مرتبط بعرض
+      const { data: staff } = await supabaseAdmin
+        .from("users")
+        .select("id")
+        .gte("role", 3)
+        .eq("sts", 0)
+        .eq("i_del", 0);
+      if (staff && staff.length > 0) {
+        await notifyUsers(
+          supabaseAdmin,
+          staff.map((s) => s.id?.toString() ?? ""),
+          1,
+          "📸 طلب تصوير جديد لعرض",
+          `طلب تصوير للعرض: ${offer.ttl ?? ""} — يرجى مراجعة العرض وإسناد مصوّر.`,
+          insertData.id,
+          "photography_request_new",
+        );
+      }
+
+      return json({ success: true, task_id: insertData.id });
+    }
+
     // ✅ طلب تصوير عقار من مستخدم عادي (لا يحتاج صلاحية إدارة)
     // الخدمة: طلب تصوير عقار قبل أو بعد النشر — مو مرتبطة بعرض موجود
     if (action === "request_photography") {

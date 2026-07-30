@@ -14,9 +14,18 @@ import '../../services/storage_service.dart';
 import '../../core/validation/input_validators.dart';
 import '../../widgets/location_picker.dart';
 import 'package:latlong2/latlong.dart';
+import '../../core/network/supabase_service.dart';
 
 class AddOfferScreen extends StatefulWidget {
-  const AddOfferScreen({super.key});
+  /// 📸 وضع طلب التصوير: يفتح شاشة إضافة العرض الكاملة مع تعديلات:
+  /// - 3 خطوات فقط (أساسيات + تفاصيل/خريطة إلزامية + صور + إرسال)
+  /// - إخفاء السند/العمولة/الإقرار/السوشيال/الفيديو/مواعيد المعاينة
+  /// - الخريطة إلزامية (ليست اختيارية)
+  /// - الزر: «إرسال طلب التصوير» بدل «نشر العرض»
+  /// - بعد الحفظ: يُنشأ عرض مراجعة + مهمة تصوير مرتبطة
+  final bool isPhotographyRequest;
+
+  const AddOfferScreen({super.key, this.isPhotographyRequest = false});
   @override
   State<AddOfferScreen> createState() => _AddOfferScreenState();
 }
@@ -226,8 +235,19 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     final user = auth.userModel;
     if (user == null) { _snack('يجب تسجيل الدخول'); return; }
 
-    if (_selectedType == null || _selectedTrans == null || _selectedMainCat == null || _selectedDocType == null) {
-      _snack('يرجى إكمال البيانات الأساسية واختيار نوع السند'); return;
+    if (_selectedType == null || _selectedTrans == null || _selectedMainCat == null ||
+        (!widget.isPhotographyRequest && _selectedDocType == null)) {
+      _snack(widget.isPhotographyRequest
+          ? 'يرجى إكمال البيانات الأساسية'
+          : 'يرجى إكمال البيانات الأساسية واختيار نوع السند');
+      return;
+    }
+
+    // 📸 وضع التصوير: الخريطة إلزامية — بدون موقع دقيق لا يستطيع المصوّر الوصول
+    if (widget.isPhotographyRequest && _pickedLocation == null) {
+      _snack('يرجى تحديد الموقع الدقيق على الخريطة — ضروري لوصول المصوّر');
+      _goToStep(1); // العودة لخطوة التفاصيل
+      return;
     }
 
     // إزالة شرط إلزامية الصورة (أصبحت اختيارية كما طلبت)
@@ -245,8 +265,9 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
 
     // التوفر إلزامي — عرض بلا مواعيد معاينة = زر حجز يعمل ورسالة «لا توجد مواعيد متاحة حالياً»
     // (نفس البلاغ اللي صار على العروض المضافة قبل هالإصلاح — avl كانت تُحفظ {} بصمت)
-    final avlMap = _buildAvl();
-    if (avlMap.isEmpty) {
+    // 📸 وضع التصوير: المواعيد تُحدد لاحقاً عند إسناد المصوّر — لا نطلبها هنا
+    final avlMap = widget.isPhotographyRequest ? {'any': ['00:00-23:59']} : _buildAvl();
+    if (!widget.isPhotographyRequest && avlMap.isEmpty) {
       if (_selectedType != 1) _goToStep(3); // خطوة التوفر موجودة فقط بمسار العقارات
       _snack('حدد مواعيد المعاينة: فعّل «أنا جاهز للمعاينة في أي وقت» أو اختر يوماً واحداً على الأقل مع فترة مكتملة (من — إلى)');
       return;
@@ -297,9 +318,9 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         if (_selectedType == 1) ...{'plate': InputValidators.normalizeDigits(_carPlateCtrl.text), 'brand': _carBrandCtrl.text, 'model': _carModelCtrl.text, 'year': InputValidators.normalizeDigits(_carYearCtrl.text), 'color': _carColorCtrl.text, 'fuel': _carFuel, 'transmission': _carTransmission, 'plate_type': _selectedPlateType},
       },
       imgs: imageUrls, vdo: '', exactLoc: _pickedLocation != null ? '${_pickedLocation!.latitude},${_pickedLocation!.longitude}' : '',
-      docTp: _selectedDocType ?? 0, docImg: docUrl, avl: avlMap, sts: OfferStatus.review, tsCrt: DateTime.now(),
-      iSoc: _autoPublishSocial ? 1 : 0,
-      socTxt: socialText,
+      docTp: widget.isPhotographyRequest ? 0 : (_selectedDocType ?? 0), docImg: docUrl, avl: avlMap, sts: OfferStatus.review, tsCrt: DateTime.now(),
+      iSoc: widget.isPhotographyRequest ? 0 : (_autoPublishSocial ? 1 : 0),
+      socTxt: widget.isPhotographyRequest ? '' : socialText,
     );
 
     try {
@@ -310,6 +331,23 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         _snack('❌ تعذر إنشاء العرض — تحقق من الاتصال وحاول مجدداً');
         return;
       }
+      // 📸 وضع التصوير: إنشاء مهمة تصوير مرتبطة بالعرض + إشعار المكتب
+      if (widget.isPhotographyRequest) {
+        try {
+          await SupabaseService().invokeFunction('admin-photography', body: {
+            'action': 'request_photography_for_offer',
+            'user_uid': user.uid,
+            'offer_id': created.id,
+          });
+        } catch (_) {
+          // فشل إنشاء مهمة التصوير لا يُبطل العرض — الموظف ينشئها يدوياً
+        }
+        if (!mounted) return;
+        Navigator.pop(context, true); // true = تم إنشاء طلب تصوير
+        _snack('✅ تم إرسال طلب التصوير بنجاح — سيتم التواصل معك قريباً');
+        return;
+      }
+
       if (_wantVideo) {
         // المستخدم طلب إرفاق فيديو ← نفتح واتساب المكتب مع نص فيه رقم العرض الفعلي
         final num0 = created.offerNumber ?? 0;
@@ -332,7 +370,11 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   void _snack(String m) => AppTheme.showSnackBar(context, SnackBar(content: Text(m)));
 
   /// آخر خطوة فعلياً: للسيارة 4 خطوات (بدون معاينة) وللعقار 5
-  int get _lastStep => _selectedType == 1 ? 3 : 4;
+  /// 📸 وضع التصوير: 3 خطوات فقط (أساسيات + تفاصيل/خريطة + صور/إرسال)
+  int get _lastStep {
+    if (widget.isPhotographyRequest) return 2;
+    return _selectedType == 1 ? 3 : 4;
+  }
 
   /// بناء عناصر dropdown رقمية المفاتيح بأمان — يتجاهل المفاتيح غير الرقمية
   /// والمكررة بدل ما يرمي FormatException ويجمّد الشاشة كلها
@@ -422,10 +464,16 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('إضافة عرض جديد'), backgroundColor: Colors.transparent),
+      appBar: AppBar(
+        title: Text(widget.isPhotographyRequest ? 'طلب تصوير عقاري' : 'إضافة عرض جديد'),
+        backgroundColor: Colors.transparent,
+      ),
       body: Stack(children: [
         Builder(builder: (context) {
-          final steps = [_step1(), _step2(), _step3(), if (_selectedType != 1) _stepAvl(), _step4()];
+          // 📸 وضع التصوير: 3 خطوات فقط (بلا مواعيد/سند/عمولة/إقرار/سوشيال)
+          final steps = widget.isPhotographyRequest
+              ? [_step1(), _step2(), _step3Photo()]
+              : [_step1(), _step2(), _step3(), if (_selectedType != 1) _stepAvl(), _step4()];
           // حماية من RangeError: التبديل عقار (5 خطوات) → سيارة (4) وأنت بآخر خطوة
           final current = _currentStep.clamp(0, steps.length - 1);
           // ⚠️ مهم: Stepper بفلاتر فيه assert صارم (widget.steps.length == oldWidget.steps.length)
@@ -589,7 +637,17 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       TextField(controller: _descCtrl, maxLines: 3, decoration: const InputDecoration(labelText: 'وصف إضافي (اختياري)', hintText: 'أي مميزات أو تفاصيل أخرى تود ذكرها للزبائن...', border: OutlineInputBorder())),
       const SizedBox(height: 20),
       if (_selectedType == 0) ...[
-        const Text('الموقع الدقيق على الخريطة (اختياري)', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 14)),
+        // 📸 وضع التصوير: الخريطة إلزامية — الموقع الدقيق ضروري لوصول المصوّر
+        Text(
+          widget.isPhotographyRequest
+              ? 'الموقع الدقيق على الخريطة * (إلزامي لوصول المصوّر)'
+              : 'الموقع الدقيق على الخريطة (اختياري)',
+          style: TextStyle(
+            color: widget.isPhotographyRequest ? Colors.redAccent : AppTheme.primaryGold,
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
+        ),
         const SizedBox(height: 8),
         LocationPicker(initial: _pickedLocation, onPicked: (loc) => setState(() => _pickedLocation = loc), height: 250),
       ],
@@ -633,6 +691,133 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       _navRow(onBack: () => _goToStep(1), onNext: () => _goToStep(3)),
     ]),
     isActive: _currentStep >= 2,
+  );
+
+  /// 📸 الخطوة الثالثة بوضع التصوير: صور أولية (اختيارية) + زر إرسال طلب التصوير
+  /// بلا سند/عمولة/إقرار/سوشيال/فيديو — هذه كلها تُحدد لاحقاً عند نشر العرض.
+  Step _step3Photo() => Step(
+    title: const Text('الصور وإرسال الطلب', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
+    content: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      // ── صور أولية (اختيارية — المصوّر سيلتقط صوراً احترافية) ──
+      Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppTheme.primaryGold.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3)),
+        ),
+        child: const Row(children: [
+          Icon(Icons.photo_camera, color: AppTheme.primaryGold, size: 20),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'يمكنك إضافة صور أولية الآن، أو انتظار المصوّر المحترف الذي سيلتقط صوراً عالية الجودة.',
+              style: TextStyle(color: AppTheme.primaryGold, fontSize: 12, height: 1.5),
+            ),
+          ),
+        ]),
+      ),
+      const SizedBox(height: 12),
+      ElevatedButton.icon(
+        onPressed: _pickImages,
+        icon: const Icon(Icons.add_a_photo),
+        label: Text('إضافة صور أولية (${_pickedImages.length}/${StorageService.maxImages})'),
+      ),
+      const SizedBox(height: 10),
+      if (_pickedImages.isNotEmpty)
+        Wrap(
+          spacing: 8,
+          children: _pickedImages.asMap().entries.map((e) => Stack(children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: _thumb(e.value),
+            ),
+            Positioned(
+              top: -5, left: -5,
+              child: IconButton(
+                icon: const Icon(Icons.cancel, color: Colors.red),
+                onPressed: () => setState(() => _pickedImages.removeAt(e.key)),
+              ),
+            ),
+          ])).toList(),
+        ),
+      const SizedBox(height: 20),
+
+      // ── ملخص الطلب ──
+      Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceBlack,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppTheme.primaryGold.withOpacity(0.5), width: 1.2),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Row(children: [
+            Icon(Icons.summarize, color: AppTheme.primaryGold, size: 20),
+            SizedBox(width: 8),
+            Text('ملخص طلب التصوير', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 14)),
+          ]),
+          const SizedBox(height: 10),
+          _summaryRow('نوع العرض', _selectedType == 0 ? 'عقار' : 'سيارة'),
+          _summaryRow('المعاملة', _selectedTrans == 0 ? 'بيع' : 'إيجار'),
+          if (_ttlCtrl.text.trim().isNotEmpty) _summaryRow('العنوان', _ttlCtrl.text.trim()),
+          if (_priceCtrl.text.trim().isNotEmpty)
+            _summaryRow('السعر', '${_priceCtrl.text} ${_cur == 0 ? 'دولار' : 'ل.س'}'),
+          if (_pickedLocation != null)
+            _summaryRow('الموقع', '📍 ${_pickedLocation!.latitude.toStringAsFixed(5)}, ${_pickedLocation!.longitude.toStringAsFixed(5)}'),
+          _summaryRow('الصور', _pickedImages.isEmpty ? 'بدون (المصوّر سيلتقطها)' : '${_pickedImages.length} صورة أولية'),
+        ]),
+      ),
+
+      // ── تذكير بالأجر ──
+      if ((context.read<ConfigProvider>().config?.photographyPrice ?? 1000) > 0) ...[
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: Colors.amber.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.amber.withOpacity(0.4)),
+          ),
+          child: Row(children: [
+            const Icon(Icons.payments_outlined, color: Colors.amber, size: 18),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'أجر التصوير ${(context.read<ConfigProvider>().config?.photographyPrice ?? 1000).toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+$)'), (m) => '${m[1]},')} ل.س — يُدفع للمصوّر عند وصوله.',
+                style: const TextStyle(color: Colors.amber, fontSize: 12, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ]),
+        ),
+      ],
+
+      const SizedBox(height: 16),
+      _navRow(onBack: () => _goToStep(1)),
+      const SizedBox(height: 8),
+      SizedBox(
+        width: double.infinity,
+        height: 55,
+        child: ElevatedButton.icon(
+          onPressed: _submitting ? null : _submit,
+          icon: const Icon(Icons.photo_camera, size: 20),
+          label: const Text('إرسال طلب التصوير', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryGold, foregroundColor: AppTheme.deepBlack),
+        ),
+      ),
+    ]),
+    isActive: _currentStep >= 2,
+  );
+
+  Widget _summaryRow(String label, String value) => Padding(
+    padding: const EdgeInsets.only(bottom: 6),
+    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      SizedBox(
+        width: 80,
+        child: Text(label, style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+      ),
+      Expanded(child: Text(value, style: const TextStyle(color: AppTheme.textWhite, fontSize: 12, fontWeight: FontWeight.w500))),
+    ]),
   );
 
   Step _stepAvl() => Step(

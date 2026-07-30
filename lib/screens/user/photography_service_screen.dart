@@ -6,6 +6,7 @@ import '../../models/photography_task_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/config_provider.dart';
 import '../../widgets/bottom_nav_bar.dart';
+import 'add_offer_screen.dart';
 
 /// ════════════════════════════════════════════════════════════════════
 /// شاشة خدمة التصوير العقاري — للمستخدمين العاديين والوسطاء (ليس للإدارة).
@@ -430,7 +431,15 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
               width: double.infinity,
               height: 50,
               child: ElevatedButton.icon(
-                onPressed: _showRequestForm,
+                onPressed: () async {
+                  // 📸 فتح شاشة إضافة العرض بوضع التصوير (خريطة إلزامية + بيانات كاملة)
+                  final result = await Navigator.of(context).push<bool>(
+                    MaterialPageRoute(
+                      builder: (_) => const AddOfferScreen(isPhotographyRequest: true),
+                    ),
+                  );
+                  if (result == true) _loadMyRequests();
+                },
                 icon: const Icon(Icons.add_a_photo_outlined,
                     color: AppTheme.deepBlack),
                 label: Text(
