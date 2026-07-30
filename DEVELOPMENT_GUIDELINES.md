@@ -193,3 +193,80 @@ GRANT EXECUTE ON FUNCTION public.f(sig) TO service_role;            -- ④
   3. إعادة تشغيل الجهاز
   4. تعديل ملفات `android/settings.gradle.kts` و `android/app/build.gradle.kts` في الريبو لتوافق بيئة المالك
 - إذا تعذّر الحل، الحل الوحيد المسموح هو `flutter downgrade` — ويُترك للمالك ينفذه بملء إرادته مع شرح المخاطر.
+
+---
+
+## ⚡ §16 بيئة الوكيل: منع التعليق (إلزامي — أُضيف 2026-07-30 بعد شكوى المالك المتكررة)
+
+**المشكلة الموثقة:** المالك اضطر لإيقاف الوكيل 3–5 مرات بالجلسة الواحدة لأنه «يعلّق» — أي يختفي دقائق طويلة بلا رد.
+
+### السببان الحقيقيان (مُشخَّصان)
+1. **تنزيل Flutter SDK كامل (1.5 غيغا)** — حصل مرتين بجلسة واحدة، كل مرة دقائق طويلة بصمت.
+2. **البيئة تُجرَّد بين الرسائل**: `.git/config` و`/tmp` وكاش Flutter تُمسح، فيعيد الوكيل بناءها كل مرة بصمت.
+
+### القواعد الملزِمة
+- 🚫 **ممنوع تنزيل Flutter SDK إطلاقاً.** للتحقق التركيبي استخدم **Dart SDK وحده** (~200MB):
+  ```bash
+  curl -sL -o /tmp/d.zip https://storage.googleapis.com/dart-archive/channels/stable/release/3.9.4/sdk/dartsdk-linux-x64-release.zip
+  unzip -q /tmp/d.zip -d /home/user/bin && /home/user/bin/dart-sdk/bin/dart format --output=none <file>
+  ```
+  `dart format` يكشف أخطاء التركيب فوراً. ملاحظة: «Changed» تعني تنسيقاً لا خطأً؛ الخطأ الحقيقي نصّه `Could not format`.
+- **أمر واحد ≤ دقيقتين.** أي عملية أطول: أخبر المالك **قبلها** بسطر واحد.
+- **تحديث نصّي بعد كل خطوة** — لا صمت طويل مهما كان السبب.
+- **البدائل السريعة:** `esbuild` لفحص TS · `supabase functions deploy` هو الفيصل النهائي (Deno يرفض ما يقبله esbuild) · GitHub CI (`.github/workflows/flutter-ci.yml`) يشغّل `flutter analyze` تلقائياً عند كل push.
+
+### أدوات ثابتة تُعاد لأول كل جلسة (دقيقة واحدة)
+```bash
+mkdir -p /home/user/bin /home/user/.secrets && chmod 700 /home/user/.secrets
+# التوكنات (يعطيها المالك) — خارج الريبو حصراً
+printf '<SUPABASE_PAT>' > /home/user/.secrets/sb_pat
+printf '<GITHUB_PAT>'   > /home/user/.secrets/gh_pat
+chmod 600 /home/user/.secrets/*
+# أداة SQL الحي
+cat > /home/user/bin/q <<'Q'
+#!/bin/bash
+TOK=$(cat /home/user/.secrets/sb_pat)
+python3 - "$1" <<'PY' 2>/dev/null | curl -s --max-time 60 -X POST -H "Authorization: Bearer $TOK" -H "Content-Type: application/json" --data-binary @- "https://api.supabase.com/v1/projects/vsgkgnjtebjxyqwpuopz/database/query"
+import json,sys; print(json.dumps({"query":sys.argv[1]}))
+PY
+Q
+chmod +x /home/user/bin/*
+```
+**تنبيه:** `chmod +x` يضيع مع التجريد — أعِد تنفيذه عند أي `Permission denied`.
+
+---
+
+## 🔑 §17 التحقق الحي عبر Management API (أُضيف 2026-07-30 — نقلة نوعية بالسرعة)
+
+المالك يعطي **Supabase PAT** (`sbp_…`) فيصبح الوكيل قادراً على **تنفيذ SQL مباشرةً** بلا انتظار لصق يدوي:
+
+```bash
+/home/user/bin/q "select ..."            # قراءة
+/home/user/bin/q "update ... returning 1" # كتابة (بحذر ووسم 🧪)
+```
+
+- **يعلو على «استعلام واحد لكل رسالة»** — الوكيل ينفّذ بنفسه ويعرض النتيجة.
+- **لصق المايغريشن:** تُرسَل عبر نفس الـAPI بقطع (الجزء قبل «تحققات» ثم التحققات منفصلة) — أسرع بكثير من انتظار المالك.
+- **نشر الإيدج:** Supabase CLI بـ`SUPABASE_ACCESS_TOKEN=$(cat /home/user/.secrets/sb_pat)` — والمشروع مربوط أصلاً.
+- 🔒 **التوكنات في `/home/user/.secrets` فقط** — لا تُكتب بأي ملف داخل الريبو (عام!)، وتُحذف عند الإطلاق.
+
+---
+
+## 🧯 §18 دروس فنية مُكلفة (لا تكررها)
+
+| الدرس | التفصيل |
+|---|---|
+| **`.select()` المفتوحة تكسر منع الأعمدة** | `REVOKE SELECT` + منح عمودي يبدو منطقياً لحجب عمود حساس، لكنه يُرجع `42501` لأن العميل يستخدم `SELECT *` في 12+ موضع ⇒ التطبيق كله 401. **الحل الصحيح:** جدول منفصل محمي بـRLS + تريغر تحويل (كما فُعل مع `doc_img` ⇒ `offer_documents`). |
+| **`specs` مقروء anon** | أي «وسم إداري» يوضع داخل `offers.specs` يتسرّب للزائر عبر REST. الحماية بشرط الدور في الواجهة **تجميلية**. المصدر الموثوق دائماً جدول محمي + إيدج بحارس. |
+| **Deno أصرم من esbuild** | `a ?? b \|\| c` يقبله esbuild ويرفضه Deno وقت النشر. الفيصل النهائي هو `functions deploy` نفسه. |
+| **`CREATE OR REPLACE` بتوقيع مختلف = overload** | إلزامي `DROP FUNCTION IF EXISTS` للتوقيع القديم أولاً (تكرر مع `submit_photography_task_internal`). |
+| **الكتابة المباشرة على `app_config` مرفوضة** | `updateConfig` كان PATCH بمفتاح anon ⇒ `42501` ⇒ زر «حفظ الإعدادات» معطّل خادمياً رغم رسالة النجاح. كل كتابة إعدادات تمر عبر إيدج بمفتاح الخدمة + قائمة بيضاء. |
+| **الفحص البدائي للأقواس يكذب** | عدّ `()` على ملف Dart فيه نصوص عربية يعطي اختلالاً كاذباً. تحقّق دائماً بالمقارنة مع نسخة `git` الأصلية أو بـ`dart format`. |
+| **`PGRST204` ليس رفضاً أمنياً** | يعني «عمود غير موجود». عند فحص RLS استخدم أعمدة السكيما الحقيقية وإلا حصلت على نجاح أمني كاذب. |
+
+---
+
+## ✍️ §19 قواعد لغة الواجهة (أُضيف 2026-07-30 بطلب المالك)
+
+- 🚫 **ممنوع كلمة «عرضك»** — تلتبس بـ«عِرضك» وهي حساسة اجتماعياً (مجتمع السويداء). البديل الإلزامي: **«العرض الخاص بك»**، و«أضف أول عرض لك» بدل «أضف عرضك الأول».
+- تُفحص أي صياغة جديدة ضد اللبس قبل الاعتماد، وتُطبَّق على **الريبو والدوال الحية معاً** (السيرفر قد يكون مُصلَحاً والريبو قديماً — انحراف وقع فعلاً).
