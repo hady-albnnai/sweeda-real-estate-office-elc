@@ -232,6 +232,8 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
       userId: userId,
       offerId: 'photography_${task.id}',
     );
+    // الدمج المحلي يحافظ على ترتيب العرض فوراً؛ والسيرفر يدمج تراكمياً كذلك
+    // (submit_photography_task_internal) فلا تُفقد صور سابقة عند إعادة التسليم.
     final allMedia = <String>{...task.media, ...urls}.toList();
     final notes = _notesControllers[taskHash]?.text.trim() ?? '';
 

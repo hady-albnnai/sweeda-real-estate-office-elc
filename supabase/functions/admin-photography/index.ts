@@ -487,6 +487,29 @@ serve(async (req) => {
         if (when.getTime() < Date.now() - 5 * 60 * 1000) {
           return json({ success: false, error: "SCHEDULE_IN_THE_PAST" }, 400);
         }
+
+        // 🚧 منع ازدواج المصوّر بنفس النافذة الزمنية (gap_mins من app_config).
+        // مواعيد المعاينة محميّة بـ TIME_CONFLICT؛ التصوير كان بلا أي حماية
+        // ⇒ مهمتان لنفس المصوّر بنفس الساعة = ازدواج ميداني حتمي (2026-07-30).
+        const { error: conflictErr } = await supabaseAdmin.rpc(
+          "assert_photographer_free",
+          {
+            p_photographer_uid: photographerId,
+            p_dt: scheduledAt,
+            p_exclude_task: taskId,
+          },
+        );
+        if (conflictErr) {
+          const msg = conflictErr.message ?? "";
+          if (msg.includes("PHOTOGRAPHER_TIME_CONFLICT")) {
+            return json({
+              success: false,
+              error: "PHOTOGRAPHER_TIME_CONFLICT",
+              message: "المصوّر لديه مهمة أخرى بنفس التوقيت — اختر موعداً آخر أو مصوّراً آخر.",
+            }, 409);
+          }
+          return json({ success: false, error: msg }, 400);
+        }
       }
 
       // التحقق أن المُسند إليه مؤهل للتصوير (role >= 2 أو صلاحية photographer_tasks)
