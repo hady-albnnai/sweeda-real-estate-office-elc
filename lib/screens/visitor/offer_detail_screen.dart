@@ -36,6 +36,9 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
   double? _ownerAvgRating;
   int _ownerRatingCount = 0;
   bool _loading = true;
+  /// 📸 معلومات «مُصوَّر من المكتب» — تُجلب للإدارة فقط من مصدر محمي.
+  /// null = ليس مُصوَّراً من المكتب أو المستخدم ليس إدارياً ⇒ لا يظهر التنويه.
+  Map<String, dynamic>? _officePhotoInfo;
   // حالة القلب تُقرأ حيّاً من favoritesListenable (لا حقل محلي — إصلاح مزامنة 2026-07-27)
   bool _publishing = false;
   int _currentImg = 0;
@@ -108,6 +111,30 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
         _offer = offer;
         _loading = false;
       });
+    }
+    _loadOfficePhotoInfo();
+  }
+
+  /// 📸 يجلب تنويه «مُصوَّر من المكتب» — للإداريين فقط (دور ≥ موظف مكتب).
+  /// المصدر محمي (photography_tasks عبر إيدج بحارس دور) وليس specs المكشوف.
+  Future<void> _loadOfficePhotoInfo() async {
+    final me = context.read<AuthProvider>().userModel;
+    if (me == null || me.role < UserRole.employee) return;
+    try {
+      final res = await SupabaseService().invokeFunction(
+        'admin-photography',
+        body: {
+          'action': 'offer_photo_info',
+          'admin_uid': me.uid,
+          'offer_id': widget.offerId,
+        },
+      );
+      final d = res.data;
+      if (d is Map && d['office_photographed'] == true && mounted) {
+        setState(() => _officePhotoInfo = Map<String, dynamic>.from(d));
+      }
+    } catch (_) {
+      // التنويه إثراء إداري — فشله لا يؤثر على عرض التفاصيل
     }
   }
 
@@ -1088,6 +1115,54 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                       return LocationViewer(lat: lat, lng: lng);
                     }),
                     const SizedBox(height: 20),
+                  ],
+
+                  // 📸 تنويه إداري: العرض صُوِّر بمصوّر المكتب (للإدارة فقط).
+                  // المصدر: photography_tasks.off_id عبر إيدج بحارس دور — لا من
+                  // specs (مقروء anon ⇒ يتسرّب). يُجلب مرة عند فتح الشاشة للإدارة.
+                  if (_officePhotoInfo != null) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.cyan.withOpacity(0.10),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.cyan.withOpacity(0.45)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.photo_camera_front_rounded,
+                              color: Colors.cyan, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'صُوِّر بواسطة مصوّر المكتب',
+                                  style: TextStyle(
+                                      color: Colors.cyan,
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                Text(
+                                  [
+                                    if ((_officePhotoInfo!['photographer_name'] ?? '')
+                                        .toString().isNotEmpty)
+                                      'المصوّر: ${_officePhotoInfo!['photographer_name']}',
+                                    'تنويه داخلي للإدارة فقط',
+                                  ].join(' — '),
+                                  style: const TextStyle(
+                                      color: Colors.cyan, fontSize: 11),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
 
                   // تفاصيل سند الملكية (للكل كمعلومة نصية، وللموظفين كمعاينة)

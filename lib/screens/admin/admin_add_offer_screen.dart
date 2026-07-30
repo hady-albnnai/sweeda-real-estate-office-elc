@@ -271,6 +271,10 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
       descript:  _descCtrl.text.trim().isNotEmpty
                    ? _descCtrl.text.trim()
                    : _locCtrl.text.trim(),
+      // ⚠️ لا يُوضع وسم «مُصوَّر من المكتب» داخل specs: العمود مقروء anon عبر
+      // REST ⇒ أي وسم فيه يتسرّب للزائر (مُثبت حيّاً 2026-07-29 — نفس درس doc_img).
+      // المصدر الموثوق للتنويه هو photography_tasks.off_id المحمي، ويُقرأ عبر
+      // إيدج admin-photography: offer_photo_info بحارس دور.
       specs:     {'details': _specCtrl.text, if (customSub.isNotEmpty) 'custom_sub': customSub},
       imgs:      imageUrls,
       vdo:       '',

@@ -567,6 +567,40 @@ serve(async (req) => {
       return json({ success: data === true });
     }
 
+    // ─── Action: offer_photo_info — هل هذا العرض مُصوَّر من المكتب؟ (للإدارة فقط) ───
+    // أُضيف 2026-07-29: التنويه لا يُخزَّن داخل offers.specs لأن العمود مقروء anon
+    // ⇒ أي وسم فيه يتسرّب للزائر. المصدر الموثوق هو photography_tasks.off_id،
+    // ويُقرأ هنا خلف حارس الدور (validateActor ≥3) بمفتاح الخدمة.
+    if (action === "offer_photo_info") {
+      const offerId = (body.offer_id ?? body.offerId)?.toString() ?? "";
+      if (!offerId) return json({ success: false, error: "OFFER_ID_REQUIRED" }, 400);
+
+      const { data: task, error } = await supabaseAdmin
+        .from("photography_tasks")
+        .select("id, ttl, sts, photographer_id, ts_done, ts_scheduled")
+        .eq("off_id", offerId)
+        .order("ts_crt", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) return json({ success: false, error: error.message }, 400);
+      if (!task) return json({ success: true, office_photographed: false });
+
+      let photographerName = "";
+      if (task.photographer_id) {
+        const { data: ph } = await supabaseAdmin
+          .from("users").select("nm").eq("id", task.photographer_id).maybeSingle();
+        photographerName = ph?.nm?.toString() ?? "";
+      }
+
+      return json({
+        success: true,
+        office_photographed: true,
+        task_id: task.id,
+        photographer_name: photographerName,
+        done_at: task.ts_done ?? task.ts_scheduled ?? null,
+      });
+    }
+
     // ─── Action: link_offer — ربط مهمة تصوير بالعرض المُنشأ منها وإغلاقها ───
     // أُضيف 2026-07-29: طلبات المستخدم تُنشأ بـ off_id=null (العقار غير منشور بعد)،
     // فكانت صور المصوّر تبقى حبيسة photography_tasks بلا أي طريق لتصير عرضاً.
