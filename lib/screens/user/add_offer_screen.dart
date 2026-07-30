@@ -970,12 +970,12 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Theme(
               data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-              child: const ExpansionTile(
-                leading: Icon(Icons.description, color: AppTheme.primaryGold, size: 20),
-                title: Text('الإقرار والتعهد — اضغط للقراءة قبل الموافقة', style: TextStyle(color: AppTheme.primaryGold, fontSize: 13, fontWeight: FontWeight.bold)),
+              child: ExpansionTile(
+                leading: const Icon(Icons.description, color: AppTheme.primaryGold, size: 20),
+                title: const Text('الإقرار والتعهد — اضغط للقراءة قبل الموافقة', style: TextStyle(color: AppTheme.primaryGold, fontSize: 13, fontWeight: FontWeight.bold)),
                 iconColor: AppTheme.primaryGold, collapsedIconColor: AppTheme.primaryGold,
-                childrenPadding: EdgeInsets.fromLTRB(14, 0, 14, 12),
-                children: [Text(_pledgeFullText, style: TextStyle(color: AppTheme.textWhite, fontSize: 12, height: 1.7))],
+                childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+                children: [Text(_pledgeFullText, style: const TextStyle(color: AppTheme.textWhite, fontSize: 12, height: 1.7))],
               ),
             ),
             CheckboxListTile(
