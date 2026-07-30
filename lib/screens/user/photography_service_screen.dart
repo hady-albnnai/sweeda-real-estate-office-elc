@@ -233,6 +233,14 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                             descCtrl.text.trim().isEmpty ||
                             locCtrl.text.trim().isEmpty ||
                             phoneCtrl.text.trim().isEmpty) {
+                          // 🐛 إصلاح 2026-07-30: كان يعود صامتاً بلا أي تنبيه
+                          ScaffoldMessenger.of(ctx).showSnackBar(
+                            const SnackBar(
+                              content: Text('يرجى تعبئة كل الحقول المطلوبة *'),
+                              backgroundColor: Colors.red,
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
                           return;
                         }
                         Navigator.pop(ctx, true);
@@ -748,6 +756,42 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
               ),
             ),
           ],
+          // 🐛 إصلاح 2026-07-30: إظهار سبب الرفض/الإلغاء (office_note)
+          // كان المستخدم يرى «مرفوضة» بلا أي تفسير — الآن يرى سبب المكتب.
+          if ((t.sts == 4 || t.sts == 5) && t.officeNote.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: (t.sts == 4 ? Colors.red : Colors.grey).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                    color: (t.sts == 4 ? Colors.red : Colors.grey)
+                        .withOpacity(0.3)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    t.sts == 4 ? Icons.info_outline : Icons.cancel_outlined,
+                    color: t.sts == 4 ? Colors.red : Colors.grey,
+                    size: 14,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      t.officeNote,
+                      style: TextStyle(
+                        color: t.sts == 4 ? Colors.red : Colors.grey,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           // زر الإلغاء — فقط للطلبات المعلّقة (لم يبدأ المصور بعد)
           if (t.sts == 0) ...[
             const SizedBox(height: 10),
@@ -760,6 +804,26 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                 label: const Text('إلغاء الطلب',
                     style: TextStyle(color: Colors.red, fontSize: 12)),
               ),
+            ),
+          ],
+          // 💡 تحسين 2026-07-30: توضيح سبب عدم إمكانية الإلغاء
+          // عندما يبدأ المصوّر (sts=1) أو تُرسل الصور (sts=2) يختفي زر الإلغاء
+          // بلا تفسير. الآن رسالة قصيرة تُعلم المستخدم أن الإلغاء لم يعد متاحاً.
+          if (t.sts == 1 || t.sts == 2) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(Icons.info_outline,
+                    color: Colors.amber, size: 13),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    'لا يمكن إلغاء الطلب بعد بدء التصوير — يرجى التواصل مع المكتب مباشرة إذا لزم الأمر',
+                    style: const TextStyle(
+                        color: Colors.amber, fontSize: 10.5),
+                  ),
+                ),
+              ],
             ),
           ],
         ],

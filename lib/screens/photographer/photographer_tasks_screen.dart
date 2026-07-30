@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -328,7 +330,11 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
       }
     }
 
-    return Column(children: [
+    // 💡 تحسين 2026-07-30: Pull-to-refresh كان مفقوداً من هذا التبويب
+    return RefreshIndicator(
+      color: AppTheme.primaryGold,
+      onRefresh: _load,
+      child: Column(children: [
       // تقويم بسيط — نعرض الأيام اللي فيها مهام
       Container(
         padding: const EdgeInsets.all(12),
@@ -391,7 +397,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
                 itemBuilder: (_, i) => _taskCard(_selectedDayTasks[i]),
               ),
       ),
-    ]);
+    ]));
   }
 
   // ─── تبويب المنفذة ───
@@ -486,6 +492,16 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
                   style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
             ]),
           ],
+          // 💡 تحسين 2026-07-30: تنبيه المصوّر عند عدم تحديد موعد
+          if (task.tsScheduled == null && (task.isPending || task.isInProgress)) ...[
+            const SizedBox(height: 4),
+            Row(children: [
+              const Icon(Icons.schedule, color: Colors.amber, size: 14),
+              const SizedBox(width: 4),
+              const Text('بلا موعد محدد — نسّق مع المكتب',
+                  style: TextStyle(color: Colors.amber, fontSize: 12)),
+            ]),
+          ],
 
           // زر بدء المهمة أو واجهة الرفع
           if (!isExpanded && (task.isPending || task.isInProgress)) ...[
@@ -522,20 +538,30 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
           if (isExpanded) ...[
             const Divider(color: Colors.white12, height: 20),
 
-            // عرض الصور المختارة
+            // 💡 تحسين 2026-07-30: عرض الصور الحقيقية بدلاً من أيقونة
+            // كان Container بـ Icon(Icons.image) — المستخدم لا يرى ما اختار.
+            // الآن Image.file(XFile.path) يعرض المحتوى الفعلي.
             if ((_tempMedia[taskHash]?.isNotEmpty ?? false))
               Wrap(
                 spacing: 8, runSpacing: 8,
                 children: _tempMedia[taskHash]!.asMap().entries.map((e) {
                   return Stack(clipBehavior: Clip.none, children: [
-                    Container(
-                      width: 70, height: 70,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3)),
-                        color: AppTheme.deepBlack,
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.file(
+                        File(e.value.path),
+                        width: 70, height: 70,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          width: 70, height: 70,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3)),
+                            color: AppTheme.deepBlack,
+                          ),
+                          child: const Center(child: Icon(Icons.image, color: AppTheme.textGrey)),
+                        ),
                       ),
-                      child: const Center(child: Icon(Icons.image, color: AppTheme.textGrey)),
                     ),
                     Positioned(
                       top: -6, right: -6,

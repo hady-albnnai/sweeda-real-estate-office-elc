@@ -364,7 +364,7 @@ serve(async (req) => {
 
       const { data: tasks, error: tasksError } = await supabaseAdmin
         .from("photography_tasks")
-        .select("id, ttl, notes, sts, ts_scheduled, ts_submit, ts_done, ts_crt, media")
+        .select("*")
         .eq("requested_by", userUid)
         .order("ts_crt", { ascending: false })
         .limit(20);
@@ -644,6 +644,34 @@ serve(async (req) => {
         return json({ success: false, error: "MISSING_REQUIRED_FIELDS" }, 400);
       }
 
+      // 🕐 منع ازدواج المصوّر بنفس النافذة الزمنية (2026-07-30)
+      // assign_photographer كان يفحص التعارض لكن create لا — فجوة منطقية
+      // أُغلقت بنفس الدالة assert_photographer_free المستخدمة بالإسناد.
+      if (scheduledAt) {
+        const when = new Date(scheduledAt);
+        if (isNaN(when.getTime())) {
+          return json({ success: false, error: "INVALID_SCHEDULE_DATE" }, 400);
+        }
+        if (when.getTime() < Date.now() - 5 * 60 * 1000) {
+          return json({ success: false, error: "SCHEDULE_IN_THE_PAST" }, 400);
+        }
+        const { error: conflictErr } = await supabaseAdmin.rpc(
+          "assert_photographer_free",
+          { p_photographer_uid: photographerId, p_dt: scheduledAt, p_exclude_task: null },
+        );
+        if (conflictErr) {
+          const msg = conflictErr.message ?? "";
+          if (msg.includes("PHOTOGRAPHER_TIME_CONFLICT")) {
+            return json({
+              success: false,
+              error: "PHOTOGRAPHER_TIME_CONFLICT",
+              message: "المصوّر لديه مهمة أخرى بنفس التوقيت — اختر موعداً آخر أو مصوّراً آخر.",
+            }, 409);
+          }
+          return json({ success: false, error: msg }, 400);
+        }
+      }
+
       const { data, error } = await supabaseAdmin.rpc("create_photography_task_internal", {
         p_admin_uid: adminUid,
         p_offer_id: offerId,
@@ -653,7 +681,37 @@ serve(async (req) => {
       });
 
       if (error) return json({ success: false, error: error.message }, 400);
-      return json({ success: data === true });
+
+      // 🔔 إشعار المصوّر بالمهمة الجديدة (2026-07-30)
+      // كان المصوّر لا يُشعَر عند الإنشاء — يكتشف المهمة فقط عند فتح الشاشة.
+      // assign_photographer يُشعَر لكن create لا — فجوة إشعارات أُغلقت.
+      if (data && Array.isArray(data) && data.length > 0) {
+        const newTask = data[0];
+        const whenTxt = fmtDamascus(scheduledAt);
+        const { data: photog } = await supabaseAdmin
+          .from("users").select("nm, ph").eq("id", photographerId).maybeSingle();
+        const { data: offer } = await supabaseAdmin
+          .from("offers").select("ttl").eq("id", offerId).maybeSingle();
+
+        const lines = [
+          `📸 مهمة تصوير جديدة: ${offer?.ttl ?? newTask.ttl ?? ""}`,
+          whenTxt ? `📅 ${whenTxt}` : "📅 الموعد غير محدد — نسّق مع المكتب",
+          notes ? `📝 ${notes}` : "",
+          "يرجى فتح «مهام التصوير» للتفاصيل والبدء بالتنفيذ.",
+        ].filter(Boolean);
+
+        await notifyUsers(
+          supabaseAdmin,
+          [photographerId],
+          2,
+          "📸 مهمة تصوير جديدة مسندة لك",
+          lines.join("\n"),
+          newTask.id?.toString() ?? "",
+          "photography_task_created",
+        );
+      }
+
+      return json({ success: true });
     }
 
     if (action === "update_status") {
