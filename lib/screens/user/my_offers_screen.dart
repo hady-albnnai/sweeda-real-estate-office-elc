@@ -193,7 +193,7 @@ class _MyOffersScreenState extends State<MyOffersScreen>
             ElevatedButton.icon(
               onPressed: _tryAddOffer,
               icon: const Icon(Icons.add, color: Colors.black),
-              label: const Text('أضف عرضك الأول'),
+              label: const Text('أضف أول عرض لك'),
             ),
           ],
         ),

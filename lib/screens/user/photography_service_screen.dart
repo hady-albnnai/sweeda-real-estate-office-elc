@@ -368,7 +368,7 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                       'التقاط صور وفيديو احترافية للعقار'),
                   const SizedBox(height: 8),
                   _explainRow(Icons.trending_up_rounded,
-                      'وسائط عالية الجودة تُنشر في عرضك وتزيد فرص البيع أو الإيجار'),
+                      'وسائط عالية الجودة تُنشر في العرض الخاص بك وتزيد فرص البيع أو الإيجار'),
                   // 💰 أجر الخدمة — يُقرأ من إعدادات الإدارة (photoPrice)؛ 0 = مجاني فيُخفى
                   if (_photoFee > 0) ...[
                     const SizedBox(height: 12),

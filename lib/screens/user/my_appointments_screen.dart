@@ -554,7 +554,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
           title: const Text('تأكيد إزالة العرض',
               style: TextStyle(color: AppTheme.textWhite)),
           content: const Text(
-            'سيتم إزالة عرضك تلقائياً عند الرفض بهذا السبب. هل أنت متأكد؟',
+            'سيتم إزالة العرض الخاص بك تلقائياً عند الرفض بهذا السبب. هل أنت متأكد؟',
             style: TextStyle(color: AppTheme.textGrey),
           ),
           actions: [

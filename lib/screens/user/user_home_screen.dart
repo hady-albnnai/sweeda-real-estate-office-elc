@@ -295,7 +295,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                                   onPressed: () =>
                                       context.push('/user/add-offer'),
                                   icon: const Icon(Icons.add),
-                                  label: const Text('أضف عرضك الأول'),
+                                  label: const Text('أضف أول عرض لك'),
                                 ),
                               ],
                             ),

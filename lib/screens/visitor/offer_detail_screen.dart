@@ -168,7 +168,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
     if (isOwn && !isFavNow) {
       if (mounted) {
         AppTheme.showSnackBar(context, const SnackBar(
-          content: Text('لا يمكن الإعجاب بعرضك الخاص 👌'),
+          content: Text('لا يمكن الإعجاب بالعرض الخاص بك 👌'),
           duration: Duration(seconds: 1),
         ));
       }
@@ -657,7 +657,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
     } catch (e) {
       if (!mounted) return;
       final msg = e.toString().contains('CANNOT_REPORT_OWN')
-          ? 'لا يمكن التبليغ عن عرضك الخاص 👌'
+          ? 'لا يمكن التبليغ عن العرض الخاص بك 👌'
           : 'فشل إرسال التبليغ، حاول مرة أخرى';
       AppTheme.showSnackBar(context, SnackBar(content: Text(msg)));
     }
@@ -807,7 +807,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                 icon: const Icon(Icons.arrow_back_ios),
                 onPressed: () => Navigator.pop(context)),
             actions: [
-              // لا تبليغ عن عرضك الخاص — والسيرفر يحسم أيضاً (CANNOT_REPORT_OWN)
+              // لا تبليغ عن العرض الخاص بك — والسيرفر يحسم أيضاً (CANNOT_REPORT_OWN)
               if (_offer != null &&
                   context.read<AuthProvider>().userModel?.uid != _offer!.usrId)
                 IconButton(

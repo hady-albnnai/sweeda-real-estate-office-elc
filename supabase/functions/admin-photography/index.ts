@@ -766,7 +766,7 @@ serve(async (req) => {
           supabaseAdmin,
           [requester],
           1,
-          "🎉 عرضك أصبح منشوراً",
+          "🎉 العرض الخاص بك أصبح منشوراً",
           `تم إنشاء عرض من صور التصوير (${task.ttl ?? ""}) ونشره — يمكنك متابعته من «عروضي».`,
           offerId,
           "photography_offer_published",
@@ -801,7 +801,7 @@ serve(async (req) => {
             [requester],
             1,
             "تم اعتماد تصوير عقارك",
-            `اعتُمدت وسائط التصوير ورُبطت بعرضك (${task?.ttl ?? ""})`,
+            `اعتُمدت وسائط التصوير ورُبطت بالعرض الخاص بك (${task?.ttl ?? ""})`,
             taskId,
             "photography_request_result",
           );

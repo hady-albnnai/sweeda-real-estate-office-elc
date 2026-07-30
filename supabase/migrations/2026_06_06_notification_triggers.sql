@@ -96,25 +96,25 @@ BEGIN
 
   -- الحالة 2 = منشور (موافقة الإدارة)
   IF NEW.sts = 2 AND OLD.sts = 1 THEN
-    v_title := '✅ تم نشر عرضك';
+    v_title := '✅ تم نشر العرض الخاص بك';
     v_body := 'تمت الموافقة على "' || v_offer_title || '" وهو متاح الآن للجمهور.';
     v_type := 0; -- offers
 
   -- الحالة 3 = مرفوض
   ELSIF NEW.sts = 3 AND OLD.sts = 1 THEN
-    v_title := '❌ تم رفض عرضك';
+    v_title := '❌ تم رفض العرض الخاص بك';
     v_body := 'عرض "' || v_offer_title || '" مرفوض. السبب: ' || COALESCE(NEW.rsn, 'غير محدد');
     v_type := 0;
 
   -- الحالة 4 = منتهي (cron)
   ELSIF NEW.sts = 4 AND OLD.sts = 2 THEN
-    v_title := '⏰ انتهت صلاحية عرضك';
+    v_title := '⏰ انتهت صلاحية العرض الخاص بك';
     v_body := 'عرض "' || v_offer_title || '" انتهت مدته. يمكنك تجديده بـ 500 نقطة.';
     v_type := 0;
 
   -- الحالة 5 = محجوز
   ELSIF NEW.sts = 5 AND OLD.sts = 2 THEN
-    v_title := '🔒 عرضك محجوز';
+    v_title := '🔒 العرض الخاص بك محجوز';
     v_body := 'تم حجز عرض "' || v_offer_title || '" بانتظار إتمام الصفقة.';
     v_type := 0;
 

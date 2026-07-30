@@ -271,7 +271,7 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
                 _boostCard(
                   icon: Icons.push_pin,
                   title: 'تثبيت في الأعلى',
-                  description: 'يظهر عرضك بأعلى نتائج البحث لمدة 7 أيام',
+                  description: 'يظهر العرض الخاص بك بأعلى نتائج البحث لمدة 7 أيام',
                   cost: (spd['pin'] ?? 2000) as int,
                   active: _offer!.iPin == 1,
                   activeUntil: _offer!.pinEnd,
@@ -281,7 +281,7 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
                 _boostCard(
                   icon: Icons.rocket_launch,
                   title: 'Boost — وصول أكبر',
-                  description: 'ضاعف ظهور عرضك للمستخدمين لمدة 14 يوم',
+                  description: 'ضاعف ظهور العرض الخاص بك للمستخدمين لمدة 14 يوم',
                   cost: (spd['bst'] ?? 4000) as int,
                   active: _offer!.iBst == 1,
                   activeUntil: _offer!.bstEnd,

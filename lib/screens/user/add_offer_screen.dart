@@ -319,7 +319,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         final waNum = (context.read<ConfigProvider>().config?.videoRequestWhatsApp ?? '').trim();
         _snack(launched
             ? 'تم إرسال العرض #$num0 للمراجعة ✅ — أكمل إرفاق الفيديو في واتساب'
-            : 'تم إرسال العرض #$num0 ✅ — واتساب غير متاح حالياً؛ أرسل الفيديو يدوياً ${waNum.isNotEmpty ? 'على $waNum' : 'لمكتب العقارات'} واذكر رقم عرضك');
+            : 'تم إرسال العرض #$num0 ✅ — واتساب غير متاح حالياً؛ أرسل الفيديو يدوياً ${waNum.isNotEmpty ? 'على $waNum' : 'لمكتب العقارات'} واذكر رقم العرض الخاص بك');
       } else {
         Navigator.pop(context);
         _snack('تم إرسال العرض للمراجعة بنجاح ✅');

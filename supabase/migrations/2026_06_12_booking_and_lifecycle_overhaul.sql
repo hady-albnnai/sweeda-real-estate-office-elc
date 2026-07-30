@@ -542,7 +542,7 @@ GRANT EXECUTE ON FUNCTION create_request_internal(UUID, JSONB) TO anon, authenti
 --
 -- book_appointment_internal:
 --   ✅ فحص العرض منشور (sts=2)
---   ✅ منع حجز عرضك
+--   ✅ منع حجز العرض الخاص بك
 --   ✅ وقت بالمستقبل
 --   ✅ فحص طلب إتمام معلق على العرض
 --   ✅ فحص avl (يوم + فترة زمنية)

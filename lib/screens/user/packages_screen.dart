@@ -149,7 +149,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
     }
   }
 
-  // ─── ⭐ بطاقة الإعلان المميز المدفوع — اختر عرضك وتابع للدفع مباشرة ───
+  // ─── ⭐ بطاقة الإعلان المميز المدفوع — اختر العرض الخاص بك وتابع للدفع مباشرة ───
   Widget _featuredAdSection(ConfigModel? config, Set<String> pendingFeaturedIds) {
     final prices = config?.featuredAdPrices ??
         const {'w1': 50000, 'w2': 95000, 'w3': 135000, 'w4': 180000};
@@ -174,12 +174,12 @@ class _PackagesScreenState extends State<PackagesScreen> {
           const Row(children: [
             Icon(Icons.star, color: AppTheme.primaryGold, size: 22),
             SizedBox(width: 8),
-            Text('إعلان مميز لعرضك ✨',
+            Text('إعلان مميز للعرض الخاص بك ✨',
                 style: TextStyle(color: AppTheme.primaryGold, fontSize: 16, fontWeight: FontWeight.bold)),
           ]),
           const SizedBox(height: 6),
           const Text(
-            'عرضك المميز يظهر بقسم خاص بأعلى الرئيسية ونتائج البحث طوال المدة',
+            'العرض المميز الخاص بك يظهر بقسم خاص بأعلى الرئيسية ونتائج البحث طوال المدة',
             style: TextStyle(color: AppTheme.textGrey, fontSize: 12),
           ),
           const SizedBox(height: 12),

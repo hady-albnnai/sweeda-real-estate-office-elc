@@ -65,7 +65,7 @@ class _OfferCardState extends State<OfferCard> {
     if (myUid != null && widget.offer.usrId == myUid) {
       if (mounted) {
         AppTheme.showSnackBar(context, const SnackBar(
-          content: Text('لا يمكن الإعجاب بعرضك الخاص 👌'),
+          content: Text('لا يمكن الإعجاب بالعرض الخاص بك 👌'),
           duration: Duration(seconds: 1),
         ));
       }
