@@ -395,6 +395,78 @@ serve(async (req) => {
       return json({ success: true, tasks: data ?? [] });
     }
 
+    // ─── Action: stats — إحصاءات مهام التصوير (نظرة إدارية بأرقام مجمّعة) ───
+    // أُضيف 2026-07-30: الشاشة فيها فلاتر تصفح فقط (قوائم)، بلا أي رقم مجمّع
+    // يخبر المكتب بالتكدّس أو الإنتاجية أو نسبة التحويل لعروض.
+    if (action === "stats") {
+      const { data: rows, error } = await supabaseAdmin
+        .from("photography_tasks")
+        .select("sts, off_id, photographer_id, ts_crt, ts_done");
+      if (error) return json({ success: false, error: error.message }, 400);
+
+      const tasks = rows ?? [];
+      const byStatus: Record<string, number> = {
+        pending: 0, in_progress: 0, submitted: 0, approved: 0, rejected: 0, cancelled: 0,
+      };
+      const nameByStatus: Record<number, string> = {
+        0: "pending", 1: "in_progress", 2: "submitted", 3: "approved", 4: "rejected", 5: "cancelled",
+      };
+
+      let becameOffers = 0;
+      let doneCount = 0;
+      let totalHours = 0;
+      const perPhotographer: Record<string, number> = {};
+
+      for (const t of tasks) {
+        const key = nameByStatus[Number(t.sts)] ?? "pending";
+        byStatus[key] = (byStatus[key] ?? 0) + 1;
+
+        if (t.off_id) becameOffers++;
+
+        // متوسط زمن الإنجاز: من إنشاء الطلب حتى إغلاقه (المعتمدة فقط)
+        if (Number(t.sts) === 3 && t.ts_crt && t.ts_done) {
+          const h = (new Date(String(t.ts_done)).getTime() -
+                     new Date(String(t.ts_crt)).getTime()) / 3600000;
+          if (h >= 0 && h < 24 * 365) { totalHours += h; doneCount++; }
+        }
+
+        const pid = t.photographer_id?.toString() ?? "";
+        if (pid && Number(t.sts) === 3) {
+          perPhotographer[pid] = (perPhotographer[pid] ?? 0) + 1;
+        }
+      }
+
+      // أسماء المصوّرين الأكثر إنجازاً (أعلى 5)
+      const topIds = Object.entries(perPhotographer)
+        .sort((a, b) => b[1] - a[1]).slice(0, 5).map(([id]) => id);
+      const topPhotographers: Array<Record<string, unknown>> = [];
+      if (topIds.length > 0) {
+        const { data: users } = await supabaseAdmin
+          .from("users").select("id, nm").in("id", topIds);
+        for (const id of topIds) {
+          const u = users?.find((x) => x.id?.toString() === id);
+          topPhotographers.push({
+            uid: id,
+            name: u?.nm?.toString() ?? "—",
+            done: perPhotographer[id],
+          });
+        }
+      }
+
+      const total = tasks.length;
+      return json({
+        success: true,
+        total,
+        by_status: byStatus,
+        became_offers: becameOffers,
+        conversion_pct: total > 0 ? Math.round((becameOffers / total) * 100) : 0,
+        avg_done_hours: doneCount > 0
+          ? Math.round((totalHours / doneCount) * 10) / 10
+          : null,
+        top_photographers: topPhotographers,
+      });
+    }
+
     // إسناد مصور لمهمة تصوير بانتظار (يدعم طلبات المستخدم بلا عرض off_id=null)
     if (action === "assign_photographer") {
       const taskId = (body.task_id ?? body.taskId)?.toString() ?? "";

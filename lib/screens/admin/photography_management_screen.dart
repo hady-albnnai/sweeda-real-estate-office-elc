@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../../core/network/supabase_service.dart';
 import '../../core/services/permission_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/offer_model.dart';
@@ -23,6 +24,8 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
   List<OfferModel> _offers = [];
   List<UserModel> _photographers = [];
   bool _loading = true;
+  /// 📊 أرقام مجمّعة من إيدج admin-photography: stats (null قبل الجلب)
+  Map<String, dynamic>? _stats;
   int? _filter;
 
   @override
@@ -50,6 +53,25 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
           .toList();
       _loading = false;
     });
+    _loadStats();
+  }
+
+  /// 📊 إحصاءات مجمّعة (الفلاتر تعرض قوائم فقط — هذه تعطي نظرة إدارية بأرقام).
+  Future<void> _loadStats() async {
+    final uid = context.read<AuthProvider>().userModel?.uid ?? '';
+    if (uid.isEmpty) return;
+    try {
+      final res = await SupabaseService().invokeFunction(
+        'admin-photography',
+        body: {'action': 'stats', 'admin_uid': uid},
+      );
+      final d = res.data;
+      if (d is Map && d['success'] == true && mounted) {
+        setState(() => _stats = Map<String, dynamic>.from(d));
+      }
+    } catch (_) {
+      // الإحصاءات إثراء — فشلها لا يمنع عرض المهام
+    }
   }
 
   @override
@@ -78,6 +100,10 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
+                  if (_stats != null) ...[
+                    _statsBar(),
+                    const SizedBox(height: 12),
+                  ],
                   _filters(),
                   const SizedBox(height: 12),
                   if (_tasks.isEmpty)
@@ -90,6 +116,118 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
                 ],
               ),
             ),
+    );
+  }
+
+  /// 📊 شريط الأرقام: تكدّس · إنتاجية · تحويل لعروض · سرعة الإنجاز
+  Widget _statsBar() {
+    final s = _stats!;
+    final st = Map<String, dynamic>.from(s['by_status'] ?? {});
+    int n(String k) => int.tryParse('${st[k] ?? 0}') ?? 0;
+    final avgH = s['avg_done_hours'];
+    final top = (s['top_photographers'] as List?) ?? const [];
+
+    String avgTxt() {
+      if (avgH == null) return '—';
+      final h = double.tryParse('$avgH') ?? 0;
+      if (h < 24) return '${h.toStringAsFixed(1)} س';
+      return '${(h / 24).toStringAsFixed(1)} يوم';
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceBlack,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppTheme.primaryGold.withOpacity(0.30)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.insights, color: AppTheme.primaryGold, size: 18),
+              const SizedBox(width: 6),
+              Text('نظرة عامة — ${s['total'] ?? 0} طلب تصوير',
+                  style: const TextStyle(
+                      color: AppTheme.primaryGold,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _statChip('بانتظار', n('pending'), Colors.orange),
+              _statChip('قيد التنفيذ', n('in_progress'), Colors.blue),
+              _statChip('بانتظار المراجعة', n('submitted'), Colors.purple),
+              _statChip('معتمدة', n('approved'), Colors.green),
+              _statChip('مرفوضة', n('rejected'), AppTheme.errorRed),
+              _statChip('ملغاة', n('cancelled'), AppTheme.textGrey),
+            ],
+          ),
+          const Divider(color: Colors.white12, height: 22),
+          Row(
+            children: [
+              Expanded(
+                child: _statMetric(Icons.post_add, 'صارت عروضاً',
+                    '${s['became_offers'] ?? 0}  (${s['conversion_pct'] ?? 0}%)'),
+              ),
+              Expanded(
+                child: _statMetric(
+                    Icons.timer_outlined, 'متوسط الإنجاز', avgTxt()),
+              ),
+            ],
+          ),
+          if (top.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(
+              'الأكثر إنجازاً: ${top.map((e) => '${e['name']} (${e['done']})').join(' · ')}',
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: 11.5),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _statChip(String label, int value, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.40)),
+      ),
+      child: Text('$label: $value',
+          style: TextStyle(
+              color: color, fontSize: 12, fontWeight: FontWeight.bold)),
+    );
+  }
+
+  Widget _statMetric(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Icon(icon, color: AppTheme.primaryGold, size: 17),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label,
+                  style: const TextStyle(
+                      color: AppTheme.textGrey, fontSize: 11)),
+              Text(value,
+                  style: const TextStyle(
+                      color: AppTheme.textWhite,
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.bold)),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
