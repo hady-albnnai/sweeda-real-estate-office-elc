@@ -9,6 +9,7 @@ import '../../models/user_model.dart';
 import '../../providers/admin_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/photography_provider.dart';
+import 'admin_add_offer_screen.dart';
 
 class PhotographyManagementScreen extends StatefulWidget {
   const PhotographyManagementScreen({super.key});
@@ -237,13 +238,34 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
             ],
             if (task.isSubmitted) ...[
               const Divider(color: Colors.white12, height: 24),
+              // 📸 طلبات المستخدمين تصل بلا عرض (off_id فارغ) — الصور كانت تبقى
+              // حبيسة المهمة بلا طريق لتصير عرضاً. هذا الزر يفتح شاشة الإضافة
+              // محمّلة بصور المصوّر وبيانات الطالب، وينشر مباشرةً بعد الإكمال.
+              if (task.offId.isEmpty) ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _createOfferFromTask(task),
+                    icon: const Icon(Icons.post_add, color: AppTheme.deepBlack),
+                    label: const Text('إنشاء عرض من الصور',
+                        style: TextStyle(
+                            color: AppTheme.deepBlack,
+                            fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryGold),
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
               Row(
                 children: [
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () => _approveAndAttach(task),
                       icon: const Icon(Icons.check),
-                      label: const Text('اعتماد وربط بالعرض'),
+                      label: Text(task.offId.isEmpty
+                          ? 'اعتماد فقط'
+                          : 'اعتماد وربط بالعرض'),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -360,6 +382,35 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
       ),
     ),
     );
+  }
+
+  /// 📸 إنشاء عرض من صور مهمة تصوير (طلب مستخدم بلا عرض مسبق).
+  /// المالك = صاحب الطلب (قرار المالك) · الصور جاهزة · النشر مباشر بعد الإكمال.
+  Future<void> _createOfferFromTask(PhotographyTaskModel task) async {
+    if (task.media.isEmpty) {
+      _snack('لا توجد صور بهذه المهمة');
+      return;
+    }
+    // الهاتف والموقع مخزّنان داخل notes بصيغة «الاسم: … | الموقع: … | الهاتف: …»
+    String pick(String label) {
+      for (final seg in task.notes.split('|')) {
+        if (seg.contains('$label:')) return seg.split('$label:').last.trim();
+      }
+      return '';
+    }
+
+    final created = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => AdminAddOfferScreen(
+          photoTaskId: task.id,
+          presetOwnerUid: task.requestedBy,
+          presetImages: task.media,
+          presetPhone: pick('الهاتف'),
+          presetLocation: pick('الموقع'),
+        ),
+      ),
+    );
+    if (created == true) _load();
   }
 
   Future<void> _approveAndAttach(PhotographyTaskModel task) async {

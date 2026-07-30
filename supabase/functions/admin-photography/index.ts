@@ -567,6 +567,47 @@ serve(async (req) => {
       return json({ success: data === true });
     }
 
+    // ─── Action: link_offer — ربط مهمة تصوير بالعرض المُنشأ منها وإغلاقها ───
+    // أُضيف 2026-07-29: طلبات المستخدم تُنشأ بـ off_id=null (العقار غير منشور بعد)،
+    // فكانت صور المصوّر تبقى حبيسة photography_tasks بلا أي طريق لتصير عرضاً.
+    // الآن موظف المكتب ينشئ العرض من الصور، وهذا الأكشن يربط ويُغلق ويُشعر الطالب.
+    if (action === "link_offer") {
+      const taskId = (body.task_id ?? body.taskId)?.toString() ?? "";
+      const offerId = (body.offer_id ?? body.offerId)?.toString() ?? "";
+      if (!taskId || !offerId) {
+        return json({ success: false, error: "TASK_AND_OFFER_REQUIRED" }, 400);
+      }
+
+      const { data: task, error: upErr } = await supabaseAdmin
+        .from("photography_tasks")
+        .update({
+          off_id: offerId,
+          sts: 3,
+          ts_done: new Date().toISOString(),
+          ts_upd: new Date().toISOString(),
+        })
+        .eq("id", taskId)
+        .select("id, ttl, requested_by")
+        .maybeSingle();
+      if (upErr) return json({ success: false, error: upErr.message }, 400);
+      if (!task) return json({ success: false, error: "TASK_NOT_FOUND" }, 404);
+
+      const requester = task.requested_by?.toString() ?? "";
+      if (requester) {
+        await notifyUsers(
+          supabaseAdmin,
+          [requester],
+          1,
+          "🎉 عرضك أصبح منشوراً",
+          `تم إنشاء عرض من صور التصوير (${task.ttl ?? ""}) ونشره — يمكنك متابعته من «عروضي».`,
+          offerId,
+          "photography_offer_published",
+        );
+      }
+
+      return json({ success: true, offer_id: offerId });
+    }
+
     if (action === "attach_media") {
       const taskId = (body.task_id ?? body.taskId)?.toString() ?? "";
       if (!taskId) return json({ success: false, error: "TASK_ID_REQUIRED" }, 400);

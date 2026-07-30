@@ -20,7 +20,29 @@ import '../../widgets/location_picker.dart';
 /// - من يصل إليها: role >= UserRole.minAdmin فقط
 /// - added_by = uid الموظف/المدير — يظهر فقط في لوحة الإدارة
 class AdminAddOfferScreen extends StatefulWidget {
-  const AdminAddOfferScreen({super.key});
+  const AdminAddOfferScreen({
+    super.key,
+    this.photoTaskId,
+    this.presetOwnerUid,
+    this.presetImages,
+    this.presetPhone,
+    this.presetLocation,
+  });
+
+  /// 📸 معرّف مهمة التصوير التي وُلد منها العرض (تُربط وتُغلق بعد النشر)
+  final String? photoTaskId;
+
+  /// مالك العرض مُسبقاً = صاحب طلب التصوير
+  final String? presetOwnerUid;
+
+  /// صور المصوّر المرفوعة (روابط جاهزة — لا يُعاد رفعها)
+  final List<String>? presetImages;
+
+  /// هاتف وموقع الطالب المستخرجان من ملاحظات المهمة
+  final String? presetPhone;
+  final String? presetLocation;
+
+  bool get isFromPhotoTask => (photoTaskId ?? '').isNotEmpty;
 
   @override
   State<AdminAddOfferScreen> createState() => _AdminAddOfferScreenState();
@@ -115,6 +137,32 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
       // تم تجاهل الخطأ عمداً للحفاظ على التدفق الحالي.
     }
     if (mounted) setState(() => _loadingUsers = false);
+    _applyPhotoTaskPreset();
+  }
+
+  /// 📸 تعبئة مسبقة عند القدوم من مهمة تصوير:
+  /// المالك = صاحب الطلب · الصور = صور المصوّر (جاهزة) · الهاتف والموقع من الملاحظات.
+  void _applyPhotoTaskPreset() {
+    if (!widget.isFromPhotoTask || !mounted) return;
+    final ownerUid = widget.presetOwnerUid ?? '';
+    UserModel? owner;
+    for (final u in _users) {
+      if (u.uid == ownerUid) {
+        owner = u;
+        break;
+      }
+    }
+    setState(() {
+      if (owner != null) _selectedOwner = owner;
+      if ((widget.presetPhone ?? '').isNotEmpty && _contactPhCtrl.text.trim().isEmpty) {
+        _contactPhCtrl.text = widget.presetPhone!;
+      } else if (owner != null && _contactPhCtrl.text.trim().isEmpty) {
+        _contactPhCtrl.text = owner.ph;
+      }
+      if ((widget.presetLocation ?? '').isNotEmpty && _locCtrl.text.trim().isEmpty) {
+        _locCtrl.text = widget.presetLocation!;
+      }
+    });
   }
 
   Map<String, List<String>> _buildAvl() {
@@ -165,15 +213,18 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
 
     setState(() { _submitting = true; _progressMsg = 'جارٍ رفع الصور...'; });
 
-    List<String> imageUrls = [];
+    // 📸 صور المصوّر مرفوعة مسبقاً على التخزين ⇒ تُستخدم كما هي بلا رفع ثانٍ،
+    // وتتقدّم على أي صور يضيفها الموظف يدوياً.
+    List<String> imageUrls = [...(widget.presetImages ?? const <String>[])];
     if (_pickedImages.isNotEmpty) {
-      imageUrls = await _storage.uploadOfferImages(
+      final uploaded = await _storage.uploadOfferImages(
         files: _pickedImages,
         userId: _selectedOwner!.uid,
         onProgress: (d, t) {
           if (mounted) setState(() => _progressMsg = 'الصور ($d/$t)...');
         },
       );
+      imageUrls = <String>{...imageUrls, ...uploaded}.toList();
     }
 
     setState(() => _progressMsg = 'جارٍ رفع السند...');
@@ -251,13 +302,54 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
       return;
     }
 
-    if (mounted) setState(() => _submitting = false);
-    if (created != null) {
-      if (mounted) Navigator.pop(context);
-      _snack('✅ تم إنشاء العرض وإرساله للمراجعة');
-    } else {
+    if (created == null) {
+      if (mounted) setState(() => _submitting = false);
       _snack('فشل إنشاء العرض، حاول مجدداً');
+      return;
     }
+
+    // 📸 القادم من مهمة تصوير: نشر مباشر + ربط المهمة وإغلاقها (قرار المالك).
+    // ملاحظة: create_offer_internal تفرض sts=1 دائماً (حارس سيرفري لا يُضعَّف)،
+    // لذا ننشر عبر مسار الاعتماد الرسمي admin-offers: review — نفس ما يفعله المدير.
+    if (widget.isFromPhotoTask) {
+      setState(() => _progressMsg = 'جارٍ نشر العرض...');
+      var published = false;
+      try {
+        final res = await SupabaseService().invokeFunction('admin-offers', body: {
+          'action': 'review',
+          'admin_uid': admin.uid,
+          'offer_id': created.id,
+          'approve': true,
+        });
+        final d = res.data;
+        published = d is Map && (d['success'] == true || d['result'] == true);
+      } catch (_) {
+        published = false;
+      }
+
+      // ربط المهمة بالعرض وإغلاقها (معتمدة) — عبر إيدج التصوير
+      try {
+        await SupabaseService().invokeFunction('admin-photography', body: {
+          'action': 'link_offer',
+          'admin_uid': admin.uid,
+          'task_id': widget.photoTaskId,
+          'offer_id': created.id,
+        });
+      } catch (_) {
+        // الربط إثراء — فشله لا يُبطل العرض المنشور
+      }
+
+      if (mounted) setState(() => _submitting = false);
+      if (mounted) Navigator.pop(context, true);
+      _snack(published
+          ? '✅ تم إنشاء العرض ونشره وربطه بمهمة التصوير'
+          : '⚠️ أُنشئ العرض وربط بالمهمة — لكن النشر لم يكتمل، راجعه من «مراجعة العروض»');
+      return;
+    }
+
+    if (mounted) setState(() => _submitting = false);
+    if (mounted) Navigator.pop(context);
+    _snack('✅ تم إنشاء العرض وإرساله للمراجعة');
   }
 
   void _snack(String m) {
