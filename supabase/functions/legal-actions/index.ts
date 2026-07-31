@@ -362,8 +362,16 @@ serve(async (req) => {
       const revisionNotes = (body.revision_notes ?? body.revisionNotes ?? body.notes ?? "").toString();
       if (!taskId || !itemKey) return json({ success: false, error: "TASK_ID_AND_ITEM_KEY_REQUIRED" }, 400);
 
+      // الإدارة: نستخدم lawyer_uid الحقيقي للمهمة
+      let effectiveLawyerUid = uid;
+      if (canManageLawyerProfiles(role) && !isLawyer(role)) {
+        const { data: taskRow } = await supabaseAdmin
+          .from("expediting_tasks").select("lawyer_uid").eq("id", taskId).maybeSingle();
+        effectiveLawyerUid = taskRow?.lawyer_uid?.toString() ?? uid;
+      }
+
       const { data, error } = await supabaseAdmin.rpc("request_expediting_item_revision_internal", {
-        p_lawyer_uid: uid,
+        p_lawyer_uid: effectiveLawyerUid,
         p_task_id: taskId,
         p_item_key: itemKey,
         p_revision_notes: revisionNotes,
@@ -377,8 +385,16 @@ serve(async (req) => {
       const taskId = (body.task_id ?? body.taskId)?.toString() ?? "";
       if (!taskId) return json({ success: false, error: "TASK_ID_REQUIRED" }, 400);
 
+      // الإدارة: نستخدم lawyer_uid الحقيقي للمهمة (مش uid الأدمن)
+      let effectiveLawyerUid = uid;
+      if (canManageLawyerProfiles(role) && !isLawyer(role)) {
+        const { data: taskRow } = await supabaseAdmin
+          .from("expediting_tasks").select("lawyer_uid").eq("id", taskId).maybeSingle();
+        effectiveLawyerUid = taskRow?.lawyer_uid?.toString() ?? uid;
+      }
+
       const { data, error } = await supabaseAdmin.rpc("approve_expediting_task_internal", {
-        p_lawyer_uid: uid,
+        p_lawyer_uid: effectiveLawyerUid,
         p_task_id: taskId,
       });
       if (error) return json({ success: false, error: error.message }, 400);
