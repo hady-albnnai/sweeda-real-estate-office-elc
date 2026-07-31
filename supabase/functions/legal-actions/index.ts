@@ -250,7 +250,7 @@ serve(async (req) => {
         attachmentUrl = path;
       }
 
-      const { data, error } = await supabaseAdmin.rpc("update_expediting_checklist_item", {
+      const { data: updateResult, error } = await supabaseAdmin.rpc("update_expediting_checklist_item", {
         p_actor_uid: uid,
         p_task_id: taskId,
         p_item_key: itemKey,
@@ -261,7 +261,35 @@ serve(async (req) => {
       });
 
       if (error) return json({ success: false, error: error.message }, 400);
-      return json(data as Record<string, unknown>);
+
+      // 🔔 إشعار المحامي عند تحديث بند (إذا المعقّب هو من حدّث)
+      if (isExpediter(role)) {
+        const { data: taskRow } = await supabaseAdmin
+          .from("expediting_tasks")
+          .select("lawyer_uid, target_property_num")
+          .eq("id", taskId)
+          .maybeSingle();
+        const lawyerToNotify = taskRow?.lawyer_uid?.toString() ?? "";
+        if (lawyerToNotify) {
+          const statusLabels: Record<number, string> = { 0: "مطلوب", 1: "قيد الاستخراج", 2: "تم الاستخراج ✅", 3: "عائق إداري ⚠️" };
+          const sLabel = statusLabels[status] ?? "تحديث";
+          const ref = taskRow?.target_property_num ? ` (${taskRow.target_property_num})` : "";
+          await supabaseAdmin.from("notifications").insert({
+            uid: lawyerToNotify, tp: 2, ttl: "📋 تحديث على مهمة تعقيب",
+            bdy: `المعقّب حدّث بند "${itemKey}" → ${sLabel}${ref}`,
+            ref_id: taskId, act: "expediting_item_updated", i_rd: 0, i_del: 0, ts_crt: new Date().toISOString(),
+          });
+          try {
+            await supabaseAdmin.rpc("send_push_notification", {
+              p_uid: lawyerToNotify, p_title: "📋 تحديث مهمة تعقيب",
+              p_body: `${itemKey} → ${sLabel}`,
+              p_data: { act: "expediting_item_updated", ref_id: taskId },
+            });
+          } catch { /* non-critical */ }
+        }
+      }
+
+      return json(updateResult as Record<string, unknown>);
     }
 
     if (action === "get_lawyer_profile") {
@@ -337,6 +365,27 @@ serve(async (req) => {
         p_checklist: checklist,
       });
       if (error) return json({ success: false, error: error.message }, 400);
+
+      // 🔔 إشعار المعقّب بمهمة تعقيب جديدة
+      const taskResult = data as Record<string, unknown>;
+      const newTaskId = taskResult?.task_id?.toString() ?? "";
+      if (newTaskId) {
+        const itemLabel = itemType === 0 ? "عقار" : "سيارة";
+        const refLabel = propNum ? ` — ${propNum}` : "";
+        await supabaseAdmin.from("notifications").insert({
+          uid: expediterUid, tp: 2, ttl: "🏃 مهمة تعقيب جديدة",
+          bdy: `كلّفك المحامي بمهمة استخراج ثبوتيات ${itemLabel}${refLabel} — ${zone || ""} (${(checklist as unknown[]).length} وثائق)`,
+          ref_id: newTaskId, act: "expediting_task_assigned", i_rd: 0, i_del: 0, ts_crt: new Date().toISOString(),
+        });
+        try {
+          await supabaseAdmin.rpc("send_push_notification", {
+            p_uid: expediterUid, p_title: "🏃 مهمة تعقيب جديدة",
+            p_body: `${itemLabel}${refLabel} — ${(checklist as unknown[]).length} وثائق`,
+            p_data: { act: "expediting_task_assigned", ref_id: newTaskId },
+          });
+        } catch { /* non-critical */ }
+      }
+
       return json(data as Record<string, unknown>);
     }
 
@@ -352,6 +401,31 @@ serve(async (req) => {
         p_notes: notes,
       });
       if (error) return json({ success: false, error: error.message }, 400);
+
+      // 🔔 إشعار المحامي بأن المهمة اكتملت وبانتظار المراجعة
+      const { data: taskRow } = await supabaseAdmin
+        .from("expediting_tasks")
+        .select("lawyer_uid, target_property_num, target_zone")
+        .eq("id", taskId)
+        .maybeSingle();
+      const lawyerToNotify = taskRow?.lawyer_uid?.toString() ?? "";
+      if (lawyerToNotify) {
+        const ref = taskRow?.target_property_num ? ` — ${taskRow.target_property_num}` : "";
+        const zoneTxt = taskRow?.target_zone ? ` (${taskRow.target_zone})` : "";
+        await supabaseAdmin.from("notifications").insert({
+          uid: lawyerToNotify, tp: 2, ttl: "✅ مهمة تعقيب مكتملة — بانتظار المراجعة",
+          bdy: `أنهى المعقّب مهمة الاستخراج${ref}${zoneTxt} — راجع الوثائق واعتمد المهمة أو اطلب إعادة.`,
+          ref_id: taskId, act: "expediting_task_completed", i_rd: 0, i_del: 0, ts_crt: new Date().toISOString(),
+        });
+        try {
+          await supabaseAdmin.rpc("send_push_notification", {
+            p_uid: lawyerToNotify, p_title: "✅ مهمة تعقيب مكتملة",
+            p_body: `بانتظار مراجعتك${ref}`,
+            p_data: { act: "expediting_task_completed", ref_id: taskId },
+          });
+        } catch { /* non-critical */ }
+      }
+
       return json(data as Record<string, unknown>);
     }
 
@@ -377,6 +451,30 @@ serve(async (req) => {
         p_revision_notes: revisionNotes,
       });
       if (error) return json({ success: false, error: error.message }, 400);
+
+      // 🔔 إشعار المعقّب بطلب إعادة وثيقة
+      const { data: taskRow } = await supabaseAdmin
+        .from("expediting_tasks")
+        .select("expediter_uid, target_property_num")
+        .eq("id", taskId)
+        .maybeSingle();
+      const expediterToNotify = taskRow?.expediter_uid?.toString() ?? "";
+      if (expediterToNotify) {
+        const ref = taskRow?.target_property_num ? ` (${taskRow.target_property_num})` : "";
+        await supabaseAdmin.from("notifications").insert({
+          uid: expediterToNotify, tp: 2, ttl: "🔄 طلب إعادة وثيقة",
+          bdy: `المحامي طلب إعادة "${itemKey}"${ref} — السبب: ${revisionNotes || "يرجى المراجعة"}`,
+          ref_id: taskId, act: "expediting_revision_requested", i_rd: 0, i_del: 0, ts_crt: new Date().toISOString(),
+        });
+        try {
+          await supabaseAdmin.rpc("send_push_notification", {
+            p_uid: expediterToNotify, p_title: "🔄 طلب إعادة وثيقة",
+            p_body: `${itemKey} — ${revisionNotes?.slice(0, 60) || "يرجى المراجعة"}`,
+            p_data: { act: "expediting_revision_requested", ref_id: taskId },
+          });
+        } catch { /* non-critical */ }
+      }
+
       return json(data as Record<string, unknown>);
     }
 
@@ -398,6 +496,31 @@ serve(async (req) => {
         p_task_id: taskId,
       });
       if (error) return json({ success: false, error: error.message }, 400);
+
+      // 🔔 إشعار المعقّب باعتماد المهمة
+      const { data: taskRow2 } = await supabaseAdmin
+        .from("expediting_tasks")
+        .select("expediter_uid, target_property_num, target_zone")
+        .eq("id", taskId)
+        .maybeSingle();
+      const expediterToNotify2 = taskRow2?.expediter_uid?.toString() ?? "";
+      if (expediterToNotify2) {
+        const ref = taskRow2?.target_property_num ? ` — ${taskRow2.target_property_num}` : "";
+        const zoneTxt = taskRow2?.target_zone ? ` (${taskRow2.target_zone})` : "";
+        await supabaseAdmin.from("notifications").insert({
+          uid: expediterToNotify2, tp: 2, ttl: "🎉 تم اعتماد مهمة التعقيب",
+          bdy: `اعتمد المحامي مهمة الاستخراج${ref}${zoneTxt} — أحسنت!`,
+          ref_id: taskId, act: "expediting_task_approved", i_rd: 0, i_del: 0, ts_crt: new Date().toISOString(),
+        });
+        try {
+          await supabaseAdmin.rpc("send_push_notification", {
+            p_uid: expediterToNotify2, p_title: "🎉 تم اعتماد مهمتك",
+            p_body: `مهمة الاستخراج${ref} — معتمدة`,
+            p_data: { act: "expediting_task_approved", ref_id: taskId },
+          });
+        } catch { /* non-critical */ }
+      }
+
       return json(data as Record<string, unknown>);
     }
 
