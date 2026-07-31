@@ -513,6 +513,11 @@ serve(async (req) => {
         );
       }
 
+      // 📊 تحديث active_tasks_count للمحامي المُسند
+      if (lawyerUid) {
+        await supabaseAdmin.rpc("update_lawyer_active_tasks", { p_lawyer_uid: lawyerUid });
+      }
+
       return json({ success: true, consultation_id: consultId, lawyer_assigned: !!lawyerUid });
     }
 
@@ -610,6 +615,15 @@ serve(async (req) => {
       const serviceNames = ["استشارة هاتفية", "جلسة مكتبية", "باقة توثيق شامل"];
       const sName = serviceNames[Number(row.service_type)] ?? "استشارة قانونية";
       const userUid = row.user_uid?.toString() ?? "";
+
+      // 📊 تحديث active_tasks_count عند انتقال لحالة نهائية (2,3,4)
+      if ([2, 3, 4].includes(newStatus) && [0, 1].includes(currentStatus)) {
+        const lawyerToUpdate = row.lawyer_uid?.toString() ?? "";
+        if (lawyerToUpdate) {
+          await supabaseAdmin.rpc("update_lawyer_active_tasks", { p_lawyer_uid: lawyerToUpdate });
+        }
+      }
+
       if (userUid) {
         await supabaseAdmin.from("notifications").insert({
           uid: userUid, tp: 1, ttl: `⚖️ ${label} الاستشارة القانونية`,
