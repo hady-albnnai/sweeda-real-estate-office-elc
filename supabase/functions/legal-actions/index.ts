@@ -313,13 +313,17 @@ serve(async (req) => {
       // المحامي = المستخدم الحالي (محامي) أو محامي مُحدد (إدارة) أو أول محامي متاح
       let lawyerUid = isLawyer(role) ? uid : ((body.lawyer_uid ?? body.lawyerUid)?.toString() ?? "");
       if (!lawyerUid && canManageLawyerProfiles(role)) {
-        // الإدارة ما حددت محامي → أسند لأول محامي متاح
+        // الإدارة ما حددت محامي → أسند لأول محامي متاح (role=7 فقط)
         const { data: firstLawyer } = await supabaseAdmin
           .from("lawyer_profiles")
-          .select("uid")
+          .select("uid, users!inner(role)")
           .eq("is_active", true)
+          .eq("users.role", 7)
           .limit(1);
-        lawyerUid = firstLawyer?.[0]?.uid?.toString() ?? uid;
+        lawyerUid = firstLawyer?.[0]?.uid?.toString() ?? "";
+        if (!lawyerUid) {
+          return json({ success: false, error: "NO_ACTIVE_LAWYERS", message: "لا يوجد محامون نشطون" }, 400);
+        }
       }
       if (!lawyerUid) lawyerUid = uid;
 
