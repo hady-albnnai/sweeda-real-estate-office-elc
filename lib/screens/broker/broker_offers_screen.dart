@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../providers/broker_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/offer_model.dart';
+import '../../core/network/supabase_service.dart';
 import '../../core/theme/app_theme.dart';
 
 /// 🏠 عروض الوسيط — العروض الخاصة به + المُسندة إليه
@@ -178,9 +179,95 @@ class _BrokerOffersScreenState extends State<BrokerOffersScreen> {
           ],
         ),
         onTap: () => context.push('/offer/${o.id}'),
+        // 🤝 أزرار تعديل/حذف للوسيط — فقط للعروض القابلة للتعديل
+        trailing: (o.sts == 0 || o.sts == 1 || o.sts == 3)
+            ? PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert,
+                    color: AppTheme.textGrey, size: 20),
+                color: AppTheme.surfaceBlack,
+                onSelected: (val) async {
+                  if (val == 'edit') {
+                    final changed =
+                        await context.push('/user/edit-offer/${o.id}');
+                    if (changed == true && mounted) _load();
+                  } else if (val == 'delete') {
+                    _confirmDelete(o);
+                  }
+                },
+                itemBuilder: (_) => [
+                  const PopupMenuItem(
+                    value: 'edit',
+                    child: Row(children: [
+                      Icon(Icons.edit, color: AppTheme.primaryGold, size: 18),
+                      SizedBox(width: 8),
+                      Text('تعديل',
+                          style: TextStyle(color: AppTheme.textWhite)),
+                    ]),
+                  ),
+                  const PopupMenuItem(
+                    value: 'delete',
+                    child: Row(children: [
+                      Icon(Icons.delete_outline, color: Colors.red, size: 18),
+                      SizedBox(width: 8),
+                      Text('حذف', style: TextStyle(color: Colors.red)),
+                    ]),
+                  ),
+                ],
+              )
+            : null,
       ),
     );
   }
+
+  /// 🗑️ تأكيد حذف عرض — يستدعي user-offers: delete_offer
+  Future<void> _confirmDelete(OfferModel o) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppTheme.surfaceBlack,
+        title: const Text('حذف العرض',
+            style: TextStyle(color: AppTheme.textWhite)),
+        content: Text('هل أنت متأكد من حذف «${o.ttl}»؟\nلا يمكن التراجع.',
+            style: const TextStyle(color: AppTheme.textGrey)),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('إلغاء',
+                  style: TextStyle(color: AppTheme.textGrey))),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child:
+                const Text('حذف', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+
+    final uid = context.read<AuthProvider>().userModel?.uid ?? '';
+    try {
+      final res = await SupabaseService().invokeFunction('user-offers',
+          body: {
+            'action': 'delete_offer',
+            'user_uid': uid,
+            'offer_id': o.id,
+          });
+      if (!mounted) return;
+      final data = res.data;
+      if (data is Map && data['success'] == true) {
+        _snack('تم حذف العرض');
+        _load();
+      } else {
+        _snack('فشل الحذف');
+      }
+    } catch (e) {
+      if (mounted) _snack('فشل الحذف — تحقق من الاتصال');
+    }
+  }
+
+  void _snack(String m) =>
+      AppTheme.showSnackBar(context, SnackBar(content: Text(m)));
 
   Widget _imgPlaceholder() => Container(
         width: 60,

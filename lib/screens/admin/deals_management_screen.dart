@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../../providers/admin_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/deal_model.dart';
+import '../../models/offer_model.dart';
+import '../../core/network/supabase_service.dart';
 import '../../core/theme/app_theme.dart';
 
 /// 🤝 إدارة الصفقات — عرض + إتمام + تسجيل العمولة
@@ -55,6 +57,14 @@ class _DealsManagementScreenState extends State<DealsManagementScreen> {
             onPressed: _load,
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _showCreateDealDialog,
+        backgroundColor: AppTheme.primaryGold,
+        icon: const Icon(Icons.add, color: AppTheme.deepBlack),
+        label: const Text('صفقة جديدة',
+            style: TextStyle(
+                color: AppTheme.deepBlack, fontWeight: FontWeight.bold)),
       ),
       body: Column(
         children: [
@@ -251,6 +261,158 @@ class _DealsManagementScreenState extends State<DealsManagementScreen> {
         _snack('تم إتمام الصفقة');
         _load();
       }
+    }
+  }
+
+  /// 🤝 إنشاء صفقة جديدة — يختار العرض + السعر النهائي + العمولة
+  Future<void> _showCreateDealDialog() async {
+    // جلب العروض المنشورة
+    List<OfferModel> offers = [];
+    try {
+      final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
+      final res = await SupabaseService().invokeFunction('admin-offers',
+          body: {'action': 'list', 'admin_uid': adminUid});
+      if (res.data is Map && res.data['success'] == true) {
+        offers = (res.data['offers'] as List)
+            .map((r) => OfferModel.fromSupabase(
+                Map<String, dynamic>.from(r), r['id'] as String))
+            .where((o) => o.sts == 2 && o.iPub == 1) // منشورة فقط
+            .toList();
+      }
+    } catch (_) {}
+
+    if (!mounted) return;
+    if (offers.isEmpty) {
+      _snack('لا توجد عروض منشورة لإنشاء صفقة عليها');
+      return;
+    }
+
+    OfferModel? selectedOffer;
+    final priceCtrl = TextEditingController();
+    final comPctCtrl = TextEditingController(text: '3');
+    final comValCtrl = TextEditingController();
+    final noteCtrl = TextEditingController();
+
+    void recalcCom() {
+      final price = double.tryParse(priceCtrl.text.trim()) ?? 0;
+      final pct = double.tryParse(comPctCtrl.text.trim()) ?? 0;
+      comValCtrl.text = (price * pct / 100).toStringAsFixed(0);
+    }
+
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDlg) => AlertDialog(
+          backgroundColor: AppTheme.surfaceBlack,
+          title: const Text('إنشاء صفقة جديدة',
+              style: TextStyle(color: AppTheme.primaryGold)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<OfferModel>(
+                  dropdownColor: AppTheme.surfaceBlack,
+                  style: const TextStyle(color: AppTheme.textWhite),
+                  decoration:
+                      const InputDecoration(labelText: 'العرض *'),
+                  items: offers
+                      .map((o) => DropdownMenuItem(
+                          value: o,
+                          child: Text(o.ttl,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 13))))
+                      .toList(),
+                  onChanged: (v) {
+                    setDlg(() {
+                      selectedOffer = v;
+                      if (v != null) {
+                        priceCtrl.text =
+                            v.prc.toStringAsFixed(0);
+                        recalcCom();
+                      }
+                    });
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: priceCtrl,
+                  keyboardType: TextInputType.number,
+                  style: const TextStyle(color: AppTheme.textWhite),
+                  decoration: const InputDecoration(
+                      labelText: 'السعر النهائي *'),
+                  onChanged: (_) => recalcCom(),
+                ),
+                const SizedBox(height: 12),
+                Row(children: [
+                  Expanded(
+                    child: TextField(
+                      controller: comPctCtrl,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(
+                              decimal: true),
+                      style:
+                          const TextStyle(color: AppTheme.textWhite),
+                      decoration: const InputDecoration(
+                          labelText: 'نسبة العمولة %'),
+                      onChanged: (_) => recalcCom(),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: comValCtrl,
+                      keyboardType: TextInputType.number,
+                      style:
+                          const TextStyle(color: AppTheme.textWhite),
+                      decoration: const InputDecoration(
+                          labelText: 'قيمة العمولة'),
+                    ),
+                  ),
+                ]),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: noteCtrl,
+                  style: const TextStyle(color: AppTheme.textWhite),
+                  decoration: const InputDecoration(
+                      labelText: 'ملاحظة (اختياري)'),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('إلغاء',
+                    style: TextStyle(color: AppTheme.textGrey))),
+            ElevatedButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('إنشاء')),
+          ],
+        ),
+      ),
+    );
+
+    if (ok != true || selectedOffer == null || !mounted) return;
+
+    final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
+    final deal = DealModel(
+      id: '',
+      offId: selectedOffer!.id,
+      sellUid: selectedOffer!.usrId,
+      buyUid: '', // يُحدد لاحقاً
+      finPrc: double.tryParse(priceCtrl.text.trim()) ?? 0,
+      cur: selectedOffer!.cur,
+      comPct: double.tryParse(comPctCtrl.text.trim()) ?? 3,
+      comVal: double.tryParse(comValCtrl.text.trim()) ?? 0,
+      comNote: noteCtrl.text.trim().isEmpty ? null : noteCtrl.text.trim(),
+      tsCrt: DateTime.now(),
+    );
+
+    if (await context.read<AdminProvider>().createDeal(adminUid, deal)) {
+      _snack('✅ تم إنشاء الصفقة');
+      _load();
+    } else {
+      _snack('فشل إنشاء الصفقة');
     }
   }
 
