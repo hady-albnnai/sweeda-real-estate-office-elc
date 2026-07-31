@@ -220,6 +220,38 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             ),
           ),
 
+          // ─── خدمات المكتب (استشارة قانونية + تصوير عقاري) ───
+          if (!auth.isInternal)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 6),
+              child: SizedBox(
+                height: 85,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _serviceTile(
+                        context,
+                        icon: Icons.gavel_rounded,
+                        title: 'استشارة قانونية',
+                        subtitle: '⚖️ من 50,000 ل.س',
+                        route: '/legal/consultations',
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _serviceTile(
+                        context,
+                        icon: Icons.photo_camera_rounded,
+                        title: 'تصوير عقاري',
+                        subtitle: '📸 مصوّر محترف',
+                        route: '/user/photography',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
           // فئات العروض (فلاتر متزامنة مع الجميع)
           SizedBox(
             height: 44,
@@ -366,6 +398,55 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       docTpSrc:   (data['docTp']   ?? <String, dynamic>{}) as Map<String, dynamic>,
       carDocTpSrc:(data['carDocTp']?? <String, dynamic>{}) as Map<String, dynamic>,
       onChanged: () { if (mounted) setState(() {}); },
+    );
+  }
+
+  Widget _serviceTile(BuildContext context,
+      {required IconData icon,
+      required String title,
+      required String subtitle,
+      required String route}) {
+    return GestureDetector(
+      onTap: () => context.push(route),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppTheme.primaryGold.withOpacity(0.15),
+              AppTheme.surfaceBlack,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppTheme.primaryGold.withOpacity(0.35)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: AppTheme.primaryGold, size: 28),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(title,
+                      style: const TextStyle(
+                          color: AppTheme.textWhite,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 2),
+                  Text(subtitle,
+                      style: TextStyle(
+                          color: AppTheme.primaryGold.withOpacity(0.7),
+                          fontSize: 11)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

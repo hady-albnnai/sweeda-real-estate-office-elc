@@ -368,6 +368,142 @@ serve(async (req) => {
       return json({ success: true, tasks: signedTasks });
     }
 
+    // ─── حجز استشارة قانونية (من المستخدم العادي) ───
+    if (action === "book_consultation") {
+      const serviceType = Number(body.service_type ?? 0);
+      const subject = (body.subject ?? "").toString().trim();
+      const price = Number(body.price ?? 0);
+      if (!subject) return json({ success: false, error: "SUBJECT_REQUIRED" }, 400);
+
+      const { data, error } = await supabaseAdmin.rpc("create_legal_consultation_internal", {
+        p_user_uid: uid,
+        p_service_type: serviceType,
+        p_subject: subject,
+        p_price: price,
+      });
+      if (error) return json({ success: false, error: error.message }, 400);
+
+      const consultation = Array.isArray(data) ? data[0] : data;
+      const consultId = consultation?.id?.toString() ?? "";
+
+      // 🔔 إشعار المحامي المُسند (إن وُجد)
+      const lawyerUid = consultation?.lawyer_uid?.toString() ?? "";
+      if (lawyerUid) {
+        const serviceNames = ["استشارة هاتفية", "جلسة مكتبية", "باقة توثيق شامل"];
+        const sName = serviceNames[serviceType] ?? "استشارة قانونية";
+        const { data: userData } = await supabaseAdmin
+          .from("users").select("nm").eq("id", uid).maybeSingle();
+        const clientName = userData?.nm?.toString() ?? "عميل";
+        await supabaseAdmin.from("notifications").insert({
+          uid: lawyerUid, tp: 1, ttl: "⚖️ حجز استشارة قانونية جديد",
+          bdy: `${clientName} حجز ${sName} — الموضوع: ${subject.slice(0, 100)}`,
+          ref_id: consultId, act: "legal_consultation_new", i_rd: 0, i_del: 0, ts_crt: new Date().toISOString(),
+        });
+        try {
+          await supabaseAdmin.rpc("send_push_notification", {
+            p_uid: lawyerUid, p_title: "⚖️ استشارة قانونية جديدة",
+            p_body: `${clientName} — ${sName}`,
+            p_data: { act: "legal_consultation_new", ref_id: consultId },
+          });
+        } catch { /* push failure is non-critical */ }
+      }
+
+      // 🔔 إشعار الإدارة (role >= 5)
+      const { data: admins } = await supabaseAdmin
+        .from("users").select("id").gte("role", 5).eq("sts", 0).eq("i_del", 0);
+      if (admins && admins.length > 0) {
+        const { data: userData } = await supabaseAdmin
+          .from("users").select("nm").eq("id", uid).maybeSingle();
+        const clientName = userData?.nm?.toString() ?? "عميل";
+        await supabaseAdmin.from("notifications").insert(
+          admins.map((a: Record<string, unknown>) => ({
+            uid: a.id, tp: 1, ttl: "⚖️ طلب استشارة قانونية",
+            bdy: `${clientName} حجز استشارة قانونية — بانتظار التأكيد`,
+            ref_id: consultId, act: "legal_consultation_admin", i_rd: 0, i_del: 0, ts_crt: new Date().toISOString(),
+          }))
+        );
+      }
+
+      return json({ success: true, consultation_id: consultId, lawyer_assigned: !!lawyerUid });
+    }
+
+    // ─── قائمة استشاراتي (للمستخدم العادي) ───
+    if (action === "list_my_consultations") {
+      const { data, error } = await supabaseAdmin
+        .from("legal_consultations")
+        .select("*")
+        .eq("user_uid", uid)
+        .eq("i_del", 0)
+        .order("ts_crt", { ascending: false });
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json({ success: true, consultations: data ?? [] });
+    }
+
+    // ─── استشارات المحامي ───
+    if (action === "get_lawyer_consultations") {
+      if (!isLawyer(role)) return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
+      const { data, error } = await supabaseAdmin
+        .from("legal_consultations")
+        .select("*, client_nm:users!user_uid(nm)")
+        .eq("lawyer_uid", uid)
+        .eq("i_del", 0)
+        .order("ts_crt", { ascending: false });
+      if (error) return json({ success: false, error: error.message }, 400);
+      return json({ success: true, consultations: data ?? [] });
+    }
+
+    // ─── تحديث حالة الاستشارة (محامي/أدمن) ───
+    if (action === "update_consultation_status") {
+      if (!isLawyer(role) && !canManageLawyerProfiles(role)) {
+        return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
+      }
+      const consultId = (body.consultation_id ?? body.consultationId)?.toString() ?? "";
+      const newStatus = Number(body.status ?? 0);
+      const updateNotes = (body.notes ?? "").toString();
+      if (!consultId) return json({ success: false, error: "CONSULTATION_ID_REQUIRED" }, 400);
+
+      const { data: row, error: fetchErr } = await supabaseAdmin
+        .from("legal_consultations")
+        .select("id, user_uid, lawyer_uid, service_type, subject")
+        .eq("id", consultId)
+        .eq("i_del", 0)
+        .maybeSingle();
+      if (fetchErr || !row) return json({ success: false, error: "CONSULTATION_NOT_FOUND" }, 404);
+
+      if (isLawyer(role) && row.lawyer_uid !== uid && !canManageLawyerProfiles(role)) {
+        return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
+      }
+
+      const { error: updErr } = await supabaseAdmin
+        .from("legal_consultations")
+        .update({ status: newStatus, notes: updateNotes || undefined, ts_upd: new Date().toISOString() })
+        .eq("id", consultId);
+      if (updErr) return json({ success: false, error: updErr.message }, 400);
+
+      // 🔔 إشعار المستخدم بتحديث الحالة
+      const statusLabels: Record<number, string> = { 1: "تم تأكيد", 2: "تم إتمام", 3: "تم إلغاء", 4: "تم رفض" };
+      const label = statusLabels[newStatus] ?? "تم تحديث";
+      const serviceNames = ["استشارة هاتفية", "جلسة مكتبية", "باقة توثيق شامل"];
+      const sName = serviceNames[Number(row.service_type)] ?? "استشارة قانونية";
+      const userUid = row.user_uid?.toString() ?? "";
+      if (userUid) {
+        await supabaseAdmin.from("notifications").insert({
+          uid: userUid, tp: 1, ttl: `⚖️ ${label} الاستشارة القانونية`,
+          bdy: `${label} ${sName} — ${row.subject?.toString().slice(0, 80) ?? ""}${updateNotes ? " — " + updateNotes : ""}`,
+          ref_id: consultId, act: "legal_consultation_update", i_rd: 0, i_del: 0, ts_crt: new Date().toISOString(),
+        });
+        try {
+          await supabaseAdmin.rpc("send_push_notification", {
+            p_uid: userUid, p_title: `⚖️ ${label} استشارتك القانونية`,
+            p_body: sName,
+            p_data: { act: "legal_consultation_update", ref_id: consultId },
+          });
+        } catch { /* push failure is non-critical */ }
+      }
+
+      return json({ success: true });
+    }
+
     return json({ success: false, error: "UNKNOWN_ACTION" }, 400);
   } catch (error) {
     return json({ success: false, error: (error as Error).message }, 500);
