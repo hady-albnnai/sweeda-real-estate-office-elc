@@ -86,7 +86,7 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
                     physics: const NeverScrollableScrollPhysics(),
                     mainAxisSpacing: 12,
                     crossAxisSpacing: 12,
-                    childAspectRatio: 1.5,
+                    childAspectRatio: 1.8,
                     children: [
                       _statCard('🏠', 'العروض',
                           '${stats['totalOffers'] ?? 0}', 'منشور: ${stats['publishedOffers'] ?? 0}'),
@@ -146,7 +146,7 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
 
   Widget _statCard(String emoji, String label, String value, String sub) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(16),
@@ -158,21 +158,21 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
         children: [
           Row(
             children: [
-              Text(emoji, style: const TextStyle(fontSize: 22)),
-              const SizedBox(width: 8),
+              Text(emoji, style: const TextStyle(fontSize: 18)),
+              const SizedBox(width: 6),
               Text(label,
                   style: const TextStyle(
-                      color: AppTheme.textGrey, fontSize: 13)),
+                      color: AppTheme.textGrey, fontSize: 12)),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           Text(value,
               style: const TextStyle(
                   color: AppTheme.primaryGold,
-                  fontSize: 24,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold)),
           Text(sub,
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: 10)),
         ],
       ),
     );
