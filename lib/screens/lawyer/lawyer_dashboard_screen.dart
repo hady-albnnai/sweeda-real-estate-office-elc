@@ -41,7 +41,7 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
   @override
   void initState() {
     super.initState();
-    _tabCtrl = TabController(length: 3, vsync: this);
+    _tabCtrl = TabController(length: 4, vsync: this);
     _loadCustomDocumentTemplates();
     WidgetsBinding.instance.addPostFrameCallback((_) => _init());
   }
@@ -55,6 +55,7 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
       legal.fetchAvailableExpediters();
       legal.fetchLawyerAppointments();
       legal.fetchLawyerTasks();
+      legal.fetchLawyerConsultations();
     }
     if (mounted) setState(() => _checking = false);
   }
@@ -384,6 +385,11 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
         title: const E2E(id: 'e2e_screen_lawyer_dashboard', child: Text('⚖️ لوحة المحامي')), backgroundColor: AppTheme.scaffoldBackground,
         actions: [
           IconButton(
+            icon: const Icon(Icons.notifications_outlined, color: AppTheme.primaryGold),
+            tooltip: 'الإشعارات',
+            onPressed: () => context.push('/user/notifications'),
+          ),
+          IconButton(
             icon: const Icon(Icons.account_circle_outlined, color: AppTheme.primaryGold),
             tooltip: 'تفاصيل حسابي',
             onPressed: _openAccountDetails,
@@ -402,12 +408,14 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
         bottom: TabBar(controller: _tabCtrl, indicatorColor: AppTheme.primaryGold,
           labelColor: AppTheme.primaryGold, unselectedLabelColor: AppTheme.textGrey,
           tabs: const [
+            Tab(icon: E2E(id: 'e2e_lawyer_tab_consultations', button: true, child: Icon(Icons.gavel)), text: 'الاستشارات'),
             Tab(icon: E2E(id: 'e2e_lawyer_tab_appointments', button: true, child: Icon(Icons.calendar_month)), text: 'مواعيدي'),
             Tab(icon: E2E(id: 'e2e_lawyer_tab_create_task', button: true, child: Icon(Icons.add_task)), text: 'إضافة مهمة'),
             Tab(icon: E2E(id: 'e2e_lawyer_tab_sent_tasks', button: true, child: Icon(Icons.assignment)), text: 'المهام المرسلة'),
           ]),
       ),
       body: TabBarView(controller: _tabCtrl, children: [
+        _buildConsultationsTab(legal),
         _buildAppointmentsTab(legal),
         _buildCreateTaskTab(legal),
         _buildSentTasksTab(legal),
@@ -466,7 +474,179 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
     );
   }
 
-  // ──────── تبويب المواعيد ────────
+  // ──────── تبويب الاستشارات القانونية ────────
+  Widget _buildConsultationsTab(LegalProvider legal) {
+    final consultations = legal.lawyerConsultations;
+    if (consultations.isEmpty) {
+      return Center(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Icon(Icons.gavel, size: 60, color: AppTheme.textGrey.withOpacity(0.4)),
+          const SizedBox(height: 12),
+          const Text('لا توجد استشارات حالياً',
+              style: TextStyle(color: AppTheme.textGrey, fontSize: 16)),
+          const SizedBox(height: 8),
+          const Text('عند حجز عميل لاستشارة قانونية، ستظهر هنا',
+              style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+        ]),
+      );
+    }
+    return RefreshIndicator(
+      onRefresh: () => legal.fetchLawyerConsultations(),
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: consultations.length,
+        itemBuilder: (_, i) => _consultationCard(consultations[i], legal),
+      ),
+    );
+  }
+
+  Widget _consultationCard(Map<String, dynamic> c, LegalProvider legal) {
+    final sts = c['status'] ?? 0;
+    final (label, color) = _consultStatusInfo(sts);
+    final serviceNames = ['استشارة هاتفية', 'جلسة مكتبية', 'باقة توثيق شامل'];
+    final sName = serviceNames[c['service_type'] ?? 0];
+    final price = (c['price'] ?? 0) as num;
+    final subject = (c['subject'] ?? '').toString();
+    final clientName = c['client_nm']?.toString() ?? 'عميل';
+    final tsCrt = c['ts_crt']?.toString().substring(0, 16) ?? '';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceBlack,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            Icon(Icons.gavel, color: AppTheme.primaryGold, size: 18),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(sName,
+                  style: const TextStyle(
+                      color: AppTheme.textWhite,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14)),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(label,
+                  style: TextStyle(
+                      color: color, fontSize: 11, fontWeight: FontWeight.bold)),
+            ),
+          ]),
+          const SizedBox(height: 8),
+          Text('العميل: $clientName',
+              style: const TextStyle(
+                  color: AppTheme.primaryGold,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600)),
+          const SizedBox(height: 4),
+          Text(subject,
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+          const SizedBox(height: 6),
+          Row(children: [
+            Text('${price.toStringAsFixed(0)} ل.س',
+                style: const TextStyle(
+                    color: AppTheme.primaryGold,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold)),
+            const Spacer(),
+            Text(tsCrt,
+                style:
+                    const TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+          ]),
+          // أزرار الإجراءات (فقط لبانتظار التأكيد)
+          if (sts == 0) ...[
+            const SizedBox(height: 10),
+            Row(children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () =>
+                      _updateConsultationStatus(legal, c['id'], 4, 'مرفوضة'),
+                  icon: const Icon(Icons.close, color: Colors.red, size: 16),
+                  label: const Text('رفض',
+                      style: TextStyle(color: Colors.red, fontSize: 12)),
+                  style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.red)),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () =>
+                      _updateConsultationStatus(legal, c['id'], 1, ''),
+                  icon:
+                      const Icon(Icons.check_circle, color: Colors.black, size: 16),
+                  label: const Text('تأكيد',
+                      style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold)),
+                  style:
+                      ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                ),
+              ),
+            ]),
+          ],
+          // إتمام (للمؤكدة)
+          if (sts == 1) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () =>
+                    _updateConsultationStatus(legal, c['id'], 2, ''),
+                icon: const Icon(Icons.done_all, color: Colors.black),
+                label: const Text('إتمام الاستشارة',
+                    style: TextStyle(
+                        color: Colors.black, fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  (String, Color) _consultStatusInfo(int sts) {
+    switch (sts) {
+      case 0:
+        return ('بانتظار التأكيد', Colors.orange);
+      case 1:
+        return ('مؤكدة', Colors.green);
+      case 2:
+        return ('مكتملة', Colors.teal);
+      case 3:
+        return ('ملغاة', Colors.grey);
+      case 4:
+        return ('مرفوضة', Colors.red);
+      default:
+        return ('غير معروف', Colors.grey);
+    }
+  }
+
+  Future<void> _updateConsultationStatus(
+      LegalProvider legal, String? id, int status, String errorLabel) async {
+    if (id == null) return;
+    final action = status == 1 ? 'تأكيد' : status == 2 ? 'إتمام' : 'رفض';
+    final ok = await legal.updateConsultationStatus(id: id, status: status);
+    if (!mounted) return;
+    if (ok) {
+      _snack('✅ تم $action الاستشارة');
+    } else {
+      _snack('فشل $action الاستشارة', bg: AppTheme.errorRed);
+    }
+  }
+
   Widget _buildAppointmentsTab(LegalProvider legal) {
     final apps = legal.lawyerAppointments;
     if (apps.isEmpty) return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [

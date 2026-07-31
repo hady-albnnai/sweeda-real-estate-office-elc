@@ -127,6 +127,7 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
     final isAlreadyBroker = user?.isBroker == true;
     final hasPendingRequest =
         user?.brkNm.isNotEmpty == true && !isAlreadyBroker;
+    final isNotVerified = user != null && !user.isVerifiedOfficial;
 
     return Scaffold(
       backgroundColor: AppTheme.scaffoldBackground,
@@ -144,6 +145,8 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
             const SizedBox(height: 20),
             if (isAlreadyBroker)
               _alreadyBrokerCard()
+            else if (isNotVerified)
+              _verificationRequiredCard()
             else if (hasPendingRequest)
               _pendingCard()
             else
@@ -236,6 +239,50 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
             textAlign: TextAlign.center,
             style: TextStyle(color: AppTheme.textGrey),
           ),
+        ],
+      ),
+    );
+  }
+
+  /// 🛡️ بطاقة التوثيق المطلوب — تظهر للمستخدم غير الموثق قبل النموذج
+  Widget _verificationRequiredCard() {
+    final user = context.read<AuthProvider>().userModel;
+    final hasId = user != null && user.sid.isNotEmpty && user.img.isNotEmpty;
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.orange.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.orange),
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.verified_user_outlined,
+              color: Colors.orange, size: 48),
+          const SizedBox(height: 10),
+          const Text('توثيق الهوية مطلوب أولاً',
+              style: TextStyle(
+                  color: Colors.orange,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold)),
+          const SizedBox(height: 6),
+          Text(
+            hasId
+                ? 'تم رفع هويتك وهي بانتظار مراجعة الإدارة.\nبعد الموافقة يمكنك التقديم مباشرة كوسيط.'
+                : 'للانضمام كوسيط يجب توثيق هويتك أولاً (صورة الهوية + الرقم الوطني).',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: AppTheme.textGrey, height: 1.5),
+          ),
+          if (!hasId) ...[
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () => context.push('/setup-identity'),
+              icon: const Icon(Icons.badge_outlined, color: Colors.black),
+              label: const Text('توثيق الهوية الآن'),
+              style:
+                  ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+            ),
+          ],
         ],
       ),
     );

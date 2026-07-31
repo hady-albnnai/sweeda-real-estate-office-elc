@@ -22,6 +22,8 @@ class LegalProvider with ChangeNotifier {
   List<ExpeditingTaskModel> get lawyerTasks => _lawyerTasks;
   List<Map<String, dynamic>> _lawyerAppointments = [];
   List<Map<String, dynamic>> get lawyerAppointments => _lawyerAppointments;
+  List<Map<String, dynamic>> _lawyerConsultations = [];
+  List<Map<String, dynamic>> get lawyerConsultations => _lawyerConsultations;
   List<ExpeditingTaskModel> _expeditingTasks = [];
   List<ExpeditingTaskModel> get expeditingTasks => _expeditingTasks;
 
@@ -181,6 +183,46 @@ class LegalProvider with ChangeNotifier {
       _error = data?['error']?.toString() ?? 'فشل تحديث الوثيقة';
       return false;
     } catch (e) { _error = e.toString(); return false; }
+  }
+
+  Future<void> fetchLawyerConsultations() async {
+    try {
+      final res = await SupabaseService().invokeFunction('legal-actions',
+          body: {'action': 'get_lawyer_consultations', 'user_uid': ''});
+      final data = res.data as Map<String, dynamic>?;
+      _lawyerConsultations = (data != null && data['success'] == true)
+          ? ((data['consultations'] as List?)
+                  ?.map((e) => Map<String, dynamic>.from(e as Map))
+                  .toList() ??
+              [])
+          : [];
+    } catch (_) {
+      _lawyerConsultations = [];
+    }
+    notifyListeners();
+  }
+
+  Future<bool> updateConsultationStatus(
+      {required String id, required int status}) async {
+    try {
+      final res = await SupabaseService().invokeFunction('legal-actions',
+          body: {
+            'action': 'update_consultation_status',
+            'user_uid': '',
+            'consultation_id': id,
+            'status': status,
+          });
+      final data = res.data as Map<String, dynamic>?;
+      if (data != null && data['success'] == true) {
+        await fetchLawyerConsultations();
+        return true;
+      }
+      _error = data?['error']?.toString() ?? 'فشل التحديث';
+      return false;
+    } catch (e) {
+      _error = e.toString();
+      return false;
+    }
   }
 
   Future<bool> requestChecklistRevision({

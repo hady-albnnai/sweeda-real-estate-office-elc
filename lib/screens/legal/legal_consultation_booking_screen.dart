@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/app_utils.dart';
+import '../../core/network/supabase_service.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/legal_provider.dart';
 
@@ -18,6 +19,8 @@ class _LegalConsultationBookingScreenState extends State<LegalConsultationBookin
   int _selectedService = 0; // 0: هاتفية 50 ألف، 1: مكتبية 200 ألف، 2: باقة التوثيق الشامل 700 ألف
   final _subjectCtrl = TextEditingController();
   bool _submitting = false;
+  List<Map<String, dynamic>> _myConsultations = [];
+  bool _loadingConsultations = false;
 
   final List<Map<String, dynamic>> _services = [
     {
@@ -44,9 +47,37 @@ class _LegalConsultationBookingScreenState extends State<LegalConsultationBookin
   ];
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadMyConsultations());
+  }
+
+  @override
   void dispose() {
     _subjectCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadMyConsultations() async {
+    final user = context.read<AuthProvider>().userModel;
+    if (user == null) return;
+    setState(() => _loadingConsultations = true);
+    try {
+      final res = await SupabaseService().invokeFunction(
+        'legal-actions',
+        body: {'action': 'list_my_consultations', 'user_uid': user.uid},
+      );
+      final data = res.data as Map?;
+      if (data?['success'] == true && mounted) {
+        setState(() {
+          _myConsultations = (data!['consultations'] as List?)
+                  ?.map((e) => Map<String, dynamic>.from(e as Map))
+                  .toList() ??
+              [];
+        });
+      }
+    } catch (_) {}
+    if (mounted) setState(() => _loadingConsultations = false);
   }
 
   void _snack(String m) {
@@ -59,12 +90,43 @@ class _LegalConsultationBookingScreenState extends State<LegalConsultationBookin
       _snack('يرجى إدخال ملخص موضوع الاستشارة أو المعاملة');
       return;
     }
+    final user = context.read<AuthProvider>().userModel;
+    if (user == null) {
+      _snack('يجب تسجيل الدخول أولاً');
+      return;
+    }
+
     setState(() => _submitting = true);
-    await Future.delayed(const Duration(milliseconds: 800)); // محاكاة حجز الطلب المالي
-    if (!mounted) return;
-    setState(() => _submitting = false);
-    _snack('✅ تم إنشاء الطلب، يرجى رفع إيصال الدفع لتأكيد الموعد');
-    context.push('/user/payment');
+
+    try {
+      final res = await SupabaseService().invokeFunction(
+        'legal-actions',
+        body: {
+          'action': 'book_consultation',
+          'user_uid': user.uid,
+          'service_type': _selectedService,
+          'subject': _subjectCtrl.text.trim(),
+          'price': _services[_selectedService]['price'],
+        },
+      );
+      final data = res.data as Map?;
+      if (!mounted) return;
+      setState(() => _submitting = false);
+
+      if (data?['success'] == true) {
+        final assigned = data?['lawyer_assigned'] == true;
+        _snack(assigned
+            ? '✅ تم حجز الاستشارة بنجاح — سيتم التواصل معك قريباً'
+            : '✅ تم تسجيل الطلب — بانتظار تحديد المحامي المختص');
+        _loadMyConsultations();
+      } else {
+        _snack(data?['error']?.toString() ?? 'فشل الحجز — حاول مجدداً');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _submitting = false);
+      _snack('فشل الحجز — تحقق من الاتصال وحاول مجدداً');
+    }
   }
 
   Future<void> _openLawyerWhatsapp(String phone) async {
@@ -75,6 +137,88 @@ class _LegalConsultationBookingScreenState extends State<LegalConsultationBookin
     } else {
       _snack('تعذّر فتح تطبيق واتساب');
     }
+  }
+
+  (String, Color) _statusInfo(int sts) {
+    switch (sts) {
+      case 0: return ('بانتظار التأكيد', Colors.orange);
+      case 1: return ('مؤكدة', Colors.green);
+      case 2: return ('مكتملة', Colors.teal);
+      case 3: return ('ملغاة', Colors.grey);
+      case 4: return ('مرفوضة', Colors.red);
+      default: return ('غير معروف', Colors.grey);
+    }
+  }
+
+  Widget _consultationCard(Map<String, dynamic> c) {
+    final (label, color) = _statusInfo(c['status'] ?? 0);
+    final serviceNames = ['استشارة هاتفية', 'جلسة مكتبية', 'باقة توثيق شامل'];
+    final sName = serviceNames[c['service_type'] ?? 0];
+    final price = (c['price'] ?? 0) as num;
+    final subject = (c['subject'] ?? '').toString();
+    final tsCrt = c['ts_crt']?.toString().substring(0, 10) ?? '';
+    final notes = (c['notes'] ?? '').toString();
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceBlack,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.gavel, color: AppTheme.primaryGold, size: 16),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(sName,
+                    style: const TextStyle(
+                        color: AppTheme.textWhite,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13)),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(label,
+                    style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(subject,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Text('${AppUtils.formatPrice(price)} ل.س',
+                  style: const TextStyle(
+                      color: AppTheme.primaryGold,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold)),
+              const Spacer(),
+              Text(tsCrt,
+                  style: const TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+            ],
+          ),
+          if (notes.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text('ملاحظة: $notes',
+                style: const TextStyle(color: Colors.amber, fontSize: 11)),
+          ],
+        ],
+      ),
+    );
   }
 
   @override
@@ -215,6 +359,34 @@ class _LegalConsultationBookingScreenState extends State<LegalConsultationBookin
                 ),
               ),
             ],
+            // ─── استشاراتي السابقة ───
+            const SizedBox(height: 24),
+            const Text('📋 استشاراتي',
+                style: TextStyle(
+                    color: AppTheme.primaryGold,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            if (_loadingConsultations)
+              const Center(
+                  child: Padding(
+                padding: EdgeInsets.all(20),
+                child: CircularProgressIndicator(color: AppTheme.primaryGold),
+              ))
+            else if (_myConsultations.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceBlack,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Center(
+                  child: Text('لا توجد استشارات سابقة',
+                      style: TextStyle(color: AppTheme.textGrey)),
+                ),
+              )
+            else
+              ..._myConsultations.map(_consultationCard),
             const SizedBox(height: 30),
           ],
         ),
