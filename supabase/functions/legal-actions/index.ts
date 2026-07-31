@@ -166,10 +166,22 @@ serve(async (req) => {
     const uid = actor.uid;
     const role = actor.role;
 
+    // ─── المحامين النشطين (إخفاء واتساب عن المستخدم العادي) ───
     if (action === "get_active_lawyers") {
       const { data, error } = await supabaseAdmin.rpc("get_active_lawyers");
       if (error) return json({ success: false, error: error.message }, 400);
-      return json({ success: true, lawyers: data ?? [] });
+      const lawyers = (data ?? []) as Record<string, unknown>[];
+      // 🔒 إخفاء واتساب والعنوان عن المستخدم العادي (يظهر فقط للمحامي/الإدارة)
+      const hidePrivate = !isLawyer(role) && !canManageLawyerProfiles(role);
+      const safeLawyers = hidePrivate
+        ? lawyers.map((l) => {
+            const safe = { ...l };
+            delete safe.whatsapp_phone;
+            delete safe.office_address;
+            return safe;
+          })
+        : lawyers;
+      return json({ success: true, lawyers: safeLawyers });
     }
 
     if (action === "admin_upsert_lawyer") {
@@ -270,8 +282,11 @@ serve(async (req) => {
       return json({ success: true, expediters: data ?? [] });
     }
 
+    // ─── إنشاء مهمة تعقيب (محامي + إدارة + فحص تكرار) ───
     if (action === "create_expediting_task") {
-      if (!isLawyer(role)) return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
+      if (!isLawyer(role) && !canManageLawyerProfiles(role)) {
+        return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
+      }
       const expediterUid = (body.expediter_uid ?? body.expediterUid)?.toString() ?? "";
       const itemType = Number(body.item_type ?? body.itemType ?? 0);
       const propNum = (body.target_property_num ?? "").toString();
@@ -281,8 +296,25 @@ serve(async (req) => {
 
       if (!expediterUid) return json({ success: false, error: "EXPEDITER_UID_REQUIRED" }, 400);
 
+      // 🔒 فحص التكرار: نفس المعقّب + نفس رقم العقار + مهمة نشطة
+      if (propNum) {
+        const { data: dupes } = await supabaseAdmin
+          .from("expediting_tasks")
+          .select("id")
+          .eq("expediter_uid", expediterUid)
+          .eq("target_property_num", propNum)
+          .in("status", [0, 1])
+          .limit(1);
+        if (dupes && dupes.length > 0) {
+          return json({ success: false, error: "DUPLICATE_TASK_EXISTS", message: "يوجد مهمة نشطة لنفس المعقّب ونفس الرقم" }, 409);
+        }
+      }
+
+      // المحامي = المستخدم الحالي (أو الإدارة تُسند لنفسها)
+      const lawyerUid = isLawyer(role) ? uid : (body.lawyer_uid ?? uid).toString();
+
       const { data, error } = await supabaseAdmin.rpc("create_expediting_task_internal", {
-        p_lawyer_uid: uid,
+        p_lawyer_uid: lawyerUid,
         p_expediter_uid: expediterUid,
         p_item_type: itemType,
         p_target_property_num: propNum,
@@ -310,7 +342,7 @@ serve(async (req) => {
     }
 
     if (action === "request_checklist_revision") {
-      if (!isLawyer(role)) return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
+      if (!isLawyer(role) && !canManageLawyerProfiles(role)) return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
       const taskId = (body.task_id ?? body.taskId)?.toString() ?? "";
       const itemKey = (body.item_key ?? body.itemKey)?.toString() ?? "";
       const revisionNotes = (body.revision_notes ?? body.revisionNotes ?? body.notes ?? "").toString();
@@ -327,7 +359,7 @@ serve(async (req) => {
     }
 
     if (action === "approve_expediting_task") {
-      if (!isLawyer(role)) return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
+      if (!isLawyer(role) && !canManageLawyerProfiles(role)) return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
       const taskId = (body.task_id ?? body.taskId)?.toString() ?? "";
       if (!taskId) return json({ success: false, error: "TASK_ID_REQUIRED" }, 400);
 
@@ -339,10 +371,26 @@ serve(async (req) => {
       return json(data as Record<string, unknown>);
     }
 
+    // ─── مهام التعقيب (محامي + إدارة) ───
     if (action === "get_lawyer_expediting_tasks") {
-      if (!isLawyer(role)) return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
+      if (!isLawyer(role) && !canManageLawyerProfiles(role)) {
+        return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
+      }
+      // الإدارة تشوف كل المهام، المحامي يشوف مهامه فقط
+      const lawyerFilter = isLawyer(role) ? uid : ((body.lawyer_uid ?? body.lawyerUid)?.toString() ?? "");
+      if (canManageLawyerProfiles(role) && !lawyerFilter) {
+        // جلب كل المهام للإدارة
+        const { data, error } = await supabaseAdmin
+          .from("expediting_tasks")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(100);
+        if (error) return json({ success: false, error: error.message }, 400);
+        const signedTasks = await signExpeditingTaskAttachments(supabaseAdmin, data ?? []);
+        return json({ success: true, tasks: signedTasks });
+      }
       const { data, error } = await supabaseAdmin.rpc("get_lawyer_expediting_tasks", {
-        p_lawyer_uid: uid,
+        p_lawyer_uid: lawyerFilter || uid,
       });
       if (error) return json({ success: false, error: error.message }, 400);
       const signedTasks = await signExpeditingTaskAttachments(supabaseAdmin, data ?? []);
@@ -374,6 +422,17 @@ serve(async (req) => {
       const subject = (body.subject ?? "").toString().trim();
       const price = Number(body.price ?? 0);
       if (!subject) return json({ success: false, error: "SUBJECT_REQUIRED" }, 400);
+
+      // 🔒 حد أقصى للاستشارات النشطة (status 0 أو 1)
+      const { count: activeCount } = await supabaseAdmin
+        .from("legal_consultations")
+        .select("*", { count: "exact", head: true })
+        .eq("user_uid", uid)
+        .in("status", [0, 1])
+        .eq("i_del", 0);
+      if ((activeCount ?? 0) >= 2) {
+        return json({ success: false, error: "MAX_ACTIVE_CONSULTATIONS", message: "لديك استشارتان نشطتان — انتظر إتمامهما قبل حجز استشارة جديدة" }, 429);
+      }
 
       const { data, error } = await supabaseAdmin.rpc("create_legal_consultation_internal", {
         p_user_uid: uid,
@@ -439,24 +498,27 @@ serve(async (req) => {
       return json({ success: true, consultations: data ?? [] });
     }
 
-    // ─── استشارات المحامي ───
+    // ─── استشارات المحامي (محامي: خاصة به — إدارة: الكل) ───
     if (action === "get_lawyer_consultations") {
-      if (!isLawyer(role)) return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
-      const { data, error } = await supabaseAdmin
+      if (!isLawyer(role) && !canManageLawyerProfiles(role)) {
+        return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
+      }
+      let query = supabaseAdmin
         .from("legal_consultations")
         .select("*, client_nm:users!user_uid(nm)")
-        .eq("lawyer_uid", uid)
         .eq("i_del", 0)
         .order("ts_crt", { ascending: false });
+      // المحامي يشوف استشاراته فقط، الإدارة تشوف الكل
+      if (isLawyer(role) && !canManageLawyerProfiles(role)) {
+        query = query.eq("lawyer_uid", uid);
+      }
+      const { data, error } = await query;
       if (error) return json({ success: false, error: error.message }, 400);
       return json({ success: true, consultations: data ?? [] });
     }
 
-    // ─── تحديث حالة الاستشارة (محامي/أدمن) ───
+    // ─── تحديث حالة الاستشارة (محامي/أدمن/المستخدم يلغي) ───
     if (action === "update_consultation_status") {
-      if (!isLawyer(role) && !canManageLawyerProfiles(role)) {
-        return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
-      }
       const consultId = (body.consultation_id ?? body.consultationId)?.toString() ?? "";
       const newStatus = Number(body.status ?? 0);
       const updateNotes = (body.notes ?? "").toString();
@@ -470,12 +532,25 @@ serve(async (req) => {
         .maybeSingle();
       if (fetchErr || !row) return json({ success: false, error: "CONSULTATION_NOT_FOUND" }, 404);
 
-      if (isLawyer(role) && row.lawyer_uid !== uid && !canManageLawyerProfiles(role)) {
+      const currentStatus = Number(row.status ?? 0);
+      const isOwner = row.user_uid === uid;
+      const isAssignedLawyer = isLawyer(role) && row.lawyer_uid === uid;
+      const isAdmin = canManageLawyerProfiles(role);
+
+      // 🔒 الصلاحيات:
+      // - المستخدم: يقدر يلغي استشارته فقط (status=0 → 3)
+      // - المحامي المُسند: يؤكد/يتمم/يرفض/يلغي
+      // - الإدارة: كل شي
+      if (isOwner && !isAssignedLawyer && !isAdmin) {
+        // المستخدم العادي — يسمح فقط بالإلغاء (0 → 3)
+        if (currentStatus !== 0 || newStatus !== 3) {
+          return json({ success: false, error: "USER_CAN_ONLY_CANCEL_PENDING" }, 403);
+        }
+      } else if (!isAssignedLawyer && !isAdmin) {
         return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
       }
 
       // 🔒 حماية انتقالات الحالة — منع تغيير حالة مكتملة/ملغاة/مرفوضة
-      const currentStatus = Number(row.status ?? 0);
       const allowedTransitions: Record<number, number[]> = {
         0: [1, 3, 4], // بانتظار → مؤكد / ملغي / مرفوض
         1: [2, 3],    // مؤكد → مكتمل / ملغي
