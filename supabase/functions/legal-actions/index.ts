@@ -310,8 +310,18 @@ serve(async (req) => {
         }
       }
 
-      // المحامي = المستخدم الحالي (أو الإدارة تُسند لنفسها)
-      const lawyerUid = isLawyer(role) ? uid : (body.lawyer_uid ?? uid).toString();
+      // المحامي = المستخدم الحالي (محامي) أو محامي مُحدد (إدارة) أو أول محامي متاح
+      let lawyerUid = isLawyer(role) ? uid : ((body.lawyer_uid ?? body.lawyerUid)?.toString() ?? "");
+      if (!lawyerUid && canManageLawyerProfiles(role)) {
+        // الإدارة ما حددت محامي → أسند لأول محامي متاح
+        const { data: firstLawyer } = await supabaseAdmin
+          .from("lawyer_profiles")
+          .select("uid")
+          .eq("is_active", true)
+          .limit(1);
+        lawyerUid = firstLawyer?.[0]?.uid?.toString() ?? uid;
+      }
+      if (!lawyerUid) lawyerUid = uid;
 
       const { data, error } = await supabaseAdmin.rpc("create_expediting_task_internal", {
         p_lawyer_uid: lawyerUid,
