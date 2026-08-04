@@ -77,9 +77,20 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
           : RefreshIndicator(
               color: AppTheme.primaryGold,
               onRefresh: _loadCounts,
-              child: ListView(
-                padding: AppTheme.paddingAllLarge,
-                children: [
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final maxWidth = AppTheme.getMaxContentWidth(context);
+                  return Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: maxWidth),
+                      child: ListView(
+                        padding: AppTheme.responsivePadding(
+                          context,
+                          mobile: AppTheme.paddingAllMedium,
+                          tablet: AppTheme.paddingAllLarge,
+                          desktop: AppTheme.paddingAllXL,
+                        ),
+                        children: [
                   // ─── العمليات الأساسية ───
                   _sectionTitle('العمليات اليومية'),
                   AppTheme.gapHeightSmall,
@@ -156,6 +167,10 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
 
                   const SizedBox(height: 30),
                 ],
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
     );
@@ -168,14 +183,27 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
 
   Widget _buildGrid(List<_MenuItem> items) {
     if (items.isEmpty) return const SizedBox.shrink();
-    return GridView.count(
+    return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      mainAxisSpacing: 10,
-      crossAxisSpacing: 10,
-      childAspectRatio: 1.6,
-      children: items.map((item) => _card(item)).toList(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: AppTheme.getGridColumns(
+          context,
+          mobile: 2,
+          tablet: 3,
+          desktop: 4,
+        ),
+        mainAxisSpacing: AppTheme.spacingSmall,
+        crossAxisSpacing: AppTheme.spacingSmall,
+        childAspectRatio: AppTheme.responsiveValue(
+          context,
+          mobile: 1.6,
+          tablet: 1.8,
+          desktop: 2.0,
+        ),
+      ),
+      itemCount: items.length,
+      itemBuilder: (context, index) => _card(items[index]),
     );
   }
 
