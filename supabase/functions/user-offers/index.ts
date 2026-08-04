@@ -147,6 +147,9 @@ serve(async (req) => {
         p_offer_id: offerId,
       });
       if (error) return json({ success: false, error: error.message }, 400);
+      if (!data || (Array.isArray(data) && data.length === 0)) {
+        return json({ success: false, error: "OFFER_NOT_FOUND" }, 404);
+      }
       return json({ success: true, offer: data });
     }
 
