@@ -108,12 +108,6 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
 
                   // ── بطاقات التنقل ──
                   _navTile(
-                    icon: Icons.home_work_outlined,
-                    title: 'عروضي',
-                    subtitle: 'إدارة العروض المرتبطة بك',
-                    onTap: () => context.push('/broker/offers'),
-                  ),
-                  _navTile(
                     icon: Icons.calendar_today_outlined,
                     title: 'طلبات المعاينة',
                     subtitle: 'قبول ورفض مواعيد المعاينة',
