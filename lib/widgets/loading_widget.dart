@@ -15,7 +15,7 @@ class LoadingWidget extends StatelessWidget {
         children: [
           const CircularProgressIndicator(color: AppTheme.primaryGold),
           if (message != null) ...[
-            const SizedBox(height: 16),
+            AppTheme.gapHeightLarge,
             Text(message!, style: const TextStyle(color: AppTheme.textGrey)),
           ],
         ],

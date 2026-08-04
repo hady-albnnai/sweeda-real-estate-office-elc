@@ -255,7 +255,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
       padding: const EdgeInsets.fromLTRB(16, 60, 16, 16),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFF1E1E1E), Color(0xFF121212)],
+          colors: [Color(0xFF1E1E1E), AppTheme.deepBlack],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
@@ -272,11 +272,11 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
                   u.nm.isNotEmpty ? u.nm[0].toUpperCase() : '؟',
                   style: const TextStyle(
                       color: Colors.black,
-                      fontSize: 24,
+                      fontSize: AppTheme.fontSizeLarge,
                       fontWeight: FontWeight.bold),
                 ),
               ),
-              const SizedBox(width: 12),
+              AppTheme.gapWidthMedium,
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -285,22 +285,22 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
                       u.nm.isEmpty ? 'مستخدم بدون اسم' : u.nm,
                       style: const TextStyle(
                           color: AppTheme.textWhite,
-                          fontSize: 18,
+                          fontSize: AppTheme.fontSizeTitle,
                           fontWeight: FontWeight.bold),
                     ),
                     Text(u.ph,
                         style: const TextStyle(
-                            color: AppTheme.textGrey, fontSize: 13)),
+                            color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody)),
                     if (u.eml?.isNotEmpty == true)
                       Text(u.eml!,
                           style: const TextStyle(
-                              color: AppTheme.textGrey, fontSize: 11)),
+                              color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption)),
                   ],
                 ),
               ),
               if (u.ph.isNotEmpty) ...[
                 IconButton(
-                  icon: const Icon(Icons.phone, color: Colors.green),
+                  icon: const Icon(Icons.phone, color: AppTheme.successGreen),
                   onPressed: _callUser,
                 ),
                 IconButton(
@@ -310,20 +310,20 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
               ],
             ],
           ),
-          const SizedBox(height: 8),
+          AppTheme.gapHeightSmall,
           // شارات
           Wrap(spacing: 6, runSpacing: 4, children: [
             _chip(statusInfo.$1, statusInfo.$2),
             _chip(u.roleName, AppTheme.primaryGold),
             _chip('⭐ ${u.pt}', Colors.amber),
             if (u.isVerifiedOfficial)
-              _chip('✓ موثق رسمياً', Colors.green)
+              _chip('✓ موثق رسمياً', AppTheme.successGreen)
             else if (u.vrf == 1)
-              _chip('⏳ توثيق قيد المراجعة', Colors.orange)
+              _chip('⏳ توثيق قيد المراجعة', AppTheme.warningOrange)
             else
-              _chip('غير موثق', Colors.grey),
+              _chip('غير موثق', AppTheme.textGrey),
           ]),
-          const SizedBox(height: 10),
+          AppTheme.gapHeightSmall,
           _quickActions(),
         ],
       ),
@@ -337,11 +337,11 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
         Expanded(
           child: OutlinedButton.icon(
             onPressed: () => _changeStatus(1),
-            icon: const Icon(Icons.pause_circle, color: Colors.orange, size: 14),
+            icon: const Icon(Icons.pause_circle, color: AppTheme.warningOrange, size: 14),
             label: const Text('تجميد',
-                style: TextStyle(color: Colors.orange, fontSize: 11)),
+                style: TextStyle(color: AppTheme.warningOrange, fontSize: AppTheme.fontSizeCaption)),
             style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: Colors.orange),
+              side: const BorderSide(color: AppTheme.warningOrange),
               padding: const EdgeInsets.symmetric(vertical: 6),
             ),
           ),
@@ -350,11 +350,11 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
         Expanded(
           child: OutlinedButton.icon(
             onPressed: () => _changeStatus(2),
-            icon: const Icon(Icons.block, color: Colors.red, size: 14),
+            icon: const Icon(Icons.block, color: AppTheme.errorRed, size: 14),
             label: const Text('حظر',
-                style: TextStyle(color: Colors.red, fontSize: 11)),
+                style: TextStyle(color: AppTheme.errorRed, fontSize: AppTheme.fontSizeCaption)),
             style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: Colors.red),
+              side: const BorderSide(color: AppTheme.errorRed),
               padding: const EdgeInsets.symmetric(vertical: 6),
             ),
           ),
@@ -363,11 +363,11 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
         Expanded(
           child: OutlinedButton.icon(
             onPressed: () => _changeStatus(0),
-            icon: const Icon(Icons.check_circle, color: Colors.green, size: 14),
+            icon: const Icon(Icons.check_circle, color: AppTheme.successGreen, size: 14),
             label: const Text('تفعيل',
-                style: TextStyle(color: Colors.green, fontSize: 11)),
+                style: TextStyle(color: AppTheme.successGreen, fontSize: AppTheme.fontSizeCaption)),
             style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: Colors.green),
+              side: const BorderSide(color: AppTheme.successGreen),
               padding: const EdgeInsets.symmetric(vertical: 6),
             ),
           ),
@@ -379,7 +379,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
           icon: const Icon(Icons.swap_horiz,
               color: AppTheme.primaryGold, size: 14),
           label: const Text('الدور',
-              style: TextStyle(color: AppTheme.primaryGold, fontSize: 11)),
+              style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeCaption)),
           style: OutlinedButton.styleFrom(
             side: const BorderSide(color: AppTheme.primaryGold),
             padding: const EdgeInsets.symmetric(vertical: 6),
@@ -422,7 +422,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
               style: TextStyle(color: AppTheme.textGrey)));
     }
     return ListView.builder(
-      padding: const EdgeInsets.all(12),
+      padding: AppTheme.paddingAllMedium,
       itemCount: _offers.length,
       itemBuilder: (_, i) {
         final o = _offers[i];
@@ -431,7 +431,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
           margin: const EdgeInsets.only(bottom: 8),
           child: ListTile(
             leading: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: AppTheme.borderRadiusSmall,
               child: SizedBox(
                 width: 50,
                 height: 50,
@@ -449,7 +449,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
                 overflow: TextOverflow.ellipsis),
             subtitle: Text(
               '${o.prc.toStringAsFixed(0)} ${o.cur == 0 ? '\$' : 'ل.س'} • ${_offerStatusText(o.sts)}',
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 11),
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption),
             ),
             trailing: const Icon(Icons.chevron_left, color: AppTheme.primaryGold),
             onTap: () => context.push('/offer/${o.id}'),
@@ -466,7 +466,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
               style: TextStyle(color: AppTheme.textGrey)));
     }
     return ListView.builder(
-      padding: const EdgeInsets.all(12),
+      padding: AppTheme.paddingAllMedium,
       itemCount: _appointments.length,
       itemBuilder: (_, i) {
         final a = _appointments[i];
@@ -479,7 +479,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
                 style: const TextStyle(color: AppTheme.textWhite)),
             subtitle: Text(
               '${a.dt.year}/${a.dt.month}/${a.dt.day} ${a.dt.hour}:${a.dt.minute.toString().padLeft(2, '0')} • ${_apptStatusText(a.sts)}',
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 11),
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption),
             ),
           ),
         );
@@ -491,29 +491,29 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
     if (_reports.isEmpty) {
       return const Center(
           child: Text('لا توجد تبليغات عليه ✅',
-              style: TextStyle(color: Colors.green)));
+              style: TextStyle(color: AppTheme.successGreen)));
     }
     return ListView.builder(
-      padding: const EdgeInsets.all(12),
+      padding: AppTheme.paddingAllMedium,
       itemCount: _reports.length,
       itemBuilder: (_, i) {
         final r = _reports[i];
         return Card(
-          color: Colors.red.withOpacity(0.1),
+          color: AppTheme.errorRed.withOpacity(0.1),
           margin: const EdgeInsets.only(bottom: 8),
           child: ListTile(
-            leading: const Icon(Icons.flag, color: Colors.red),
+            leading: const Icon(Icons.flag, color: AppTheme.errorRed),
             title: Text('تبليغ #${r['id'].toString().substring(0, 6)}',
                 style: const TextStyle(color: AppTheme.textWhite)),
             subtitle: Text(
               '${r['det'] ?? 'بدون تفاصيل'}',
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 11),
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
             trailing: Text(
               AppUtils.formatTimestamp(r['ts_crt']),
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 10),
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeXS),
             ),
           ),
         );
@@ -528,7 +528,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
               style: TextStyle(color: AppTheme.textGrey)));
     }
     return ListView.builder(
-      padding: const EdgeInsets.all(12),
+      padding: AppTheme.paddingAllMedium,
       itemCount: _activity.length,
       itemBuilder: (_, i) {
         final a = _activity[i];
@@ -541,10 +541,10 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
                 a['det']?.toString().isNotEmpty == true
                     ? a['det'].toString()
                     : (a['action']?.toString() ?? (a['act'] != null ? 'إجراء رقم ${a['act']}' : '—')),
-                style: const TextStyle(color: AppTheme.textWhite, fontSize: 13)),
+                style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeBody)),
             subtitle: Text(
               AppUtils.formatTimestamp(a['ts_crt']),
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 10),
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeXS),
             ),
           ),
         );
@@ -557,25 +557,25 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: color.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AppTheme.borderRadiusSmall,
         border: Border.all(color: color.withOpacity(0.4)),
       ),
       child: Text(text,
           style: TextStyle(
-              color: color, fontSize: 11, fontWeight: FontWeight.bold)),
+              color: color, fontSize: AppTheme.fontSizeCaption, fontWeight: FontWeight.bold)),
     );
   }
 
   (String, Color) _statusInfo(int s) {
     switch (s) {
       case 0:
-        return ('نشط', Colors.green);
+        return ('نشط', AppTheme.successGreen);
       case 1:
-        return ('مجمّد', Colors.orange);
+        return ('مجمّد', AppTheme.warningOrange);
       case 2:
-        return ('محظور', Colors.red);
+        return ('محظور', AppTheme.errorRed);
       default:
-        return ('غير معروف', Colors.grey);
+        return ('غير معروف', AppTheme.textGrey);
     }
   }
 

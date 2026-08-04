@@ -114,7 +114,7 @@ class _MyTasksScreenState extends State<MyTasksScreen>
       color: AppTheme.primaryGold,
       onRefresh: _load,
       child: ListView.builder(
-        padding: const EdgeInsets.all(12),
+        padding: AppTheme.paddingAllMedium,
         itemCount: tasks.length,
         itemBuilder: (_, i) => _taskCard(tasks[i]),
       ),
@@ -127,7 +127,7 @@ class _MyTasksScreenState extends State<MyTasksScreen>
       color: AppTheme.primaryGold,
       onRefresh: _load,
       child: ListView.builder(
-        padding: const EdgeInsets.all(12),
+        padding: AppTheme.paddingAllMedium,
         itemCount: _completed.length,
         itemBuilder: (_, i) => _completedCard(_completed[i]),
       ),
@@ -140,7 +140,7 @@ class _MyTasksScreenState extends State<MyTasksScreen>
       color: AppTheme.primaryGold,
       onRefresh: _load,
       child: ListView.builder(
-        padding: const EdgeInsets.all(12),
+        padding: AppTheme.paddingAllMedium,
         itemCount: _pending.length,
         itemBuilder: (_, i) {
           final r = _pending[i];
@@ -148,7 +148,7 @@ class _MyTasksScreenState extends State<MyTasksScreen>
           final color = _decisionColor(decision);
           return Card(
             color: AppTheme.surfaceBlack,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusLarge),
             margin: const EdgeInsets.only(bottom: 10),
             child: ListTile(
               leading: CircleAvatar(
@@ -157,9 +157,9 @@ class _MyTasksScreenState extends State<MyTasksScreen>
               ),
               title: Text(r['display_title'] ?? '', style: const TextStyle(color: AppTheme.textWhite)),
               subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('الحالة: ${_decisionLabel(decision)}', style: TextStyle(color: color, fontSize: 12)),
+                Text('الحالة: ${_decisionLabel(decision)}', style: TextStyle(color: color, fontSize: AppTheme.fontSizeSmall)),
                 if ((r['office_notes'] ?? '').toString().isNotEmpty)
-                  Text('ملاحظة المكتب: ${r['office_notes']}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+                  Text('ملاحظة المكتب: ${r['office_notes']}', style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption)),
               ]),
             ),
           );
@@ -175,10 +175,10 @@ class _MyTasksScreenState extends State<MyTasksScreen>
   Widget _taskCard(ExecutorTaskModel task) {
     return Card(
       color: AppTheme.surfaceBlack,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusLarge),
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: AppTheme.paddingAllLarge,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -190,16 +190,16 @@ class _MyTasksScreenState extends State<MyTasksScreen>
                   color: AppTheme.primaryGold,
                 ),
               ),
-              const SizedBox(width: 10),
+              AppTheme.gapWidthSmall,
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(task.displayTitle.isEmpty ? 'مهمة' : task.displayTitle,
                       style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold)),
-                  Text(task.taskTypeLabel, style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                  Text(task.taskTypeLabel, style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
                 ]),
               ),
             ]),
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             _infoRow(Icons.calendar_today, _fmtDate(task.appointmentDate)),
             if (task.locationText.isNotEmpty)
               _infoRow(Icons.location_on_outlined, task.locationText),
@@ -223,10 +223,10 @@ class _MyTasksScreenState extends State<MyTasksScreen>
   }
 
   Widget _completedCard(ExecutorTaskModel task) {
-    final color = task.isAccepted ? Colors.green : (task.isRejected ? Colors.red : Colors.orange);
+    final color = task.isAccepted ? AppTheme.successGreen : (task.isRejected ? AppTheme.errorRed : AppTheme.warningOrange);
     return Card(
       color: AppTheme.surfaceBlack,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusLarge),
       margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
         leading: CircleAvatar(
@@ -238,11 +238,11 @@ class _MyTasksScreenState extends State<MyTasksScreen>
         ),
         title: Text(task.displayTitle, style: const TextStyle(color: AppTheme.textWhite)),
         subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('النتيجة: ${task.outcomeLabel}', style: TextStyle(color: color, fontSize: 12)),
+          Text('النتيجة: ${task.outcomeLabel}', style: TextStyle(color: color, fontSize: AppTheme.fontSizeSmall)),
           if (task.rejectionReason != null && task.rejectionReason!.isNotEmpty)
-            Text('السبب: ${task.rejectionReason}', style: const TextStyle(color: Colors.red, fontSize: 11)),
+            Text('السبب: ${task.rejectionReason}', style: const TextStyle(color: AppTheme.errorRed, fontSize: AppTheme.fontSizeCaption)),
           if (task.completionDate != null)
-            Text('تاريخ التنفيذ: ${_fmtDate(task.completionDate!)}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+            Text('تاريخ التنفيذ: ${_fmtDate(task.completionDate!)}', style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption)),
         ]),
       ),
     );
@@ -263,9 +263,9 @@ class _MyTasksScreenState extends State<MyTasksScreen>
 
   Color _decisionColor(String decision) {
     switch (decision) {
-      case 'approved': return Colors.green;
-      case 'rejected': return Colors.red;
-      default: return Colors.orange;
+      case 'approved': return AppTheme.successGreen;
+      case 'rejected': return AppTheme.errorRed;
+      default: return AppTheme.warningOrange;
     }
   }
 
@@ -291,7 +291,7 @@ class _MyTasksScreenState extends State<MyTasksScreen>
       child: Row(children: [
         Icon(icon, size: 15, color: AppTheme.textGrey),
         const SizedBox(width: 6),
-        Expanded(child: Text(text, style: const TextStyle(color: AppTheme.textGrey, fontSize: 12))),
+        Expanded(child: Text(text, style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall))),
       ]),
     );
   }

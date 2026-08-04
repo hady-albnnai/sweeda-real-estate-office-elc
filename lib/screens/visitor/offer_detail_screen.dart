@@ -234,7 +234,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
       ),
       builder: (ctx) {
         return Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppTheme.paddingXXL),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -242,21 +242,21 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                 'تحديد أولوية النشر (للإدارة فقط)',
                 style: TextStyle(
                   color: AppTheme.primaryGold,
-                  fontSize: 18,
+                  fontSize: AppTheme.fontSizeTitle,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 8),
+              AppTheme.gapHeightSmall,
               const Text(
                 'اختر مستوى الأولوية الذي سيظهر فيه العرض للمستخدمين. (لمدة 30 يوم)',
-                style: TextStyle(color: AppTheme.textGrey, fontSize: 12),
+                style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 24),
+              AppTheme.gapHeightXXL,
               _priorityOption(ctx, offer.id, 'pin', 'مثبّت في الأعلى (أعلى أولوية)', Icons.push_pin, Colors.redAccent),
               _priorityOption(ctx, offer.id, 'fms', 'مميّز (ثاني أولوية)', Icons.star, Colors.orangeAccent),
               _priorityOption(ctx, offer.id, 'bst', 'مُرقّى (ثالث أولوية)', Icons.rocket_launch, Colors.blueAccent),
-              _priorityOption(ctx, offer.id, 'normal', 'عادي (ترتيب حسب التاريخ)', Icons.format_list_bulleted, Colors.grey),
+              _priorityOption(ctx, offer.id, 'normal', 'عادي (ترتيب حسب التاريخ)', Icons.format_list_bulleted, AppTheme.textGrey),
             ],
           ),
         );
@@ -300,7 +300,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
               context,
               const SnackBar(
                 content: Text('تم تحديث أولوية العرض بنجاح'),
-                backgroundColor: Colors.green,
+                backgroundColor: AppTheme.successGreen,
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -328,7 +328,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
         backgroundColor: AppTheme.surfaceBlack,
         title: const Row(children: [
           Icon(Icons.warning_amber_rounded, color: AppTheme.errorRed),
-          SizedBox(width: 8),
+          AppTheme.gapWidthSmall,
           Text('حذف العرض (إدارة)', style: TextStyle(color: AppTheme.textWhite)),
         ]),
         content: const Text(
@@ -398,7 +398,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.successGreen),
             child: const Text('نشر',
                 style: TextStyle(color: AppTheme.deepBlack, fontWeight: FontWeight.bold)),
           ),
@@ -431,7 +431,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
         }
       }
       AppTheme.showSnackBar(context,
-        SnackBar(content: Text(msg), backgroundColor: Colors.green, duration: const Duration(seconds: 4)),
+        SnackBar(content: Text(msg), backgroundColor: AppTheme.successGreen, duration: const Duration(seconds: 4)),
       );
       _load();
     } else {
@@ -452,7 +452,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
     final ok = result['success'] == true;
     if (ok) {
       AppTheme.showSnackBar(context,
-        const SnackBar(content: Text('تم رفض العرض'), backgroundColor: Colors.orange),
+        const SnackBar(content: Text('تم رفض العرض'), backgroundColor: AppTheme.warningOrange),
       );
       _load();
     } else {
@@ -497,7 +497,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                         dense: true,
                         contentPadding: EdgeInsets.zero,
                       )),
-                  const SizedBox(height: 8),
+                  AppTheme.gapHeightSmall,
                   TextField(
                     controller: ctrl,
                     maxLines: 2,
@@ -524,7 +524,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                       extra.isEmpty ? selected! : '$selected — $extra';
                   Navigator.pop(ctx, result);
                 },
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorRed),
                 child: const Text('رفض',
                     style: TextStyle(color: AppTheme.scaffoldBackground, fontWeight: FontWeight.bold)),
               ),
@@ -570,8 +570,8 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
         builder: (ctx, setS) => AlertDialog(
           backgroundColor: AppTheme.surfaceBlack,
           title: const Row(children: [
-            Icon(Icons.flag, color: Colors.red),
-            SizedBox(width: 8),
+            Icon(Icons.flag, color: AppTheme.errorRed),
+            AppTheme.gapWidthSmall,
             Text('تبليغ عن العرض',
                 style: TextStyle(color: AppTheme.textWhite)),
           ]),
@@ -581,7 +581,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Text('اختر سبب التبليغ:',
-                    style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                    style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
                 const SizedBox(height: 6),
                 ...reasons.map((r) => RadioListTile<String>(
                       title: Text(r,
@@ -593,7 +593,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                       dense: true,
                       contentPadding: EdgeInsets.zero,
                     )),
-                const SizedBox(height: 8),
+                AppTheme.gapHeightSmall,
                 TextField(
                   controller: notesCtrl,
                   maxLines: 2,
@@ -617,7 +617,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                 if (selected == null) return;
                 Navigator.pop(ctx, true);
               },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorRed),
               child: const Text('إرسال التبليغ',
                   style: TextStyle(color: AppTheme.scaffoldBackground, fontWeight: FontWeight.bold)),
             ),
@@ -651,7 +651,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
       AppTheme.showSnackBar(context,
         const SnackBar(
           content: Text('✅ تم إرسال التبليغ، شكراً لمساعدتنا'),
-          backgroundColor: Colors.green,
+          backgroundColor: AppTheme.successGreen,
         ),
       );
     } catch (e) {
@@ -734,7 +734,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                             color: _currentImg == i
                                 ? AppTheme.primaryGold
                                 : AppTheme.scaffoldBackground.withOpacity(0.5),
-                            borderRadius: BorderRadius.circular(4),
+                            borderRadius: AppTheme.borderRadiusXS,
                           ),
                         ),
                       )),
@@ -775,12 +775,12 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
                           color: Colors.black54,
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: AppTheme.borderRadiusXL,
                         ),
                         child: const Row(mainAxisSize: MainAxisSize.min, children: [
                           Icon(Icons.fullscreen, color: AppTheme.scaffoldBackground, size: 18),
-                          SizedBox(width: 4),
-                          Text('عرض الصور', style: TextStyle(color: AppTheme.scaffoldBackground, fontSize: 12)),
+                          AppTheme.gapWidthXS,
+                          Text('عرض الصور', style: TextStyle(color: AppTheme.scaffoldBackground, fontSize: AppTheme.fontSizeSmall)),
                         ]),
                       ),
                     ),
@@ -793,11 +793,11 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.black.withOpacity(0.5),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: AppTheme.borderRadiusMedium,
                       ),
                       child: Text(
                         '${_currentImg + 1}/${offer.imgs.length}',
-                        style: const TextStyle(color: AppTheme.scaffoldBackground, fontSize: 12),
+                        style: const TextStyle(color: AppTheme.scaffoldBackground, fontSize: AppTheme.fontSizeSmall),
                       ),
                     ),
                   ),
@@ -826,7 +826,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
           ),
           SliverToBoxAdapter(
             child: Container(
-              padding: const EdgeInsets.all(20),
+              padding: AppTheme.paddingAllXL,
               decoration: const BoxDecoration(
                   color: AppTheme.scaffoldBackground,
                   borderRadius:
@@ -843,26 +843,26 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                             children: [
                               if (offer.offerNumber != null)
                                 Text('عرض رقم #${offer.offerNumber}',
-                                    style: TextStyle(color: AppTheme.primaryGold.withOpacity(0.7), fontSize: 12)),
+                                    style: TextStyle(color: AppTheme.primaryGold.withOpacity(0.7), fontSize: AppTheme.fontSizeSmall)),
                               if (isOwner || auth.isAdmin)
                                 Container(
                                   margin: const EdgeInsets.only(top: 4, bottom: 4),
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: offer.daysUntilExpiration <= 3 ? AppTheme.errorRed.withOpacity(0.1) : Colors.green.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: offer.daysUntilExpiration <= 3 ? AppTheme.errorRed.withOpacity(0.3) : Colors.green.withOpacity(0.3)),
+                                    color: offer.daysUntilExpiration <= 3 ? AppTheme.errorRed.withOpacity(0.1) : AppTheme.successGreen.withOpacity(0.1),
+                                    borderRadius: AppTheme.borderRadiusSmall,
+                                    border: Border.all(color: offer.daysUntilExpiration <= 3 ? AppTheme.errorRed.withOpacity(0.3) : AppTheme.successGreen.withOpacity(0.3)),
                                   ),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.timer_outlined, size: 14, color: offer.daysUntilExpiration <= 3 ? AppTheme.errorRed : Colors.green),
-                                      const SizedBox(width: 4),
+                                      Icon(Icons.timer_outlined, size: 14, color: offer.daysUntilExpiration <= 3 ? AppTheme.errorRed : AppTheme.successGreen),
+                                      AppTheme.gapWidthXS,
                                       Text(
                                         offer.daysUntilExpiration == 0 ? 'ينتهي اليوم (بانتظار التجديد)' : 'ينتهي بعد ${offer.daysUntilExpiration} يوم',
                                         style: TextStyle(
-                                          color: offer.daysUntilExpiration <= 3 ? AppTheme.errorRed : Colors.green,
-                                          fontSize: 11,
+                                          color: offer.daysUntilExpiration <= 3 ? AppTheme.errorRed : AppTheme.successGreen,
+                                          fontSize: AppTheme.fontSizeCaption,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
@@ -877,12 +877,12 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                             ],
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        AppTheme.gapWidthSmall,
                         Text(
                             AppUtils.formatPrice(offer.prc, currency: offer.cur),
                             style: const TextStyle(
                                 color: AppTheme.primaryGold,
-                                fontSize: 20,
+                                fontSize: AppTheme.fontSizeHeadline,
                                 fontWeight: FontWeight.bold)),
                       ]),
 
@@ -894,7 +894,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                         horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
                       color: AppTheme.primaryGold.withOpacity(0.08),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: AppTheme.borderRadiusSmall,
                       border: Border.all(
                           color: AppTheme.primaryGold.withOpacity(0.3)),
                     ),
@@ -913,7 +913,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                                     : 'منشور بواسطة المكتب العقاري الالكتروني'),
                             style: const TextStyle(
                                 color: AppTheme.primaryGold,
-                                fontSize: 13,
+                                fontSize: AppTheme.fontSizeBody,
                                 fontWeight: FontWeight.w600),
                           ),
                         ),
@@ -927,18 +927,18 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                     Row(children: [
                       const Icon(Icons.star,
                           color: AppTheme.primaryGold, size: 16),
-                      const SizedBox(width: 4),
+                      AppTheme.gapWidthXS,
                       Text(
                         '${_ownerAvgRating!.toStringAsFixed(1)} ($_ownerRatingCount تقييم)',
                         style: const TextStyle(
                             color: AppTheme.textWhite,
-                            fontSize: 12,
+                            fontSize: AppTheme.fontSizeSmall,
                             fontWeight: FontWeight.w500),
                       ),
                     ]),
                   ],
 
-                  const SizedBox(height: 10),
+                  AppTheme.gapHeightSmall,
                   Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     const Icon(Icons.location_on,
                         color: AppTheme.primaryGold, size: 20),
@@ -951,7 +951,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                             Text((offer.loc['city'] ?? '').toString(),
                                 style: const TextStyle(
                                     color: AppTheme.primaryGold,
-                                    fontSize: 14,
+                                    fontSize: AppTheme.fontSizeMedium,
                                     fontWeight: FontWeight.bold)),
                           Text(offer.loc['d'] ?? '',
                               style: const TextStyle(
@@ -960,23 +960,23 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                       ),
                     ),
                   ]),
-                  const SizedBox(height: 20),
+                  AppTheme.gapHeightXL,
                   const Text('الوصف التفصيلي',
                       style: TextStyle(
                           color: AppTheme.primaryGold,
-                          fontSize: 18,
+                          fontSize: AppTheme.fontSizeTitle,
                           fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
+                  AppTheme.gapHeightSmall,
                   Text(offer.descript.isEmpty ? 'لا يوجد وصف' : offer.descript,
                       style: const TextStyle(
-                          color: AppTheme.textWhite, fontSize: 16, height: 1.5)),
+                          color: AppTheme.textWhite, fontSize: AppTheme.fontSizeSubtitle, height: 1.5)),
                   // المواصفات التقنية
                   // المواصفات التفصيلية — حسب نوع العرض
                   if (offer.specs.isNotEmpty) ...[
-                    const SizedBox(height: 20),
+                    AppTheme.gapHeightXL,
                     Text(offer.typ == 1 ? 'مواصفات السيارة' : 'مواصفات العقار',
-                        style: const TextStyle(color: AppTheme.primaryGold, fontSize: 18, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 10),
+                        style: const TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeTitle, fontWeight: FontWeight.bold)),
+                    AppTheme.gapHeightSmall,
                     Wrap(spacing: 8, runSpacing: 8, children: [
                       if (offer.typ == 0) ...[
                         if ((offer.specs['area'] ?? '').toString().isNotEmpty) _spec(Icons.square_foot, 'المساحة', '${offer.specs['area']} م²'),
@@ -996,27 +996,27 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                       ],
                     ]),
                     if ((offer.specs['legal_notes'] ?? '').toString().isNotEmpty) ...[
-                      const SizedBox(height: 10),
+                      AppTheme.gapHeightSmall,
                       _spec(Icons.gavel, 'ملاحظات قانونية', offer.specs['legal_notes'].toString()),
                     ],
                     if ((offer.specs['details'] ?? '').toString().trim().isNotEmpty) ...[
-                      const SizedBox(height: 10),
-                      Text(offer.specs['details'].toString(), style: const TextStyle(color: AppTheme.textWhite, fontSize: 14, height: 1.5)),
+                      AppTheme.gapHeightSmall,
+                      Text(offer.specs['details'].toString(), style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeMedium, height: 1.5)),
                     ],
                   ],
-                  const SizedBox(height: 20),
+                  AppTheme.gapHeightXL,
 
                   // فيديو العرض — NOTICE + REQUEST BUTTON (NEVER PUBLICLY SHOWN OR DOWNLOADABLE)
                   // Only appears on published offers if vdo exists.
                   // "Watch video" button only visible to logged-in users.
                   // Opens booking sheet with video context → enforces verified phone + auto WhatsApp after success.
                   if (offer.vdo.isNotEmpty) ...[
-                    const SizedBox(height: 8),
+                    AppTheme.gapHeightSmall,
                     Container(
-                      padding: const EdgeInsets.all(14),
+                      padding: AppTheme.paddingAllLarge,
                       decoration: BoxDecoration(
                         color: AppTheme.primaryGold.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: AppTheme.borderRadiusLarge,
                         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.35)),
                       ),
                       child: Column(
@@ -1024,42 +1024,42 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                         children: [
                           Row(children: [
                             const Icon(Icons.videocam, color: AppTheme.primaryGold, size: 20),
-                            const SizedBox(width: 8),
+                            AppTheme.gapWidthSmall,
                             const Expanded(
                               child: Text(
                                 'فيديو العرض متوفر',
                                 style: TextStyle(
                                     color: AppTheme.primaryGold,
-                                    fontSize: 16,
+                                    fontSize: AppTheme.fontSizeSubtitle,
                                     fontWeight: FontWeight.bold),
                               ),
                             ),
                           ]),
-                          const SizedBox(height: 8),
+                          AppTheme.gapHeightSmall,
                           const Text(
                             'يمكنك طلب مشاهدة الفيديو الخاص بهذا العرض بعد حجز موعد معاينة عليه. يتم إرسال الطلب تلقائياً إلى فريق المكتب بعد نجاح الحجز.',
-                            style: TextStyle(color: AppTheme.textWhite, fontSize: 13, height: 1.5),
+                            style: TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeBody, height: 1.5),
                           ),
-                          const SizedBox(height: 8),
+                          AppTheme.gapHeightSmall,
                           // Strong deterrent notice (per requirement)
                           Container(
-                            padding: const EdgeInsets.all(8),
+                            padding: AppTheme.paddingAllSmall,
                             decoration: BoxDecoration(
-                              color: Colors.red.withOpacity(0.08),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.red.withOpacity(0.3)),
+                              color: AppTheme.errorRed.withOpacity(0.08),
+                              borderRadius: AppTheme.borderRadiusSmall,
+                              border: Border.all(color: AppTheme.errorRed.withOpacity(0.3)),
                             ),
                             child: const Text(
                               '⚠️ حجز الموعد يُعتبر التزاماً. إلغاء متكرر أو عدم حضور قد يؤثر على صلاحية طلبات الفيديو المستقبلية. الفيديو يُرسل بشكل خاص بعد التحقق من الحجز.',
                               style: TextStyle(
                                 color: Colors.redAccent,
-                                fontSize: 12,
+                                fontSize: AppTheme.fontSizeSmall,
                                 height: 1.4,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
                           ),
-                          const SizedBox(height: 12),
+                          AppTheme.gapHeightMedium,
 
                           // "Watch video" button — ONLY for logged-in users
                           if (auth.isLoggedIn)
@@ -1087,26 +1087,26 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                           else
                             const Text(
                               'سجّل الدخول لتتمكن من طلب الفيديو',
-                              style: TextStyle(color: AppTheme.textGrey, fontSize: 12),
+                              style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall),
                             ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    AppTheme.gapHeightXL,
                   ],
 
                   // الموقع على الخريطة (إذا exact_loc موجود)
                   if (offer.exactLoc.contains(',')) ...[
                     const Row(children: [
                       Icon(Icons.map, color: AppTheme.primaryGold),
-                      SizedBox(width: 8),
+                      AppTheme.gapWidthSmall,
                       Text('الموقع على الخريطة',
                           style: TextStyle(
                               color: AppTheme.primaryGold,
-                              fontSize: 18,
+                              fontSize: AppTheme.fontSizeTitle,
                               fontWeight: FontWeight.bold)),
                     ]),
-                    const SizedBox(height: 10),
+                    AppTheme.gapHeightSmall,
                     Builder(builder: (_) {
                       final parts = offer.exactLoc.split(',');
                       final lat = double.tryParse(parts[0].trim());
@@ -1114,28 +1114,28 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                       if (lat == null || lng == null) return const SizedBox();
                       return LocationViewer(lat: lat, lng: lng);
                     }),
-                    const SizedBox(height: 20),
+                    AppTheme.gapHeightXL,
                   ],
 
                   // 📸 تنويه إداري: العرض صُوِّر بمصوّر المكتب (للإدارة فقط).
                   // المصدر: photography_tasks.off_id عبر إيدج بحارس دور — لا من
                   // specs (مقروء anon ⇒ يتسرّب). يُجلب مرة عند فتح الشاشة للإدارة.
                   if (_officePhotoInfo != null) ...[
-                    const SizedBox(height: 16),
+                    AppTheme.gapHeightLarge,
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 10),
                       decoration: BoxDecoration(
                         color: Colors.cyan.withOpacity(0.10),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: AppTheme.borderRadiusMedium,
                         border: Border.all(color: Colors.cyan.withOpacity(0.45)),
                       ),
                       child: Row(
                         children: [
                           const Icon(Icons.photo_camera_front_rounded,
                               color: Colors.cyan, size: 20),
-                          const SizedBox(width: 8),
+                          AppTheme.gapWidthSmall,
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1144,7 +1144,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                                   'صُوِّر بواسطة مصوّر المكتب',
                                   style: TextStyle(
                                       color: Colors.cyan,
-                                      fontSize: 12.5,
+                                      fontSize: AppTheme.fontSizeSmall.5,
                                       fontWeight: FontWeight.bold),
                                 ),
                                 Text(
@@ -1155,7 +1155,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                                     'تنويه داخلي للإدارة فقط',
                                   ].join(' — '),
                                   style: const TextStyle(
-                                      color: Colors.cyan, fontSize: 11),
+                                      color: Colors.cyan, fontSize: AppTheme.fontSizeCaption),
                                 ),
                               ],
                             ),
@@ -1167,14 +1167,14 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
 
                   // تفاصيل سند الملكية (للكل كمعلومة نصية، وللموظفين كمعاينة)
                   if (offer.docTp >= 0) ...[
-                    const SizedBox(height: 20),
+                    AppTheme.gapHeightXL,
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text('سند الملكية',
                             style: TextStyle(
                                 color: AppTheme.primaryGold,
-                                fontSize: 18,
+                                fontSize: AppTheme.fontSizeTitle,
                                 fontWeight: FontWeight.bold)),
                         if (auth.userModel != null && auth.userModel!.role >= UserRole.employee && offer.docImg.isNotEmpty)
                           GestureDetector(
@@ -1188,24 +1188,24 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                               decoration: BoxDecoration(
-                                color: Colors.blue.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                                color: AppTheme.infoBlue.withOpacity(0.1),
+                                borderRadius: AppTheme.borderRadiusXL,
+                                border: Border.all(color: AppTheme.infoBlue.withOpacity(0.3)),
                               ),
                               child: const Row(
                                 children: [
-                                  Icon(Icons.file_present, color: Colors.blue, size: 16),
-                                  SizedBox(width: 4),
-                                  Text('معاينة السند (إدارة)', style: TextStyle(color: Colors.blue, fontSize: 12, fontWeight: FontWeight.bold)),
+                                  Icon(Icons.file_present, color: AppTheme.infoBlue, size: 16),
+                                  AppTheme.gapWidthXS,
+                                  Text('معاينة السند (إدارة)', style: TextStyle(color: AppTheme.infoBlue, fontSize: AppTheme.fontSizeSmall, fontWeight: FontWeight.bold)),
                                 ],
                               ),
                             ),
                           ),
                       ],
                     ),
-                    const SizedBox(height: 10),
+                    AppTheme.gapHeightSmall,
                     _spec(Icons.description, 'نوع السند', AppUtils.deedTypeText(offer.docTp, offer.typ)),
-                    const SizedBox(height: 10),
+                    AppTheme.gapHeightSmall,
                   ],
 
                   GridView.count(
@@ -1230,7 +1230,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                   Container(
                     width: double.infinity,
                     margin: const EdgeInsets.only(bottom: 25),
-                    padding: const EdgeInsets.all(16),
+                    padding: AppTheme.paddingAllLarge,
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
                         colors: [
@@ -1240,7 +1240,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                         begin: Alignment.topRight,
                         end: Alignment.bottomLeft,
                       ),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: AppTheme.borderRadiusLarge,
                       border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4), width: 1.5),
                       boxShadow: [
                         BoxShadow(
@@ -1256,45 +1256,45 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                         Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(8),
+                              padding: AppTheme.paddingAllSmall,
                               decoration: BoxDecoration(
                                 color: AppTheme.primaryGold.withOpacity(0.15),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(Icons.gavel, color: AppTheme.primaryGold, size: 22),
                             ),
-                            const SizedBox(width: 12),
+                            AppTheme.gapWidthMedium,
                             const Expanded(
                               child: Text(
                                 'الضمان والتوثيق القانوني المعتمد ⚖️',
                                 style: TextStyle(
                                   color: AppTheme.primaryGold,
-                                  fontSize: 16,
+                                  fontSize: AppTheme.fontSizeSubtitle,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
+                        AppTheme.gapHeightMedium,
                         const Text(
                           'يقدم المكتب العقاري خدمة التوثيق القانوني المأجور وتنظيم العقود أصولاً لضمان حق الطرفين. عند تقديم طلب إتمام المعاملة، يتولى فريقنا القانوني تدقيق صحة سندات الملكية (طابو، حكم محكمة، مواصلات) وخلوها من الإشارات والنزاعات قبل إتمام الصفقة.',
                           style: TextStyle(
                             color: AppTheme.textWhite,
-                            fontSize: 13,
+                            fontSize: AppTheme.fontSizeBody,
                             height: 1.6,
                           ),
                         ),
-                        const SizedBox(height: 14),
+                        AppTheme.gapHeightMedium,
                         const Row(
                           children: [
-                            Icon(Icons.verified_user, color: Colors.green, size: 16),
+                            Icon(Icons.verified_user, color: AppTheme.successGreen, size: 16),
                             SizedBox(width: 6),
                             Text(
                               'توثيق قانوني • عقود معتمدة • استشارات محامين',
                               style: TextStyle(
-                                color: Colors.green,
-                                fontSize: 11,
+                                color: AppTheme.successGreen,
+                                fontSize: AppTheme.fontSizeCaption,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -1342,7 +1342,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                         ),
                       ),
                     ),
-                  if (isOwner) const SizedBox(height: 10),
+                  if (isOwner) AppTheme.gapHeightSmall,
 
                   // 🚀 زر ترقية بالنقاط للمالك أو تعيين أولوية للإدارة
                   if (isOwner && !auth.isAdmin)
@@ -1366,32 +1366,32 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
 
                                     // أزرار مراجعة العرض — للإدارة فقط للعروض غير المنشورة
                   if (auth.isAdmin && offer.iPub == 0) ...[
-                    const SizedBox(height: 10),
+                    AppTheme.gapHeightSmall,
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                        color: AppTheme.warningOrange.withOpacity(0.08),
+                        borderRadius: AppTheme.borderRadiusLarge,
+                        border: Border.all(color: AppTheme.warningOrange.withOpacity(0.3)),
                       ),
                       child: Row(
                         children: [
                           Expanded(
                             child: TextButton.icon(
                               onPressed: () => _rejectOffer(offer),
-                              icon: const Icon(Icons.cancel, color: Colors.red, size: 20),
+                              icon: const Icon(Icons.cancel, color: AppTheme.errorRed, size: 20),
                               label: const Text('رفض',
-                                  style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 14)),
+                                  style: TextStyle(color: AppTheme.errorRed, fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeMedium)),
                               style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
                             ),
                           ),
-                          Container(width: 1, height: 32, color: Colors.orange.withOpacity(0.3)),
+                          Container(width: 1, height: 32, color: AppTheme.warningOrange.withOpacity(0.3)),
                           Expanded(
                             child: TextButton.icon(
                               onPressed: () => _approveOffer(offer),
-                              icon: const Icon(Icons.check_circle, color: Colors.green, size: 20),
+                              icon: const Icon(Icons.check_circle, color: AppTheme.successGreen, size: 20),
                               label: const Text('قبول',
-                                  style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 14)),
+                                  style: TextStyle(color: AppTheme.successGreen, fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeMedium)),
                               style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
                             ),
                           ),
@@ -1402,7 +1402,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
 
                   // خيار أولوية النشر للإدارة + زر الحذف
                   if (auth.isAdmin) ...[
-                    const SizedBox(height: 10),
+                    AppTheme.gapHeightSmall,
                     Row(
                       children: [
                         Expanded(
@@ -1413,14 +1413,14 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                             label: const Text('أولوية (إدارة)',
                                 style: TextStyle(
                                     color: AppTheme.deepBlack,
-                                    fontWeight: FontWeight.bold, fontSize: 13)),
+                                    fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeBody)),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppTheme.lightGold,
                               padding: const EdgeInsets.symmetric(vertical: 14),
                             ),
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        AppTheme.gapWidthSmall,
                         ElevatedButton(
                           onPressed: () => _showAdminDeleteDialog(context, offer),
                           style: ElevatedButton.styleFrom(
@@ -1433,7 +1433,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                     ),
                   ],
 
-                  if (isOwner || auth.isAdmin) const SizedBox(height: 14),
+                  if (isOwner || auth.isAdmin) AppTheme.gapHeightMedium,
 
                   // زر الحجز — مخفي عن المالك والإدارة
                   if (!isOwner && !auth.isAdmin)
@@ -1554,14 +1554,14 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
           color: AppTheme.surfaceBlack,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AppTheme.borderRadiusMedium,
           border: Border.all(color: AppTheme.primaryGold.withOpacity(0.2))),
       child: Row(children: [
         Icon(icon, color: AppTheme.primaryGold, size: 18),
-        const SizedBox(width: 8),
+        AppTheme.gapWidthSmall,
         Expanded(
             child: Text('$label: $value',
-                style: const TextStyle(color: AppTheme.textWhite, fontSize: 14),
+                style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeMedium),
                 overflow: TextOverflow.ellipsis)),
       ]),
     );
@@ -1608,7 +1608,7 @@ class _FullScreenImageViewerState extends State<_FullScreenImageViewer> {
         ),
         title: Text(
           '${_current + 1} / ${widget.images.length}',
-          style: const TextStyle(color: AppTheme.scaffoldBackground, fontSize: 16),
+          style: const TextStyle(color: AppTheme.scaffoldBackground, fontSize: AppTheme.fontSizeSubtitle),
         ),
         centerTitle: true,
       ),
@@ -1625,7 +1625,7 @@ class _FullScreenImageViewerState extends State<_FullScreenImageViewer> {
               fit: BoxFit.contain,
               width: double.infinity,
               errorBuilder: (_, __, ___) => const Icon(
-                Icons.broken_image, color: Colors.grey, size: 80),
+                Icons.broken_image, color: AppTheme.textGrey, size: 80),
             ),
           ),
         ),

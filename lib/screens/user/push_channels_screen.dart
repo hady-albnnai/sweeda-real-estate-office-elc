@@ -122,19 +122,19 @@ class _PushChannelsScreenState extends State<PushChannelsScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: (en ? Colors.green : Colors.white10).withOpacity(en ? 0.12 : 0.06),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: (en ? Colors.green : Colors.white24).withOpacity(0.35)),
+        color: (en ? AppTheme.successGreen : Colors.white10).withOpacity(en ? 0.12 : 0.06),
+        borderRadius: AppTheme.borderRadiusMedium,
+        border: Border.all(color: (en ? AppTheme.successGreen : Colors.white24).withOpacity(0.35)),
       ),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Icon(en ? Icons.check_circle : Icons.help_outline,
-            color: en ? Colors.green : AppTheme.textGrey, size: 18),
-        const SizedBox(width: 8),
+            color: en ? AppTheme.successGreen : AppTheme.textGrey, size: 18),
+        AppTheme.gapWidthSmall,
         Expanded(
           child: Text(
             en ? '$fam ✓ مُنوّرة عبر: ${enabledBy.join('، ')}'
                : '$fam — ما في جهاز بهالفصيلة قابل البوش بعد',
-            style: const TextStyle(color: AppTheme.textWhite, fontSize: 12, height: 1.5),
+            style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeSmall, height: 1.5),
           ),
         ),
       ]),
@@ -153,24 +153,24 @@ class _PushChannelsScreenState extends State<PushChannelsScreen> {
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryGold))
-          : ListView(padding: const EdgeInsets.all(16), children: [
+          : ListView(padding: AppTheme.paddingAllLarge, children: [
               const Text('وش نوّر جرس التطبيق؟', style: TextStyle(color: AppTheme.primaryGold, fontSize: 15, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 4),
+              AppTheme.gapHeightXS,
               const Text(
                 'سجل الجرس بيتحوّل «غير مقروء» بس لما يان البوش يقبل فعلياً بجهاز '
                 'واحد عالأقل من أجهزتك المفعل عليها الحساب (ومن أوفلاط القنوات '
                 'الموسومة «hybrid»). فشل/رفض ⇒ يبقى مقروءاً وتكمل دوريتك عليه.',
-                style: TextStyle(color: AppTheme.textGrey, fontSize: 11.5, height: 1.6),
+                style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption.5, height: 1.6),
               ),
-              const SizedBox(height: 10),
+              AppTheme.gapHeightSmall,
               _famChip('🤖 أندرويد / 🍎 iOS', [
                 if (_pushAllowed && fam != 0) 'هذا الجهاز',
                 for (final f in _allowedFam) if (f != 0) 'جهاز آخر (فصيلة $f)',
                 if (_allowedFam.contains(0)) 'ويب',
               ]),
-              const SizedBox(height: 16),
+              AppTheme.gapHeightLarge,
               const Text('مفاتيح القنوات (فعلّل عائل)', style: TextStyle(color: AppTheme.primaryGold, fontSize: 15, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
+              AppTheme.gapHeightSmall,
               for (final e in _labels.entries) Builder(builder: (_) {
                 final chn = e.key;
                 final (nm, desc) = e.value;
@@ -178,24 +178,24 @@ class _PushChannelsScreenState extends State<PushChannelsScreen> {
                 return SwitchListTile(
                   value: enabled,
                   activeColor: AppTheme.primaryGold,
-                  title: Text('$nm (chn $chn)', style: const TextStyle(color: AppTheme.textWhite, fontSize: 13)),
+                  title: Text('$nm (chn $chn)', style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeBody)),
                   subtitle: Text(desc + (enabled ? '' : ' — مطفية'),
-                      style: TextStyle(color: enabled ? AppTheme.textGrey : AppTheme.errorRed, fontSize: 11)),
+                      style: TextStyle(color: enabled ? AppTheme.textGrey : AppTheme.errorRed, fontSize: AppTheme.fontSizeCaption)),
                   onChanged: (v) => _toggle(chn, v),
                 );
               }),
-              const SizedBox(height: 14),
+              AppTheme.gapHeightMedium,
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: AppTheme.paddingAllMedium,
                 decoration: BoxDecoration(
                   color: AppTheme.surfaceBlack,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: AppTheme.borderRadiusMedium,
                   border: Border.all(color: AppTheme.primaryGold.withOpacity(0.25)),
                 ),
                 child: const Text(
                   '💡 «إشعارات» القديمة بتضل موجودة — هاد البروفايل هو «قنوات البوش + التظهير» '
                   'وفق قرار المالك 2026-07-27: التظهير يتبع قبول البوش، والمفاتيح فعلّل عائل.',
-                  style: TextStyle(color: AppTheme.textGrey, fontSize: 11, height: 1.6),
+                  style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption, height: 1.6),
                 ),
               ),
             ]),

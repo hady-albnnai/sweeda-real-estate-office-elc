@@ -203,8 +203,8 @@ class _FeaturedAdPaymentScreenState extends State<FeaturedAdPaymentScreen> {
           backgroundColor: AppTheme.surfaceBlack,
           title: const Row(
             children: [
-              Icon(Icons.check_circle, color: Colors.green, size: 28),
-              SizedBox(width: 8),
+              Icon(Icons.check_circle, color: AppTheme.successGreen, size: 28),
+              AppTheme.gapWidthSmall,
               Text('تم إرسال طلبك',
                   style: TextStyle(color: AppTheme.textWhite)),
             ],
@@ -257,7 +257,7 @@ class _FeaturedAdPaymentScreenState extends State<FeaturedAdPaymentScreen> {
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: AppTheme.paddingAllXL,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -267,7 +267,7 @@ class _FeaturedAdPaymentScreenState extends State<FeaturedAdPaymentScreen> {
                     color: AppTheme.primaryGold,
                     fontSize: 15,
                     fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             ...List.generate(4, (i) {
               final w = i + 1;
               final p = _priceFor(w, config);
@@ -287,7 +287,7 @@ class _FeaturedAdPaymentScreenState extends State<FeaturedAdPaymentScreen> {
                     color: selected
                         ? AppTheme.primaryGold.withOpacity(0.12)
                         : AppTheme.surfaceBlack,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: AppTheme.borderRadiusMedium,
                     border: Border.all(
                       color: selected
                           ? AppTheme.primaryGold
@@ -305,22 +305,22 @@ class _FeaturedAdPaymentScreenState extends State<FeaturedAdPaymentScreen> {
                           : AppTheme.textGrey,
                       size: 20,
                     ),
-                    const SizedBox(width: 10),
+                    AppTheme.gapWidthSmall,
                     Expanded(
                       child: Text(label,
                           style: const TextStyle(
-                              color: AppTheme.textWhite, fontSize: 14)),
+                              color: AppTheme.textWhite, fontSize: AppTheme.fontSizeMedium)),
                     ),
                     Text('$p ل.س',
                         style: const TextStyle(
                             color: AppTheme.primaryGold,
-                            fontSize: 13,
+                            fontSize: AppTheme.fontSizeBody,
                             fontWeight: FontWeight.bold)),
                   ]),
                 ),
               );
             }),
-            const SizedBox(height: 16),
+            AppTheme.gapHeightLarge,
 
             // ─── قناة الدفع ───
             const Text('قناة الدفع:',
@@ -328,7 +328,7 @@ class _FeaturedAdPaymentScreenState extends State<FeaturedAdPaymentScreen> {
                     color: AppTheme.primaryGold,
                     fontSize: 15,
                     fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             if (channels.isEmpty)
               const Text('لا توجد قنوات دفع مفعّلة حالياً',
                   style: TextStyle(color: AppTheme.textGrey)),
@@ -342,12 +342,12 @@ class _FeaturedAdPaymentScreenState extends State<FeaturedAdPaymentScreen> {
                 onTap: () => setState(() => _channel = key),
                 child: Container(
                   margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.all(12),
+                  padding: AppTheme.paddingAllMedium,
                   decoration: BoxDecoration(
                     color: selected
                         ? AppTheme.primaryGold.withOpacity(0.12)
                         : AppTheme.surfaceBlack,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: AppTheme.borderRadiusMedium,
                     border: Border.all(
                       color: selected
                           ? AppTheme.primaryGold
@@ -367,19 +367,19 @@ class _FeaturedAdPaymentScreenState extends State<FeaturedAdPaymentScreen> {
                               : AppTheme.textGrey,
                           size: 20,
                         ),
-                        const SizedBox(width: 10),
+                        AppTheme.gapWidthSmall,
                         Text(chName,
                             style: const TextStyle(
                                 color: AppTheme.textWhite,
-                                fontSize: 14,
+                                fontSize: AppTheme.fontSizeMedium,
                                 fontWeight: FontWeight.bold)),
                       ]),
                       if (selected && chInstr.isNotEmpty) ...[
-                        const SizedBox(height: 8),
+                        AppTheme.gapHeightSmall,
                         Text(chInstr,
                             style: const TextStyle(
                                 color: AppTheme.textGrey,
-                                fontSize: 12,
+                                fontSize: AppTheme.fontSizeSmall,
                                 height: 1.5)),
                       ],
                       if (selected)
@@ -389,7 +389,7 @@ class _FeaturedAdPaymentScreenState extends State<FeaturedAdPaymentScreen> {
                             child: Text('${kv.$1}: ${kv.$2}',
                                 style: const TextStyle(
                                     color: AppTheme.primaryGold,
-                                    fontSize: 13,
+                                    fontSize: AppTheme.fontSizeBody,
                                     fontWeight: FontWeight.bold)),
                           ),
                     ],
@@ -397,7 +397,7 @@ class _FeaturedAdPaymentScreenState extends State<FeaturedAdPaymentScreen> {
                 ),
               );
             }),
-            const SizedBox(height: 16),
+            AppTheme.gapHeightLarge,
 
             // ─── إثبات الدفع ───
             const Text('إثبات الدفع:',
@@ -405,15 +405,15 @@ class _FeaturedAdPaymentScreenState extends State<FeaturedAdPaymentScreen> {
                     color: AppTheme.primaryGold,
                     fontSize: 15,
                     fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             GestureDetector(
               onTap: _uploading ? null : _pickProof,
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(16),
+                padding: AppTheme.paddingAllLarge,
                 decoration: BoxDecoration(
                   color: AppTheme.surfaceBlack,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: AppTheme.borderRadiusMedium,
                   border: Border.all(color: Colors.white12),
                 ),
                 child: Row(children: [
@@ -423,22 +423,22 @@ class _FeaturedAdPaymentScreenState extends State<FeaturedAdPaymentScreen> {
                         : Icons.check_circle,
                     color: _proofImage == null
                         ? AppTheme.textGrey
-                        : Colors.green,
+                        : AppTheme.successGreen,
                   ),
-                  const SizedBox(width: 10),
+                  AppTheme.gapWidthSmall,
                   Expanded(
                     child: Text(
                       _proofImage == null
                           ? 'اضغط لاختيار صورة إثبات الدفع (سكرين التحويل)'
                           : 'تم اختيار الصورة ✓ — اضغط للتغيير',
                       style: const TextStyle(
-                          color: AppTheme.textGrey, fontSize: 13),
+                          color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody),
                     ),
                   ),
                 ]),
               ),
             ),
-            const SizedBox(height: 12),
+            AppTheme.gapHeightMedium,
             TextFormField(
               controller: _refCtrl,
               keyboardType: TextInputType.number,
@@ -452,7 +452,7 @@ class _FeaturedAdPaymentScreenState extends State<FeaturedAdPaymentScreen> {
                     Icon(Icons.tag, color: AppTheme.primaryGold),
               ),
             ),
-            const SizedBox(height: 24),
+            AppTheme.gapHeightXXL,
 
             // ─── زر الإرسال ───
             SizedBox(

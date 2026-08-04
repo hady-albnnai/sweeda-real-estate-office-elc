@@ -88,8 +88,8 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
           backgroundColor: AppTheme.surfaceBlack,
           title: const Row(
             children: [
-              Icon(Icons.check_circle, color: Colors.green, size: 28),
-              SizedBox(width: 8),
+              Icon(Icons.check_circle, color: AppTheme.successGreen, size: 28),
+              AppTheme.gapWidthSmall,
               Text('تم إرسال الطلب',
                   style: TextStyle(color: AppTheme.textWhite)),
             ],
@@ -137,12 +137,12 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
         elevation: 0,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: AppTheme.paddingAllLarge,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _heroCard(),
-            const SizedBox(height: 20),
+            AppTheme.gapHeightXL,
             if (isAlreadyBroker)
               _alreadyBrokerCard()
             else if (isNotVerified)
@@ -159,29 +159,29 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
 
   Widget _heroCard() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: AppTheme.paddingAllXL,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFFD4AF37), Color(0xFFFFD700)],
+          colors: [AppTheme.primaryGold, Color(0xFFFFD700)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppTheme.borderRadiusLarge,
       ),
       child: const Column(
         children: [
           Icon(Icons.handshake, color: Colors.black87, size: 48),
-          SizedBox(height: 8),
+          AppTheme.gapHeightSmall,
           Text('كن جزءاً من شبكة وسطائنا',
               style: TextStyle(
                   color: Colors.black,
-                  fontSize: 18,
+                  fontSize: AppTheme.fontSizeTitle,
                   fontWeight: FontWeight.bold)),
           SizedBox(height: 6),
           Text(
             'احصل على عمولة من كل صفقة، صلاحيات أوسع لإدراج العروض، وأولوية بالظهور.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.black87, fontSize: 13),
+            style: TextStyle(color: Colors.black87, fontSize: AppTheme.fontSizeBody),
           ),
         ],
       ),
@@ -190,22 +190,22 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
 
   Widget _alreadyBrokerCard() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: AppTheme.paddingAllXL,
       decoration: BoxDecoration(
-        color: Colors.green.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.green),
+        color: AppTheme.successGreen.withOpacity(0.1),
+        borderRadius: AppTheme.borderRadiusMedium,
+        border: Border.all(color: AppTheme.successGreen),
       ),
       child: Column(
         children: [
-          const Icon(Icons.verified, color: Colors.green, size: 48),
-          const SizedBox(height: 10),
+          const Icon(Icons.verified, color: AppTheme.successGreen, size: 48),
+          AppTheme.gapHeightSmall,
           const Text('أنت وسيط مفعّل ✅',
               style: TextStyle(
-                  color: Colors.green,
-                  fontSize: 18,
+                  color: AppTheme.successGreen,
+                  fontSize: AppTheme.fontSizeTitle,
                   fontWeight: FontWeight.bold)),
-          const SizedBox(height: 16),
+          AppTheme.gapHeightLarge,
           ElevatedButton.icon(
             onPressed: () => context.go('/broker/dashboard'),
             icon: const Icon(Icons.dashboard, color: Colors.black),
@@ -218,20 +218,20 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
 
   Widget _pendingCard() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: AppTheme.paddingAllXL,
       decoration: BoxDecoration(
-        color: Colors.orange.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.orange),
+        color: AppTheme.warningOrange.withOpacity(0.1),
+        borderRadius: AppTheme.borderRadiusMedium,
+        border: Border.all(color: AppTheme.warningOrange),
       ),
       child: const Column(
         children: [
-          Icon(Icons.hourglass_top, color: Colors.orange, size: 48),
-          SizedBox(height: 10),
+          Icon(Icons.hourglass_top, color: AppTheme.warningOrange, size: 48),
+          AppTheme.gapHeightSmall,
           Text('طلبك قيد المراجعة ⏳',
               style: TextStyle(
-                  color: Colors.orange,
-                  fontSize: 18,
+                  color: AppTheme.warningOrange,
+                  fontSize: AppTheme.fontSizeTitle,
                   fontWeight: FontWeight.bold)),
           SizedBox(height: 6),
           Text(
@@ -249,21 +249,21 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
     final user = context.read<AuthProvider>().userModel;
     final hasId = user != null && user.sid.isNotEmpty && user.img.isNotEmpty;
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: AppTheme.paddingAllXL,
       decoration: BoxDecoration(
-        color: Colors.orange.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.orange),
+        color: AppTheme.warningOrange.withOpacity(0.1),
+        borderRadius: AppTheme.borderRadiusMedium,
+        border: Border.all(color: AppTheme.warningOrange),
       ),
       child: Column(
         children: [
           const Icon(Icons.verified_user_outlined,
-              color: Colors.orange, size: 48),
-          const SizedBox(height: 10),
+              color: AppTheme.warningOrange, size: 48),
+          AppTheme.gapHeightSmall,
           const Text('توثيق الهوية مطلوب أولاً',
               style: TextStyle(
-                  color: Colors.orange,
-                  fontSize: 18,
+                  color: AppTheme.warningOrange,
+                  fontSize: AppTheme.fontSizeTitle,
                   fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
           Text(
@@ -274,13 +274,13 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
             style: const TextStyle(color: AppTheme.textGrey, height: 1.5),
           ),
           if (!hasId) ...[
-            const SizedBox(height: 16),
+            AppTheme.gapHeightLarge,
             ElevatedButton.icon(
               onPressed: () => context.push('/setup-identity'),
               icon: const Icon(Icons.badge_outlined, color: Colors.black),
               label: const Text('توثيق الهوية الآن'),
               style:
-                  ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                  ElevatedButton.styleFrom(backgroundColor: AppTheme.warningOrange),
             ),
           ],
         ],
@@ -298,13 +298,13 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
                 color: AppTheme.primaryGold,
                 fontWeight: FontWeight.bold,
                 fontSize: 15)),
-        const SizedBox(height: 8),
+        AppTheme.gapHeightSmall,
         _benefit('💰', 'حصة من كل صفقة عبر المكتب'),
         _benefit('📊', 'حصة 5 عروض و 5 طلبات (مقابل 1+3 للمستخدم العادي)'),
         _benefit('🎯', 'لوحة تحكم خاصة بالعروض والمواعيد والصفقات'),
         _benefit('📈', 'إحصائيات تفصيلية لأدائك'),
         _benefit('⭐', 'أولوية ظهور بنتائج البحث'),
-        const SizedBox(height: 20),
+        AppTheme.gapHeightXL,
 
         // النموذج
         const Text('📝 معلومات الطلب',
@@ -312,7 +312,7 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
                 color: AppTheme.primaryGold,
                 fontWeight: FontWeight.bold,
                 fontSize: 15)),
-        const SizedBox(height: 12),
+        AppTheme.gapHeightMedium,
         _label('الاسم التجاري *'),
         TextField(
           controller: _businessNameCtrl,
@@ -322,14 +322,14 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
             prefixIcon: Icon(Icons.business, color: AppTheme.primaryGold),
           ),
         ),
-        const SizedBox(height: 16),
+        AppTheme.gapHeightLarge,
 
         _label('فئة الوساطة *'),
         Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
             color: AppTheme.surfaceBlack,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: AppTheme.borderRadiusMedium,
           ),
           child: Column(
             children: _categories.entries
@@ -350,7 +350,7 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
                 .toList(),
           ),
         ),
-        const SizedBox(height: 16),
+        AppTheme.gapHeightLarge,
 
         _label('سنوات الخبرة (اختياري)'),
         TextField(
@@ -363,7 +363,7 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
                 color: AppTheme.primaryGold),
           ),
         ),
-        const SizedBox(height: 16),
+        AppTheme.gapHeightLarge,
 
         _label('نبذة عنك (اختياري)'),
         TextField(
@@ -374,22 +374,22 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
             hintText: 'تحدّث عن خبرتك ومناطق عملك...',
           ),
         ),
-        const SizedBox(height: 20),
+        AppTheme.gapHeightXL,
 
         // الشروط
         Container(
-          padding: const EdgeInsets.all(12),
+          padding: AppTheme.paddingAllMedium,
           decoration: BoxDecoration(
             color: AppTheme.surfaceBlack,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: AppTheme.borderRadiusMedium,
           ),
           child: Column(
             children: [
               const Text(
                 '⚠️ شروط والتزامات الوسيط:\n• الالتزام بالأمانة والصدق في العروض\n• تسجيل العمولات للمكتب\n• الاستجابة لطلبات العملاء بسرعة\n• عدم تجاوز الصلاحيات المخوّلة',
-                style: TextStyle(color: AppTheme.textGrey, fontSize: 12),
+                style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall),
               ),
-              const SizedBox(height: 10),
+              AppTheme.gapHeightSmall,
               CheckboxListTile(
                 value: _agreeTerms,
                 onChanged: (v) =>
@@ -397,7 +397,7 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
                 title: const Text(
                   'أوافق على الشروط والالتزامات',
                   style: TextStyle(
-                      color: AppTheme.textWhite, fontSize: 13),
+                      color: AppTheme.textWhite, fontSize: AppTheme.fontSizeBody),
                 ),
                 activeColor: AppTheme.primaryGold,
                 checkColor: Colors.black,
@@ -407,7 +407,7 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
             ],
           ),
         ),
-        const SizedBox(height: 20),
+        AppTheme.gapHeightXL,
 
         SizedBox(
           height: 52,
@@ -436,12 +436,12 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 18)),
-          const SizedBox(width: 10),
+          Text(emoji, style: const TextStyle(fontSize: AppTheme.fontSizeTitle)),
+          AppTheme.gapWidthSmall,
           Expanded(
             child: Text(text,
                 style: const TextStyle(
-                    color: AppTheme.textWhite, fontSize: 13)),
+                    color: AppTheme.textWhite, fontSize: AppTheme.fontSizeBody)),
           ),
         ],
       ),
@@ -454,6 +454,6 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
             style: const TextStyle(
                 color: AppTheme.primaryGold,
                 fontWeight: FontWeight.bold,
-                fontSize: 13)),
+                fontSize: AppTheme.fontSizeBody)),
       );
 }

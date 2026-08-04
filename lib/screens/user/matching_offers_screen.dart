@@ -105,7 +105,7 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
       AppTheme.showSnackBar(context,
         SnackBar(
           content: Text('🎉 ظهر ${newMatches.length} عرض جديد مطابق!'),
-          backgroundColor: Colors.green,
+          backgroundColor: AppTheme.successGreen,
           action: SnackBarAction(
             label: 'عرض',
             onPressed: () {},
@@ -283,106 +283,106 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
         .toList();
 
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: AppTheme.paddingAllLarge,
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('فلاتر البحث', style: TextStyle(color: AppTheme.primaryGold, fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 20),
+            const Text('فلاتر البحث', style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeTitle, fontWeight: FontWeight.bold)),
+            AppTheme.gapHeightXL,
 
             _buildPriceSlider(),
 
-            const SizedBox(height: 16),
+            AppTheme.gapHeightLarge,
             _buildCityFilter(),
 
             if (isProperty) ...[
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               DropdownButtonFormField<int>(
                 value: _selectedCat,
                 decoration: const InputDecoration(labelText: 'التصنيف', border: OutlineInputBorder()),
                 items: [const DropdownMenuItem(value: null, child: Text('كل التصنيفات')), ...catItems],
                 onChanged: (v) => setState(() => _selectedCat = v),
               ),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               DropdownButtonFormField<int>(
                 value: _selectedDocTp,
                 decoration: const InputDecoration(labelText: 'نوع السند', border: OutlineInputBorder()),
                 items: [const DropdownMenuItem(value: null, child: Text('كل أنواع السند')), ...docItems],
                 onChanged: (v) => setState(() => _selectedDocTp = v),
               ),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               DropdownButtonFormField<String>(
                 value: _selectedFinishing,
                 decoration: const InputDecoration(labelText: 'الإكساء', border: OutlineInputBorder()),
                 items: ['ملكي', 'سوبر ديلوكس', 'ديلوكس', 'عادي', 'هيكل'].map((f) => DropdownMenuItem(value: f, child: Text(f))).toList(),
                 onChanged: (v) => setState(() => _selectedFinishing = v),
               ),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               DropdownButtonFormField<String>(
                 value: _selectedDirection,
                 decoration: const InputDecoration(labelText: 'الاتجاه', border: OutlineInputBorder()),
                 items: ['شمالي', 'جنوبي', 'شرقي', 'غربي', 'شمالي شرقي', 'شمالي غربي', 'جنوبي شرقي', 'جنوبي غربي', 'مفتوح'].map((d) => DropdownMenuItem(value: d, child: Text(d))).toList(),
                 onChanged: (v) => setState(() => _selectedDirection = v),
               ),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               Row(children: [
                 Expanded(child: TextField(
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(labelText: 'المساحة من', border: OutlineInputBorder()),
                   onChanged: (v) => setState(() => _minArea = double.tryParse(v)),
                 )),
-                const SizedBox(width: 8),
+                AppTheme.gapWidthSmall,
                 Expanded(child: TextField(
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(labelText: 'المساحة إلى', border: OutlineInputBorder()),
                   onChanged: (v) => setState(() => _maxArea = double.tryParse(v)),
                 )),
               ]),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               TextField(
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(labelText: 'الطابق', border: OutlineInputBorder()),
                 onChanged: (v) => setState(() => _selectedFloor = int.tryParse(v)),
               ),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               _buildRoomsFilter(),
             ] else ...[
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               TextField(
                 decoration: const InputDecoration(labelText: 'الماركة', border: OutlineInputBorder()),
                 onChanged: (v) => setState(() => _selectedBrand = v),
               ),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               TextField(
                 decoration: const InputDecoration(labelText: 'الموديل', border: OutlineInputBorder()),
                 onChanged: (v) => setState(() => _selectedModel = v),
               ),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               TextField(
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(labelText: 'سنة الصنع', border: OutlineInputBorder()),
                 onChanged: (v) => setState(() => _selectedYear = int.tryParse(v)),
               ),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               DropdownButtonFormField<String>(
                 value: _selectedFuel,
                 decoration: const InputDecoration(labelText: 'نوع الوقود', border: OutlineInputBorder()),
                 items: ['بنزين', 'ديزل', 'هجين', 'كهرباء'].map((f) => DropdownMenuItem(value: f, child: Text(f))).toList(),
                 onChanged: (v) => setState(() => _selectedFuel = v),
               ),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               DropdownButtonFormField<String>(
                 value: _selectedTransmission,
                 decoration: const InputDecoration(labelText: 'ناقل الحركة', border: OutlineInputBorder()),
                 items: ['عادي', 'أوتوماتيك', 'نصف أوتوماتيك'].map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
                 onChanged: (v) => setState(() => _selectedTransmission = v),
               ),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               _buildKmFilter(),
             ],
 
-            const SizedBox(height: 16),
+            AppTheme.gapHeightLarge,
             SwitchListTile(
               title: const Text('عروض تحتوي على صور فقط', style: TextStyle(color: AppTheme.textWhite)),
               value: _hasImagesOnly,
@@ -392,7 +392,7 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
               activeColor: AppTheme.primaryGold,
             ),
 
-            const SizedBox(height: 24),
+            AppTheme.gapHeightXXL,
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
@@ -504,7 +504,7 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
                           'يمكنك استخدام زر الفلاتر 🔽 لتصفية العروض حسب السعر والموقع والمواصفات',
                           style: TextStyle(
                             color: AppTheme.primaryGold.withOpacity(0.9),
-                            fontSize: 12,
+                            fontSize: AppTheme.fontSizeSmall,
                             height: 1.4,
                           ),
                         ),
@@ -516,7 +516,7 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
                   child: _filteredOffers.isEmpty
                       ? const Center(child: Text('لا توجد عروض مطابقة حالياً', style: TextStyle(color: AppTheme.textGrey)))
                       : ListView.builder(
-                          padding: const EdgeInsets.all(12),
+                          padding: AppTheme.paddingAllMedium,
                           itemCount: _filteredOffers.length,
                           itemBuilder: (context, index) {
                             final offer = _filteredOffers[index];
@@ -536,7 +536,7 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
       color: AppTheme.surfaceBlack,
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: AppTheme.paddingAllLarge,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -550,31 +550,31 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: AppTheme.primaryGold.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: AppTheme.borderRadiusXL,
                     ),
                     child: Text('$score% مطابق', style: const TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
                   ),
                 ),
                 const Spacer(),
                 Text('${offer.prc.toStringAsFixed(0)} ${offer.cur == 0 ? '\$' : 'ل.س'}',
-                    style: const TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 16)),
+                    style: const TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeSubtitle)),
               ],
             ),
-            const SizedBox(height: 8),
-            Text(offer.ttl, style: const TextStyle(color: AppTheme.textWhite, fontSize: 16, fontWeight: FontWeight.bold)),
+            AppTheme.gapHeightSmall,
+            Text(offer.ttl, style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeSubtitle, fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
             Row(
               children: [
                 Text(offer.loc['d'] ?? '', style: const TextStyle(color: AppTheme.textGrey)),
                 if (offer.imgs.isNotEmpty) ...[
-                  const SizedBox(width: 12),
+                  AppTheme.gapWidthMedium,
                   Icon(Icons.photo, size: 14, color: AppTheme.primaryGold),
-                  const SizedBox(width: 4),
-                  Text('${offer.imgs.length} صور', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 12)),
+                  AppTheme.gapWidthXS,
+                  Text('${offer.imgs.length} صور', style: const TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSmall)),
                 ],
               ],
             ),
-            const SizedBox(height: 12),
+            AppTheme.gapHeightMedium,
             Row(
               children: [
                 Expanded(
@@ -585,7 +585,7 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
                     child: const Text('عرض التفاصيل'),
                   ),
                 ),
-                const SizedBox(width: 8),
+                AppTheme.gapWidthSmall,
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
@@ -604,7 +604,7 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            AppTheme.gapHeightSmall,
             SizedBox(
               width: double.infinity,
               child: TextButton.icon(

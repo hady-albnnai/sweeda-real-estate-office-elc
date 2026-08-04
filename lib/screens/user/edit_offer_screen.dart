@@ -267,7 +267,7 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
           TextButton(onPressed: () => Navigator.pop(context, false),
               child: const Text('إلغاء', style: TextStyle(color: AppTheme.textGrey))),
           TextButton(onPressed: () => Navigator.pop(context, true),
-              child: const Text('حذف', style: TextStyle(color: Colors.red))),
+              child: const Text('حذف', style: TextStyle(color: AppTheme.errorRed))),
         ],
       ),
     );
@@ -310,24 +310,24 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.delete_outline, color: Colors.red),
+            icon: const Icon(Icons.delete_outline, color: AppTheme.errorRed),
             onPressed: _saving ? null : _confirmDelete,
           ),
         ],
       ),
       body: Stack(children: [
         SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: AppTheme.paddingAllLarge,
           child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
             _statusBanner(),
-            const SizedBox(height: 20),
+            AppTheme.gapHeightXL,
 
             // ── العنوان ──
             _label('عنوان العرض'),
             TextField(controller: _titleCtrl,
                 style: const TextStyle(color: AppTheme.textWhite),
                 decoration: const InputDecoration(border: OutlineInputBorder())),
-            const SizedBox(height: 16),
+            AppTheme.gapHeightLarge,
 
             // ── السعر + العملة ──
             _label('السعر'),
@@ -338,7 +338,7 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
                 style: const TextStyle(color: AppTheme.textWhite),
                 decoration: const InputDecoration(border: OutlineInputBorder()),
               )),
-              const SizedBox(width: 10),
+              AppTheme.gapWidthSmall,
               Expanded(flex: 2, child: DropdownButtonFormField<int>(
                 value: _cur,
                 dropdownColor: AppTheme.surfaceBlack,
@@ -350,7 +350,7 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
                 onChanged: (v) => setState(() => _cur = v ?? Currency.lbp),
               )),
             ]),
-            const SizedBox(height: 16),
+            AppTheme.gapHeightLarge,
 
             // ── رقم التواصل ──
             _label('رقم الهاتف للتواصل (إلزامي)'),
@@ -364,14 +364,14 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
                 hintStyle: TextStyle(color: AppTheme.textGrey),
               ),
             ),
-            const SizedBox(height: 16),
+            AppTheme.gapHeightLarge,
 
             // ── الموقع ──
             _label('الموقع'),
             TextField(controller: _locCtrl,
                 style: const TextStyle(color: AppTheme.textWhite),
                 decoration: const InputDecoration(border: OutlineInputBorder())),
-            const SizedBox(height: 16),
+            AppTheme.gapHeightLarge,
 
             // ── نوع العرض ── قراءة فقط: تغيير النوع بعد الإنشاء ممنوع بطلب المالك
             // (نقل عرض عقار ↔ سيارة يخرب بنية المواصفات ويلتفّ على مراجعة الإدارة)
@@ -381,30 +381,30 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
               decoration: BoxDecoration(
                 color: AppTheme.surfaceBlack,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: AppTheme.borderRadiusSmall,
                 border: Border.all(color: AppTheme.textGrey.withOpacity(0.25)),
               ),
               child: Row(children: [
                 Icon(_typ == 1 ? Icons.directions_car : Icons.home_outlined,
                     color: AppTheme.primaryGold, size: 18),
-                const SizedBox(width: 8),
+                AppTheme.gapWidthSmall,
                 Text(_typ == 1 ? 'سيارة' : 'عقار',
                     style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold)),
                 const Spacer(),
                 const Text('لا يمكن تغييره',
-                    style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+                    style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption)),
               ]),
             ),
-            const SizedBox(height: 12),
+            AppTheme.gapHeightMedium,
 
             // ── نوع المعاملة ──
             _label('نوع المعاملة'),
             Row(children: [
               Expanded(child: _radioChip('بيع',    _trx == 0, () => setState(() => _trx = 0))),
-              const SizedBox(width: 10),
+              AppTheme.gapWidthSmall,
               Expanded(child: _radioChip('إيجار', _trx == 1, () => setState(() => _trx = 1))),
             ]),
-            const SizedBox(height: 16),
+            AppTheme.gapHeightLarge,
 
             // ── الوصف ──
             _label('الوصف التفصيلي'),
@@ -414,7 +414,7 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
               style: const TextStyle(color: AppTheme.textWhite),
               decoration: const InputDecoration(border: OutlineInputBorder()),
             ),
-            const SizedBox(height: 16),
+            AppTheme.gapHeightLarge,
 
             // ── المواصفات ──
             _label('المواصفات التقنية (اختيارية)'),
@@ -428,48 +428,48 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
                 hintStyle: TextStyle(color: AppTheme.textGrey),
               ),
             ),
-            const SizedBox(height: 20),
+            AppTheme.gapHeightXL,
 
             // ── المواعيد المتاحة (avl) ──
             _label('المواعيد المتاحة للمعاينة'),
             const Text('حدد الأيام والفترات الزمنية المتاحة',
-                style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
-            const SizedBox(height: 10),
+                style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
+            AppTheme.gapHeightSmall,
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: AppTheme.paddingAllMedium,
               decoration: BoxDecoration(
                 color: AppTheme.primaryGold.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: AppTheme.borderRadiusMedium,
                 border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3)),
               ),
               child: SwitchListTile(
                 value: _anytimeReady,
                 onChanged: (v) => setState(() => _anytimeReady = v),
                 title: const Text('أنا جاهز للمعاينة في أي وقت',
-                    style: TextStyle(color: AppTheme.textWhite, fontSize: 14, fontWeight: FontWeight.bold)),
+                    style: TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeMedium, fontWeight: FontWeight.bold)),
                 subtitle: const Text('سيتمكن الزبائن من طلب موعد في أي وقت تراه الإدارة مناسباً',
-                    style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+                    style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption)),
                 activeColor: AppTheme.primaryGold,
                 contentPadding: EdgeInsets.zero,
               ),
             ),
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             if (!_anytimeReady)
               ..._weekDays.map((day) => _avlDayWidget(day.$1, day.$2)),
-            const SizedBox(height: 20),
+            AppTheme.gapHeightXL,
 
             // ── الصور ──
             _label('الصور (${_existingImages.length + _newImages.length}/${StorageService.maxImages})'),
-            const SizedBox(height: 8),
+            AppTheme.gapHeightSmall,
             _imagesGrid(),
-            const SizedBox(height: 12),
+            AppTheme.gapHeightMedium,
             OutlinedButton.icon(
               onPressed: _pickImages,
               icon: const Icon(Icons.add_photo_alternate, color: AppTheme.primaryGold),
               label: const Text('إضافة صور', style: TextStyle(color: AppTheme.primaryGold)),
               style: OutlinedButton.styleFrom(side: const BorderSide(color: AppTheme.primaryGold)),
             ),
-            const SizedBox(height: 24),
+            AppTheme.gapHeightXXL,
 
             // ── أزرار ──
             Row(children: [
@@ -482,7 +482,7 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
                   side: const BorderSide(color: AppTheme.primaryGold),
                 ),
               )),
-              const SizedBox(width: 12),
+              AppTheme.gapWidthMedium,
               Expanded(child: ElevatedButton.icon(
                 onPressed: _saving ? null : _save,
                 icon: const Icon(Icons.save, color: Colors.black),
@@ -491,7 +491,7 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
                 style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
               )),
             ]),
-            const SizedBox(height: 24),
+            AppTheme.gapHeightXXL,
           ]),
         ),
         if (_saving)
@@ -501,7 +501,7 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const CircularProgressIndicator(color: AppTheme.primaryGold),
-                const SizedBox(height: 16),
+                AppTheme.gapHeightLarge,
                 Text(_progress, style: const TextStyle(color: AppTheme.textWhite)),
               ],
             )),
@@ -518,7 +518,7 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: AppTheme.borderRadiusMedium,
         border: Border.all(
           color: enabled ? AppTheme.primaryGold.withOpacity(0.5) : AppTheme.textGrey.withOpacity(0.2),
         ),
@@ -529,13 +529,13 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
             _avlDaysEnabled[key] = !enabled;
             if (!enabled && slots.isEmpty) _avlSlots[key]!.add({'from': '', 'to': ''});
           }),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: AppTheme.borderRadiusMedium,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: Row(children: [
               Icon(enabled ? Icons.check_box : Icons.check_box_outline_blank,
                   color: enabled ? AppTheme.primaryGold : AppTheme.textGrey, size: 20),
-              const SizedBox(width: 10),
+              AppTheme.gapWidthSmall,
               Text(label, style: TextStyle(
                   color: enabled ? AppTheme.textWhite : AppTheme.textGrey,
                   fontWeight: FontWeight.bold)),
@@ -544,7 +544,7 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
                 TextButton.icon(
                   onPressed: () => setState(() => _avlSlots[key]!.add({'from': '', 'to': ''})),
                   icon: const Icon(Icons.add, size: 16, color: AppTheme.primaryGold),
-                  label: const Text('فترة', style: TextStyle(color: AppTheme.primaryGold, fontSize: 12)),
+                  label: const Text('فترة', style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSmall)),
                   style: TextButton.styleFrom(padding: EdgeInsets.zero),
                 ),
             ]),
@@ -557,22 +557,22 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               child: Row(children: [
-                const Text('من', style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+                const Text('من', style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody)),
                 const SizedBox(width: 6),
                 Expanded(child: _timeField(
                   value: slot['from'] ?? '', hint: '09:00',
                   onChanged: (v) => setState(() => _avlSlots[key]![i]['from'] = v),
                 )),
-                const SizedBox(width: 8),
-                const Text('إلى', style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+                AppTheme.gapWidthSmall,
+                const Text('إلى', style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody)),
                 const SizedBox(width: 6),
                 Expanded(child: _timeField(
                   value: slot['to'] ?? '', hint: '12:00',
                   onChanged: (v) => setState(() => _avlSlots[key]![i]['to'] = v),
                 )),
-                const SizedBox(width: 4),
+                AppTheme.gapWidthXS,
                 IconButton(
-                  icon: const Icon(Icons.remove_circle, color: Colors.red, size: 20),
+                  icon: const Icon(Icons.remove_circle, color: AppTheme.errorRed, size: 20),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                   onPressed: () => setState(() {
@@ -583,7 +583,7 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
               ]),
             );
           }),
-        if (enabled) const SizedBox(height: 8),
+        if (enabled) AppTheme.gapHeightSmall,
       ]),
     );
   }
@@ -595,10 +595,10 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
       controller: ctrl,
       keyboardType: TextInputType.datetime,
       textAlign: TextAlign.center,
-      style: const TextStyle(color: AppTheme.textWhite, fontSize: 14),
+      style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeMedium),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: AppTheme.textGrey, fontSize: 13),
+        hintStyle: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody),
         contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         isDense: true,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
@@ -610,15 +610,15 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
   Widget _statusBanner() {
     final info = _statusText(_offer!.sts);
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: AppTheme.paddingAllMedium,
       decoration: BoxDecoration(
         color: info.$2.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: AppTheme.borderRadiusMedium,
         border: Border.all(color: info.$2.withOpacity(0.5)),
       ),
       child: Row(children: [
         Icon(info.$3, color: info.$2),
-        const SizedBox(width: 10),
+        AppTheme.gapWidthSmall,
         Expanded(child: Text('الحالة الحالية: ${info.$1}',
             style: TextStyle(color: info.$2, fontWeight: FontWeight.bold))),
       ]),
@@ -627,14 +627,14 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
 
   (String, Color, IconData) _statusText(int s) {
     switch (s) {
-      case 0: return ('مسودة',          Colors.grey,   Icons.edit);
-      case 1: return ('قيد المراجعة',   Colors.orange, Icons.hourglass_empty);
-      case 2: return ('منشور',          Colors.green,  Icons.check_circle);
-      case 3: return ('مرفوض',          Colors.red,    Icons.cancel);
-      case 4: return ('منتهي',          Colors.grey,   Icons.timer_off);
-      case 5: return ('محجوز',          Colors.blue,   Icons.lock_clock);
+      case 0: return ('مسودة',          AppTheme.textGrey,   Icons.edit);
+      case 1: return ('قيد المراجعة',   AppTheme.warningOrange, Icons.hourglass_empty);
+      case 2: return ('منشور',          AppTheme.successGreen,  Icons.check_circle);
+      case 3: return ('مرفوض',          AppTheme.errorRed,    Icons.cancel);
+      case 4: return ('منتهي',          AppTheme.textGrey,   Icons.timer_off);
+      case 5: return ('محجوز',          AppTheme.infoBlue,   Icons.lock_clock);
       case 6: return ('مكتمل',          Colors.teal,   Icons.done_all);
-      default: return ('غير معروف',     Colors.grey,   Icons.help);
+      default: return ('غير معروف',     AppTheme.textGrey,   Icons.help);
     }
   }
 
@@ -651,7 +651,7 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: selected ? AppTheme.primaryGold : AppTheme.surfaceBlack,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: AppTheme.borderRadiusMedium,
           border: Border.all(color: selected ? AppTheme.primaryGold : AppTheme.textGrey),
         ),
         child: Center(child: Text(label,
@@ -683,7 +683,7 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
       return Container(
         height: 80,
         decoration: BoxDecoration(
-          color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(10)),
+          color: AppTheme.surfaceBlack, borderRadius: AppTheme.borderRadiusMedium),
         child: const Center(child: Text('لا توجد صور',
             style: TextStyle(color: AppTheme.textGrey))),
       );
@@ -699,15 +699,15 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
   Widget _imageTile(Widget image, VoidCallback onRemove, String tag) {
     return Stack(children: [
       ClipRRect(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AppTheme.borderRadiusSmall,
         child: SizedBox(width: double.infinity, height: double.infinity, child: image),
       ),
       Positioned(top: 4, right: 4,
         child: GestureDetector(
           onTap: onRemove,
           child: Container(
-            padding: const EdgeInsets.all(4),
-            decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+            padding: AppTheme.paddingAllSmall,
+            decoration: const BoxDecoration(color: AppTheme.errorRed, shape: BoxShape.circle),
             child: const Icon(Icons.close, color: Colors.white, size: 14),
           ),
         ),
@@ -716,9 +716,9 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
-            color: tag == 'جديدة' ? Colors.green : Colors.blue,
+            color: tag == 'جديدة' ? AppTheme.successGreen : AppTheme.infoBlue,
             borderRadius: BorderRadius.circular(6)),
-          child: Text(tag, style: const TextStyle(color: Colors.white, fontSize: 10)),
+          child: Text(tag, style: const TextStyle(color: Colors.white, fontSize: AppTheme.fontSizeXS)),
         ),
       ),
     ]);

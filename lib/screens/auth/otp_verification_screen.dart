@@ -123,17 +123,17 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> with Code
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(30),
           child: Column(children: [
-            const SizedBox(height: 20),
+            AppTheme.gapHeightXL,
             const Icon(Icons.sms_outlined, color: AppTheme.primaryGold, size: 56),
-            const SizedBox(height: 24),
-            const Text('تحقق من الرمز', style: TextStyle(color: AppTheme.textWhite, fontSize: 28, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
+            AppTheme.gapHeightXXL,
+            const Text('تحقق من الرمز', style: TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeXL, fontWeight: FontWeight.bold)),
+            AppTheme.gapHeightMedium,
             Text(
               'أدخل الرمز المكون من 6 أحرف المرسل عبر رسالة نصية SMS إلى\n${auth.currentPhone ?? ''}',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 14, height: 1.5),
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeMedium, height: 1.5),
             ),
-            const SizedBox(height: 20),
+            AppTheme.gapHeightXL,
             Directionality(
               textDirection: TextDirection.rtl,
               child: Row(
@@ -144,8 +144,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> with Code
                     controller: _ctrls[i], focusNode: _nodes[i], textAlign: TextAlign.center,
                     keyboardType: TextInputType.text,
                     maxLength: 1,
-                    style: const TextStyle(color: AppTheme.primaryGold, fontSize: 24, fontWeight: FontWeight.bold),
-                    decoration: InputDecoration(counterText: '', filled: true, fillColor: AppTheme.surfaceBlack, enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Colors.white10)), focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2))),
+                    style: const TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeLarge, fontWeight: FontWeight.bold),
+                    decoration: InputDecoration(counterText: '', filled: true, fillColor: AppTheme.surfaceBlack, enabledBorder: OutlineInputBorder(borderRadius: AppTheme.borderRadiusLarge, borderSide: const BorderSide(color: Colors.white10)), focusedBorder: OutlineInputBorder(borderRadius: AppTheme.borderRadiusLarge, borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2))),
                     onChanged: (v) {
                       if (v.isNotEmpty && i < 5) {
                         _nodes[i + 1].requestFocus();
@@ -160,9 +160,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> with Code
                 )),
               ),
             ),
-            const SizedBox(height: 20),
-            SizedBox(width: double.infinity, height: 56, child: ElevatedButton(onPressed: _loading ? null : _verify, style: ElevatedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))), child: _loading ? const CircularProgressIndicator(color: Colors.black) : const Text('تحقق الآن', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)))),
-            const SizedBox(height: 20),
+            AppTheme.gapHeightXL,
+            SizedBox(width: double.infinity, height: 56, child: ElevatedButton(onPressed: _loading ? null : _verify, style: ElevatedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusLarge)), child: _loading ? const CircularProgressIndicator(color: Colors.black) : const Text('تحقق الآن', style: TextStyle(fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeTitle)))),
+            AppTheme.gapHeightXL,
             TextButton(
               onPressed: _canResend ? () {
                 Provider.of<AuthProvider>(context, listen: false).sendSMSOTP(auth.currentPhone ?? '');

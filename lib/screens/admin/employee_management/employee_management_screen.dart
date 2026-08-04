@@ -232,7 +232,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
-        title: const Text('تأكيد الحذف', style: TextStyle(color: Colors.red)),
+        title: const Text('تأكيد الحذف', style: TextStyle(color: AppTheme.errorRed)),
         content: Text(
           'هل أنت متأكد من حذف "${user.nm}"؟\nهذا الإجراء لا يمكن التراجع عنه.',
           style: const TextStyle(color: AppTheme.textWhite),
@@ -244,7 +244,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorRed),
             child: const Text('حذف'),
           ),
         ],
@@ -304,15 +304,15 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, size: 18, color: AppTheme.primaryGold),
-          const SizedBox(width: 8),
+          AppTheme.gapWidthSmall,
           SizedBox(
             width: 95,
-            child: Text(label, style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+            child: Text(label, style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
           ),
           Expanded(
             child: SelectableText(
               value.isEmpty ? '—' : value,
-              style: const TextStyle(color: AppTheme.textWhite, fontSize: 13),
+              style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeBody),
             ),
           ),
         ],
@@ -363,7 +363,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
       if (!mounted) return;
       if (result['success'] == true) {
         AppTheme.showSnackBar(context,
-          const SnackBar(content: Text('تم تحديث صور الهوية وتوثيق الحساب وظيفياً ✅'), backgroundColor: Colors.green),
+          const SnackBar(content: Text('تم تحديث صور الهوية وتوثيق الحساب وظيفياً ✅'), backgroundColor: AppTheme.successGreen),
         );
         await _loadUsers();
       } else {
@@ -397,7 +397,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
         context: context,
         builder: (ctx) => Dialog(
           backgroundColor: Colors.black,
-          insetPadding: const EdgeInsets.all(12),
+          insetPadding: AppTheme.paddingAllMedium,
           child: _StaffIdImagesViewer(name: user.nm, urls: urls),
         ),
       );
@@ -443,7 +443,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
               _detailRow(Icons.location_on_outlined, 'العنوان', user.ad),
               _detailRow(Icons.verified_user_outlined, 'التوثيق', user.vrf == 2 ? 'موثق' : 'غير موثق'),
               _detailRow(Icons.circle, 'الحالة', user.sts == 0 ? 'نشط' : 'معطّل/مجمّد'),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               OutlinedButton.icon(
                 onPressed: user.img.trim().isEmpty ? null : () => _showStaffIdImages(user),
                 icon: const Icon(Icons.image_search, color: AppTheme.primaryGold),
@@ -456,7 +456,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
-              const SizedBox(height: 8),
+              AppTheme.gapHeightSmall,
               ElevatedButton.icon(
                 onPressed: () async {
                   Navigator.pop(ctx);
@@ -513,7 +513,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
         children: [
           // شريط البحث
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: AppTheme.paddingAllLarge,
             child: TextField(
               controller: _searchController,
               style: const TextStyle(color: AppTheme.textWhite),
@@ -524,7 +524,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
                 filled: true,
                 fillColor: AppTheme.surfaceBlack,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: AppTheme.borderRadiusMedium,
                   borderSide: BorderSide.none,
                 ),
               ),
@@ -536,7 +536,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryGold))
                 : _errorMessage != null
-                    ? Center(child: Text(_errorMessage!, style: const TextStyle(color: Colors.red)))
+                    ? Center(child: Text(_errorMessage!, style: const TextStyle(color: AppTheme.errorRed)))
                     : _filteredUsers.isEmpty
                         ? const Center(
                             child: Text('لا يوجد موظفون', style: TextStyle(color: AppTheme.textGrey)),
@@ -564,9 +564,9 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
     return Card(
       color: AppTheme.surfaceBlack,
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusMedium),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: AppTheme.paddingAllLarge,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -579,7 +579,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
                     style: const TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold),
                   ),
                 ),
-                const SizedBox(width: 12),
+                AppTheme.gapWidthMedium,
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -588,20 +588,20 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
                         user.nm,
                         style: const TextStyle(
                           color: AppTheme.textWhite,
-                          fontSize: 16,
+                          fontSize: AppTheme.fontSizeSubtitle,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      AppTheme.gapHeightXS,
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
                           color: roleColor.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: AppTheme.borderRadiusSmall,
                         ),
                         child: Text(
                           roleName,
-                          style: TextStyle(color: roleColor, fontSize: 12),
+                          style: TextStyle(color: roleColor, fontSize: AppTheme.fontSizeSmall),
                         ),
                       ),
                     ],
@@ -644,14 +644,14 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
                                       const PopupMenuItem(value: 'reset_password', child: Text('إعادة تعيين كلمة السر')),
                                       const PopupMenuItem(
                                         value: 'delete',
-                                        child: Text('حذف', style: TextStyle(color: Colors.red)),
+                                        child: Text('حذف', style: TextStyle(color: AppTheme.errorRed)),
                                       ),
                                     ],
                                   ],
                                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            AppTheme.gapHeightMedium,
             Row(
               children: [
                 const Icon(Icons.phone, size: 16, color: AppTheme.textGrey),
@@ -660,7 +660,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
               ],
             ),
             if (user.eml != null) ...[
-              const SizedBox(height: 4),
+              AppTheme.gapHeightXS,
               Row(
                 children: [
                   const Icon(Icons.email, size: 16, color: AppTheme.textGrey),
@@ -669,20 +669,20 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
                 ],
               ),
             ],
-            const SizedBox(height: 8),
+            AppTheme.gapHeightSmall,
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: isActive
-                    ? Colors.green.withOpacity(0.2)
-                    : Colors.red.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(8),
+                    ? AppTheme.successGreen.withOpacity(0.2)
+                    : AppTheme.errorRed.withOpacity(0.2),
+                borderRadius: AppTheme.borderRadiusSmall,
               ),
               child: Text(
                 isActive ? 'نشط' : 'معطل',
                 style: TextStyle(
-                  color: isActive ? Colors.green : Colors.red,
-                  fontSize: 12,
+                  color: isActive ? AppTheme.successGreen : AppTheme.errorRed,
+                  fontSize: AppTheme.fontSizeSmall,
                 ),
               ),
             ),
@@ -708,13 +708,13 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
   Color _getRoleColor(int role) {
     switch (role) {
       case 2: return Colors.teal;
-      case 3: return Colors.orange;
-      case 4: return Colors.blue;
+      case 3: return AppTheme.warningOrange;
+      case 4: return AppTheme.infoBlue;
       case 5: return Colors.purple;
       case 6: return AppTheme.primaryGold;
       case 7: return Colors.deepPurple;
       case 8: return Colors.brown;
-      default: return Colors.grey;
+      default: return AppTheme.textGrey;
     }
   }
 
@@ -809,7 +809,7 @@ class _StaffIdImagesViewerState extends State<_StaffIdImagesViewer> {
                     margin: const EdgeInsets.symmetric(horizontal: 3),
                     decoration: BoxDecoration(
                       color: active ? AppTheme.primaryGold : Colors.white54,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: AppTheme.borderRadiusSmall,
                     ),
                   );
                 }),

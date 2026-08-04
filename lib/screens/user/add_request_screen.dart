@@ -305,7 +305,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
             (v) => setState(() {
                   _selectedType = v == 'شراء' ? 0 : 1;
                 })),
-        const SizedBox(height: 16),
+        AppTheme.gapHeightLarge,
         _dd('نوع العنصر', ['عقار', 'سيارة'],
             (v) => setState(() {
                   _selectedElement = v == 'عقار' ? 0 : 1;
@@ -313,7 +313,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
                   _selectedSubCat  = null;
                   _customSubCtrl.clear();
                 })),
-        const SizedBox(height: 16),
+        AppTheme.gapHeightLarge,
         if (_selectedElement != null) ...[
           DropdownButtonFormField<int>(
             value: _selectedMainCat,
@@ -335,11 +335,11 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
                 style: TextStyle(color: AppTheme.textGrey)),
           ),
           if (_selectedMainCat != null) ...[
-            const SizedBox(height: 12),
+            AppTheme.gapHeightMedium,
             DropdownButtonFormField<int>(
               value: _selectedSubCat,
               dropdownColor: AppTheme.surfaceBlack,
-              style: const TextStyle(color: AppTheme.textWhite, fontSize: 14),
+              style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeMedium),
               decoration: const InputDecoration(
                   labelText: 'التصنيف الفرعي (اختياري)',
                   border: OutlineInputBorder()),
@@ -353,7 +353,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
                 if (v != -1) _customSubCtrl.clear();
               }),
               hint: const Text('اختر التصنيف الفرعي',
-                  style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
+                  style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeMedium)),
             ),
             if (_selectedSubCat == -1)
               Padding(
@@ -369,9 +369,9 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
           ],
         ],
         if (_selectedType != null) ...[
-          const SizedBox(height: 12),
+          AppTheme.gapHeightMedium,
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: AppTheme.paddingAllSmall,
             decoration: BoxDecoration(
               color: AppTheme.surfaceBlack,
               border: Border.all(
@@ -382,7 +382,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
               _selectedType == 0
                   ? 'المكتب يتقاضى عمولة 3% عند إتمام عملية الشراء.'
                   : 'المكتب يتقاضى أجرة نصف شهر عند إتمام عملية الاستئجار.',
-              style: const TextStyle(color: AppTheme.textWhite, fontSize: 12),
+              style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeSmall),
             ),
           ),
         ],
@@ -406,7 +406,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
               border: OutlineInputBorder(),
             ),
           ),
-          const SizedBox(height: 14),
+          AppTheme.gapHeightMedium,
           TextField(
             controller: _clientPhoneCtrl,
             keyboardType: TextInputType.phone,
@@ -418,7 +418,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
               border: OutlineInputBorder(),
             ),
           ),
-          const SizedBox(height: 14),
+          AppTheme.gapHeightMedium,
           // الميزانية + العملة
           Row(children: [
             Expanded(
@@ -434,7 +434,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
                 ),
               ),
             ),
-            const SizedBox(width: 10),
+            AppTheme.gapWidthSmall,
             Expanded(
               flex: 2,
               child: DropdownButtonFormField<int>(
@@ -454,13 +454,13 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
               ),
             ),
           ]),
-          const SizedBox(height: 8),
+          AppTheme.gapHeightSmall,
           // توضيح: بيانات العميل للإدارة وصاحب الطلب فقط
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: AppTheme.paddingAllSmall,
             decoration: BoxDecoration(
               color: AppTheme.primaryGold.withOpacity(0.06),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: AppTheme.borderRadiusSmall,
               border: Border.all(
                   color: AppTheme.primaryGold.withOpacity(0.2)),
             ),
@@ -473,7 +473,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
                   'بيانات العميل تظهر فقط لك وللإدارة — لا تُكشف لأي طرف آخر.',
                   style: TextStyle(
                       color: AppTheme.textGrey,
-                      fontSize: 11,
+                      fontSize: AppTheme.fontSizeCaption,
                       height: 1.4),
                 ),
               ),
@@ -501,7 +501,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
               border: OutlineInputBorder(),
             ),
           ),
-          const SizedBox(height: 14),
+          AppTheme.gapHeightMedium,
           TextField(
             controller: _notesCtrl,
             maxLines: 3,
@@ -512,7 +512,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
               border: OutlineInputBorder(),
             ),
           ),
-          const SizedBox(height: 16),
+          AppTheme.gapHeightLarge,
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
@@ -543,7 +543,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
           labelText: label,
           filled: true,
           fillColor: AppTheme.surfaceBlack,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          border: OutlineInputBorder(borderRadius: AppTheme.borderRadiusMedium),
         ),
       );
 }

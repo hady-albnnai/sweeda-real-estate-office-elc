@@ -67,7 +67,7 @@ class _CheckEmailScreenState extends State<CheckEmailScreen> {
             context,
             const SnackBar(
                 content: Text('فشل إعادة الإرسال، حاول بعد قليل'),
-                backgroundColor: Colors.red));
+                backgroundColor: AppTheme.errorRed));
       }
     }
   }
@@ -90,38 +90,38 @@ class _CheckEmailScreenState extends State<CheckEmailScreen> {
             children: [
               const Icon(Icons.mark_email_unread,
                   color: AppTheme.primaryGold, size: 88),
-              const SizedBox(height: 24),
+              AppTheme.gapHeightXXL,
               const Text('تحقّق من بريدك الإلكتروني',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       color: AppTheme.textWhite,
-                      fontSize: 24,
+                      fontSize: AppTheme.fontSizeLarge,
                       fontWeight: FontWeight.bold)),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               Text(
                 'أرسلنا رابط تسجيل دخول إلى:\n${auth.currentEmail ?? ''}\n\nافتح بريدك واضغط الرابط لإكمال الدخول. إذا لم يظهر في الوارد خلال دقيقة افحص Spam / البريد غير المرغوب فيه.',
                 textAlign: TextAlign.center,
                 style:
-                    const TextStyle(color: AppTheme.textGrey, fontSize: 14),
+                    const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeMedium),
               ),
               if (auth.lastError != null) ...[
-                const SizedBox(height: 14),
+                AppTheme.gapHeightMedium,
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(12),
+                  padding: AppTheme.paddingAllMedium,
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.10),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.red.withOpacity(0.35)),
+                    color: AppTheme.errorRed.withOpacity(0.10),
+                    borderRadius: AppTheme.borderRadiusMedium,
+                    border: Border.all(color: AppTheme.errorRed.withOpacity(0.35)),
                   ),
                   child: Text(
                     auth.lastError!,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+                    style: const TextStyle(color: Colors.redAccent, fontSize: AppTheme.fontSizeSmall),
                   ),
                 ),
               ],
-              const SizedBox(height: 32),
+              const const SizedBox(height: AppTheme.spacingXXXL),
               SizedBox(
                 width: double.infinity,
                 height: 52,
@@ -142,30 +142,30 @@ class _CheckEmailScreenState extends State<CheckEmailScreen> {
                       : 'إعادة الإرسال'),
                 ),
               ),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               TextButton(
                 onPressed: () => context.go('/login'),
                 child: const Text('تغيير طريقة التسجيل',
                     style: TextStyle(color: AppTheme.primaryGold)),
               ),
-              const SizedBox(height: 32),
+              const const SizedBox(height: AppTheme.spacingXXXL),
               Container(
-                padding: const EdgeInsets.all(14),
+                padding: AppTheme.paddingAllLarge,
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.10),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.orange.withOpacity(0.45)),
+                  color: AppTheme.warningOrange.withOpacity(0.10),
+                  borderRadius: AppTheme.borderRadiusMedium,
+                  border: Border.all(color: AppTheme.warningOrange.withOpacity(0.45)),
                 ),
                 child: const Row(
                   children: [
                     Icon(Icons.warning_amber_rounded,
-                        color: Colors.orange, size: 20),
-                    SizedBox(width: 8),
+                        color: AppTheme.warningOrange, size: 20),
+                    AppTheme.gapWidthSmall,
                     Expanded(
                       child: Text(
                         'مهم: أحياناً يصل رابط التفعيل إلى Spam / البريد غير المرغوب فيه. إذا لم تجده في الوارد، افتح هذا المجلد وانقل الرسالة إلى الوارد.',
                         style:
-                            TextStyle(color: AppTheme.textWhite, fontSize: 12, height: 1.4),
+                            TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeSmall, height: 1.4),
                       ),
                     ),
                   ],

@@ -381,7 +381,7 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
     final phone = auth.userModel?.ph ?? '';
     return SafeArea(
       child: Container(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppTheme.paddingXXL),
         decoration: const BoxDecoration(
           color: AppTheme.deepBlack,
           borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
@@ -394,42 +394,42 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
               const Center(
                 child: Icon(Icons.phone_android, color: AppTheme.primaryGold, size: 48),
               ),
-              const SizedBox(height: 16),
+              AppTheme.gapHeightLarge,
               const Text(
                 'تأكيد رقم الهاتف مطلوب',
                 style: TextStyle(
                     color: AppTheme.textWhite,
-                    fontSize: 20,
+                    fontSize: AppTheme.fontSizeHeadline,
                     fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 8),
+              AppTheme.gapHeightSmall,
               const Text(
                 'لحجز موعد معاينة يجب أن يكون رقم هاتفك متحققاً منه عبر رمز SMS. هذا الإجراء يضمن الجدية ويمنع الاستغلال.',
-                style: TextStyle(color: AppTheme.textGrey, fontSize: 14, height: 1.5),
+                style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeMedium, height: 1.5),
               ),
-              const SizedBox(height: 20),
+              AppTheme.gapHeightXL,
 
               if (phone.isEmpty) ...[
                 // Email-only user: enter phone
                 const Text('رقم الهاتف (09XXXXXXXX):',
                     style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
+                AppTheme.gapHeightSmall,
                 TextField(
                   controller: _phoneCtrl,
                   keyboardType: TextInputType.phone,
-                  style: const TextStyle(color: AppTheme.textWhite, fontSize: 16),
+                  style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeSubtitle),
                   decoration: InputDecoration(
                     hintText: '09XXXXXXXX',
                     prefixIcon: const Icon(Icons.phone, color: AppTheme.primaryGold),
                     filled: true,
                     fillColor: AppTheme.surfaceBlack,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: AppTheme.borderRadiusMedium,
                       borderSide: BorderSide(color: AppTheme.primaryGold.withOpacity(0.3)),
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
+                AppTheme.gapHeightMedium,
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -442,7 +442,7 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
               ] else ...[
                 // Has phone but unverified? (rare)
                 Text('رقمك المسجل: $phone', style: const TextStyle(color: AppTheme.textWhite)),
-                const SizedBox(height: 12),
+                AppTheme.gapHeightMedium,
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -458,22 +458,22 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
               ],
 
               if (_otpSent) ...[
-                const SizedBox(height: 16),
+                AppTheme.gapHeightLarge,
                 const Text('أدخل رمز التحقق المكون من 6 أرقام:',
                     style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
+                AppTheme.gapHeightSmall,
                 TextField(
                   controller: _otpCtrl,
                   keyboardType: TextInputType.number,
                   maxLength: 6,
-                  style: const TextStyle(color: AppTheme.textWhite, fontSize: 20, letterSpacing: 8),
+                  style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeHeadline, letterSpacing: 8),
                   textAlign: TextAlign.center,
                   decoration: const InputDecoration(
                     hintText: '123456',
                     counterText: '',
                   ),
                 ),
-                const SizedBox(height: 12),
+                AppTheme.gapHeightMedium,
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -486,11 +486,11 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
               ],
 
               if (_phoneError != null) ...[
-                const SizedBox(height: 12),
+                AppTheme.gapHeightMedium,
                 Text(_phoneError!, style: const TextStyle(color: AppTheme.errorRed)),
               ],
 
-              const SizedBox(height: 20),
+              AppTheme.gapHeightXL,
               TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: const Text('إلغاء', style: TextStyle(color: AppTheme.textGrey)),
@@ -519,19 +519,19 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
           child: SingleChildScrollView(
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               const Icon(Icons.lock_outline, color: AppTheme.primaryGold, size: 60),
-              const SizedBox(height: 16),
+              AppTheme.gapHeightLarge,
               const Text('يجب تسجيل الدخول',
                   style: TextStyle(
                       color: AppTheme.textWhite,
-                      fontSize: 20,
+                      fontSize: AppTheme.fontSizeHeadline,
                       fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
+              AppTheme.gapHeightSmall,
               const Text(
                 'لحجز موعد معاينة يجب أن تكون مسجّلاً في التطبيق.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppTheme.textGrey, fontSize: 14, height: 1.5),
+                style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeMedium, height: 1.5),
               ),
-              const SizedBox(height: 24),
+              AppTheme.gapHeightXXL,
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -543,7 +543,7 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
                       style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
-              const SizedBox(height: 10),
+              AppTheme.gapHeightSmall,
               TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: const Text('لاحقاً',
@@ -585,58 +585,58 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
                 width: 50, height: 5,
                 decoration: BoxDecoration(
                   color: AppTheme.primaryGold,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: AppTheme.borderRadiusMedium,
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            AppTheme.gapHeightXL,
             const Text('حجز موعد معاينة',
                 style: TextStyle(
                     color: AppTheme.textWhite,
-                    fontSize: 20,
+                    fontSize: AppTheme.fontSizeHeadline,
                     fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
+            AppTheme.gapHeightSmall,
             // تنبيه الدور والمكتب
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
                 color: AppTheme.primaryGold.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: AppTheme.borderRadiusSmall,
                 border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
               ),
               child: const Row(children: [
                 Icon(Icons.info_outline, color: AppTheme.primaryGold, size: 18),
-                SizedBox(width: 8),
+                AppTheme.gapWidthSmall,
                 Expanded(
                   child: Text(
                     'الحجز يتم عبر إدارة المكتب لضمان الجدية. يرجى ملاحظة أنه قد يكون هناك طلبات أخرى تسبقك في الدور.',
                     style: TextStyle(
-                        color: AppTheme.primaryGold, fontSize: 12, height: 1.4),
+                        color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSmall, height: 1.4),
                   ),
                 ),
               ]),
             ),
-            const SizedBox(height: 8),
+            AppTheme.gapHeightSmall,
             // تنبيه التوثيق القانوني المأجور
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.green.withOpacity(0.3)),
+                color: AppTheme.successGreen.withOpacity(0.08),
+                borderRadius: AppTheme.borderRadiusSmall,
+                border: Border.all(color: AppTheme.successGreen.withOpacity(0.3)),
               ),
               child: const Row(children: [
-                Icon(Icons.verified_user_outlined, color: Colors.green, size: 18),
-                SizedBox(width: 8),
+                Icon(Icons.verified_user_outlined, color: AppTheme.successGreen, size: 18),
+                AppTheme.gapWidthSmall,
                 Expanded(
                   child: Text(
                     'يتولى القسم القانوني في المكتب تدقيق ثبوتيات الملكية وتنظيم العقود المعتمدة عند طلب إتمام المعاملة.',
-                    style: TextStyle(color: Colors.green, fontSize: 11, height: 1.4, fontWeight: FontWeight.w600),
+                    style: TextStyle(color: AppTheme.successGreen, fontSize: AppTheme.fontSizeCaption, height: 1.4, fontWeight: FontWeight.w600),
                   ),
                 ),
               ]),
             ),
-            const SizedBox(height: 16),
+            AppTheme.gapHeightLarge,
 
             if (!hasAvailability)
               const Center(
@@ -656,16 +656,16 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
                       ' حتى '
                       '${context.read<ConfigProvider>().config?.apptAnyTo ?? '21:00'}',
                       style: const TextStyle(
-                          color: AppTheme.textGrey, fontSize: 12, height: 1.4),
+                          color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall, height: 1.4),
                     ),
                   ),
                 ]),
-                const SizedBox(height: 10),
+                AppTheme.gapHeightSmall,
               ],
               const Text('1. اختر اليوم:',
                   style: TextStyle(
                       color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 10),
+              AppTheme.gapHeightSmall,
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -682,14 +682,14 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
                         });
                         _loadBookedSlots();
                       },
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: AppTheme.borderRadiusXL,
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                         decoration: BoxDecoration(
                           color: selected
                               ? AppTheme.primaryGold
                               : AppTheme.surfaceBlack,
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: AppTheme.borderRadiusXL,
                           border: Border.all(color: AppTheme.primaryGold),
                         ),
                         child: Text(
@@ -704,13 +704,13 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
                   );
                 }).toList(),
               ),
-              const SizedBox(height: 16),
+              AppTheme.gapHeightLarge,
 
               if (_selectedDayKey != null) ...[
                 const Text('2. اختر الفترة:',
                     style: TextStyle(
                         color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 10),
+                AppTheme.gapHeightSmall,
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -727,7 +727,7 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
                           color: selected
                               ? AppTheme.primaryGold.withOpacity(0.2)
                               : AppTheme.surfaceBlack,
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: AppTheme.borderRadiusXL,
                           border: Border.all(
                             color: selected
                                 ? AppTheme.primaryGold
@@ -745,14 +745,14 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
                     );
                   }).toList(),
                 ),
-                const SizedBox(height: 16),
+                AppTheme.gapHeightLarge,
               ],
 
               if (_selectedSlot != null) ...[
                 const Text('3. اختر الوقت المحدد:',
                     style: TextStyle(
                         color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 10),
+                AppTheme.gapHeightSmall,
                 if (_loadingSlots)
                   const Center(
                     child: Padding(
@@ -775,14 +775,14 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
                           onTap: isBooked
                             ? null
                             : () => setState(() => _selectedTime = time),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: AppTheme.borderRadiusMedium,
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                             decoration: BoxDecoration(
                               color: isBooked
                                   ? AppTheme.textGrey.withOpacity(0.1)
                                   : (selected ? AppTheme.primaryGold : AppTheme.surfaceBlack),
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: AppTheme.borderRadiusMedium,
                               border: Border.all(
                                 color: isBooked
                                     ? AppTheme.textGrey.withOpacity(0.2)
@@ -804,21 +804,21 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
                     }).toList(),
                   ),
                 if (_bookedSlots.isNotEmpty && !_loadingSlots) ...[
-                  const SizedBox(height: 8),
+                  AppTheme.gapHeightSmall,
                   const Row(
                     children: [
                       Icon(Icons.info_outline, size: 14, color: AppTheme.textGrey),
-                      SizedBox(width: 4),
+                      AppTheme.gapWidthXS,
                       Expanded(
                         child: Text(
                           'الأوقات المظللة محجوزة أو ضمن فارق الساعة من موعد آخر',
-                          style: TextStyle(color: AppTheme.textGrey, fontSize: 11),
+                          style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption),
                         ),
                       ),
                     ],
                   ),
                 ],
-                const SizedBox(height: 20),
+                AppTheme.gapHeightXL,
               ],
 
               SizedBox(
@@ -837,7 +837,7 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
                 ),
               ),
             ],
-            const SizedBox(height: 20),
+            AppTheme.gapHeightXL,
           ],
         ),
       ),

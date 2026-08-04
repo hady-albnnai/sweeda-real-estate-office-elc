@@ -116,7 +116,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                         color: AppTheme.primaryGold,
                         onRefresh: _load,
                         child: ListView.builder(
-                          padding: const EdgeInsets.all(12),
+                          padding: AppTheme.paddingAllMedium,
                           itemCount: _filtered.length,
                           itemBuilder: (_, i) => _payTile(_filtered[i]),
                         ),
@@ -150,21 +150,21 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   Color _stsColor(int sts) {
     switch (sts) {
       case 1:
-        return Colors.green;
+        return AppTheme.successGreen;
       case 2:
         return AppTheme.errorRed;
       default:
-        return Colors.orange;
+        return AppTheme.warningOrange;
     }
   }
 
   Widget _payTile(PaymentModel p) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.15)),
       ),
       child: Column(
@@ -176,21 +176,21 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               Text('${p.amt.toStringAsFixed(0)} ${p.cur == 0 ? '\$' : 'ل.س'}',
                   style: const TextStyle(
                       color: AppTheme.primaryGold,
-                      fontSize: 18,
+                      fontSize: AppTheme.fontSizeTitle,
                       fontWeight: FontWeight.bold)),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                 decoration: BoxDecoration(
                   color: _stsColor(p.sts).withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: AppTheme.borderRadiusSmall,
                   border: Border.all(color: _stsColor(p.sts).withOpacity(0.5)),
                 ),
                 child: Text(_stsNames[p.sts] ?? '—',
-                    style: TextStyle(color: _stsColor(p.sts), fontSize: 11)),
+                    style: TextStyle(color: _stsColor(p.sts), fontSize: AppTheme.fontSizeCaption)),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          AppTheme.gapHeightSmall,
           _row('المستخدم',
               _usersCache[p.uid]?.nm.isNotEmpty == true
                   ? _usersCache[p.uid]!.nm
@@ -224,19 +224,19 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                     child: Row(children: [
                       Text('السعر المفترض: ',
                           style: const TextStyle(
-                              color: AppTheme.textGrey, fontSize: 12)),
+                              color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
                       Text(expectedLabel,
                           style: TextStyle(
-                              color: mismatch ? Colors.red : Colors.green,
-                              fontSize: 13,
+                              color: mismatch ? AppTheme.errorRed : AppTheme.successGreen,
+                              fontSize: AppTheme.fontSizeBody,
                               fontWeight: FontWeight.bold)),
                       if (mismatch) ...[
                         const SizedBox(width: 6),
                         const Icon(Icons.warning_amber,
-                            color: Colors.red, size: 14),
+                            color: AppTheme.errorRed, size: 14),
                         const Text(' أقل من المطلوب',
                             style: TextStyle(
-                                color: Colors.red, fontSize: 11)),
+                                color: AppTheme.errorRed, fontSize: AppTheme.fontSizeCaption)),
                       ],
                     ]),
                   ),
@@ -254,11 +254,11 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                 child: const Row(
                   children: [
                     Icon(Icons.receipt_long, color: AppTheme.primaryGold, size: 16),
-                    SizedBox(width: 4),
+                    AppTheme.gapWidthXS,
                     Text('عرض إثبات الدفع',
                         style: TextStyle(
                             color: AppTheme.primaryGold,
-                            fontSize: 12,
+                            fontSize: AppTheme.fontSizeSmall,
                             decoration: TextDecoration.underline)),
                   ],
                 ),
@@ -273,7 +273,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                   onPressed: () => _approve(p),
                   icon: const Icon(Icons.check_circle, size: 18),
                   label: const Text('قبول وتفعيل'),
-                  style: TextButton.styleFrom(foregroundColor: Colors.green),
+                  style: TextButton.styleFrom(foregroundColor: AppTheme.successGreen),
                 ),
                 TextButton.icon(
                   onPressed: () => _reject(p),
@@ -313,12 +313,12 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
       context: context,
       builder: (_) => Dialog(
         backgroundColor: AppTheme.surfaceBlack,
-        insetPadding: const EdgeInsets.all(16),
+        insetPadding: AppTheme.paddingAllLarge,
         child: Stack(
           children: [
             InteractiveViewer(
               child: Padding(
-                padding: const EdgeInsets.all(8),
+                padding: AppTheme.paddingAllSmall,
                 child: Image.network(
                   finalUrl!,
                   errorBuilder: (_, __, ___) => const Padding(
@@ -381,24 +381,24 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
         title: const Text('سبب الرفض (إلزامي)',
-            style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 16)),
+            style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeSubtitle)),
         content: StatefulBuilder(
           builder: (ctx2, setS) => Column(mainAxisSize: MainAxisSize.min, children: [
             Wrap(spacing: 6, runSpacing: 4, children: [
               for (final r in presets)
                 ActionChip(
-                  label: Text(r, style: const TextStyle(fontSize: 11)),
+                  label: Text(r, style: const TextStyle(fontSize: AppTheme.fontSizeCaption)),
                   onPressed: () => setS(() => ctrl.text = r),
                 ),
             ]),
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             TextField(
               controller: ctrl,
               maxLines: 2,
-              style: const TextStyle(color: AppTheme.textWhite, fontSize: 13),
+              style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeBody),
               decoration: const InputDecoration(
                 hintText: 'اكتب السبب أو اختر من الأعلى…',
-                hintStyle: TextStyle(color: AppTheme.textGrey, fontSize: 12),
+                hintStyle: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall),
                 border: OutlineInputBorder(),
               ),
             ),
@@ -423,11 +423,11 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label,
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody)),
           Flexible(
             child: Text(value,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: AppTheme.textWhite, fontSize: 13)),
+                style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeBody)),
           ),
         ],
       ),

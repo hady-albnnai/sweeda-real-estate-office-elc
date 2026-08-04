@@ -168,7 +168,7 @@ class _ExecuteTaskScreenState extends State<ExecuteTaskScreen> {
           : _task == null
               ? const Center(child: Text('لم يتم العثور على المهمة', style: TextStyle(color: AppTheme.textGrey)))
               : SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
+                  padding: AppTheme.paddingAllLarge,
                   child: Column(children: [
                     // معلومات العرض
                     _card('معلومات المهمة', [
@@ -180,13 +180,13 @@ class _ExecuteTaskScreenState extends State<ExecuteTaskScreen> {
                     ]),
 
                     if ((_task!['description'] ?? '').isNotEmpty) ...[
-                      const SizedBox(height: 12),
+                      AppTheme.gapHeightMedium,
                       _card('تفاصيل العرض', [
-                        Text(_task!['description'], style: const TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+                        Text(_task!['description'], style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody)),
                       ]),
                     ],
 
-                    const SizedBox(height: 16),
+                    AppTheme.gapHeightLarge,
 
                     // ملاحظات المنفذ
                     _card('ملاحظاتي', [
@@ -201,7 +201,7 @@ class _ExecuteTaskScreenState extends State<ExecuteTaskScreen> {
                       ),
                     ]),
 
-                    const SizedBox(height: 24),
+                    AppTheme.gapHeightXXL,
 
                     // أزرار الإجراءات
                     Row(children: [
@@ -211,26 +211,26 @@ class _ExecuteTaskScreenState extends State<ExecuteTaskScreen> {
                           icon: const Icon(Icons.schedule),
                           label: const Text('تأجيل'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange,
+                            backgroundColor: AppTheme.warningOrange,
                             padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      AppTheme.gapWidthSmall,
                       Expanded(
                         child: ElevatedButton.icon(
                           onPressed: _loading ? null : _reject,
                           icon: const Icon(Icons.cancel),
                           label: const Text('رفض'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
+                            backgroundColor: AppTheme.errorRed,
                             padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
                         ),
                       ),
                     ]),
 
-                    const SizedBox(height: 14),
+                    AppTheme.gapHeightMedium,
 
                     SizedBox(
                       width: double.infinity,
@@ -239,12 +239,12 @@ class _ExecuteTaskScreenState extends State<ExecuteTaskScreen> {
                         icon: const Icon(Icons.send),
                         label: const Text('طلب إتمام المعاملة'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
+                          backgroundColor: AppTheme.infoBlue,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    AppTheme.gapHeightXXL,
                   ]),
                 ),
     );
@@ -253,14 +253,14 @@ class _ExecuteTaskScreenState extends State<ExecuteTaskScreen> {
   Widget _card(String title, List<Widget> children) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppTheme.borderRadiusLarge,
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(title, style: const TextStyle(color: AppTheme.primaryGold, fontSize: 16, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
+        Text(title, style: const TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSubtitle, fontWeight: FontWeight.bold)),
+        AppTheme.gapHeightSmall,
         ...children,
       ]),
     );
@@ -270,8 +270,8 @@ class _ExecuteTaskScreenState extends State<ExecuteTaskScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        SizedBox(width: 90, child: Text(label, style: const TextStyle(color: AppTheme.textGrey, fontSize: 13))),
-        Expanded(child: Text(value, style: const TextStyle(color: AppTheme.textWhite, fontSize: 13))),
+        SizedBox(width: 90, child: Text(label, style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody))),
+        Expanded(child: Text(value, style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeBody))),
       ]),
     );
   }

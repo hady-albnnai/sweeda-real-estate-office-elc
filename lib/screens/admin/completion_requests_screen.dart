@@ -93,7 +93,7 @@ class _CompletionRequestsScreenState extends State<CompletionRequestsScreen> {
               child: const Text('إلغاء')),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorRed),
             child: const Text('رفض'),
           ),
         ],
@@ -134,7 +134,7 @@ class _CompletionRequestsScreenState extends State<CompletionRequestsScreen> {
                   color: AppTheme.primaryGold,
                   onRefresh: _load,
                   child: ListView.builder(
-                    padding: const EdgeInsets.all(12),
+                    padding: AppTheme.paddingAllMedium,
                     itemCount: _requests.length,
                     itemBuilder: (_, i) => _requestCard(_requests[i]),
                   ),
@@ -145,19 +145,19 @@ class _CompletionRequestsScreenState extends State<CompletionRequestsScreen> {
   Widget _requestCard(Map<String, dynamic> req) {
     return Card(
       color: AppTheme.surfaceBlack,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusLarge),
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: AppTheme.paddingAllLarge,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(children: [
               CircleAvatar(
-                backgroundColor: Colors.blue.withOpacity(0.15),
-                child: const Icon(Icons.assignment_turned_in, color: Colors.blue),
+                backgroundColor: AppTheme.infoBlue.withOpacity(0.15),
+                child: const Icon(Icons.assignment_turned_in, color: AppTheme.infoBlue),
               ),
-              const SizedBox(width: 10),
+              AppTheme.gapWidthSmall,
               Expanded(
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -169,11 +169,11 @@ class _CompletionRequestsScreenState extends State<CompletionRequestsScreen> {
                       Text(
                           req['task_type'] == 'property' ? 'عقار' : 'سيارة',
                           style: const TextStyle(
-                              color: AppTheme.textGrey, fontSize: 12)),
+                              color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
                     ]),
               ),
             ]),
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             if ((req['executor_name'] ?? '').isNotEmpty)
               _info('المنفذ', req['executor_name']),
             if ((req['executor_notes'] ?? '').isNotEmpty)
@@ -190,10 +190,10 @@ class _CompletionRequestsScreenState extends State<CompletionRequestsScreen> {
                   icon: const Icon(Icons.check),
                   label: const Text('موافقة'),
                   style:
-                      ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                      ElevatedButton.styleFrom(backgroundColor: AppTheme.successGreen),
                 ),
               ),
-              const SizedBox(width: 10),
+              AppTheme.gapWidthSmall,
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: () => _reject(req),
@@ -217,11 +217,11 @@ class _CompletionRequestsScreenState extends State<CompletionRequestsScreen> {
             width: 100,
             child: Text(label,
                 style:
-                    const TextStyle(color: AppTheme.textGrey, fontSize: 12))),
+                    const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall))),
         Expanded(
             child: Text(value,
                 style:
-                    const TextStyle(color: AppTheme.textWhite, fontSize: 12))),
+                    const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeSmall))),
       ]),
     );
   }

@@ -23,14 +23,14 @@ class AppErrorWidget extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, size: 64, color: AppTheme.errorRed.withOpacity(0.8)),
-            const SizedBox(height: 16),
+            AppTheme.gapHeightLarge,
             Text(
               message,
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 15, color: AppTheme.textGrey),
             ),
             if (onRetry != null) ...[
-              const SizedBox(height: 20),
+              AppTheme.gapHeightXL,
               ElevatedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh),

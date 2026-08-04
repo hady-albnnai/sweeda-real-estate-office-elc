@@ -392,7 +392,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const CircularProgressIndicator(color: AppTheme.primaryGold),
-                    const SizedBox(height: 16),
+                    AppTheme.gapHeightLarge,
                     Text(_progressMsg,
                         style: const TextStyle(color: AppTheme.textWhite)),
                   ],
@@ -417,16 +417,16 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
         const Text('صاحب العرض',
             style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
         if (_selectedOwner != null) ...[
-          const SizedBox(width: 8),
+          AppTheme.gapWidthSmall,
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.15),
+              color: AppTheme.successGreen.withOpacity(0.15),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
               _selectedOwner!.nm.isNotEmpty ? _selectedOwner!.nm : _selectedOwner!.ph,
-              style: const TextStyle(color: Colors.green, fontSize: 12),
+              style: const TextStyle(color: AppTheme.successGreen, fontSize: AppTheme.fontSizeSmall),
             ),
           ),
         ],
@@ -436,20 +436,20 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
         children: [
           // تنويه داخلي
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: AppTheme.paddingAllMedium,
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
               color: Colors.amber.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: AppTheme.borderRadiusSmall,
               border: Border.all(color: Colors.amber.withOpacity(0.4)),
             ),
             child: const Row(children: [
               Icon(Icons.admin_panel_settings, color: Colors.amber, size: 16),
-              SizedBox(width: 8),
+              AppTheme.gapWidthSmall,
               Expanded(
                 child: Text(
                   'العرض يُضاف من الإدارة — سيُسجَّل من أضافه داخلياً.',
-                  style: TextStyle(color: Colors.amber, fontSize: 12),
+                  style: TextStyle(color: Colors.amber, fontSize: AppTheme.fontSizeSmall),
                 ),
               ),
             ]),
@@ -463,7 +463,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
               border: OutlineInputBorder(),
             ),
           ),
-          const SizedBox(height: 10),
+          AppTheme.gapHeightSmall,
           _loadingUsers
               ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryGold))
               : SizedBox(
@@ -489,18 +489,18 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
                                   style: const TextStyle(
                                       color: Colors.black,
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 14),
+                                      fontSize: AppTheme.fontSizeMedium),
                                 ),
                               ),
                               title: Text(
                                 u.nm.isNotEmpty ? u.nm : 'مجهول',
                                 style: const TextStyle(
-                                    color: AppTheme.textWhite, fontSize: 14),
+                                    color: AppTheme.textWhite, fontSize: AppTheme.fontSizeMedium),
                               ),
                               subtitle: Text(
                                 u.ph + (u.role == UserRole.broker ? ' • وسيط' : ''),
                                 style: const TextStyle(
-                                    color: AppTheme.textGrey, fontSize: 11),
+                                    color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption),
                               ),
                               trailing: selected
                                   ? const Icon(Icons.check_circle,
@@ -511,7 +511,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
                           },
                         ),
                 ),
-          const SizedBox(height: 12),
+          AppTheme.gapHeightMedium,
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -554,11 +554,11 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
                 _selectedMainCat = null;
                 _selectedSubCat  = null;
               })),
-          const SizedBox(height: 16),
+          AppTheme.gapHeightLarge,
           _dd('نوع المعاملة', ['بيع', 'إيجار'],
               _selectedTrans == null ? null : (_selectedTrans == 0 ? 'بيع' : 'إيجار'),
               (v) => setState(() => _selectedTrans = v == 'بيع' ? 0 : 1)),
-          const SizedBox(height: 16),
+          AppTheme.gapHeightLarge,
           DropdownButtonFormField<int>(
             value: _selectedMainCat,
             dropdownColor: AppTheme.surfaceBlack,
@@ -577,11 +577,11 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
                 style: TextStyle(color: AppTheme.textGrey)),
           ),
           if (_selectedMainCat != null) ...[
-            const SizedBox(height: 12),
+            AppTheme.gapHeightMedium,
             DropdownButtonFormField<int>(
               value: _selectedSubCat,
               dropdownColor: AppTheme.surfaceBlack,
-              style: const TextStyle(color: AppTheme.textWhite, fontSize: 14),
+              style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeMedium),
               decoration: const InputDecoration(
                   border: OutlineInputBorder(), labelText: 'التصنيف الفرعي'),
               items: [
@@ -594,7 +594,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
                 if (v != -1) _customSubCtrl.clear();
               }),
               hint: const Text('اختر التصنيف الفرعي',
-                  style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
+                  style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeMedium)),
             ),
             if (_selectedSubCat == -1)
               Padding(
@@ -607,7 +607,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
                 ),
               ),
           ],
-          const SizedBox(height: 16),
+          AppTheme.gapHeightLarge,
           TextField(
             controller: _contactPhCtrl,
             keyboardType: TextInputType.phone,
@@ -617,7 +617,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
               border: OutlineInputBorder(),
             ),
           ),
-          const SizedBox(height: 16),
+          AppTheme.gapHeightLarge,
           DropdownButtonFormField<String>(
             value: _selectedCityArea,
             dropdownColor: AppTheme.surfaceBlack,
@@ -630,7 +630,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
               if (v != _customCityOption) _customCityCtrl.clear();
             }),
             hint: const Text('اختر المنطقة',
-                style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
+                style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeMedium)),
             menuMaxHeight: 300,
           ),
           if (_selectedCityArea == _customCityOption)
@@ -643,9 +643,9 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
                     border: OutlineInputBorder()),
               ),
             ),
-          const SizedBox(height: 16),
+          AppTheme.gapHeightLarge,
           _buildLocationAutocomplete(),
-          const SizedBox(height: 14),
+          AppTheme.gapHeightMedium,
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -675,7 +675,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
               counterStyle: TextStyle(color: AppTheme.textGrey),
             ),
           ),
-          const SizedBox(height: 12),
+          AppTheme.gapHeightMedium,
           Row(children: [
             Expanded(
               flex: 3,
@@ -687,7 +687,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
                     border: OutlineInputBorder()),
               ),
             ),
-            const SizedBox(width: 10),
+            AppTheme.gapWidthSmall,
             Expanded(
               flex: 2,
               child: DropdownButtonFormField<int>(
@@ -703,7 +703,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
               ),
             ),
           ]),
-          const SizedBox(height: 12),
+          AppTheme.gapHeightMedium,
           TextField(
             controller: _descCtrl,
             maxLines: 4,
@@ -713,7 +713,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
               border: OutlineInputBorder(),
             ),
           ),
-          const SizedBox(height: 12),
+          AppTheme.gapHeightMedium,
           TextField(
             controller: _specCtrl,
             maxLines: 3,
@@ -723,21 +723,21 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
               border: OutlineInputBorder(),
             ),
           ),
-          const SizedBox(height: 12),
+          AppTheme.gapHeightMedium,
           // الخريطة
           const Row(children: [
             Icon(Icons.map, color: AppTheme.primaryGold, size: 18),
             SizedBox(width: 6),
             Text('الموقع الدقيق على الخريطة (اختياري)',
-                style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 14)),
+                style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeMedium)),
           ]),
-          const SizedBox(height: 8),
+          AppTheme.gapHeightSmall,
           LocationPicker(
             initial: _pickedLocation,
             onPicked: (loc) => setState(() => _pickedLocation = loc),
             height: 220,
           ),
-          const SizedBox(height: 14),
+          AppTheme.gapHeightMedium,
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -761,7 +761,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
             label: Text(
                 'إضافة صور (${_pickedImages.length}/${StorageService.maxImages})'),
           ),
-          const SizedBox(height: 10),
+          AppTheme.gapHeightSmall,
           if (_pickedImages.isNotEmpty)
             Wrap(
               spacing: 8,
@@ -769,7 +769,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
               children: _pickedImages.asMap().entries.map((e) {
                 return Stack(children: [
                   ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: AppTheme.borderRadiusSmall,
                       child: _thumb(e.value)),
                   Positioned(
                     top: -8, left: -8,
@@ -782,7 +782,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
                 ]);
               }).toList(),
             ),
-          const SizedBox(height: 14),
+          AppTheme.gapHeightMedium,
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -803,8 +803,8 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('حدد الأيام والفترات الزمنية المتاحة للمعاينة.',
-                style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
-            const SizedBox(height: 16),
+                style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody)),
+            AppTheme.gapHeightLarge,
             ..._weekDays.map((day) {
               final key     = day.$1;
               final label   = day.$2;
@@ -814,7 +814,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
                 margin: const EdgeInsets.only(bottom: 10),
                 decoration: BoxDecoration(
                   color: AppTheme.surfaceBlack,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: AppTheme.borderRadiusMedium,
                   border: Border.all(
                     color: enabled
                         ? AppTheme.primaryGold.withOpacity(0.5)
@@ -831,7 +831,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
                           _avlSlots[key]!.add({'from': '', 'to': ''});
                         }
                       }),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: AppTheme.borderRadiusMedium,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 10),
@@ -845,7 +845,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
                                 : AppTheme.textGrey,
                             size: 20,
                           ),
-                          const SizedBox(width: 10),
+                          AppTheme.gapWidthSmall,
                           Text(label,
                               style: TextStyle(
                                 color: enabled
@@ -864,7 +864,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
                               label: const Text('فترة',
                                   style: TextStyle(
                                       color: AppTheme.primaryGold,
-                                      fontSize: 12)),
+                                      fontSize: AppTheme.fontSizeSmall)),
                               style: TextButton.styleFrom(
                                   padding: EdgeInsets.zero),
                             ),
@@ -881,7 +881,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
                           child: Row(children: [
                             const Text('من',
                                 style: TextStyle(
-                                    color: AppTheme.textGrey, fontSize: 13)),
+                                    color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody)),
                             const SizedBox(width: 6),
                             Expanded(
                               child: _timeField(
@@ -891,10 +891,10 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
                                     () => _avlSlots[key]![i]['from'] = v),
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            AppTheme.gapWidthSmall,
                             const Text('إلى',
                                 style: TextStyle(
-                                    color: AppTheme.textGrey, fontSize: 13)),
+                                    color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody)),
                             const SizedBox(width: 6),
                             Expanded(
                               child: _timeField(
@@ -904,10 +904,10 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
                                     () => _avlSlots[key]![i]['to'] = v),
                               ),
                             ),
-                            const SizedBox(width: 4),
+                            AppTheme.gapWidthXS,
                             IconButton(
                               icon: const Icon(Icons.remove_circle,
-                                  color: Colors.red, size: 20),
+                                  color: AppTheme.errorRed, size: 20),
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(),
                               onPressed: () => setState(() {
@@ -920,12 +920,12 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
                           ]),
                         );
                       }),
-                    if (enabled) const SizedBox(height: 8),
+                    if (enabled) AppTheme.gapHeightSmall,
                   ],
                 ),
               );
             }),
-            const SizedBox(height: 14),
+            AppTheme.gapHeightMedium,
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -967,7 +967,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
               .toList(),
           onChanged: (v) => setState(() => _selectedDocType = v),
         ),
-        const SizedBox(height: 14),
+        AppTheme.gapHeightMedium,
         const Text('صورة سند الملكية (اختيارية)',
             style: TextStyle(
                 color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
@@ -978,10 +978,10 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
             height: 120,
             decoration: BoxDecoration(
               color: AppTheme.surfaceBlack,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: AppTheme.borderRadiusMedium,
               border: Border.all(
                 color: _docImage != null
-                    ? Colors.green.withOpacity(0.4)
+                    ? AppTheme.successGreen.withOpacity(0.4)
                     : AppTheme.primaryGold.withOpacity(0.3),
               ),
             ),
@@ -992,10 +992,10 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
                       children: [
                         Icon(Icons.upload_file,
                             color: AppTheme.primaryGold, size: 32),
-                        SizedBox(height: 4),
+                        AppTheme.gapHeightXS,
                         Text('اضغط لرفع صورة السند',
                             style: TextStyle(
-                                color: AppTheme.textGrey, fontSize: 12)),
+                                color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
                       ],
                     ),
                   )
@@ -1009,27 +1009,27 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
                   ),
           ),
         ),
-        const SizedBox(height: 20),
+        AppTheme.gapHeightXL,
         // تنويه داخلي
         Container(
-          padding: const EdgeInsets.all(10),
+          padding: AppTheme.paddingAllMedium,
           decoration: BoxDecoration(
             color: Colors.amber.withOpacity(0.08),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: AppTheme.borderRadiusSmall,
             border: Border.all(color: Colors.amber.withOpacity(0.3)),
           ),
           child: Row(children: [
             const Icon(Icons.info_outline, color: Colors.amber, size: 16),
-            const SizedBox(width: 8),
+            AppTheme.gapWidthSmall,
             Expanded(
               child: Text(
                 'تنويه داخلي: هذا العرض أُضيف من قِبل ${context.read<AuthProvider>().userModel?.nm ?? "الإدارة"}',
-                style: const TextStyle(color: Colors.amber, fontSize: 12),
+                style: const TextStyle(color: Colors.amber, fontSize: AppTheme.fontSizeSmall),
               ),
             ),
           ]),
         ),
-        const SizedBox(height: 16),
+        AppTheme.gapHeightLarge,
         SizedBox(
           width: double.infinity,
           height: 52,
@@ -1053,10 +1053,10 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
       controller: ctrl,
       keyboardType: TextInputType.datetime,
       textAlign: TextAlign.center,
-      style: const TextStyle(color: AppTheme.textWhite, fontSize: 14),
+      style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeMedium),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: AppTheme.textGrey, fontSize: 13),
+        hintStyle: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody),
         contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         isDense: true,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),

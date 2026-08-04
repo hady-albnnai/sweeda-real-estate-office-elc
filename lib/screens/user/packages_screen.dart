@@ -22,7 +22,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
   static const Map<int, List<Color>> _gradients = {
     0: [Color(0xFF424242), Color(0xFF616161)],
     1: [Color(0xFF8E8E8E), Color(0xFFBDBDBD)],
-    2: [Color(0xFFD4AF37), Color(0xFFFFD700)],
+    2: [AppTheme.primaryGold, Color(0xFFFFD700)],
   };
 
   // ⭐ قسم الإعلان المميز المدفوع (بيع مباشر بدون الدخول على العرض — 2026-07-26)
@@ -79,44 +79,44 @@ class _PackagesScreenState extends State<PackagesScreen> {
             icon: const Icon(Icons.receipt_long,
                 color: AppTheme.primaryGold, size: 18),
             label: const Text('دفعاتي',
-                style: TextStyle(color: AppTheme.primaryGold, fontSize: 13)),
+                style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeBody)),
           ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: AppTheme.paddingAllLarge,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // بطاقة الباقة الحالية
             if (user != null) _currentBadge(user),
-            const SizedBox(height: 12),
+            AppTheme.gapHeightMedium,
 
             // تنبيه دفعة معلقة
             if (pendingPayments.isNotEmpty) ...[
               _pendingPaymentBanner(pendingPayments.first.pkg),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
             ],
 
             // ⭐ الإعلان المميز المدفوع — بيع مباشر أول الشاشة (قرار المالك 2026-07-26)
             _featuredAdSection(config, pendingFeaturedIds),
-            const SizedBox(height: 20),
+            AppTheme.gapHeightXL,
 
             const Text(
               'اختر الباقة الأنسب لاحتياجك',
               textAlign: TextAlign.center,
               style: TextStyle(
                   color: AppTheme.textWhite,
-                  fontSize: 18,
+                  fontSize: AppTheme.fontSizeTitle,
                   fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 6),
             const Text(
               'كلما زادت الباقة، زاد عدد العروض ومدة العرض',
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppTheme.textGrey, fontSize: 13),
+              style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody),
             ),
-            const SizedBox(height: 20),
+            AppTheme.gapHeightXL,
 
             ...packages.map((p) => _packageCard(
                   context, p, user,
@@ -127,7 +127,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
                   anyPkgPending: pendingPayments.isNotEmpty,
                 )),
 
-            const SizedBox(height: 20),
+            AppTheme.gapHeightXL,
             _infoBox(config),
           ],
         ),
@@ -162,10 +162,10 @@ class _PackagesScreenState extends State<PackagesScreen> {
     const weekLabels = {1: 'أسبوع واحد', 2: 'أسبوعين', 3: '3 أسابيع', 4: '4 أسابيع'};
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppTheme.borderRadiusMedium,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.6), width: 1.2),
       ),
       child: Column(
@@ -173,16 +173,16 @@ class _PackagesScreenState extends State<PackagesScreen> {
         children: [
           const Row(children: [
             Icon(Icons.star, color: AppTheme.primaryGold, size: 22),
-            SizedBox(width: 8),
+            AppTheme.gapWidthSmall,
             Text('إعلان مميز للعرض الخاص بك ✨',
-                style: TextStyle(color: AppTheme.primaryGold, fontSize: 16, fontWeight: FontWeight.bold)),
+                style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSubtitle, fontWeight: FontWeight.bold)),
           ]),
           const SizedBox(height: 6),
           const Text(
             'العرض المميز الخاص بك يظهر بقسم خاص بأعلى الرئيسية ونتائج البحث طوال المدة',
-            style: TextStyle(color: AppTheme.textGrey, fontSize: 12),
+            style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall),
           ),
-          const SizedBox(height: 12),
+          AppTheme.gapHeightMedium,
           Row(
             children: [
               for (var wi = 1; wi <= 4; wi++)
@@ -190,12 +190,12 @@ class _PackagesScreenState extends State<PackagesScreen> {
                   child: Column(children: [
                     Text(weekLabels[wi] ?? '',
                         textAlign: TextAlign.center,
-                        style: const TextStyle(color: AppTheme.textGrey, fontSize: 10)),
+                        style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeXS)),
                     const SizedBox(height: 3),
                     // currency:1 → ل.س فقط (العملة الجديدة، بلا $)
                     Text(AppUtils.formatPrice(priceOf(wi), currency: 1),
                         textAlign: TextAlign.center,
-                        style: const TextStyle(color: AppTheme.primaryGold, fontSize: 12, fontWeight: FontWeight.bold)),
+                        style: const TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSmall, fontWeight: FontWeight.bold)),
                   ]),
                 ),
             ],
@@ -203,15 +203,15 @@ class _PackagesScreenState extends State<PackagesScreen> {
           const Divider(height: 20, color: AppTheme.textGrey),
           if (_offersLoading)
             const Center(child: Padding(
-              padding: EdgeInsets.all(8),
+              padding: AppTheme.paddingAllSmall,
               child: SizedBox(width: 18, height: 18,
                   child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primaryGold)),
             ))
           else if (_activeOffers.isEmpty) ...[
             const Text('لا تملك عروضاً منشورة حالياً — أضف عرضاً أولاً لتروّجه ⭐',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
-            const SizedBox(height: 8),
+                style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
+            AppTheme.gapHeightSmall,
             OutlinedButton.icon(
               onPressed: () => context.push('/user/add-offer'),
               icon: const Icon(Icons.add, color: AppTheme.primaryGold, size: 18),
@@ -223,13 +223,13 @@ class _PackagesScreenState extends State<PackagesScreen> {
               value: _selectedOfferId,
               isExpanded: true,
               dropdownColor: AppTheme.surfaceBlack,
-              style: const TextStyle(color: AppTheme.textWhite, fontSize: 13),
+              style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeBody),
               decoration: InputDecoration(
                 filled: true,
                 fillColor: AppTheme.scaffoldBackground,
                 hintText: 'اختر العرض المراد إعلانه ⭐',
-                hintStyle: const TextStyle(color: AppTheme.textGrey, fontSize: 13),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                hintStyle: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody),
+                border: OutlineInputBorder(borderRadius: AppTheme.borderRadiusMedium),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               ),
               items: _activeOffers.map((o) {
@@ -245,7 +245,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
               }).toList(),
               onChanged: (v) => setState(() => _selectedOfferId = v),
             ),
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -258,7 +258,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
                       },
                 icon: const Icon(Icons.payment, color: AppTheme.deepBlack),
                 label: const Text('تابع للدفع — تختار المدة وقناة الدفع بالخطوة التالية 💳',
-                    style: TextStyle(color: AppTheme.deepBlack, fontWeight: FontWeight.bold, fontSize: 12)),
+                    style: TextStyle(color: AppTheme.deepBlack, fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeSmall)),
                 style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryGold),
               ),
             ),
@@ -275,14 +275,14 @@ class _PackagesScreenState extends State<PackagesScreen> {
     final isExpired        = user.bPkg > 0 && !isPkgActive && !isInGrace;
 
     Color borderColor = AppTheme.primaryGold.withOpacity(0.4);
-    if (isInGrace)  borderColor = Colors.orange.withOpacity(0.6);
-    if (isExpired)  borderColor = Colors.red.withOpacity(0.5);
+    if (isInGrace)  borderColor = AppTheme.warningOrange.withOpacity(0.6);
+    if (isExpired)  borderColor = AppTheme.errorRed.withOpacity(0.5);
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppTheme.borderRadiusMedium,
         border: Border.all(color: borderColor),
       ),
       child: Row(children: [
@@ -290,12 +290,12 @@ class _PackagesScreenState extends State<PackagesScreen> {
           isInGrace  ? Icons.hourglass_bottom :
           isExpired  ? Icons.warning_amber :
                        Icons.workspace_premium,
-          color: isInGrace ? Colors.orange :
-                 isExpired  ? Colors.red :
+          color: isInGrace ? AppTheme.warningOrange :
+                 isExpired  ? AppTheme.errorRed :
                               AppTheme.primaryGold,
           size: 32,
         ),
-        const SizedBox(width: 12),
+        AppTheme.gapWidthMedium,
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -306,14 +306,14 @@ class _PackagesScreenState extends State<PackagesScreen> {
                 user.bPkg == 0 ? 'الباقة المجانية' :
                 'باقة ${_pkgName(user.bPkg)} — نشطة',
                 style: TextStyle(
-                  color: isInGrace ? Colors.orange :
-                         isExpired  ? Colors.red :
+                  color: isInGrace ? AppTheme.warningOrange :
+                         isExpired  ? AppTheme.errorRed :
                                       AppTheme.primaryGold,
-                  fontSize: 16,
+                  fontSize: AppTheme.fontSizeSubtitle,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 4),
+              AppTheme.gapHeightXS,
               if (user.pkgEnd != null && user.bPkg > 0)
                 Text(
                   isPkgActive
@@ -322,10 +322,10 @@ class _PackagesScreenState extends State<PackagesScreen> {
                           ? '⚠️ فترة السماح تنتهي: ${AppUtils.formatTimestamp(user.pkgGrace!)} (${user.graceDaysLeft} يوم متبق)'
                           : '⛔ انتهت — جدّد اشتراكك الآن',
                   style: TextStyle(
-                    color: isInGrace ? Colors.orange :
-                           isExpired  ? Colors.red :
+                    color: isInGrace ? AppTheme.warningOrange :
+                           isExpired  ? AppTheme.errorRed :
                                         AppTheme.textGrey,
-                    fontSize: 11,
+                    fontSize: AppTheme.fontSizeCaption,
                     fontWeight: (isInGrace || isExpired)
                         ? FontWeight.bold : FontWeight.normal,
                   ),
@@ -335,15 +335,15 @@ class _PackagesScreenState extends State<PackagesScreen> {
         ),
         // زر تجديد سريع إذا انتهت أو في فترة السماح
         if ((isExpired || isInGrace) && user.bPkg > 0) ...[
-          const SizedBox(width: 8),
+          AppTheme.gapWidthSmall,
           ElevatedButton(
             onPressed: () => context.push('/user/payment?pkg=${user.bPkg}'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: isInGrace ? Colors.orange : AppTheme.primaryGold,
+              backgroundColor: isInGrace ? AppTheme.warningOrange : AppTheme.primaryGold,
               foregroundColor: Colors.black,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
-            child: const Text('جدّد', style: TextStyle(fontSize: 12)),
+            child: const Text('جدّد', style: TextStyle(fontSize: AppTheme.fontSizeSmall)),
           ),
         ],
       ]),
@@ -353,26 +353,26 @@ class _PackagesScreenState extends State<PackagesScreen> {
   // ─── تنبيه دفعة معلقة ───
   Widget _pendingPaymentBanner(int pkgId) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: AppTheme.paddingAllMedium,
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.blue.withOpacity(0.4)),
+        color: AppTheme.infoBlue.withOpacity(0.1),
+        borderRadius: AppTheme.borderRadiusMedium,
+        border: Border.all(color: AppTheme.infoBlue.withOpacity(0.4)),
       ),
       child: Row(children: [
-        const Icon(Icons.pending_actions, color: Colors.blue, size: 20),
-        const SizedBox(width: 10),
+        const Icon(Icons.pending_actions, color: AppTheme.infoBlue, size: 20),
+        AppTheme.gapWidthSmall,
         Expanded(
           child: Text(
             'لديك دفعة معلقة للباقة ${_pkgName(pkgId)} — في انتظار موافقة الإدارة (عادة < 24 ساعة).',
             style:
-                const TextStyle(color: Colors.blue, fontSize: 12, height: 1.4),
+                const TextStyle(color: AppTheme.infoBlue, fontSize: AppTheme.fontSizeSmall, height: 1.4),
           ),
         ),
         TextButton(
           onPressed: () => context.push('/user/my-payments'),
           child: const Text('متابعة',
-              style: TextStyle(color: Colors.blue, fontSize: 12)),
+              style: TextStyle(color: AppTheme.infoBlue, fontSize: AppTheme.fontSizeSmall)),
         ),
       ]),
     );
@@ -399,7 +399,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppTheme.borderRadiusLarge,
         gradient: LinearGradient(
             colors: gradient,
             begin: Alignment.topLeft,
@@ -413,10 +413,10 @@ class _PackagesScreenState extends State<PackagesScreen> {
       ),
       child: Container(
         margin: const EdgeInsets.all(2),
-        padding: const EdgeInsets.all(20),
+        padding: AppTheme.paddingAllXL,
         decoration: BoxDecoration(
           color: AppTheme.surfaceBlack,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: AppTheme.borderRadiusLarge,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -434,17 +434,17 @@ class _PackagesScreenState extends State<PackagesScreen> {
                           fontWeight: FontWeight.bold),
                     ),
                     if (isCurrent)
-                      _badge('باقتك الحالية', Colors.green),
+                      _badge('باقتك الحالية', AppTheme.successGreen),
                     if (isCurrent && (user?.pkgXoff ?? 0) > 0)
                       _badge(
                           '🎯 السقف الفعلي: ${pkg.offers + (user?.pkgXoff ?? 0)} عرض (منها +${user?.pkgXoff ?? 0} مضافة بالتراكم)',
                           Colors.lightGreen),
                     if (isPending && !isCurrent)
-                      _badge('دفعة معلقة ⏳', Colors.blue),
+                      _badge('دفعة معلقة ⏳', AppTheme.infoBlue),
                     if (user?.isInGracePeriod == true &&
                         pkg.id == user?.bPkg &&
                         !isCurrent)
-                      _badge('فترة السماح', Colors.orange),
+                      _badge('فترة السماح', AppTheme.warningOrange),
                     // الشراء الأدنى مسموح — بنظام التجميع ينضاف سقف وأيام للرصيد
                   ],
                 ),
@@ -467,7 +467,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
                   if (!isFree)
                     const Text('/ شهرياً',
                         style:
-                            TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+                            TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption)),
                 ],
               ),
             ]),
@@ -478,7 +478,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
             if (pkg.id >= 1) _feature(Icons.star, 'أولوية بالظهور'),
             if (pkg.id >= 2) _feature(Icons.support_agent, 'دعم فني مميّز'),
             if (pkg.id >= 2) _feature(Icons.handshake, 'شارة موثوق'),
-            const SizedBox(height: 16),
+            AppTheme.gapHeightLarge,
             SizedBox(
               width: double.infinity,
               height: 46,
@@ -487,7 +487,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
                     context, pkg, isCurrent, isFree, isPending || anyPkgPending, price),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: isPending
-                      ? Colors.blue.withOpacity(0.3)
+                      ? AppTheme.infoBlue.withOpacity(0.3)
                       : gradient[1],
                   foregroundColor: Colors.black,
                   disabledBackgroundColor: AppTheme.surfaceBlack,
@@ -527,41 +527,41 @@ class _PackagesScreenState extends State<PackagesScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
         decoration: BoxDecoration(
           color: color.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: AppTheme.borderRadiusSmall,
         ),
         child: Text(label,
             style: TextStyle(
-                color: color, fontSize: 11, fontWeight: FontWeight.bold)),
+                color: color, fontSize: AppTheme.fontSizeCaption, fontWeight: FontWeight.bold)),
       );
 
   Widget _feature(IconData icon, String text) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(children: [
           Icon(icon, color: AppTheme.primaryGold, size: 18),
-          const SizedBox(width: 10),
+          AppTheme.gapWidthSmall,
           Expanded(
               child: Text(text,
                   style: const TextStyle(
-                      color: AppTheme.textWhite, fontSize: 14))),
+                      color: AppTheme.textWhite, fontSize: AppTheme.fontSizeMedium))),
         ]),
       );
 
   Widget _infoBox(ConfigModel? config) => Container(
-        padding: const EdgeInsets.all(14),
+        padding: AppTheme.paddingAllLarge,
         decoration: BoxDecoration(
           color: AppTheme.surfaceBlack,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AppTheme.borderRadiusMedium,
           border:
               Border.all(color: AppTheme.textGrey.withOpacity(0.3)),
         ),
                 child: Row(children: [
           const Icon(Icons.info_outline, color: AppTheme.primaryGold, size: 20),
-          const SizedBox(width: 10),
+          AppTheme.gapWidthSmall,
           Expanded(
             child: Text(
               'يتم تفعيل الباقة بعد موافقة الإدارة على إثبات الدفع (عادة < 24 ساعة). '
               'بعد انتهاء الباقة لديك ${config?.pkgGraceDays ?? 3} أيام سماح قبل التحول للمجانية.',
-              style: TextStyle(color: AppTheme.textGrey, fontSize: 12),
+              style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall),
             ),
           ),
         ]),

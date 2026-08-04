@@ -74,9 +74,9 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.assignment_outlined, size: 80, color: AppTheme.textGrey.withOpacity(0.3)),
-          const SizedBox(height: 20),
-          const Text('ما عندك طلبات حالياً', style: TextStyle(color: AppTheme.textGrey, fontSize: 16)),
-          const SizedBox(height: 20),
+          AppTheme.gapHeightXL,
+          const Text('ما عندك طلبات حالياً', style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSubtitle)),
+          AppTheme.gapHeightXL,
           ElevatedButton.icon(
             onPressed: () => context.push('/user/add-request'),
             icon: const Icon(Icons.add),
@@ -90,7 +90,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
   Widget _requestCard(dynamic req) {
     final typeText = req.typ == 0 ? 'شراء' : 'استئجار';
     final elementText = req.elm == 0 ? 'عقار' : 'سيارة';
-    final statusColors = {0: Colors.green, 1: Colors.orange, 2: Colors.blue, 3: Colors.grey, 4: Colors.deepOrange};
+    final statusColors = {0: AppTheme.successGreen, 1: AppTheme.warningOrange, 2: AppTheme.infoBlue, 3: AppTheme.textGrey, 4: Colors.deepOrange};
     final statusTexts = {0: 'نشط', 1: 'قيد المعالجة', 2: 'تمت تلبيته', 3: 'ملغي', 4: 'منتهي الصلاحية'};
 
     return Card(
@@ -111,7 +111,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 4),
+            AppTheme.gapHeightXS,
             Text('$typeText — $elementText', style: const TextStyle(color: AppTheme.textGrey)),
             if (req.prc > 0)
               Text('الميزانية: ${AppUtils.formatPrice(req.prc, currency: req.cur)}',
@@ -121,12 +121,12 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
         trailing: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
-            color: (statusColors[req.sts] ?? Colors.grey).withOpacity(0.2),
-            borderRadius: BorderRadius.circular(8),
+            color: (statusColors[req.sts] ?? AppTheme.textGrey).withOpacity(0.2),
+            borderRadius: AppTheme.borderRadiusSmall,
           ),
           child: Text(
             statusTexts[req.sts] ?? 'غير معروف',
-            style: TextStyle(color: statusColors[req.sts] ?? Colors.grey, fontSize: 11, fontWeight: FontWeight.bold),
+            style: TextStyle(color: statusColors[req.sts] ?? AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption, fontWeight: FontWeight.bold),
           ),
         ),
         onTap: () => context.push('/user/request/${req.id}'),

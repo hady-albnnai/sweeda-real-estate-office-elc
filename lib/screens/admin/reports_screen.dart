@@ -87,7 +87,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                         color: AppTheme.primaryGold,
                         onRefresh: _load,
                         child: ListView.builder(
-                          padding: const EdgeInsets.all(12),
+                          padding: AppTheme.paddingAllMedium,
                           itemCount: _filtered.length,
                           itemBuilder: (_, i) => _reportTile(_filtered[i]),
                         ),
@@ -122,10 +122,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
     final handled = r.sts == 1;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(
             color: handled
                 ? AppTheme.primaryGold.withOpacity(0.15)
@@ -140,7 +140,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               Row(
                 children: [
                   Icon(handled ? Icons.check_circle : Icons.flag,
-                      color: handled ? Colors.green : AppTheme.errorRed,
+                      color: handled ? AppTheme.successGreen : AppTheme.errorRed,
                       size: 18),
                   const SizedBox(width: 6),
                   Text('بلاغ على ${_tgtTypes[r.tgtTp] ?? '—'}',
@@ -150,10 +150,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 ],
               ),
               Text(r.tsCrt.toString().split(' ').first,
-                  style: const TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+                  style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption)),
             ],
           ),
-          const SizedBox(height: 8),
+          AppTheme.gapHeightSmall,
           _row('المُبلِّغ', _short(r.repUid)),
           _row('الهدف', _short(r.tgtId)),
           if (r.det.isNotEmpty) _row('التفاصيل', r.det),
@@ -201,7 +201,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     activeColor: AppTheme.primaryGold,
                     dense: true,
                   )),
-              const SizedBox(height: 8),
+              AppTheme.gapHeightSmall,
               TextField(
                 controller: noteCtrl,
                 style: const TextStyle(color: AppTheme.textWhite),
@@ -251,15 +251,15 @@ class _ReportsScreenState extends State<ReportsScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label,
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 13)),
-          const SizedBox(width: 12),
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody)),
+          AppTheme.gapWidthMedium,
           Flexible(
             child: Text(value,
                 textAlign: TextAlign.left,
                 style: TextStyle(
                     color: highlight ? AppTheme.primaryGold : AppTheme.textWhite,
                     fontWeight: highlight ? FontWeight.bold : FontWeight.normal,
-                    fontSize: 13)),
+                    fontSize: AppTheme.fontSizeBody)),
           ),
         ],
       ),

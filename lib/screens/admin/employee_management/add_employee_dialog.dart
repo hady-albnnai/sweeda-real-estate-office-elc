@@ -139,7 +139,7 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
                 ),
                 validator: InputValidators.validateName,
               ),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               TextFormField(
                 controller: _phoneController,
                 style: const TextStyle(color: AppTheme.textWhite),
@@ -150,7 +150,7 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
                 keyboardType: TextInputType.phone,
                 validator: InputValidators.validateSyrianPhone,
               ),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               TextFormField(
                 controller: _sidController,
                 style: const TextStyle(color: AppTheme.textWhite),
@@ -161,7 +161,7 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
                 keyboardType: TextInputType.number,
                 validator: (v) => (v == null || v.isEmpty) ? 'مطلوب' : null,
               ),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               TextFormField(
                 controller: _addressController,
                 style: const TextStyle(color: AppTheme.textWhite),
@@ -171,30 +171,30 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
                 ),
                 validator: (v) => (v == null || v.isEmpty) ? 'مطلوب' : null,
               ),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               // اختيار صورة الهوية
               InkWell(
                 onTap: _pickImages,
                 child: Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: AppTheme.paddingAllMedium,
                   decoration: BoxDecoration(
                     color: AppTheme.surfaceBlack,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: AppTheme.borderRadiusSmall,
                     border: Border.all(color: AppTheme.textGrey.withOpacity(0.3)),
                   ),
                   child: Row(
                     children: [
                       Icon(
                         _idImages.isEmpty ? Icons.add_a_photo_outlined : Icons.check_circle,
-                        color: _idImages.isEmpty ? AppTheme.primaryGold : Colors.green,
+                        color: _idImages.isEmpty ? AppTheme.primaryGold : AppTheme.successGreen,
                       ),
-                      const SizedBox(width: 12),
+                      AppTheme.gapWidthMedium,
                       Expanded(
                         child: Text(
                           _idImages.length < 2 ? 'ارفع صورتين للهوية (وجه وقفا) *' : 'تم اختيار ${_idImages.length} صورة',
                           style: TextStyle(
                             color: _idImages.isEmpty ? AppTheme.textGrey : AppTheme.textWhite,
-                            fontSize: 14,
+                            fontSize: AppTheme.fontSizeMedium,
                           ),
                         ),
                       ),
@@ -202,7 +202,7 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               TextFormField(
                 controller: _usernameController,
                 style: const TextStyle(color: AppTheme.textWhite),
@@ -214,7 +214,7 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
                 ),
                 validator: _validateUsername,
               ),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               TextFormField(
                 controller: _emailController,
                 style: const TextStyle(color: AppTheme.textWhite),
@@ -224,7 +224,7 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
                 ),
                 keyboardType: TextInputType.emailAddress,
               ),
-              const SizedBox(height: 16),
+              AppTheme.gapHeightLarge,
               DropdownButtonFormField<int>(
                 value: _selectedRole,
                 dropdownColor: AppTheme.surfaceBlack,
@@ -245,17 +245,17 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
                   if (value != null) setState(() => _selectedRole = value);
                 },
               ),
-              const SizedBox(height: 16),
+              AppTheme.gapHeightLarge,
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: AppTheme.paddingAllMedium,
                 decoration: BoxDecoration(
                   color: AppTheme.primaryGold.withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: AppTheme.borderRadiusSmall,
                   border: Border.all(color: AppTheme.primaryGold.withOpacity(0.25)),
                 ),
                 child: const Text(
                   'سيتم توليد كلمة سر تلقائياً وعرضها مرة واحدة بعد الإضافة.',
-                  style: TextStyle(color: AppTheme.primaryGold, fontSize: 12),
+                  style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSmall),
                 ),
               ),
             ],

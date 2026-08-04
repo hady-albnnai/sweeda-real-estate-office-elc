@@ -198,8 +198,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
           backgroundColor: AppTheme.surfaceBlack,
           title: const Row(
             children: [
-              Icon(Icons.check_circle, color: Colors.green, size: 28),
-              SizedBox(width: 8),
+              Icon(Icons.check_circle, color: AppTheme.successGreen, size: 28),
+              AppTheme.gapWidthSmall,
               Text('تم بنجاح',
                   style: TextStyle(color: AppTheme.textWhite)),
             ],
@@ -245,21 +245,21 @@ class _PaymentScreenState extends State<PaymentScreen> {
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: AppTheme.paddingAllLarge,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _summaryCard(),
-                const SizedBox(height: 20),
+                AppTheme.gapHeightXL,
                 _sectionTitle('💳 اختر قناة الدفع'),
                 if (channels.isEmpty)
                   _emptyChannelsCard()
                 else
                   ...channels.map((e) => _channelCard(e.key, e.value)),
                 if (_channel.isNotEmpty) ...[
-                  const SizedBox(height: 20),
+                  AppTheme.gapHeightXL,
                   _channelDetailsCard(_findChannel(channels, _channel)),
-                  const SizedBox(height: 20),
+                  AppTheme.gapHeightXL,
 
                   _sectionTitle('🔢 رقم العملية / المرجع'),
                   TextField(
@@ -271,10 +271,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
                           Icon(Icons.tag, color: AppTheme.primaryGold),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  AppTheme.gapHeightXL,
                   _sectionTitle('📷 صورة إثبات الدفع'),
                   _proofPicker(),
-                  const SizedBox(height: 24),
+                  AppTheme.gapHeightXXL,
                   SizedBox(
                     height: 52,
                     child: ElevatedButton.icon(
@@ -284,11 +284,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
                           style: TextStyle(
                               color: Colors.black,
                               fontWeight: FontWeight.bold,
-                              fontSize: 16)),
+                              fontSize: AppTheme.fontSizeSubtitle)),
                     ),
                   ),
                 ],
-                const SizedBox(height: 20),
+                AppTheme.gapHeightXL,
               ],
             ),
           ),
@@ -301,7 +301,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   children: [
                     const CircularProgressIndicator(
                         color: AppTheme.primaryGold),
-                    const SizedBox(height: 16),
+                    AppTheme.gapHeightLarge,
                     Text(_progress,
                         style: const TextStyle(color: AppTheme.textWhite)),
                   ],
@@ -327,24 +327,24 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   Widget _summaryCard() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFFD4AF37), Color(0xFFFFD700)],
+          colors: [AppTheme.primaryGold, Color(0xFFFFD700)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppTheme.borderRadiusLarge,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text('الاشتراك بالباقة',
-              style: TextStyle(color: Colors.black87, fontSize: 13)),
+              style: TextStyle(color: Colors.black87, fontSize: AppTheme.fontSizeBody)),
           Text(_packageName,
               style: const TextStyle(
                   color: Colors.black,
-                  fontSize: 24,
+                  fontSize: AppTheme.fontSizeLarge,
                   fontWeight: FontWeight.bold)),
           const Divider(color: Colors.black26, height: 20),
           Row(
@@ -379,25 +379,25 @@ class _PaymentScreenState extends State<PaymentScreen> {
             style: const TextStyle(
                 color: AppTheme.primaryGold,
                 fontWeight: FontWeight.bold,
-                fontSize: 14)),
+                fontSize: AppTheme.fontSizeMedium)),
       );
 
   Widget _emptyChannelsCard() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
-        color: Colors.orange.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.orange.withOpacity(0.5)),
+        color: AppTheme.warningOrange.withOpacity(0.1),
+        borderRadius: AppTheme.borderRadiusMedium,
+        border: Border.all(color: AppTheme.warningOrange.withOpacity(0.5)),
       ),
       child: const Row(
         children: [
-          Icon(Icons.warning_amber_rounded, color: Colors.orange),
-          SizedBox(width: 10),
+          Icon(Icons.warning_amber_rounded, color: AppTheme.warningOrange),
+          AppTheme.gapWidthSmall,
           Expanded(
             child: Text(
               'لا توجد قنوات دفع مفعّلة حالياً.\nيرجى التواصل مع الإدارة.',
-              style: TextStyle(color: AppTheme.textWhite, fontSize: 13),
+              style: TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeBody),
             ),
           ),
         ],
@@ -413,12 +413,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
       onTap: () => setState(() => _channel = key),
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(14),
+        padding: AppTheme.paddingAllLarge,
         decoration: BoxDecoration(
           color: selected
               ? AppTheme.primaryGold.withOpacity(0.15)
               : AppTheme.surfaceBlack,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AppTheme.borderRadiusMedium,
           border: Border.all(
             color: selected
                 ? AppTheme.primaryGold
@@ -428,8 +428,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
         ),
         child: Row(
           children: [
-            Text(icon, style: const TextStyle(fontSize: 28)),
-            const SizedBox(width: 12),
+            Text(icon, style: const TextStyle(fontSize: AppTheme.fontSizeXL)),
+            AppTheme.gapWidthMedium,
             Expanded(
               child: Text(
                 name,
@@ -438,7 +438,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       ? AppTheme.primaryGold
                       : AppTheme.textWhite,
                   fontWeight: FontWeight.bold,
-                  fontSize: 16,
+                  fontSize: AppTheme.fontSizeSubtitle,
                 ),
               ),
             ),
@@ -478,7 +478,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         final qrUrl = (data['qr_image_url'] ?? '').toString();
         if (qrUrl.isNotEmpty) {
           fields.add(_qrImage(qrUrl));
-          fields.add(const SizedBox(height: 8));
+          fields.add(AppTheme.gapHeightSmall);
         }
         if ((data['account_number'] ?? '').toString().isNotEmpty) {
           fields.add(_kv('رقم الحساب', data['account_number'].toString()));
@@ -517,10 +517,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
     }
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppTheme.borderRadiusMedium,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
       ),
       child: Column(
@@ -529,42 +529,42 @@ class _PaymentScreenState extends State<PaymentScreen> {
           Row(
             children: [
               Text(icon, style: const TextStyle(fontSize: 22)),
-              const SizedBox(width: 8),
+              AppTheme.gapWidthSmall,
               Text(name,
                   style: const TextStyle(
                       color: AppTheme.primaryGold,
                       fontWeight: FontWeight.bold,
-                      fontSize: 16)),
+                      fontSize: AppTheme.fontSizeSubtitle)),
             ],
           ),
           const Divider(color: AppTheme.textGrey, height: 18),
           if (fields.isEmpty)
             const Text(
               '⚠️ لم يتم إعداد بيانات هذه القناة بعد.\nيرجى التواصل مع الإدارة.',
-              style: TextStyle(color: Colors.orange, fontSize: 13),
+              style: TextStyle(color: AppTheme.warningOrange, fontSize: AppTheme.fontSizeBody),
             )
           else
             ...fields,
           if (instructions.isNotEmpty) ...[
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: AppTheme.paddingAllMedium,
               decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                color: AppTheme.infoBlue.withOpacity(0.08),
+                borderRadius: AppTheme.borderRadiusSmall,
+                border: Border.all(color: AppTheme.infoBlue.withOpacity(0.3)),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Icon(Icons.lightbulb_outline,
                       color: Colors.lightBlueAccent, size: 18),
-                  const SizedBox(width: 8),
+                  AppTheme.gapWidthSmall,
                   Expanded(
                     child: Text(
                       instructions,
                       style: const TextStyle(
-                          color: AppTheme.textWhite, fontSize: 12.5, height: 1.5),
+                          color: AppTheme.textWhite, fontSize: AppTheme.fontSizeSmall.5, height: 1.5),
                     ),
                   ),
                 ],
@@ -581,10 +581,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: AppTheme.borderRadiusMedium,
           border: Border.all(color: AppTheme.primaryGold, width: 2),
         ),
-        padding: const EdgeInsets.all(8),
+        padding: AppTheme.paddingAllSmall,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(6),
           child: Image.network(
@@ -593,9 +593,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
             height: 180,
             fit: BoxFit.contain,
             errorBuilder: (_, __, ___) => const Padding(
-              padding: EdgeInsets.all(20),
+              padding: AppTheme.paddingAllXL,
               child: Text('فشل تحميل QR',
-                  style: TextStyle(color: Colors.red)),
+                  style: TextStyle(color: AppTheme.errorRed)),
             ),
             loadingBuilder: (_, child, p) => p == null
                 ? child
@@ -618,10 +618,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
             height: 180,
             decoration: BoxDecoration(
               color: AppTheme.surfaceBlack,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: AppTheme.borderRadiusMedium,
               border: Border.all(
                 color: _proofImage != null
-                    ? Colors.green
+                    ? AppTheme.successGreen
                     : AppTheme.primaryGold.withOpacity(0.4),
                 width: 1.5,
               ),
@@ -633,11 +633,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       children: [
                         Icon(Icons.upload_file,
                             color: AppTheme.primaryGold, size: 48),
-                        SizedBox(height: 8),
+                        AppTheme.gapHeightSmall,
                         Text(
                           'اضغط لرفع صورة إيصال التحويل',
                           style: TextStyle(
-                              color: AppTheme.textGrey, fontSize: 13),
+                              color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody),
                         ),
                       ],
                     ),
@@ -655,9 +655,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
         if (_proofImage != null)
           TextButton.icon(
             onPressed: () => setState(() => _proofImage = null),
-            icon: const Icon(Icons.close, color: Colors.red),
+            icon: const Icon(Icons.close, color: AppTheme.errorRed),
             label: const Text('إزالة الصورة',
-                style: TextStyle(color: Colors.red)),
+                style: TextStyle(color: AppTheme.errorRed)),
           ),
       ],
     );
@@ -673,14 +673,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
             width: 95,
             child: Text(k,
                 style: const TextStyle(
-                    color: AppTheme.textGrey, fontSize: 12)),
+                    color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
           ),
           Expanded(
             child: SelectableText(
               v,
               style: const TextStyle(
                   color: AppTheme.textWhite,
-                  fontSize: 13,
+                  fontSize: AppTheme.fontSizeBody,
                   fontWeight: FontWeight.w600),
             ),
           ),

@@ -115,7 +115,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
               'مرحباً، $userName 👋',
               style: const TextStyle(
                 color: AppTheme.textWhite,
-                fontSize: 18,
+                fontSize: AppTheme.fontSizeTitle,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -123,7 +123,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
               'اكتشف عقارك المثالي 🏠',
               style: TextStyle(
                 color: AppTheme.primaryGold.withOpacity(0.7),
-                fontSize: 12,
+                fontSize: AppTheme.fontSizeSmall,
               ),
             ),
           ],
@@ -152,7 +152,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                       top: 8,
                       right: 8,
                       child: Container(
-                        padding: const EdgeInsets.all(4),
+                        padding: AppTheme.paddingAllSmall,
                         constraints:
                             const BoxConstraints(minWidth: 18, minHeight: 18),
                         decoration: const BoxDecoration(
@@ -164,7 +164,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 10,
+                              fontSize: AppTheme.fontSizeXS,
                               fontWeight: FontWeight.bold),
                         ),
                       ),
@@ -206,14 +206,14 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                       filled: true,
                       fillColor: AppTheme.surfaceBlack,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: AppTheme.borderRadiusMedium,
                         borderSide: BorderSide.none,
                       ),
                     ),
                     onChanged: (_) => setState(() {}),
                   ),
                 ),
-                const SizedBox(width: 8),
+                AppTheme.gapWidthSmall,
                 // زر «فلاتر» الذهبي المشترك — نفس الشكل عند الزائر والمستخدم
                 OfferFiltersButton(count: _advF.activeCount, onTap: _openFilters),
               ],
@@ -237,7 +237,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                         route: '/legal/consultations',
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    AppTheme.gapWidthSmall,
                     Expanded(
                       child: _serviceTile(
                         context,
@@ -263,22 +263,22 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                   setState(() { _filterType = null; _filterTrx = null; });
                   _doSearch();
                 }),
-                const SizedBox(width: 8),
+                AppTheme.gapWidthSmall,
                 _buildChip('🏠 عقار', _filterType == 0, () {
                   setState(() => _filterType = _filterType == 0 ? null : 0);
                   _doSearch();
                 }),
-                const SizedBox(width: 8),
+                AppTheme.gapWidthSmall,
                 _buildChip('🚗 سيارة', _filterType == 1, () {
                   setState(() => _filterType = _filterType == 1 ? null : 1);
                   _doSearch();
                 }),
-                const SizedBox(width: 8),
+                AppTheme.gapWidthSmall,
                 _buildChip('بيع', _filterTrx == 0, () {
                   setState(() => _filterTrx = _filterTrx == 0 ? null : 0);
                   _doSearch();
                 }),
-                const SizedBox(width: 8),
+                AppTheme.gapWidthSmall,
                 _buildChip('إيجار', _filterTrx == 1, () {
                   setState(() => _filterTrx = _filterTrx == 1 ? null : 1);
                   _doSearch();
@@ -287,18 +287,18 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             ),
           ),
 
-          const SizedBox(height: 10),
+          AppTheme.gapHeightSmall,
 
           // قائمة العروض
           // مؤشّر العمل دون اتصال
           if (offerProv.fromCache && offerProv.offers.isNotEmpty)
             Container(
               width: double.infinity,
-              color: Colors.orange.withOpacity(0.15),
+              color: AppTheme.warningOrange.withOpacity(0.15),
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: const Text('📡 وضع دون اتصال — عرض بيانات محفوظة',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.orange, fontSize: 11)),
+                  style: TextStyle(color: AppTheme.warningOrange, fontSize: AppTheme.fontSizeCaption)),
             ),
           Expanded(
             child: offerProv.isLoading && offerProv.offers.isEmpty
@@ -316,13 +316,13 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                                 Icon(Icons.home_work,
                                     size: 80,
                                     color: AppTheme.textGrey.withOpacity(0.3)),
-                                const SizedBox(height: 20),
+                                AppTheme.gapHeightXL,
                                 const Text(
                                   'لا توجد عروض متاحة حالياً',
                                   style: TextStyle(
-                                      color: AppTheme.textGrey, fontSize: 16),
+                                      color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSubtitle),
                                 ),
-                                const SizedBox(height: 20),
+                                AppTheme.gapHeightXL,
                                 ElevatedButton.icon(
                                   onPressed: () =>
                                       context.push('/user/add-offer'),
@@ -409,7 +409,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     return GestureDetector(
       onTap: () => context.push(route),
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: AppTheme.paddingAllMedium,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
@@ -419,13 +419,13 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: AppTheme.borderRadiusLarge,
           border: Border.all(color: AppTheme.primaryGold.withOpacity(0.35)),
         ),
         child: Row(
           children: [
             Icon(icon, color: AppTheme.primaryGold, size: 28),
-            const SizedBox(width: 10),
+            AppTheme.gapWidthSmall,
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -434,13 +434,13 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                   Text(title,
                       style: const TextStyle(
                           color: AppTheme.textWhite,
-                          fontSize: 13,
+                          fontSize: AppTheme.fontSizeBody,
                           fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 2),
+                  AppTheme.gapHeightXXS,
                   Text(subtitle,
                       style: TextStyle(
                           color: AppTheme.primaryGold.withOpacity(0.7),
-                          fontSize: 11)),
+                          fontSize: AppTheme.fontSizeCaption)),
                 ],
               ),
             ),
@@ -460,7 +460,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
         style: TextStyle(
           color: isSelected ? AppTheme.deepBlack : AppTheme.textWhite,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-          fontSize: 12,
+          fontSize: AppTheme.fontSizeSmall,
         ),
       ),
       selected: isSelected,

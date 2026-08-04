@@ -99,11 +99,11 @@ class _ChangeRoleDialogState extends State<ChangeRoleDialog> {
               setState(() => _selectedRole = value!);
             },
           ),
-          const SizedBox(height: 16),
+          AppTheme.gapHeightLarge,
           if (widget.user.role == 6)
             const Text(
               'لا يمكن تغيير دور المدير الرئيسي',
-              style: TextStyle(color: Colors.red, fontSize: 12),
+              style: TextStyle(color: AppTheme.errorRed, fontSize: AppTheme.fontSizeSmall),
             ),
         ],
       ),

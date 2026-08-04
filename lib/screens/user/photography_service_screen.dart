@@ -98,7 +98,7 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
       context,
       SnackBar(
         content: Text(m),
-        backgroundColor: ok ? Colors.green : null,
+        backgroundColor: ok ? AppTheme.successGreen : null,
       ),
     );
   }
@@ -139,7 +139,7 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
               const Row(
                 children: [
                   Icon(Icons.camera_alt, color: AppTheme.primaryGold, size: 24),
-                  SizedBox(width: 10),
+                  AppTheme.gapWidthSmall,
                   Text('طلب تصوير عقار',
                       style: TextStyle(
                           color: AppTheme.textWhite,
@@ -147,18 +147,18 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                           fontWeight: FontWeight.bold)),
                 ],
               ),
-              const SizedBox(height: 16),
+              AppTheme.gapHeightLarge,
               _field(nameCtrl, 'الاسم الثلاثي *', 'مثال: محمد أحمد الخطيب',
                   Icons.person),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               _field(descCtrl, 'وصف العقار *', 'مثال: شقة 3 غرف طابق ثاني',
                   Icons.home_outlined),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: AppTheme.paddingAllMedium,
                 decoration: BoxDecoration(
                   color: AppTheme.primaryGold.withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: AppTheme.borderRadiusSmall,
                   border:
                       Border.all(color: AppTheme.primaryGold.withOpacity(0.3)),
                 ),
@@ -166,20 +166,20 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                   children: [
                     Icon(Icons.info_outline,
                         color: AppTheme.primaryGold, size: 18),
-                    SizedBox(width: 8),
+                    AppTheme.gapWidthSmall,
                     Expanded(
                       child: Text(
                         'حدد الموقع بدقة: المدينة ← الحي ← الشارع ← أقرب معلم',
                         style: TextStyle(
                             color: AppTheme.primaryGold,
-                            fontSize: 11,
+                            fontSize: AppTheme.fontSizeCaption,
                             height: 1.4),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 8),
+              AppTheme.gapHeightSmall,
               _field(
                 locCtrl,
                 'موقع العقار التفصيلي *',
@@ -187,17 +187,17 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                 Icons.location_on,
                 maxLines: 2,
               ),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               _field(phoneCtrl, 'هاتف التواصل *', 'رقمك للتواصل وتأكيد الموعد',
                   Icons.phone,
                   keyboard: TextInputType.phone),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               _field(notesCtrl, 'ملاحظات إضافية (اختياري)',
                   'مثال: أفضل وقت بعد الظهر...', Icons.note_alt_outlined,
                   maxLines: 2),
               // 💰 تذكير بالأجر قبل التأكيد — لا مفاجآت عند وصول المصوّر
               if (_photoFee > 0) ...[
-                const SizedBox(height: 12),
+                AppTheme.gapHeightMedium,
                 Row(
                   children: [
                     const Icon(Icons.payments_outlined,
@@ -208,7 +208,7 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                         'أجر التصوير $_photoFeeTxt ل.س، يُدفع للمصوّر عند وصوله.',
                         style: const TextStyle(
                             color: AppTheme.primaryGold,
-                            fontSize: 12,
+                            fontSize: AppTheme.fontSizeSmall,
                             fontWeight: FontWeight.w600),
                       ),
                     ),
@@ -225,7 +225,7 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                           style: TextStyle(color: AppTheme.textGrey)),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  AppTheme.gapWidthSmall,
                   Expanded(
                     flex: 2,
                     child: ElevatedButton(
@@ -238,7 +238,7 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                           ScaffoldMessenger.of(ctx).showSnackBar(
                             const SnackBar(
                               content: Text('يرجى تعبئة كل الحقول المطلوبة *'),
-                              backgroundColor: Colors.red,
+                              backgroundColor: AppTheme.errorRed,
                               duration: Duration(seconds: 2),
                             ),
                           );
@@ -303,11 +303,11 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
       controller: ctrl,
       keyboardType: keyboard,
       maxLines: maxLines,
-      style: const TextStyle(color: AppTheme.textWhite, fontSize: 14),
+      style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeMedium),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        hintStyle: const TextStyle(fontSize: 12),
+        hintStyle: const TextStyle(fontSize: AppTheme.fontSizeSmall),
         border: const OutlineInputBorder(),
         prefixIcon: Icon(icon, color: AppTheme.primaryGold, size: 20),
       ),
@@ -331,7 +331,7 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
         color: AppTheme.primaryGold,
         onRefresh: _loadMyRequests,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: AppTheme.paddingAllLarge,
           children: [
             // ─── بطاقة شرح الخدمة ───
             Container(
@@ -345,7 +345,7 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                   begin: Alignment.topRight,
                   end: Alignment.bottomLeft,
                 ),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: AppTheme.borderRadiusLarge,
                 border:
                     Border.all(color: AppTheme.primaryGold.withOpacity(0.35)),
               ),
@@ -356,7 +356,7 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                     children: [
                       Icon(Icons.photo_camera_front_rounded,
                           color: AppTheme.primaryGold, size: 28),
-                      SizedBox(width: 10),
+                      AppTheme.gapWidthSmall,
                       Expanded(
                         child: Text(
                           'صوّر عقارك باحتراف مع مصور المكتب',
@@ -369,25 +369,25 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  AppTheme.gapHeightMedium,
                   _explainRow(Icons.location_on_outlined,
                       'مصوّر محترف يزور عقارك في الموعد المتفق عليه'),
-                  const SizedBox(height: 8),
+                  AppTheme.gapHeightSmall,
                   _explainRow(Icons.photo_library_outlined,
                       'التقاط صور وفيديو احترافية للعقار'),
-                  const SizedBox(height: 8),
+                  AppTheme.gapHeightSmall,
                   _explainRow(Icons.trending_up_rounded,
                       'وسائط عالية الجودة تُنشر في العرض الخاص بك وتزيد فرص البيع أو الإيجار'),
                   // 💰 أجر الخدمة — يُقرأ من إعدادات الإدارة (photoPrice)؛ 0 = مجاني فيُخفى
                   if (_photoFee > 0) ...[
-                    const SizedBox(height: 12),
+                    AppTheme.gapHeightMedium,
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 10),
                       decoration: BoxDecoration(
                         color: AppTheme.primaryGold.withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: AppTheme.borderRadiusMedium,
                         border: Border.all(
                             color: AppTheme.primaryGold.withOpacity(0.45)),
                       ),
@@ -395,7 +395,7 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                         children: [
                           const Icon(Icons.payments_outlined,
                               color: AppTheme.primaryGold, size: 20),
-                          const SizedBox(width: 8),
+                          AppTheme.gapWidthSmall,
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -404,15 +404,15 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                                   'الخدمة مأجورة — $_photoFeeTxt ل.س',
                                   style: const TextStyle(
                                     color: AppTheme.primaryGold,
-                                    fontSize: 13.5,
+                                    fontSize: AppTheme.fontSizeBody.5,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                const SizedBox(height: 2),
+                                AppTheme.gapHeightXXS,
                                 const Text(
                                   'تُدفع للمصوّر عند وصوله لموقع العقار.',
                                   style: TextStyle(
-                                      color: AppTheme.textGrey, fontSize: 11.5),
+                                      color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption.5),
                                 ),
                               ],
                             ),
@@ -424,7 +424,7 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            AppTheme.gapHeightLarge,
 
             // ─── زر طلب جديد ───
             SizedBox(
@@ -453,25 +453,25 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primaryGold,
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                      borderRadius: AppTheme.borderRadiusMedium),
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            AppTheme.gapHeightXXL,
 
             // ─── طلبات التصوير الخاصة بي ───
             const Row(
               children: [
                 Icon(Icons.history, color: AppTheme.primaryGold, size: 18),
-                SizedBox(width: 8),
+                AppTheme.gapWidthSmall,
                 Text('طلبات التصوير الخاصة بي',
                     style: TextStyle(
                         color: AppTheme.primaryGold,
-                        fontSize: 14,
+                        fontSize: AppTheme.fontSizeMedium,
                         fontWeight: FontWeight.bold)),
               ],
             ),
-            const SizedBox(height: 12),
+            AppTheme.gapHeightMedium,
             if (_loading)
               const Padding(
                 padding: EdgeInsets.all(30),
@@ -482,17 +482,17 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
               )
             else if (_error != null)
               Container(
-                padding: const EdgeInsets.all(20),
+                padding: AppTheme.paddingAllXL,
                 decoration: BoxDecoration(
                   color: AppTheme.surfaceBlack,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: AppTheme.borderRadiusMedium,
                 ),
                 child: Column(
                   children: [
                     Text(_error!,
                         style: const TextStyle(color: AppTheme.textGrey),
                         textAlign: TextAlign.center),
-                    const SizedBox(height: 10),
+                    AppTheme.gapHeightSmall,
                     TextButton(
                       onPressed: _loadMyRequests,
                       child: const Text('إعادة المحاولة'),
@@ -505,20 +505,20 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                 padding: const EdgeInsets.all(26),
                 decoration: BoxDecoration(
                   color: AppTheme.surfaceBlack,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: AppTheme.borderRadiusMedium,
                 ),
                 child: Column(
                   children: [
                     Icon(Icons.no_photography_outlined,
                         size: 44,
                         color: AppTheme.textGrey.withOpacity(0.4)),
-                    const SizedBox(height: 10),
+                    AppTheme.gapHeightSmall,
                     const Text('ما عندك طلبات تصوير بعد',
                         style: TextStyle(color: AppTheme.textGrey)),
-                    const SizedBox(height: 4),
+                    AppTheme.gapHeightXS,
                     const Text('اضغط "طلب تصوير جديد" لطلب أول جلسة تصوير',
                         style: TextStyle(
-                            color: AppTheme.textGrey, fontSize: 11)),
+                            color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption)),
                   ],
                 ),
               )
@@ -545,13 +545,13 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
         builder: (ctx, setDialogState) => AlertDialog(
           backgroundColor: AppTheme.surfaceBlack,
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusLarge),
           title: const Row(
             children: [
-              Icon(Icons.cancel_outlined, color: Colors.red, size: 22),
-              SizedBox(width: 8),
+              Icon(Icons.cancel_outlined, color: AppTheme.errorRed, size: 22),
+              AppTheme.gapWidthSmall,
               Text('إلغاء طلب التصوير',
-                  style: TextStyle(color: AppTheme.textWhite, fontSize: 16)),
+                  style: TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeSubtitle)),
             ],
           ),
           content: Column(
@@ -560,14 +560,14 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
             children: [
               const Text(
                 'إلغاء الطلب نهائي ولن تتمكن من استعادته.',
-                style: TextStyle(color: AppTheme.textGrey, fontSize: 13),
+                style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody),
               ),
-              const SizedBox(height: 16),
+              AppTheme.gapHeightLarge,
               TextField(
                 controller: reasonCtrl,
                 maxLines: 3,
                 autofocus: true,
-                style: const TextStyle(color: AppTheme.textWhite, fontSize: 14),
+                style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeMedium),
                 decoration: InputDecoration(
                   labelText: 'سبب الإلغاء *',
                   labelStyle: const TextStyle(color: AppTheme.textGrey),
@@ -604,7 +604,7 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                 }
                 Navigator.pop(ctx, txt);
               },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorRed),
               child: const Text('تأكيد الإلغاء',
                   style: TextStyle(color: Colors.white)),
             ),
@@ -644,12 +644,12 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icon, color: AppTheme.primaryGold.withOpacity(0.9), size: 18),
-        const SizedBox(width: 8),
+        AppTheme.gapWidthSmall,
         Expanded(
           child: Text(
             text,
             style: const TextStyle(
-                color: AppTheme.textWhite, fontSize: 12.5, height: 1.5),
+                color: AppTheme.textWhite, fontSize: AppTheme.fontSizeSmall.5, height: 1.5),
           ),
         ),
       ],
@@ -660,10 +660,10 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
     final (label, color) = _statusInfo(t.sts);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Column(
@@ -672,7 +672,7 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
           Row(
             children: [
               Icon(Icons.camera_alt_outlined, color: color, size: 18),
-              const SizedBox(width: 8),
+              AppTheme.gapWidthSmall,
               Expanded(
                 child: Text(
                   t.ttl.isNotEmpty ? t.ttl : 'طلب تصوير عقار',
@@ -681,7 +681,7 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                   style: const TextStyle(
                       color: AppTheme.textWhite,
                       fontWeight: FontWeight.bold,
-                      fontSize: 13),
+                      fontSize: AppTheme.fontSizeBody),
                 ),
               ),
               Container(
@@ -689,43 +689,43 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: AppTheme.borderRadiusSmall,
                   border: Border.all(color: color.withOpacity(0.5)),
                 ),
                 child: Text(label,
                     style: TextStyle(
                         color: color,
-                        fontSize: 11,
+                        fontSize: AppTheme.fontSizeCaption,
                         fontWeight: FontWeight.bold)),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          AppTheme.gapHeightSmall,
           Row(
             children: [
               const Icon(Icons.schedule,
                   size: 13, color: AppTheme.textGrey),
-              const SizedBox(width: 4),
+              AppTheme.gapWidthXS,
               Text(
                 'أُرسل: ${_fmtDate(t.tsCrt)}',
                 style:
-                    const TextStyle(color: AppTheme.textGrey, fontSize: 11),
+                    const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption),
               ),
             ],
           ),
           if (t.tsScheduled != null) ...[
-            const SizedBox(height: 4),
+            AppTheme.gapHeightXS,
             Row(
               children: [
                 const Icon(Icons.event_available,
-                    size: 13, color: Colors.green),
-                const SizedBox(width: 4),
+                    size: 13, color: AppTheme.successGreen),
+                AppTheme.gapWidthXS,
                 Expanded(
                   child: Text(
                     'موعد التصوير: ${_fmtDateTime(t.tsScheduled!)}',
                     style: const TextStyle(
-                        color: Colors.green,
-                        fontSize: 11,
+                        color: AppTheme.successGreen,
+                        fontSize: AppTheme.fontSizeCaption,
                         fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -734,9 +734,9 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
           ],
           // الوسائط المعتمدة تظهر للمستخدم بعد اكتمال الجلسة
           if (t.sts == 3 && t.media.isNotEmpty) ...[
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             const Text('وسائط جلسة التصوير:',
-                style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+                style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption)),
             const SizedBox(height: 6),
             SizedBox(
               height: 72,
@@ -746,7 +746,7 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                 itemBuilder: (_, i) => Padding(
                   padding: const EdgeInsets.only(left: 6),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: AppTheme.borderRadiusSmall,
                     child: Image.network(
                       t.media[i],
                       width: 72,
@@ -768,15 +768,15 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
           // 🐛 إصلاح 2026-07-30: إظهار سبب الرفض/الإلغاء (office_note)
           // كان المستخدم يرى «مرفوضة» بلا أي تفسير — الآن يرى سبب المكتب.
           if ((t.sts == 4 || t.sts == 5) && t.officeNote.isNotEmpty) ...[
-            const SizedBox(height: 8),
+            AppTheme.gapHeightSmall,
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(8),
+              padding: AppTheme.paddingAllSmall,
               decoration: BoxDecoration(
-                color: (t.sts == 4 ? Colors.red : Colors.grey).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
+                color: (t.sts == 4 ? AppTheme.errorRed : AppTheme.textGrey).withOpacity(0.1),
+                borderRadius: AppTheme.borderRadiusSmall,
                 border: Border.all(
-                    color: (t.sts == 4 ? Colors.red : Colors.grey)
+                    color: (t.sts == 4 ? AppTheme.errorRed : AppTheme.textGrey)
                         .withOpacity(0.3)),
               ),
               child: Row(
@@ -784,7 +784,7 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                 children: [
                   Icon(
                     t.sts == 4 ? Icons.info_outline : Icons.cancel_outlined,
-                    color: t.sts == 4 ? Colors.red : Colors.grey,
+                    color: t.sts == 4 ? AppTheme.errorRed : AppTheme.textGrey,
                     size: 14,
                   ),
                   const SizedBox(width: 6),
@@ -792,8 +792,8 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                     child: Text(
                       t.officeNote,
                       style: TextStyle(
-                        color: t.sts == 4 ? Colors.red : Colors.grey,
-                        fontSize: 11,
+                        color: t.sts == 4 ? AppTheme.errorRed : AppTheme.textGrey,
+                        fontSize: AppTheme.fontSizeCaption,
                       ),
                     ),
                   ),
@@ -803,15 +803,15 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
           ],
           // زر الإلغاء — فقط للطلبات المعلّقة (لم يبدأ المصور بعد)
           if (t.sts == 0) ...[
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             Align(
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
                 onPressed: () => _cancelRequest(t),
                 icon: const Icon(Icons.cancel_outlined,
-                    color: Colors.red, size: 16),
+                    color: AppTheme.errorRed, size: 16),
                 label: const Text('إلغاء الطلب',
-                    style: TextStyle(color: Colors.red, fontSize: 12)),
+                    style: TextStyle(color: AppTheme.errorRed, fontSize: AppTheme.fontSizeSmall)),
               ),
             ),
           ],
@@ -819,17 +819,17 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
           // عندما يبدأ المصوّر (sts=1) أو تُرسل الصور (sts=2) يختفي زر الإلغاء
           // بلا تفسير. الآن رسالة قصيرة تُعلم المستخدم أن الإلغاء لم يعد متاحاً.
           if (t.sts == 1 || t.sts == 2) ...[
-            const SizedBox(height: 8),
+            AppTheme.gapHeightSmall,
             Row(
               children: [
                 const Icon(Icons.info_outline,
                     color: Colors.amber, size: 13),
-                const SizedBox(width: 4),
+                AppTheme.gapWidthXS,
                 Expanded(
                   child: Text(
                     'لا يمكن إلغاء الطلب بعد بدء التصوير — يرجى التواصل مع المكتب مباشرة إذا لزم الأمر',
                     style: const TextStyle(
-                        color: Colors.amber, fontSize: 10.5),
+                        color: Colors.amber, fontSize: AppTheme.fontSizeXS.5),
                   ),
                 ),
               ],
@@ -843,19 +843,19 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
   (String, Color) _statusInfo(int sts) {
     switch (sts) {
       case 0:
-        return ('بانتظار المراجعة', Colors.orange);
+        return ('بانتظار المراجعة', AppTheme.warningOrange);
       case 1:
-        return ('قيد التنفيذ', Colors.blue);
+        return ('قيد التنفيذ', AppTheme.infoBlue);
       case 2:
         return ('مرسلة للمكتب', Colors.purple);
       case 3:
-        return ('مكتملة', Colors.green);
+        return ('مكتملة', AppTheme.successGreen);
       case 4:
-        return ('مرفوضة', Colors.red);
+        return ('مرفوضة', AppTheme.errorRed);
       case 5:
-        return ('ملغاة', Colors.grey);
+        return ('ملغاة', AppTheme.textGrey);
       default:
-        return ('غير معروف', Colors.grey);
+        return ('غير معروف', AppTheme.textGrey);
     }
   }
 

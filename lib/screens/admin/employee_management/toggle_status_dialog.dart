@@ -69,7 +69,7 @@ class _ToggleStatusDialogState extends State<ToggleStatusDialog> {
   @override
   Widget build(BuildContext context) {
     final actionText = widget.currentStatus ? 'تعطيل' : 'تفعيل';
-    final color = widget.currentStatus ? Colors.red : Colors.green;
+    final color = widget.currentStatus ? AppTheme.errorRed : AppTheme.successGreen;
 
     return AlertDialog(
       backgroundColor: AppTheme.surfaceBlack,
@@ -81,7 +81,7 @@ class _ToggleStatusDialogState extends State<ToggleStatusDialog> {
             'هل أنت متأكد من $actionText هذا المستخدم؟',
             style: const TextStyle(color: AppTheme.textWhite),
           ),
-          const SizedBox(height: 16),
+          AppTheme.gapHeightLarge,
           if (widget.currentStatus) // سبب التعطيل/التجميد عند إيقاف حساب نشط
             TextField(
               controller: _reasonController,

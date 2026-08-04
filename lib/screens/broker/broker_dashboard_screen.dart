@@ -51,11 +51,11 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
             const Text('لوحة الوسيط',
                 style: TextStyle(
                     color: AppTheme.textWhite,
-                    fontSize: 18,
+                    fontSize: AppTheme.fontSizeTitle,
                     fontWeight: FontWeight.bold)),
             Text('أهلاً، $name 🤝',
                 style: TextStyle(
-                    color: AppTheme.primaryGold.withOpacity(0.8), fontSize: 12)),
+                    color: AppTheme.primaryGold.withOpacity(0.8), fontSize: AppTheme.fontSizeSmall)),
           ],
         ),
         actions: [
@@ -77,7 +77,7 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
             ? const Center(
                 child: CircularProgressIndicator(color: AppTheme.primaryGold))
             : ListView(
-                padding: const EdgeInsets.all(16),
+                padding: AppTheme.paddingAllLarge,
                 children: [
                   // ── شبكة الإحصائيات ──
                   GridView.count(
@@ -98,13 +98,13 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
                           _fmt(stats['totalCommission']), 'إجمالي محقّق'),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  AppTheme.gapHeightXXL,
                   const Text('الأقسام',
                       style: TextStyle(
                           color: AppTheme.primaryGold,
-                          fontSize: 16,
+                          fontSize: AppTheme.fontSizeSubtitle,
                           fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 12),
+                  AppTheme.gapHeightMedium,
 
                   // ── بطاقات التنقل ──
                   _navTile(
@@ -140,10 +140,10 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
 
   Widget _statCard(String emoji, String label, String value, String sub) {
     return Container(
-      padding: const EdgeInsets.all(10),
+      padding: AppTheme.paddingAllMedium,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.25)),
       ),
       child: Column(
@@ -152,21 +152,21 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
         children: [
           Row(
             children: [
-              Text(emoji, style: const TextStyle(fontSize: 18)),
+              Text(emoji, style: const TextStyle(fontSize: AppTheme.fontSizeTitle)),
               const SizedBox(width: 6),
               Text(label,
                   style: const TextStyle(
-                      color: AppTheme.textGrey, fontSize: 12)),
+                      color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
             ],
           ),
-          const SizedBox(height: 4),
+          AppTheme.gapHeightXS,
           Text(value,
               style: const TextStyle(
                   color: AppTheme.primaryGold,
-                  fontSize: 20,
+                  fontSize: AppTheme.fontSizeHeadline,
                   fontWeight: FontWeight.bold)),
           Text(sub,
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 10)),
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeXS)),
         ],
       ),
     );
@@ -182,7 +182,7 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.15)),
       ),
       child: ListTile(
@@ -194,7 +194,7 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
             style: const TextStyle(
                 color: AppTheme.textWhite, fontWeight: FontWeight.bold)),
         subtitle: Text(subtitle,
-            style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+            style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
         trailing:
             const Icon(Icons.arrow_back_ios, color: AppTheme.primaryGold, size: 16),
         onTap: onTap,

@@ -97,7 +97,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 filled: true,
                 fillColor: AppTheme.surfaceBlack,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: AppTheme.borderRadiusMedium,
                   borderSide: BorderSide.none,
                 ),
               ),
@@ -114,15 +114,15 @@ class _SearchScreenState extends State<SearchScreen> {
                 _chip('🏠 عقار', _type == 0, () {
                   setState(() => _type = _type == 0 ? null : 0);
                 }),
-                const SizedBox(width: 8),
+                AppTheme.gapWidthSmall,
                 _chip('🚗 سيارة', _type == 1, () {
                   setState(() => _type = _type == 1 ? null : 1);
                 }),
-                const SizedBox(width: 8),
+                AppTheme.gapWidthSmall,
                 _chip('بيع', _trx == 0, () {
                   setState(() => _trx = _trx == 0 ? null : 0);
                 }),
-                const SizedBox(width: 8),
+                AppTheme.gapWidthSmall,
                 _chip('إيجار', _trx == 1, () {
                   setState(() => _trx = _trx == 1 ? null : 1);
                 }),
@@ -138,8 +138,8 @@ class _SearchScreenState extends State<SearchScreen> {
               DropdownButton<int?>(
                 value: _currency,
                 dropdownColor: AppTheme.surfaceBlack,
-                style: const TextStyle(color: AppTheme.textWhite, fontSize: 13),
-                hint: const Text('العملة', style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+                style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeBody),
+                hint: const Text('العملة', style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody)),
                 items: const [
                   DropdownMenuItem(value: null, child: Text('الكل')),
                   DropdownMenuItem(value: 0, child: Text('\$')),
@@ -147,15 +147,15 @@ class _SearchScreenState extends State<SearchScreen> {
                 ],
                 onChanged: (v) => setState(() => _currency = v),
               ),
-              const SizedBox(width: 10),
+              AppTheme.gapWidthSmall,
               Expanded(
                 child: TextField(
                   controller: _minPriceCtrl,
                   keyboardType: TextInputType.number,
-                  style: const TextStyle(color: AppTheme.textWhite, fontSize: 13),
+                  style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeBody),
                   decoration: const InputDecoration(
                     hintText: 'سعر من',
-                    hintStyle: TextStyle(color: AppTheme.textGrey, fontSize: 13),
+                    hintStyle: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody),
                     filled: true, fillColor: AppTheme.surfaceBlack,
                     contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                     border: OutlineInputBorder(borderSide: BorderSide.none,
@@ -172,10 +172,10 @@ class _SearchScreenState extends State<SearchScreen> {
                 child: TextField(
                   controller: _maxPriceCtrl,
                   keyboardType: TextInputType.number,
-                  style: const TextStyle(color: AppTheme.textWhite, fontSize: 13),
+                  style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeBody),
                   decoration: const InputDecoration(
                     hintText: 'سعر إلى',
-                    hintStyle: TextStyle(color: AppTheme.textGrey, fontSize: 13),
+                    hintStyle: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody),
                     filled: true, fillColor: AppTheme.surfaceBlack,
                     contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                     border: OutlineInputBorder(borderSide: BorderSide.none,
@@ -232,7 +232,7 @@ class _SearchScreenState extends State<SearchScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, size: 72, color: AppTheme.textGrey.withOpacity(0.3)),
-          const SizedBox(height: 16),
+          AppTheme.gapHeightLarge,
           Text(text,
               textAlign: TextAlign.center,
               style: const TextStyle(color: AppTheme.textGrey, fontSize: 15)),

@@ -102,7 +102,7 @@ class _MyOffersScreenState extends State<MyOffersScreen>
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusLarge),
         title: const Text('وصلت لحد العروض المسموح', style: TextStyle(color: AppTheme.textWhite)),
         content: Text(
           'تجاوزت عدد العروض المسموح بها لحسابك (الحد الحالي: $limit عرض).\n\n'
@@ -144,7 +144,7 @@ class _MyOffersScreenState extends State<MyOffersScreen>
           labelColor: AppTheme.primaryGold,
           unselectedLabelColor: AppTheme.textGrey,
           labelStyle:
-              const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              const TextStyle(fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeBody),
           tabs: _filters
               .map((f) => Tab(
                     text:
@@ -186,10 +186,10 @@ class _MyOffersScreenState extends State<MyOffersScreen>
           children: [
             Icon(Icons.folder_open,
                 size: 80, color: AppTheme.primaryGold.withOpacity(0.5)),
-            const SizedBox(height: 20),
+            AppTheme.gapHeightXL,
             const Text('لا توجد عروض في هذه الحالة',
-                style: TextStyle(color: AppTheme.textGrey, fontSize: 16)),
-            const SizedBox(height: 16),
+                style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSubtitle)),
+            AppTheme.gapHeightLarge,
             ElevatedButton.icon(
               onPressed: _tryAddOffer,
               icon: const Icon(Icons.add, color: Colors.black),
@@ -214,11 +214,11 @@ class _MyOffersScreenState extends State<MyOffersScreen>
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(color: status.$2.withOpacity(0.3)),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppTheme.borderRadiusLarge,
         onTap: () => context.push('/offer/${o.id}'),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -238,23 +238,23 @@ class _MyOffersScreenState extends State<MyOffersScreen>
                       style: TextStyle(
                           color: status.$2,
                           fontWeight: FontWeight.bold,
-                          fontSize: 12)),
+                          fontSize: AppTheme.fontSizeSmall)),
                   const Spacer(),
                   if (o.sts == 3 && o.rsn.isNotEmpty)
                     Tooltip(
                       message: 'سبب الرفض: ${o.rsn}',
                       child: const Icon(Icons.info_outline,
-                          color: Colors.red, size: 16),
+                          color: AppTheme.errorRed, size: 16),
                     ),
                 ],
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: AppTheme.paddingAllMedium,
               child: Row(
                 children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: AppTheme.borderRadiusMedium,
                     child: SizedBox(
                       width: 80,
                       height: 80,
@@ -265,7 +265,7 @@ class _MyOffersScreenState extends State<MyOffersScreen>
                           : _imgPlaceholder(),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  AppTheme.gapWidthMedium,
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -279,15 +279,15 @@ class _MyOffersScreenState extends State<MyOffersScreen>
                               fontWeight: FontWeight.bold,
                               fontSize: 15),
                         ),
-                        const SizedBox(height: 4),
+                        AppTheme.gapHeightXS,
                         Text(
                           '${_formatPrice(o.prc)} ${o.cur == 0 ? '\$' : 'ل.س'}',
                           style: const TextStyle(
                               color: AppTheme.primaryGold,
                               fontWeight: FontWeight.bold,
-                              fontSize: 14),
+                              fontSize: AppTheme.fontSizeMedium),
                         ),
-                        const SizedBox(height: 4),
+                        AppTheme.gapHeightXS,
                         Row(
                           children: [
                             const Icon(Icons.remove_red_eye,
@@ -295,14 +295,14 @@ class _MyOffersScreenState extends State<MyOffersScreen>
                             const SizedBox(width: 3),
                             Text('${o.vws}',
                                 style: const TextStyle(
-                                    color: AppTheme.textGrey, fontSize: 11)),
-                            const SizedBox(width: 10),
+                                    color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption)),
+                            AppTheme.gapWidthSmall,
                             const Icon(Icons.favorite,
                                 color: AppTheme.textGrey, size: 13),
                             const SizedBox(width: 3),
                             Text('${o.fvs}',
                                 style: const TextStyle(
-                                    color: AppTheme.textGrey, fontSize: 11)),
+                                    color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption)),
                           ],
                         ),
                       ],
@@ -380,8 +380,8 @@ class _MyOffersScreenState extends State<MyOffersScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, color: color, size: 18),
-            const SizedBox(height: 2),
-            Text(label, style: TextStyle(color: color, fontSize: 11)),
+            AppTheme.gapHeightXXS,
+            Text(label, style: TextStyle(color: color, fontSize: AppTheme.fontSizeCaption)),
           ],
         ),
       ),
@@ -397,21 +397,21 @@ class _MyOffersScreenState extends State<MyOffersScreen>
   (String, Color, IconData) _statusInfo(int s) {
     switch (s) {
       case 0:
-        return ('مسودة', Colors.grey, Icons.edit_note);
+        return ('مسودة', AppTheme.textGrey, Icons.edit_note);
       case 1:
-        return ('قيد المراجعة', Colors.orange, Icons.hourglass_empty);
+        return ('قيد المراجعة', AppTheme.warningOrange, Icons.hourglass_empty);
       case 2:
-        return ('منشور', Colors.green, Icons.check_circle);
+        return ('منشور', AppTheme.successGreen, Icons.check_circle);
       case 3:
-        return ('مرفوض', Colors.red, Icons.cancel);
+        return ('مرفوض', AppTheme.errorRed, Icons.cancel);
       case 4:
-        return ('منتهي', Colors.grey, Icons.timer_off);
+        return ('منتهي', AppTheme.textGrey, Icons.timer_off);
       case 5:
-        return ('محجوز', Colors.blue, Icons.lock_clock);
+        return ('محجوز', AppTheme.infoBlue, Icons.lock_clock);
       case 6:
         return ('مكتمل', Colors.teal, Icons.done_all);
       default:
-        return ('غير معروف', Colors.grey, Icons.help);
+        return ('غير معروف', AppTheme.textGrey, Icons.help);
     }
   }
 }

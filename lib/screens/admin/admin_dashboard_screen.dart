@@ -61,11 +61,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             const Text('لوحة الإدارة',
                 style: TextStyle(
                     color: AppTheme.textWhite,
-                    fontSize: 18,
+                    fontSize: AppTheme.fontSizeTitle,
                     fontWeight: FontWeight.bold)),
             Text('أهلاً، $name 🛡️',
                 style: TextStyle(
-                    color: AppTheme.primaryGold.withOpacity(0.8), fontSize: 12)),
+                    color: AppTheme.primaryGold.withOpacity(0.8), fontSize: AppTheme.fontSizeSmall)),
           ],
           ),
         ),
@@ -88,46 +88,46 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               color: AppTheme.primaryGold,
               onRefresh: _load,
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: AppTheme.paddingAllLarge,
                 children: [
                   // ── تنبيهات الإجراءات المطلوبة ──
                   if (_totalActions() > 0) _actionsBanner(),
 
                   // ── إحصائيات عامة ──
-                  const SizedBox(height: 4),
+                  AppTheme.gapHeightXS,
                   const Text('نظرة عامة',
                       style: TextStyle(
                           color: AppTheme.primaryGold,
-                          fontSize: 16,
+                          fontSize: AppTheme.fontSizeSubtitle,
                           fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 12),
+                  AppTheme.gapHeightMedium,
                   Column(
                     children: [
                       Row(
                         children: [
                           Expanded(child: _statCard('👥', 'المستخدمون', '${_stats['totalUsers'] ?? 0}', 'نشط: ${_stats['activeUsers'] ?? 0}')),
-                          const SizedBox(width: 10),
+                          AppTheme.gapWidthSmall,
                           Expanded(child: _statCard('🏠', 'العروض', '${_stats['totalOffers'] ?? 0}', 'منشور: ${_stats['publishedOffers'] ?? 0}')),
                         ],
                       ),
-                      const SizedBox(height: 10),
+                      AppTheme.gapHeightSmall,
                       Row(
                         children: [
                           Expanded(child: _statCard('🤝', 'الصفقات', '${_stats['totalDeals'] ?? 0}', 'مكتمل: ${_stats['completedDeals'] ?? 0}')),
-                          const SizedBox(width: 10),
+                          AppTheme.gapWidthSmall,
                           Expanded(child: _statCard('💰', 'العمولات', _fmt(_stats['totalCommission']), 'إجمالي محقّق')),
                         ],
                       ),
                     ],
                   ),
 
-                  const SizedBox(height: 24),
+                  AppTheme.gapHeightXXL,
                   const Text('الإدارة',
                       style: TextStyle(
                           color: AppTheme.primaryGold,
-                          fontSize: 16,
+                          fontSize: AppTheme.fontSizeSubtitle,
                           fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 12),
+                  AppTheme.gapHeightMedium,
 
                   // ── مدخل الأقسام ──
                   GridView.count(
@@ -145,7 +145,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  AppTheme.gapHeightXL,
                 ],
               ),
             ),
@@ -161,16 +161,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Widget _actionsBanner() {
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
-      padding: const EdgeInsets.all(16),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.errorRed.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(color: AppTheme.errorRed.withOpacity(0.5)),
       ),
       child: Row(
         children: [
           const Icon(Icons.notification_important, color: AppTheme.errorRed),
-          const SizedBox(width: 12),
+          AppTheme.gapWidthMedium,
           Expanded(
             child: Text(
               'لديك ${_totalActions()} عنصر بانتظار الإجراء '
@@ -178,7 +178,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               '${_counts['pendingPayments'] ?? 0} دفعة · '
               '${_counts['openReports'] ?? 0} تبليغ · '
               '${_counts['pendingVerifications'] ?? 0} توثيق)',
-              style: const TextStyle(color: AppTheme.textWhite, fontSize: 13),
+              style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeBody),
             ),
           ),
         ],
@@ -199,13 +199,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.25)),
       ),
       child: Row(
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 20)),
-          const SizedBox(width: 8),
+          Text(emoji, style: const TextStyle(fontSize: AppTheme.fontSizeHeadline)),
+          AppTheme.gapWidthSmall,
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -214,16 +214,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 Text(label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: AppTheme.textGrey, fontSize: 11)),
-                const SizedBox(height: 2),
+                    style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption)),
+                AppTheme.gapHeightXXS,
                 Text(value,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                         color: AppTheme.primaryGold,
-                        fontSize: 18,
+                        fontSize: AppTheme.fontSizeTitle,
                         fontWeight: FontWeight.bold)),
-                const SizedBox(height: 2),
+                AppTheme.gapHeightXXS,
                 Text(sub,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -244,35 +244,35 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   ) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: AppTheme.borderRadiusLarge,
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: AppTheme.paddingAllLarge,
         decoration: BoxDecoration(
           color: AppTheme.surfaceBlack,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: AppTheme.borderRadiusLarge,
           border: Border.all(color: AppTheme.primaryGold.withOpacity(0.15)),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, color: AppTheme.primaryGold, size: 34),
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             Text(
               title,
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: AppTheme.textWhite,
-                fontSize: 13,
+                fontSize: AppTheme.fontSizeBody,
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 4),
+            AppTheme.gapHeightXS,
             Text(
               subtitle,
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 10),
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeXS),
             ),
           ],
         ),

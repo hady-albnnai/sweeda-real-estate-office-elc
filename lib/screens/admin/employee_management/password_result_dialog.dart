@@ -39,12 +39,12 @@ class PasswordResultDialog extends StatelessWidget {
             'انسخ كلمة السر وأرسلها للموظف. لن تظهر هذه الكلمة مرة أخرى.',
             style: TextStyle(color: AppTheme.textGrey),
           ),
-          const SizedBox(height: 16),
+          AppTheme.gapHeightLarge,
           Container(
-            padding: const EdgeInsets.all(14),
+            padding: AppTheme.paddingAllLarge,
             decoration: BoxDecoration(
               color: AppTheme.deepBlack,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: AppTheme.borderRadiusMedium,
               border: Border.all(color: AppTheme.primaryGold.withOpacity(0.45)),
             ),
             child: SelectableText(
@@ -52,7 +52,7 @@ class PasswordResultDialog extends StatelessWidget {
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: AppTheme.primaryGold,
-                fontSize: 18,
+                fontSize: AppTheme.fontSizeTitle,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'monospace',
               ),

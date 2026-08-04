@@ -115,7 +115,7 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
                   style: TextStyle(color: AppTheme.textGrey))),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorRed),
             child:
                 const Text('رفض', style: TextStyle(color: Colors.white)),
           ),
@@ -234,9 +234,9 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
           children: [
             const Icon(Icons.event_busy,
                 size: 80, color: Color.fromRGBO(212, 175, 55, 0.5)),
-            const SizedBox(height: 20),
+            AppTheme.gapHeightXL,
             const Text('لا توجد طلبات في هذه الفئة',
-                style: TextStyle(color: AppTheme.textGrey, fontSize: 16)),
+                style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSubtitle)),
           ],
         ),
       );
@@ -245,7 +245,7 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
       color: AppTheme.primaryGold,
       onRefresh: _load,
       child: ListView.builder(
-        padding: const EdgeInsets.all(12),
+        padding: AppTheme.paddingAllMedium,
         itemCount: items.length,
         itemBuilder: (_, i) => _card(items[i]),
       ),
@@ -262,7 +262,7 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(color: status.$2.withOpacity(0.3)),
       ),
       child: Column(
@@ -284,19 +284,19 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
                     style: TextStyle(
                         color: status.$2,
                         fontWeight: FontWeight.bold,
-                        fontSize: 12)),
+                        fontSize: AppTheme.fontSizeSmall)),
                 const Spacer(),
                 Text(
                   '${a.dt.day}/${a.dt.month}/${a.dt.year} - ${a.dt.hour.toString().padLeft(2, '0')}:${a.dt.minute.toString().padLeft(2, '0')}',
                   style: const TextStyle(
-                      color: AppTheme.textGrey, fontSize: 12),
+                      color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall),
                 ),
               ],
             ),
           ),
 
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: AppTheme.paddingAllMedium,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -304,7 +304,7 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
                 Row(
                   children: [
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: AppTheme.borderRadiusSmall,
                       child: SizedBox(
                         width: 60,
                         height: 60,
@@ -316,7 +316,7 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
                             : _imgPlaceholder(),
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    AppTheme.gapWidthSmall,
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -326,7 +326,7 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
                             style: const TextStyle(
                                 color: AppTheme.textWhite,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 14),
+                                fontSize: AppTheme.fontSizeMedium),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -334,7 +334,7 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
                             Text(
                               '${offer.prc.toStringAsFixed(0)} ${offer.cur == 0 ? '\$' : 'ل.س'} • ${(offer.loc['d'] ?? '').toString()}',
                               style: const TextStyle(
-                                  color: AppTheme.textGrey, fontSize: 11),
+                                  color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption),
                             ),
                         ],
                       ),
@@ -356,20 +356,20 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   decoration: BoxDecoration(
                     color: AppTheme.primaryGold.withOpacity(0.07),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: AppTheme.borderRadiusSmall,
                     border: Border.all(
                         color: AppTheme.primaryGold.withOpacity(0.3)),
                   ),
                   child: const Row(children: [
                     Icon(Icons.business_center,
                         color: AppTheme.primaryGold, size: 16),
-                    SizedBox(width: 8),
+                    AppTheme.gapWidthSmall,
                     Expanded(
                       child: Text(
                         'يوجد طلب حجز موعد — التواصل مع الطالب يتم عبر إدارة المكتب حصراً.',
                         style: TextStyle(
                             color: AppTheme.primaryGold,
-                            fontSize: 12,
+                            fontSize: AppTheme.fontSizeSmall,
                             height: 1.4),
                       ),
                     ),
@@ -378,9 +378,9 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
 
                 // ملاحظة الإلغاء
                 if (a.cnlRsn != null && a.cnlRsn!.isNotEmpty) ...[
-                  const SizedBox(height: 8),
+                  AppTheme.gapHeightSmall,
                   Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: AppTheme.paddingAllSmall,
                     decoration: BoxDecoration(
                       color: const Color.fromRGBO(255, 0, 0, 0.1),
                       borderRadius: BorderRadius.circular(6),
@@ -388,13 +388,13 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
                     child: Row(
                       children: [
                         const Icon(Icons.info_outline,
-                            color: Colors.red, size: 14),
+                            color: AppTheme.errorRed, size: 14),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
                             'سبب الإلغاء: ${a.cnlRsn}',
                             style: const TextStyle(
-                                color: Colors.red, fontSize: 11),
+                                color: AppTheme.errorRed, fontSize: AppTheme.fontSizeCaption),
                           ),
                         ),
                       ],
@@ -408,9 +408,9 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
           // أزرار الإجراءات
           if (isPending)
             _actionRow([
-              _actionBtn('رفض', Icons.close, Colors.red, () => _reject(a)),
+              _actionBtn('رفض', Icons.close, AppTheme.errorRed, () => _reject(a)),
               _actionBtn(
-                  'قبول', Icons.check, Colors.green, () => _accept(a)),
+                  'قبول', Icons.check, AppTheme.successGreen, () => _accept(a)),
             ])
           else if (isAccepted)
             _actionRow([
@@ -461,19 +461,19 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
   (String, Color, IconData) _statusInfo(int s) {
     switch (s) {
       case 0:
-        return ('قيد الانتظار', Colors.orange, Icons.hourglass_empty);
+        return ('قيد الانتظار', AppTheme.warningOrange, Icons.hourglass_empty);
       case 1:
-        return ('مؤكد', Colors.green, Icons.check_circle);
+        return ('مؤكد', AppTheme.successGreen, Icons.check_circle);
       case 2:
         return ('مكتمل', Colors.teal, Icons.done_all);
       case 3:
-        return ('ملغي', Colors.grey, Icons.block);
+        return ('ملغي', AppTheme.textGrey, Icons.block);
       case 4:
-        return ('مرفوض', Colors.red, Icons.cancel);
+        return ('مرفوض', AppTheme.errorRed, Icons.cancel);
       case 5:
         return ('لم يتم الحضور', Colors.deepOrange, Icons.person_off);
       default:
-        return ('غير معروف', Colors.grey, Icons.help);
+        return ('غير معروف', AppTheme.textGrey, Icons.help);
     }
   }
 }

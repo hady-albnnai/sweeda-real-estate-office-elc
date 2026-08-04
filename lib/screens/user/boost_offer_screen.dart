@@ -74,7 +74,7 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
         backgroundColor: AppTheme.surfaceBlack,
         title: const Row(children: [
           Icon(Icons.shopping_cart, color: AppTheme.primaryGold),
-          SizedBox(width: 8),
+          AppTheme.gapWidthSmall,
           Text('تأكيد الشراء',
               style: TextStyle(color: AppTheme.textWhite)),
         ]),
@@ -215,19 +215,19 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: AppTheme.paddingAllLarge,
             child: Column(
               children: [
                 _offerSummary(_offer!),
-                const SizedBox(height: 16),
+                AppTheme.gapHeightLarge,
                 _pointsBalance(user?.pt ?? 0),
-                const SizedBox(height: 20),
+                AppTheme.gapHeightXL,
                 const Text('🚀 خيارات الترقية',
                     style: TextStyle(
                         color: AppTheme.primaryGold,
-                        fontSize: 16,
+                        fontSize: AppTheme.fontSizeSubtitle,
                         fontWeight: FontWeight.bold)),
-                const SizedBox(height: 12),
+                AppTheme.gapHeightMedium,
 
                 _boostCard(
                   icon: Icons.refresh,
@@ -238,7 +238,7 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
                   cost: _renCost(spd),
                   active: false,
                   boostType: 'ren',
-                  color: Colors.blue,
+                  color: AppTheme.infoBlue,
                 ),
                 // ⓘ تنويه المصطلحات: تمديد مدفوع (+30 فوق المتبقي بأي وقت) / تجديد مجاني (قبل يومين)
                 Container(
@@ -246,22 +246,22 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.08),
-                    borderRadius: BorderRadius.circular(10),
+                    color: AppTheme.infoBlue.withOpacity(0.08),
+                    borderRadius: AppTheme.borderRadiusMedium,
                     border:
-                        Border.all(color: Colors.blue.withOpacity(0.3)),
+                        Border.all(color: AppTheme.infoBlue.withOpacity(0.3)),
                   ),
                   child: const Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.info_outline, color: Colors.blue, size: 16),
-                      SizedBox(width: 8),
+                      Icon(Icons.info_outline, color: AppTheme.infoBlue, size: 16),
+                      AppTheme.gapWidthSmall,
                       Expanded(
                         child: Text(
                           '«تمديد» مدفوع: يضيف 30 يوم فوق المدة المتبقية بأي وقت.\n«تجديد» مجاني: عندما يتبقى يومان أو أقل على انتهاء العرض.',
                           style: TextStyle(
                               color: AppTheme.textGrey,
-                              fontSize: 11.5,
+                              fontSize: AppTheme.fontSizeCaption.5,
                               height: 1.5),
                         ),
                       ),
@@ -276,7 +276,7 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
                   active: _offer!.iPin == 1,
                   activeUntil: _offer!.pinEnd,
                   boostType: 'pin',
-                  color: Colors.orange,
+                  color: AppTheme.warningOrange,
                 ),
                 _boostCard(
                   icon: Icons.rocket_launch,
@@ -296,13 +296,13 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
                   active: _offer!.dscPct > 0,
                   activeUntil: _offer!.dscEnd,
                   boostType: 'dsc5',
-                  color: Colors.green,
+                  color: AppTheme.successGreen,
                 ),
                 // ⭐ الإعلان المميز أصبح مدفوعاً فقط (قرار المالك 2026-07-26 — لا نسخة نقاط)
                 _featuredAdCard(),
-                const SizedBox(height: 16),
+                AppTheme.gapHeightLarge,
                 _infoBox(),
-                const SizedBox(height: 20),
+                AppTheme.gapHeightXL,
               ],
             ),
           ),
@@ -320,15 +320,15 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
 
   Widget _offerSummary(OfferModel o) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: AppTheme.paddingAllMedium,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppTheme.borderRadiusMedium,
       ),
       child: Row(
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: AppTheme.borderRadiusSmall,
             child: SizedBox(
               width: 60,
               height: 60,
@@ -343,7 +343,7 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
                           color: AppTheme.textGrey)),
             ),
           ),
-          const SizedBox(width: 10),
+          AppTheme.gapWidthSmall,
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -369,33 +369,33 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
 
   Widget _pointsBalance(int pts) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFFD4AF37), Color(0xFFFFD700)],
+          colors: [AppTheme.primaryGold, Color(0xFFFFD700)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppTheme.borderRadiusMedium,
       ),
       child: Row(
         children: [
           const Icon(Icons.stars, color: Colors.black, size: 28),
-          const SizedBox(width: 10),
+          AppTheme.gapWidthSmall,
           const Text('رصيدك من النقاط:',
               style: TextStyle(
                   color: Colors.black87,
                   fontWeight: FontWeight.bold,
-                  fontSize: 14)),
+                  fontSize: AppTheme.fontSizeMedium)),
           const Spacer(),
           Text('$pts',
               style: const TextStyle(
                   color: Colors.black,
                   fontSize: 22,
                   fontWeight: FontWeight.bold)),
-          const SizedBox(width: 4),
+          AppTheme.gapWidthXS,
           const Text('نقطة',
-              style: TextStyle(color: Colors.black87, fontSize: 12)),
+              style: TextStyle(color: Colors.black87, fontSize: AppTheme.fontSizeSmall)),
         ],
       ),
     );
@@ -428,12 +428,12 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppTheme.borderRadiusMedium,
         border: Border.all(
-          color: active ? Colors.green : color.withOpacity(0.3),
+          color: active ? AppTheme.successGreen : color.withOpacity(0.3),
           width: active ? 2 : 1,
         ),
       ),
@@ -443,14 +443,14 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: AppTheme.paddingAllSmall,
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: AppTheme.borderRadiusSmall,
                 ),
                 child: Icon(icon, color: color, size: 22),
               ),
-              const SizedBox(width: 10),
+              AppTheme.gapWidthSmall,
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -459,10 +459,10 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
                         style: const TextStyle(
                             color: AppTheme.textWhite,
                             fontWeight: FontWeight.bold,
-                            fontSize: 14)),
+                            fontSize: AppTheme.fontSizeMedium)),
                     Text(description,
                         style: const TextStyle(
-                            color: AppTheme.textGrey, fontSize: 11)),
+                            color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption)),
                   ],
                 ),
               ),
@@ -472,41 +472,41 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
                   Text('$cost',
                       style: TextStyle(
                           color: color,
-                          fontSize: 18,
+                          fontSize: AppTheme.fontSizeTitle,
                           fontWeight: FontWeight.bold)),
                   const Text('نقطة',
                       style: TextStyle(
-                          color: AppTheme.textGrey, fontSize: 10)),
+                          color: AppTheme.textGrey, fontSize: AppTheme.fontSizeXS)),
                 ],
               ),
             ],
           ),
           if (active && activeUntil != null) ...[
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             Container(
               padding: const EdgeInsets.symmetric(
                   horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.15),
+                color: AppTheme.successGreen.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Row(
                 children: [
                   const Icon(Icons.check_circle,
-                      color: Colors.green, size: 14),
+                      color: AppTheme.successGreen, size: 14),
                   const SizedBox(width: 6),
                   Text(
                     'مفعّل حتى ${activeUntil.day}/${activeUntil.month}/${activeUntil.year}',
                     style: const TextStyle(
-                        color: Colors.green,
-                        fontSize: 11,
+                        color: AppTheme.successGreen,
+                        fontSize: AppTheme.fontSizeCaption,
                         fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
             ),
           ] else ...[
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             SizedBox(
               width: double.infinity,
               height: 38,
@@ -528,9 +528,9 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
                     style: const TextStyle(
                         color: Colors.black,
                         fontWeight: FontWeight.bold,
-                        fontSize: 13)),
+                        fontSize: AppTheme.fontSizeBody)),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: (isEnabled && canAfford) ? color : Colors.grey,
+                  backgroundColor: (isEnabled && canAfford) ? color : AppTheme.textGrey,
                 ),
               ),
             ),
@@ -548,10 +548,10 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
         ending.isAfter(DateTime.now());
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppTheme.borderRadiusMedium,
         border: Border.all(
             color: AppTheme.primaryGold.withOpacity(active ? 0.6 : 0.25)),
       ),
@@ -560,12 +560,12 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
         children: [
           Row(children: [
             const Icon(Icons.star, color: AppTheme.primaryGold, size: 20),
-            const SizedBox(width: 8),
+            AppTheme.gapWidthSmall,
             const Expanded(
               child: Text('إعلان مميز',
                   style: TextStyle(
                       color: AppTheme.textWhite,
-                      fontSize: 14,
+                      fontSize: AppTheme.fontSizeMedium,
                       fontWeight: FontWeight.bold)),
             ),
             if (active)
@@ -573,13 +573,13 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
                 padding: const EdgeInsets.symmetric(
                     horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(8),
+                  color: AppTheme.successGreen.withOpacity(0.12),
+                  borderRadius: AppTheme.borderRadiusSmall,
                 ),
                 child: const Text('فعّال',
                     style: TextStyle(
-                        color: Colors.green,
-                        fontSize: 11,
+                        color: AppTheme.successGreen,
+                        fontSize: AppTheme.fontSizeCaption,
                         fontWeight: FontWeight.bold)),
               ),
           ]),
@@ -590,9 +590,9 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
                     '${ending.day}/${ending.month}/${ending.year}'
                 : 'شارة مميّز + ظهور في قسم خاص — شراء مدفوع بالمدة (1-4 أسابيع)',
             style:
-                const TextStyle(color: AppTheme.textGrey, fontSize: 11.5),
+                const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption.5),
           ),
-          const SizedBox(height: 10),
+          AppTheme.gapHeightSmall,
           SizedBox(
             width: double.infinity,
             height: 38,
@@ -611,11 +611,11 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
                 style: const TextStyle(
                     color: Colors.black,
                     fontWeight: FontWeight.bold,
-                    fontSize: 13),
+                    fontSize: AppTheme.fontSizeBody),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor:
-                    active ? Colors.grey : AppTheme.primaryGold,
+                    active ? AppTheme.textGrey : AppTheme.primaryGold,
               ),
             ),
           ),
@@ -626,19 +626,19 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
 
   Widget _infoBox() {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: AppTheme.paddingAllMedium,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: AppTheme.borderRadiusMedium,
       ),
       child: const Row(
         children: [
           Icon(Icons.info_outline, color: AppTheme.primaryGold, size: 18),
-          SizedBox(width: 8),
+          AppTheme.gapWidthSmall,
           Expanded(
             child: Text(
               'النقاط تُكتسب من النشاط بالتطبيق (إضافة عروض، إكمال صفقات، دعوة أصدقاء، تسجيل دخول يومي).',
-              style: TextStyle(color: AppTheme.textGrey, fontSize: 11),
+              style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption),
             ),
           ),
         ],

@@ -141,12 +141,12 @@ class _LegalConsultationBookingScreenState extends State<LegalConsultationBookin
 
   (String, Color) _statusInfo(int sts) {
     switch (sts) {
-      case 0: return ('بانتظار التأكيد', Colors.orange);
-      case 1: return ('مؤكدة', Colors.green);
+      case 0: return ('بانتظار التأكيد', AppTheme.warningOrange);
+      case 1: return ('مؤكدة', AppTheme.successGreen);
       case 2: return ('مكتملة', Colors.teal);
-      case 3: return ('ملغاة', Colors.grey);
-      case 4: return ('مرفوضة', Colors.red);
-      default: return ('غير معروف', Colors.grey);
+      case 3: return ('ملغاة', AppTheme.textGrey);
+      case 4: return ('مرفوضة', AppTheme.errorRed);
+      default: return ('غير معروف', AppTheme.textGrey);
     }
   }
 
@@ -161,10 +161,10 @@ class _LegalConsultationBookingScreenState extends State<LegalConsultationBookin
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
+      padding: AppTheme.paddingAllMedium,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppTheme.borderRadiusMedium,
         border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Column(
@@ -179,17 +179,17 @@ class _LegalConsultationBookingScreenState extends State<LegalConsultationBookin
                     style: const TextStyle(
                         color: AppTheme.textWhite,
                         fontWeight: FontWeight.bold,
-                        fontSize: 13)),
+                        fontSize: AppTheme.fontSizeBody)),
               ),
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: AppTheme.borderRadiusSmall,
                 ),
                 child: Text(label,
-                    style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
+                    style: TextStyle(color: color, fontSize: AppTheme.fontSizeXS, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -197,24 +197,24 @@ class _LegalConsultationBookingScreenState extends State<LegalConsultationBookin
           Text(subject,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
-          const SizedBox(height: 4),
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
+          AppTheme.gapHeightXS,
           Row(
             children: [
               Text('${AppUtils.formatPrice(price)} ل.س',
                   style: const TextStyle(
                       color: AppTheme.primaryGold,
-                      fontSize: 12,
+                      fontSize: AppTheme.fontSizeSmall,
                       fontWeight: FontWeight.bold)),
               const Spacer(),
               Text(tsCrt,
-                  style: const TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+                  style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption)),
             ],
           ),
           if (notes.isNotEmpty) ...[
-            const SizedBox(height: 4),
+            AppTheme.gapHeightXS,
             Text('ملاحظة: $notes',
-                style: const TextStyle(color: Colors.amber, fontSize: 11)),
+                style: const TextStyle(color: Colors.amber, fontSize: AppTheme.fontSizeCaption)),
           ],
         ],
       ),
@@ -233,37 +233,37 @@ class _LegalConsultationBookingScreenState extends State<LegalConsultationBookin
         elevation: 0,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: AppTheme.paddingAllLarge,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: AppTheme.paddingAllLarge,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [AppTheme.primaryGold.withOpacity(0.15), AppTheme.surfaceBlack],
                   begin: Alignment.topRight,
                   end: Alignment.bottomLeft,
                 ),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: AppTheme.borderRadiusLarge,
                 border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
               ),
               child: const Row(
                 children: [
                   Icon(Icons.gavel, color: AppTheme.primaryGold, size: 36),
-                  SizedBox(width: 14),
+                  AppTheme.gapWidthMedium,
                   Expanded(
                     child: Text(
                       'مظلة أمان قانونية متكاملة بإشراف نخبة المحامين المعتمدين لدى مكتب عقارات السويداء لضمان حقوقك العقارية والمالية.',
-                      style: TextStyle(color: AppTheme.textWhite, fontSize: 13, height: 1.5),
+                      style: TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeBody, height: 1.5),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 20),
-            const Text('اختر الخدمة القانونية المطلوبة:', style: TextStyle(color: AppTheme.primaryGold, fontSize: 16, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
+            AppTheme.gapHeightXL,
+            const Text('اختر الخدمة القانونية المطلوبة:', style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSubtitle, fontWeight: FontWeight.bold)),
+            AppTheme.gapHeightMedium,
             ...List.generate(_services.length, (i) {
               final s = _services[i];
               final selected = _selectedService == i;
@@ -271,10 +271,10 @@ class _LegalConsultationBookingScreenState extends State<LegalConsultationBookin
                 onTap: () => setState(() => _selectedService = i),
                 child: Container(
                   margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(16),
+                  padding: AppTheme.paddingAllLarge,
                   decoration: BoxDecoration(
                     color: selected ? AppTheme.primaryGold.withOpacity(0.12) : AppTheme.surfaceBlack,
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: AppTheme.borderRadiusLarge,
                     border: Border.all(color: selected ? AppTheme.primaryGold : Colors.white12, width: selected ? 2 : 1),
                   ),
                   child: Column(
@@ -283,7 +283,7 @@ class _LegalConsultationBookingScreenState extends State<LegalConsultationBookin
                       Row(
                         children: [
                           Icon(s['icon'] as IconData, color: AppTheme.primaryGold, size: 24),
-                          const SizedBox(width: 10),
+                          AppTheme.gapWidthSmall,
                           Expanded(
                             child: Text(
                               s['title'] as String,
@@ -292,24 +292,24 @@ class _LegalConsultationBookingScreenState extends State<LegalConsultationBookin
                           ),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(color: AppTheme.primaryGold, borderRadius: BorderRadius.circular(20)),
+                            decoration: BoxDecoration(color: AppTheme.primaryGold, borderRadius: AppTheme.borderRadiusXL),
                             child: Text(
                               AppUtils.formatPrice(s['price'] as num),
-                              style: const TextStyle(color: AppTheme.deepBlack, fontWeight: FontWeight.bold, fontSize: 12),
+                              style: const TextStyle(color: AppTheme.deepBlack, fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeSmall),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
-                      Text(s['desc'] as String, style: const TextStyle(color: AppTheme.textGrey, fontSize: 12, height: 1.5)),
+                      AppTheme.gapHeightSmall,
+                      Text(s['desc'] as String, style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall, height: 1.5)),
                     ],
                   ),
                 ),
               );
             }),
-            const SizedBox(height: 20),
-            const Text('ملخص الموضوع أو المعاملة:', style: TextStyle(color: AppTheme.primaryGold, fontSize: 16, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
+            AppTheme.gapHeightXL,
+            const Text('ملخص الموضوع أو المعاملة:', style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSubtitle, fontWeight: FontWeight.bold)),
+            AppTheme.gapHeightSmall,
             TextField(
               controller: _subjectCtrl,
               maxLines: 4,
@@ -319,10 +319,10 @@ class _LegalConsultationBookingScreenState extends State<LegalConsultationBookin
                 hintStyle: const TextStyle(color: AppTheme.textGrey),
                 filled: true,
                 fillColor: AppTheme.surfaceBlack,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                border: OutlineInputBorder(borderRadius: AppTheme.borderRadiusMedium, borderSide: BorderSide.none),
               ),
             ),
-            const SizedBox(height: 24),
+            AppTheme.gapHeightXXL,
             SizedBox(
               width: double.infinity,
               height: 52,
@@ -331,28 +331,28 @@ class _LegalConsultationBookingScreenState extends State<LegalConsultationBookin
                 icon: const Icon(Icons.verified_user),
                 label: _submitting
                     ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: AppTheme.deepBlack, strokeWidth: 2))
-                    : const Text('تأكيد الطلب والمتابعة للدفع', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    : const Text('تأكيد الطلب والمتابعة للدفع', style: TextStyle(fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeSubtitle)),
               ),
             ),
             if (activeLawyers.isNotEmpty && _selectedService == 0) ...[
-              const SizedBox(height: 20),
+              AppTheme.gapHeightXL,
               Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.green.withOpacity(0.4))),
+                padding: AppTheme.paddingAllLarge,
+                decoration: BoxDecoration(color: AppTheme.successGreen.withOpacity(0.1), borderRadius: AppTheme.borderRadiusLarge, border: Border.all(color: AppTheme.successGreen.withOpacity(0.4))),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('💬 الاتصال الفوري المعتمد (بعد اعتماد الدفع):', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 14)),
-                    const SizedBox(height: 8),
-                    const Text('بمجرد قيام الإدارة بتدقيق الإيصال، يُفتح لك زر التواصل المباشر بالرسائل الصوتية عبر واتساب مع المحامي المخصص:', style: TextStyle(color: AppTheme.textWhite, fontSize: 12, height: 1.4)),
-                    const SizedBox(height: 12),
+                    const Text('💬 الاتصال الفوري المعتمد (بعد اعتماد الدفع):', style: TextStyle(color: AppTheme.successGreen, fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeMedium)),
+                    AppTheme.gapHeightSmall,
+                    const Text('بمجرد قيام الإدارة بتدقيق الإيصال، يُفتح لك زر التواصل المباشر بالرسائل الصوتية عبر واتساب مع المحامي المخصص:', style: TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeSmall, height: 1.4)),
+                    AppTheme.gapHeightMedium,
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
                         onPressed: () => _openLawyerWhatsapp(activeLawyers.first.whatsappPhone),
                         icon: const Icon(Icons.chat),
                         label: const Text('تحدث صوتياً عبر واتساب مع المحامي المخصص 💬'),
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                        style: ElevatedButton.styleFrom(backgroundColor: AppTheme.successGreen),
                       ),
                     ),
                   ],
@@ -360,25 +360,25 @@ class _LegalConsultationBookingScreenState extends State<LegalConsultationBookin
               ),
             ],
             // ─── استشاراتي السابقة ───
-            const SizedBox(height: 24),
+            AppTheme.gapHeightXXL,
             const Text('📋 استشاراتي',
                 style: TextStyle(
                     color: AppTheme.primaryGold,
-                    fontSize: 16,
+                    fontSize: AppTheme.fontSizeSubtitle,
                     fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
+            AppTheme.gapHeightMedium,
             if (_loadingConsultations)
               const Center(
                   child: Padding(
-                padding: EdgeInsets.all(20),
+                padding: AppTheme.paddingAllXL,
                 child: CircularProgressIndicator(color: AppTheme.primaryGold),
               ))
             else if (_myConsultations.isEmpty)
               Container(
-                padding: const EdgeInsets.all(20),
+                padding: AppTheme.paddingAllXL,
                 decoration: BoxDecoration(
                   color: AppTheme.surfaceBlack,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: AppTheme.borderRadiusMedium,
                 ),
                 child: const Center(
                   child: Text('لا توجد استشارات سابقة',

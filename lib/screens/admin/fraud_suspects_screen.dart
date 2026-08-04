@@ -83,7 +83,7 @@ class _FraudSuspectsScreenState extends State<FraudSuspectsScreen> {
           : _error != null
               ? Center(
                   child: Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(AppTheme.paddingXXL),
                   child: Text(
                     '❌ تعذّر التحميل\n${_error!}',
                     textAlign: TextAlign.center,
@@ -97,7 +97,7 @@ class _FraudSuspectsScreenState extends State<FraudSuspectsScreen> {
                       color: AppTheme.primaryGold,
                       onRefresh: _load,
                       child: ListView.builder(
-                        padding: const EdgeInsets.all(12),
+                        padding: AppTheme.paddingAllMedium,
                         itemCount: _suspects.length,
                         itemBuilder: (_, i) => _suspectCard(_suspects[i]),
                       ),
@@ -110,13 +110,13 @@ class _FraudSuspectsScreenState extends State<FraudSuspectsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.verified_user, color: Colors.green, size: 80),
-          SizedBox(height: 12),
+          Icon(Icons.verified_user, color: AppTheme.successGreen, size: 80),
+          AppTheme.gapHeightMedium,
           Text('لا توجد حسابات مشبوهة',
-              style: TextStyle(color: AppTheme.textGrey, fontSize: 16)),
+              style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSubtitle)),
           SizedBox(height: 6),
           Text('كل المستخدمين على أجهزة فريدة 🎉',
-              style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+              style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
         ],
       ),
     );
@@ -130,19 +130,19 @@ class _FraudSuspectsScreenState extends State<FraudSuspectsScreen> {
 
     Color tone;
     if (count >= 5) {
-      tone = Colors.red;
+      tone = AppTheme.errorRed;
     } else if (count >= 3) {
-      tone = Colors.orange;
+      tone = AppTheme.warningOrange;
     } else {
       tone = AppTheme.primaryGold;
     }
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6),
-      padding: const EdgeInsets.all(12),
+      padding: AppTheme.paddingAllMedium,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: AppTheme.borderRadiusMedium,
         border: Border.all(color: tone.withOpacity(0.5)),
       ),
       child: Column(
@@ -161,12 +161,12 @@ class _FraudSuspectsScreenState extends State<FraudSuspectsScreen> {
               ),
             ),
           ]),
-          const SizedBox(height: 4),
+          AppTheme.gapHeightXS,
           Text(
             'Device: ${deviceId.length > 16 ? '${deviceId.substring(0, 16)}…' : deviceId}',
             style: const TextStyle(
                 color: AppTheme.textGrey,
-                fontSize: 11,
+                fontSize: AppTheme.fontSizeCaption,
                 fontFamily: 'monospace'),
           ),
           const Divider(color: AppTheme.textGrey, height: 16),
@@ -184,7 +184,7 @@ class _FraudSuspectsScreenState extends State<FraudSuspectsScreen> {
                   Expanded(
                     child: Text(name,
                         style: const TextStyle(
-                            color: AppTheme.textWhite, fontSize: 13)),
+                            color: AppTheme.textWhite, fontSize: AppTheme.fontSizeBody)),
                   ),
                   const Icon(Icons.arrow_forward_ios,
                       color: AppTheme.textGrey, size: 12),

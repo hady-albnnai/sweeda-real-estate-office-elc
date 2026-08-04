@@ -59,13 +59,13 @@ class _AdminSectionsScreenState extends State<AdminSectionsScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryGold))
           : ListView(
-              padding: const EdgeInsets.all(16),
+              padding: AppTheme.paddingAllLarge,
               children: [
                 const Text(
                   'صفحات متابعة وإدارة وليست صفحات تنفيذ ميداني خاصة بالمنفذ أو المصور.',
-                  style: TextStyle(color: AppTheme.textGrey, fontSize: 12),
+                  style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall),
                 ),
-                const SizedBox(height: 16),
+                AppTheme.gapHeightLarge,
                 _section('التنظيم', [
                   if (PermissionService.has(user, PermissionKeys.manageStaff))
                     _tile(Icons.badge_outlined, 'إدارة الموظفين', '/admin/employee-management'),
@@ -121,17 +121,17 @@ class _AdminSectionsScreenState extends State<AdminSectionsScreen> {
     if (children.isEmpty) return const SizedBox.shrink();
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(12),
+      padding: AppTheme.paddingAllMedium,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.14)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title, style: const TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 10),
+          AppTheme.gapHeightSmall,
           ...children,
         ],
       ),
@@ -148,12 +148,12 @@ class _AdminSectionsScreenState extends State<AdminSectionsScreen> {
         backgroundColor: AppTheme.primaryGold.withOpacity(0.12),
         child: Icon(icon, color: AppTheme.primaryGold),
       ),
-      title: Text(title, style: const TextStyle(color: AppTheme.textWhite, fontSize: 13)),
+      title: Text(title, style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeBody)),
       trailing: badge > 0
           ? CircleAvatar(
               radius: 11,
               backgroundColor: AppTheme.errorRed,
-              child: Text('$badge', style: const TextStyle(color: Colors.white, fontSize: 10)),
+              child: Text('$badge', style: const TextStyle(color: Colors.white, fontSize: AppTheme.fontSizeXS)),
             )
           : const Icon(Icons.chevron_left, color: AppTheme.textGrey),
       onTap: () => context.push(route),

@@ -55,9 +55,9 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
         title: Column(
           children: [
             const Text('المكتب العقاري',
-                style: TextStyle(color: AppTheme.primaryGold, fontSize: 18, fontWeight: FontWeight.bold)),
+                style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeTitle, fontWeight: FontWeight.bold)),
             Text(user?.nm ?? 'موظف المكتب',
-                style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
           ],
         ),
         centerTitle: true,
@@ -78,28 +78,28 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
               color: AppTheme.primaryGold,
               onRefresh: _loadCounts,
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: AppTheme.paddingAllLarge,
                 children: [
                   // ─── العمليات الأساسية ───
                   _sectionTitle('العمليات اليومية'),
-                  const SizedBox(height: 10),
+                  AppTheme.gapHeightSmall,
                   _buildGrid([
                     if (PermissionService.has(user, PermissionKeys.reviewOffers))
-                      _item(Icons.fact_check_outlined, 'مراجعة العروض', '/admin/review-offers', Colors.blue),
+                      _item(Icons.fact_check_outlined, 'مراجعة العروض', '/admin/review-offers', AppTheme.infoBlue),
                     if (PermissionService.has(user, PermissionKeys.manageAppointments))
                       _item(Icons.calendar_month_outlined, 'المواعيد', '/admin/appointments', Colors.teal),
                     if (PermissionService.has(user, PermissionKeys.manageRequests))
-                      _item(Icons.assignment_outlined, 'طلبات الزبائن', '/admin/requests', Colors.orange),
+                      _item(Icons.assignment_outlined, 'طلبات الزبائن', '/admin/requests', AppTheme.warningOrange),
                     if (PermissionService.has(user, PermissionKeys.completionRequests))
-                      _item(Icons.assignment_turned_in_outlined, 'طلبات الإتمام', '/admin/completion-requests', Colors.green,
+                      _item(Icons.assignment_turned_in_outlined, 'طلبات الإتمام', '/admin/completion-requests', AppTheme.successGreen,
                           badge: _pendingCompletions),
                   ]),
 
-                  const SizedBox(height: 20),
+                  AppTheme.gapHeightXL,
 
                   // ─── التصوير والوسائط ───
                   _sectionTitle('التصوير والوسائط'),
-                  const SizedBox(height: 10),
+                  AppTheme.gapHeightSmall,
                   _buildGrid([
                     if (PermissionService.has(user, PermissionKeys.photographyManagement))
                       _item(Icons.add_a_photo_outlined, 'مهام التصوير', '/admin/photography-management', Colors.cyan),
@@ -107,21 +107,21 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
                       _item(Icons.photo_library_outlined, 'إدارة الوسائط', '/admin/media-review', Colors.brown),
                   ]),
 
-                  const SizedBox(height: 20),
+                  AppTheme.gapHeightXL,
 
                   // ─── المستخدمين والتوثيق ───
                   _sectionTitle('المستخدمين'),
-                  const SizedBox(height: 10),
+                  AppTheme.gapHeightSmall,
                   _buildGrid([
                     if (PermissionService.has(user, PermissionKeys.manageUsers))
                       _item(Icons.people_outline, 'المستخدمون', '/admin/users', Colors.blueGrey),
                     if (PermissionService.has(user, PermissionKeys.reviewVerifications))
                       _item(Icons.verified_user_outlined, 'طلبات التوثيق', '/admin/review-verifications', Colors.amber),
                     if (PermissionService.has(user, PermissionKeys.fraudSuspects))
-                      _item(Icons.security_outlined, 'كشف الاحتيال', '/admin/fraud-suspects', Colors.red),
+                      _item(Icons.security_outlined, 'كشف الاحتيال', '/admin/fraud-suspects', AppTheme.errorRed),
                   ]),
 
-                  const SizedBox(height: 20),
+                  AppTheme.gapHeightXL,
 
                   // ─── إضافة عرض ───
                   if (PermissionService.has(user, PermissionKeys.addOfferAdmin))
@@ -133,17 +133,17 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
                         child: ElevatedButton.icon(
                           onPressed: () => context.push('/admin/add-offer'),
                           icon: const Icon(Icons.add_home_work),
-                          label: const Text('إضافة عرض جديد', style: TextStyle(fontSize: 16)),
+                          label: const Text('إضافة عرض جديد', style: TextStyle(fontSize: AppTheme.fontSizeSubtitle)),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppTheme.primaryGold,
                             foregroundColor: AppTheme.deepBlack,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusLarge),
                           ),
                         ),
                       ),
                     ),
 
-                  const SizedBox(height: 10),
+                  AppTheme.gapHeightSmall,
 
                   // ─── رابط للوحة الإدارة الكاملة ───
                   if (user != null && user.isSenior)
@@ -163,7 +163,7 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
 
   Widget _sectionTitle(String title) {
     return Text(title,
-        style: const TextStyle(color: AppTheme.primaryGold, fontSize: 16, fontWeight: FontWeight.bold));
+        style: const TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSubtitle, fontWeight: FontWeight.bold));
   }
 
   Widget _buildGrid(List<_MenuItem> items) {
@@ -185,10 +185,10 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
       child: Container(
         decoration: BoxDecoration(
           color: AppTheme.surfaceBlack,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: AppTheme.borderRadiusLarge,
           border: Border.all(color: item.color.withOpacity(0.25)),
         ),
-        padding: const EdgeInsets.all(14),
+        padding: AppTheme.paddingAllLarge,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
@@ -200,17 +200,17 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(10),
+                    color: AppTheme.errorRed,
+                    borderRadius: AppTheme.borderRadiusMedium,
                   ),
                   child: Text('${item.badge}',
-                      style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                      style: const TextStyle(color: Colors.white, fontSize: AppTheme.fontSizeCaption, fontWeight: FontWeight.bold)),
                 ),
               ],
             ]),
-            const SizedBox(height: 8),
+            AppTheme.gapHeightSmall,
             Text(item.title,
-                style: const TextStyle(color: AppTheme.textWhite, fontSize: 13, fontWeight: FontWeight.w600)),
+                style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeBody, fontWeight: FontWeight.w600)),
           ],
         ),
       ),

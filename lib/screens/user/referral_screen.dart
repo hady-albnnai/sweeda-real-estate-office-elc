@@ -102,16 +102,16 @@ class _ReferralScreenState extends State<ReferralScreen> {
         elevation: 0,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: AppTheme.paddingAllLarge,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _heroCard(refPts),
-            const SizedBox(height: 20),
+            AppTheme.gapHeightXL,
             _codeCard(code),
-            const SizedBox(height: 20),
+            AppTheme.gapHeightXL,
             _statsCard(refPts),
-            const SizedBox(height: 20),
+            AppTheme.gapHeightXL,
             _howItWorksCard(refPts),
           ],
         ),
@@ -121,30 +121,30 @@ class _ReferralScreenState extends State<ReferralScreen> {
 
   Widget _heroCard(int refPts) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: AppTheme.paddingAllXL,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFFD4AF37), Color(0xFFFFD700)],
+          colors: [AppTheme.primaryGold, Color(0xFFFFD700)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppTheme.borderRadiusLarge,
       ),
       child: Column(
         children: [
           const Icon(Icons.card_giftcard,
               color: Colors.black87, size: 48),
-          const SizedBox(height: 8),
+          AppTheme.gapHeightSmall,
           const Text('ادعُ صديقاً واربحوا معاً!',
               style: TextStyle(
                   color: Colors.black,
-                  fontSize: 20,
+                  fontSize: AppTheme.fontSizeHeadline,
                   fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
           Text(
             '$refPts نقطة لك + $refPts لصديقك عند تسجيل حسابه',
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.black87, fontSize: 13),
+            style: const TextStyle(color: Colors.black87, fontSize: AppTheme.fontSizeBody),
           ),
         ],
       ),
@@ -153,36 +153,36 @@ class _ReferralScreenState extends State<ReferralScreen> {
 
   Widget _codeCard(String code) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: AppTheme.paddingAllXL,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
       ),
       child: Column(
         children: [
           const Text('كود الدعوة الخاص بك',
-              style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
-          const SizedBox(height: 10),
+              style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody)),
+          AppTheme.gapHeightSmall,
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
             decoration: BoxDecoration(
               color: AppTheme.deepBlack,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: AppTheme.borderRadiusMedium,
               border: Border.all(color: AppTheme.primaryGold),
             ),
             child: Text(
               code,
               style: const TextStyle(
                 color: AppTheme.primaryGold,
-                fontSize: 28,
+                fontSize: AppTheme.fontSizeXL,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 4,
                 fontFamily: 'monospace',
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          AppTheme.gapHeightLarge,
           Row(
             children: [
               Expanded(
@@ -198,7 +198,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
+              AppTheme.gapWidthSmall,
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: () => _share(code),
@@ -220,10 +220,10 @@ class _ReferralScreenState extends State<ReferralScreen> {
 
   Widget _statsCard(int refPts) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppTheme.borderRadiusMedium,
       ),
       child: Row(
         children: [
@@ -242,11 +242,11 @@ class _ReferralScreenState extends State<ReferralScreen> {
                     : Text('$_referralCount',
                         style: const TextStyle(
                             color: AppTheme.textWhite,
-                            fontSize: 24,
+                            fontSize: AppTheme.fontSizeLarge,
                             fontWeight: FontWeight.bold)),
                 const Text('أصدقاء انضمّوا',
                     style: TextStyle(
-                        color: AppTheme.textGrey, fontSize: 11)),
+                        color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption)),
               ],
             ),
           ),
@@ -260,11 +260,11 @@ class _ReferralScreenState extends State<ReferralScreen> {
                 Text('${_referralCount * refPts}',
                     style: const TextStyle(
                         color: AppTheme.textWhite,
-                        fontSize: 24,
+                        fontSize: AppTheme.fontSizeLarge,
                         fontWeight: FontWeight.bold)),
                 const Text('نقطة مكتسبة',
                     style: TextStyle(
-                        color: AppTheme.textGrey, fontSize: 11)),
+                        color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption)),
               ],
             ),
           ),
@@ -275,10 +275,10 @@ class _ReferralScreenState extends State<ReferralScreen> {
 
   Widget _howItWorksCard(int refPts) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppTheme.borderRadiusMedium,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -287,8 +287,8 @@ class _ReferralScreenState extends State<ReferralScreen> {
               style: TextStyle(
                   color: AppTheme.primaryGold,
                   fontWeight: FontWeight.bold,
-                  fontSize: 14)),
-          const SizedBox(height: 10),
+                  fontSize: AppTheme.fontSizeMedium)),
+          AppTheme.gapHeightSmall,
           _step('1', 'شارك كودك مع أصدقائك'),
           _step('2', 'يسجّل صديقك حساب جديد ويدخل الكود'),
           _step('3', 'تحصلان كلاكما على $refPts نقطة فوراً'),
@@ -310,13 +310,13 @@ class _ReferralScreenState extends State<ReferralScreen> {
                 style: const TextStyle(
                     color: Colors.black,
                     fontWeight: FontWeight.bold,
-                    fontSize: 12)),
+                    fontSize: AppTheme.fontSizeSmall)),
           ),
-          const SizedBox(width: 10),
+          AppTheme.gapWidthSmall,
           Expanded(
             child: Text(text,
                 style: const TextStyle(
-                    color: AppTheme.textWhite, fontSize: 13)),
+                    color: AppTheme.textWhite, fontSize: AppTheme.fontSizeBody)),
           ),
         ],
       ),

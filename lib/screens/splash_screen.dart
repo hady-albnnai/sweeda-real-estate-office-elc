@@ -233,22 +233,22 @@ class _SplashScreenState extends State<SplashScreen>
                               letterSpacing: 0.5,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          AppTheme.gapHeightXS,
                           Text(
                             'SWEEDA REAL ESTATE',
                             style: GoogleFonts.montserrat(
                               color: AppTheme.primaryGold.withOpacity(0.5),
-                              fontSize: 10,
+                              fontSize: AppTheme.fontSizeXS,
                               letterSpacing: 6,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          const SizedBox(height: 24),
+                          AppTheme.gapHeightXXL,
                           // شعار تسويقي صغير (Slogan)
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: AppTheme.borderRadiusXL,
                               border: Border.all(color: Colors.white10),
                               color: Colors.white.withOpacity(0.03),
                             ),
@@ -256,7 +256,7 @@ class _SplashScreenState extends State<SplashScreen>
                               'وجهتك الموثوقة لعقارات وسيارات السويداء',
                               style: GoogleFonts.cairo(
                                 color: AppTheme.textGrey.withOpacity(0.8),
-                                fontSize: 11,
+                                fontSize: AppTheme.fontSizeCaption,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -273,19 +273,19 @@ class _SplashScreenState extends State<SplashScreen>
                       child: Column(
                         children: [
                           ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: AppTheme.borderRadiusMedium,
                             child: LinearProgressIndicator(
                               minHeight: 3,
                               backgroundColor: Colors.white.withOpacity(0.05),
                               valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primaryGold),
                             ),
                           ),
-                          const SizedBox(height: 12),
+                          AppTheme.gapHeightMedium,
                           Text(
                             'جاري تهيئة النظام...',
                             style: GoogleFonts.cairo(
                               color: AppTheme.textGrey.withOpacity(0.5),
-                              fontSize: 10,
+                              fontSize: AppTheme.fontSizeXS,
                             ),
                           ),
                         ],

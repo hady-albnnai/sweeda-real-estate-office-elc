@@ -144,7 +144,7 @@ class _LoginScreenState extends State<LoginScreen> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(children: [
-            const SizedBox(height: 20),
+            AppTheme.gapHeightXL,
             // 🔥 شعار السبلاش الضخم جداً
             Hero(tag: 'logo', child: Container(
               width: logoSize, height: logoSize * 0.72,
@@ -154,24 +154,24 @@ class _LoginScreenState extends State<LoginScreen> {
                 Container(width: logoSize * 0.65, height: logoSize * 0.65, decoration: const BoxDecoration(shape: BoxShape.circle, color: AppTheme.surfaceBlack), padding: const EdgeInsets.all(35), child: Image.asset('assets/images/logo_app.png', fit: BoxFit.contain)),
               ]),
             )),
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             Text('المكتب العقاري الإلكتروني', style: GoogleFonts.cairo(color: AppTheme.primaryGold, fontSize: 26, fontWeight: FontWeight.w900)),
-            const SizedBox(height: 24),
+            AppTheme.gapHeightXXL,
 
             // ── القائمة 1: تسجيل الدخول ──
             _buildBlock(
               id: 2, title: 'تسجيل الدخول', icon: Icons.login_rounded, isGold: false,
               child: Column(children: [
                 _input(_userCtrl, 'اسم المستخدم أو الهاتف', Icons.person_outline, e2eId: 'e2e_login_username'),
-                const SizedBox(height: 12),
+                AppTheme.gapHeightMedium,
                 _input(_passCtrl, 'كلمة المرور', Icons.lock_outline, isPass: true, obs: _obs, onT: () => setState(() => _obs = !_obs), e2eId: 'e2e_login_password'),
-                const SizedBox(height: 20),
+                AppTheme.gapHeightXL,
                 _btn(label: 'دخول', onTap: _login, e2eId: 'e2e_login_button'),
-                TextButton(onPressed: _forgot, child: const Text('هل نسيت كلمة المرور؟ استعادة بـ SMS', style: TextStyle(color: AppTheme.primaryGold, decoration: TextDecoration.underline, fontSize: 13))),
+                TextButton(onPressed: _forgot, child: const Text('هل نسيت كلمة المرور؟ استعادة بـ SMS', style: TextStyle(color: AppTheme.primaryGold, decoration: TextDecoration.underline, fontSize: AppTheme.fontSizeBody))),
               ]),
             ),
 
-            const SizedBox(height: 16),
+            AppTheme.gapHeightLarge,
 
             // ── القائمة 2: تسجيل حساب جديد ──
             _buildBlock(
@@ -181,14 +181,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 _buildOption(
                   id: 1, title: 'عن طريق رقم الهاتف', icon: Icons.phone_android,
                   child: Column(children: [
-                    const Text('سيصلك رمز تفعيل برسالة نصية SMS', style: TextStyle(color: Colors.black87, fontSize: 11)),
-                    const SizedBox(height: 12),
+                    const Text('سيصلك رمز تفعيل برسالة نصية SMS', style: TextStyle(color: Colors.black87, fontSize: AppTheme.fontSizeCaption)),
+                    AppTheme.gapHeightMedium,
                     _input(_phoneCtrl, '09XXXXXXXX', Icons.phone_iphone, dark: true),
-                    const SizedBox(height: 12),
+                    AppTheme.gapHeightMedium,
                     _btn(label: 'إرسال رمز التفعيل SMS', onTap: _regSMS, dark: true),
                   ]),
                 ),
-                const SizedBox(height: 12),
+                AppTheme.gapHeightMedium,
                 // ب. إيميل
                 _buildOption(
                   id: 2, title: 'عن طريق الإيميل', icon: Icons.alternate_email,
@@ -196,17 +196,17 @@ class _LoginScreenState extends State<LoginScreen> {
                     const Text(
                       'سيصلك رابط تفعيل إلى بريدك الإلكتروني. إذا لم يظهر في الوارد خلال دقيقة افحص Spam / البريد غير المرغوب فيه.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.black87, fontSize: 11, height: 1.4),
+                      style: TextStyle(color: Colors.black87, fontSize: AppTheme.fontSizeCaption, height: 1.4),
                     ),
-                    const SizedBox(height: 12),
+                    AppTheme.gapHeightMedium,
                     _input(_emailCtrl, 'example@mail.com', Icons.email_outlined, dark: true),
-                    const SizedBox(height: 12),
+                    AppTheme.gapHeightMedium,
                     _btn(label: 'إرسال رابط التفعيل', onTap: _regMail, dark: true),
                   ]),
                 ),
               ]),
             ),
-            const SizedBox(height: 24),
+            AppTheme.gapHeightXXL,
           ]),
         ),
       ),
@@ -217,15 +217,15 @@ class _LoginScreenState extends State<LoginScreen> {
     final open = _activeSection == id;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
-      decoration: BoxDecoration(color: isGold ? AppTheme.primaryGold : AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(24), border: Border.all(color: AppTheme.primaryGold.withOpacity(0.5), width: 2)),
+      decoration: BoxDecoration(color: isGold ? AppTheme.primaryGold : AppTheme.surfaceBlack, borderRadius: AppTheme.borderRadiusXXL, border: Border.all(color: AppTheme.primaryGold.withOpacity(0.5), width: 2)),
       child: Column(children: [
         InkWell(
           onTap: () => setState(() { _activeSection = open ? 0 : id; if (id == 1) _signupMethod = 0; }),
-          borderRadius: BorderRadius.circular(24),
-          child: Padding(padding: const EdgeInsets.all(20), child: Row(children: [
+          borderRadius: AppTheme.borderRadiusXXL,
+          child: Padding(padding: AppTheme.paddingAllXL, child: Row(children: [
             Icon(icon, color: isGold ? Colors.black : AppTheme.primaryGold, size: 28),
-            const SizedBox(width: 16),
-            Text(title, style: TextStyle(color: isGold ? Colors.black : AppTheme.textWhite, fontSize: 18, fontWeight: FontWeight.w900)),
+            AppTheme.gapWidthLarge,
+            Text(title, style: TextStyle(color: isGold ? Colors.black : AppTheme.textWhite, fontSize: AppTheme.fontSizeTitle, fontWeight: FontWeight.w900)),
             const Spacer(),
             Icon(open ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down, color: isGold ? Colors.black : AppTheme.textGrey),
           ])),
@@ -238,12 +238,12 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildOption({required int id, required String title, required IconData icon, required Widget child}) {
     final sel = _signupMethod == id;
     return Container(
-      decoration: BoxDecoration(color: Colors.black.withOpacity(0.1), borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(color: Colors.black.withOpacity(0.1), borderRadius: AppTheme.borderRadiusLarge),
       child: Column(children: [
         ListTile(
           onTap: () => setState(() => _signupMethod = sel ? 0 : id),
           leading: Icon(icon, color: Colors.black87),
-          title: Text(title, style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 14)),
+          title: Text(title, style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeMedium)),
           trailing: Icon(sel ? Icons.radio_button_checked : Icons.radio_button_off, color: Colors.black87),
         ),
         if (sel) Padding(padding: const EdgeInsets.fromLTRB(12, 0, 12, 16), child: child),
@@ -267,8 +267,8 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _btn({required String label, required VoidCallback? onTap, bool dark = false, String? e2eId}) {
     final button = SizedBox(width: double.infinity, height: 56, child: ElevatedButton(
       onPressed: _loading ? null : onTap,
-      style: ElevatedButton.styleFrom(backgroundColor: dark ? Colors.black : Colors.white, foregroundColor: dark ? Colors.white : Colors.black, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
-      child: _loading ? const CircularProgressIndicator(color: Colors.grey) : Text(label, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17)),
+      style: ElevatedButton.styleFrom(backgroundColor: dark ? Colors.black : Colors.white, foregroundColor: dark ? Colors.white : Colors.black, shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusLarge)),
+      child: _loading ? const CircularProgressIndicator(color: AppTheme.textGrey) : Text(label, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17)),
     ));
     return e2eId == null ? button : E2E(id: e2eId, button: true, child: button);
   }

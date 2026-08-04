@@ -99,7 +99,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.successGreen),
             child: const Text('نشر',
                 style: TextStyle(color: Colors.white)),
           ),
@@ -297,7 +297,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                         dense: true,
                         contentPadding: EdgeInsets.zero,
                       )),
-                  const SizedBox(height: 8),
+                  AppTheme.gapHeightSmall,
                   TextField(
                     controller: ctrl,
                     maxLines: 2,
@@ -324,7 +324,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                       extra.isEmpty ? selected! : '$selected — $extra';
                   Navigator.pop(ctx, result);
                 },
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorRed),
                 child: const Text('رفض',
                     style: TextStyle(color: Colors.white)),
               ),
@@ -365,12 +365,12 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                     children: [
                       Icon(Icons.check_circle_outline,
                           size: 80,
-                          color: Colors.green.withOpacity(0.6)),
-                      const SizedBox(height: 20),
+                          color: AppTheme.successGreen.withOpacity(0.6)),
+                      AppTheme.gapHeightXL,
                       const Text(
                         'لا توجد عروض للمراجعة أو للنشر 🎉',
                         style: TextStyle(
-                            color: AppTheme.textGrey, fontSize: 16),
+                            color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSubtitle),
                       ),
                     ],
                   ),
@@ -379,20 +379,20 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                   color: AppTheme.primaryGold,
                   onRefresh: _load,
                   child: ListView(
-                    padding: const EdgeInsets.all(12),
+                    padding: AppTheme.paddingAllMedium,
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(10),
+                        padding: AppTheme.paddingAllMedium,
                         margin: const EdgeInsets.only(bottom: 12),
                         decoration: BoxDecoration(
                           color: autoEnabled
-                              ? Colors.green.withOpacity(0.08)
-                              : Colors.orange.withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(10),
+                              ? AppTheme.successGreen.withOpacity(0.08)
+                              : AppTheme.warningOrange.withOpacity(0.08),
+                          borderRadius: AppTheme.borderRadiusMedium,
                           border: Border.all(
                               color: autoEnabled
-                                  ? Colors.green.withOpacity(0.4)
-                                  : Colors.orange.withOpacity(0.4)),
+                                  ? AppTheme.successGreen.withOpacity(0.4)
+                                  : AppTheme.warningOrange.withOpacity(0.4)),
                         ),
                         child: Row(
                           children: [
@@ -400,17 +400,17 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                                 autoEnabled
                                     ? Icons.auto_awesome
                                     : Icons.pause_circle_outline,
-                                color: autoEnabled ? Colors.green : Colors.orange,
+                                color: autoEnabled ? AppTheme.successGreen : AppTheme.warningOrange,
                                 size: 18),
-                            const SizedBox(width: 8),
+                            AppTheme.gapWidthSmall,
                             Expanded(
                               child: Text(
                                 autoEnabled
                                     ? 'الوضع التلقائي مفعّل: سيُنشر العرض تلقائياً على فيسبوك وإنستغرام بعد الموافقة'
                                     : 'الوضع التلقائي معطل: العروض ستُجدول فقط وتحتاج نشر يدوي من قائمة الجاهزة',
                                 style: TextStyle(
-                                    color: autoEnabled ? Colors.green : Colors.orange,
-                                    fontSize: 12,
+                                    color: autoEnabled ? AppTheme.successGreen : AppTheme.warningOrange,
+                                    fontSize: AppTheme.fontSizeSmall,
                                     fontWeight: FontWeight.w600),
                               ),
                             ),
@@ -421,7 +421,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                         _listHeader(
                           '📣 جاهزة للنشر على فيسبوك + إنستغرام',
                           '${_socialQueue.length}',
-                          Colors.blue,
+                          AppTheme.infoBlue,
                           action: _socialQueue.length > 1
                               ? TextButton.icon(
                                   onPressed: _bulkPublishing ? null : _publishAllQueued,
@@ -436,7 +436,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                               : null,
                         ),
                         ..._socialQueue.map((o) => _offerCard(o, socialOnly: true)),
-                        const SizedBox(height: 10),
+                        AppTheme.gapHeightSmall,
                       ],
                       if (_offers.isNotEmpty) ...[
                         _listHeader(
@@ -457,7 +457,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: AppTheme.borderRadiusMedium,
           border: Border.all(color: color.withOpacity(0.35)),
         ),
         child: Row(
@@ -467,11 +467,11 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                   style: TextStyle(color: color, fontWeight: FontWeight.bold)),
             ),
             if (action != null) action,
-            const SizedBox(width: 8),
+            AppTheme.gapWidthSmall,
             CircleAvatar(
               radius: 14,
               backgroundColor: color.withOpacity(0.2),
-              child: Text(count, style: TextStyle(color: color, fontSize: 11)),
+              child: Text(count, style: TextStyle(color: color, fontSize: AppTheme.fontSizeCaption)),
             ),
           ],
         ),
@@ -486,9 +486,9 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(
-          color: isDup ? Colors.orange : AppTheme.primaryGold.withOpacity(0.3),
+          color: isDup ? AppTheme.warningOrange : AppTheme.primaryGold.withOpacity(0.3),
           width: isDup ? 1.5 : 1,
         ),
       ),
@@ -500,20 +500,20 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.2),
+                color: AppTheme.warningOrange.withOpacity(0.2),
                 borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(13)),
               ),
               child: const Row(
                 children: [
                   Icon(Icons.warning_amber,
-                      color: Colors.orange, size: 16),
+                      color: AppTheme.warningOrange, size: 16),
                   SizedBox(width: 6),
                   Text('⚠️ عرض مكرّر محتمل',
                       style: TextStyle(
-                          color: Colors.orange,
+                          color: AppTheme.warningOrange,
                           fontWeight: FontWeight.bold,
-                          fontSize: 12)),
+                          fontSize: AppTheme.fontSizeSmall)),
                 ],
               ),
             ),
@@ -549,7 +549,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
 
           // التفاصيل
           Padding(
-            padding: const EdgeInsets.all(14),
+            padding: AppTheme.paddingAllLarge,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -561,7 +561,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                         o.ttl,
                         style: const TextStyle(
                             color: AppTheme.textWhite,
-                            fontSize: 16,
+                            fontSize: AppTheme.fontSizeSubtitle,
                             fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -570,39 +570,39 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                       style: const TextStyle(
                           color: AppTheme.primaryGold,
                           fontWeight: FontWeight.bold,
-                          fontSize: 16),
+                          fontSize: AppTheme.fontSizeSubtitle),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                AppTheme.gapHeightSmall,
 
                 // النوع + المعاملة
                 Wrap(spacing: 6, children: [
                   _chip('#${o.offerNumber ?? 0}', Colors.teal),
-                  _chip(o.typ == 0 ? '🏠 عقار' : '🚗 سيارة', Colors.blue),
+                  _chip(o.typ == 0 ? '🏠 عقار' : '🚗 سيارة', AppTheme.infoBlue),
                   _chip(o.trx == 0 ? 'بيع' : 'إيجار', Colors.purple),
                   if (o.imgs.isNotEmpty)
                     _chip('${o.imgs.length} صور',
                         AppTheme.primaryGold),
                 ]),
-                const SizedBox(height: 10),
+                AppTheme.gapHeightSmall,
 
                 // الموقع
                 Row(
                   children: [
                     const Icon(Icons.location_on,
                         color: AppTheme.textGrey, size: 14),
-                    const SizedBox(width: 4),
+                    AppTheme.gapWidthXS,
                     Expanded(
                       child: Text(
                         (o.loc['d'] ?? 'غير محدد').toString(),
                         style: const TextStyle(
-                            color: AppTheme.textGrey, fontSize: 12),
+                            color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                AppTheme.gapHeightSmall,
 
                 // شارة النشر الاجتماعي (إن كان مفعّل)
                 if (o.iSoc == 1 && o.socTxt.isNotEmpty) ...[
@@ -610,20 +610,20 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     margin: const EdgeInsets.only(top: 4, bottom: 8),
                     decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.blue.withOpacity(0.4)),
+                      color: AppTheme.infoBlue.withOpacity(0.12),
+                      borderRadius: AppTheme.borderRadiusSmall,
+                      border: Border.all(color: AppTheme.infoBlue.withOpacity(0.4)),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.share, color: Colors.blue, size: 16),
+                        const Icon(Icons.share, color: AppTheme.infoBlue, size: 16),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
                             socialOnly
                                 ? '📣 العرض معتمد وجاهز للنشر الفعلي على فيسبوك + إنستغرام'
                                 : '📣 سيُنشر تلقائياً على فيسبوك + إنستغرام بعد الموافقة',
-                            style: const TextStyle(color: Colors.blue, fontSize: 12, fontWeight: FontWeight.w600),
+                            style: const TextStyle(color: AppTheme.infoBlue, fontSize: AppTheme.fontSizeSmall, fontWeight: FontWeight.w600),
                           ),
                         ),
                       ],
@@ -638,9 +638,9 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                        color: AppTheme.textWhite, fontSize: 13),
+                        color: AppTheme.textWhite, fontSize: AppTheme.fontSizeBody),
                   ),
-                  const SizedBox(height: 10),
+                  AppTheme.gapHeightSmall,
                 ],
 
                 // تنويه داخلي: من أضاف العرض
@@ -650,7 +650,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
                       color: Colors.amber.withOpacity(0.08),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: AppTheme.borderRadiusSmall,
                       border: Border.all(color: Colors.amber.withOpacity(0.3)),
                     ),
                     child: Row(children: [
@@ -660,12 +660,12 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                       Expanded(
                         child: Text(
                           'أُضيف بواسطة: ${_ownersCache[o.addedBy]?.nm.isNotEmpty == true ? _ownersCache[o.addedBy]!.nm : 'موظف (${o.addedBy!.substring(0, 8)})'}',
-                          style: const TextStyle(color: Colors.amber, fontSize: 11),
+                          style: const TextStyle(color: Colors.amber, fontSize: AppTheme.fontSizeCaption),
                         ),
                       ),
                     ]),
                   ),
-                  const SizedBox(height: 8),
+                  AppTheme.gapHeightSmall,
                 ],
 
                 // المرسل
@@ -685,7 +685,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                             fontWeight: FontWeight.bold),
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    AppTheme.gapWidthSmall,
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -697,12 +697,12 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                             style: const TextStyle(
                                 color: AppTheme.textWhite,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 13),
+                                fontSize: AppTheme.fontSizeBody),
                           ),
                           Text(
                             owner?.ph ?? '—',
                             style: const TextStyle(
-                                color: AppTheme.textGrey, fontSize: 11),
+                                color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption),
                           ),
                         ],
                       ),
@@ -713,13 +713,13 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                             horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
                           color: AppTheme.primaryGold.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: AppTheme.borderRadiusSmall,
                         ),
                         child: Text(
                           '${owner.pt} نقطة',
                           style: const TextStyle(
                               color: AppTheme.primaryGold,
-                              fontSize: 11,
+                              fontSize: AppTheme.fontSizeCaption,
                               fontWeight: FontWeight.bold),
                         ),
                       ),
@@ -775,9 +775,9 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                       Expanded(
                         child: TextButton.icon(
                           onPressed: () => _reject(o),
-                          icon: const Icon(Icons.cancel, color: Colors.red),
+                          icon: const Icon(Icons.cancel, color: AppTheme.errorRed),
                           label: const Text('رفض',
-                              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                              style: TextStyle(color: AppTheme.errorRed, fontWeight: FontWeight.bold)),
                         ),
                       ),
                       Container(width: 1, height: 36, color: AppTheme.deepBlack),
@@ -795,9 +795,9 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                       Expanded(
                         child: TextButton.icon(
                           onPressed: () => _approve(o),
-                          icon: const Icon(Icons.check_circle, color: Colors.green),
+                          icon: const Icon(Icons.check_circle, color: AppTheme.successGreen),
                           label: const Text('قبول',
-                              style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                              style: TextStyle(color: AppTheme.successGreen, fontWeight: FontWeight.bold)),
                         ),
                       ),
                     ],
@@ -847,7 +847,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
       label: Text(active ? 'فيديو ✓' : 'فيديو',
           style: TextStyle(
               color: active ? AppTheme.primaryGold : AppTheme.textGrey,
-              fontSize: 12,
+              fontSize: AppTheme.fontSizeSmall,
               fontWeight: active ? FontWeight.bold : FontWeight.normal)),
     );
   }
@@ -857,12 +857,12 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: color.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AppTheme.borderRadiusSmall,
         border: Border.all(color: color.withOpacity(0.4)),
       ),
       child: Text(label,
           style: TextStyle(
-              color: color, fontSize: 11, fontWeight: FontWeight.bold)),
+              color: color, fontSize: AppTheme.fontSizeCaption, fontWeight: FontWeight.bold)),
     );
   }
 }

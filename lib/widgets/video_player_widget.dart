@@ -43,7 +43,7 @@ class _OfferVideoPlayerState extends State<OfferVideoPlayer> {
         materialProgressColors: ChewieProgressColors(
           playedColor: AppTheme.primaryGold,
           handleColor: AppTheme.primaryGold,
-          backgroundColor: Colors.grey,
+          backgroundColor: AppTheme.textGrey,
           bufferedColor: Colors.white24,
         ),
         placeholder: Container(color: Colors.black),
@@ -69,7 +69,7 @@ class _OfferVideoPlayerState extends State<OfferVideoPlayer> {
         height: widget.height,
         color: AppTheme.surfaceBlack,
         child: const Center(
-          child: Icon(Icons.error_outline, color: Colors.red, size: 40),
+          child: Icon(Icons.error_outline, color: AppTheme.errorRed, size: 40),
         ),
       );
     }
@@ -85,7 +85,7 @@ class _OfferVideoPlayerState extends State<OfferVideoPlayer> {
     return SizedBox(
       height: widget.height,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppTheme.borderRadiusMedium,
         child: Chewie(controller: _chewieController!),
       ),
     );

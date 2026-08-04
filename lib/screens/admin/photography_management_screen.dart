@@ -98,14 +98,14 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
               color: AppTheme.primaryGold,
               onRefresh: _load,
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: AppTheme.paddingAllLarge,
                 children: [
                   if (_stats != null) ...[
                     _statsBar(),
-                    const SizedBox(height: 12),
+                    AppTheme.gapHeightMedium,
                   ],
                   _filters(),
-                  const SizedBox(height: 12),
+                  AppTheme.gapHeightMedium,
                   if (_tasks.isEmpty)
                     const Padding(
                       padding: EdgeInsets.only(top: 100),
@@ -135,10 +135,10 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
     }
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.30)),
       ),
       child: Column(
@@ -151,19 +151,19 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
               Text('نظرة عامة — ${s['total'] ?? 0} طلب تصوير',
                   style: const TextStyle(
                       color: AppTheme.primaryGold,
-                      fontSize: 14,
+                      fontSize: AppTheme.fontSizeMedium,
                       fontWeight: FontWeight.bold)),
             ],
           ),
-          const SizedBox(height: 12),
+          AppTheme.gapHeightMedium,
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
-              _statChip('بانتظار', n('pending'), Colors.orange),
-              _statChip('قيد التنفيذ', n('in_progress'), Colors.blue),
+              _statChip('بانتظار', n('pending'), AppTheme.warningOrange),
+              _statChip('قيد التنفيذ', n('in_progress'), AppTheme.infoBlue),
               _statChip('بانتظار المراجعة', n('submitted'), Colors.purple),
-              _statChip('معتمدة', n('approved'), Colors.green),
+              _statChip('معتمدة', n('approved'), AppTheme.successGreen),
               _statChip('مرفوضة', n('rejected'), AppTheme.errorRed),
               _statChip('ملغاة', n('cancelled'), AppTheme.textGrey),
             ],
@@ -182,10 +182,10 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
             ],
           ),
           if (top.isNotEmpty) ...[
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             Text(
               'الأكثر إنجازاً: ${top.map((e) => '${e['name']} (${e['done']})').join(' · ')}',
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 11.5),
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption.5),
             ),
           ],
         ],
@@ -198,12 +198,12 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AppTheme.borderRadiusSmall,
         border: Border.all(color: color.withOpacity(0.40)),
       ),
       child: Text('$label: $value',
           style: TextStyle(
-              color: color, fontSize: 12, fontWeight: FontWeight.bold)),
+              color: color, fontSize: AppTheme.fontSizeSmall, fontWeight: FontWeight.bold)),
     );
   }
 
@@ -218,11 +218,11 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
             children: [
               Text(label,
                   style: const TextStyle(
-                      color: AppTheme.textGrey, fontSize: 11)),
+                      color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption)),
               Text(value,
                   style: const TextStyle(
                       color: AppTheme.textWhite,
-                      fontSize: 13.5,
+                      fontSize: AppTheme.fontSizeBody.5,
                       fontWeight: FontWeight.bold)),
             ],
           ),
@@ -271,18 +271,18 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(color: color.withOpacity(0.30)),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: AppTheme.paddingAllLarge,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 CircleAvatar(backgroundColor: color.withOpacity(0.14), child: Icon(Icons.camera_alt, color: color)),
-                const SizedBox(width: 10),
+                AppTheme.gapWidthSmall,
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -291,7 +291,7 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
                           style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold)),
                       Row(
                         children: [
-                          Text(task.statusLabel, style: TextStyle(color: color, fontSize: 12)),
+                          Text(task.statusLabel, style: TextStyle(color: color, fontSize: AppTheme.fontSizeSmall)),
                           if (task.offId.isEmpty) ...[
                             const SizedBox(width: 6),
                             Container(
@@ -302,7 +302,7 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
                                 border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
                               ),
                               child: const Text('طلب مستخدم',
-                                  style: TextStyle(color: AppTheme.primaryGold, fontSize: 10)),
+                                  style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeXS)),
                             ),
                           ],
                         ],
@@ -318,24 +318,24 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
               ],
             ),
             if (task.notes.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(task.notes, style: const TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+              AppTheme.gapHeightSmall,
+              Text(task.notes, style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody)),
             ],
             if (task.photographerNote.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text('ملاحظة المصور: ${task.photographerNote}', style: const TextStyle(color: AppTheme.textWhite, fontSize: 12)),
+              AppTheme.gapHeightSmall,
+              Text('ملاحظة المصور: ${task.photographerNote}', style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeSmall)),
             ],
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             Wrap(
               spacing: 6,
               runSpacing: 6,
               children: [
-                _badge('${task.media.length} وسائط', task.media.isEmpty ? Colors.orange : Colors.green),
-                if (task.tsScheduled != null) _badge(_fmtDate(task.tsScheduled!), Colors.blue),
+                _badge('${task.media.length} وسائط', task.media.isEmpty ? AppTheme.warningOrange : AppTheme.successGreen),
+                if (task.tsScheduled != null) _badge(_fmtDate(task.tsScheduled!), AppTheme.infoBlue),
               ],
             ),
             if (task.media.isNotEmpty) ...[
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               SizedBox(
                 height: 76,
                 child: ListView.builder(
@@ -344,7 +344,7 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
                   itemBuilder: (_, index) => Padding(
                     padding: const EdgeInsets.only(left: 8),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: AppTheme.borderRadiusMedium,
                       child: Image.network(task.media[index], width: 76, height: 76, fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => Container(width: 76, height: 76, color: AppTheme.deepBlack, child: const Icon(Icons.broken_image, color: AppTheme.textGrey))),
                     ),
@@ -393,7 +393,7 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
                         backgroundColor: AppTheme.primaryGold),
                   ),
                 ),
-                const SizedBox(height: 8),
+                AppTheme.gapHeightSmall,
               ],
               Row(
                 children: [
@@ -406,7 +406,7 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
                           : 'اعتماد وربط بالعرض'),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  AppTheme.gapWidthSmall,
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () => _rejectTask(task),
@@ -451,7 +451,7 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
               const Text('إنشاء مهمة تصوير', style: TextStyle(color: AppTheme.primaryGold, fontSize: 17, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               DropdownButtonFormField<OfferModel>(
                 dropdownColor: AppTheme.surfaceBlack,
                 style: const TextStyle(color: AppTheme.textWhite),
@@ -459,7 +459,7 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
                 items: _offers.take(100).map((offer) => DropdownMenuItem(value: offer, child: Text(offer.ttl, overflow: TextOverflow.ellipsis))).toList(),
                 onChanged: (value) => setSheet(() => selectedOffer = value),
               ),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               DropdownButtonFormField<UserModel>(
                 dropdownColor: AppTheme.surfaceBlack,
                 style: const TextStyle(color: AppTheme.textWhite),
@@ -467,14 +467,14 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
                 items: _photographers.map((user) => DropdownMenuItem(value: user, child: Text(user.nm.isEmpty ? user.ph : user.nm))).toList(),
                 onChanged: (value) => setSheet(() => selectedPhotographer = value),
               ),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               TextField(
                 controller: notesCtrl,
                 maxLines: 3,
                 style: const TextStyle(color: AppTheme.textWhite),
                 decoration: const InputDecoration(labelText: 'ملاحظات التصوير'),
               ),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               OutlinedButton.icon(
                 onPressed: () async {
                   final date = await showDatePicker(
@@ -491,7 +491,7 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
                 icon: const Icon(Icons.schedule, color: AppTheme.primaryGold),
                 label: Text(scheduledAt == null ? 'تحديد موعد اختياري' : _fmtDate(scheduledAt!), style: const TextStyle(color: AppTheme.primaryGold)),
               ),
-              const SizedBox(height: 14),
+              AppTheme.gapHeightMedium,
               ElevatedButton.icon(
                 onPressed: () async {
                   if (selectedOffer == null || selectedPhotographer == null) {
@@ -590,7 +590,7 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
             children: [
               const Text('إسناد مصوّر',
                   style: TextStyle(color: AppTheme.primaryGold, fontSize: 17, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               DropdownButtonFormField<UserModel>(
                 dropdownColor: AppTheme.surfaceBlack,
                 style: const TextStyle(color: AppTheme.textWhite),
@@ -600,7 +600,7 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
                     .toList(),
                 onChanged: (v) => setSheet(() => selected = v),
               ),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               OutlinedButton.icon(
                 onPressed: () async {
                   final date = await showDatePicker(
@@ -620,7 +620,7 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
                   style: const TextStyle(color: AppTheme.primaryGold),
                 ),
               ),
-              const SizedBox(height: 14),
+              AppTheme.gapHeightMedium,
               ElevatedButton.icon(
                 onPressed: () async {
                   if (selected == null) {
@@ -677,27 +677,27 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: color.withOpacity(0.13),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: AppTheme.borderRadiusMedium,
         border: Border.all(color: color.withOpacity(0.30)),
       ),
-      child: Text(text, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w600)),
+      child: Text(text, style: TextStyle(color: color, fontSize: AppTheme.fontSizeXS, fontWeight: FontWeight.w600)),
     );
   }
 
   Color _statusColor(int status) {
     switch (status) {
       case 0:
-        return Colors.orange;
+        return AppTheme.warningOrange;
       case 1:
-        return Colors.blue;
+        return AppTheme.infoBlue;
       case 2:
         return AppTheme.primaryGold;
       case 3:
-        return Colors.green;
+        return AppTheme.successGreen;
       case 4:
         return AppTheme.errorRed;
       default:
-        return Colors.grey;
+        return AppTheme.textGrey;
     }
   }
 

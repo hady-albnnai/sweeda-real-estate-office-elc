@@ -93,7 +93,7 @@ class _AppointmentsManagementScreenState
                         color: AppTheme.primaryGold,
                         onRefresh: _load,
                         child: ListView.builder(
-                          padding: const EdgeInsets.all(12),
+                          padding: AppTheme.paddingAllMedium,
                           itemCount: _filtered.length,
                           itemBuilder: (_, i) => _apptTile(_filtered[i]),
                         ),
@@ -127,27 +127,27 @@ class _AppointmentsManagementScreenState
   Color _statusColor(int sts) {
     switch (sts) {
       case 1:
-        return Colors.green;
+        return AppTheme.successGreen;
       case 2:
         return AppTheme.primaryGold;
       case 3:
-        return Colors.grey;
+        return AppTheme.textGrey;
       case 4:
         return AppTheme.errorRed;
       case 5:
         return Colors.deepOrange;
       default:
-        return Colors.orange;
+        return AppTheme.warningOrange;
     }
   }
 
   Widget _apptTile(AppointmentModel a) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.15)),
       ),
       child: Column(
@@ -172,7 +172,7 @@ class _AppointmentsManagementScreenState
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: _statusColor(a.sts).withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: AppTheme.borderRadiusSmall,
                   border: Border.all(color: _statusColor(a.sts).withOpacity(0.5)),
                 ),
                 child: Row(
@@ -184,36 +184,36 @@ class _AppointmentsManagementScreenState
                     ],
                     Text(_statusLabels[a.sts] ?? '—',
                         style: TextStyle(
-                            color: _statusColor(a.sts), fontSize: 11)),
+                            color: _statusColor(a.sts), fontSize: AppTheme.fontSizeCaption)),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          AppTheme.gapHeightSmall,
           Text('العرض: ${_short(a.offId)}',
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
           if (a.supervisorUid != null && a.supervisorUid!.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 3),
               child: Row(children: [
                 const Icon(Icons.support_agent, color: AppTheme.primaryGold, size: 12),
-                const SizedBox(width: 4),
+                AppTheme.gapWidthXS,
                 Text('المشرف: ${_short(a.supervisorUid!)}',
-                    style: const TextStyle(color: AppTheme.primaryGold, fontSize: 11)),
+                    style: const TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeCaption)),
               ]),
             ),
           if (a.neogRounds > 0)
             Padding(
               padding: const EdgeInsets.only(top: 3),
               child: Text('جولات التفاوض: ${a.neogRounds}/5',
-                  style: const TextStyle(color: Colors.orange, fontSize: 11)),
+                  style: const TextStyle(color: AppTheme.warningOrange, fontSize: AppTheme.fontSizeCaption)),
             ),
           if (a.cnlRsn != null && a.cnlRsn!.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 4),
               child: Text('سبب الإلغاء: ${a.cnlRsn}',
-                  style: const TextStyle(color: AppTheme.errorRed, fontSize: 11)),
+                  style: const TextStyle(color: AppTheme.errorRed, fontSize: AppTheme.fontSizeCaption)),
             ),
           const Divider(color: Colors.white12, height: 18),
           Row(
@@ -231,14 +231,14 @@ class _AppointmentsManagementScreenState
                   onPressed: () => _setStatus(a, 2),
                   icon: const Icon(Icons.check, size: 16),
                   label: const Text('إكمال'),
-                  style: TextButton.styleFrom(foregroundColor: Colors.green),
+                  style: TextButton.styleFrom(foregroundColor: AppTheme.successGreen),
                 ),
               if (a.sts != 3)
                 TextButton.icon(
                   onPressed: () => _setStatus(a, 3),
                   icon: const Icon(Icons.close, size: 16),
                   label: const Text('إلغاء'),
-                  style: TextButton.styleFrom(foregroundColor: Colors.grey),
+                  style: TextButton.styleFrom(foregroundColor: AppTheme.textGrey),
                 ),
               if (a.sts != 5)
                 TextButton.icon(

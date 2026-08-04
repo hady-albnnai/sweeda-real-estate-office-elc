@@ -123,7 +123,7 @@ class _PermissionsManagementScreenState extends State<PermissionsManagementScree
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(12),
+          padding: AppTheme.paddingAllMedium,
           child: TextField(
             controller: _searchCtrl,
             style: const TextStyle(color: AppTheme.textWhite),
@@ -136,14 +136,14 @@ class _PermissionsManagementScreenState extends State<PermissionsManagementScree
               ),
               filled: true,
               fillColor: AppTheme.surfaceBlack,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+              border: OutlineInputBorder(borderRadius: AppTheme.borderRadiusMedium, borderSide: BorderSide.none),
             ),
             onSubmitted: (_) => _load(),
           ),
         ),
         Expanded(
           child: ListView.builder(
-            padding: const EdgeInsets.all(12),
+            padding: AppTheme.paddingAllMedium,
             itemCount: _users.length,
             itemBuilder: (_, index) {
               final user = _users[index];
@@ -152,7 +152,7 @@ class _PermissionsManagementScreenState extends State<PermissionsManagementScree
                 margin: const EdgeInsets.only(bottom: 10),
                 decoration: BoxDecoration(
                   color: selected ? AppTheme.primaryGold.withOpacity(0.10) : AppTheme.surfaceBlack,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: AppTheme.borderRadiusLarge,
                   border: Border.all(color: selected ? AppTheme.primaryGold : AppTheme.primaryGold.withOpacity(0.14)),
                 ),
                 child: ListTile(
@@ -161,7 +161,7 @@ class _PermissionsManagementScreenState extends State<PermissionsManagementScree
                     child: Text(user.nm.isNotEmpty ? user.nm[0] : '؟', style: const TextStyle(color: AppTheme.primaryGold)),
                   ),
                   title: Text(user.nm.isEmpty ? 'بدون اسم' : user.nm, style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold)),
-                  subtitle: Text('${user.roleName} • ${PermissionService.effectivePermissions(user).length} صلاحية', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                  subtitle: Text('${user.roleName} • ${PermissionService.effectivePermissions(user).length} صلاحية', style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
                   trailing: selected ? const Icon(Icons.check_circle, color: AppTheme.primaryGold) : const Icon(Icons.chevron_left, color: AppTheme.textGrey),
                   onTap: () => setState(() => _selectUser(user)),
                 ),
@@ -185,11 +185,11 @@ class _PermissionsManagementScreenState extends State<PermissionsManagementScree
     return Column(
       children: [
         Container(
-          margin: const EdgeInsets.all(12),
-          padding: const EdgeInsets.all(14),
+          margin: AppTheme.paddingAllMedium,
+          padding: AppTheme.paddingAllLarge,
           decoration: BoxDecoration(
             color: AppTheme.surfaceBlack,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: AppTheme.borderRadiusLarge,
             border: Border.all(color: AppTheme.primaryGold.withOpacity(0.20)),
           ),
           child: Row(
@@ -203,13 +203,13 @@ class _PermissionsManagementScreenState extends State<PermissionsManagementScree
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(user.nm.isEmpty ? 'بدون اسم' : user.nm, style: const TextStyle(color: AppTheme.textWhite, fontSize: 16, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 4),
-                    Text(user.perm.isEmpty ? 'صلاحيات الدور الافتراضية' : 'صلاحيات مخصصة', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                    Text(user.nm.isEmpty ? 'بدون اسم' : user.nm, style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeSubtitle, fontWeight: FontWeight.bold)),
+                    AppTheme.gapHeightXS,
+                    Text(user.perm.isEmpty ? 'صلاحيات الدور الافتراضية' : 'صلاحيات مخصصة', style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
                   ],
                 ),
               ),
-              Text('${_selectedPermissions.length}', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 20, fontWeight: FontWeight.bold)),
+              Text('${_selectedPermissions.length}', style: const TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeHeadline, fontWeight: FontWeight.bold)),
             ],
           ),
         ),
@@ -238,17 +238,17 @@ class _PermissionsManagementScreenState extends State<PermissionsManagementScree
             ],
           ),
         ),
-        const SizedBox(height: 8),
+        AppTheme.gapHeightSmall,
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.all(12),
+            padding: AppTheme.paddingAllMedium,
             children: grouped.entries.map((entry) => _groupCard(entry.key, entry.value)).toList(),
           ),
         ),
         SafeArea(
           top: false,
           child: Padding(
-            padding: const EdgeInsets.all(12),
+            padding: AppTheme.paddingAllMedium,
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -268,24 +268,24 @@ class _PermissionsManagementScreenState extends State<PermissionsManagementScree
   Widget _groupCard(String group, List<AppPermission> permissions) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
+      padding: AppTheme.paddingAllMedium,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.14)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(group, style: const TextStyle(color: AppTheme.primaryGold, fontSize: 15, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
+          AppTheme.gapHeightSmall,
           ...permissions.map((permission) {
             final checked = _selectedPermissions.contains(permission.key);
             return SwitchListTile(
               value: checked,
               activeColor: AppTheme.primaryGold,
               title: Text(permission.title, style: const TextStyle(color: AppTheme.textWhite)),
-              subtitle: Text(permission.key, style: const TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+              subtitle: Text(permission.key, style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption)),
               onChanged: (value) {
                 setState(() {
                   if (value) {

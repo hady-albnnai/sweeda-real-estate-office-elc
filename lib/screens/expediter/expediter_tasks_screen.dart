@@ -48,7 +48,7 @@ class _ExpediterTasksScreenState extends State<ExpediterTasksScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('تسجيل خروج', style: TextStyle(color: Colors.red)),
+            child: const Text('تسجيل خروج', style: TextStyle(color: AppTheme.errorRed)),
           ),
         ],
       ),
@@ -92,15 +92,15 @@ class _ExpediterTasksScreenState extends State<ExpediterTasksScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.assignment_late, size: 64, color: AppTheme.textGrey.withOpacity(0.4)),
-                  const SizedBox(height: 16),
+                  AppTheme.gapHeightLarge,
                   const Text(
                     'لا توجد مهام تعقيب حالياً',
-                    style: TextStyle(color: AppTheme.textGrey, fontSize: 16),
+                    style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSubtitle),
                   ),
-                  const SizedBox(height: 8),
+                  AppTheme.gapHeightSmall,
                   const Text(
                     'عند إحالة المحامي مهمة لك، ستظهر هنا',
-                    style: TextStyle(color: AppTheme.textGrey, fontSize: 13),
+                    style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody),
                   ),
                 ],
               ),
@@ -108,7 +108,7 @@ class _ExpediterTasksScreenState extends State<ExpediterTasksScreen> {
           : RefreshIndicator(
               onRefresh: _load,
               child: ListView.builder(
-                padding: const EdgeInsets.all(16),
+                padding: AppTheme.paddingAllLarge,
                 itemCount: tasks.length,
                 itemBuilder: (_, i) {
                   final task = tasks[i];
@@ -131,11 +131,11 @@ class _TaskCard extends StatelessWidget {
 
   Color _statusColor(int sts) {
     switch (sts) {
-      case 0: return Colors.orange;
-      case 1: return Colors.blue;
-      case 2: return Colors.green;
-      case 3: return Colors.green;
-      default: return Colors.grey;
+      case 0: return AppTheme.warningOrange;
+      case 1: return AppTheme.infoBlue;
+      case 2: return AppTheme.successGreen;
+      case 3: return AppTheme.successGreen;
+      default: return AppTheme.textGrey;
     }
   }
 
@@ -163,12 +163,12 @@ class _TaskCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppTheme.borderRadiusLarge,
         child: Container(
-          padding: const EdgeInsets.all(14),
+          padding: AppTheme.paddingAllLarge,
           decoration: BoxDecoration(
             color: AppTheme.surfaceBlack,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: AppTheme.borderRadiusLarge,
             border: Border.all(color: color.withOpacity(0.4)),
           ),
           child: Column(
@@ -177,26 +177,26 @@ class _TaskCard extends StatelessWidget {
               Row(
                 children: [
                   Icon(Icons.assignment, color: color, size: 20),
-                  const SizedBox(width: 8),
+                  AppTheme.gapWidthSmall,
                   Expanded(
                     child: Text(
                       _statusText(task.status),
-                      style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 14),
+                      style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeMedium),
                     ),
                   ),
                   Text(
                     task.itemType == 0 ? '🏠 عقار' : '🚗 سيارة',
-                    style: const TextStyle(color: AppTheme.primaryGold, fontSize: 12),
+                    style: const TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSmall),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              AppTheme.gapHeightSmall,
               if (task.targetPropertyNum.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Text(
                     'رقم العقار: ${task.targetPropertyNum} | المنطقة: ${task.targetZone}',
-                    style: const TextStyle(color: AppTheme.textGrey, fontSize: 13),
+                    style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody),
                   ),
                 ),
               Row(
@@ -206,8 +206,8 @@ class _TaskCard extends StatelessWidget {
                   Text(
                     '$done / $total وثائق مستخرجة',
                     style: TextStyle(
-                      color: done == total ? Colors.green : AppTheme.textGrey,
-                      fontSize: 13,
+                      color: done == total ? AppTheme.successGreen : AppTheme.textGrey,
+                      fontSize: AppTheme.fontSizeBody,
                     ),
                   ),
                   const Spacer(),

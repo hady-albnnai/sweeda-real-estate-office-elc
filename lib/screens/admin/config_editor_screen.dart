@@ -145,40 +145,40 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
               : Form(
                   key: _formKey,
                   child: ListView(
-                    padding: const EdgeInsets.all(16),
+                    padding: AppTheme.paddingAllLarge,
                     children: [
                       _warning(),
-                      const SizedBox(height: 16),
+                      AppTheme.gapHeightLarge,
                       _section('⭐ النقاط'),
                       _numField('نقاط التسجيل', _signupPts),
                       _numField('نقاط الدخول الأسبوعي', _weeklyPts),
                       _numField('نقاط إضافة عرض', _addOfferPts),
                       _numField('نقاط إتمام صفقة', _dealDonePts),
-                      const SizedBox(height: 20),
+                      AppTheme.gapHeightXL,
                       _section('💰 العمولة'),
                       _numField('عمولة البيع (%)', _sellCom),
-                      const SizedBox(height: 20),
+                      AppTheme.gapHeightXL,
                       _section('📊 الحصص (عدد العروض)'),
                       _numField('حصة المستخدم', _userOffersQuota),
                       _numField('حصة الوسيط', _brokerOffersQuota),
-                      const SizedBox(height: 20),
+                      AppTheme.gapHeightXL,
 
                       // ── 🎥 طلبات الفيديو (مدير + نائب المدير فقط)
                       _section('🎥 طلبات الفيديو (خاصة)'),
                       Container(
-                        padding: const EdgeInsets.all(10),
+                        padding: AppTheme.paddingAllMedium,
                         margin: const EdgeInsets.only(bottom: 12),
                         decoration: BoxDecoration(
-                          color: Colors.blue.withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                          color: AppTheme.infoBlue.withOpacity(0.08),
+                          borderRadius: AppTheme.borderRadiusSmall,
+                          border: Border.all(color: AppTheme.infoBlue.withOpacity(0.3)),
                         ),
                         child: const Text(
                           '⚠️ هذه الخانتان مخصصتان للمدير ونائب المدير فقط.\n'
                           '• الرقم الأول: الواتساب الخاص بطلبات الفيديو (يفضل).\n'
                           '• الرابط الثاني: مجموعة احتياطية في حال تم حظر الرقم.\n'
                           'يتم استخدامهما تلقائياً بعد حجز الموعد من زر "مشاهدة الفيديو".',
-                          style: TextStyle(color: AppTheme.textWhite, fontSize: 12, height: 1.45),
+                          style: TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeSmall, height: 1.45),
                         ),
                       ),
                       TextFormField(
@@ -193,7 +193,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
                           prefixIcon: Icon(Icons.phone, color: AppTheme.primaryGold),
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      AppTheme.gapHeightMedium,
                       TextFormField(
                         controller: _appLinkCtrl,
                         style: const TextStyle(color: AppTheme.textWhite),
@@ -205,7 +205,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
                           prefixIcon: Icon(Icons.download, color: AppTheme.primaryGold),
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      AppTheme.gapHeightMedium,
                       TextFormField(
                         controller: _videoGroupLink,
                         style: const TextStyle(color: AppTheme.textWhite),
@@ -217,42 +217,42 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
                           prefixIcon: Icon(Icons.link, color: AppTheme.primaryGold),
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      AppTheme.gapHeightXL,
 
                       // ── 📣 صفحات التواصل الاجتماعي (فيسبوك + إنستغرام + قابلة للتوسعة)
                       _section('📣 صفحات التواصل الاجتماعي'),
                       Container(
-                        padding: const EdgeInsets.all(10),
+                        padding: AppTheme.paddingAllMedium,
                         margin: const EdgeInsets.only(bottom: 12),
                         decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.green.withOpacity(0.3)),
+                          color: AppTheme.successGreen.withOpacity(0.08),
+                          borderRadius: AppTheme.borderRadiusSmall,
+                          border: Border.all(color: AppTheme.successGreen.withOpacity(0.3)),
                         ),
                         child: const Text(
                           '• روابط الصفحات الرسمية تظهر في "عن التطبيق".\n'
                           '• يمكنك إضافة صفحات جديدة (تيك توك، إلخ).\n'
                           '• النشر التلقائي يعتمد على i_soc في العرض + socTxt الجاهز.',
-                          style: TextStyle(color: AppTheme.textWhite, fontSize: 12, height: 1.4),
+                          style: TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeSmall, height: 1.4),
                         ),
                       ),
                       Container(
                         margin: const EdgeInsets.only(bottom: 12),
                         decoration: BoxDecoration(
                           color: AppTheme.surfaceBlack,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.blue.withOpacity(0.35)),
+                          borderRadius: AppTheme.borderRadiusMedium,
+                          border: Border.all(color: AppTheme.infoBlue.withOpacity(0.35)),
                         ),
                         child: SwitchListTile(
                           value: _socialAutoPublish,
                           onChanged: (value) => setState(() => _socialAutoPublish = value),
                           activeColor: AppTheme.primaryGold,
-                          secondary: const Icon(Icons.auto_awesome, color: Colors.blue),
+                          secondary: const Icon(Icons.auto_awesome, color: AppTheme.infoBlue),
                           title: const Text('النشر التلقائي فور قبول العرض',
                               style: TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold)),
                           subtitle: const Text(
                             'عند تعطيله يبقى العرض في قائمة «جاهز للنشر» ويُنشر من الزر اليدوي.',
-                            style: TextStyle(color: AppTheme.textGrey, fontSize: 11),
+                            style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption),
                           ),
                         ),
                       ),
@@ -267,7 +267,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
                           prefixIcon: Icon(Icons.facebook, color: AppTheme.primaryGold),
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      AppTheme.gapHeightMedium,
                       TextFormField(
                         controller: _instagramCtrl,
                         style: const TextStyle(color: AppTheme.textWhite),
@@ -279,7 +279,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
                           prefixIcon: Icon(Icons.camera_alt, color: AppTheme.primaryGold),
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      AppTheme.gapHeightMedium,
                       TextFormField(
                         controller: _developerPhoneCtrl,
                         keyboardType: TextInputType.phone,
@@ -292,7 +292,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
                           prefixIcon: Icon(Icons.phone, color: AppTheme.primaryGold),
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      AppTheme.gapHeightMedium,
                       TextFormField(
                         controller: _developerPhone2Ctrl,
                         keyboardType: TextInputType.phone,
@@ -305,7 +305,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
                           prefixIcon: Icon(Icons.phone, color: AppTheme.primaryGold),
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      AppTheme.gapHeightMedium,
                       // 📸 أجر خدمة التصوير العقاري — يظهر للمستخدم بشاشة الخدمة
                       TextFormField(
                         controller: _photoPriceCtrl,
@@ -320,8 +320,8 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
                               color: AppTheme.primaryGold),
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      const Text('صفحات إضافية (تيك توك، إلخ — اكتب الاسم ثم الرابط):', style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                      AppTheme.gapHeightLarge,
+                      const Text('صفحات إضافية (تيك توك، إلخ — اكتب الاسم ثم الرابط):', style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
                       ..._extraSocialCtrls.map((ctrls) {
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 8),
@@ -340,7 +340,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              AppTheme.gapWidthSmall,
                               Expanded(
                                 flex: 3,
                                 child: TextFormField(
@@ -355,7 +355,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
                                 ),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.remove_circle, color: Colors.red),
+                                icon: const Icon(Icons.remove_circle, color: AppTheme.errorRed),
                                 onPressed: () {
                                   setState(() {
                                     _extraSocialCtrls.remove(ctrls);
@@ -378,7 +378,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
                         icon: const Icon(Icons.add, color: AppTheme.primaryGold),
                         label: const Text('إضافة صفحة تواصل جديدة', style: TextStyle(color: AppTheme.primaryGold)),
                       ),
-                      const SizedBox(height: 20),
+                      AppTheme.gapHeightXL,
 
                       _section('💳 قنوات الدفع'),
                       _navTile(
@@ -417,20 +417,20 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
   }
 
   Widget _warning() => Container(
-        padding: const EdgeInsets.all(12),
+        padding: AppTheme.paddingAllMedium,
         decoration: BoxDecoration(
-          color: Colors.orange.withOpacity(0.12),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.orange.withOpacity(0.5)),
+          color: AppTheme.warningOrange.withOpacity(0.12),
+          borderRadius: AppTheme.borderRadiusMedium,
+          border: Border.all(color: AppTheme.warningOrange.withOpacity(0.5)),
         ),
         child: const Row(
           children: [
-            Icon(Icons.warning_amber, color: Colors.orange),
-            SizedBox(width: 10),
+            Icon(Icons.warning_amber, color: AppTheme.warningOrange),
+            AppTheme.gapWidthSmall,
             Expanded(
               child: Text(
                 'هذه القيم تؤثّر على كل المستخدمين فوراً. عدّل بحذر.',
-                style: TextStyle(color: AppTheme.textWhite, fontSize: 12),
+                style: TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeSmall),
               ),
             ),
           ],
@@ -439,16 +439,16 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
 
   Widget _error(String? msg) => Center(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppTheme.paddingXXL),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(Icons.error_outline, color: AppTheme.errorRed, size: 48),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               Text(msg ?? 'تعذّر تحميل الإعدادات',
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: AppTheme.textGrey)),
-              const SizedBox(height: 16),
+              AppTheme.gapHeightLarge,
               ElevatedButton(onPressed: _load, child: const Text('إعادة المحاولة')),
             ],
           ),
@@ -460,7 +460,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
         child: Text(title,
             style: const TextStyle(
                 color: AppTheme.primaryGold,
-                fontSize: 16,
+                fontSize: AppTheme.fontSizeSubtitle,
                 fontWeight: FontWeight.bold)),
       );
 
@@ -474,7 +474,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: AppTheme.borderRadiusMedium,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3)),
       ),
       child: ListTile(
@@ -483,7 +483,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
             style: const TextStyle(
                 color: AppTheme.textWhite, fontWeight: FontWeight.bold)),
         subtitle: Text(subtitle,
-            style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+            style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
         trailing: const Icon(Icons.arrow_forward_ios,
             color: AppTheme.primaryGold, size: 16),
         onTap: onTap,

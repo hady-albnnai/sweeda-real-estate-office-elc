@@ -55,7 +55,7 @@ class _MyPaymentsScreenState extends State<MyPaymentsScreen> {
                   color: AppTheme.primaryGold,
                   onRefresh: _load,
                   child: ListView.builder(
-                    padding: const EdgeInsets.all(16),
+                    padding: AppTheme.paddingAllLarge,
                     itemCount: payProv.payments.length,
                     itemBuilder: (_, i) => _card(payProv.payments[i]),
                   ),
@@ -65,10 +65,10 @@ class _MyPaymentsScreenState extends State<MyPaymentsScreen> {
 
   Widget _card(PaymentModel p) {
     final stsColor = p.sts == 1
-        ? Colors.green
+        ? AppTheme.successGreen
         : p.sts == 2
-            ? Colors.red
-            : Colors.orange;
+            ? AppTheme.errorRed
+            : AppTheme.warningOrange;
     final stsLabel = p.sts == 1
         ? '✅ مقبولة'
         : p.sts == 2
@@ -85,10 +85,10 @@ class _MyPaymentsScreenState extends State<MyPaymentsScreen> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(16),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(color: stsColor.withOpacity(0.3)),
       ),
       child: Column(
@@ -103,19 +103,19 @@ class _MyPaymentsScreenState extends State<MyPaymentsScreen> {
                 style: const TextStyle(
                     color: AppTheme.textWhite,
                     fontWeight: FontWeight.bold,
-                    fontSize: 16),
+                    fontSize: AppTheme.fontSizeSubtitle),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: stsColor.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: AppTheme.borderRadiusSmall,
                   border: Border.all(color: stsColor.withOpacity(0.5)),
                 ),
                 child: Text(stsLabel,
                     style: TextStyle(
                         color: stsColor,
-                        fontSize: 12,
+                        fontSize: AppTheme.fontSizeSmall,
                         fontWeight: FontWeight.bold)),
               ),
             ],
@@ -130,12 +130,12 @@ class _MyPaymentsScreenState extends State<MyPaymentsScreen> {
           _row('التاريخ', AppUtils.formatTimestamp(p.tsCrt)),
 
           // رسالة الحالة
-          const SizedBox(height: 10),
+          AppTheme.gapHeightSmall,
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: AppTheme.paddingAllMedium,
             decoration: BoxDecoration(
               color: stsColor.withOpacity(0.07),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: AppTheme.borderRadiusSmall,
             ),
             child: Row(children: [
               Icon(
@@ -147,7 +147,7 @@ class _MyPaymentsScreenState extends State<MyPaymentsScreen> {
                 color: stsColor,
                 size: 16,
               ),
-              const SizedBox(width: 8),
+              AppTheme.gapWidthSmall,
               Expanded(
                 child: Text(
                   p.sts == 1
@@ -157,7 +157,7 @@ class _MyPaymentsScreenState extends State<MyPaymentsScreen> {
                               ? 'سبب الرفض: ${p.meta['reject_reason']} — يمكنك التصحيح وإعادة الطلب.'
                               : 'لم تُقبل الدفعة. يرجى التحقق من البيانات والمحاولة مجدداً أو التواصل مع الإدارة.')
                           : 'دفعتك قيد المراجعة من الإدارة. عادةً خلال 24 ساعة.',
-                  style: TextStyle(color: stsColor, fontSize: 12, height: 1.4),
+                  style: TextStyle(color: stsColor, fontSize: AppTheme.fontSizeSmall, height: 1.4),
                 ),
               ),
             ]),
@@ -165,7 +165,7 @@ class _MyPaymentsScreenState extends State<MyPaymentsScreen> {
 
           // زر تجديد إذا مرفوضة
           if (p.sts == 2) ...[
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
@@ -190,12 +190,12 @@ class _MyPaymentsScreenState extends State<MyPaymentsScreen> {
         child: Row(children: [
           Text('$label: ',
               style:
-                  const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                  const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
           Expanded(
             child: Text(value,
                 style: const TextStyle(
                     color: AppTheme.textWhite,
-                    fontSize: 13,
+                    fontSize: AppTheme.fontSizeBody,
                     fontWeight: FontWeight.w500)),
           ),
         ]),
@@ -208,10 +208,10 @@ class _MyPaymentsScreenState extends State<MyPaymentsScreen> {
             Icon(Icons.receipt_long_outlined,
                 size: 80,
                 color: AppTheme.textGrey.withOpacity(0.3)),
-            const SizedBox(height: 20),
+            AppTheme.gapHeightXL,
             const Text('لا توجد دفعات بعد',
-                style: TextStyle(color: AppTheme.textGrey, fontSize: 16)),
-            const SizedBox(height: 12),
+                style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSubtitle)),
+            AppTheme.gapHeightMedium,
             ElevatedButton(
               onPressed: () => context.push('/user/packages'),
               child: const Text('تصفح الباقات'),

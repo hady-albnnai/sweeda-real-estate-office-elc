@@ -125,15 +125,15 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
         builder: (ctx, setDlg) => AlertDialog(
           backgroundColor: AppTheme.surfaceBlack,
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16)),
+              borderRadius: AppTheme.borderRadiusLarge),
           title: const Row(
             children: [
               Icon(Icons.event_busy, color: AppTheme.errorRed, size: 22),
-              SizedBox(width: 8),
+              AppTheme.gapWidthSmall,
               Expanded(
                 child: Text('اعتذار عن المهمة',
                     style: TextStyle(
-                        color: AppTheme.textWhite, fontSize: 16)),
+                        color: AppTheme.textWhite, fontSize: AppTheme.fontSizeSubtitle)),
               ),
             ],
           ),
@@ -143,15 +143,15 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
             children: [
               const Text(
                 'سترجع المهمة للمكتب لإسنادها لمصوّر آخر، وسيُبلَّغون بسببك.',
-                style: TextStyle(color: AppTheme.textGrey, fontSize: 13),
+                style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody),
               ),
-              const SizedBox(height: 14),
+              AppTheme.gapHeightMedium,
               TextField(
                 controller: ctrl,
                 maxLines: 3,
                 autofocus: true,
                 style: const TextStyle(
-                    color: AppTheme.textWhite, fontSize: 14),
+                    color: AppTheme.textWhite, fontSize: AppTheme.fontSizeMedium),
                 decoration: InputDecoration(
                   labelText: 'سبب الاعتذار *',
                   labelStyle: const TextStyle(color: AppTheme.textGrey),
@@ -308,7 +308,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
       color: AppTheme.primaryGold,
       onRefresh: _load,
       child: ListView.builder(
-        padding: const EdgeInsets.all(12),
+        padding: AppTheme.paddingAllMedium,
         itemCount: tasks.length,
         itemBuilder: (_, i) => _taskCard(tasks[i]),
       ),
@@ -337,7 +337,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
       child: Column(children: [
       // تقويم بسيط — نعرض الأيام اللي فيها مهام
       Container(
-        padding: const EdgeInsets.all(12),
+        padding: AppTheme.paddingAllMedium,
         color: AppTheme.surfaceBlack,
         child: Column(children: [
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
@@ -347,14 +347,14 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
             ),
             Text(
               '${_focusedDay.year} / ${_focusedDay.month}',
-              style: const TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 16),
+              style: const TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeSubtitle),
             ),
             IconButton(
               icon: const Icon(Icons.chevron_left, color: AppTheme.primaryGold),
               onPressed: () => setState(() => _focusedDay = DateTime(_focusedDay.year, _focusedDay.month + 1)),
             ),
           ]),
-          const SizedBox(height: 8),
+          AppTheme.gapHeightSmall,
           Wrap(
             spacing: 6,
             runSpacing: 6,
@@ -370,7 +370,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
                     color: isSelected ? AppTheme.primaryGold : AppTheme.deepBlack,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: AppTheme.borderRadiusMedium,
                     border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
                   ),
                   child: Text(
@@ -378,7 +378,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
                     style: TextStyle(
                       color: isSelected ? AppTheme.deepBlack : AppTheme.primaryGold,
                       fontWeight: FontWeight.bold,
-                      fontSize: 13,
+                      fontSize: AppTheme.fontSizeBody,
                     ),
                   ),
                 ),
@@ -387,12 +387,12 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
           ),
         ]),
       ),
-      const SizedBox(height: 8),
+      AppTheme.gapHeightSmall,
       Expanded(
         child: _selectedDayTasks.isEmpty
             ? _empty('اختر يوماً من الأعلى لعرض المهام')
             : ListView.builder(
-                padding: const EdgeInsets.all(12),
+                padding: AppTheme.paddingAllMedium,
                 itemCount: _selectedDayTasks.length,
                 itemBuilder: (_, i) => _taskCard(_selectedDayTasks[i]),
               ),
@@ -409,7 +409,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
       color: AppTheme.primaryGold,
       onRefresh: _load,
       child: ListView.builder(
-        padding: const EdgeInsets.all(12),
+        padding: AppTheme.paddingAllMedium,
         itemCount: tasks.length,
         itemBuilder: (_, i) => _completedCard(tasks[i]),
       ),
@@ -427,10 +427,10 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
 
     return Card(
       color: AppTheme.surfaceBlack,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusLarge),
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: AppTheme.paddingAllLarge,
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           // رأس البطاقة
           Row(children: [
@@ -438,39 +438,39 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
               backgroundColor: color.withOpacity(0.14),
               child: Icon(Icons.camera_alt, color: color),
             ),
-            const SizedBox(width: 10),
+            AppTheme.gapWidthSmall,
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(task.ttl.isEmpty ? 'مهمة تصوير' : task.ttl,
                   style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold)),
-              Text(task.statusLabel, style: TextStyle(color: color, fontSize: 12)),
+              Text(task.statusLabel, style: TextStyle(color: color, fontSize: AppTheme.fontSizeSmall)),
             ])),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: color.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: AppTheme.borderRadiusXL,
               ),
               child: Text('${task.media.length} وسائط',
-                  style: TextStyle(color: color, fontSize: 11)),
+                  style: TextStyle(color: color, fontSize: AppTheme.fontSizeCaption)),
             ),
           ]),
 
           // معلومات
           if (task.notes.isNotEmpty) ...[
-            const SizedBox(height: 8),
+            AppTheme.gapHeightSmall,
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(8),
+              padding: AppTheme.paddingAllSmall,
               decoration: BoxDecoration(
                 color: AppTheme.primaryGold.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: AppTheme.borderRadiusSmall,
                 border: Border.all(color: AppTheme.primaryGold.withOpacity(0.2)),
               ),
               child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 const Icon(Icons.description, size: 14, color: AppTheme.primaryGold),
                 const SizedBox(width: 6),
                 Expanded(child: Text(task.notes,
-                    style: const TextStyle(color: AppTheme.primaryGold, fontSize: 12))),
+                    style: const TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSmall))),
               ]),
             ),
           ],
@@ -478,34 +478,34 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
             const SizedBox(height: 6),
             Row(children: [
               const Icon(Icons.location_on_outlined, color: AppTheme.textGrey, size: 14),
-              const SizedBox(width: 4),
+              AppTheme.gapWidthXS,
               Expanded(child: Text(task.loc['d'].toString(),
-                  style: const TextStyle(color: AppTheme.textGrey, fontSize: 12))),
+                  style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall))),
             ]),
           ],
           if (task.tsScheduled != null) ...[
-            const SizedBox(height: 4),
+            AppTheme.gapHeightXS,
             Row(children: [
               const Icon(Icons.schedule, color: AppTheme.textGrey, size: 14),
-              const SizedBox(width: 4),
+              AppTheme.gapWidthXS,
               Text('الموعد: ${_fmtDate(task.tsScheduled!)}',
-                  style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                  style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
             ]),
           ],
           // 💡 تحسين 2026-07-30: تنبيه المصوّر عند عدم تحديد موعد
           if (task.tsScheduled == null && (task.isPending || task.isInProgress)) ...[
-            const SizedBox(height: 4),
+            AppTheme.gapHeightXS,
             Row(children: [
               const Icon(Icons.schedule, color: Colors.amber, size: 14),
-              const SizedBox(width: 4),
+              AppTheme.gapWidthXS,
               const Text('بلا موعد محدد — نسّق مع المكتب',
-                  style: TextStyle(color: Colors.amber, fontSize: 12)),
+                  style: TextStyle(color: Colors.amber, fontSize: AppTheme.fontSizeSmall)),
             ]),
           ],
 
           // زر بدء المهمة أو واجهة الرفع
           if (!isExpanded && (task.isPending || task.isInProgress)) ...[
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             Row(
               children: [
                 Expanded(
@@ -516,7 +516,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
                     label: const Text('بدء المهمة'),
                   ),
                 ),
-                const SizedBox(width: 8),
+                AppTheme.gapWidthSmall,
                 // 🔄 مخرج للمصوّر عند التعذّر — ترجع المهمة للمكتب بدل ما تبقى
                 // مسكّرة عليه بلا علم أحد (أُضيف 2026-07-30)
                 Expanded(
@@ -547,7 +547,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
                 children: _tempMedia[taskHash]!.asMap().entries.map((e) {
                   return Stack(clipBehavior: Clip.none, children: [
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: AppTheme.borderRadiusSmall,
                       child: Image.file(
                         File(e.value.path),
                         width: 70, height: 70,
@@ -555,7 +555,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
                         errorBuilder: (_, __, ___) => Container(
                           width: 70, height: 70,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: AppTheme.borderRadiusSmall,
                             border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3)),
                             color: AppTheme.deepBlack,
                           ),
@@ -569,7 +569,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
                         onTap: () => _removeMedia(taskHash, e.key),
                         child: const CircleAvatar(
                           radius: 10,
-                          backgroundColor: Colors.red,
+                          backgroundColor: AppTheme.errorRed,
                           child: Icon(Icons.close, size: 12, color: Colors.white),
                         ),
                       ),
@@ -577,21 +577,21 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
                   ]);
                 }).toList(),
               ),
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             OutlinedButton.icon(
               onPressed: isUploading ? null : () => _pickMedia(taskHash),
               icon: const Icon(Icons.add_photo_alternate, color: AppTheme.primaryGold),
               label: Text('إضافة صور (${_tempMedia[taskHash]?.length ?? 0})',
                   style: const TextStyle(color: AppTheme.primaryGold)),
             ),
-            const SizedBox(height: 8),
+            AppTheme.gapHeightSmall,
             TextField(
               controller: _notesControllers.putIfAbsent(taskHash, () => TextEditingController(text: task.photographerNote)),
               maxLines: 2,
               style: const TextStyle(color: AppTheme.textWhite),
               decoration: const InputDecoration(labelText: 'ملاحظات (اختياري)'),
             ),
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             if (hasMedia && !isUploading)
               SizedBox(
                 width: double.infinity,
@@ -604,28 +604,28 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
               ),
             if (isUploading)
               const Center(child: Padding(
-                padding: EdgeInsets.all(12),
+                padding: AppTheme.paddingAllMedium,
                 child: CircularProgressIndicator(color: AppTheme.primaryGold),
               )),
           ],
 
           // ملاحظة المكتب (للمرفوضة)
           if (task.officeNote.isNotEmpty) ...[
-            const SizedBox(height: 8),
+            AppTheme.gapHeightSmall,
             Text('ملاحظة المكتب: ${task.officeNote}',
-                style: const TextStyle(color: Colors.orange, fontSize: 12)),
+                style: const TextStyle(color: AppTheme.warningOrange, fontSize: AppTheme.fontSizeSmall)),
           ],
 
           // إعادة الرفع (للمرفوضة)
           if (task.isRejected && !isExpanded) ...[
-            const SizedBox(height: 8),
+            AppTheme.gapHeightSmall,
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () => _startTask(task),
                 icon: const Icon(Icons.replay),
                 label: const Text('إعادة رفع التصوير'),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                style: ElevatedButton.styleFrom(backgroundColor: AppTheme.warningOrange),
               ),
             ),
           ],
@@ -640,7 +640,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
     final color = _statusColor(task.sts);
     return Card(
       color: AppTheme.surfaceBlack,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusLarge),
       margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
         leading: CircleAvatar(
@@ -653,12 +653,12 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
         title: Text(task.ttl.isEmpty ? 'مهمة تصوير' : task.ttl,
             style: const TextStyle(color: AppTheme.textWhite)),
         subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(task.statusLabel, style: TextStyle(color: color, fontSize: 12)),
+          Text(task.statusLabel, style: TextStyle(color: color, fontSize: AppTheme.fontSizeSmall)),
           Text('${task.media.length} وسائط',
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption)),
           if (task.isSubmitted)
             const Text('بانتظار معالجة المكتب',
-                style: TextStyle(color: Colors.purple, fontSize: 11)),
+                style: TextStyle(color: Colors.purple, fontSize: AppTheme.fontSizeCaption)),
         ]),
       ),
     );
@@ -668,12 +668,12 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
 
   Color _statusColor(int status) {
     switch (status) {
-      case 0: return Colors.orange;
-      case 1: return Colors.blue;
+      case 0: return AppTheme.warningOrange;
+      case 1: return AppTheme.infoBlue;
       case 2: return AppTheme.primaryGold;
-      case 3: return Colors.green;
+      case 3: return AppTheme.successGreen;
       case 4: return AppTheme.errorRed;
-      default: return Colors.grey;
+      default: return AppTheme.textGrey;
     }
   }
 

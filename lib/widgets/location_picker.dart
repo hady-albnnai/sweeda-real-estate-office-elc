@@ -74,7 +74,7 @@ class _LocationPickerState extends State<LocationPicker> {
     return Container(
       height: widget.height,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppTheme.borderRadiusMedium,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
       ),
       child: ClipRRect(
@@ -104,7 +104,7 @@ class _LocationPickerState extends State<LocationPicker> {
                     height: 50,
                     child: const Icon(
                       Icons.location_on,
-                      color: Colors.red,
+                      color: AppTheme.errorRed,
                       size: 50,
                     ),
                   ),
@@ -165,7 +165,7 @@ class _LocationPickerState extends State<LocationPicker> {
                 ),
                 child: Text(
                   '📍 ${_picked.latitude.toStringAsFixed(5)}, ${_picked.longitude.toStringAsFixed(5)}',
-                  style: const TextStyle(color: Colors.white, fontSize: 11),
+                  style: const TextStyle(color: Colors.white, fontSize: AppTheme.fontSizeCaption),
                 ),
               ),
             ),
@@ -195,7 +195,7 @@ class LocationViewer extends StatelessWidget {
     return Container(
       height: height,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppTheme.borderRadiusMedium,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3)),
       ),
       child: ClipRRect(
@@ -219,7 +219,7 @@ class LocationViewer extends StatelessWidget {
                 width: 50,
                 height: 50,
                 child: const Icon(Icons.location_on,
-                    color: Colors.red, size: 50),
+                    color: AppTheme.errorRed, size: 50),
               ),
             ]),
           ],

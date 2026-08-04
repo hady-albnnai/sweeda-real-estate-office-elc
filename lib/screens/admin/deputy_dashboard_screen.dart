@@ -25,8 +25,8 @@ class DeputyDashboardScreen extends StatelessWidget {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('لوحة نائب المدير', style: TextStyle(color: AppTheme.textWhite, fontSize: 18)),
-            Text('أهلاً، $name', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 12)),
+            const Text('لوحة نائب المدير', style: TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeTitle)),
+            Text('أهلاً، $name', style: const TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSmall)),
           ],
         ),
         actions: [
@@ -47,34 +47,34 @@ class DeputyDashboardScreen extends StatelessWidget {
           final loading = snapshot.connectionState == ConnectionState.waiting;
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: AppTheme.paddingAllLarge,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('نظرة عامة', style: TextStyle(color: AppTheme.primaryGold, fontSize: 16, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 12),
+                const Text('نظرة عامة', style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSubtitle, fontWeight: FontWeight.bold)),
+                AppTheme.gapHeightMedium,
                 if (loading)
                   const Center(child: CircularProgressIndicator(color: AppTheme.primaryGold))
                 else ...[
                   Row(
                     children: [
                       Expanded(child: _statCard('👥', 'المستخدمون', _value(stats['total_users']), 'إجمالي الحسابات')),
-                      const SizedBox(width: 12),
+                      AppTheme.gapWidthMedium,
                       Expanded(child: _statCard('🏠', 'العروض النشطة', _value(stats['active_offers']), 'منشورة حالياً')),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  AppTheme.gapHeightMedium,
                   Row(
                     children: [
                       Expanded(child: _statCard('💰', 'دفعات معلقة', _value(stats['pending_payments']), 'بانتظار الموافقة')),
-                      const SizedBox(width: 12),
+                      AppTheme.gapWidthMedium,
                       Expanded(child: _statCard('✅', 'توثيقات معلقة', _value(stats['pending_verifications']), 'قيد المراجعة')),
                     ],
                   ),
                 ],
-                const SizedBox(height: 32),
-                const Text('الوصول السريع', style: TextStyle(color: AppTheme.primaryGold, fontSize: 16, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 12),
+                const const SizedBox(height: AppTheme.spacingXXXL),
+                const Text('الوصول السريع', style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSubtitle, fontWeight: FontWeight.bold)),
+                AppTheme.gapHeightMedium,
                 GridView.count(
                   crossAxisCount: 2,
                   shrinkWrap: true,
@@ -109,20 +109,20 @@ class DeputyDashboardScreen extends StatelessWidget {
 
   Widget _statCard(String emoji, String label, String value, String sub) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 20)),
-          const SizedBox(height: 8),
-          Text(label, style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+          Text(emoji, style: const TextStyle(fontSize: AppTheme.fontSizeHeadline)),
+          AppTheme.gapHeightSmall,
+          Text(label, style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
           Text(value, style: const TextStyle(color: AppTheme.primaryGold, fontSize: 22, fontWeight: FontWeight.bold)),
-          Text(sub, style: const TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+          Text(sub, style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption)),
         ],
       ),
     );
@@ -131,20 +131,20 @@ class DeputyDashboardScreen extends StatelessWidget {
   Widget _navCard(BuildContext context, IconData icon, String title, String route) {
     return InkWell(
       onTap: () => context.push(route),
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: AppTheme.borderRadiusLarge,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: AppTheme.paddingAllLarge,
         decoration: BoxDecoration(
           color: AppTheme.surfaceBlack,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: AppTheme.borderRadiusLarge,
           border: Border.all(color: AppTheme.primaryGold.withOpacity(0.15)),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, color: AppTheme.primaryGold, size: 30),
-            const SizedBox(height: 10),
-            Text(title, textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.textWhite, fontSize: 13)),
+            AppTheme.gapHeightSmall,
+            Text(title, textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeBody)),
           ],
         ),
       ),

@@ -69,10 +69,10 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
               color: AppTheme.primaryGold,
               onRefresh: _load,
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: AppTheme.paddingAllLarge,
                 children: [
                   _headerCard(),
-                  const SizedBox(height: 16),
+                  AppTheme.gapHeightLarge,
                   _sectionTitle('الأولويات'),
                   if (PermissionService.has(auth.userModel, PermissionKeys.reviewOffers))
                     _priorityTile(
@@ -80,7 +80,7 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
                     title: 'عروض بانتظار المراجعة',
                     count: _counts['pendingOffers'] ?? 0,
                     route: '/admin/review-offers',
-                    color: Colors.orange,
+                    color: AppTheme.warningOrange,
                   ),
                   if (PermissionService.has(auth.userModel, PermissionKeys.managePayments))
                     _priorityTile(
@@ -88,7 +88,7 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
                     title: 'مدفوعات بانتظار الموافقة',
                     count: _counts['pendingPayments'] ?? 0,
                     route: '/admin/payments',
-                    color: Colors.green,
+                    color: AppTheme.successGreen,
                   ),
                   if (PermissionService.has(auth.userModel, PermissionKeys.manageReports))
                     _priorityTile(
@@ -104,9 +104,9 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
                     title: 'طلبات توثيق',
                     count: _counts['pendingVerifications'] ?? 0,
                     route: '/admin/review-verifications',
-                    color: Colors.blue,
+                    color: AppTheme.infoBlue,
                   ),
-                  const SizedBox(height: 20),
+                  AppTheme.gapHeightXL,
                   _sectionTitle('اختصارات التشغيل'),
                   GridView.count(
                     crossAxisCount: 2,
@@ -127,7 +127,7 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
                         _shortcut(Icons.cloud_queue_outlined, 'استهلاك السيرفر', '/admin/resource-usage'),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  AppTheme.gapHeightXL,
                   _sectionTitle('ملخص سريع'),
                   GridView.count(
                     crossAxisCount: 2,
@@ -150,7 +150,7 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
 
   Widget _headerCard() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(18),
@@ -163,25 +163,25 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
             height: 54,
             decoration: BoxDecoration(
               color: AppTheme.primaryGold.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: AppTheme.borderRadiusLarge,
             ),
             child: const Icon(Icons.support_agent, color: AppTheme.primaryGold, size: 30),
           ),
-          const SizedBox(width: 12),
+          AppTheme.gapWidthMedium,
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
                   'لوحة متابعة الأعمال اليومية',
-                  style: TextStyle(color: AppTheme.textWhite, fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeSubtitle, fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 4),
+                AppTheme.gapHeightXS,
                 Text(
                   _totalPending == 0
                       ? 'لا توجد عناصر عاجلة حالياً.'
                       : 'يوجد $_totalPending عنصر يحتاج متابعة.',
-                  style: const TextStyle(color: AppTheme.textGrey, fontSize: 12),
+                  style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall),
                 ),
               ],
             ),
@@ -196,7 +196,7 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
       padding: const EdgeInsets.only(bottom: 10),
       child: Text(
         title,
-        style: const TextStyle(color: AppTheme.primaryGold, fontSize: 16, fontWeight: FontWeight.bold),
+        style: const TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSubtitle, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -212,7 +212,7 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(color: color.withOpacity(0.25)),
       ),
       child: ListTile(
@@ -225,7 +225,7 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
             color: color.withOpacity(0.15),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: AppTheme.borderRadiusMedium,
           ),
           child: Text('$count', style: TextStyle(color: color, fontWeight: FontWeight.bold)),
         ),
@@ -237,19 +237,19 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
   Widget _shortcut(IconData icon, String title, String route) {
     return InkWell(
       onTap: () => context.push(route),
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: AppTheme.borderRadiusLarge,
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: AppTheme.paddingAllLarge,
         decoration: BoxDecoration(
           color: AppTheme.surfaceBlack,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: AppTheme.borderRadiusLarge,
           border: Border.all(color: AppTheme.primaryGold.withOpacity(0.18)),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, color: AppTheme.primaryGold, size: 32),
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             Text(title, textAlign: TextAlign.center, style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.w600)),
           ],
         ),
@@ -259,19 +259,19 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
 
   Widget _stat(String title, dynamic value, IconData icon) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.16)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, color: AppTheme.primaryGold),
-          const SizedBox(height: 8),
+          AppTheme.gapHeightSmall,
           Text('$value', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 22, fontWeight: FontWeight.bold)),
-          Text(title, style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+          Text(title, style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
         ],
       ),
     );

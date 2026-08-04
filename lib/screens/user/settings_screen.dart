@@ -67,7 +67,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _toggleTile('التقييمات والتعليقات', _notifRatings, (v) => _toggle('rat', v)),
           ],
 
-          const SizedBox(height: 20),
+          AppTheme.gapHeightXL,
 
           // قسم الحساب
           _sectionTitle('الحساب', Icons.person_outline_rounded),
@@ -77,7 +77,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _settingsTile('الباقة الحالية', Icons.card_membership,
                 () => context.push('/user/packages')),
 
-          const SizedBox(height: 20),
+          AppTheme.gapHeightXL,
 
           // قسم التطبيق
           _sectionTitle('التطبيق', Icons.phone_android_outlined),
@@ -100,11 +100,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
 
-          const SizedBox(height: 20),
+          AppTheme.gapHeightXL,
 
           // إصدار التطبيق
           Center(
-            child: Text('الإصدار 1.0.0', style: TextStyle(color: AppTheme.textGrey.withOpacity(0.5), fontSize: 12)),
+            child: Text('الإصدار 1.0.0', style: TextStyle(color: AppTheme.textGrey.withOpacity(0.5), fontSize: AppTheme.fontSizeSmall)),
           ),
         ],
       ),
@@ -118,7 +118,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Row(
         children: [
           Icon(icon, color: AppTheme.primaryGold.withOpacity(0.8), size: 18),
-          const SizedBox(width: 8),
+          AppTheme.gapWidthSmall,
           Text(title, style: const TextStyle(color: AppTheme.primaryGold, fontSize: 15, fontWeight: FontWeight.w600)),
         ],
       ),
@@ -129,7 +129,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Card(
       color: AppTheme.surfaceBlack,
       margin: const EdgeInsets.only(bottom: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusMedium),
       child: SwitchListTile(
         title: Text(title, style: const TextStyle(color: AppTheme.textWhite)),
         value: value,
@@ -144,7 +144,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Card(
       color: AppTheme.surfaceBlack,
       margin: const EdgeInsets.only(bottom: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusMedium),
       child: ListTile(
         leading: Icon(icon, color: AppTheme.primaryGold),
         title: Text(title, style: const TextStyle(color: AppTheme.textWhite)),
@@ -209,22 +209,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
               // من نحن
               const Text(
                 'من نحن',
-                style: TextStyle(color: AppTheme.primaryGold, fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSubtitle, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 8),
+              AppTheme.gapHeightSmall,
               const Text(
                 'نحن فريق من الشباب المبدعين الذين يؤمنون بتحويل تجربة الوساطة العقارية إلى نموذج يجمع بين الاحترافية العالية والأمان المطلق. نسعى لتحقيق أعلى معايير الشفافية، وحماية حقوق جميع الأطراف، وتسهيل كافة الإجراءات بأحدث التقنيات الرقمية.',
-                style: TextStyle(color: AppTheme.textWhite, fontSize: 13, height: 1.5),
+                style: TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeBody, height: 1.5),
               ),
-              const SizedBox(height: 20),
+              AppTheme.gapHeightXL,
 
               // صفحات التواصل الاجتماعي
               if (facebook.isNotEmpty || instagram.isNotEmpty || extraSocials.isNotEmpty) ...[
                 const Text(
                   'تابعنا على',
-                  style: TextStyle(color: AppTheme.primaryGold, fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSubtitle, fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 10),
+                AppTheme.gapHeightSmall,
                 if (facebook.isNotEmpty)
                   _socialLinkTile('فيسبوك', Icons.facebook, facebook, () => _launchUrl(facebook)),
                 if (instagram.isNotEmpty)
@@ -235,19 +235,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   if (url.isEmpty) return const SizedBox.shrink();
                   return _socialLinkTile(label, Icons.link, url, () => _launchUrl(url));
                 }),
-                const SizedBox(height: 16),
+                AppTheme.gapHeightLarge,
               ],
 
               // المطور
               const Text(
                 'التطوير',
-                style: TextStyle(color: AppTheme.primaryGold, fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSubtitle, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 16),
+              AppTheme.gapHeightLarge,
               // أيقونة لورانيم بسطر لحالها
               Center(
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: AppTheme.borderRadiusMedium,
                   child: Image.asset(
                     'assets/images/loraneem_tech_logo.png',
                     // الصورة أصلها عريضة (1200×520) — contain بلا قص
@@ -256,7 +256,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               const Center(
                 child: Column(
                   children: [
@@ -264,51 +264,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       'loraneem-tech',
                       style: TextStyle(
                         color: AppTheme.textWhite,
-                        fontSize: 16,
+                        fontSize: AppTheme.fontSizeSubtitle,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 2),
+                    AppTheme.gapHeightXXS,
                     Text(
                       'CODE • AI • LIMITLESS EVOLUTION',
                       style: TextStyle(
                         color: AppTheme.primaryGold,
-                        fontSize: 11,
+                        fontSize: AppTheme.fontSizeCaption,
                         letterSpacing: 0.5,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+              AppTheme.gapHeightLarge,
               // رقم المطور
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: AppTheme.paddingAllMedium,
                 decoration: BoxDecoration(
                   color: AppTheme.deepBlack,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: AppTheme.borderRadiusSmall,
                   border: Border.all(color: AppTheme.primaryGold.withOpacity(0.25)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Icon(Icons.phone, color: AppTheme.primaryGold, size: 18),
-                    const SizedBox(width: 8),
+                    AppTheme.gapWidthSmall,
                     Text(
                       'رقم المطور: $devPhone',
-                      style: const TextStyle(color: AppTheme.textGrey, fontSize: 13),
+                      style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody),
                     ),
                   ],
                 ),
               ),
               // رقم المطور الثاني (يُخفى إذا النص فارغ من لوحة الأدمن)
               if (devPhone2.isNotEmpty) ...[
-                const SizedBox(height: 8),
+                AppTheme.gapHeightSmall,
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: AppTheme.paddingAllMedium,
                   decoration: BoxDecoration(
                     color: AppTheme.deepBlack,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: AppTheme.borderRadiusSmall,
                     border: Border.all(
                         color: AppTheme.primaryGold.withOpacity(0.25)),
                   ),
@@ -317,30 +317,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     children: [
                       const Icon(Icons.phone,
                           color: AppTheme.primaryGold, size: 18),
-                      const SizedBox(width: 8),
+                      AppTheme.gapWidthSmall,
                       Text(
                         'رقم المطور الثاني: $devPhone2',
                         style: const TextStyle(
-                            color: AppTheme.textGrey, fontSize: 13),
+                            color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody),
                       ),
                     ],
                   ),
                 ),
               ],
-              const SizedBox(height: 20),
+              AppTheme.gapHeightXL,
 
               // معلومات التطبيق
               const Divider(color: Colors.white12),
-              const SizedBox(height: 8),
+              AppTheme.gapHeightSmall,
               const Text(
                 'عقارات السويداء — المكتب العقاري الإلكتروني\n\n'
                 'تطبيق لتصفح وعرض العقارات والسيارات في محافظة السويداء',
-                style: TextStyle(color: AppTheme.textGrey, fontSize: 12),
+                style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall),
               ),
-              const SizedBox(height: 8),
+              AppTheme.gapHeightSmall,
               Text(
                 'الإصدار: 1.0.0\nBackend: Supabase • Frontend: Flutter',
-                style: TextStyle(color: AppTheme.textGrey.withValues(alpha: 0.7), fontSize: 11),
+                style: TextStyle(color: AppTheme.textGrey.withValues(alpha: 0.7), fontSize: AppTheme.fontSizeCaption),
               ),
             ],
           ),
@@ -357,22 +357,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
       padding: const EdgeInsets.only(bottom: 8),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AppTheme.borderRadiusSmall,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             color: AppTheme.deepBlack,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: AppTheme.borderRadiusSmall,
             border: Border.all(color: AppTheme.primaryGold.withOpacity(0.25)),
           ),
           child: Row(
             children: [
               Icon(icon, color: AppTheme.primaryGold, size: 20),
-              const SizedBox(width: 10),
+              AppTheme.gapWidthSmall,
               Expanded(
                 child: Text(
                   label,
-                  style: const TextStyle(color: AppTheme.textWhite, fontSize: 14, fontWeight: FontWeight.w500),
+                  style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeMedium, fontWeight: FontWeight.w500),
                 ),
               ),
               const Icon(Icons.open_in_new, color: AppTheme.textGrey, size: 16),
@@ -408,7 +408,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Provider.of<AuthProvider>(context, listen: false).logout();
               context.go('/login');
             },
-            child: const Text('خروج', style: TextStyle(color: Colors.red)),
+            child: const Text('خروج', style: TextStyle(color: AppTheme.errorRed)),
           ),
         ],
       ),

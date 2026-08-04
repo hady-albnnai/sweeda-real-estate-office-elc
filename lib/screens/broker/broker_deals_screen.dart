@@ -63,7 +63,7 @@ class _BrokerDealsScreenState extends State<BrokerDealsScreen> {
         children: [
           // بطاقة ملخّص العمولات
           Container(
-            margin: const EdgeInsets.all(16),
+            margin: AppTheme.paddingAllLarge,
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -81,14 +81,14 @@ class _BrokerDealsScreenState extends State<BrokerDealsScreen> {
               children: [
                 const Icon(Icons.account_balance_wallet,
                     color: AppTheme.primaryGold, size: 38),
-                const SizedBox(width: 16),
+                AppTheme.gapWidthLarge,
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text('إجمالي العمولات المحققة',
                         style:
-                            TextStyle(color: AppTheme.textGrey, fontSize: 13)),
-                    const SizedBox(height: 4),
+                            TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody)),
+                    AppTheme.gapHeightXS,
                     Text('${totalCommission.toStringAsFixed(0)} \$',
                         style: const TextStyle(
                             color: AppTheme.primaryGold,
@@ -108,9 +108,9 @@ class _BrokerDealsScreenState extends State<BrokerDealsScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               children: [
                 _chip('الكل', 0),
-                const SizedBox(width: 8),
+                AppTheme.gapWidthSmall,
                 _chip('نشطة', 1),
-                const SizedBox(width: 8),
+                AppTheme.gapWidthSmall,
                 _chip('مكتملة', 2),
               ],
             ),
@@ -125,7 +125,7 @@ class _BrokerDealsScreenState extends State<BrokerDealsScreen> {
                         color: AppTheme.primaryGold,
                         onRefresh: () async => _load(),
                         child: ListView.builder(
-                          padding: const EdgeInsets.all(12),
+                          padding: AppTheme.paddingAllMedium,
                           itemCount: deals.length,
                           itemBuilder: (_, i) => _dealTile(deals[i]),
                         ),
@@ -142,7 +142,7 @@ class _BrokerDealsScreenState extends State<BrokerDealsScreen> {
           children: [
             Icon(Icons.handshake,
                 size: 72, color: AppTheme.textGrey.withOpacity(0.3)),
-            const SizedBox(height: 16),
+            AppTheme.gapHeightLarge,
             const Text('لا توجد صفقات',
                 style: TextStyle(color: AppTheme.textGrey, fontSize: 15)),
           ],
@@ -170,10 +170,10 @@ class _BrokerDealsScreenState extends State<BrokerDealsScreen> {
     final isDone = d.sts == 1;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.15)),
       ),
       child: Column(
@@ -189,17 +189,17 @@ class _BrokerDealsScreenState extends State<BrokerDealsScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                 decoration: BoxDecoration(
-                  color: (isDone ? Colors.green : Colors.orange)
+                  color: (isDone ? AppTheme.successGreen : AppTheme.warningOrange)
                       .withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: AppTheme.borderRadiusSmall,
                   border: Border.all(
-                      color: (isDone ? Colors.green : Colors.orange)
+                      color: (isDone ? AppTheme.successGreen : AppTheme.warningOrange)
                           .withOpacity(0.5)),
                 ),
                 child: Text(isDone ? 'مكتملة' : 'نشطة',
                     style: TextStyle(
-                        color: isDone ? Colors.green : Colors.orange,
-                        fontSize: 11)),
+                        color: isDone ? AppTheme.successGreen : AppTheme.warningOrange,
+                        fontSize: AppTheme.fontSizeCaption)),
               ),
             ],
           ),
@@ -224,12 +224,12 @@ class _BrokerDealsScreenState extends State<BrokerDealsScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label,
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody)),
           Text(value,
               style: TextStyle(
                   color: highlight ? AppTheme.primaryGold : AppTheme.textWhite,
                   fontWeight: highlight ? FontWeight.bold : FontWeight.normal,
-                  fontSize: 13)),
+                  fontSize: AppTheme.fontSizeBody)),
         ],
       ),
     );

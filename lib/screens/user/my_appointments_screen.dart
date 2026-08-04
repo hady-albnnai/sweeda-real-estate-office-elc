@@ -113,8 +113,8 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
   Widget _myApptCard(AppointmentModel appt) {
     final sts = appt.sts;
     final statusColors = {
-      0: Colors.orange, 1: Colors.blue, 2: Colors.green,
-      3: Colors.red, 4: Colors.redAccent, 5: Colors.deepOrange,
+      0: AppTheme.warningOrange, 1: AppTheme.infoBlue, 2: AppTheme.successGreen,
+      3: AppTheme.errorRed, 4: Colors.redAccent, 5: Colors.deepOrange,
     };
     final statusTexts = {
       0: 'قيد الانتظار', 1: 'مؤكد', 2: 'منتهي',
@@ -137,7 +137,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
           children: [
             Row(children: [
               const Icon(Icons.event, color: AppTheme.primaryGold, size: 22),
-              const SizedBox(width: 10),
+              AppTheme.gapWidthSmall,
               Expanded(
                 child: Text(
                   'معاينة عرض #${appt.offId.length >= 8 ? appt.offId.substring(0, 8) : appt.offId}',
@@ -150,14 +150,14 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: (statusColors[sts] ?? Colors.grey).withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
+                  color: (statusColors[sts] ?? AppTheme.textGrey).withOpacity(0.2),
+                  borderRadius: AppTheme.borderRadiusSmall,
                 ),
                 child: Text(
                   statusTexts[sts] ?? '—',
                   style: TextStyle(
-                      color: statusColors[sts] ?? Colors.grey,
-                      fontSize: 11,
+                      color: statusColors[sts] ?? AppTheme.textGrey,
+                      fontSize: AppTheme.fontSizeCaption,
                       fontWeight: FontWeight.bold),
                 ),
               ),
@@ -165,53 +165,53 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
             const Divider(color: Colors.white12, height: 20),
             Row(children: [
               const Icon(Icons.calendar_today, size: 15, color: AppTheme.textGrey),
-              const SizedBox(width: 8),
+              AppTheme.gapWidthSmall,
               Text(AppUtils.formatTimestamp(appt.dt),
                   style: const TextStyle(color: AppTheme.textGrey)),
             ]),
 
             // وقت بديل مقترح من صاحب العرض
             if (pendingCounter) ...[
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: AppTheme.paddingAllMedium,
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange.withOpacity(0.4)),
+                  color: AppTheme.warningOrange.withOpacity(0.1),
+                  borderRadius: AppTheme.borderRadiusSmall,
+                  border: Border.all(color: AppTheme.warningOrange.withOpacity(0.4)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text('🔄 اقترح صاحب العرض وقتاً بديلاً:',
                         style: TextStyle(
-                            color: Colors.orange,
+                            color: AppTheme.warningOrange,
                             fontWeight: FontWeight.bold,
-                            fontSize: 13)),
-                    const SizedBox(height: 4),
+                            fontSize: AppTheme.fontSizeBody)),
+                    AppTheme.gapHeightXS,
                     Text(
                       AppUtils.formatTimestamp(appt.lastProposedDt!),
                       style: const TextStyle(
-                          color: AppTheme.textWhite, fontSize: 14),
+                          color: AppTheme.textWhite, fontSize: AppTheme.fontSizeMedium),
                     ),
-                    const SizedBox(height: 10),
+                    AppTheme.gapHeightSmall,
                     Row(children: [
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () => _requesterAccept(appt),
                           style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green),
+                              backgroundColor: AppTheme.successGreen),
                           child: const Text('✅ قبول'),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      AppTheme.gapWidthSmall,
                       Expanded(
                         child: OutlinedButton(
                           onPressed: () => _requesterCounter(appt),
                           style: OutlinedButton.styleFrom(
-                              side: const BorderSide(color: Colors.orange)),
+                              side: const BorderSide(color: AppTheme.warningOrange)),
                           child: const Text('🔄 وقت آخر',
-                              style: TextStyle(color: Colors.orange)),
+                              style: TextStyle(color: AppTheme.warningOrange)),
                         ),
                       ),
                     ]),
@@ -219,7 +219,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
                       const Padding(
                         padding: EdgeInsets.only(top: 6),
                         child: Text('⚠️ آخر جولة — بعدها يُلغى تلقائياً',
-                            style: TextStyle(color: Colors.red, fontSize: 11)),
+                            style: TextStyle(color: AppTheme.errorRed, fontSize: AppTheme.fontSizeCaption)),
                       ),
                   ],
                 ),
@@ -228,23 +228,23 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
 
             // إلغاء (للمواعيد المعلقة والمؤكدة)
             if (sts <= 1 && !pendingCounter) ...[
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
                   onPressed: () => _showCancelDialog(appt),
-                  icon: const Icon(Icons.cancel, color: Colors.red, size: 18),
+                  icon: const Icon(Icons.cancel, color: AppTheme.errorRed, size: 18),
                   label: const Text('إلغاء الموعد',
-                      style: TextStyle(color: Colors.red)),
+                      style: TextStyle(color: AppTheme.errorRed)),
                   style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Colors.red)),
+                      side: const BorderSide(color: AppTheme.errorRed)),
                 ),
               ),
             ],
 
             // تقييم للموعد المنتهي
             if (sts == 2) ...[
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -317,14 +317,14 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
             Row(children: [
               const Icon(Icons.event_available,
                   color: AppTheme.primaryGold, size: 22),
-              const SizedBox(width: 10),
+              AppTheme.gapWidthSmall,
               Expanded(
                 child: Text(
                   'طلب موعد على عرض #${appt.offId.length >= 8 ? appt.offId.substring(0, 8) : appt.offId}',
                   style: const TextStyle(
                       color: AppTheme.textWhite,
                       fontWeight: FontWeight.bold,
-                      fontSize: 14),
+                      fontSize: AppTheme.fontSizeMedium),
                 ),
               ),
               _statusBadge(sts),
@@ -335,7 +335,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
             Row(children: [
               const Icon(Icons.calendar_today,
                   size: 15, color: AppTheme.textGrey),
-              const SizedBox(width: 8),
+              AppTheme.gapWidthSmall,
               Text(AppUtils.formatTimestamp(appt.dt),
                   style: const TextStyle(color: AppTheme.textGrey)),
             ]),
@@ -345,19 +345,19 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
               const SizedBox(height: 6),
               Text(
                 'جولة التفاوض: ${appt.neogRounds}/5',
-                style: const TextStyle(color: Colors.orange, fontSize: 12),
+                style: const TextStyle(color: AppTheme.warningOrange, fontSize: AppTheme.fontSizeSmall),
               ),
             ],
 
-            const SizedBox(height: 14),
+            AppTheme.gapHeightMedium,
 
             // بطاقة الطلب — بدون أي معلومة عن الطالب
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(12),
+              padding: AppTheme.paddingAllMedium,
               decoration: BoxDecoration(
                 color: AppTheme.deepBlack,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: AppTheme.borderRadiusMedium,
                 border: Border.all(
                     color: AppTheme.primaryGold.withOpacity(0.2)),
               ),
@@ -368,15 +368,15 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
                     'يوجد طلب حجز موعد بتاريخ:\n${AppUtils.formatTimestamp(appt.dt)}',
                     style: const TextStyle(
                         color: AppTheme.textWhite,
-                        fontSize: 14,
+                        fontSize: AppTheme.fontSizeMedium,
                         height: 1.5),
                   ),
-                  const SizedBox(height: 4),
+                  AppTheme.gapHeightXS,
                   const Text(
                     '(لا تظهر معلومات الطالب — التواصل عبر المكتب)',
                     style: TextStyle(
                         color: AppTheme.textGrey,
-                        fontSize: 11,
+                        fontSize: AppTheme.fontSizeCaption,
                         fontStyle: FontStyle.italic),
                   ),
                 ],
@@ -385,24 +385,24 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
 
             // أزرار الرد (فقط إذا الدور على صاحب العرض)
             if (myTurn) ...[
-              const SizedBox(height: 14),
+              AppTheme.gapHeightMedium,
               Row(children: [
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () => _ownerAccept(appt),
                     style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green),
+                        backgroundColor: AppTheme.successGreen),
                     child: const Text('✅ موافقة'),
                   ),
                 ),
-                const SizedBox(width: 8),
+                AppTheme.gapWidthSmall,
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => _ownerReject(appt),
                     style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Colors.red)),
+                        side: const BorderSide(color: AppTheme.errorRed)),
                     child: const Text('❌ رفض',
-                        style: TextStyle(color: Colors.red)),
+                        style: TextStyle(color: AppTheme.errorRed)),
                   ),
                 ),
               ]),
@@ -410,12 +410,12 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
 
             // بانتظار رد الطالب
             if (isPending && appt.lastProposedBy == 'owner') ...[
-              const SizedBox(height: 10),
+              AppTheme.gapHeightSmall,
               const Row(children: [
-                Icon(Icons.hourglass_empty, color: Colors.orange, size: 16),
+                Icon(Icons.hourglass_empty, color: AppTheme.warningOrange, size: 16),
                 SizedBox(width: 6),
                 Text('بانتظار رد طالب الموعد على وقتك البديل',
-                    style: TextStyle(color: Colors.orange, fontSize: 13)),
+                    style: TextStyle(color: AppTheme.warningOrange, fontSize: AppTheme.fontSizeBody)),
               ]),
             ],
           ],
@@ -507,7 +507,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
                 activeColor: AppTheme.primaryGold,
               ),
               if (reason == 2) ...[
-                const SizedBox(height: 8),
+                AppTheme.gapHeightSmall,
                 TextField(
                   controller: textCtrl,
                   style: const TextStyle(color: AppTheme.textWhite),
@@ -564,7 +564,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
             ),
             ElevatedButton(
               onPressed: () => Navigator.pop(context, true),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorRed),
               child: const Text('نعم، إزالة العرض'),
             ),
           ],
@@ -711,7 +711,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
               _load();
             },
             child: const Text('نعم، إلغاء',
-                style: TextStyle(color: Colors.red)),
+                style: TextStyle(color: AppTheme.errorRed)),
           ),
         ],
       ),
@@ -720,24 +720,24 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
 
   Widget _statusBadge(int sts) {
     final colors = {
-      0: Colors.orange, 1: Colors.green, 2: Colors.teal,
-      3: Colors.grey, 4: Colors.red, 5: Colors.deepOrange,
+      0: AppTheme.warningOrange, 1: AppTheme.successGreen, 2: Colors.teal,
+      3: AppTheme.textGrey, 4: AppTheme.errorRed, 5: Colors.deepOrange,
     };
     final texts = {
       0: 'انتظار', 1: 'مؤكد', 2: 'مكتمل',
       3: 'ملغي', 4: 'مرفوض', 5: 'لم يحضر',
     };
-    final color = colors[sts] ?? Colors.grey;
+    final color = colors[sts] ?? AppTheme.textGrey;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: color.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: AppTheme.borderRadiusSmall,
         border: Border.all(color: color.withOpacity(0.5)),
       ),
       child: Text(texts[sts] ?? '—',
           style: TextStyle(
-              color: color, fontSize: 11, fontWeight: FontWeight.bold)),
+              color: color, fontSize: AppTheme.fontSizeCaption, fontWeight: FontWeight.bold)),
     );
   }
 
@@ -748,10 +748,10 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
             Icon(Icons.calendar_today_outlined,
                 size: 80,
                 color: AppTheme.textGrey.withOpacity(0.3)),
-            const SizedBox(height: 20),
+            AppTheme.gapHeightXL,
             Text(msg,
                 style:
-                    const TextStyle(color: AppTheme.textGrey, fontSize: 16)),
+                    const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSubtitle)),
           ],
         ),
       );

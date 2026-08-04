@@ -202,13 +202,13 @@ class _PaymentChannelsEditorScreenState
           : Stack(
               children: [
                 ListView(
-                  padding: const EdgeInsets.all(16),
+                  padding: AppTheme.paddingAllLarge,
                   children: [
                     _infoBanner(),
-                    const SizedBox(height: 16),
+                    AppTheme.gapHeightLarge,
                     for (final key in ['haram', 'sham_cash', 'balance', 'bank'])
                       _channelCard(key),
-                    const SizedBox(height: 20),
+                    AppTheme.gapHeightXL,
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
@@ -246,20 +246,20 @@ class _PaymentChannelsEditorScreenState
   }
 
   Widget _infoBanner() => Container(
-        padding: const EdgeInsets.all(12),
+        padding: AppTheme.paddingAllMedium,
         decoration: BoxDecoration(
-          color: Colors.blue.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.blue.withOpacity(0.4)),
+          color: AppTheme.infoBlue.withOpacity(0.1),
+          borderRadius: AppTheme.borderRadiusMedium,
+          border: Border.all(color: AppTheme.infoBlue.withOpacity(0.4)),
         ),
         child: const Row(
           children: [
             Icon(Icons.info_outline, color: Colors.lightBlueAccent),
-            SizedBox(width: 10),
+            AppTheme.gapWidthSmall,
             Expanded(
               child: Text(
                 'هذه القنوات تظهر للمستخدمين في شاشة الدفع.\nالقنوات المعطّلة لا تظهر، والحقول الفارغة تخفى تلقائياً.',
-                style: TextStyle(color: AppTheme.textWhite, fontSize: 12),
+                style: TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeSmall),
               ),
             ),
           ],
@@ -275,14 +275,14 @@ class _PaymentChannelsEditorScreenState
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(14),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppTheme.borderRadiusMedium,
         border: Border.all(
           color: enabled
               ? AppTheme.primaryGold.withOpacity(0.4)
-              : Colors.grey.withOpacity(0.2),
+              : AppTheme.textGrey.withOpacity(0.2),
         ),
       ),
       child: Column(
@@ -290,14 +290,14 @@ class _PaymentChannelsEditorScreenState
         children: [
           Row(
             children: [
-              Text(icon, style: const TextStyle(fontSize: 24)),
-              const SizedBox(width: 8),
+              Text(icon, style: const TextStyle(fontSize: AppTheme.fontSizeLarge)),
+              AppTheme.gapWidthSmall,
               Expanded(
                 child: Text(name,
                     style: const TextStyle(
                         color: AppTheme.primaryGold,
                         fontWeight: FontWeight.bold,
-                        fontSize: 16)),
+                        fontSize: AppTheme.fontSizeSubtitle)),
               ),
               Switch(
                 value: enabled,
@@ -315,7 +315,7 @@ class _PaymentChannelsEditorScreenState
           // QR لشام كاش
           if (key == 'sham_cash') ...[
             _textField('رابط QR (يدوي)', ctrls['qr_image_url']!),
-            const SizedBox(height: 8),
+            AppTheme.gapHeightSmall,
             Row(
               children: [
                 Expanded(
@@ -333,12 +333,12 @@ class _PaymentChannelsEditorScreenState
               ],
             ),
             if ((ctrls['qr_image_url']!.text).isNotEmpty) ...[
-              const SizedBox(height: 8),
+              AppTheme.gapHeightSmall,
               Center(
                 child: Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: AppTheme.borderRadiusSmall,
                     border: Border.all(
                         color: AppTheme.primaryGold.withOpacity(0.5)),
                   ),
@@ -349,14 +349,14 @@ class _PaymentChannelsEditorScreenState
                     height: 120,
                     fit: BoxFit.contain,
                     errorBuilder: (_, __, ___) => const Text('فشل تحميل',
-                        style: TextStyle(color: Colors.red)),
+                        style: TextStyle(color: AppTheme.errorRed)),
                   ),
                 ),
               ),
             ],
           ],
 
-          const SizedBox(height: 10),
+          AppTheme.gapHeightSmall,
 
           // التعليمات
           _textField('التعليمات (يدعم الأسطر المتعددة)',
@@ -379,7 +379,7 @@ class _PaymentChannelsEditorScreenState
           labelText: label,
           filled: true,
           fillColor: AppTheme.scaffoldBackground,
-          labelStyle: const TextStyle(color: AppTheme.textGrey, fontSize: 13),
+          labelStyle: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody),
         ),
       ),
     );

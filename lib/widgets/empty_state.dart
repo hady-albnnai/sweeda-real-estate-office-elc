@@ -25,14 +25,14 @@ class EmptyState extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, size: 80, color: AppTheme.textGrey.withOpacity(0.3)),
-            const SizedBox(height: 20),
+            AppTheme.gapHeightXL,
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16, color: AppTheme.textGrey),
+              style: const TextStyle(fontSize: AppTheme.fontSizeSubtitle, color: AppTheme.textGrey),
             ),
             if (actionText != null && onAction != null) ...[
-              const SizedBox(height: 20),
+              AppTheme.gapHeightXL,
               ElevatedButton(
                 onPressed: onAction,
                 child: Text(actionText!),

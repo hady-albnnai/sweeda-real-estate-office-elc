@@ -78,12 +78,12 @@ class _MediaReviewScreenState extends State<MediaReviewScreen> {
               color: AppTheme.primaryGold,
               onRefresh: _load,
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: AppTheme.paddingAllLarge,
                 children: [
                   _summaryCard(),
-                  const SizedBox(height: 14),
+                  AppTheme.gapHeightMedium,
                   _filters(),
-                  const SizedBox(height: 12),
+                  AppTheme.gapHeightMedium,
                   if (_filtered.isEmpty)
                     const Padding(
                       padding: EdgeInsets.only(top: 80),
@@ -101,7 +101,7 @@ class _MediaReviewScreenState extends State<MediaReviewScreen> {
 
   Widget _summaryCard() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
         borderRadius: BorderRadius.circular(18),
@@ -113,20 +113,20 @@ class _MediaReviewScreenState extends State<MediaReviewScreen> {
           const Row(
             children: [
               Icon(Icons.photo_library_outlined, color: AppTheme.primaryGold),
-              SizedBox(width: 8),
-              Text('ملخص الوسائط', style: TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold, fontSize: 16)),
+              AppTheme.gapWidthSmall,
+              Text('ملخص الوسائط', style: TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeSubtitle)),
             ],
           ),
-          const SizedBox(height: 14),
+          AppTheme.gapHeightMedium,
           Row(
             children: [
               Expanded(child: _miniStat('العروض', _offers.length, AppTheme.primaryGold)),
-              const SizedBox(width: 8),
-              Expanded(child: _miniStat('بلا صور', _missingImages, Colors.orange)),
-              const SizedBox(width: 8),
+              AppTheme.gapWidthSmall,
+              Expanded(child: _miniStat('بلا صور', _missingImages, AppTheme.warningOrange)),
+              AppTheme.gapWidthSmall,
               Expanded(child: _miniStat('بلا سند', _missingDocs, AppTheme.errorRed)),
-              const SizedBox(width: 8),
-              Expanded(child: _miniStat('فيديو', _withVideo, Colors.blue)),
+              AppTheme.gapWidthSmall,
+              Expanded(child: _miniStat('فيديو', _withVideo, AppTheme.infoBlue)),
             ],
           ),
         ],
@@ -139,12 +139,12 @@ class _MediaReviewScreenState extends State<MediaReviewScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
       decoration: BoxDecoration(
         color: color.withOpacity(0.10),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppTheme.borderRadiusMedium,
       ),
       child: Column(
         children: [
-          Text('$count', style: TextStyle(color: color, fontSize: 18, fontWeight: FontWeight.bold)),
-          Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppTheme.textGrey, fontSize: 10)),
+          Text('$count', style: TextStyle(color: color, fontSize: AppTheme.fontSizeTitle, fontWeight: FontWeight.bold)),
+          Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeXS)),
         ],
       ),
     );
@@ -190,13 +190,13 @@ class _MediaReviewScreenState extends State<MediaReviewScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.14)),
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.all(12),
+        contentPadding: AppTheme.paddingAllMedium,
         leading: ClipRRect(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: AppTheme.borderRadiusMedium,
           child: SizedBox(
             width: 58,
             height: 58,
@@ -221,9 +221,9 @@ class _MediaReviewScreenState extends State<MediaReviewScreen> {
             spacing: 6,
             runSpacing: 6,
             children: [
-              _badge('${offer.imgs.length} صور', hasImages ? Colors.green : Colors.orange),
-              _badge(hasDoc ? 'سند موجود' : 'بلا سند', hasDoc ? Colors.green : AppTheme.errorRed),
-              if (hasVideo) _badge('فيديو', Colors.blue),
+              _badge('${offer.imgs.length} صور', hasImages ? AppTheme.successGreen : AppTheme.warningOrange),
+              _badge(hasDoc ? 'سند موجود' : 'بلا سند', hasDoc ? AppTheme.successGreen : AppTheme.errorRed),
+              if (hasVideo) _badge('فيديو', AppTheme.infoBlue),
               _badge(_statusLabel(offer.sts), AppTheme.primaryGold),
             ],
           ),
@@ -246,10 +246,10 @@ class _MediaReviewScreenState extends State<MediaReviewScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: color.withOpacity(0.13),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: AppTheme.borderRadiusMedium,
         border: Border.all(color: color.withOpacity(0.30)),
       ),
-      child: Text(text, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w600)),
+      child: Text(text, style: TextStyle(color: color, fontSize: AppTheme.fontSizeXS, fontWeight: FontWeight.w600)),
     );
   }
 

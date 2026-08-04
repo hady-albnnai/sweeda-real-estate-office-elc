@@ -84,10 +84,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.favorite_border, size: 80, color: AppTheme.textGrey.withOpacity(0.3)),
-                      const SizedBox(height: 20),
+                      AppTheme.gapHeightXL,
                       const Text('ما عندك عروض مفضلة حالياً',
-                          style: TextStyle(color: AppTheme.textGrey, fontSize: 16)),
-                      const SizedBox(height: 20),
+                          style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSubtitle)),
+                      AppTheme.gapHeightXL,
                       ElevatedButton.icon(
                         onPressed: () => context.go('/home'),
                         icon: const Icon(Icons.search),
@@ -110,9 +110,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                           child: GestureDetector(
                             onTap: () => _toggleFavorite(offer.id),
                             child: Container(
-                              padding: const EdgeInsets.all(8),
+                              padding: AppTheme.paddingAllSmall,
                               decoration: const BoxDecoration(
-                                color: Colors.red,
+                                color: AppTheme.errorRed,
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(Icons.favorite, color: Colors.white, size: 18),

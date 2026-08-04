@@ -96,7 +96,7 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
               'سيتم إرسال إشعار للمحامي بأن المهمة اكتملت وبانتظار اعتماده.',
               style: TextStyle(color: AppTheme.textGrey, height: 1.4),
             ),
-            const SizedBox(height: 12),
+            AppTheme.gapHeightMedium,
             TextField(
               controller: notesCtrl,
               maxLines: 3,
@@ -143,32 +143,32 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDlg) => AlertDialog(
           backgroundColor: AppTheme.surfaceBlack,
-          title: Text(item.title, style: const TextStyle(color: AppTheme.primaryGold, fontSize: 16)),
+          title: Text(item.title, style: const TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSubtitle)),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(10),
+                  padding: AppTheme.paddingAllMedium,
                   decoration: BoxDecoration(
                     color: AppTheme.primaryGold.withOpacity(0.08),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: AppTheme.borderRadiusMedium,
                     border: Border.all(color: AppTheme.primaryGold.withOpacity(0.22)),
                   ),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('عدد النسخ المطلوبة: ${item.requiredCopies}', style: const TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 13)),
+                    Text('عدد النسخ المطلوبة: ${item.requiredCopies}', style: const TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeBody)),
                     if (item.lawyerInstructions.isNotEmpty) ...[
                       const SizedBox(height: 6),
-                      Text('تعليمات المحامي: ${item.lawyerInstructions}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12, height: 1.35)),
+                      Text('تعليمات المحامي: ${item.lawyerInstructions}', style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall, height: 1.35)),
                     ],
                     if (item.revisionNotes.isNotEmpty) ...[
                       const SizedBox(height: 6),
-                      Text('طلب إعادة من المحامي: ${item.revisionNotes}', style: const TextStyle(color: AppTheme.errorRed, fontSize: 12, height: 1.35)),
+                      Text('طلب إعادة من المحامي: ${item.revisionNotes}', style: const TextStyle(color: AppTheme.errorRed, fontSize: AppTheme.fontSizeSmall, height: 1.35)),
                     ],
                   ]),
                 ),
-                const SizedBox(height: 12),
+                AppTheme.gapHeightMedium,
                 DropdownButtonFormField<int>(
                   value: selectedSts,
                   dropdownColor: AppTheme.surfaceBlack,
@@ -182,34 +182,34 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
                   ],
                   onChanged: (v) => setDlg(() => selectedSts = v ?? 0),
                 ),
-                const SizedBox(height: 12),
+                AppTheme.gapHeightMedium,
                 TextField(
                   controller: inputCtrl,
                   style: const TextStyle(color: AppTheme.textWhite),
                   decoration: const InputDecoration(labelText: 'رقم العقار / رقم السيارة / الصحيفة'),
                 ),
-                const SizedBox(height: 12),
+                AppTheme.gapHeightMedium,
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(10),
+                  padding: AppTheme.paddingAllMedium,
                   decoration: BoxDecoration(
                     color: AppTheme.scaffoldBackground,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: AppTheme.borderRadiusMedium,
                     border: Border.all(color: AppTheme.primaryGold.withOpacity(0.22)),
                   ),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    const Text('صورة السند / الوثيقة المستخرجة', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 13)),
-                    const SizedBox(height: 8),
+                    const Text('صورة السند / الوثيقة المستخرجة', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeBody)),
+                    AppTheme.gapHeightSmall,
                     if (attachmentBase64.isNotEmpty)
-                      Text('تم اختيار صورة: $attachmentName', style: const TextStyle(color: Colors.green, fontSize: 12))
+                      Text('تم اختيار صورة: $attachmentName', style: const TextStyle(color: AppTheme.successGreen, fontSize: AppTheme.fontSizeSmall))
                     else if (existingImage.isNotEmpty)
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: AppTheme.borderRadiusSmall,
                         child: Image.network(existingImage, height: 130, width: double.infinity, fit: BoxFit.cover),
                       )
                     else
-                      const Text('لم يتم إرفاق صورة بعد', style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
-                    const SizedBox(height: 8),
+                      const Text('لم يتم إرفاق صورة بعد', style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
+                    AppTheme.gapHeightSmall,
                     OutlinedButton.icon(
                       onPressed: () async {
                         final file = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 82, maxWidth: 1600);
@@ -226,7 +226,7 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
                     ),
                   ]),
                 ),
-                const SizedBox(height: 12),
+                AppTheme.gapHeightMedium,
                 TextField(
                   controller: notesCtrl,
                   maxLines: 2,
@@ -271,70 +271,70 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
         backgroundColor: AppTheme.scaffoldBackground,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: AppTheme.paddingAllLarge,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (widget.task.itemType == 0)
               Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppTheme.primaryGold)),
+                padding: AppTheme.paddingAllLarge,
+                decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: AppTheme.borderRadiusMedium, border: Border.all(color: AppTheme.primaryGold)),
                 child: Row(
                   children: [
                     const Icon(Icons.home, color: AppTheme.primaryGold),
-                    const SizedBox(width: 10),
+                    AppTheme.gapWidthSmall,
                     Expanded(
-                      child: Text('رقم العقار: ${widget.task.targetPropertyNum.isEmpty ? "غير محدد" : widget.task.targetPropertyNum} | المنطقة العقارية: ${widget.task.targetZone.isEmpty ? "غير محددة" : widget.task.targetZone}', style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold, fontSize: 13)),
+                      child: Text('رقم العقار: ${widget.task.targetPropertyNum.isEmpty ? "غير محدد" : widget.task.targetPropertyNum} | المنطقة العقارية: ${widget.task.targetZone.isEmpty ? "غير محددة" : widget.task.targetZone}', style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeBody)),
                     ),
                   ],
                 ),
               ),
-            const SizedBox(height: 16),
-            const Text('📋 قائمة الوثائق الرسمية المطلوب استخراجها ميدانياً:', style: TextStyle(color: AppTheme.primaryGold, fontSize: 16, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
+            AppTheme.gapHeightLarge,
+            const Text('📋 قائمة الوثائق الرسمية المطلوب استخراجها ميدانياً:', style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSubtitle, fontWeight: FontWeight.bold)),
+            AppTheme.gapHeightMedium,
             ..._items.map((item) {
               final isDone = item.status == 2;
               return Container(
                 margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(14),
+                padding: AppTheme.paddingAllLarge,
                 decoration: BoxDecoration(
-                  color: isDone ? Colors.green.withOpacity(0.1) : AppTheme.surfaceBlack,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: isDone ? Colors.green : Colors.white12),
+                  color: isDone ? AppTheme.successGreen.withOpacity(0.1) : AppTheme.surfaceBlack,
+                  borderRadius: AppTheme.borderRadiusLarge,
+                  border: Border.all(color: isDone ? AppTheme.successGreen : Colors.white12),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Icon(isDone ? Icons.check_circle : Icons.radio_button_unchecked, color: isDone ? Colors.green : AppTheme.primaryGold),
-                        const SizedBox(width: 10),
+                        Icon(isDone ? Icons.check_circle : Icons.radio_button_unchecked, color: isDone ? AppTheme.successGreen : AppTheme.primaryGold),
+                        AppTheme.gapWidthSmall,
                         Expanded(child: Text(item.title, style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold, fontSize: 15))),
                         IconButton(icon: const Icon(Icons.edit, color: AppTheme.primaryGold), onPressed: () => _showEditDialog(item)),
                       ],
                     ),
                     const SizedBox(height: 6),
-                    Text('المطلوب من المحامي: ${item.requiredCopies} نسخة', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 12, fontWeight: FontWeight.w600)),
+                    Text('المطلوب من المحامي: ${item.requiredCopies} نسخة', style: const TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSmall, fontWeight: FontWeight.w600)),
                     if (item.lawyerInstructions.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text('تعليمات المحامي: ${item.lawyerInstructions}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12, height: 1.35)),
+                      AppTheme.gapHeightXS,
+                      Text('تعليمات المحامي: ${item.lawyerInstructions}', style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall, height: 1.35)),
                     ],
                     if (item.inputValue.isNotEmpty) ...[
                       const SizedBox(height: 6),
-                      Text('البيانات المُدخلة: ${item.inputValue}', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 13, fontWeight: FontWeight.w600)),
+                      Text('البيانات المُدخلة: ${item.inputValue}', style: const TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeBody, fontWeight: FontWeight.w600)),
                     ],
                     if (item.revisionNotes.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text('طلب إعادة من المحامي: ${item.revisionNotes}', style: const TextStyle(color: AppTheme.errorRed, fontSize: 12, height: 1.35)),
+                      AppTheme.gapHeightXS,
+                      Text('طلب إعادة من المحامي: ${item.revisionNotes}', style: const TextStyle(color: AppTheme.errorRed, fontSize: AppTheme.fontSizeSmall, height: 1.35)),
                     ],
                     if (item.notes.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text('ملاحظات: ${item.notes}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                      AppTheme.gapHeightXS,
+                      Text('ملاحظات: ${item.notes}', style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
                     ],
                     if (item.attachmentSignedUrl.isNotEmpty || item.attachmentUrl.startsWith('http')) ...[
-                      const SizedBox(height: 8),
+                      AppTheme.gapHeightSmall,
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: AppTheme.borderRadiusMedium,
                         child: Image.network(
                           item.attachmentSignedUrl.isNotEmpty ? item.attachmentSignedUrl : item.attachmentUrl,
                           height: 120,
@@ -343,26 +343,26 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
                         ),
                       ),
                     ],
-                    const SizedBox(height: 12),
+                    AppTheme.gapHeightMedium,
                     Row(
                       children: [
                         Expanded(
                           child: ElevatedButton.icon(
                             onPressed: isDone ? null : () => _showEditDialog(item, forceDone: true),
                             icon: const Icon(Icons.check_circle_outline, size: 16),
-                            label: const Text('تم الاستخراج ✔️', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                            label: const Text('تم الاستخراج ✔️', style: TextStyle(fontSize: AppTheme.fontSizeSmall, fontWeight: FontWeight.bold)),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
+                              backgroundColor: AppTheme.successGreen,
                               padding: const EdgeInsets.symmetric(vertical: 8),
                             ),
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        AppTheme.gapWidthSmall,
                         Expanded(
                           child: OutlinedButton.icon(
                             onPressed: () => _showEditDialog(item),
                             icon: const Icon(Icons.edit_note, size: 16, color: AppTheme.primaryGold),
-                            label: const Text('البيانات والمرفق ✏️', style: TextStyle(color: AppTheme.primaryGold, fontSize: 12)),
+                            label: const Text('البيانات والمرفق ✏️', style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSmall)),
                             style: OutlinedButton.styleFrom(
                               side: const BorderSide(color: AppTheme.primaryGold),
                               padding: const EdgeInsets.symmetric(vertical: 8),
@@ -375,14 +375,14 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
                 ),
               );
             }).toList(),
-            const SizedBox(height: 8),
+            AppTheme.gapHeightSmall,
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(14),
+              padding: AppTheme.paddingAllLarge,
               decoration: BoxDecoration(
-                color: _taskStatus >= 2 ? Colors.green.withOpacity(0.1) : AppTheme.surfaceBlack,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: _taskStatus >= 2 ? Colors.green : AppTheme.primaryGold.withOpacity(0.35)),
+                color: _taskStatus >= 2 ? AppTheme.successGreen.withOpacity(0.1) : AppTheme.surfaceBlack,
+                borderRadius: AppTheme.borderRadiusLarge,
+                border: Border.all(color: _taskStatus >= 2 ? AppTheme.successGreen : AppTheme.primaryGold.withOpacity(0.35)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -396,13 +396,13 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
                                 ? 'كل البنود مكتملة — يمكنك الآن إتمام المهمة وإشعار المحامي'
                                 : 'أكمل كل البنود أولاً حتى يظهر زر إتمام المهمة',
                     style: TextStyle(
-                      color: _taskStatus >= 2 || _allItemsDone ? Colors.green : AppTheme.textGrey,
+                      color: _taskStatus >= 2 || _allItemsDone ? AppTheme.successGreen : AppTheme.textGrey,
                       fontWeight: FontWeight.bold,
-                      fontSize: 13,
+                      fontSize: AppTheme.fontSizeBody,
                     ),
                   ),
                   if (_taskStatus < 2) ...[
-                    const SizedBox(height: 12),
+                    AppTheme.gapHeightMedium,
                     ElevatedButton.icon(
                       onPressed: (!_allItemsDone || _completingTask) ? null : _completeTask,
                       icon: _completingTask
@@ -412,7 +412,7 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
                         _completingTask ? 'جاري الإرسال...' : 'إتمام المهمة وإشعار المحامي',
                         style: const TextStyle(color: AppTheme.deepBlack, fontWeight: FontWeight.bold),
                       ),
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                      style: ElevatedButton.styleFrom(backgroundColor: AppTheme.successGreen),
                     ),
                   ],
                 ],

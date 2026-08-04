@@ -58,42 +58,42 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               color: AppTheme.primaryGold,
               onRefresh: _load,
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: AppTheme.paddingAllLarge,
                 children: [
                   _section('👥 المستخدمون'),
                   Row(
                     children: [
                       Expanded(child: _mini('الإجمالي', '${_i('totalUsers')}', Icons.people)),
-                      const SizedBox(width: 12),
+                      AppTheme.gapWidthMedium,
                       Expanded(child: _mini('الوسطاء', '${_i('brokers')}', Icons.handshake)),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  _bar('نشط', _i('activeUsers'), _i('totalUsers'), Colors.green),
+                  AppTheme.gapHeightMedium,
+                  _bar('نشط', _i('activeUsers'), _i('totalUsers'), AppTheme.successGreen),
                   _bar('محظور', _i('bannedUsers'), _i('totalUsers'), AppTheme.errorRed),
 
-                  const SizedBox(height: 24),
+                  AppTheme.gapHeightXXL,
                   _section('🏠 العروض'),
                   Row(
                     children: [
                       Expanded(child: _mini('الإجمالي', '${_i('totalOffers')}', Icons.home_work)),
-                      const SizedBox(width: 12),
+                      AppTheme.gapWidthMedium,
                       Expanded(child: _mini('معلّق', '${_i('pendingOffers')}', Icons.pending_actions)),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  _bar('منشور', _i('publishedOffers'), _i('totalOffers'), Colors.green),
-                  _bar('معلّق', _i('pendingOffers'), _i('totalOffers'), Colors.orange),
+                  AppTheme.gapHeightMedium,
+                  _bar('منشور', _i('publishedOffers'), _i('totalOffers'), AppTheme.successGreen),
+                  _bar('معلّق', _i('pendingOffers'), _i('totalOffers'), AppTheme.warningOrange),
 
-                  const SizedBox(height: 24),
+                  AppTheme.gapHeightXXL,
                   _section('📅 المواعيد'),
                   _bar('مكتمل', _i('completedAppointments'), _i('totalAppointments'),
                       AppTheme.primaryGold),
 
-                  const SizedBox(height: 24),
+                  AppTheme.gapHeightXXL,
                   _section('🤝 الصفقات والإيرادات'),
-                  _bar('مكتملة', _i('completedDeals'), _i('totalDeals'), Colors.green),
-                  const SizedBox(height: 12),
+                  _bar('مكتملة', _i('completedDeals'), _i('totalDeals'), AppTheme.successGreen),
+                  AppTheme.gapHeightMedium,
                   _bigMetric('إجمالي عمولات المكتب',
                       '${_d('totalCommission').toStringAsFixed(0)} \$', gold: true),
                   const SizedBox(height: 30),
@@ -108,29 +108,29 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         child: Text(t,
             style: const TextStyle(
                 color: AppTheme.primaryGold,
-                fontSize: 16,
+                fontSize: AppTheme.fontSizeSubtitle,
                 fontWeight: FontWeight.bold)),
       );
 
   Widget _mini(String label, String value, IconData icon) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.2)),
       ),
       child: Column(
         children: [
           Icon(icon, color: AppTheme.primaryGold, size: 26),
-          const SizedBox(height: 8),
+          AppTheme.gapHeightSmall,
           Text(value,
               style: const TextStyle(
                   color: AppTheme.textWhite,
                   fontSize: 22,
                   fontWeight: FontWeight.bold)),
           Text(label,
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
         ],
       ),
     );
@@ -147,14 +147,14 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(label,
-                  style: const TextStyle(color: AppTheme.textWhite, fontSize: 13)),
+                  style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeBody)),
               Text('$value (${(pct * 100).toStringAsFixed(0)}%)',
-                  style: TextStyle(color: color, fontSize: 12)),
+                  style: TextStyle(color: color, fontSize: AppTheme.fontSizeSmall)),
             ],
           ),
           const SizedBox(height: 6),
           ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: AppTheme.borderRadiusSmall,
             child: LinearProgressIndicator(
               value: pct,
               minHeight: 10,
@@ -173,7 +173,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(
             color: gold ? AppTheme.primaryGold.withOpacity(0.5) : Colors.white12),
       ),
@@ -181,12 +181,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label,
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody)),
           const SizedBox(height: 6),
           Text(value,
               style: TextStyle(
                   color: gold ? AppTheme.primaryGold : AppTheme.textWhite,
-                  fontSize: 24,
+                  fontSize: AppTheme.fontSizeLarge,
                   fontWeight: FontWeight.bold)),
         ],
       ),

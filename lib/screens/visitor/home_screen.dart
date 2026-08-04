@@ -101,7 +101,7 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: AppTheme.scaffoldBackground,
         elevation: 0,
         title: const Text('المكتب العقاري الالكتروني',
-            style: TextStyle(color: AppTheme.primaryGold, fontSize: 16)),
+            style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSubtitle)),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_none, color: AppTheme.textGrey),
@@ -149,14 +149,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     filled: true,
                     fillColor: AppTheme.surfaceBlack,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: AppTheme.borderRadiusMedium,
                       borderSide: BorderSide.none,
                     ),
                   ),
                   onChanged: (_) => setState(() {}),
                 ),
               ),
-              const SizedBox(width: 8),
+              AppTheme.gapWidthSmall,
               OfferFiltersButton(count: _advF.activeCount, onTap: _openFilters),
             ],
           ),
@@ -171,16 +171,16 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               _chip('الكل',    _filterType == null && _filterTrx == null,
                   () { setState(() { _filterType = null; _filterTrx = null; }); _doSearch(); }),
-              const SizedBox(width: 8),
+              AppTheme.gapWidthSmall,
               _chip('🏠 عقار', _filterType == 0,
                   () { setState(() => _filterType = _filterType == 0 ? null : 0); _doSearch(); }),
-              const SizedBox(width: 8),
+              AppTheme.gapWidthSmall,
               _chip('🚗 سيارة', _filterType == 1,
                   () { setState(() => _filterType = _filterType == 1 ? null : 1); _doSearch(); }),
-              const SizedBox(width: 8),
+              AppTheme.gapWidthSmall,
               _chip('بيع',    _filterTrx == 0,
                   () { setState(() => _filterTrx = _filterTrx == 0 ? null : 0); _doSearch(); }),
-              const SizedBox(width: 8),
+              AppTheme.gapWidthSmall,
               _chip('إيجار',  _filterTrx == 1,
                   () { setState(() => _filterTrx = _filterTrx == 1 ? null : 1); _doSearch(); }),
             ],
@@ -194,7 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Text(
               '${offers.length} نتيجة',
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 13),
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody),
             ),
           ),
 
@@ -210,15 +210,15 @@ class _HomeScreenState extends State<HomeScreen> {
                           Icon(Icons.home_work_outlined,
                               size: 80,
                               color: AppTheme.textGrey.withOpacity(0.3)),
-                          const SizedBox(height: 16),
+                          AppTheme.gapHeightLarge,
                           Text(
                             _isSearching
                                 ? 'لا توجد نتائج مطابقة'
                                 : 'لا توجد عروض متاحة حالياً',
                             style: const TextStyle(
-                                color: AppTheme.textGrey, fontSize: 16)),
+                                color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSubtitle)),
                           if (_isSearching) ...[
-                            const SizedBox(height: 8),
+                            AppTheme.gapHeightSmall,
                             TextButton(
                               onPressed: _clearSearch,
                               child: const Text('إلغاء الفلتر',
@@ -289,7 +289,7 @@ class _HomeScreenState extends State<HomeScreen> {
           style: TextStyle(
             color: selected ? AppTheme.deepBlack : AppTheme.textWhite,
             fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-            fontSize: 12,
+            fontSize: AppTheme.fontSizeSmall,
           )),
       selected: selected,
       selectedColor: AppTheme.primaryGold,

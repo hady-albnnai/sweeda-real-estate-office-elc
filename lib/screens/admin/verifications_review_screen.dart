@@ -50,7 +50,7 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
     final adminUid = context.read<AuthProvider>().userModel?.uid ?? '';
     if (adminUid.isEmpty) {
       AppTheme.showSnackBar(context,
-        const SnackBar(content: Text('❌ لا يمكن تحديد هوية المدير'), backgroundColor: Colors.red),
+        const SnackBar(content: Text('❌ لا يمكن تحديد هوية المدير'), backgroundColor: AppTheme.errorRed),
       );
       return;
     }
@@ -59,13 +59,13 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
     if (!mounted) return;
     if (ok) {
       AppTheme.showSnackBar(context,
-        SnackBar(content: Text('✅ تم اعتماد توثيق $name'), backgroundColor: Colors.green),
+        SnackBar(content: Text('✅ تم اعتماد توثيق $name'), backgroundColor: AppTheme.successGreen),
       );
       _load();
     } else {
       final error = context.read<AdminProvider>().error ?? 'خطأ غير معروف';
       AppTheme.showSnackBar(context,
-        SnackBar(content: Text('❌ فشل الاعتماد: $error'), backgroundColor: Colors.red, duration: const Duration(seconds: 5)),
+        SnackBar(content: Text('❌ فشل الاعتماد: $error'), backgroundColor: AppTheme.errorRed, duration: const Duration(seconds: 5)),
       );
     }
   }
@@ -86,7 +86,7 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
               'سيُعاد $name إلى حالة "غير موثق" وسيصله إشعار. اذكر سبب الرفض (اختياري):',
               style: const TextStyle(color: AppTheme.textGrey),
             ),
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             TextField(
               controller: reasonCtrl,
               maxLines: 2,
@@ -107,7 +107,7 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorRed),
             child: const Text('رفض', style: TextStyle(color: Colors.white)),
           ),
         ],
@@ -122,7 +122,7 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
     if (!mounted) return;
     AppTheme.showSnackBar(context, SnackBar(
       content: Text(ok ? '🚫 تم رفض توثيق $name' : '❌ فشل الرفض'),
-      backgroundColor: ok ? Colors.orange : Colors.red,
+      backgroundColor: ok ? AppTheme.warningOrange : AppTheme.errorRed,
     ));
     if (ok) _load();
   }
@@ -220,11 +220,11 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
                     children: [
                       const Icon(Icons.verified_user_outlined,
                           color: AppTheme.textGrey, size: 80),
-                      const SizedBox(height: 16),
+                      AppTheme.gapHeightLarge,
                       const Text('لا توجد طلبات توثيق قيد المراجعة',
                           style: TextStyle(
-                              color: AppTheme.textGrey, fontSize: 16)),
-                      const SizedBox(height: 8),
+                              color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSubtitle)),
+                      AppTheme.gapHeightSmall,
                       TextButton.icon(
                         onPressed: _load,
                         icon: const Icon(Icons.refresh,
@@ -239,7 +239,7 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
                   onRefresh: _load,
                   color: AppTheme.primaryGold,
                   child: ListView.builder(
-                    padding: const EdgeInsets.all(12),
+                    padding: AppTheme.paddingAllMedium,
                     itemCount: _pending.length,
                     itemBuilder: (_, i) => _buildCard(_pending[i]),
                   ),
@@ -282,10 +282,10 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6),
-      padding: const EdgeInsets.all(14),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppTheme.borderRadiusMedium,
         border: Border.all(
             color: AppTheme.primaryGold.withOpacity(0.3), width: 1),
       ),
@@ -308,17 +308,17 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
                   isBroker ? 'وسيط' : (role >= UserRole.minAdmin ? 'موظف' : 'مستخدم'),
                   style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 11,
+                      fontSize: AppTheme.fontSizeCaption,
                       fontWeight: FontWeight.bold),
                 ),
               ),
-              const SizedBox(width: 8),
+              AppTheme.gapWidthSmall,
               Expanded(
                 child: Text(
                   name,
                   style: const TextStyle(
                       color: AppTheme.textWhite,
-                      fontSize: 16,
+                      fontSize: AppTheme.fontSizeSubtitle,
                       fontWeight: FontWeight.bold),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -326,16 +326,16 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
             ],
           ),
           if (isBroker && brkNm.isNotEmpty) ...[
-            const SizedBox(height: 4),
+            AppTheme.gapHeightXS,
             Text('🏢 $brkNm',
                 style: const TextStyle(
-                    color: AppTheme.primaryGold, fontSize: 13)),
+                    color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeBody)),
           ],
-          const SizedBox(height: 8),
+          AppTheme.gapHeightSmall,
           // ── المعلومات ──
           _infoRow(Icons.phone, 'الهاتف', phone),
           _infoRow(Icons.badge, 'الرقم الوطني', sid.isEmpty ? '—' : sid),
-          const SizedBox(height: 10),
+          AppTheme.gapHeightSmall,
           // ── صور الهوية (أمامي + خلفي) ──
           if (idImages.isNotEmpty) ...[
             // 🔒 Phase 9: للأمان، لا نُحمّل صور الهوية تلقائياً.
@@ -343,7 +343,7 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
             Row(
               children: [
                 for (var i = 0; i < idImages.length; i++) ...[
-                  if (i > 0) const SizedBox(width: 8),
+                  if (i > 0) AppTheme.gapWidthSmall,
                   Expanded(
                     child: InkWell(
                       onTap: () => _showIdImage(idImages[i]),
@@ -351,7 +351,7 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
                         height: 90,
                         decoration: BoxDecoration(
                           color: AppTheme.deepBlack,
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: AppTheme.borderRadiusSmall,
                           border: Border.all(color: AppTheme.primaryGold),
                         ),
                         child: Column(
@@ -359,14 +359,14 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
                           children: [
                             const Icon(Icons.badge_outlined,
                                 color: AppTheme.primaryGold, size: 28),
-                            const SizedBox(height: 4),
+                            AppTheme.gapHeightXS,
                             Text(
                               idImages.length == 2
                                   ? (i == 0 ? 'الوجه الأمامي' : 'الوجه الخلفي')
                                   : 'صورة الهوية',
                               style: const TextStyle(
                                   color: AppTheme.primaryGold,
-                                  fontSize: 11,
+                                  fontSize: AppTheme.fontSizeCaption,
                                   fontWeight: FontWeight.w600),
                             ),
                             const Text('(رابط مؤقت 60 ثانية)',
@@ -385,33 +385,33 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
               padding:
                   const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.red),
+                color: AppTheme.errorRed.withOpacity(0.1),
+                borderRadius: AppTheme.borderRadiusSmall,
+                border: Border.all(color: AppTheme.errorRed),
               ),
               child: const Row(children: [
-                Icon(Icons.warning, color: Colors.red, size: 18),
+                Icon(Icons.warning, color: AppTheme.errorRed, size: 18),
                 SizedBox(width: 6),
                 Text('⚠️ لا توجد صورة هوية مرفوعة',
-                    style: TextStyle(color: Colors.red, fontSize: 13)),
+                    style: TextStyle(color: AppTheme.errorRed, fontSize: AppTheme.fontSizeBody)),
               ]),
             ),
-          const SizedBox(height: 12),
+          AppTheme.gapHeightMedium,
           // ── الأزرار ──
           Row(children: [
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: () => _reject(id, name),
-                icon: const Icon(Icons.close, color: Colors.red),
+                icon: const Icon(Icons.close, color: AppTheme.errorRed),
                 label: const Text('رفض',
-                    style: TextStyle(color: Colors.red)),
+                    style: TextStyle(color: AppTheme.errorRed)),
                 style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Colors.red),
+                  side: const BorderSide(color: AppTheme.errorRed),
                   padding: const EdgeInsets.symmetric(vertical: 10),
                 ),
               ),
             ),
-            const SizedBox(width: 8),
+            AppTheme.gapWidthSmall,
             Expanded(
               child: ElevatedButton.icon(
                 onPressed: img.isEmpty ? null : () => _approve(id, name),
@@ -419,7 +419,7 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
                 label: const Text('اعتماد',
                     style: TextStyle(color: Colors.white)),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
+                  backgroundColor: AppTheme.successGreen,
                   padding: const EdgeInsets.symmetric(vertical: 10),
                 ),
               ),
@@ -437,11 +437,11 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
         Icon(icon, color: AppTheme.primaryGold, size: 16),
         const SizedBox(width: 6),
         Text('$label: ',
-            style: const TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+            style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody)),
         Expanded(
           child: Text(value,
               style: const TextStyle(
-                  color: AppTheme.textWhite, fontSize: 13),
+                  color: AppTheme.textWhite, fontSize: AppTheme.fontSizeBody),
               overflow: TextOverflow.ellipsis),
         ),
       ]),

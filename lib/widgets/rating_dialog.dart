@@ -101,7 +101,7 @@ class _RatingDialogState extends State<RatingDialog> {
           content: Text(_stars == 5
               ? '⭐ شكراً! تم منح الطرف الآخر 200 نقطة مكافأة'
               : '✅ تم إرسال تقييمك'),
-          backgroundColor: Colors.green,
+          backgroundColor: AppTheme.successGreen,
         ),
       );
     } catch (e) {
@@ -143,16 +143,16 @@ class _RatingDialogState extends State<RatingDialog> {
         children: [
           const Row(children: [
             Icon(Icons.star_rate, color: AppTheme.primaryGold),
-            SizedBox(width: 8),
+            AppTheme.gapWidthSmall,
             Text('تقييم تجربتك',
                 style: TextStyle(color: AppTheme.textWhite)),
           ]),
-          const SizedBox(height: 4),
+          AppTheme.gapHeightXS,
           Text(
             widget.refLabel != null
                 ? '${widget.refLabel} • مع: ${widget.targetName}'
                 : 'مع: ${widget.targetName}',
-            style: const TextStyle(color: AppTheme.textGrey, fontSize: 12),
+            style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall),
           ),
         ],
       ),
@@ -177,7 +177,7 @@ class _RatingDialogState extends State<RatingDialog> {
               );
             }),
           ),
-          const SizedBox(height: 4),
+          AppTheme.gapHeightXS,
           Center(
             child: Text(
               _starLabel(_stars),
@@ -185,11 +185,11 @@ class _RatingDialogState extends State<RatingDialog> {
                   color: _stars > 0
                       ? AppTheme.primaryGold
                       : AppTheme.textGrey,
-                  fontSize: 13,
+                  fontSize: AppTheme.fontSizeBody,
                   fontWeight: FontWeight.w500),
             ),
           ),
-          const SizedBox(height: 12),
+          AppTheme.gapHeightMedium,
           TextField(
             controller: _commentCtrl,
             maxLines: 3,
@@ -200,7 +200,7 @@ class _RatingDialogState extends State<RatingDialog> {
               hintText: 'تعليقك (اختياري)',
               hintStyle: TextStyle(color: AppTheme.textGrey),
               border: OutlineInputBorder(),
-              counterStyle: TextStyle(color: AppTheme.textGrey, fontSize: 11),
+              counterStyle: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption),
             ),
           ),
         ],

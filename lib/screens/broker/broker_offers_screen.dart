@@ -67,9 +67,9 @@ class _BrokerOffersScreenState extends State<BrokerOffersScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               children: [
                 _chip('الكل', 0),
-                const SizedBox(width: 8),
+                AppTheme.gapWidthSmall,
                 _chip('منشور', 1),
-                const SizedBox(width: 8),
+                AppTheme.gapWidthSmall,
                 _chip('قيد المراجعة', 2),
               ],
             ),
@@ -84,7 +84,7 @@ class _BrokerOffersScreenState extends State<BrokerOffersScreen> {
                         color: AppTheme.primaryGold,
                         onRefresh: () async => _load(),
                         child: ListView.builder(
-                          padding: const EdgeInsets.all(12),
+                          padding: AppTheme.paddingAllMedium,
                           itemCount: offers.length,
                           itemBuilder: (_, i) => _offerTile(offers[i]),
                         ),
@@ -101,7 +101,7 @@ class _BrokerOffersScreenState extends State<BrokerOffersScreen> {
           children: [
             Icon(Icons.home_work,
                 size: 72, color: AppTheme.textGrey.withOpacity(0.3)),
-            const SizedBox(height: 16),
+            AppTheme.gapHeightLarge,
             const Text('لا توجد عروض مرتبطة بك',
                 style: TextStyle(color: AppTheme.textGrey, fontSize: 15)),
           ],
@@ -130,13 +130,13 @@ class _BrokerOffersScreenState extends State<BrokerOffersScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.15)),
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.all(10),
+        contentPadding: AppTheme.paddingAllMedium,
         leading: ClipRRect(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: AppTheme.borderRadiusMedium,
           child: o.imgs.isNotEmpty
               ? Image.network(o.imgs[0],
                   width: 60,
@@ -153,27 +153,27 @@ class _BrokerOffersScreenState extends State<BrokerOffersScreen> {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 4),
+            AppTheme.gapHeightXS,
             Text('${o.prc.toStringAsFixed(0)} ${o.cur == 0 ? '\$' : 'ل.س'}',
-                style: const TextStyle(color: AppTheme.primaryGold, fontSize: 13)),
-            const SizedBox(height: 4),
+                style: const TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeBody)),
+            AppTheme.gapHeightXS,
             Row(
               children: [
                 _statusBadge(o.sts),
-                const SizedBox(width: 8),
+                AppTheme.gapWidthSmall,
                 Icon(Icons.visibility,
                     size: 13, color: AppTheme.textGrey.withOpacity(0.7)),
-                const SizedBox(width: 2),
+                AppTheme.gapWidthXXS,
                 Text('${o.vws}',
                     style: const TextStyle(
-                        color: AppTheme.textGrey, fontSize: 11)),
-                const SizedBox(width: 8),
+                        color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption)),
+                AppTheme.gapWidthSmall,
                 Icon(Icons.favorite,
                     size: 13, color: AppTheme.textGrey.withOpacity(0.7)),
-                const SizedBox(width: 2),
+                AppTheme.gapWidthXXS,
                 Text('${o.fvs}',
                     style: const TextStyle(
-                        color: AppTheme.textGrey, fontSize: 11)),
+                        color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption)),
               ],
             ),
           ],
@@ -199,7 +199,7 @@ class _BrokerOffersScreenState extends State<BrokerOffersScreen> {
                     value: 'edit',
                     child: Row(children: [
                       Icon(Icons.edit, color: AppTheme.primaryGold, size: 18),
-                      SizedBox(width: 8),
+                      AppTheme.gapWidthSmall,
                       Text('تعديل',
                           style: TextStyle(color: AppTheme.textWhite)),
                     ]),
@@ -207,9 +207,9 @@ class _BrokerOffersScreenState extends State<BrokerOffersScreen> {
                   const PopupMenuItem(
                     value: 'delete',
                     child: Row(children: [
-                      Icon(Icons.delete_outline, color: Colors.red, size: 18),
-                      SizedBox(width: 8),
-                      Text('حذف', style: TextStyle(color: Colors.red)),
+                      Icon(Icons.delete_outline, color: AppTheme.errorRed, size: 18),
+                      AppTheme.gapWidthSmall,
+                      Text('حذف', style: TextStyle(color: AppTheme.errorRed)),
                     ]),
                   ),
                 ],
@@ -236,7 +236,7 @@ class _BrokerOffersScreenState extends State<BrokerOffersScreen> {
                   style: TextStyle(color: AppTheme.textGrey))),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorRed),
             child:
                 const Text('حذف', style: TextStyle(color: Colors.white)),
           ),
@@ -286,11 +286,11 @@ class _BrokerOffersScreenState extends State<BrokerOffersScreen> {
         break;
       case 1:
         label = 'قيد المراجعة';
-        color = Colors.orange;
+        color = AppTheme.warningOrange;
         break;
       case 2:
         label = 'منشور';
-        color = Colors.green;
+        color = AppTheme.successGreen;
         break;
       case 3:
         label = 'مرفوض';
@@ -319,7 +319,7 @@ class _BrokerOffersScreenState extends State<BrokerOffersScreen> {
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: color.withOpacity(0.5)),
       ),
-      child: Text(label, style: TextStyle(color: color, fontSize: 10)),
+      child: Text(label, style: TextStyle(color: color, fontSize: AppTheme.fontSizeXS)),
     );
   }
 }

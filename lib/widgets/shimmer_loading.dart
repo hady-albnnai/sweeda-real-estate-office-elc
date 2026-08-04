@@ -29,7 +29,7 @@ class ShimmerLoading {
         margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 5),
         decoration: BoxDecoration(
           color: AppTheme.surfaceBlack,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: AppTheme.borderRadiusXL,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -48,9 +48,9 @@ class ShimmerLoading {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _box(w: 180, h: 18),
-                  const SizedBox(height: 10),
+                  AppTheme.gapHeightSmall,
                   _box(w: 120, h: 14),
-                  const SizedBox(height: 14),
+                  AppTheme.gapHeightMedium,
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -83,10 +83,10 @@ class ShimmerLoading {
     return _wrap(
       Container(
         margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(14),
+        padding: AppTheme.paddingAllLarge,
         decoration: BoxDecoration(
           color: AppTheme.surfaceBlack,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: AppTheme.borderRadiusLarge,
         ),
         child: Row(
           children: [
@@ -98,13 +98,13 @@ class ShimmerLoading {
                 shape: BoxShape.circle,
               ),
             ),
-            const SizedBox(width: 12),
+            AppTheme.gapWidthMedium,
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _box(w: double.infinity, h: 14),
-                  const SizedBox(height: 8),
+                  AppTheme.gapHeightSmall,
                   _box(w: 140, h: 12),
                 ],
               ),
@@ -118,7 +118,7 @@ class ShimmerLoading {
   /// قائمة عناصر وهمية
   static Widget tileList({int count = 6}) {
     return ListView.builder(
-      padding: const EdgeInsets.all(12),
+      padding: AppTheme.paddingAllMedium,
       itemCount: count,
       physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
@@ -136,13 +136,13 @@ class ShimmerLoading {
         mainAxisSpacing: 12,
         crossAxisSpacing: 12,
         childAspectRatio: 1.5,
-        padding: const EdgeInsets.all(16),
+        padding: AppTheme.paddingAllLarge,
         children: List.generate(
           count,
           (_) => Container(
             decoration: BoxDecoration(
               color: AppTheme.surfaceBlack,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: AppTheme.borderRadiusLarge,
             ),
           ),
         ),

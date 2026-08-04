@@ -30,10 +30,10 @@ class _RequestsManagementScreenState extends State<RequestsManagementScreen> {
     4: 'منتهي الصلاحية',
   };
   static const _statusColors = {
-    0: Colors.green,
-    1: Colors.orange,
-    2: Colors.blue,
-    3: Colors.grey,
+    0: AppTheme.successGreen,
+    1: AppTheme.warningOrange,
+    2: AppTheme.infoBlue,
+    3: AppTheme.textGrey,
     4: Colors.deepOrange,
   };
 
@@ -104,7 +104,7 @@ class _RequestsManagementScreenState extends State<RequestsManagementScreen> {
               filled: true,
               fillColor: AppTheme.surfaceBlack,
               border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: AppTheme.borderRadiusMedium,
                   borderSide: BorderSide.none),
             ),
           ),
@@ -139,7 +139,7 @@ class _RequestsManagementScreenState extends State<RequestsManagementScreen> {
                       color: AppTheme.primaryGold,
                       onRefresh: _load,
                       child: ListView.builder(
-                        padding: const EdgeInsets.all(12),
+                        padding: AppTheme.paddingAllMedium,
                         itemCount: _filtered.length,
                         itemBuilder: (_, i) => _card(_filtered[i]),
                       ),
@@ -175,17 +175,17 @@ class _RequestsManagementScreenState extends State<RequestsManagementScreen> {
   }
 
   Widget _card(RequestModel r) {
-    final stsColor = _statusColors[r.sts] ?? Colors.grey;
+    final stsColor = _statusColors[r.sts] ?? AppTheme.textGrey;
     final stsLabel = _statusLabels[r.sts] ?? '—';
     final typeLabel = r.typ == 0 ? 'شراء' : 'استئجار';
     final elmLabel  = r.elm == 0 ? 'عقار' : 'سيارة';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(
             color: AppTheme.primaryGold.withOpacity(0.15)),
       ),
@@ -197,28 +197,28 @@ class _RequestsManagementScreenState extends State<RequestsManagementScreen> {
             color: AppTheme.primaryGold,
             size: 20,
           ),
-          const SizedBox(width: 8),
+          AppTheme.gapWidthSmall,
           Expanded(
             child: Text(
               '$typeLabel $elmLabel',
               style: const TextStyle(
                   color: AppTheme.textWhite,
                   fontWeight: FontWeight.bold,
-                  fontSize: 14),
+                  fontSize: AppTheme.fontSizeMedium),
             ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
               color: stsColor.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: AppTheme.borderRadiusSmall,
               border:
                   Border.all(color: stsColor.withOpacity(0.5)),
             ),
             child: Text(stsLabel,
                 style: TextStyle(
                     color: stsColor,
-                    fontSize: 11,
+                    fontSize: AppTheme.fontSizeCaption,
                     fontWeight: FontWeight.bold)),
           ),
         ]),
@@ -240,16 +240,16 @@ class _RequestsManagementScreenState extends State<RequestsManagementScreen> {
           const SizedBox(height: 6),
           Text('ملاحظات: ${r.notes}',
               style: const TextStyle(
-                  color: AppTheme.textGrey, fontSize: 12),
+                  color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall),
               maxLines: 2,
               overflow: TextOverflow.ellipsis),
         ],
 
         if (r.specs.isNotEmpty) ...[
-          const SizedBox(height: 4),
+          AppTheme.gapHeightXS,
           Text(
             'المواصفات: ${(r.specs['details'] ?? r.specs.toString())}',
-            style: const TextStyle(color: AppTheme.textGrey, fontSize: 11),
+            style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
@@ -258,7 +258,7 @@ class _RequestsManagementScreenState extends State<RequestsManagementScreen> {
         const SizedBox(height: 6),
         Text(
           'تاريخ الطلب: ${AppUtils.formatTimestamp(r.tsCrt)}',
-          style: const TextStyle(color: AppTheme.textGrey, fontSize: 11),
+          style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption),
         ),
         if (r.tsEnd != null)
           _infoRow(Icons.hourglass_bottom, 'ينتهي في',
@@ -275,7 +275,7 @@ class _RequestsManagementScreenState extends State<RequestsManagementScreen> {
             _infoRow(Icons.notes, 'ملاحظة الإغلاق', r.closedNote),
         ],
         if (r.isOpen || r.isExpired) ...[
-          const SizedBox(height: 10),
+          AppTheme.gapHeightSmall,
           Row(children: [
             Expanded(
               child: OutlinedButton.icon(
@@ -284,13 +284,13 @@ class _RequestsManagementScreenState extends State<RequestsManagementScreen> {
                 label: const Text('إغلاق/إلغاء', style: TextStyle(color: AppTheme.errorRed)),
               ),
             ),
-            const SizedBox(width: 8),
+            AppTheme.gapWidthSmall,
             Expanded(
               child: ElevatedButton.icon(
                 onPressed: () => _closeRequest(r, 2),
                 icon: const Icon(Icons.check_circle_outline, size: 18),
                 label: const Text('تمت تلبيته'),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                style: ElevatedButton.styleFrom(backgroundColor: AppTheme.successGreen),
               ),
             ),
           ]),
@@ -351,12 +351,12 @@ class _RequestsManagementScreenState extends State<RequestsManagementScreen> {
         const SizedBox(width: 6),
         Text('$label: ',
             style: const TextStyle(
-                color: AppTheme.textGrey, fontSize: 12)),
+                color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
         Expanded(
           child: Text(value,
               style: TextStyle(
                   color: color,
-                  fontSize: 13,
+                  fontSize: AppTheme.fontSizeBody,
                   fontWeight: FontWeight.w500)),
         ),
       ]),

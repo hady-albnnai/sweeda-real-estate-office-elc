@@ -232,7 +232,7 @@ class _SetupIdentityScreenState extends State<SetupIdentityScreen> {
         context,
         const SnackBar(
           content: Text('✅ تم حفظ بيانات الهوية'),
-          backgroundColor: Colors.green,
+          backgroundColor: AppTheme.successGreen,
         ),
       );
       context.pop();
@@ -279,13 +279,13 @@ class _SetupIdentityScreenState extends State<SetupIdentityScreen> {
               if (vrf == 1 || vrf == 2) ...[
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(12),
+                  padding: AppTheme.paddingAllMedium,
                   decoration: BoxDecoration(
-                    color: (vrf == 2 ? Colors.green : Colors.orange)
+                    color: (vrf == 2 ? AppTheme.successGreen : AppTheme.warningOrange)
                         .withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: AppTheme.borderRadiusMedium,
                     border: Border.all(
-                        color: (vrf == 2 ? Colors.green : Colors.orange)
+                        color: (vrf == 2 ? AppTheme.successGreen : AppTheme.warningOrange)
                             .withOpacity(0.45)),
                   ),
                   child: Row(children: [
@@ -293,31 +293,31 @@ class _SetupIdentityScreenState extends State<SetupIdentityScreen> {
                         vrf == 2
                             ? Icons.verified_rounded
                             : Icons.hourglass_top_rounded,
-                        color: vrf == 2 ? Colors.green : Colors.orange,
+                        color: vrf == 2 ? AppTheme.successGreen : AppTheme.warningOrange,
                         size: 20),
-                    const SizedBox(width: 8),
+                    AppTheme.gapWidthSmall,
                     Expanded(
                       child: Text(
                         vrf == 2
                             ? 'حسابك موثق رسمياً ✓'
                             : 'طلبك قيد المراجعة من الإدارة — لا حاجة لتعديل البيانات إلا إذا طُلب منك ذلك.',
                         style: TextStyle(
-                            color: vrf == 2 ? Colors.green : Colors.orange,
-                            fontSize: 12,
+                            color: vrf == 2 ? AppTheme.successGreen : AppTheme.warningOrange,
+                            fontSize: AppTheme.fontSizeSmall,
                             height: 1.5),
                       ),
                     ),
                   ]),
                 ),
-                const SizedBox(height: 16),
+                AppTheme.gapHeightLarge,
               ],
 
               // ─── تنويه إلزامية البيانات (بدل رسالة التنبيه الغامضة) ───
               Container(
-                padding: const EdgeInsets.all(14),
+                padding: AppTheme.paddingAllLarge,
                 decoration: BoxDecoration(
                   color: AppTheme.primaryGold.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: AppTheme.borderRadiusMedium,
                   border:
                       Border.all(color: AppTheme.primaryGold.withOpacity(0.45)),
                 ),
@@ -327,40 +327,40 @@ class _SetupIdentityScreenState extends State<SetupIdentityScreen> {
                     Row(children: [
                       Icon(Icons.verified_user_outlined,
                           color: AppTheme.primaryGold, size: 20),
-                      SizedBox(width: 8),
+                      AppTheme.gapWidthSmall,
                       Expanded(
                         child: Text(
                           'لإكمال توثيق حسابك يلزمك:',
                           style: TextStyle(
                               color: AppTheme.primaryGold,
-                              fontSize: 13,
+                              fontSize: AppTheme.fontSizeBody,
                               fontWeight: FontWeight.bold),
                         ),
                       ),
                     ]),
-                    SizedBox(height: 8),
+                    AppTheme.gapHeightSmall,
                     Text(
                       '١) إدخال الرقم الوطني\n٢) رفع صورة بطاقة الهوية بالوجهين (أمامية + خلفية)',
                       style: TextStyle(
-                          color: AppTheme.textWhite, fontSize: 12, height: 1.6),
+                          color: AppTheme.textWhite, fontSize: AppTheme.fontSizeSmall, height: 1.6),
                     ),
                     SizedBox(height: 6),
                     Text(
                       'بياناتك محمية وتُستخدم للتوثيق فقط ولا تظهر للعامة.',
-                      style: TextStyle(color: AppTheme.textGrey, fontSize: 11),
+                      style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
+              AppTheme.gapHeightXXL,
 
               // ─── الرقم الوطني ───
               const Text('الرقم الوطني *',
                   style: TextStyle(
                       color: AppTheme.primaryGold,
                       fontWeight: FontWeight.bold,
-                      fontSize: 13)),
-              const SizedBox(height: 8),
+                      fontSize: AppTheme.fontSizeBody)),
+              AppTheme.gapHeightSmall,
               TextField(
                 controller: _sidController,
                 keyboardType: TextInputType.number,
@@ -371,7 +371,7 @@ class _SetupIdentityScreenState extends State<SetupIdentityScreen> {
                       Icon(Icons.badge_outlined, color: AppTheme.primaryGold),
                 ),
               ),
-              const SizedBox(height: 20),
+              AppTheme.gapHeightXL,
 
               // ─── صور الهوية بالوجهين ───
               Row(
@@ -381,14 +381,14 @@ class _SetupIdentityScreenState extends State<SetupIdentityScreen> {
                         style: TextStyle(
                             color: AppTheme.primaryGold,
                             fontWeight: FontWeight.bold,
-                            fontSize: 13)),
+                            fontSize: AppTheme.fontSizeBody)),
                   ),
                   if (hasServerImages && _frontImage == null && _backImage == null)
                     const Icon(Icons.check_circle_rounded,
-                        color: Colors.green, size: 20),
+                        color: AppTheme.successGreen, size: 20),
                 ],
               ),
-              const SizedBox(height: 8),
+              AppTheme.gapHeightSmall,
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
@@ -400,18 +400,18 @@ class _SetupIdentityScreenState extends State<SetupIdentityScreen> {
                         ? 'إعادة اختيار الصورتين معاً من المعرض'
                         : 'اختيار الصورتين معاً من المعرض',
                     style: const TextStyle(
-                        color: AppTheme.primaryGold, fontSize: 13),
+                        color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeBody),
                   ),
                   style: OutlinedButton.styleFrom(
                     side:
                         BorderSide(color: AppTheme.primaryGold.withOpacity(0.5)),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
+                        borderRadius: AppTheme.borderRadiusMedium),
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
+              AppTheme.gapHeightSmall,
               Row(
                 children: [
                   Expanded(
@@ -424,7 +424,7 @@ class _SetupIdentityScreenState extends State<SetupIdentityScreen> {
                           : () => setState(() => _frontImage = null),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  AppTheme.gapWidthSmall,
                   Expanded(
                     child: _idSlot(
                       label: 'الوجه الخلفي',
@@ -457,7 +457,7 @@ class _SetupIdentityScreenState extends State<SetupIdentityScreen> {
                       style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
-              const SizedBox(height: 20),
+              AppTheme.gapHeightXL,
             ],
           ),
         ),
@@ -480,10 +480,10 @@ class _SetupIdentityScreenState extends State<SetupIdentityScreen> {
             height: 150,
             decoration: BoxDecoration(
               color: AppTheme.surfaceBlack,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: AppTheme.borderRadiusMedium,
               border: Border.all(
                 color: image != null
-                    ? Colors.green
+                    ? AppTheme.successGreen
                     : AppTheme.primaryGold.withOpacity(0.4),
                 width: 1.5,
               ),
@@ -498,10 +498,10 @@ class _SetupIdentityScreenState extends State<SetupIdentityScreen> {
                         const SizedBox(height: 6),
                         Text(label,
                             style: const TextStyle(
-                                color: AppTheme.textGrey, fontSize: 12)),
+                                color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
                         const Text('اضغط للاختيار',
                             style: TextStyle(
-                                color: AppTheme.textGrey, fontSize: 10)),
+                                color: AppTheme.textGrey, fontSize: AppTheme.fontSizeXS)),
                       ],
                     ),
                   )
@@ -523,14 +523,14 @@ class _SetupIdentityScreenState extends State<SetupIdentityScreen> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 3),
                           decoration: BoxDecoration(
-                            color: Colors.green.withOpacity(0.85),
+                            color: AppTheme.successGreen.withOpacity(0.85),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
                             '$label ✓',
                             textAlign: TextAlign.center,
                             style: const TextStyle(
-                                color: Colors.white, fontSize: 11),
+                                color: Colors.white, fontSize: AppTheme.fontSizeCaption),
                           ),
                         ),
                       ),
@@ -543,9 +543,9 @@ class _SetupIdentityScreenState extends State<SetupIdentityScreen> {
             alignment: Alignment.centerLeft,
             child: TextButton.icon(
               onPressed: onRemove,
-              icon: const Icon(Icons.close, color: Colors.red, size: 14),
+              icon: const Icon(Icons.close, color: AppTheme.errorRed, size: 14),
               label: const Text('إزالة',
-                  style: TextStyle(color: Colors.red, fontSize: 11)),
+                  style: TextStyle(color: AppTheme.errorRed, fontSize: AppTheme.fontSizeCaption)),
             ),
           ),
       ],

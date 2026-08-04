@@ -70,8 +70,8 @@ class _DealsManagementScreenState extends State<DealsManagementScreen> {
         children: [
           // ملخّص العمولات
           Container(
-            margin: const EdgeInsets.all(14),
-            padding: const EdgeInsets.all(16),
+            margin: AppTheme.paddingAllLarge,
+            padding: AppTheme.paddingAllLarge,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
@@ -81,23 +81,23 @@ class _DealsManagementScreenState extends State<DealsManagementScreen> {
                 begin: Alignment.topRight,
                 end: Alignment.bottomLeft,
               ),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: AppTheme.borderRadiusLarge,
               border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
             ),
             child: Row(
               children: [
                 const Icon(Icons.account_balance,
                     color: AppTheme.primaryGold, size: 34),
-                const SizedBox(width: 14),
+                AppTheme.gapWidthMedium,
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text('إجمالي عمولات المكتب',
-                        style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                        style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
                     Text('${_totalCommission.toStringAsFixed(0)} \$',
                         style: const TextStyle(
                             color: AppTheme.primaryGold,
-                            fontSize: 24,
+                            fontSize: AppTheme.fontSizeLarge,
                             fontWeight: FontWeight.bold)),
                   ],
                 ),
@@ -128,7 +128,7 @@ class _DealsManagementScreenState extends State<DealsManagementScreen> {
                         color: AppTheme.primaryGold,
                         onRefresh: _load,
                         child: ListView.builder(
-                          padding: const EdgeInsets.all(12),
+                          padding: AppTheme.paddingAllMedium,
                           itemCount: _filtered.length,
                           itemBuilder: (_, i) => _dealTile(_filtered[i]),
                         ),
@@ -163,10 +163,10 @@ class _DealsManagementScreenState extends State<DealsManagementScreen> {
     final done = d.sts == 1;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.15)),
       ),
       child: Column(
@@ -181,14 +181,14 @@ class _DealsManagementScreenState extends State<DealsManagementScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                 decoration: BoxDecoration(
-                  color: (done ? Colors.green : Colors.orange).withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(8),
+                  color: (done ? AppTheme.successGreen : AppTheme.warningOrange).withOpacity(0.15),
+                  borderRadius: AppTheme.borderRadiusSmall,
                   border: Border.all(
-                      color: (done ? Colors.green : Colors.orange).withOpacity(0.5)),
+                      color: (done ? AppTheme.successGreen : AppTheme.warningOrange).withOpacity(0.5)),
                 ),
                 child: Text(done ? 'مكتملة' : 'نشطة',
                     style: TextStyle(
-                        color: done ? Colors.green : Colors.orange, fontSize: 11)),
+                        color: done ? AppTheme.successGreen : AppTheme.warningOrange, fontSize: AppTheme.fontSizeCaption)),
               ),
             ],
           ),
@@ -234,7 +234,7 @@ class _DealsManagementScreenState extends State<DealsManagementScreen> {
               style: const TextStyle(color: AppTheme.textWhite),
               decoration: const InputDecoration(labelText: 'قيمة العمولة (\$)'),
             ),
-            const SizedBox(height: 12),
+            AppTheme.gapHeightMedium,
             TextField(
               controller: noteCtrl,
               style: const TextStyle(color: AppTheme.textWhite),
@@ -320,7 +320,7 @@ class _DealsManagementScreenState extends State<DealsManagementScreen> {
                           value: o,
                           child: Text(o.ttl,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 13))))
+                              style: const TextStyle(fontSize: AppTheme.fontSizeBody))))
                       .toList(),
                   onChanged: (v) {
                     setDlg(() {
@@ -333,7 +333,7 @@ class _DealsManagementScreenState extends State<DealsManagementScreen> {
                     });
                   },
                 ),
-                const SizedBox(height: 12),
+                AppTheme.gapHeightMedium,
                 TextField(
                   controller: priceCtrl,
                   keyboardType: TextInputType.number,
@@ -342,7 +342,7 @@ class _DealsManagementScreenState extends State<DealsManagementScreen> {
                       labelText: 'السعر النهائي *'),
                   onChanged: (_) => recalcCom(),
                 ),
-                const SizedBox(height: 12),
+                AppTheme.gapHeightMedium,
                 Row(children: [
                   Expanded(
                     child: TextField(
@@ -357,7 +357,7 @@ class _DealsManagementScreenState extends State<DealsManagementScreen> {
                       onChanged: (_) => recalcCom(),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  AppTheme.gapWidthMedium,
                   Expanded(
                     child: TextField(
                       controller: comValCtrl,
@@ -369,7 +369,7 @@ class _DealsManagementScreenState extends State<DealsManagementScreen> {
                     ),
                   ),
                 ]),
-                const SizedBox(height: 12),
+                AppTheme.gapHeightMedium,
                 TextField(
                   controller: noteCtrl,
                   style: const TextStyle(color: AppTheme.textWhite),
@@ -423,14 +423,14 @@ class _DealsManagementScreenState extends State<DealsManagementScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label,
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody)),
           Flexible(
             child: Text(value,
                 textAlign: TextAlign.left,
                 style: TextStyle(
                     color: highlight ? AppTheme.primaryGold : AppTheme.textWhite,
                     fontWeight: highlight ? FontWeight.bold : FontWeight.normal,
-                    fontSize: 13)),
+                    fontSize: AppTheme.fontSizeBody)),
           ),
         ],
       ),

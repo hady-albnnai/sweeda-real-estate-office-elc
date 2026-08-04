@@ -21,10 +21,10 @@ class VisualMilestoneTracker extends StatelessWidget {
     ];
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
       ),
       child: Column(
@@ -33,7 +33,7 @@ class VisualMilestoneTracker extends StatelessWidget {
           const Row(
             children: [
               Icon(Icons.timeline, color: AppTheme.primaryGold, size: 22),
-              SizedBox(width: 8),
+              AppTheme.gapWidthSmall,
               Text(
                 'شريط تتبع إنجاز باقة التوثيق 📜⚖️',
                 style: TextStyle(
@@ -44,7 +44,7 @@ class VisualMilestoneTracker extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          AppTheme.gapHeightLarge,
           ...List.generate(steps.length, (i) {
             final isDone = i <= currentStep;
             final isCurrent = i == currentStep;
@@ -60,29 +60,29 @@ class VisualMilestoneTracker extends StatelessWidget {
                         width: 26,
                         height: 26,
                         decoration: BoxDecoration(
-                          color: isDone ? Colors.green : AppTheme.deepBlack,
+                          color: isDone ? AppTheme.successGreen : AppTheme.deepBlack,
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: isDone ? Colors.green : AppTheme.textGrey.withOpacity(0.4),
+                            color: isDone ? AppTheme.successGreen : AppTheme.textGrey.withOpacity(0.4),
                             width: 2,
                           ),
                         ),
                         child: Center(
                           child: isDone
                               ? const Icon(Icons.check, color: Colors.white, size: 16)
-                              : Text('${i + 1}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+                              : Text('${i + 1}', style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption)),
                         ),
                       ),
                       if (!isLast)
                         Expanded(
                           child: Container(
                             width: 2,
-                            color: isDone ? Colors.green : Colors.white12,
+                            color: isDone ? AppTheme.successGreen : Colors.white12,
                           ),
                         ),
                     ],
                   ),
-                  const SizedBox(width: 12),
+                  AppTheme.gapWidthMedium,
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 20),
@@ -94,13 +94,13 @@ class VisualMilestoneTracker extends StatelessWidget {
                             style: TextStyle(
                               color: isCurrent ? AppTheme.primaryGold : (isDone ? AppTheme.textWhite : AppTheme.textGrey),
                               fontWeight: isCurrent || isDone ? FontWeight.bold : FontWeight.normal,
-                              fontSize: 14,
+                              fontSize: AppTheme.fontSizeMedium,
                             ),
                           ),
                           const SizedBox(height: 3),
                           Text(
                             steps[i]['sub']!,
-                            style: TextStyle(color: AppTheme.textGrey.withOpacity(0.8), fontSize: 11),
+                            style: TextStyle(color: AppTheme.textGrey.withOpacity(0.8), fontSize: AppTheme.fontSizeCaption),
                           ),
                         ],
                       ),
@@ -112,21 +112,21 @@ class VisualMilestoneTracker extends StatelessWidget {
           }),
           if (currentStep >= 2 && documentUrls != null && documentUrls!.isNotEmpty) ...[
             const Divider(color: Colors.white12),
-            const SizedBox(height: 8),
+            AppTheme.gapHeightSmall,
             Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+              padding: AppTheme.paddingAllMedium,
+              decoration: BoxDecoration(color: AppTheme.successGreen.withOpacity(0.1), borderRadius: AppTheme.borderRadiusMedium),
               child: Row(
                 children: [
-                  const Icon(Icons.folder_shared, color: Colors.green),
-                  const SizedBox(width: 10),
+                  const Icon(Icons.folder_shared, color: AppTheme.successGreen),
+                  AppTheme.gapWidthSmall,
                   const Expanded(
-                    child: Text('خزنة المستندات المعتمدة جاهزة للمعاينة والتنزيل', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12)),
+                    child: Text('خزنة المستندات المعتمدة جاهزة للمعاينة والتنزيل', style: TextStyle(color: AppTheme.successGreen, fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeSmall)),
                   ),
                   ElevatedButton(
                     onPressed: () {},
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.green, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6)),
-                    child: const Text('استعراض 📁', style: TextStyle(fontSize: 11)),
+                    style: ElevatedButton.styleFrom(backgroundColor: AppTheme.successGreen, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6)),
+                    child: const Text('استعراض 📁', style: TextStyle(fontSize: AppTheme.fontSizeCaption)),
                   ),
                 ],
               ),

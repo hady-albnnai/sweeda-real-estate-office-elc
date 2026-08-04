@@ -61,7 +61,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   color: AppTheme.primaryGold,
                   onRefresh: () async => _load(),
                   child: ListView.builder(
-                    padding: const EdgeInsets.all(12),
+                    padding: AppTheme.paddingAllMedium,
                     itemCount: prov.notifications.length,
                     itemBuilder: (_, i) => _tile(prov.notifications[i], prov),
                   ),
@@ -76,7 +76,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         color: n.isRead
             ? AppTheme.surfaceBlack
             : AppTheme.primaryGold.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppTheme.borderRadiusMedium,
         border: Border.all(
             color: n.isRead
                 ? Colors.white12
@@ -94,13 +94,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 4),
+            AppTheme.gapHeightXS,
             Text(n.bdy,
-                style: const TextStyle(color: AppTheme.textGrey, fontSize: 13)),
-            const SizedBox(height: 4),
+                style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody)),
+            AppTheme.gapHeightXS,
             Text(AppUtils.formatTimestamp(n.tsCrt),
                 style: TextStyle(
-                    color: AppTheme.textGrey.withOpacity(0.7), fontSize: 11)),
+                    color: AppTheme.textGrey.withOpacity(0.7), fontSize: AppTheme.fontSizeCaption)),
           ],
         ),
         trailing: n.isRead

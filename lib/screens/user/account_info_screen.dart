@@ -44,7 +44,7 @@ class AccountInfoScreen extends StatelessWidget {
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: AppTheme.paddingAllXL,
         child: Column(
           children: [
             // ─── معلومات الحساب ───
@@ -52,21 +52,21 @@ class AccountInfoScreen extends StatelessWidget {
 
             // ─── بطاقة «باقتي» (مخفية للموظفين الداخليين) ───
             if (!user.isInternal) ...[
-              const SizedBox(height: 16),
+              AppTheme.gapHeightLarge,
               _buildPackageCard(user, context),
             ],
 
             if (user.isLawyer || user.isExpediter) ...[
-              const SizedBox(height: 16),
+              AppTheme.gapHeightLarge,
               _buildLegalRoleDetailsCard(user),
             ],
 
-            const SizedBox(height: 16),
+            AppTheme.gapHeightLarge,
 
             // ─── حالة التوثيق (مخفي للموظفين الداخليين) ───
             if (!user.isInternal) ...[
               _buildVerificationCard(user, context),
-              const SizedBox(height: 16),
+              AppTheme.gapHeightLarge,
             ],
 
             // ─── تغيير كلمة المرور ───
@@ -79,10 +79,10 @@ class AccountInfoScreen extends StatelessWidget {
 
   Widget _buildInfoCard(UserModel user, BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(
             color: AppTheme.primaryGold.withOpacity(0.12)),
       ),
@@ -94,18 +94,18 @@ class AccountInfoScreen extends StatelessWidget {
               Icon(Icons.info_outline_rounded,
                   color: AppTheme.primaryGold.withOpacity(0.8),
                   size: 18),
-              const SizedBox(width: 8),
+              AppTheme.gapWidthSmall,
               const Text(
                 'بيانات الحساب',
                 style: TextStyle(
                   color: AppTheme.primaryGold,
-                  fontSize: 14,
+                  fontSize: AppTheme.fontSizeMedium,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          AppTheme.gapHeightMedium,
           _infoRow(
               Icons.phone_android_outlined, 'الهاتف', user.ph, context),
           _infoRow(Icons.person_outline_rounded, 'الاسم',
@@ -239,10 +239,10 @@ class AccountInfoScreen extends StatelessWidget {
     required List<Widget> children,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.18)),
       ),
       child: Column(
@@ -251,18 +251,18 @@ class AccountInfoScreen extends StatelessWidget {
           Row(
             children: [
               Icon(icon, color: AppTheme.primaryGold, size: 20),
-              const SizedBox(width: 8),
+              AppTheme.gapWidthSmall,
               Text(
                 title,
                 style: const TextStyle(
                   color: AppTheme.primaryGold,
-                  fontSize: 14,
+                  fontSize: AppTheme.fontSizeMedium,
                   fontWeight: FontWeight.w700,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          AppTheme.gapHeightMedium,
           ...children,
         ],
       ),
@@ -277,12 +277,12 @@ class AccountInfoScreen extends StatelessWidget {
         children: [
           Icon(icon,
               color: AppTheme.primaryGold.withOpacity(0.6), size: 18),
-          const SizedBox(width: 10),
+          AppTheme.gapWidthSmall,
           Text(
             label,
             style: TextStyle(
               color: AppTheme.textGrey.withOpacity(0.7),
-              fontSize: 13,
+              fontSize: AppTheme.fontSizeBody,
             ),
           ),
           const Spacer(),
@@ -291,7 +291,7 @@ class AccountInfoScreen extends StatelessWidget {
               value,
               style: const TextStyle(
                 color: AppTheme.textWhite,
-                fontSize: 13,
+                fontSize: AppTheme.fontSizeBody,
                 fontWeight: FontWeight.w500,
               ),
               textAlign: TextAlign.left,
@@ -346,10 +346,10 @@ class AccountInfoScreen extends StatelessWidget {
       statusColor = AppTheme.textGrey;
     } else if (user.isPkgActive) {
       statusLabel = 'فعّالة';
-      statusColor = Colors.green;
+      statusColor = AppTheme.successGreen;
     } else if (user.isInGracePeriod) {
       statusLabel = 'سماح ${user.graceDaysLeft} يوم';
-      statusColor = Colors.orange;
+      statusColor = AppTheme.warningOrange;
     } else {
       statusLabel = 'منتهية';
       statusColor = AppTheme.errorRed;
@@ -357,10 +357,10 @@ class AccountInfoScreen extends StatelessWidget {
 
     final limit = _pkgLimit(user, pkgMap, pkgLive);
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppTheme.borderRadiusLarge,
         border:
             Border.all(color: AppTheme.primaryGold.withOpacity(0.12)),
       ),
@@ -370,12 +370,12 @@ class AccountInfoScreen extends StatelessWidget {
           Row(children: [
             Icon(Icons.workspace_premium_outlined,
                 color: AppTheme.primaryGold.withOpacity(0.8), size: 18),
-            const SizedBox(width: 8),
+            AppTheme.gapWidthSmall,
             const Expanded(
               child: Text('باقتي',
                   style: TextStyle(
                       color: AppTheme.primaryGold,
-                      fontSize: 14,
+                      fontSize: AppTheme.fontSizeMedium,
                       fontWeight: FontWeight.w600)),
             ),
             Container(
@@ -383,23 +383,23 @@ class AccountInfoScreen extends StatelessWidget {
                   const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: statusColor.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: AppTheme.borderRadiusSmall,
               ),
               child: Text(statusLabel,
                   style: TextStyle(
                       color: statusColor,
-                      fontSize: 10.5,
+                      fontSize: AppTheme.fontSizeXS.5,
                       fontWeight: FontWeight.bold)),
             ),
           ]),
-          const SizedBox(height: 10),
+          AppTheme.gapHeightSmall,
           Text(pkgName,
               style: const TextStyle(
                   color: AppTheme.textWhite,
-                  fontSize: 16,
+                  fontSize: AppTheme.fontSizeSubtitle,
                   fontWeight: FontWeight.bold)),
           if (user.bPkg > 0 && user.pkgEnd != null) ...[
-            const SizedBox(height: 4),
+            AppTheme.gapHeightXS,
             Text(
               user.isPkgActive
                   ? 'تنتهي: ${AppUtils.formatTimestamp(user.pkgEnd!)}'
@@ -407,10 +407,10 @@ class AccountInfoScreen extends StatelessWidget {
                       ? 'فترة السماح حتى: ${AppUtils.formatTimestamp(user.pkgGrace!)}'
                       : 'انتهت بتاريخ: ${AppUtils.formatTimestamp(user.pkgEnd!)}',
               style:
-                  const TextStyle(color: AppTheme.textGrey, fontSize: 11.5),
+                  const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption.5),
             ),
           ],
-          const SizedBox(height: 12),
+          AppTheme.gapHeightMedium,
           FutureBuilder<int>(
             future: _countActiveOffers(user.uid),
             builder: (ctx, snap) {
@@ -422,10 +422,10 @@ class AccountInfoScreen extends StatelessWidget {
                 children: [
                   Text('عروضك الفعّالة: $used / $limit',
                       style: const TextStyle(
-                          color: AppTheme.textGrey, fontSize: 12)),
+                          color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
                   const SizedBox(height: 6),
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: AppTheme.borderRadiusXS,
                     child: LinearProgressIndicator(
                       value: ratio,
                       minHeight: 6,
@@ -440,7 +440,7 @@ class AccountInfoScreen extends StatelessWidget {
               );
             },
           ),
-          const SizedBox(height: 12),
+          AppTheme.gapHeightMedium,
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
@@ -475,14 +475,14 @@ class AccountInfoScreen extends StatelessWidget {
 
     switch (vrf) {
       case 2:
-        color = Colors.green;
+        color = AppTheme.successGreen;
         icon = Icons.verified_rounded;
         title = 'حسابك موثق رسمياً';
         subtitle = 'تظهر شارة التوثيق في جميع عروضك أمام العملاء.';
         showAction = false;
         break;
       case 1:
-        color = Colors.orange;
+        color = AppTheme.warningOrange;
         icon = Icons.hourglass_top_rounded;
         title = 'طلبك قيد المراجعة';
         subtitle = 'الإدارة تراجع وثائقك حالياً. ستصلك إشعار بالنتيجة.';
@@ -498,10 +498,10 @@ class AccountInfoScreen extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(color: color.withOpacity(0.25)),
       ),
       child: Column(
@@ -510,30 +510,30 @@ class AccountInfoScreen extends StatelessWidget {
           Row(
             children: [
               Icon(icon, color: color, size: 20),
-              const SizedBox(width: 8),
+              AppTheme.gapWidthSmall,
               Expanded(
                 child: Text(
                   title,
                   style: TextStyle(
                     color: color,
-                    fontSize: 14,
+                    fontSize: AppTheme.fontSizeMedium,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          AppTheme.gapHeightSmall,
           Text(
             subtitle,
             style: const TextStyle(
               color: AppTheme.textGrey,
-              fontSize: 12,
+              fontSize: AppTheme.fontSizeSmall,
               height: 1.5,
             ),
           ),
           if (showAction) ...[
-            const SizedBox(height: 12),
+            AppTheme.gapHeightMedium,
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -545,14 +545,14 @@ class AccountInfoScreen extends StatelessWidget {
                   style: TextStyle(
                     color: AppTheme.deepBlack,
                     fontWeight: FontWeight.bold,
-                    fontSize: 13,
+                    fontSize: AppTheme.fontSizeBody,
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primaryGold,
                   padding: const EdgeInsets.symmetric(vertical: 11),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
+                      borderRadius: AppTheme.borderRadiusMedium),
                 ),
               ),
             ),
@@ -579,7 +579,7 @@ class AccountInfoScreen extends StatelessWidget {
         builder: (ctx) => AlertDialog(
           backgroundColor: AppTheme.surfaceBlack,
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16)),
+              borderRadius: AppTheme.borderRadiusLarge),
           title: const Text('بيانات ناقصة',
               style: TextStyle(color: AppTheme.textWhite)),
           content: Text(
@@ -612,7 +612,7 @@ class AccountInfoScreen extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusLarge),
         title: const Text('طلب التوثيق الرسمي',
             style: TextStyle(color: AppTheme.textWhite)),
         content: const Text(
@@ -655,7 +655,7 @@ class AccountInfoScreen extends StatelessWidget {
       AppTheme.showSnackBar(context,
         const SnackBar(
           content: Text('✅ تم إرسال طلب التوثيق، بانتظار مراجعة الإدارة'),
-          backgroundColor: Colors.green,
+          backgroundColor: AppTheme.successGreen,
         ),
       );
     } catch (e) {
@@ -685,10 +685,10 @@ class AccountInfoScreen extends StatelessWidget {
     final hasPassword = user.pwd != null && user.pwd!.isNotEmpty;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(color: Colors.white.withOpacity(0.06)),
       ),
       child: Column(
@@ -699,25 +699,25 @@ class AccountInfoScreen extends StatelessWidget {
               Icon(Icons.lock_outline_rounded,
                   color: AppTheme.primaryGold.withOpacity(0.8),
                   size: 18),
-              const SizedBox(width: 8),
+              AppTheme.gapWidthSmall,
               const Text(
                 'كلمة المرور',
                 style: TextStyle(
                   color: AppTheme.primaryGold,
-                  fontSize: 14,
+                  fontSize: AppTheme.fontSizeMedium,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          AppTheme.gapHeightSmall,
           Text(
             hasPassword
                 ? 'كلمة المرور مُعيّنة — يمكنك تغييرها'
                 : 'لم يتم تعيين كلمة مرور بعد',
-            style: const TextStyle(color: AppTheme.textGrey, fontSize: 12),
+            style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall),
           ),
-          const SizedBox(height: 10),
+          AppTheme.gapHeightSmall,
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
@@ -730,14 +730,14 @@ class AccountInfoScreen extends StatelessWidget {
               label: Text(
                 hasPassword ? 'تغيير كلمة المرور' : 'تعيين كلمة مرور',
                 style: const TextStyle(
-                    color: AppTheme.primaryGold, fontSize: 13),
+                    color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeBody),
               ),
               style: OutlinedButton.styleFrom(
                 side: BorderSide(
                     color: AppTheme.primaryGold.withOpacity(0.3)),
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
+                    borderRadius: AppTheme.borderRadiusMedium),
               ),
             ),
           ),
@@ -755,10 +755,10 @@ class AccountInfoScreen extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusLarge),
         title: Text(
           hasOld ? 'تغيير كلمة المرور' : 'تعيين كلمة مرور',
-          style: const TextStyle(color: AppTheme.textWhite, fontSize: 16),
+          style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeSubtitle),
         ),
         content: SingleChildScrollView(
           child: Column(
@@ -775,7 +775,7 @@ class AccountInfoScreen extends StatelessWidget {
                         Icon(Icons.lock_outline, color: AppTheme.primaryGold),
                   ),
                 ),
-              if (hasOld) const SizedBox(height: 12),
+              if (hasOld) AppTheme.gapHeightMedium,
               TextField(
                 controller: newCtrl,
                 obscureText: true,
@@ -786,7 +786,7 @@ class AccountInfoScreen extends StatelessWidget {
                       Icon(Icons.lock_rounded, color: AppTheme.primaryGold),
                 ),
               ),
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               TextField(
                 controller: confirmCtrl,
                 obscureText: true,
@@ -848,7 +848,7 @@ class AccountInfoScreen extends StatelessWidget {
                   AppTheme.showSnackBar(context,
                     const SnackBar(
                         content: Text('✅ تم تحديث كلمة المرور'),
-                        backgroundColor: Colors.green),
+                        backgroundColor: AppTheme.successGreen),
                   );
                 }
               } catch (e) {

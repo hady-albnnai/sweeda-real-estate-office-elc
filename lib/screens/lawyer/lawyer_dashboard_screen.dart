@@ -95,7 +95,7 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('تسجيل خروج', style: TextStyle(color: Colors.red)),
+            child: const Text('تسجيل خروج', style: TextStyle(color: AppTheme.errorRed)),
           ),
         ],
       ),
@@ -118,26 +118,26 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
         backgroundColor: AppTheme.surfaceBlack,
         title: const Row(children: [
           Icon(Icons.person, color: AppTheme.primaryGold, size: 22),
-          SizedBox(width: 8),
-          Text('الملف الشخصي', style: TextStyle(color: AppTheme.primaryGold, fontSize: 18)),
+          AppTheme.gapWidthSmall,
+          Text('الملف الشخصي', style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeTitle)),
         ]),
         content: SingleChildScrollView(
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(user?.nm ?? '', style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold, fontSize: 16)),
-            Text(user?.ph ?? '', style: const TextStyle(color: AppTheme.textGrey, fontSize: 14)),
+            Text(user?.nm ?? '', style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeSubtitle)),
+            Text(user?.ph ?? '', style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeMedium)),
             if (user?.usr != null && user!.usr!.isNotEmpty)
-              Text('@${user.usr}', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 13)),
-            const SizedBox(height: 20), const Divider(color: AppTheme.textGrey),
+              Text('@${user.usr}', style: const TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeBody)),
+            AppTheme.gapHeightXL, const Divider(color: AppTheme.textGrey),
             const Text('تغيير كلمة المرور', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 15)),
-            const SizedBox(height: 12),
+            AppTheme.gapHeightMedium,
             TextField(controller: oldCtrl, style: const TextStyle(color: AppTheme.textWhite),
               decoration: const InputDecoration(labelText: 'كلمة المرور الحالية', prefixIcon: Icon(Icons.lock_outline, color: AppTheme.primaryGold)),
               obscureText: true),
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             TextField(controller: newCtrl, style: const TextStyle(color: AppTheme.textWhite),
               decoration: const InputDecoration(labelText: 'كلمة المرور الجديدة', prefixIcon: Icon(Icons.lock, color: AppTheme.primaryGold)),
               obscureText: true),
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             TextField(controller: confCtrl, style: const TextStyle(color: AppTheme.textWhite),
               decoration: const InputDecoration(labelText: 'تأكيد كلمة المرور', prefixIcon: Icon(Icons.lock, color: AppTheme.primaryGold)),
               obscureText: true),
@@ -443,32 +443,32 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
           ),
         ],
       ),
-      body: SingleChildScrollView(padding: const EdgeInsets.all(20), child: Column(children: [
-        const SizedBox(height: 20),
-        Container(padding: const EdgeInsets.all(20),
+      body: SingleChildScrollView(padding: AppTheme.paddingAllXL, child: Column(children: [
+        AppTheme.gapHeightXL,
+        Container(padding: AppTheme.paddingAllXL,
           decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(18),
             border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3))),
           child: Column(children: [
-            const Icon(Icons.gavel, size: 50, color: AppTheme.primaryGold), const SizedBox(height: 12),
-            const Text('أهلاً بك', style: TextStyle(color: AppTheme.primaryGold, fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            const Text('يرجى إعداد رقم الواتساب المعتمد', style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
-            const SizedBox(height: 24),
+            const Icon(Icons.gavel, size: 50, color: AppTheme.primaryGold), AppTheme.gapHeightMedium,
+            const Text('أهلاً بك', style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeTitle, fontWeight: FontWeight.bold)),
+            AppTheme.gapHeightSmall,
+            const Text('يرجى إعداد رقم الواتساب المعتمد', style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeMedium)),
+            AppTheme.gapHeightXXL,
             TextField(controller: _whatsappCtrl, style: const TextStyle(color: AppTheme.textWhite),
               decoration: const InputDecoration(labelText: 'رقم الواتساب المعتمد *', hintText: '+9639xxxxxxxx',
                 prefixIcon: Icon(Icons.phone_android, color: AppTheme.primaryGold)),
               keyboardType: TextInputType.phone),
-            const SizedBox(height: 16),
+            AppTheme.gapHeightLarge,
             TextField(controller: _addressCtrl, style: const TextStyle(color: AppTheme.textWhite),
               decoration: const InputDecoration(labelText: 'عنوان المكتب (اختياري)', hintText: 'مقر الشركة',
                 prefixIcon: Icon(Icons.location_on, color: AppTheme.primaryGold))),
-            const SizedBox(height: 24),
+            AppTheme.gapHeightXXL,
             SizedBox(width: double.infinity, height: 50, child: ElevatedButton.icon(
               onPressed: _savingProfile ? null : _saveProfile,
               icon: _savingProfile ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.save),
-              label: Text(_savingProfile ? 'جاري...' : 'حفظ ومتابعة', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              label: Text(_savingProfile ? 'جاري...' : 'حفظ ومتابعة', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeSubtitle)),
               style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryGold,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))))),
+                shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusMedium)))),
           ])),
       ])),
     );
@@ -481,19 +481,19 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
       return Center(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Icon(Icons.gavel, size: 60, color: AppTheme.textGrey.withOpacity(0.4)),
-          const SizedBox(height: 12),
+          AppTheme.gapHeightMedium,
           const Text('لا توجد استشارات حالياً',
-              style: TextStyle(color: AppTheme.textGrey, fontSize: 16)),
-          const SizedBox(height: 8),
+              style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSubtitle)),
+          AppTheme.gapHeightSmall,
           const Text('عند حجز عميل لاستشارة قانونية، ستظهر هنا',
-              style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+              style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody)),
         ]),
       );
     }
     return RefreshIndicator(
       onRefresh: () => legal.fetchLawyerConsultations(),
       child: ListView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: AppTheme.paddingAllLarge,
         itemCount: consultations.length,
         itemBuilder: (_, i) => _consultationCard(consultations[i], legal),
       ),
@@ -512,10 +512,10 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Column(
@@ -523,62 +523,62 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
         children: [
           Row(children: [
             Icon(Icons.gavel, color: AppTheme.primaryGold, size: 18),
-            const SizedBox(width: 8),
+            AppTheme.gapWidthSmall,
             Expanded(
               child: Text(sName,
                   style: const TextStyle(
                       color: AppTheme.textWhite,
                       fontWeight: FontWeight.bold,
-                      fontSize: 14)),
+                      fontSize: AppTheme.fontSizeMedium)),
             ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
               decoration: BoxDecoration(
                 color: color.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: AppTheme.borderRadiusSmall,
               ),
               child: Text(label,
                   style: TextStyle(
-                      color: color, fontSize: 11, fontWeight: FontWeight.bold)),
+                      color: color, fontSize: AppTheme.fontSizeCaption, fontWeight: FontWeight.bold)),
             ),
           ]),
-          const SizedBox(height: 8),
+          AppTheme.gapHeightSmall,
           Text('العميل: $clientName',
               style: const TextStyle(
                   color: AppTheme.primaryGold,
-                  fontSize: 13,
+                  fontSize: AppTheme.fontSizeBody,
                   fontWeight: FontWeight.w600)),
-          const SizedBox(height: 4),
+          AppTheme.gapHeightXS,
           Text(subject,
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
           const SizedBox(height: 6),
           Row(children: [
             Text('${price.toStringAsFixed(0)} ل.س',
                 style: const TextStyle(
                     color: AppTheme.primaryGold,
-                    fontSize: 13,
+                    fontSize: AppTheme.fontSizeBody,
                     fontWeight: FontWeight.bold)),
             const Spacer(),
             Text(tsCrt,
                 style:
-                    const TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+                    const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption)),
           ]),
           // أزرار الإجراءات (فقط لبانتظار التأكيد)
           if (sts == 0) ...[
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             Row(children: [
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: () =>
                       _updateConsultationStatus(legal, c['id'], 4, 'مرفوضة'),
-                  icon: const Icon(Icons.close, color: Colors.red, size: 16),
+                  icon: const Icon(Icons.close, color: AppTheme.errorRed, size: 16),
                   label: const Text('رفض',
-                      style: TextStyle(color: Colors.red, fontSize: 12)),
+                      style: TextStyle(color: AppTheme.errorRed, fontSize: AppTheme.fontSizeSmall)),
                   style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Colors.red)),
+                      side: const BorderSide(color: AppTheme.errorRed)),
                 ),
               ),
-              const SizedBox(width: 8),
+              AppTheme.gapWidthSmall,
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: () =>
@@ -588,17 +588,17 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
                   label: const Text('تأكيد',
                       style: TextStyle(
                           color: Colors.black,
-                          fontSize: 12,
+                          fontSize: AppTheme.fontSizeSmall,
                           fontWeight: FontWeight.bold)),
                   style:
-                      ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                      ElevatedButton.styleFrom(backgroundColor: AppTheme.successGreen),
                 ),
               ),
             ]),
           ],
           // إتمام (للمؤكدة)
           if (sts == 1) ...[
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -620,17 +620,17 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
   (String, Color) _consultStatusInfo(int sts) {
     switch (sts) {
       case 0:
-        return ('بانتظار التأكيد', Colors.orange);
+        return ('بانتظار التأكيد', AppTheme.warningOrange);
       case 1:
-        return ('مؤكدة', Colors.green);
+        return ('مؤكدة', AppTheme.successGreen);
       case 2:
         return ('مكتملة', Colors.teal);
       case 3:
-        return ('ملغاة', Colors.grey);
+        return ('ملغاة', AppTheme.textGrey);
       case 4:
-        return ('مرفوضة', Colors.red);
+        return ('مرفوضة', AppTheme.errorRed);
       default:
-        return ('غير معروف', Colors.grey);
+        return ('غير معروف', AppTheme.textGrey);
     }
   }
 
@@ -651,49 +651,49 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
     final apps = legal.lawyerAppointments;
     if (apps.isEmpty) return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
       Icon(Icons.event_busy, size: 60, color: AppTheme.textGrey.withOpacity(0.4)),
-      const SizedBox(height: 12), const Text('لا توجد مواعيد حالياً', style: TextStyle(color: AppTheme.textGrey, fontSize: 16)),
+      AppTheme.gapHeightMedium, const Text('لا توجد مواعيد حالياً', style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSubtitle)),
     ]));
     return RefreshIndicator(onRefresh: () => legal.fetchLawyerAppointments(),
-      child: ListView.builder(padding: const EdgeInsets.all(16), itemCount: apps.length,
+      child: ListView.builder(padding: AppTheme.paddingAllLarge, itemCount: apps.length,
         itemBuilder: (_, i) => _apptCard(apps[i])));
   }
 
   Widget _apptCard(Map<String, dynamic> a) {
     final sts = a['sts']?.toString() ?? '0';
-    final c = sts == '0' ? Colors.orange : sts == '1' ? Colors.green : sts == '2' ? Colors.blue : Colors.red;
-    return Container(margin: const EdgeInsets.only(bottom: 12), padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(14), border: Border.all(color: c.withOpacity(0.3))),
+    final c = sts == '0' ? AppTheme.warningOrange : sts == '1' ? AppTheme.successGreen : sts == '2' ? AppTheme.infoBlue : AppTheme.errorRed;
+    return Container(margin: const EdgeInsets.only(bottom: 12), padding: AppTheme.paddingAllLarge,
+      decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: AppTheme.borderRadiusLarge, border: Border.all(color: c.withOpacity(0.3))),
       child: Row(children: [
-        Container(width: 4, height: 60, decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(4))),
-        const SizedBox(width: 14),
+        Container(width: 4, height: 60, decoration: BoxDecoration(color: c, borderRadius: AppTheme.borderRadiusXS)),
+        AppTheme.gapWidthMedium,
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(a['client_name']?.toString() ?? '', style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold, fontSize: 15)),
-          Text(a['client_phone']?.toString() ?? '', style: const TextStyle(color: AppTheme.textGrey, fontSize: 13)),
-          Text(a['dt']?.toString().substring(0, 16) ?? '', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 12)),
+          Text(a['client_phone']?.toString() ?? '', style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody)),
+          Text(a['dt']?.toString().substring(0, 16) ?? '', style: const TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSmall)),
         ])),
         Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(color: c.withOpacity(0.15), borderRadius: BorderRadius.circular(20)),
+          decoration: BoxDecoration(color: c.withOpacity(0.15), borderRadius: AppTheme.borderRadiusXL),
           child: Text(sts == '0' ? 'انتظار' : sts == '1' ? 'مؤكد' : sts == '2' ? 'مكتمل' : 'ملغي',
-            style: TextStyle(color: c, fontSize: 11, fontWeight: FontWeight.bold))),
+            style: TextStyle(color: c, fontSize: AppTheme.fontSizeCaption, fontWeight: FontWeight.bold))),
       ]));
   }
 
   // ──────── تبويب إضافة مهمة ────────
   Widget _buildCreateTaskTab(LegalProvider legal) {
     final expediters = legal.availableExpediters;
-    return SingleChildScrollView(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('📋 تكليف معقب', style: TextStyle(color: AppTheme.primaryGold, fontSize: 18, fontWeight: FontWeight.bold)),
-      const SizedBox(height: 16), const Text('نوع المعاملة:', style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
+    return SingleChildScrollView(padding: AppTheme.paddingAllLarge, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      const Text('📋 تكليف معقب', style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeTitle, fontWeight: FontWeight.bold)),
+      AppTheme.gapHeightLarge, const Text('نوع المعاملة:', style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeMedium)),
       Row(children: [
         Expanded(child: _Chip(label: '🏠 عقار', selected: _selectedItemType == 0, onTap: () => _changeItemType(0), e2eId: 'e2e_task_type_property')),
-        const SizedBox(width: 12),
+        AppTheme.gapWidthMedium,
         Expanded(child: _Chip(label: '🚗 سيارة', selected: _selectedItemType == 1, onTap: () => _changeItemType(1), e2eId: 'e2e_task_type_vehicle')),
-      ]), const SizedBox(height: 16), const Text('المعقب:', style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
+      ]), AppTheme.gapHeightLarge, const Text('المعقب:', style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeMedium)),
       expediters.isEmpty
-          ? Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.orange.withOpacity(0.3))),
-              child: const Row(children: [Icon(Icons.info_outline, color: Colors.orange, size: 18), SizedBox(width: 10),
-                Expanded(child: Text('لا يوجد معقبين. أضف معقباً من إدارة الموظفين.', style: TextStyle(color: AppTheme.textGrey, fontSize: 13)))]))
+          ? Container(padding: AppTheme.paddingAllLarge, decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: AppTheme.borderRadiusMedium,
+              border: Border.all(color: AppTheme.warningOrange.withOpacity(0.3))),
+              child: const Row(children: [Icon(Icons.info_outline, color: AppTheme.warningOrange, size: 18), AppTheme.gapWidthSmall,
+                Expanded(child: Text('لا يوجد معقبين. أضف معقباً من إدارة الموظفين.', style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody)))]))
           : E2E(
               id: 'e2e_lawyer_expediter_dropdown',
               child: DropdownButtonFormField<String>(value: _selectedExpediterUid, dropdownColor: AppTheme.surfaceBlack,
@@ -702,47 +702,47 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
               items: expediters.map((e) => DropdownMenuItem(value: e['id']?.toString(), child: Text('${e['nm']} (${e['ph']})'))).toList(),
               onChanged: (v) => setState(() => _selectedExpediterUid = v)),
             ),
-      const SizedBox(height: 16),
+      AppTheme.gapHeightLarge,
       if (_selectedItemType == 0) ...[
         E2E(id: 'e2e_task_property_number', child: TextField(controller: _taskPropertyCtrl, style: const TextStyle(color: AppTheme.textWhite),
           decoration: const InputDecoration(labelText: 'رقم العقار', hintText: '12345'))),
-        const SizedBox(height: 12),
+        AppTheme.gapHeightMedium,
         E2E(id: 'e2e_task_property_zone', child: TextField(controller: _taskZoneCtrl, style: const TextStyle(color: AppTheme.textWhite),
           decoration: const InputDecoration(labelText: 'المنطقة العقارية', hintText: 'السويداء'))),
       ],
       if (_selectedItemType == 1)
         E2E(id: 'e2e_task_vehicle_number', child: TextField(controller: _taskPropertyCtrl, style: const TextStyle(color: AppTheme.textWhite),
           decoration: const InputDecoration(labelText: 'رقم المركبة', hintText: '123456'))),
-      const SizedBox(height: 16),
+      AppTheme.gapHeightLarge,
       _buildChecklistSelector(),
-      const SizedBox(height: 12),
+      AppTheme.gapHeightMedium,
       E2E(id: 'e2e_task_notes', child: TextField(controller: _taskNotesCtrl, style: const TextStyle(color: AppTheme.textWhite), maxLines: 3,
         decoration: const InputDecoration(labelText: 'تعليمات', hintText: 'ملاحظات للمعقب...'))),
-      const SizedBox(height: 24),
+      AppTheme.gapHeightXXL,
       E2E(id: 'e2e_lawyer_send_task', button: true, child: SizedBox(width: double.infinity, height: 50, child: ElevatedButton.icon(
         onPressed: _creatingTask ? null : _createTask,
         icon: _creatingTask ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.send),
         label: Text(_creatingTask ? 'جاري...' : 'إرسال للمعقب', style: const TextStyle(fontWeight: FontWeight.bold)),
-        style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryGold, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)))))),
+        style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryGold, shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusMedium))))),
     ]));
   }
 
   Widget _buildChecklistSelector() {
     final docs = _documentTemplatesFor(_selectedItemType);
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.25)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text('الوثائق المطلوبة من المعقب:', style: TextStyle(color: AppTheme.primaryGold, fontSize: 15, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          const Text('حدد وثيقة أو أكثر لنفس المهمة، ثم اضبط عدد النسخ والتعليمات لكل وثيقة.', style: TextStyle(color: AppTheme.textGrey, fontSize: 12, height: 1.35)),
-          const SizedBox(height: 12),
+          AppTheme.gapHeightSmall,
+          const Text('حدد وثيقة أو أكثر لنفس المهمة، ثم اضبط عدد النسخ والتعليمات لكل وثيقة.', style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall, height: 1.35)),
+          AppTheme.gapHeightMedium,
           ...docs.map((doc) {
             final key = doc['key']!;
             final selected = _selectedChecklist.any((item) => item['key'] == key);
@@ -754,7 +754,7 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
               margin: const EdgeInsets.only(bottom: 8),
               decoration: BoxDecoration(
                 color: selected ? AppTheme.primaryGold.withOpacity(0.1) : AppTheme.scaffoldBackground,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: AppTheme.borderRadiusMedium,
                 border: Border.all(color: selected ? AppTheme.primaryGold : AppTheme.textGrey.withOpacity(0.18)),
               ),
               child: Row(
@@ -784,18 +784,18 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
               ),
             );
           }),
-          const SizedBox(height: 10),
+          AppTheme.gapHeightSmall,
           OutlinedButton.icon(
             onPressed: _addAllDefaultDocuments,
             icon: const Icon(Icons.playlist_add_check, color: AppTheme.primaryGold),
             label: const Text('تحديد كل وثائق القائمة', style: TextStyle(color: AppTheme.primaryGold)),
             style: OutlinedButton.styleFrom(side: const BorderSide(color: AppTheme.primaryGold), minimumSize: const Size(double.infinity, 44)),
           ),
-          const SizedBox(height: 16),
+          AppTheme.gapHeightLarge,
           const Divider(color: Colors.white12),
-          const SizedBox(height: 8),
-          const Text('إضافة وثيقة دائمة للقائمة:', style: TextStyle(color: AppTheme.primaryGold, fontSize: 13, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
+          AppTheme.gapHeightSmall,
+          const Text('إضافة وثيقة دائمة للقائمة:', style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeBody, fontWeight: FontWeight.bold)),
+          AppTheme.gapHeightSmall,
           Row(children: [
             Expanded(
               child: TextField(
@@ -804,16 +804,16 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
                 decoration: const InputDecoration(labelText: 'اسم الوثيقة الجديدة', hintText: 'تُحفظ في القائمة لهذا الجهاز'),
               ),
             ),
-            const SizedBox(width: 8),
+            AppTheme.gapWidthSmall,
             IconButton(
               tooltip: 'إضافة للقائمة',
               onPressed: _addPermanentDocumentTemplate,
               icon: const Icon(Icons.add_circle, color: AppTheme.primaryGold, size: 30),
             ),
           ]),
-          const SizedBox(height: 16),
-          const Text('وثيقة لمرة واحدة لهذه المهمة فقط:', style: TextStyle(color: AppTheme.primaryGold, fontSize: 13, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
+          AppTheme.gapHeightLarge,
+          const Text('وثيقة لمرة واحدة لهذه المهمة فقط:', style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeBody, fontWeight: FontWeight.bold)),
+          AppTheme.gapHeightSmall,
           Row(children: [
             Expanded(
               child: TextField(
@@ -822,21 +822,21 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
                 decoration: const InputDecoration(labelText: 'نص حر', hintText: 'لا تُحفظ في القائمة الدائمة'),
               ),
             ),
-            const SizedBox(width: 8),
+            AppTheme.gapWidthSmall,
             IconButton(
               tooltip: 'إضافة للمهمة فقط',
               onPressed: _addOneTimeDocument,
               icon: const Icon(Icons.post_add, color: AppTheme.primaryGold, size: 30),
             ),
           ]),
-          const SizedBox(height: 16),
+          AppTheme.gapHeightLarge,
           const Divider(color: Colors.white12),
-          const SizedBox(height: 8),
+          AppTheme.gapHeightSmall,
           if (_selectedChecklist.isEmpty)
-            const Text('لم تحدد أي وثيقة بعد. يجب تحديد وثيقة واحدة على الأقل.', style: TextStyle(color: AppTheme.textGrey, fontSize: 12))
+            const Text('لم تحدد أي وثيقة بعد. يجب تحديد وثيقة واحدة على الأقل.', style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall))
           else ...[
-            Text('الوثائق المحددة (${_selectedChecklist.length}):', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 13, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
+            Text('الوثائق المحددة (${_selectedChecklist.length}):', style: const TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeBody, fontWeight: FontWeight.bold)),
+            AppTheme.gapHeightSmall,
             ..._selectedChecklist.asMap().entries.map((entry) {
               final index = entry.key;
               final item = entry.value;
@@ -845,15 +845,15 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
               final copies = rawCopies < 1 ? 1 : (rawCopies > 10 ? 10 : rawCopies);
               return Container(
                 margin: const EdgeInsets.only(bottom: 10),
-                padding: const EdgeInsets.all(12),
+                padding: AppTheme.paddingAllMedium,
                 decoration: BoxDecoration(
                   color: AppTheme.scaffoldBackground,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: AppTheme.borderRadiusMedium,
                   border: Border.all(color: AppTheme.primaryGold.withOpacity(0.15)),
                 ),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Row(children: [
-                    Expanded(child: Text(title, style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold, fontSize: 13))),
+                    Expanded(child: Text(title, style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeBody))),
                     IconButton(
                       onPressed: () => setState(() => _selectedChecklist.removeAt(index)),
                       icon: const Icon(Icons.delete_outline, color: AppTheme.errorRed, size: 20),
@@ -867,7 +867,7 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
                     items: List.generate(10, (i) => DropdownMenuItem(value: i + 1, child: Text('${i + 1} نسخة'))),
                     onChanged: (value) => setState(() => item['required_copies'] = value ?? 1),
                   ),
-                  const SizedBox(height: 8),
+                  AppTheme.gapHeightSmall,
                   TextFormField(
                     key: ValueKey('instr_${item['key']}'),
                     initialValue: item['lawyer_instructions']?.toString() ?? '',
@@ -891,7 +891,7 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
-        title: Text('إعادة ${item.title}', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 16)),
+        title: Text('إعادة ${item.title}', style: const TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSubtitle)),
         content: TextField(
           controller: ctrl,
           maxLines: 3,
@@ -925,7 +925,7 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
-        title: Text('تفاصيل مهمة التعقيب', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 16)),
+        title: Text('تفاصيل مهمة التعقيب', style: const TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSubtitle)),
         content: SizedBox(
           width: double.maxFinite,
           child: SingleChildScrollView(
@@ -936,53 +936,53 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
                 Text(task.itemType == 0 ? 'نوع المهمة: عقار' : 'نوع المهمة: سيارة', style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold)),
                 if (task.targetPropertyNum.isNotEmpty) ...[
                   const SizedBox(height: 6),
-                  Text('الرقم/المرجع: ${task.targetPropertyNum}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                  Text('الرقم/المرجع: ${task.targetPropertyNum}', style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
                 ],
                 if (task.targetZone.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text('المنطقة: ${task.targetZone}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                  AppTheme.gapHeightXS,
+                  Text('المنطقة: ${task.targetZone}', style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
                 ],
                 if (task.lawyerNotes.isNotEmpty) ...[
                   const SizedBox(height: 6),
-                  Text('تعليمات عامة: ${task.lawyerNotes}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                  Text('تعليمات عامة: ${task.lawyerNotes}', style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
                 ],
-                const SizedBox(height: 12),
+                AppTheme.gapHeightMedium,
                 ...task.checklist.map((item) {
                   final imageUrl = item.attachmentSignedUrl.isNotEmpty
                       ? item.attachmentSignedUrl
                       : (item.attachmentUrl.startsWith('http') ? item.attachmentUrl : '');
                   return Container(
                     margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(12),
+                    padding: AppTheme.paddingAllMedium,
                     decoration: BoxDecoration(
                       color: AppTheme.scaffoldBackground,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: item.status == 2 ? Colors.green.withOpacity(0.45) : AppTheme.primaryGold.withOpacity(0.18)),
+                      borderRadius: AppTheme.borderRadiusMedium,
+                      border: Border.all(color: item.status == 2 ? AppTheme.successGreen.withOpacity(0.45) : AppTheme.primaryGold.withOpacity(0.18)),
                     ),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Row(children: [
-                        Icon(item.status == 2 ? Icons.check_circle : Icons.pending_actions, color: item.status == 2 ? Colors.green : AppTheme.primaryGold, size: 18),
-                        const SizedBox(width: 8),
+                        Icon(item.status == 2 ? Icons.check_circle : Icons.pending_actions, color: item.status == 2 ? AppTheme.successGreen : AppTheme.primaryGold, size: 18),
+                        AppTheme.gapWidthSmall,
                         Expanded(child: Text(item.title, style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold))),
                       ]),
                       const SizedBox(height: 6),
-                      Text('عدد النسخ المطلوبة: ${item.requiredCopies}', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 12)),
-                      if (item.lawyerInstructions.isNotEmpty) Text('تعليماتك: ${item.lawyerInstructions}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
-                      if (item.inputValue.isNotEmpty) Text('بيانات المعقب: ${item.inputValue}', style: const TextStyle(color: AppTheme.textWhite, fontSize: 12)),
-                      if (item.notes.isNotEmpty) Text('ملاحظات المعقب: ${item.notes}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
-                      if (item.revisionNotes.isNotEmpty) Text('طلب إعادة سابق: ${item.revisionNotes}', style: const TextStyle(color: AppTheme.errorRed, fontSize: 12)),
+                      Text('عدد النسخ المطلوبة: ${item.requiredCopies}', style: const TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSmall)),
+                      if (item.lawyerInstructions.isNotEmpty) Text('تعليماتك: ${item.lawyerInstructions}', style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
+                      if (item.inputValue.isNotEmpty) Text('بيانات المعقب: ${item.inputValue}', style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeSmall)),
+                      if (item.notes.isNotEmpty) Text('ملاحظات المعقب: ${item.notes}', style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
+                      if (item.revisionNotes.isNotEmpty) Text('طلب إعادة سابق: ${item.revisionNotes}', style: const TextStyle(color: AppTheme.errorRed, fontSize: AppTheme.fontSizeSmall)),
                       if (imageUrl.isNotEmpty) ...[
-                        const SizedBox(height: 8),
+                        AppTheme.gapHeightSmall,
                         ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: AppTheme.borderRadiusMedium,
                           child: Image.network(imageUrl, height: 170, width: double.infinity, fit: BoxFit.cover),
                         ),
                       ] else ...[
-                        const SizedBox(height: 8),
-                        const Text('لا توجد صورة مرفقة بعد', style: TextStyle(color: AppTheme.errorRed, fontSize: 12)),
+                        AppTheme.gapHeightSmall,
+                        const Text('لا توجد صورة مرفقة بعد', style: TextStyle(color: AppTheme.errorRed, fontSize: AppTheme.fontSizeSmall)),
                       ],
                       if (task.status == 2) ...[
-                        const SizedBox(height: 8),
+                        AppTheme.gapHeightSmall,
                         OutlinedButton.icon(
                           onPressed: () => _requestRevision(task, item),
                           icon: const Icon(Icons.replay, color: AppTheme.errorRed, size: 18),
@@ -1037,37 +1037,37 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
     final tasks = legal.lawyerTasks;
     if (tasks.isEmpty) return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
       Icon(Icons.assignment_late, size: 60, color: AppTheme.textGrey.withOpacity(0.4)),
-      const SizedBox(height: 12), const Text('لا توجد مهام', style: TextStyle(color: AppTheme.textGrey, fontSize: 16)),
+      AppTheme.gapHeightMedium, const Text('لا توجد مهام', style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSubtitle)),
     ]));
     return RefreshIndicator(onRefresh: () => legal.fetchLawyerTasks(),
-      child: ListView.builder(padding: const EdgeInsets.all(16), itemCount: tasks.length, itemBuilder: (_, i) {
+      child: ListView.builder(padding: AppTheme.paddingAllLarge, itemCount: tasks.length, itemBuilder: (_, i) {
         final t = tasks[i]; final done = t.checklist.where((c) => c.status >= 2).length;
-        final total = t.checklist.length; final c = t.status == 0 ? Colors.orange : t.status == 1 ? Colors.blue : Colors.green;
-        return Container(margin: const EdgeInsets.only(bottom: 12), padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(14), border: Border.all(color: c.withOpacity(0.3))),
+        final total = t.checklist.length; final c = t.status == 0 ? AppTheme.warningOrange : t.status == 1 ? AppTheme.infoBlue : AppTheme.successGreen;
+        return Container(margin: const EdgeInsets.only(bottom: 12), padding: AppTheme.paddingAllLarge,
+          decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: AppTheme.borderRadiusLarge, border: Border.all(color: c.withOpacity(0.3))),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [Icon(Icons.assignment, color: c, size: 20), const SizedBox(width: 8),
+            Row(children: [Icon(Icons.assignment, color: c, size: 20), AppTheme.gapWidthSmall,
               Expanded(child: Text(
                 t.status == 0 ? 'انتظار' : t.status == 1 ? 'قيد الاستخراج' : t.status == 2 ? 'مكتملة' : 'معتمدة 🎉',
-                style: TextStyle(color: c, fontWeight: FontWeight.bold, fontSize: 14))),
-              Text(t.itemType == 0 ? '🏠 عقار' : '🚗 سيارة', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 12))]),
+                style: TextStyle(color: c, fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeMedium))),
+              Text(t.itemType == 0 ? '🏠 عقار' : '🚗 سيارة', style: const TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSmall))]),
             if (t.targetPropertyNum.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text('رقم: ${t.targetPropertyNum} | ${t.targetZone}', style: const TextStyle(color: AppTheme.textGrey, fontSize: 13))],
+              AppTheme.gapHeightSmall,
+              Text('رقم: ${t.targetPropertyNum} | ${t.targetZone}', style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody))],
             Row(children: [Icon(Icons.checklist, size: 16, color: AppTheme.primaryGold), const SizedBox(width: 6),
-              Text('$done / $total وثائق', style: const TextStyle(color: AppTheme.textGrey, fontSize: 13)),
+              Text('$done / $total وثائق', style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody)),
               if (t.status == 2) ...[
-                const SizedBox(width: 8),
+                AppTheme.gapWidthSmall,
                 Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(color: Colors.orange.withOpacity(0.2), borderRadius: BorderRadius.circular(10)),
-                  child: const Text('بانتظار اعتمادك', style: TextStyle(color: Colors.orange, fontSize: 11, fontWeight: FontWeight.bold)))],
+                  decoration: BoxDecoration(color: AppTheme.warningOrange.withOpacity(0.2), borderRadius: AppTheme.borderRadiusMedium),
+                  child: const Text('بانتظار اعتمادك', style: TextStyle(color: AppTheme.warningOrange, fontSize: AppTheme.fontSizeCaption, fontWeight: FontWeight.bold)))],
               if (t.status == 3) ...[
-                const SizedBox(width: 8),
+                AppTheme.gapWidthSmall,
                 Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(color: Colors.green.withOpacity(0.2), borderRadius: BorderRadius.circular(10)),
-                  child: const Text('معتمد', style: TextStyle(color: Colors.green, fontSize: 11, fontWeight: FontWeight.bold)))],
+                  decoration: BoxDecoration(color: AppTheme.successGreen.withOpacity(0.2), borderRadius: AppTheme.borderRadiusMedium),
+                  child: const Text('معتمد', style: TextStyle(color: AppTheme.successGreen, fontSize: AppTheme.fontSizeCaption, fontWeight: FontWeight.bold)))],
             ]),
-            const SizedBox(height: 12),
+            AppTheme.gapHeightMedium,
             SizedBox(width: double.infinity, child: OutlinedButton.icon(
               onPressed: () => _showTaskReviewDialog(t),
               icon: const Icon(Icons.visibility, color: AppTheme.primaryGold),
@@ -1075,12 +1075,12 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
               style: OutlinedButton.styleFrom(side: const BorderSide(color: AppTheme.primaryGold)),
             )),
             if (t.status == 2) ...[
-              const SizedBox(height: 8),
+              AppTheme.gapHeightSmall,
               SizedBox(width: double.infinity, child: ElevatedButton.icon(
                 onPressed: () => _showTaskReviewDialog(t),
                 icon: const Icon(Icons.verified, color: AppTheme.deepBlack),
                 label: const Text('مراجعة ثم اعتماد إنجاز المعقب', style: TextStyle(color: AppTheme.deepBlack, fontWeight: FontWeight.bold)),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                style: ElevatedButton.styleFrom(backgroundColor: AppTheme.successGreen),
               )),
             ],
           ]));
@@ -1107,7 +1107,7 @@ class _Chip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(
         color: selected ? AppTheme.primaryGold.withOpacity(0.2) : AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppTheme.borderRadiusMedium,
         border: Border.all(color: selected ? AppTheme.primaryGold : AppTheme.textGrey.withOpacity(0.3), width: selected ? 2 : 1)),
       child: Center(child: Text(label, style: TextStyle(color: selected ? AppTheme.primaryGold : AppTheme.textGrey,
         fontWeight: selected ? FontWeight.bold : FontWeight.normal, fontSize: 15)))));

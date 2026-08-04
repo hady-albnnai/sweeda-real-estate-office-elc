@@ -31,13 +31,13 @@ class _OfferCardState extends State<OfferCard> {
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
             color: isFav
-                ? Colors.red.withOpacity(0.1)
+                ? AppTheme.errorRed.withOpacity(0.1)
                 : Colors.white.withOpacity(0.05),
             shape: BoxShape.circle,
           ),
           child: Icon(
             isFav ? Icons.favorite : Icons.favorite_border,
-            color: isFav ? Colors.red : AppTheme.textGrey,
+            color: isFav ? AppTheme.errorRed : AppTheme.textGrey,
             size: 20,
           ),
         ),
@@ -124,7 +124,7 @@ class _OfferCardState extends State<OfferCard> {
       ),
       child: Text(text,
           style: const TextStyle(
-              color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+              color: Colors.white, fontSize: AppTheme.fontSizeXS, fontWeight: FontWeight.bold)),
     );
   }
 
@@ -133,10 +133,10 @@ class _OfferCardState extends State<OfferCard> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, color: AppTheme.primaryGold.withOpacity(0.7), size: 14),
-        const SizedBox(width: 4),
+        AppTheme.gapWidthXS,
         Text(
           text,
-          style: const TextStyle(color: AppTheme.textGrey, fontSize: 12),
+          style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall),
         ),
       ],
     );
@@ -216,13 +216,13 @@ class _OfferCardState extends State<OfferCard> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: offer.trx == 0 ? Colors.green : Colors.blue,
-                      borderRadius: BorderRadius.circular(10),
+                      color: offer.trx == 0 ? AppTheme.successGreen : AppTheme.infoBlue,
+                      borderRadius: AppTheme.borderRadiusMedium,
                       boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
                     ),
                     child: Text(
                       offer.trx == 0 ? 'للبيع' : 'للإيجار',
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeSmall),
                     ),
                   ),
                 ),
@@ -234,7 +234,7 @@ class _OfferCardState extends State<OfferCard> {
                   child: Wrap(
                     spacing: 4,
                     children: [
-                      if (offer.iPin == 1) _boostBadge('📌 مثبت', Colors.orange),
+                      if (offer.iPin == 1) _boostBadge('📌 مثبت', AppTheme.warningOrange),
                       if (offer.iFms == 1) _boostBadge('⭐ مميز', AppTheme.primaryGold),
                     ],
                   ),
@@ -249,7 +249,7 @@ class _OfferCardState extends State<OfferCard> {
                     style: const TextStyle(
                       color: AppTheme.primaryGold,
                       fontWeight: FontWeight.w900,
-                      fontSize: 20,
+                      fontSize: AppTheme.fontSizeHeadline,
                       shadows: [Shadow(color: Colors.black, blurRadius: 8)],
                     ),
                   ),
@@ -263,7 +263,7 @@ class _OfferCardState extends State<OfferCard> {
                     AppUtils.formatTimestamp(offer.tsCrt.toIso8601String()),
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.8),
-                      fontSize: 10,
+                      fontSize: AppTheme.fontSizeXS,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -272,7 +272,7 @@ class _OfferCardState extends State<OfferCard> {
             ),
 
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: AppTheme.paddingAllLarge,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -295,12 +295,12 @@ class _OfferCardState extends State<OfferCard> {
                           '#${offer.offerNumber}',
                           style: TextStyle(
                               color: AppTheme.primaryGold.withOpacity(0.6),
-                              fontSize: 12,
+                              fontSize: AppTheme.fontSizeSmall,
                               fontFamily: 'monospace'),
                         ),
                     ],
                   ),
-                  const SizedBox(height: 10),
+                  AppTheme.gapHeightSmall,
 
                   // 📊 المواصفات السريعة (أيقونات)
                   SingleChildScrollView(
@@ -328,9 +328,9 @@ class _OfferCardState extends State<OfferCard> {
                     ),
                   ),
 
-                  const SizedBox(height: 16),
+                  AppTheme.gapHeightLarge,
                   const Divider(color: Colors.white10, height: 1),
-                  const SizedBox(height: 12),
+                  AppTheme.gapHeightMedium,
 
                   // 🛡️ هوية المكتب (التصميم الاحترافي)
                   Row(
@@ -340,20 +340,20 @@ class _OfferCardState extends State<OfferCard> {
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
                           color: AppTheme.primaryGold.withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: AppTheme.borderRadiusMedium,
                           border: Border.all(color: AppTheme.primaryGold.withOpacity(0.2)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon((offer.ownerLabel ?? '').contains('✓') ? Icons.verified_rounded : Icons.storefront_outlined,
-                                color: (offer.ownerLabel ?? '').contains('✓') ? Colors.green : AppTheme.primaryGold, size: 14),
+                                color: (offer.ownerLabel ?? '').contains('✓') ? AppTheme.successGreen : AppTheme.primaryGold, size: 14),
                             const SizedBox(width: 6),
                             Text(
                               offer.ownerLabel ?? 'إدارة المكتب العقاري',
                               style: const TextStyle(
                                   color: AppTheme.primaryGold,
-                                  fontSize: 11,
+                                  fontSize: AppTheme.fontSizeCaption,
                                   fontWeight: FontWeight.bold),
                             ),
                           ],

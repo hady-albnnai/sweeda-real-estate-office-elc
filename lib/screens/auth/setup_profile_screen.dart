@@ -279,7 +279,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
       AppTheme.showSnackBar(context,
         const SnackBar(
           content: Text('✅ تم إنشاء وتأمين حسابك بنجاح'),
-          backgroundColor: Colors.green,
+          backgroundColor: AppTheme.successGreen,
         ),
       );
 
@@ -355,12 +355,12 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                     height: 72,
                     decoration: BoxDecoration(
                       color: AppTheme.primaryGold.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: AppTheme.borderRadiusXL,
                     ),
                     child: const Icon(Icons.lock_person_outlined,
                         color: AppTheme.primaryGold, size: 36),
                   ),
-                  const SizedBox(height: 16),
+                  AppTheme.gapHeightLarge,
                   const Text(
                     'إعداد بيانات الحساب',
                     style: TextStyle(
@@ -372,19 +372,19 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                   const Text(
                     'جميع الحقول إلزامية — تُستخدم لتمييز حسابك وحمايته',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: AppTheme.textGrey, fontSize: 13),
+                    style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody),
                   ),
                 ]),
               ),
-              const SizedBox(height: 24),
+              AppTheme.gapHeightXXL,
 
               // ─── الاسم الكامل ───
               const Text('الاسم الكامل *',
                   style: TextStyle(
                       color: AppTheme.primaryGold,
                       fontWeight: FontWeight.bold,
-                      fontSize: 13)),
-              const SizedBox(height: 8),
+                      fontSize: AppTheme.fontSizeBody)),
+              AppTheme.gapHeightSmall,
               TextField(
                 controller: _nameController,
                 style: const TextStyle(color: AppTheme.textWhite),
@@ -395,18 +395,18 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                   filled: true,
                   fillColor: AppTheme.surfaceBlack,
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                      borderRadius: AppTheme.borderRadiusMedium),
                 ),
               ),
-              const SizedBox(height: 16),
+              AppTheme.gapHeightLarge,
 
               // ─── رقم الهاتف ───
               const Text('رقم الهاتف *',
                   style: TextStyle(
                       color: AppTheme.primaryGold,
                       fontWeight: FontWeight.bold,
-                      fontSize: 13)),
-              const SizedBox(height: 8),
+                      fontSize: AppTheme.fontSizeBody)),
+              AppTheme.gapHeightSmall,
               TextField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
@@ -418,23 +418,23 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                   filled: true,
                   fillColor: AppTheme.surfaceBlack,
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                      borderRadius: AppTheme.borderRadiusMedium),
                 ),
               ),
-              const SizedBox(height: 16),
+              AppTheme.gapHeightLarge,
 
               // ─── اسم المستخدم ───
               const Text('اسم المستخدم *',
                   style: TextStyle(
                       color: AppTheme.primaryGold,
                       fontWeight: FontWeight.bold,
-                      fontSize: 13)),
-              const SizedBox(height: 4),
+                      fontSize: AppTheme.fontSizeBody)),
+              AppTheme.gapHeightXS,
               const Text(
                 'بدون فراغات — أحرف عربية أو إنجليزية + أرقام + _ + . (3–30 حرف)',
-                style: TextStyle(color: AppTheme.textGrey, fontSize: 11),
+                style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption),
               ),
-              const SizedBox(height: 8),
+              AppTheme.gapHeightSmall,
               TextField(
                 controller: _usernameController,
                 textAlign: TextAlign.left,
@@ -450,14 +450,14 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                           ? 'اسم المستخدم متاح ✅'
                           : (_checkingUsername ? 'جاري فحص توفر الاسم...' : null)),
                   helperStyle: TextStyle(
-                    color: _usernameAvailable ? Colors.green : AppTheme.textGrey,
-                    fontSize: 11,
+                    color: _usernameAvailable ? AppTheme.successGreen : AppTheme.textGrey,
+                    fontSize: AppTheme.fontSizeCaption,
                   ),
                   prefixIcon: const Icon(Icons.alternate_email,
                       color: AppTheme.primaryGold),
                   suffixIcon: _checkingUsername
                       ? const Padding(
-                          padding: EdgeInsets.all(12),
+                          padding: AppTheme.paddingAllMedium,
                           child: SizedBox(
                               width: 18,
                               height: 18,
@@ -473,28 +473,28 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                                       ? Icons.check_circle
                                       : Icons.cancel,
                               color: _checkFailed
-                                  ? Colors.orange
+                                  ? AppTheme.warningOrange
                                   : _usernameAvailable
-                                      ? Colors.green
-                                      : Colors.red,
+                                      ? AppTheme.successGreen
+                                      : AppTheme.errorRed,
                               size: 20)
                           : null,
                   filled: true,
                   fillColor: AppTheme.surfaceBlack,
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                      borderRadius: AppTheme.borderRadiusMedium),
                 ),
                 onChanged: _onUsernameChanged,
               ),
-              const SizedBox(height: 16),
+              AppTheme.gapHeightLarge,
 
               // ─── كلمة المرور ───
               const Text('كلمة المرور *',
                   style: TextStyle(
                       color: AppTheme.primaryGold,
                       fontWeight: FontWeight.bold,
-                      fontSize: 13)),
-              const SizedBox(height: 8),
+                      fontSize: AppTheme.fontSizeBody)),
+              AppTheme.gapHeightSmall,
               TextField(
                 controller: _passwordController,
                 obscureText: _obscure,
@@ -518,18 +518,18 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                   filled: true,
                   fillColor: AppTheme.surfaceBlack,
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                      borderRadius: AppTheme.borderRadiusMedium),
                 ),
               ),
-              const SizedBox(height: 16),
+              AppTheme.gapHeightLarge,
 
               // ─── تأكيد كلمة المرور ───
               const Text('تأكيد كلمة المرور *',
                   style: TextStyle(
                       color: AppTheme.primaryGold,
                       fontWeight: FontWeight.bold,
-                      fontSize: 13)),
-              const SizedBox(height: 8),
+                      fontSize: AppTheme.fontSizeBody)),
+              AppTheme.gapHeightSmall,
               TextField(
                 controller: _confirmPasswordController,
                 obscureText: _obscure,
@@ -543,18 +543,18 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                   filled: true,
                   fillColor: AppTheme.surfaceBlack,
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                      borderRadius: AppTheme.borderRadiusMedium),
                 ),
                 onSubmitted: (_) => _submit(),
               ),
-              const SizedBox(height: 24),
+              AppTheme.gapHeightXXL,
 
               // ─── تنبيه حفظ البيانات ───
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: AppTheme.paddingAllMedium,
                 decoration: BoxDecoration(
                   color: AppTheme.primaryGold.withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: AppTheme.borderRadiusMedium,
                   border: Border.all(
                       color: AppTheme.primaryGold.withOpacity(0.3)),
                 ),
@@ -562,18 +562,18 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                   children: [
                     Icon(Icons.info_outline,
                         color: AppTheme.primaryGold, size: 18),
-                    SizedBox(width: 8),
+                    AppTheme.gapWidthSmall,
                     Expanded(
                       child: Text(
                         'احفظ اسم المستخدم وكلمة المرور في مكان آمن — ستستخدمهما للدخول مستقبلاً',
                         style: TextStyle(
-                            color: AppTheme.textGrey, fontSize: 11),
+                            color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
+              AppTheme.gapHeightXL,
 
               // ─── زر الإرسال ───
               SizedBox(
@@ -593,14 +593,14 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                       style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
-              const SizedBox(height: 14),
+              AppTheme.gapHeightMedium,
               const Center(
                 child: Text(
                   '🔒 بياناتك مشفّرة ومحفوظة بأمان',
-                  style: TextStyle(color: AppTheme.textGrey, fontSize: 11),
+                  style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption),
                 ),
               ),
-              const SizedBox(height: 20),
+              AppTheme.gapHeightXL,
             ],
           ),
         ),

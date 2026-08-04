@@ -55,7 +55,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
         children: [
           // شريط البحث
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: AppTheme.paddingAllMedium,
             child: TextField(
               controller: _searchCtrl,
               style: const TextStyle(color: AppTheme.textWhite),
@@ -72,7 +72,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                 filled: true,
                 fillColor: AppTheme.surfaceBlack,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: AppTheme.borderRadiusMedium,
                   borderSide: BorderSide.none,
                 ),
               ),
@@ -94,7 +94,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                         color: AppTheme.primaryGold,
                         onRefresh: _load,
                         child: ListView.builder(
-                          padding: const EdgeInsets.all(12),
+                          padding: AppTheme.paddingAllMedium,
                           itemCount: _users.length,
                           itemBuilder: (_, i) => _userTile(_users[i]),
                         ),
@@ -110,7 +110,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.15)),
       ),
       child: ListTile(
@@ -136,11 +136,11 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 4),
+            AppTheme.gapHeightXS,
             Text('${u.ph}  •  ${u.roleName}',
-                style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
             Text('${u.badgeName}  •  ⭐ ${u.pt}',
-                style: const TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+                style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption)),
           ],
         ),
         trailing: PopupMenuButton<String>(
@@ -152,10 +152,10 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                 value: 'role', child: Text('تغيير الدور', style: TextStyle(color: AppTheme.textWhite))),
             if (u.sts != 0)
               const PopupMenuItem(
-                  value: 'activate', child: Text('تفعيل', style: TextStyle(color: Colors.green))),
+                  value: 'activate', child: Text('تفعيل', style: TextStyle(color: AppTheme.successGreen))),
             if (u.sts != 1)
               const PopupMenuItem(
-                  value: 'freeze', child: Text('تجميد', style: TextStyle(color: Colors.orange))),
+                  value: 'freeze', child: Text('تجميد', style: TextStyle(color: AppTheme.warningOrange))),
             if (u.sts != 2)
               const PopupMenuItem(
                   value: 'ban', child: Text('حظر', style: TextStyle(color: AppTheme.errorRed))),
@@ -170,7 +170,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
     String t;
     switch (sts) {
       case 1:
-        c = Colors.orange;
+        c = AppTheme.warningOrange;
         t = 'مجمّد';
         break;
       case 2:
@@ -178,7 +178,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
         t = 'محظور';
         break;
       default:
-        c = Colors.green;
+        c = AppTheme.successGreen;
         t = 'نشط';
     }
     return Container(
@@ -187,7 +187,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
         color: c.withOpacity(0.15),
         borderRadius: BorderRadius.circular(6),
       ),
-      child: Text(t, style: TextStyle(color: c, fontSize: 10)),
+      child: Text(t, style: TextStyle(color: c, fontSize: AppTheme.fontSizeXS)),
     );
   }
 

@@ -421,19 +421,19 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
   /// صندوق تحذير عند فشل تحميل قسم من الإعدادات + زر إعادة التحميل
   Widget _warnBox(String msg) => Container(
         margin: const EdgeInsets.only(top: 8),
-        padding: const EdgeInsets.all(10),
+        padding: AppTheme.paddingAllMedium,
         decoration: BoxDecoration(
-          color: Colors.red.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.red.withOpacity(0.35)),
+          color: AppTheme.errorRed.withOpacity(0.08),
+          borderRadius: AppTheme.borderRadiusSmall,
+          border: Border.all(color: AppTheme.errorRed.withOpacity(0.35)),
         ),
         child: Row(children: [
           const Icon(Icons.error_outline, color: Colors.redAccent, size: 16),
-          const SizedBox(width: 8),
-          Expanded(child: Text(msg, style: const TextStyle(color: Colors.redAccent, fontSize: 12))),
+          AppTheme.gapWidthSmall,
+          Expanded(child: Text(msg, style: const TextStyle(color: Colors.redAccent, fontSize: AppTheme.fontSizeSmall))),
           TextButton(
             onPressed: () => context.read<ConfigProvider>().loadConfig(force: true),
-            child: const Text('إعادة التحميل', style: TextStyle(fontSize: 12)),
+            child: const Text('إعادة التحميل', style: TextStyle(fontSize: AppTheme.fontSizeSmall)),
           ),
         ]),
       );
@@ -451,7 +451,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
               child: const Text('رجوع', maxLines: 1, softWrap: false, overflow: TextOverflow.fade),
             ),
           ),
-        if (onBack != null && onNext != null) const SizedBox(width: 10),
+        if (onBack != null && onNext != null) AppTheme.gapWidthSmall,
         if (onNext != null)
           Expanded(
             flex: 2,
@@ -532,12 +532,12 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
                       child: CircularProgressIndicator(
                           color: AppTheme.primaryGold, strokeWidth: 3),
                     ),
-                    const SizedBox(height: 20),
+                    AppTheme.gapHeightXL,
                     Text(
                       _progressMsg,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                          color: AppTheme.textWhite, fontSize: 14, height: 1.5),
+                          color: AppTheme.textWhite, fontSize: AppTheme.fontSizeMedium, height: 1.5),
                     ),
                   ],
                 ),
@@ -601,11 +601,11 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         ],
         if (_selectedType == 1) ...[
           TextField(controller: _carPlateCtrl, decoration: const InputDecoration(labelText: 'رقم اللوحة والمحافظة (إلزامي)', hintText: 'مثال: 123456 - السويداء', border: OutlineInputBorder())),
-          const SizedBox(height: 10),
+          AppTheme.gapHeightSmall,
           TextField(controller: _carBrandCtrl, decoration: const InputDecoration(labelText: 'الماركة (إلزامي)', hintText: 'كيا، تويوتا، مرسيدس...', border: OutlineInputBorder())),
-          const SizedBox(height: 10),
+          AppTheme.gapHeightSmall,
           TextField(controller: _carModelCtrl, decoration: const InputDecoration(labelText: 'الموديل (إلزامي)', hintText: 'سيراتو، لاندكروزر، أكسنت...', border: OutlineInputBorder())),
-          const SizedBox(height: 10),
+          AppTheme.gapHeightSmall,
           // منطقة تواجد السيارة — إلزامية (نفس مصدر مناطق العقار: قائمة locs من الإعدادات)
           DropdownButtonFormField<String>(value: _carCityArea, items: cityItems, onChanged: (v) => setState(() => _carCityArea = v), decoration: const InputDecoration(labelText: 'المنطقة الرئيسية للسيارة (إلزامي)', border: OutlineInputBorder())),
           if (_carCityArea == _customCityOption) Padding(padding: const EdgeInsets.only(top: 10), child: TextField(controller: _carCustomCityCtrl, decoration: const InputDecoration(labelText: 'اكتب المنطقة يدوياً', border: OutlineInputBorder()))),
@@ -620,34 +620,34 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     title: const Text('التفاصيل والمواصفات', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
     content: Column(children: [
       TextField(controller: _ttlCtrl, maxLength: 80, decoration: const InputDecoration(labelText: 'عنوان العرض بالتطبيق (اختياري)', hintText: 'شقة فاخرة، سيارة نظيفة، أرض زراعية...', border: OutlineInputBorder())),
-      const SizedBox(height: 10),
+      AppTheme.gapHeightSmall,
       Row(children: [
         Expanded(flex: 3, child: TextField(controller: _priceCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'السعر المتوقع (إلزامي)', border: OutlineInputBorder()))),
-        const SizedBox(width: 8),
+        AppTheme.gapWidthSmall,
         Expanded(flex: 3, child: DropdownButtonFormField<int>(value: _cur, isExpanded: true, items: const [DropdownMenuItem(value: 0, child: Text('دولار أمريكي', overflow: TextOverflow.ellipsis)), DropdownMenuItem(value: 1, child: Text('ليرة سورية', overflow: TextOverflow.ellipsis))], onChanged: (v) => setState(() => _cur = v ?? 1), decoration: const InputDecoration(border: OutlineInputBorder()))),
       ]),
       const SizedBox(height: 15),
       if (_selectedType == 0) ...[
         TextField(controller: _areaCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'المساحة م²', border: OutlineInputBorder())),
-        const SizedBox(height: 12),
+        AppTheme.gapHeightMedium,
         _dd('الإكساء', ['ملكي', 'سوبر ديلوكس', 'ديلوكس', 'عادي', 'هيكل'], _finishing, (v) => setState(() => _finishing = v)),
-        const SizedBox(height: 12),
+        AppTheme.gapHeightMedium,
         TextField(controller: _floorCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'الطابق', hintText: 'مثال: 3', border: OutlineInputBorder())),
       ],
       if (_selectedType == 1) ...[
         TextField(controller: _carYearCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'سنة الصنع (إلزامي)', border: OutlineInputBorder())),
-        const SizedBox(height: 10),
+        AppTheme.gapHeightSmall,
         _dd('نوع الوقود (اختياري)', ['بنزين', 'ديزل', 'هجين', 'كهرباء'], _carFuel, (v) => setState(() => _carFuel = v)),
-        const SizedBox(height: 10),
+        AppTheme.gapHeightSmall,
         _dd('ناقل الحركة (اختياري)', ['عادي', 'أوتوماتيك'], _carTransmission, (v) => setState(() => _carTransmission = v)),
-        const SizedBox(height: 10),
+        AppTheme.gapHeightSmall,
         TextField(controller: _carColorCtrl, decoration: const InputDecoration(labelText: 'اللون (اختياري)', border: OutlineInputBorder())),
-        const SizedBox(height: 10),
+        AppTheme.gapHeightSmall,
         TextField(controller: _carKmCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'عدد الكيلومترات (اختياري)', border: OutlineInputBorder())),
       ],
       const SizedBox(height: 15),
       TextField(controller: _descCtrl, maxLines: 3, decoration: const InputDecoration(labelText: 'وصف إضافي (اختياري)', hintText: 'أي مميزات أو تفاصيل أخرى تود ذكرها للزبائن...', border: OutlineInputBorder())),
-      const SizedBox(height: 20),
+      AppTheme.gapHeightXL,
       if (_selectedType == 0) ...[
         // 📸 وضع التصوير: الخريطة إلزامية — الموقع الدقيق ضروري لوصول المصوّر
         Text(
@@ -657,10 +657,10 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           style: TextStyle(
             color: widget.isPhotographyRequest ? Colors.redAccent : AppTheme.primaryGold,
             fontWeight: FontWeight.bold,
-            fontSize: 14,
+            fontSize: AppTheme.fontSizeMedium,
           ),
         ),
-        const SizedBox(height: 8),
+        AppTheme.gapHeightSmall,
         LocationPicker(initial: _pickedLocation, onPicked: (loc) => setState(() => _pickedLocation = loc), height: 250),
       ],
       _navRow(onBack: () => _goToStep(0), onNext: () => _goToStep(2)),
@@ -672,31 +672,31 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     title: const Text('الصور والفيديو', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
     content: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       ElevatedButton.icon(onPressed: _pickImages, icon: const Icon(Icons.add_a_photo), label: Text('إضافة صور العرض (${_pickedImages.length}/${StorageService.maxImages})')),
-      const SizedBox(height: 10),
-      if (_pickedImages.isNotEmpty) Wrap(spacing: 8, children: _pickedImages.asMap().entries.map((e) => Stack(children: [ClipRRect(borderRadius: BorderRadius.circular(8), child: _thumb(e.value)), Positioned(top: -5, left: -5, child: IconButton(icon: const Icon(Icons.cancel, color: Colors.red), onPressed: () => setState(() => _pickedImages.removeAt(e.key))))])).toList()),
-      const SizedBox(height: 20),
-      const Text('🎬 فيديو العرض (اختياري)', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 13)),
+      AppTheme.gapHeightSmall,
+      if (_pickedImages.isNotEmpty) Wrap(spacing: 8, children: _pickedImages.asMap().entries.map((e) => Stack(children: [ClipRRect(borderRadius: AppTheme.borderRadiusSmall, child: _thumb(e.value)), Positioned(top: -5, left: -5, child: IconButton(icon: const Icon(Icons.cancel, color: AppTheme.errorRed), onPressed: () => setState(() => _pickedImages.removeAt(e.key))))])).toList()),
+      AppTheme.gapHeightXL,
+      const Text('🎬 فيديو العرض (اختياري)', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeBody)),
       CheckboxListTile(
         value: _wantVideo,
         onChanged: (v) => setState(() => _wantVideo = v ?? false),
         controlAffinity: ListTileControlAffinity.leading,
         contentPadding: EdgeInsets.zero,
         activeColor: AppTheme.primaryGold,
-        title: const Text('بدي أرفق فيديو للعرض (عبر واتساب المكتب)', style: TextStyle(color: Colors.black87, fontSize: 13, fontWeight: FontWeight.bold)),
+        title: const Text('بدي أرفق فيديو للعرض (عبر واتساب المكتب)', style: TextStyle(color: Colors.black87, fontSize: AppTheme.fontSizeBody, fontWeight: FontWeight.bold)),
       ),
       if (_wantVideo) ...[
         Container(
-          padding: const EdgeInsets.all(10),
+          padding: AppTheme.paddingAllMedium,
           margin: const EdgeInsets.only(bottom: 8),
           decoration: BoxDecoration(
             color: AppTheme.primaryGold.withOpacity(0.08),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: AppTheme.borderRadiusMedium,
             border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3)),
           ),
           child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('⚠️ إرسال الفيديو بيتم عبر تطبيق واتساب — تأكد إنو التطبيق مثبّت عندك', style: TextStyle(color: AppTheme.textGrey, fontSize: 12, height: 1.5)),
+            Text('⚠️ إرسال الفيديو بيتم عبر تطبيق واتساب — تأكد إنو التطبيق مثبّت عندك', style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall, height: 1.5)),
             SizedBox(height: 6),
-            Text('ℹ️ رح ينفتح واتساب تلقائياً بعد ما تنهي إضافة العرض، والرسالة بتكون جاهزة فيها رقم العرض الخاص بك — بس أرفق الفيديو وابعت', style: TextStyle(color: AppTheme.textGrey, fontSize: 12, height: 1.5)),
+            Text('ℹ️ رح ينفتح واتساب تلقائياً بعد ما تنهي إضافة العرض، والرسالة بتكون جاهزة فيها رقم العرض الخاص بك — بس أرفق الفيديو وابعت', style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall, height: 1.5)),
           ]),
         ),
       ],
@@ -712,64 +712,64 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     content: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       // ── صور أولية (اختيارية — المصوّر سيلتقط صوراً احترافية) ──
       Container(
-        padding: const EdgeInsets.all(12),
+        padding: AppTheme.paddingAllMedium,
         decoration: BoxDecoration(
           color: AppTheme.primaryGold.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: AppTheme.borderRadiusMedium,
           border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3)),
         ),
         child: const Row(children: [
           Icon(Icons.photo_camera, color: AppTheme.primaryGold, size: 20),
-          SizedBox(width: 8),
+          AppTheme.gapWidthSmall,
           Expanded(
             child: Text(
               'يمكنك إضافة صور أولية الآن، أو انتظار المصوّر المحترف الذي سيلتقط صوراً عالية الجودة.',
-              style: TextStyle(color: AppTheme.primaryGold, fontSize: 12, height: 1.5),
+              style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSmall, height: 1.5),
             ),
           ),
         ]),
       ),
-      const SizedBox(height: 12),
+      AppTheme.gapHeightMedium,
       ElevatedButton.icon(
         onPressed: _pickImages,
         icon: const Icon(Icons.add_a_photo),
         label: Text('إضافة صور أولية (${_pickedImages.length}/${StorageService.maxImages})'),
       ),
-      const SizedBox(height: 10),
+      AppTheme.gapHeightSmall,
       if (_pickedImages.isNotEmpty)
         Wrap(
           spacing: 8,
           children: _pickedImages.asMap().entries.map((e) => Stack(children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: AppTheme.borderRadiusSmall,
               child: _thumb(e.value),
             ),
             Positioned(
               top: -5, left: -5,
               child: IconButton(
-                icon: const Icon(Icons.cancel, color: Colors.red),
+                icon: const Icon(Icons.cancel, color: AppTheme.errorRed),
                 onPressed: () => setState(() => _pickedImages.removeAt(e.key)),
               ),
             ),
           ])).toList(),
         ),
-      const SizedBox(height: 20),
+      AppTheme.gapHeightXL,
 
       // ── ملخص الطلب ──
       Container(
-        padding: const EdgeInsets.all(14),
+        padding: AppTheme.paddingAllLarge,
         decoration: BoxDecoration(
           color: AppTheme.surfaceBlack,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AppTheme.borderRadiusMedium,
           border: Border.all(color: AppTheme.primaryGold.withOpacity(0.5), width: 1.2),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Row(children: [
             Icon(Icons.summarize, color: AppTheme.primaryGold, size: 20),
-            SizedBox(width: 8),
-            Text('ملخص طلب التصوير', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 14)),
+            AppTheme.gapWidthSmall,
+            Text('ملخص طلب التصوير', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeMedium)),
           ]),
-          const SizedBox(height: 10),
+          AppTheme.gapHeightSmall,
           _summaryRow('نوع العرض', _selectedType == 0 ? 'عقار' : 'سيارة'),
           _summaryRow('المعاملة', _selectedTrans == 0 ? 'بيع' : 'إيجار'),
           if (_ttlCtrl.text.trim().isNotEmpty) _summaryRow('العنوان', _ttlCtrl.text.trim()),
@@ -783,37 +783,37 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
 
       // ── تذكير بالأجر ──
       if ((context.read<ConfigProvider>().config?.photographyPrice ?? 1000) > 0) ...[
-        const SizedBox(height: 12),
+        AppTheme.gapHeightMedium,
         Container(
-          padding: const EdgeInsets.all(10),
+          padding: AppTheme.paddingAllMedium,
           decoration: BoxDecoration(
             color: Colors.amber.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: AppTheme.borderRadiusSmall,
             border: Border.all(color: Colors.amber.withOpacity(0.4)),
           ),
           child: Row(children: [
             const Icon(Icons.payments_outlined, color: Colors.amber, size: 18),
-            const SizedBox(width: 8),
+            AppTheme.gapWidthSmall,
             Expanded(
               child: Text(
                 'أجر التصوير ${(context.read<ConfigProvider>().config?.photographyPrice ?? 1000).toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+$)'), (m) => '${m[1]},')} ل.س — يُدفع للمصوّر عند وصوله.',
-                style: const TextStyle(color: Colors.amber, fontSize: 12, fontWeight: FontWeight.w600),
+                style: const TextStyle(color: Colors.amber, fontSize: AppTheme.fontSizeSmall, fontWeight: FontWeight.w600),
               ),
             ),
           ]),
         ),
       ],
 
-      const SizedBox(height: 16),
+      AppTheme.gapHeightLarge,
       _navRow(onBack: () => _goToStep(1)),
-      const SizedBox(height: 8),
+      AppTheme.gapHeightSmall,
       SizedBox(
         width: double.infinity,
         height: 55,
         child: ElevatedButton.icon(
           onPressed: _submitting ? null : _submit,
           icon: const Icon(Icons.photo_camera, size: 20),
-          label: const Text('إرسال طلب التصوير', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          label: const Text('إرسال طلب التصوير', style: TextStyle(fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeSubtitle)),
           style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryGold, foregroundColor: AppTheme.deepBlack),
         ),
       ),
@@ -826,9 +826,9 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
       SizedBox(
         width: 80,
-        child: Text(label, style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+        child: Text(label, style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
       ),
-      Expanded(child: Text(value, style: const TextStyle(color: AppTheme.textWhite, fontSize: 12, fontWeight: FontWeight.w500))),
+      Expanded(child: Text(value, style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeSmall, fontWeight: FontWeight.w500))),
     ]),
   );
 
@@ -836,26 +836,26 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     title: const Text('المواعيد المتاحة للمعاينة', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
     content: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: AppTheme.primaryGold.withOpacity(0.1), borderRadius: BorderRadius.circular(10), border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3))),
+        padding: AppTheme.paddingAllMedium,
+        decoration: BoxDecoration(color: AppTheme.primaryGold.withOpacity(0.1), borderRadius: AppTheme.borderRadiusMedium, border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3))),
         child: SwitchListTile(
           value: _anytimeReady,
           onChanged: (v) => setState(() => _anytimeReady = v),
-          title: const Text('أنا جاهز للمعاينة في أي وقت', style: TextStyle(color: AppTheme.textWhite, fontSize: 14, fontWeight: FontWeight.bold)),
-          subtitle: const Text('سيتمكن الزبائن من طلب موعد في أي وقت تراه الإدارة مناسباً', style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+          title: const Text('أنا جاهز للمعاينة في أي وقت', style: TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeMedium, fontWeight: FontWeight.bold)),
+          subtitle: const Text('سيتمكن الزبائن من طلب موعد في أي وقت تراه الإدارة مناسباً', style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption)),
           activeColor: AppTheme.primaryGold,
           contentPadding: EdgeInsets.zero,
         ),
       ),
-      const SizedBox(height: 16),
+      AppTheme.gapHeightLarge,
       if (!_anytimeReady) ...[
-        const Text('أو حدد أياماً وفترات زمنية محددة:', style: TextStyle(color: AppTheme.textGrey, fontSize: 13)),
-        const SizedBox(height: 12),
+        const Text('أو حدد أياماً وفترات زمنية محددة:', style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody)),
+        AppTheme.gapHeightMedium,
         ..._weekDays.map((day) {
           final key = day.$1; final label = day.$2; final enabled = _avlDaysEnabled[key] ?? false; final slots = _avlSlots[key] ?? [];
           return Container(
             margin: const EdgeInsets.only(bottom: 12),
-            decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(10), border: Border.all(color: enabled ? AppTheme.primaryGold.withOpacity(0.5) : AppTheme.textGrey.withOpacity(0.2))),
+            decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: AppTheme.borderRadiusMedium, border: Border.all(color: enabled ? AppTheme.primaryGold.withOpacity(0.5) : AppTheme.textGrey.withOpacity(0.2))),
             child: Column(children: [
               ListTile(
                 leading: Icon(enabled ? Icons.check_box : Icons.check_box_outline_blank, color: enabled ? AppTheme.primaryGold : AppTheme.textGrey),
@@ -868,14 +868,14 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   child: Row(children: [
-                    const Text('من', style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
-                    const SizedBox(width: 4),
+                    const Text('من', style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption)),
+                    AppTheme.gapWidthXS,
                     Expanded(child: _timeField(value: slot['from'] ?? '', hint: '09:00', onChanged: (v) => setState(() => _avlSlots[key]![i]['from'] = v))),
-                    const SizedBox(width: 8),
-                    const Text('إلى', style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
-                    const SizedBox(width: 4),
+                    AppTheme.gapWidthSmall,
+                    const Text('إلى', style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption)),
+                    AppTheme.gapWidthXS,
                     Expanded(child: _timeField(value: slot['to'] ?? '', hint: '12:00', onChanged: (v) => setState(() => _avlSlots[key]![i]['to'] = v))),
-                    IconButton(icon: const Icon(Icons.remove_circle_outline, color: Colors.red, size: 18), onPressed: () => setState(() => _avlSlots[key]!.removeAt(i))),
+                    IconButton(icon: const Icon(Icons.remove_circle_outline, color: AppTheme.errorRed, size: 18), onPressed: () => setState(() => _avlSlots[key]!.removeAt(i))),
                   ]),
                 );
               }),
@@ -892,7 +892,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     return TextField(
       controller: TextEditingController(text: value)..selection = TextSelection.collapsed(offset: value.length),
       keyboardType: TextInputType.datetime,
-      style: const TextStyle(color: AppTheme.textWhite, fontSize: 13),
+      style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeBody),
       decoration: InputDecoration(hintText: hint, contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5), isDense: true, border: const OutlineInputBorder()),
       onChanged: onChanged,
     );
@@ -917,35 +917,35 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
       title: const Text('السند والعمولة', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
       content: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         if (_selectedType == 1) ...[
-          const Text('سند ملكية السيارة (إلزامي)', style: TextStyle(color: AppTheme.primaryGold, fontSize: 13, fontWeight: FontWeight.bold)),
+          const Text('سند ملكية السيارة (إلزامي)', style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeBody, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
           DropdownButtonFormField<int>(value: _selectedCarDocType, items: carDocs, onChanged: carDocs.isEmpty ? null : (v) => setState(() { _selectedCarDocType = v; _selectedDocType = v; }), decoration: const InputDecoration(border: OutlineInputBorder())),
           if (carDocs.isEmpty) _warnBox('أنواع سندات السيارات غير محمّلة من السيرفر'),
-          const SizedBox(height: 12),
-          const Text('نوع النمرة (إلزامي)', style: TextStyle(color: AppTheme.primaryGold, fontSize: 13, fontWeight: FontWeight.bold)),
+          AppTheme.gapHeightMedium,
+          const Text('نوع النمرة (إلزامي)', style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeBody, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
           DropdownButtonFormField<int>(value: _selectedPlateType, items: plateTypes, onChanged: plateTypes.isEmpty ? null : (v) => setState(() => _selectedPlateType = v), decoration: const InputDecoration(border: OutlineInputBorder())),
           if (plateTypes.isEmpty) _warnBox('أنواع النمر غير محمّلة من السيرفر'),
         ] else ...[
-          const Text('سند ملكية العقار (إلزامي)', style: TextStyle(color: AppTheme.primaryGold, fontSize: 13, fontWeight: FontWeight.bold)),
+          const Text('سند ملكية العقار (إلزامي)', style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeBody, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
           DropdownButtonFormField<int>(value: _selectedDocType, items: propertyDocs, onChanged: propertyDocs.isEmpty ? null : (v) => setState(() => _selectedDocType = v), decoration: const InputDecoration(border: OutlineInputBorder())),
           if (propertyDocs.isEmpty) _warnBox('أنواع سندات الملكية غير محمّلة من السيرفر'),
         ],
         const SizedBox(height: 15),
-        const Text('صورة سند الملكية (اختياري)', style: TextStyle(color: AppTheme.primaryGold, fontSize: 13, fontWeight: FontWeight.bold)),
+        const Text('صورة سند الملكية (اختياري)', style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeBody, fontWeight: FontWeight.bold)),
         const SizedBox(height: 6),
-        GestureDetector(onTap: _pickDocImage, child: Container(height: 120, width: double.infinity, decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(10), border: Border.all(color: _docImage != null ? Colors.green : AppTheme.primaryGold.withOpacity(0.5))), child: _docImage == null ? const Center(child: Icon(Icons.upload_file, size: 40, color: AppTheme.primaryGold)) : ClipRRect(borderRadius: BorderRadius.circular(10), child: kIsWeb ? Image.network(_docImage!.path, fit: BoxFit.cover) : Image.file(File(_docImage!.path), fit: BoxFit.cover, cacheWidth: 800)))),
-        const SizedBox(height: 20),
+        GestureDetector(onTap: _pickDocImage, child: Container(height: 120, width: double.infinity, decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: AppTheme.borderRadiusMedium, border: Border.all(color: _docImage != null ? AppTheme.successGreen : AppTheme.primaryGold.withOpacity(0.5))), child: _docImage == null ? const Center(child: Icon(Icons.upload_file, size: 40, color: AppTheme.primaryGold)) : ClipRRect(borderRadius: AppTheme.borderRadiusMedium, child: kIsWeb ? Image.network(_docImage!.path, fit: BoxFit.cover) : Image.file(File(_docImage!.path), fit: BoxFit.cover, cacheWidth: 800)))),
+        AppTheme.gapHeightXL,
         // ── تنبيه عمولة المكتب (يُخفى للوسيط — عروضه معفاة) ──
         if (!context.read<AuthProvider>().isBroker) ...[
         Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: AppTheme.primaryGold.withOpacity(0.1), borderRadius: BorderRadius.circular(12), border: Border.all(color: AppTheme.primaryGold, width: 1.5)),
+          padding: AppTheme.paddingAllLarge,
+          decoration: BoxDecoration(color: AppTheme.primaryGold.withOpacity(0.1), borderRadius: AppTheme.borderRadiusMedium, border: Border.all(color: AppTheme.primaryGold, width: 1.5)),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Row(children: [Icon(Icons.monetization_on, color: AppTheme.primaryGold, size: 28), SizedBox(width: 10), Text('تنبيه بخصوص عمولة المكتب', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 15))]),
-            const SizedBox(height: 8),
-            Text(_selectedTrans == 0 ? 'يتقاضى المكتب عمولة قدرها 3% من القيمة الإجمالية عند إتمام عملية البيع.' : 'يتقاضى المكتب عمولة تعادل أجرة نصف شهر عند إتمام عملية الإيجار.', style: const TextStyle(color: AppTheme.primaryGold, fontSize: 13, height: 1.4)),
+            const Row(children: [Icon(Icons.monetization_on, color: AppTheme.primaryGold, size: 28), AppTheme.gapWidthSmall, Text('تنبيه بخصوص عمولة المكتب', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 15))]),
+            AppTheme.gapHeightSmall,
+            Text(_selectedTrans == 0 ? 'يتقاضى المكتب عمولة قدرها 3% من القيمة الإجمالية عند إتمام عملية البيع.' : 'يتقاضى المكتب عمولة تعادل أجرة نصف شهر عند إتمام عملية الإيجار.', style: const TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeBody, height: 1.4)),
           ]),
         ),
         const SizedBox(height: 15),
@@ -953,34 +953,34 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         // ── تنويه الخدمات القانونية (منقول من تفاصيل العرض بطلب المدير + إضافة الاستشارات المأجورة) ──
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppTheme.primaryGold.withOpacity(0.5), width: 1.2)),
+          padding: AppTheme.paddingAllLarge,
+          decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: AppTheme.borderRadiusMedium, border: Border.all(color: AppTheme.primaryGold.withOpacity(0.5), width: 1.2)),
           child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [Icon(Icons.gavel, color: AppTheme.primaryGold, size: 22), SizedBox(width: 8), Expanded(child: Text('الضمان والتوثيق القانوني المعتمد ⚖️', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 14)))]),
-            SizedBox(height: 8),
-            Text('يقدم المكتب خدمة التوثيق القانوني المأجور وتنظيم العقود أصولاً لضمان حق الطرفين: تدقيق سندات الملكية (طابو، حكم محكمة، مواصلات) وخلوّها من الإشارات والنزاعات قبل إتمام الصفقة، إضافةً إلى تقديم الاستشارات القانونية المأجورة على يد محامين مختصين.', style: TextStyle(color: AppTheme.textWhite, fontSize: 12, height: 1.6)),
+            Row(children: [Icon(Icons.gavel, color: AppTheme.primaryGold, size: 22), AppTheme.gapWidthSmall, Expanded(child: Text('الضمان والتوثيق القانوني المعتمد ⚖️', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeMedium)))]),
+            AppTheme.gapHeightSmall,
+            Text('يقدم المكتب خدمة التوثيق القانوني المأجور وتنظيم العقود أصولاً لضمان حق الطرفين: تدقيق سندات الملكية (طابو، حكم محكمة، مواصلات) وخلوّها من الإشارات والنزاعات قبل إتمام الصفقة، إضافةً إلى تقديم الاستشارات القانونية المأجورة على يد محامين مختصين.', style: TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeSmall, height: 1.6)),
             SizedBox(height: 6),
-            Text('توثيق قانوني • عقود معتمدة • استشارات قانونية مأجورة', style: TextStyle(color: Colors.green, fontSize: 11, fontWeight: FontWeight.bold)),
+            Text('توثيق قانوني • عقود معتمدة • استشارات قانونية مأجورة', style: TextStyle(color: AppTheme.successGreen, fontSize: AppTheme.fontSizeCaption, fontWeight: FontWeight.bold)),
           ]),
         ),
         const SizedBox(height: 15),
         // ── الإقرار والتعهد — مقروء قبل الموافقة (كان نصاً أبيض بلا حاوية فيختفي، والآن داخل بطاقة داكنة) ──
         Container(
-          decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: BorderRadius.circular(10), border: Border.all(color: AppTheme.primaryGold.withOpacity(0.5), width: 1.2)),
+          decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: AppTheme.borderRadiusMedium, border: Border.all(color: AppTheme.primaryGold.withOpacity(0.5), width: 1.2)),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Theme(
               data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
               child: ExpansionTile(
                 leading: const Icon(Icons.description, color: AppTheme.primaryGold, size: 20),
-                title: const Text('الإقرار والتعهد — اضغط للقراءة قبل الموافقة', style: TextStyle(color: AppTheme.primaryGold, fontSize: 13, fontWeight: FontWeight.bold)),
+                title: const Text('الإقرار والتعهد — اضغط للقراءة قبل الموافقة', style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeBody, fontWeight: FontWeight.bold)),
                 iconColor: AppTheme.primaryGold, collapsedIconColor: AppTheme.primaryGold,
                 childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
-                children: [Text(_pledgeFullText, style: const TextStyle(color: AppTheme.textWhite, fontSize: 12, height: 1.7))],
+                children: [Text(_pledgeFullText, style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeSmall, height: 1.7))],
               ),
             ),
             CheckboxListTile(
               value: _agreePledge, onChanged: (v) => setState(() => _agreePledge = v ?? false),
-              title: const Text('أوافق على الإقرار والتعهد وصحة البيانات المقدمة', style: TextStyle(color: AppTheme.textWhite, fontSize: 13)),
+              title: const Text('أوافق على الإقرار والتعهد وصحة البيانات المقدمة', style: TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeBody)),
               activeColor: AppTheme.primaryGold, checkColor: AppTheme.deepBlack,
               side: const BorderSide(color: AppTheme.primaryGold, width: 1.5),
               contentPadding: const EdgeInsets.symmetric(horizontal: 8), controlAffinity: ListTileControlAffinity.leading,
@@ -989,12 +989,12 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         ),
 
         // ── تشيك بوكس النشر التلقائي على صفحات السوشيال (مفعل تلقائياً)
-        const SizedBox(height: 8),
+        AppTheme.gapHeightSmall,
         Container(
           decoration: BoxDecoration(
             // سطح فاتح مع حد ذهبي — بالثيم الجديد surfaceBlack = أبيض (النص الداكن textWhite)
             color: AppTheme.surfaceBlack,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: AppTheme.borderRadiusMedium,
             border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
           ),
           child: CheckboxListTile(
@@ -1002,11 +1002,11 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
             onChanged: (v) => setState(() => _autoPublishSocial = v ?? true),
             title: const Text(
               'نشر العرض تلقائياً على صفحاتنا في فيسبوك وإنستغرام (وأي صفحات إضافية مضافة)',
-              style: TextStyle(color: AppTheme.textWhite, fontSize: 13, fontWeight: FontWeight.w500),
+              style: TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeBody, fontWeight: FontWeight.w500),
             ),
             subtitle: const Text(
               'سيتم إنشاء منشور جاهز من بيانات العرض ونشره بعد موافقة الإدارة (يمكنك إلغاء التفعيل).',
-              style: TextStyle(color: AppTheme.textGrey, fontSize: 11),
+              style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption),
             ),
             activeColor: AppTheme.primaryGold,
             contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -1014,10 +1014,10 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           ),
         ),
 
-        const SizedBox(height: 10),
+        AppTheme.gapHeightSmall,
         _navRow(onBack: () => _goToStep(_selectedType == 1 ? 2 : 3)),
-        const SizedBox(height: 4),
-        SizedBox(width: double.infinity, height: 55, child: ElevatedButton(onPressed: _submitting ? null : _submit, child: const Text('نشر العرض للمراجعة الآن', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)))),
+        AppTheme.gapHeightXS,
+        SizedBox(width: double.infinity, height: 55, child: ElevatedButton(onPressed: _submitting ? null : _submit, child: const Text('نشر العرض للمراجعة الآن', style: TextStyle(fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeSubtitle)))),
       ]),
       isActive: _currentStep >= _lastStep,
     );
@@ -1027,7 +1027,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
 
   /// قائمة منسدلة بعنوان — كانت بلا value فتظهر فاضية بعد الاختيار
   /// (يوحي للمستخدم أن الشاشة "لا تعمل")، الآن تعرض الاختيار الحالي
-  Widget _dd(String label, List<String> items, String? value, Function(String) on) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(label, style: TextStyle(color: value != null ? AppTheme.primaryGold : AppTheme.textGrey, fontSize: 12, fontWeight: value != null ? FontWeight.bold : FontWeight.normal)), const SizedBox(height: 5), DropdownButtonFormField<String>(value: value, items: items.map((i) => DropdownMenuItem(value: i, child: Text(i))).toList(), onChanged: (v) => on(v!), decoration: const InputDecoration(border: OutlineInputBorder()))]);
+  Widget _dd(String label, List<String> items, String? value, Function(String) on) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(label, style: TextStyle(color: value != null ? AppTheme.primaryGold : AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall, fontWeight: value != null ? FontWeight.bold : FontWeight.normal)), const SizedBox(height: 5), DropdownButtonFormField<String>(value: value, items: items.map((i) => DropdownMenuItem(value: i, child: Text(i))).toList(), onChanged: (v) => on(v!), decoration: const InputDecoration(border: OutlineInputBorder()))]);
 
   /// توليد قالب منشور جاهز للنشر على صفحات السوشيال (فيسبوك/إنستغرام)
   /// يُستخدم عندما يكون _autoPublishSocial = true

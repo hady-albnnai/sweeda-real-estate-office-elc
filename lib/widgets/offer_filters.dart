@@ -157,10 +157,10 @@ class OfferFiltersButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppTheme.primaryGold,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: AppTheme.borderRadiusMedium,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppTheme.borderRadiusMedium,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           child: Row(
@@ -172,11 +172,11 @@ class OfferFiltersButton extends StatelessWidget {
                   style: TextStyle(
                       color: AppTheme.deepBlack,
                       fontWeight: FontWeight.bold,
-                      fontSize: 13)),
+                      fontSize: AppTheme.fontSizeBody)),
               if (count > 0) ...[
                 const SizedBox(width: 6),
                 Container(
-                  padding: const EdgeInsets.all(4),
+                  padding: AppTheme.paddingAllSmall,
                   constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
                   decoration: BoxDecoration(
                     color: AppTheme.surfaceBlack,
@@ -188,7 +188,7 @@ class OfferFiltersButton extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                         color: AppTheme.deepBlack,
-                        fontSize: 11,
+                        fontSize: AppTheme.fontSizeCaption,
                         fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -285,12 +285,12 @@ class _OfferFiltersBody extends StatelessWidget {
         children: [
           Row(children: [
             const Icon(Icons.tune, color: AppTheme.primaryGold),
-            const SizedBox(width: 8),
+            AppTheme.gapWidthSmall,
             const Expanded(
               child: Text('الفلاتر الكاملة',
                   style: TextStyle(
                       color: AppTheme.primaryGold,
-                      fontSize: 18,
+                      fontSize: AppTheme.fontSizeTitle,
                       fontWeight: FontWeight.bold)),
             ),
             TextButton(
@@ -298,7 +298,7 @@ class _OfferFiltersBody extends StatelessWidget {
               child: const Text('تصفير', style: TextStyle(color: AppTheme.errorRed)),
             ),
           ]),
-          const SizedBox(height: 14),
+          AppTheme.gapHeightMedium,
 
           // الموقع
           DropdownButtonFormField<String>(
@@ -309,7 +309,7 @@ class _OfferFiltersBody extends StatelessWidget {
                 .toList(),
             onChanged: (v) => sheetSet(() => f.city = v),
           ),
-          const SizedBox(height: 14),
+          AppTheme.gapHeightMedium,
 
           // السعر
           RangeSlider(
@@ -324,8 +324,8 @@ class _OfferFiltersBody extends StatelessWidget {
           ),
           Text('السعر: ${f.minPrice.toInt()} — ${f.maxPrice.toInt()}',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
-          const SizedBox(height: 8),
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
+          AppTheme.gapHeightSmall,
 
           if (showProp) ...[
             const _FSectionTitle('🏠 فلاتر العقارات'),
@@ -336,7 +336,7 @@ class _OfferFiltersBody extends StatelessWidget {
                   ..._catItems(catPropSrc)],
               onChanged: (v) => sheetSet(() => f.cat = v),
             ),
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             DropdownButtonFormField<int>(
               value: f.docTp,
               decoration: _fDeco('نوع السند'),
@@ -344,7 +344,7 @@ class _OfferFiltersBody extends StatelessWidget {
                   ..._catItems(docTpSrc)],
               onChanged: (v) => sheetSet(() => f.docTp = v),
             ),
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             DropdownButtonFormField<String>(
               value: f.finishing,
               decoration: _fDeco('التشطيب'),
@@ -353,7 +353,7 @@ class _OfferFiltersBody extends StatelessWidget {
                   .toList(),
               onChanged: (v) => sheetSet(() => f.finishing = v),
             ),
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             DropdownButtonFormField<String>(
               value: f.direction,
               decoration: _fDeco('الاتجاه'),
@@ -363,7 +363,7 @@ class _OfferFiltersBody extends StatelessWidget {
                   .toList(),
               onChanged: (v) => sheetSet(() => f.direction = v),
             ),
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             Row(children: [
               Expanded(child: TextFormField(
                 initialValue: f.minArea?.toInt().toString() ?? '',
@@ -371,7 +371,7 @@ class _OfferFiltersBody extends StatelessWidget {
                 decoration: _fDeco('مساحة من'),
                 onChanged: (v) => f.minArea = double.tryParse(v),
               )),
-              const SizedBox(width: 10),
+              AppTheme.gapWidthSmall,
               Expanded(child: TextFormField(
                 initialValue: f.maxArea?.toInt().toString() ?? '',
                 keyboardType: TextInputType.number,
@@ -379,7 +379,7 @@ class _OfferFiltersBody extends StatelessWidget {
                 onChanged: (v) => f.maxArea = double.tryParse(v),
               )),
             ]),
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             Row(children: [
               Expanded(child: TextFormField(
                 initialValue: f.floor?.toString() ?? '',
@@ -387,7 +387,7 @@ class _OfferFiltersBody extends StatelessWidget {
                 decoration: _fDeco('الطابق'),
                 onChanged: (v) => f.floor = int.tryParse(v),
               )),
-              const SizedBox(width: 10),
+              AppTheme.gapWidthSmall,
               Expanded(child: DropdownButtonFormField<int>(
                 value: f.minRooms,
                 decoration: _fDeco('غرف (أدنى)'),
@@ -397,7 +397,7 @@ class _OfferFiltersBody extends StatelessWidget {
                 onChanged: (v) => sheetSet(() => f.minRooms = v),
               )),
             ]),
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
           ],
 
           if (showCar) ...[
@@ -408,14 +408,14 @@ class _OfferFiltersBody extends StatelessWidget {
                 decoration: _fDeco('الماركة'),
                 onChanged: (v) => f.brand = v.trim().isEmpty ? null : v.trim(),
               )),
-              const SizedBox(width: 10),
+              AppTheme.gapWidthSmall,
               Expanded(child: TextFormField(
                 initialValue: f.model ?? '',
                 decoration: _fDeco('الموديل'),
                 onChanged: (v) => f.model = v.trim().isEmpty ? null : v.trim(),
               )),
             ]),
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             Row(children: [
               Expanded(child: TextFormField(
                 initialValue: f.year?.toString() ?? '',
@@ -423,7 +423,7 @@ class _OfferFiltersBody extends StatelessWidget {
                 decoration: _fDeco('سنة الصنع'),
                 onChanged: (v) => f.year = int.tryParse(v),
               )),
-              const SizedBox(width: 10),
+              AppTheme.gapWidthSmall,
               Expanded(child: DropdownButtonFormField<int>(
                 value: f.maxKm,
                 decoration: _fDeco('كم (أقصى)'),
@@ -434,7 +434,7 @@ class _OfferFiltersBody extends StatelessWidget {
                 onChanged: (v) => sheetSet(() => f.maxKm = v),
               )),
             ]),
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             Row(children: [
               Expanded(child: DropdownButtonFormField<String>(
                 value: f.fuel,
@@ -444,7 +444,7 @@ class _OfferFiltersBody extends StatelessWidget {
                     .toList(),
                 onChanged: (v) => sheetSet(() => f.fuel = v),
               )),
-              const SizedBox(width: 10),
+              AppTheme.gapWidthSmall,
               Expanded(child: DropdownButtonFormField<String>(
                 value: f.transmission,
                 decoration: _fDeco('القير'),
@@ -454,14 +454,14 @@ class _OfferFiltersBody extends StatelessWidget {
                 onChanged: (v) => sheetSet(() => f.transmission = v),
               )),
             ]),
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
           ],
 
           // خيارات عامة
           SwitchListTile(
             value: f.imagesOnly,
             title: const Text('عروض لها صور فقط',
-                style: TextStyle(color: AppTheme.textWhite, fontSize: 13)),
+                style: TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeBody)),
             activeColor: AppTheme.primaryGold,
             contentPadding: EdgeInsets.zero,
             onChanged: (v) => sheetSet(() => f.imagesOnly = v),
@@ -477,7 +477,7 @@ class _OfferFiltersBody extends StatelessWidget {
             ],
             onChanged: (v) => sheetSet(() => f.sort = v ?? 'none'),
           ),
-          const SizedBox(height: 16),
+          AppTheme.gapHeightLarge,
 
           ElevatedButton.icon(
             onPressed: onApply,
@@ -490,7 +490,7 @@ class _OfferFiltersBody extends StatelessWidget {
               backgroundColor: AppTheme.primaryGold,
               padding: const EdgeInsets.symmetric(vertical: 13),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                  borderRadius: AppTheme.borderRadiusMedium),
             ),
           ),
         ],
@@ -501,20 +501,20 @@ class _OfferFiltersBody extends StatelessWidget {
 
 InputDecoration _fDeco(String label) => InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(color: AppTheme.textGrey, fontSize: 13),
+      labelStyle: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody),
       filled: true,
       fillColor: AppTheme.scaffoldBackground,
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: AppTheme.borderRadiusMedium,
         borderSide: BorderSide(color: AppTheme.primaryGold.withOpacity(0.3)),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: AppTheme.borderRadiusMedium,
         borderSide: BorderSide(color: AppTheme.primaryGold.withOpacity(0.3)),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: AppTheme.borderRadiusMedium,
         borderSide: const BorderSide(color: AppTheme.primaryGold),
       ),
     );
@@ -533,7 +533,7 @@ class _FSectionTitle extends StatelessWidget {
         style: const TextStyle(
           color: AppTheme.primaryGold,
           fontWeight: FontWeight.bold,
-          fontSize: 14,
+          fontSize: AppTheme.fontSizeMedium,
         ),
       ),
     );

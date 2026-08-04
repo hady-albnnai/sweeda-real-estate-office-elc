@@ -88,10 +88,10 @@ class _MyRatingsScreenState extends State<MyRatingsScreen> {
                   color: AppTheme.primaryGold,
                   onRefresh: _load,
                   child: ListView(
-                    padding: const EdgeInsets.all(12),
+                    padding: AppTheme.paddingAllMedium,
                     children: [
                       _summaryCard(),
-                      const SizedBox(height: 12),
+                      AppTheme.gapHeightMedium,
                       ..._ratings.map(_ratingTile),
                     ],
                   ),
@@ -106,13 +106,13 @@ class _MyRatingsScreenState extends State<MyRatingsScreen> {
         children: [
           Icon(Icons.star_outline,
               color: AppTheme.textGrey.withOpacity(0.4), size: 80),
-          const SizedBox(height: 12),
+          AppTheme.gapHeightMedium,
           const Text('لم تستلم أي تقييم بعد',
-              style: TextStyle(color: AppTheme.textGrey, fontSize: 16)),
+              style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSubtitle)),
           const SizedBox(height: 6),
           const Text('أكمل صفقات وقدّم خدمة ممتازة لتحصل على تقييمات',
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+              style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
         ],
       ),
     );
@@ -122,14 +122,14 @@ class _MyRatingsScreenState extends State<MyRatingsScreen> {
     final count = _ratings.length;
     final fiveStars = _ratings.where((r) => (r['stars'] ?? 0) == 5).length;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFFD4AF37), Color(0xFFFFD700)],
+          colors: [AppTheme.primaryGold, Color(0xFFFFD700)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppTheme.borderRadiusLarge,
       ),
       child: Row(
         children: [
@@ -166,19 +166,19 @@ class _MyRatingsScreenState extends State<MyRatingsScreen> {
                 Text('$count تقييم إجمالي',
                     style: const TextStyle(
                         color: Colors.black,
-                        fontSize: 16,
+                        fontSize: AppTheme.fontSizeSubtitle,
                         fontWeight: FontWeight.bold)),
-                const SizedBox(height: 4),
+                AppTheme.gapHeightXS,
                 Text('منها $fiveStars بـ 5 نجوم ⭐',
                     style: const TextStyle(
-                        color: Colors.black87, fontSize: 13)),
-                const SizedBox(height: 4),
+                        color: Colors.black87, fontSize: AppTheme.fontSizeBody)),
+                AppTheme.gapHeightXS,
                 Text(
                     fiveStars > 0
                         ? '🎁 حصلت على ${fiveStars * 200} نقطة مكافأة'
                         : 'احصل على 200 نقطة عند كل تقييم 5 نجوم',
                     style: const TextStyle(
-                        color: Colors.black54, fontSize: 12)),
+                        color: Colors.black54, fontSize: AppTheme.fontSizeSmall)),
               ],
             ),
           ),
@@ -202,10 +202,10 @@ class _MyRatingsScreenState extends State<MyRatingsScreen> {
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 5),
-      padding: const EdgeInsets.all(12),
+      padding: AppTheme.paddingAllMedium,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: AppTheme.borderRadiusMedium,
         border: Border.all(
             color: AppTheme.primaryGold.withOpacity(0.2), width: 1),
       ),
@@ -229,17 +229,17 @@ class _MyRatingsScreenState extends State<MyRatingsScreen> {
                 Text(
                   '${date.year}/${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}',
                   style: const TextStyle(
-                      color: AppTheme.textGrey, fontSize: 11),
+                      color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption),
                 ),
             ],
           ),
           if (comment.isNotEmpty) ...[
-            const SizedBox(height: 8),
+            AppTheme.gapHeightSmall,
             Text(
               '"$comment"',
               style: const TextStyle(
                   color: AppTheme.textWhite,
-                  fontSize: 13,
+                  fontSize: AppTheme.fontSizeBody,
                   fontStyle: FontStyle.italic,
                   height: 1.5),
             ),
@@ -249,7 +249,7 @@ class _MyRatingsScreenState extends State<MyRatingsScreen> {
           const Text('— تقييم من عميل عبر المكتب',
               style: TextStyle(
                   color: AppTheme.textGrey,
-                  fontSize: 11,
+                  fontSize: AppTheme.fontSizeCaption,
                   fontWeight: FontWeight.w500)),
         ],
       ),

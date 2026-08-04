@@ -132,7 +132,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                   style: TextStyle(color: AppTheme.textGrey))),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.errorRed),
             child:
                 const Text('إلغاء الطلب', style: TextStyle(color: Colors.white)),
           ),
@@ -208,7 +208,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.cancel_outlined, color: Colors.red),
+            icon: const Icon(Icons.cancel_outlined, color: AppTheme.errorRed),
             onPressed: (r.canCancel && !_deleting) ? _cancelRequest : null,
           ),
         ],
@@ -217,25 +217,25 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
         color: AppTheme.primaryGold,
         onRefresh: _load,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: AppTheme.paddingAllLarge,
           children: [
             _summaryCard(r),
-            const SizedBox(height: 20),
+            AppTheme.gapHeightXL,
             _detailsCard(r),
             if (r.canRenew) ...[
-              const SizedBox(height: 12),
+              AppTheme.gapHeightMedium,
               _renewButton(),
             ],
-            const SizedBox(height: 20),
+            AppTheme.gapHeightXL,
             _matchesHeader(),
             if (_matches.isNotEmpty) _filterBar(),
-            const SizedBox(height: 10),
+            AppTheme.gapHeightSmall,
             if (_filteredMatches.isEmpty && _matches.isNotEmpty)
-              const Padding(padding: EdgeInsets.all(20),
+              const Padding(padding: AppTheme.paddingAllXL,
                 child: Text('لا توجد عروض تطابق الفلتر', style: TextStyle(color: AppTheme.textGrey)))
             else if (_matches.isEmpty) _noMatches()
             else ..._filteredMatches.map(_matchTile),
-            const SizedBox(height: 20),
+            AppTheme.gapHeightXL,
           ],
         ),
       ),
@@ -245,10 +245,10 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
   Widget _summaryCard(RequestModel r) {
     final status = _statusInfo(r.sts);
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppTheme.borderRadiusLarge,
         border: Border.all(color: status.$2.withOpacity(0.4)),
       ),
       child: Column(
@@ -258,12 +258,12 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
             children: [
               Icon(r.typ == 0 ? Icons.home : Icons.directions_car,
                   color: AppTheme.primaryGold, size: 28),
-              const SizedBox(width: 8),
+              AppTheme.gapWidthSmall,
               Text(
                 r.typ == 0 ? 'بحث عن عقار' : 'بحث عن سيارة',
                 style: const TextStyle(
                     color: AppTheme.textWhite,
-                    fontSize: 18,
+                    fontSize: AppTheme.fontSizeTitle,
                     fontWeight: FontWeight.bold),
               ),
               const Spacer(),
@@ -272,24 +272,24 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                     horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: status.$2.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: AppTheme.borderRadiusSmall,
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(status.$3, color: status.$2, size: 14),
-                    const SizedBox(width: 4),
+                    AppTheme.gapWidthXS,
                     Text(status.$1,
                         style: TextStyle(
                             color: status.$2,
-                            fontSize: 12,
+                            fontSize: AppTheme.fontSizeSmall,
                             fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          AppTheme.gapHeightMedium,
           if (r.prc > 0)
             Text(
               'السعر المستهدف: ${r.prc.toStringAsFixed(0)} ${r.cur == 0 ? '\$' : 'ل.س'}',
@@ -298,22 +298,22 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                   fontSize: 15,
                   fontWeight: FontWeight.bold),
             ),
-          const SizedBox(height: 4),
+          AppTheme.gapHeightXS,
           Row(
             children: [
               Text(
                 'تاريخ الإنشاء: ${r.tsCrt.day}/${r.tsCrt.month}/${r.tsCrt.year}',
-                style: const TextStyle(color: AppTheme.textGrey, fontSize: 12),
+                style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall),
               ),
               const Spacer(),
               if (r.isOpen) ...[
                 const Icon(Icons.timer, size: 14, color: AppTheme.primaryGold),
-                const SizedBox(width: 4),
+                AppTheme.gapWidthXS,
                 Text(
                   'متبقي ${r.daysUntilExpiration} يوم',
                   style: const TextStyle(
                       color: AppTheme.primaryGold,
-                      fontSize: 12,
+                      fontSize: AppTheme.fontSizeSmall,
                       fontWeight: FontWeight.bold),
                 ),
               ],
@@ -326,10 +326,10 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
 
   Widget _detailsCard(RequestModel r) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppTheme.borderRadiusLarge,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -343,20 +343,20 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
           _row('اسم العميل', r.clNm.isEmpty ? '—' : r.clNm),
           _row('هاتف العميل', r.clPh.isEmpty ? '—' : r.clPh),
           if (r.notes.isNotEmpty) ...[
-            const SizedBox(height: 8),
+            AppTheme.gapHeightSmall,
             const Text('ملاحظات:',
                 style: TextStyle(
-                    color: AppTheme.primaryGold, fontSize: 13)),
-            const SizedBox(height: 4),
+                    color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeBody)),
+            AppTheme.gapHeightXS,
             Text(r.notes,
                 style: const TextStyle(
-                    color: AppTheme.textWhite, fontSize: 13)),
+                    color: AppTheme.textWhite, fontSize: AppTheme.fontSizeBody)),
           ],
           if (r.specs.isNotEmpty) ...[
-            const SizedBox(height: 12),
+            AppTheme.gapHeightMedium,
             const Text('المواصفات المطلوبة:',
                 style: TextStyle(
-                    color: AppTheme.primaryGold, fontSize: 13)),
+                    color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeBody)),
             const SizedBox(height: 6),
             ...r.specs.entries.map((e) => _row(e.key, e.value.toString())),
           ],
@@ -449,19 +449,19 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
             decoration: const InputDecoration(labelText: 'السعر من', border: OutlineInputBorder(), isDense: true),
             onChanged: (v) => setState(() => _filterMinPrice = double.tryParse(v)),
           )),
-          const SizedBox(width: 8),
+          AppTheme.gapWidthSmall,
           Expanded(child: TextField(
             keyboardType: TextInputType.number,
             decoration: const InputDecoration(labelText: 'السعر إلى', border: OutlineInputBorder(), isDense: true),
             onChanged: (v) => setState(() => _filterMaxPrice = double.tryParse(v)),
           )),
         ]),
-        const SizedBox(height: 8),
+        AppTheme.gapHeightSmall,
         TextField(
           decoration: const InputDecoration(labelText: 'فلتر الموقع', hintText: 'اكتب اسم المنطقة...', border: OutlineInputBorder(), isDense: true, prefixIcon: Icon(Icons.location_on, size: 18)),
           onChanged: (v) => setState(() => _filterLocation = v.trim()),
         ),
-        const SizedBox(height: 8),
+        AppTheme.gapHeightSmall,
         // ── التصنيف الرئيسي ──
         DropdownButtonFormField<int>(
           value: _filterCat,
@@ -470,7 +470,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
           onChanged: (v) => setState(() => _filterCat = v),
           decoration: const InputDecoration(labelText: 'التصنيف', border: OutlineInputBorder(), isDense: true),
         ),
-        const SizedBox(height: 8),
+        AppTheme.gapHeightSmall,
         // ── نوع السند ──
         if (docItems.isNotEmpty)
           DropdownButtonFormField<int>(
@@ -482,7 +482,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
           ),
         // ── فلاتر العقارات ──
         if (isProperty) ...[
-          const SizedBox(height: 8),
+          AppTheme.gapHeightSmall,
           DropdownButtonFormField<String>(
             value: _filterFinishing,
             isExpanded: true,
@@ -497,7 +497,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
             onChanged: (v) => setState(() => _filterFinishing = v),
             decoration: const InputDecoration(labelText: 'الإكساء', border: OutlineInputBorder(), isDense: true),
           ),
-          const SizedBox(height: 8),
+          AppTheme.gapHeightSmall,
           DropdownButtonFormField<String>(
             value: _filterDirection,
             isExpanded: true,
@@ -516,21 +516,21 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
             onChanged: (v) => setState(() => _filterDirection = v),
             decoration: const InputDecoration(labelText: 'اتجاه العقار', border: OutlineInputBorder(), isDense: true),
           ),
-          const SizedBox(height: 8),
+          AppTheme.gapHeightSmall,
           Row(children: [
             Expanded(child: TextField(
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(labelText: 'المساحة من', border: OutlineInputBorder(), isDense: true),
               onChanged: (v) => setState(() => _filterMinArea = double.tryParse(v)),
             )),
-            const SizedBox(width: 8),
+            AppTheme.gapWidthSmall,
             Expanded(child: TextField(
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(labelText: 'المساحة إلى', border: OutlineInputBorder(), isDense: true),
               onChanged: (v) => setState(() => _filterMaxArea = double.tryParse(v)),
             )),
           ]),
-          const SizedBox(height: 8),
+          AppTheme.gapHeightSmall,
           TextField(
             keyboardType: TextInputType.number,
             decoration: const InputDecoration(labelText: 'الطابق', border: OutlineInputBorder(), isDense: true),
@@ -539,18 +539,18 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
         ],
         // ── فلاتر السيارات ──
         if (!isProperty) ...[
-          const SizedBox(height: 8),
+          AppTheme.gapHeightSmall,
           TextField(
             decoration: const InputDecoration(labelText: 'الماركة', hintText: 'مثال: تويوتا، كيا...', border: OutlineInputBorder(), isDense: true),
             onChanged: (v) => setState(() => _filterBrand = v.trim()),
           ),
-          const SizedBox(height: 8),
+          AppTheme.gapHeightSmall,
           TextField(
             keyboardType: TextInputType.number,
             decoration: const InputDecoration(labelText: 'سنة الصنع', border: OutlineInputBorder(), isDense: true),
             onChanged: (v) => setState(() => _filterYear = int.tryParse(v)),
           ),
-          const SizedBox(height: 8),
+          AppTheme.gapHeightSmall,
           DropdownButtonFormField<String>(
             value: _filterFuel,
             isExpanded: true,
@@ -564,7 +564,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
             onChanged: (v) => setState(() => _filterFuel = v),
             decoration: const InputDecoration(labelText: 'الوقود', border: OutlineInputBorder(), isDense: true),
           ),
-          const SizedBox(height: 8),
+          AppTheme.gapHeightSmall,
           DropdownButtonFormField<String>(
             value: _filterTransmission,
             isExpanded: true,
@@ -617,13 +617,13 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
             style: TextStyle(
                 color: AppTheme.primaryGold,
                 fontWeight: FontWeight.bold,
-                fontSize: 16)),
-        const SizedBox(width: 8),
+                fontSize: AppTheme.fontSizeSubtitle)),
+        AppTheme.gapWidthSmall,
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(
             color: AppTheme.primaryGold.withOpacity(0.15),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: AppTheme.borderRadiusSmall,
           ),
           child: Text('${_matches.length}',
               style: const TextStyle(
@@ -636,7 +636,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
           icon: const Icon(Icons.refresh,
               color: AppTheme.primaryGold, size: 16),
           label: const Text('تحديث',
-              style: TextStyle(color: AppTheme.primaryGold, fontSize: 12)),
+              style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSmall)),
         ),
       ],
     );
@@ -644,21 +644,21 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
 
   Widget _noMatches() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: AppTheme.paddingAllXL,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppTheme.borderRadiusMedium,
       ),
       child: Column(
         children: [
           const Icon(Icons.search_off,
               color: AppTheme.textGrey, size: 50),
-          const SizedBox(height: 8),
+          AppTheme.gapHeightSmall,
           const Text('لا توجد عروض مطابقة حالياً',
-              style: TextStyle(color: AppTheme.textGrey, fontSize: 14)),
-          const SizedBox(height: 4),
+              style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeMedium)),
+          AppTheme.gapHeightXS,
           const Text('سنبلغك عند توفّر عرض مطابق',
-              style: TextStyle(color: AppTheme.textGrey, fontSize: 11)),
+              style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption)),
         ],
       ),
     );
@@ -669,17 +669,17 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppTheme.borderRadiusMedium,
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppTheme.borderRadiusMedium,
         onTap: () => context.push('/offer/${o.id}'),
         child: Padding(
-          padding: const EdgeInsets.all(10),
+          padding: AppTheme.paddingAllMedium,
           child: Row(
             children: [
               ClipRRect(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: AppTheme.borderRadiusSmall,
                 child: SizedBox(
                   width: 70,
                   height: 70,
@@ -696,7 +696,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                               color: AppTheme.textGrey)),
                 ),
               ),
-              const SizedBox(width: 10),
+              AppTheme.gapWidthSmall,
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -714,10 +714,10 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                           color: AppTheme.primaryGold,
                           fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(height: 2),
+                    AppTheme.gapHeightXXS,
                     Text((o.loc['d'] ?? '').toString(),
                         style: const TextStyle(
-                            color: AppTheme.textGrey, fontSize: 11)),
+                            color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption)),
                   ],
                 ),
               ),
@@ -725,17 +725,17 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(Icons.arrow_forward_ios, color: AppTheme.primaryGold, size: 14),
-                  const SizedBox(height: 8),
+                  AppTheme.gapHeightSmall,
                   GestureDetector(
                     onTap: () => _bookOnOffer(o),
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: AppTheme.primaryGold.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: AppTheme.borderRadiusSmall,
                         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
                       ),
-                      child: const Text('📅 حجز', style: TextStyle(color: AppTheme.primaryGold, fontSize: 11, fontWeight: FontWeight.bold)),
+                      child: const Text('📅 حجز', style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeCaption, fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
@@ -786,13 +786,13 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
             width: 100,
             child: Text(k,
                 style: const TextStyle(
-                    color: AppTheme.textGrey, fontSize: 12)),
+                    color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
           ),
           Expanded(
             child: Text(v,
                 style: const TextStyle(
                     color: AppTheme.textWhite,
-                    fontSize: 13,
+                    fontSize: AppTheme.fontSizeBody,
                     fontWeight: FontWeight.w500)),
           ),
         ],
@@ -803,17 +803,17 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
   (String, Color, IconData) _statusInfo(int s) {
     switch (s) {
       case 0:
-        return ('نشط', Colors.green, Icons.check_circle);
+        return ('نشط', AppTheme.successGreen, Icons.check_circle);
       case 1:
-        return ('قيد المعالجة', Colors.orange, Icons.search);
+        return ('قيد المعالجة', AppTheme.warningOrange, Icons.search);
       case 2:
-        return ('تمت تلبيته', Colors.blue, Icons.done_all);
+        return ('تمت تلبيته', AppTheme.infoBlue, Icons.done_all);
       case 3:
-        return ('ملغي', Colors.grey, Icons.lock);
+        return ('ملغي', AppTheme.textGrey, Icons.lock);
       case 4:
         return ('منتهي الصلاحية', Colors.deepOrange, Icons.hourglass_disabled);
       default:
-        return ('غير معروف', Colors.grey, Icons.help);
+        return ('غير معروف', AppTheme.textGrey, Icons.help);
     }
   }
 }
