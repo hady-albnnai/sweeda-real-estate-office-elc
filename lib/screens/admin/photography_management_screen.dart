@@ -185,7 +185,7 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
             AppTheme.gapHeightSmall,
             Text(
               'الأكثر إنجازاً: ${top.map((e) => '${e['name']} (${e['done']})').join(' · ')}',
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption.5),
+              style: const TextStyle(color: AppTheme.textGrey, fontSize: 11.5),
             ),
           ],
         ],
@@ -222,7 +222,7 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
               Text(value,
                   style: const TextStyle(
                       color: AppTheme.textWhite,
-                      fontSize: AppTheme.fontSizeBody.5,
+                      fontSize: 13.5,
                       fontWeight: FontWeight.bold)),
             ],
           ),

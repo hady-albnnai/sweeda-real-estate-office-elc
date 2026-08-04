@@ -404,7 +404,7 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                                   'الخدمة مأجورة — $_photoFeeTxt ل.س',
                                   style: const TextStyle(
                                     color: AppTheme.primaryGold,
-                                    fontSize: AppTheme.fontSizeBody.5,
+                                    fontSize: 13.5,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -412,7 +412,7 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                                 const Text(
                                   'تُدفع للمصوّر عند وصوله لموقع العقار.',
                                   style: TextStyle(
-                                      color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption.5),
+                                      color: AppTheme.textGrey, fontSize: 11.5),
                                 ),
                               ],
                             ),
@@ -649,7 +649,7 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
           child: Text(
             text,
             style: const TextStyle(
-                color: AppTheme.textWhite, fontSize: AppTheme.fontSizeSmall.5, height: 1.5),
+                color: AppTheme.textWhite, fontSize: 12.5, height: 1.5),
           ),
         ),
       ],
@@ -829,7 +829,7 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                   child: Text(
                     'لا يمكن إلغاء الطلب بعد بدء التصوير — يرجى التواصل مع المكتب مباشرة إذا لزم الأمر',
                     style: const TextStyle(
-                        color: Colors.amber, fontSize: AppTheme.fontSizeXS.5),
+                        color: Colors.amber, fontSize: 10.5),
                   ),
                 ),
               ],

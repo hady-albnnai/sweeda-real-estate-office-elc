@@ -121,7 +121,7 @@ class _CheckEmailScreenState extends State<CheckEmailScreen> {
                   ),
                 ),
               ],
-              const const SizedBox(height: AppTheme.spacingXXXL),
+              const SizedBox(height: AppTheme.spacingXXXL),
               SizedBox(
                 width: double.infinity,
                 height: 52,
@@ -148,7 +148,7 @@ class _CheckEmailScreenState extends State<CheckEmailScreen> {
                 child: const Text('تغيير طريقة التسجيل',
                     style: TextStyle(color: AppTheme.primaryGold)),
               ),
-              const const SizedBox(height: AppTheme.spacingXXXL),
+              const SizedBox(height: AppTheme.spacingXXXL),
               Container(
                 padding: AppTheme.paddingAllLarge,
                 decoration: BoxDecoration(

@@ -160,7 +160,7 @@ class _PushChannelsScreenState extends State<PushChannelsScreen> {
                 'سجل الجرس بيتحوّل «غير مقروء» بس لما يان البوش يقبل فعلياً بجهاز '
                 'واحد عالأقل من أجهزتك المفعل عليها الحساب (ومن أوفلاط القنوات '
                 'الموسومة «hybrid»). فشل/رفض ⇒ يبقى مقروءاً وتكمل دوريتك عليه.',
-                style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption.5, height: 1.6),
+                style: TextStyle(color: AppTheme.textGrey, fontSize: 11.5, height: 1.6),
               ),
               AppTheme.gapHeightSmall,
               _famChip('🤖 أندرويد / 🍎 iOS', [

@@ -388,7 +388,7 @@ class AccountInfoScreen extends StatelessWidget {
               child: Text(statusLabel,
                   style: TextStyle(
                       color: statusColor,
-                      fontSize: AppTheme.fontSizeXS.5,
+                      fontSize: 10.5,
                       fontWeight: FontWeight.bold)),
             ),
           ]),
@@ -407,7 +407,7 @@ class AccountInfoScreen extends StatelessWidget {
                       ? 'فترة السماح حتى: ${AppUtils.formatTimestamp(user.pkgGrace!)}'
                       : 'انتهت بتاريخ: ${AppUtils.formatTimestamp(user.pkgEnd!)}',
               style:
-                  const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption.5),
+                  const TextStyle(color: AppTheme.textGrey, fontSize: 11.5),
             ),
           ],
           AppTheme.gapHeightMedium,

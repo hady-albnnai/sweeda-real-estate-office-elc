@@ -48,6 +48,76 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
       (_counts['openReports'] ?? 0) +
       (_counts['pendingVerifications'] ?? 0);
 
+  List<Map<String, dynamic>> _getShortcutItems(dynamic user) {
+    final items = <Map<String, dynamic>>[];
+    
+    if (PermissionService.has(user, PermissionKeys.reviewOffers)) {
+      items.add({
+        'icon': Icons.rate_review_outlined,
+        'title': 'مراجعة العروض',
+        'route': '/admin/review-offers',
+      });
+    }
+    
+    if (PermissionService.has(user, PermissionKeys.managePayments)) {
+      items.add({
+        'icon': Icons.payment,
+        'title': 'إدارة المدفوعات',
+        'route': '/admin/payments',
+      });
+    }
+    
+    if (PermissionService.has(user, PermissionKeys.manageAppointments)) {
+      items.add({
+        'icon': Icons.event,
+        'title': 'إدارة المواعيد',
+        'route': '/admin/appointments',
+      });
+    }
+    
+    if (PermissionService.has(user, PermissionKeys.manageUsers)) {
+      items.add({
+        'icon': Icons.people,
+        'title': 'إدارة المستخدمين',
+        'route': '/admin/users',
+      });
+    }
+    
+    if (PermissionService.has(user, PermissionKeys.reviewVerifications)) {
+      items.add({
+        'icon': Icons.verified_user,
+        'title': 'طلبات التوثيق',
+        'route': '/admin/review-verifications',
+      });
+    }
+    
+    if (PermissionService.has(user, PermissionKeys.manageReports)) {
+      items.add({
+        'icon': Icons.flag,
+        'title': 'التبليغات',
+        'route': '/admin/reports',
+      });
+    }
+    
+    if (PermissionService.has(user, PermissionKeys.manageStaff)) {
+      items.add({
+        'icon': Icons.admin_panel_settings,
+        'title': 'إدارة الموظفين',
+        'route': '/admin/employees',
+      });
+    }
+    
+    if (PermissionService.has(user, PermissionKeys.viewAnalytics)) {
+      items.add({
+        'icon': Icons.analytics,
+        'title': 'التحليلات',
+        'route': '/admin/analytics',
+      });
+    }
+    
+    return items;
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();

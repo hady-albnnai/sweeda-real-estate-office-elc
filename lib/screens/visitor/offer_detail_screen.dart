@@ -1144,7 +1144,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                                   'صُوِّر بواسطة مصوّر المكتب',
                                   style: TextStyle(
                                       color: Colors.cyan,
-                                      fontSize: AppTheme.fontSizeSmall.5,
+                                      fontSize: 12.5,
                                       fontWeight: FontWeight.bold),
                                 ),
                                 Text(

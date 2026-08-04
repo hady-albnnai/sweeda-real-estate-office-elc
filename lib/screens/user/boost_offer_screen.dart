@@ -261,7 +261,7 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
                           '«تمديد» مدفوع: يضيف 30 يوم فوق المدة المتبقية بأي وقت.\n«تجديد» مجاني: عندما يتبقى يومان أو أقل على انتهاء العرض.',
                           style: TextStyle(
                               color: AppTheme.textGrey,
-                              fontSize: AppTheme.fontSizeCaption.5,
+                              fontSize: 11.5,
                               height: 1.5),
                         ),
                       ),
@@ -590,7 +590,7 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
                     '${ending.day}/${ending.month}/${ending.year}'
                 : 'شارة مميّز + ظهور في قسم خاص — شراء مدفوع بالمدة (1-4 أسابيع)',
             style:
-                const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption.5),
+                const TextStyle(color: AppTheme.textGrey, fontSize: 11.5),
           ),
           AppTheme.gapHeightSmall,
           SizedBox(

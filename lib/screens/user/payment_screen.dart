@@ -564,7 +564,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     child: Text(
                       instructions,
                       style: const TextStyle(
-                          color: AppTheme.textWhite, fontSize: AppTheme.fontSizeSmall.5, height: 1.5),
+                          color: AppTheme.textWhite, fontSize: 12.5, height: 1.5),
                     ),
                   ),
                 ],
