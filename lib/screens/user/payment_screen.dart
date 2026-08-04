@@ -334,7 +334,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -387,7 +387,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.warningOrange.withOpacity(0.1),
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
         border: Border.all(color: AppTheme.warningOrange.withOpacity(0.5)),
       ),
       child: const Row(
@@ -418,7 +418,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
           color: selected
               ? AppTheme.primaryGold.withOpacity(0.15)
               : AppTheme.surfaceBlack,
-          borderRadius: AppTheme.borderRadiusMedium,
+          borderRadius: AppTheme.radiusMedium,
           border: Border.all(
             color: selected
                 ? AppTheme.primaryGold
@@ -520,7 +520,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
       ),
       child: Column(
@@ -551,7 +551,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               padding: AppTheme.paddingAllMedium,
               decoration: BoxDecoration(
                 color: AppTheme.infoBlue.withOpacity(0.08),
-                borderRadius: AppTheme.borderRadiusSmall,
+                borderRadius: AppTheme.radiusSmall,
                 border: Border.all(color: AppTheme.infoBlue.withOpacity(0.3)),
               ),
               child: Row(
@@ -581,7 +581,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: AppTheme.borderRadiusMedium,
+          borderRadius: AppTheme.radiusMedium,
           border: Border.all(color: AppTheme.primaryGold, width: 2),
         ),
         padding: AppTheme.paddingAllSmall,
@@ -618,7 +618,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
             height: 180,
             decoration: BoxDecoration(
               color: AppTheme.surfaceBlack,
-              borderRadius: AppTheme.borderRadiusMedium,
+              borderRadius: AppTheme.radiusMedium,
               border: Border.all(
                 color: _proofImage != null
                     ? AppTheme.successGreen

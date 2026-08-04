@@ -149,7 +149,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     filled: true,
                     fillColor: AppTheme.surfaceBlack,
                     border: OutlineInputBorder(
-                      borderRadius: AppTheme.borderRadiusMedium,
+                      borderRadius: AppTheme.radiusMedium,
                       borderSide: BorderSide.none,
                     ),
                   ),

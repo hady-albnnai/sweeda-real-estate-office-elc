@@ -256,7 +256,7 @@ class _ExecuteTaskScreenState extends State<ExecuteTaskScreen> {
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(title, style: const TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSubtitle, fontWeight: FontWeight.bold)),

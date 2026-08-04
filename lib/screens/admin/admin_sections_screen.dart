@@ -124,7 +124,7 @@ class _AdminSectionsScreenState extends State<AdminSectionsScreen> {
       padding: AppTheme.paddingAllMedium,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.14)),
       ),
       child: Column(

@@ -173,7 +173,7 @@ class _BrokerDealsScreenState extends State<BrokerDealsScreen> {
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.15)),
       ),
       child: Column(
@@ -191,7 +191,7 @@ class _BrokerDealsScreenState extends State<BrokerDealsScreen> {
                 decoration: BoxDecoration(
                   color: (isDone ? AppTheme.successGreen : AppTheme.warningOrange)
                       .withOpacity(0.15),
-                  borderRadius: AppTheme.borderRadiusSmall,
+                  borderRadius: AppTheme.radiusSmall,
                   border: Border.all(
                       color: (isDone ? AppTheme.successGreen : AppTheme.warningOrange)
                           .withOpacity(0.5)),

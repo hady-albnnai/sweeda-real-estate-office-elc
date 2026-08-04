@@ -283,7 +283,7 @@ class _SetupIdentityScreenState extends State<SetupIdentityScreen> {
                   decoration: BoxDecoration(
                     color: (vrf == 2 ? AppTheme.successGreen : AppTheme.warningOrange)
                         .withOpacity(0.1),
-                    borderRadius: AppTheme.borderRadiusMedium,
+                    borderRadius: AppTheme.radiusMedium,
                     border: Border.all(
                         color: (vrf == 2 ? AppTheme.successGreen : AppTheme.warningOrange)
                             .withOpacity(0.45)),
@@ -317,7 +317,7 @@ class _SetupIdentityScreenState extends State<SetupIdentityScreen> {
                 padding: AppTheme.paddingAllLarge,
                 decoration: BoxDecoration(
                   color: AppTheme.primaryGold.withOpacity(0.1),
-                  borderRadius: AppTheme.borderRadiusMedium,
+                  borderRadius: AppTheme.radiusMedium,
                   border:
                       Border.all(color: AppTheme.primaryGold.withOpacity(0.45)),
                 ),
@@ -407,7 +407,7 @@ class _SetupIdentityScreenState extends State<SetupIdentityScreen> {
                         BorderSide(color: AppTheme.primaryGold.withOpacity(0.5)),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
-                        borderRadius: AppTheme.borderRadiusMedium),
+                        borderRadius: AppTheme.radiusMedium),
                   ),
                 ),
               ),
@@ -480,7 +480,7 @@ class _SetupIdentityScreenState extends State<SetupIdentityScreen> {
             height: 150,
             decoration: BoxDecoration(
               color: AppTheme.surfaceBlack,
-              borderRadius: AppTheme.borderRadiusMedium,
+              borderRadius: AppTheme.radiusMedium,
               border: Border.all(
                 color: image != null
                     ? AppTheme.successGreen

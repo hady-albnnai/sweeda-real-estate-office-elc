@@ -125,7 +125,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(
             color: handled
                 ? AppTheme.primaryGold.withOpacity(0.15)

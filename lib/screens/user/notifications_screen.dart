@@ -76,7 +76,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         color: n.isRead
             ? AppTheme.surfaceBlack
             : AppTheme.primaryGold.withOpacity(0.08),
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
         border: Border.all(
             color: n.isRead
                 ? Colors.white12

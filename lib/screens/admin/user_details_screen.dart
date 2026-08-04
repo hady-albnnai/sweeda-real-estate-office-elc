@@ -431,7 +431,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
           margin: const EdgeInsets.only(bottom: 8),
           child: ListTile(
             leading: ClipRRect(
-              borderRadius: AppTheme.borderRadiusSmall,
+              borderRadius: AppTheme.radiusSmall,
               child: SizedBox(
                 width: 50,
                 height: 50,
@@ -557,7 +557,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen>
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: color.withOpacity(0.15),
-        borderRadius: AppTheme.borderRadiusSmall,
+        borderRadius: AppTheme.radiusSmall,
         border: Border.all(color: color.withOpacity(0.4)),
       ),
       child: Text(text,

@@ -550,7 +550,7 @@ class _MatchingOffersScreenState extends State<MatchingOffersScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: AppTheme.primaryGold.withOpacity(0.15),
-                      borderRadius: AppTheme.borderRadiusXL,
+                      borderRadius: AppTheme.radiusXL,
                     ),
                     child: Text('$score% مطابق', style: const TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold)),
                   ),

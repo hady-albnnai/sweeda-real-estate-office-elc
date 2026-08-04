@@ -85,7 +85,7 @@ class _OfferVideoPlayerState extends State<OfferVideoPlayer> {
     return SizedBox(
       height: widget.height,
       child: ClipRRect(
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
         child: Chewie(controller: _chewieController!),
       ),
     );

@@ -524,7 +524,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
                 filled: true,
                 fillColor: AppTheme.surfaceBlack,
                 border: OutlineInputBorder(
-                  borderRadius: AppTheme.borderRadiusMedium,
+                  borderRadius: AppTheme.radiusMedium,
                   borderSide: BorderSide.none,
                 ),
               ),
@@ -564,7 +564,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
     return Card(
       color: AppTheme.surfaceBlack,
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusMedium),
+      shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
       child: Padding(
         padding: AppTheme.paddingAllLarge,
         child: Column(
@@ -597,7 +597,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
                           color: roleColor.withOpacity(0.2),
-                          borderRadius: AppTheme.borderRadiusSmall,
+                          borderRadius: AppTheme.radiusSmall,
                         ),
                         child: Text(
                           roleName,
@@ -676,7 +676,7 @@ class _EmployeeManagementScreenState extends State<EmployeeManagementScreen> {
                 color: isActive
                     ? AppTheme.successGreen.withOpacity(0.2)
                     : AppTheme.errorRed.withOpacity(0.2),
-                borderRadius: AppTheme.borderRadiusSmall,
+                borderRadius: AppTheme.radiusSmall,
               ),
               child: Text(
                 isActive ? 'نشط' : 'معطل',
@@ -809,7 +809,7 @@ class _StaffIdImagesViewerState extends State<_StaffIdImagesViewer> {
                     margin: const EdgeInsets.symmetric(horizontal: 3),
                     decoration: BoxDecoration(
                       color: active ? AppTheme.primaryGold : Colors.white54,
-                      borderRadius: AppTheme.borderRadiusSmall,
+                      borderRadius: AppTheme.radiusSmall,
                     ),
                   );
                 }),

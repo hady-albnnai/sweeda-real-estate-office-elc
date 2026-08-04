@@ -248,7 +248,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: status.$2.withOpacity(0.4)),
       ),
       child: Column(
@@ -272,7 +272,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                     horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: status.$2.withOpacity(0.15),
-                  borderRadius: AppTheme.borderRadiusSmall,
+                  borderRadius: AppTheme.radiusSmall,
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -329,7 +329,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -623,7 +623,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(
             color: AppTheme.primaryGold.withOpacity(0.15),
-            borderRadius: AppTheme.borderRadiusSmall,
+            borderRadius: AppTheme.radiusSmall,
           ),
           child: Text('${_matches.length}',
               style: const TextStyle(
@@ -647,7 +647,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
       padding: AppTheme.paddingAllXL,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
       ),
       child: Column(
         children: [
@@ -669,17 +669,17 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
       ),
       child: InkWell(
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
         onTap: () => context.push('/offer/${o.id}'),
         child: Padding(
           padding: AppTheme.paddingAllMedium,
           child: Row(
             children: [
               ClipRRect(
-                borderRadius: AppTheme.borderRadiusSmall,
+                borderRadius: AppTheme.radiusSmall,
                 child: SizedBox(
                   width: 70,
                   height: 70,
@@ -732,7 +732,7 @@ class _RequestDetailScreenState extends State<RequestDetailScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: AppTheme.primaryGold.withOpacity(0.15),
-                        borderRadius: AppTheme.borderRadiusSmall,
+                        borderRadius: AppTheme.radiusSmall,
                         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
                       ),
                       child: const Text('📅 حجز', style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeCaption, fontWeight: FontWeight.bold)),

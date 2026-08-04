@@ -128,7 +128,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
       ),
       child: Column(
         children: [
@@ -156,7 +156,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
       padding: AppTheme.paddingAllXL,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
       ),
       child: Column(
@@ -168,7 +168,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
             decoration: BoxDecoration(
               color: AppTheme.deepBlack,
-              borderRadius: AppTheme.borderRadiusMedium,
+              borderRadius: AppTheme.radiusMedium,
               border: Border.all(color: AppTheme.primaryGold),
             ),
             child: Text(
@@ -223,7 +223,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
       ),
       child: Row(
         children: [
@@ -278,7 +278,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -330,7 +330,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       curve: Curves.easeInOut,
       decoration: BoxDecoration(
         color: isGold ? AppTheme.primaryGold : AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusXXL,
+        borderRadius: AppTheme.radiusXXL,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.5), width: 2),
       ),
       child: Column(children: [
@@ -339,7 +339,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           button: true,
           child: InkWell(
           onTap: () => setState(() { _activeBlock = isOpen ? 0 : id; if (id == 1) _signupMethod = 0; }),
-          borderRadius: AppTheme.borderRadiusXXL,
+          borderRadius: AppTheme.radiusXXL,
           child: Padding(padding: AppTheme.paddingAllXL, child: Row(children: [
             Icon(icon, color: isOpen && isGold ? Colors.black : (isGold ? Colors.black : AppTheme.primaryGold), size: 28),
             AppTheme.gapWidthLarge,
@@ -357,7 +357,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildInnerOption({required int id, required String title, required IconData icon, required Widget child}) {
     final sel = _signupMethod == id;
     return Container(
-      decoration: BoxDecoration(color: Colors.black.withOpacity(0.1), borderRadius: AppTheme.borderRadiusLarge),
+      decoration: BoxDecoration(color: Colors.black.withOpacity(0.1), borderRadius: AppTheme.radiusLarge),
       child: Column(children: [
         ListTile(
           onTap: () => setState(() => _signupMethod = sel ? 0 : id),
@@ -386,7 +386,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildBigBtn({required String label, required VoidCallback? onTap, bool dark = false, String? e2eId}) {
     final button = SizedBox(width: double.infinity, height: 56, child: ElevatedButton(
       onPressed: _isBusy ? null : onTap,
-      style: ElevatedButton.styleFrom(backgroundColor: dark ? Colors.black : Colors.white, foregroundColor: dark ? Colors.white : Colors.black, shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusLarge)),
+      style: ElevatedButton.styleFrom(backgroundColor: dark ? Colors.black : Colors.white, foregroundColor: dark ? Colors.white : Colors.black, shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge)),
       child: _isBusy ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)) : Text(label, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: AppTheme.fontSizeSubtitle)),
     ));
     return e2eId == null ? button : E2E(id: e2eId, button: true, child: button);
@@ -429,10 +429,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildChip(String t, Color b, Color f) => Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5), decoration: BoxDecoration(color: b, borderRadius: AppTheme.borderRadiusLarge, border: Border.all(color: f.withOpacity(0.3))), child: Text(t, style: TextStyle(color: f, fontSize: AppTheme.fontSizeSmall, fontWeight: FontWeight.w600)));
+  Widget _buildChip(String t, Color b, Color f) => Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5), decoration: BoxDecoration(color: b, borderRadius: AppTheme.radiusLarge, border: Border.all(color: f.withOpacity(0.3))), child: Text(t, style: TextStyle(color: f, fontSize: AppTheme.fontSizeSmall, fontWeight: FontWeight.w600)));
   Widget _buildUserStats(UserModel u) => Row(children: [Expanded(child: _buildStatTile(icon: Icons.star_rounded, value: '${u.pt}', label: 'النقاط', color: const Color(0xFFFFD700))), AppTheme.gapWidthMedium, Expanded(child: _buildStatTile(icon: Icons.local_fire_department_rounded, value: '${u.strk}', label: 'أيام متتالية', color: const Color(0xFFFF6B35)))]);
-  Widget _buildStatTile({required IconData icon, required String value, required String label, required Color color}) => Container(padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12), decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: AppTheme.borderRadiusLarge, border: Border.all(color: color.withOpacity(0.2))), child: Row(children: [Container(padding: AppTheme.paddingAllSmall, decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: AppTheme.borderRadiusMedium), child: Icon(icon, color: color, size: 22)), AppTheme.gapWidthSmall, Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(value, style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeTitle, fontWeight: FontWeight.bold)), Text(label, style: TextStyle(color: AppTheme.textGrey.withOpacity(0.7), fontSize: AppTheme.fontSizeCaption))])]));
-  Widget _buildActivityStats(UserModel u) => Container(padding: AppTheme.paddingAllLarge, decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: AppTheme.borderRadiusLarge, border: Border.all(color: AppTheme.primaryGold.withOpacity(0.15))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(children: [Icon(Icons.analytics_outlined, color: AppTheme.primaryGold.withOpacity(0.8), size: 18), AppTheme.gapWidthSmall, const Text('إحصائيات النشاط', style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeMedium, fontWeight: FontWeight.w600))]), AppTheme.gapHeightMedium, Row(children: [_buildMiniStat('عروض', u.stats['off'] ?? 0, Icons.home_work_outlined), _buildMiniStat('طلبات', u.stats['req'] ?? 0, Icons.assignment_outlined), _buildMiniStat('مواعيد', u.stats['app'] ?? 0, Icons.calendar_today_outlined), _buildMiniStat('صفقات', u.stats['dl'] ?? 0, Icons.handshake_outlined)])]));
+  Widget _buildStatTile({required IconData icon, required String value, required String label, required Color color}) => Container(padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12), decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: AppTheme.radiusLarge, border: Border.all(color: color.withOpacity(0.2))), child: Row(children: [Container(padding: AppTheme.paddingAllSmall, decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: AppTheme.radiusMedium), child: Icon(icon, color: color, size: 22)), AppTheme.gapWidthSmall, Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(value, style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeTitle, fontWeight: FontWeight.bold)), Text(label, style: TextStyle(color: AppTheme.textGrey.withOpacity(0.7), fontSize: AppTheme.fontSizeCaption))])]));
+  Widget _buildActivityStats(UserModel u) => Container(padding: AppTheme.paddingAllLarge, decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: AppTheme.radiusLarge, border: Border.all(color: AppTheme.primaryGold.withOpacity(0.15))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(children: [Icon(Icons.analytics_outlined, color: AppTheme.primaryGold.withOpacity(0.8), size: 18), AppTheme.gapWidthSmall, const Text('إحصائيات النشاط', style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeMedium, fontWeight: FontWeight.w600))]), AppTheme.gapHeightMedium, Row(children: [_buildMiniStat('عروض', u.stats['off'] ?? 0, Icons.home_work_outlined), _buildMiniStat('طلبات', u.stats['req'] ?? 0, Icons.assignment_outlined), _buildMiniStat('مواعيد', u.stats['app'] ?? 0, Icons.calendar_today_outlined), _buildMiniStat('صفقات', u.stats['dl'] ?? 0, Icons.handshake_outlined)])]));
   Widget _buildMiniStat(String l, int c, IconData i) => Expanded(child: Column(children: [Icon(i, color: AppTheme.primaryGold.withOpacity(0.7), size: 20), const SizedBox(height: 6), Text('$c', style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeSubtitle, fontWeight: FontWeight.bold)), AppTheme.gapHeightXXS, Text(l, style: TextStyle(color: AppTheme.textGrey.withOpacity(0.6), fontSize: AppTheme.fontSizeXS))]));
   Widget _buildStaffStats(UserModel user) {
     if (_loadingStats) {
@@ -483,7 +483,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 padding: AppTheme.paddingAllMedium,
                 decoration: BoxDecoration(
                   color: it.color.withOpacity(0.1),
-                  borderRadius: AppTheme.borderRadiusMedium,
+                  borderRadius: AppTheme.radiusMedium,
                   border: Border.all(color: it.color.withOpacity(0.2)),
                 ),
                 child: Row(children: [

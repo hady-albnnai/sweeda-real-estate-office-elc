@@ -130,13 +130,13 @@ class _BrokerOffersScreenState extends State<BrokerOffersScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.15)),
       ),
       child: ListTile(
         contentPadding: AppTheme.paddingAllMedium,
         leading: ClipRRect(
-          borderRadius: AppTheme.borderRadiusMedium,
+          borderRadius: AppTheme.radiusMedium,
           child: o.imgs.isNotEmpty
               ? Image.network(o.imgs[0],
                   width: 60,

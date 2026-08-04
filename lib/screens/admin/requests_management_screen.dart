@@ -104,7 +104,7 @@ class _RequestsManagementScreenState extends State<RequestsManagementScreen> {
               filled: true,
               fillColor: AppTheme.surfaceBlack,
               border: OutlineInputBorder(
-                  borderRadius: AppTheme.borderRadiusMedium,
+                  borderRadius: AppTheme.radiusMedium,
                   borderSide: BorderSide.none),
             ),
           ),
@@ -185,7 +185,7 @@ class _RequestsManagementScreenState extends State<RequestsManagementScreen> {
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(
             color: AppTheme.primaryGold.withOpacity(0.15)),
       ),
@@ -211,7 +211,7 @@ class _RequestsManagementScreenState extends State<RequestsManagementScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
               color: stsColor.withOpacity(0.15),
-              borderRadius: AppTheme.borderRadiusSmall,
+              borderRadius: AppTheme.radiusSmall,
               border:
                   Border.all(color: stsColor.withOpacity(0.5)),
             ),

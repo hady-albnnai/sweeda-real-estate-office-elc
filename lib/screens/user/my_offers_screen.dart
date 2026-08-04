@@ -102,7 +102,7 @@ class _MyOffersScreenState extends State<MyOffersScreen>
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
-        shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusLarge),
+        shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
         title: const Text('وصلت لحد العروض المسموح', style: TextStyle(color: AppTheme.textWhite)),
         content: Text(
           'تجاوزت عدد العروض المسموح بها لحسابك (الحد الحالي: $limit عرض).\n\n'
@@ -214,11 +214,11 @@ class _MyOffersScreenState extends State<MyOffersScreen>
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: status.$2.withOpacity(0.3)),
       ),
       child: InkWell(
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         onTap: () => context.push('/offer/${o.id}'),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -254,7 +254,7 @@ class _MyOffersScreenState extends State<MyOffersScreen>
               child: Row(
                 children: [
                   ClipRRect(
-                    borderRadius: AppTheme.borderRadiusMedium,
+                    borderRadius: AppTheme.radiusMedium,
                     child: SizedBox(
                       width: 80,
                       height: 80,

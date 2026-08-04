@@ -74,7 +74,7 @@ class _LocationPickerState extends State<LocationPicker> {
     return Container(
       height: widget.height,
       decoration: BoxDecoration(
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
       ),
       child: ClipRRect(
@@ -195,7 +195,7 @@ class LocationViewer extends StatelessWidget {
     return Container(
       height: height,
       decoration: BoxDecoration(
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3)),
       ),
       child: ClipRRect(

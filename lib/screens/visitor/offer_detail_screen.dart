@@ -734,7 +734,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                             color: _currentImg == i
                                 ? AppTheme.primaryGold
                                 : AppTheme.scaffoldBackground.withOpacity(0.5),
-                            borderRadius: AppTheme.borderRadiusXS,
+                            borderRadius: AppTheme.radiusXS,
                           ),
                         ),
                       )),
@@ -775,7 +775,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
                           color: Colors.black54,
-                          borderRadius: AppTheme.borderRadiusXL,
+                          borderRadius: AppTheme.radiusXL,
                         ),
                         child: const Row(mainAxisSize: MainAxisSize.min, children: [
                           Icon(Icons.fullscreen, color: AppTheme.scaffoldBackground, size: 18),
@@ -793,7 +793,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.black.withOpacity(0.5),
-                        borderRadius: AppTheme.borderRadiusMedium,
+                        borderRadius: AppTheme.radiusMedium,
                       ),
                       child: Text(
                         '${_currentImg + 1}/${offer.imgs.length}',
@@ -850,7 +850,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
                                     color: offer.daysUntilExpiration <= 3 ? AppTheme.errorRed.withOpacity(0.1) : AppTheme.successGreen.withOpacity(0.1),
-                                    borderRadius: AppTheme.borderRadiusSmall,
+                                    borderRadius: AppTheme.radiusSmall,
                                     border: Border.all(color: offer.daysUntilExpiration <= 3 ? AppTheme.errorRed.withOpacity(0.3) : AppTheme.successGreen.withOpacity(0.3)),
                                   ),
                                   child: Row(
@@ -894,7 +894,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                         horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
                       color: AppTheme.primaryGold.withOpacity(0.08),
-                      borderRadius: AppTheme.borderRadiusSmall,
+                      borderRadius: AppTheme.radiusSmall,
                       border: Border.all(
                           color: AppTheme.primaryGold.withOpacity(0.3)),
                     ),
@@ -1016,7 +1016,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                       padding: AppTheme.paddingAllLarge,
                       decoration: BoxDecoration(
                         color: AppTheme.primaryGold.withOpacity(0.08),
-                        borderRadius: AppTheme.borderRadiusLarge,
+                        borderRadius: AppTheme.radiusLarge,
                         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.35)),
                       ),
                       child: Column(
@@ -1046,7 +1046,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                             padding: AppTheme.paddingAllSmall,
                             decoration: BoxDecoration(
                               color: AppTheme.errorRed.withOpacity(0.08),
-                              borderRadius: AppTheme.borderRadiusSmall,
+                              borderRadius: AppTheme.radiusSmall,
                               border: Border.all(color: AppTheme.errorRed.withOpacity(0.3)),
                             ),
                             child: const Text(
@@ -1128,7 +1128,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                           horizontal: 12, vertical: 10),
                       decoration: BoxDecoration(
                         color: Colors.cyan.withOpacity(0.10),
-                        borderRadius: AppTheme.borderRadiusMedium,
+                        borderRadius: AppTheme.radiusMedium,
                         border: Border.all(color: Colors.cyan.withOpacity(0.45)),
                       ),
                       child: Row(
@@ -1189,7 +1189,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                               decoration: BoxDecoration(
                                 color: AppTheme.infoBlue.withOpacity(0.1),
-                                borderRadius: AppTheme.borderRadiusXL,
+                                borderRadius: AppTheme.radiusXL,
                                 border: Border.all(color: AppTheme.infoBlue.withOpacity(0.3)),
                               ),
                               child: const Row(
@@ -1240,7 +1240,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                         begin: Alignment.topRight,
                         end: Alignment.bottomLeft,
                       ),
-                      borderRadius: AppTheme.borderRadiusLarge,
+                      borderRadius: AppTheme.radiusLarge,
                       border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4), width: 1.5),
                       boxShadow: [
                         BoxShadow(
@@ -1371,7 +1371,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                       decoration: BoxDecoration(
                         color: AppTheme.warningOrange.withOpacity(0.08),
-                        borderRadius: AppTheme.borderRadiusLarge,
+                        borderRadius: AppTheme.radiusLarge,
                         border: Border.all(color: AppTheme.warningOrange.withOpacity(0.3)),
                       ),
                       child: Row(
@@ -1554,7 +1554,7 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
           color: AppTheme.surfaceBlack,
-          borderRadius: AppTheme.borderRadiusMedium,
+          borderRadius: AppTheme.radiusMedium,
           border: Border.all(color: AppTheme.primaryGold.withOpacity(0.2))),
       child: Row(children: [
         Icon(icon, color: AppTheme.primaryGold, size: 18),

@@ -381,7 +381,7 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
               decoration: BoxDecoration(
                 color: AppTheme.surfaceBlack,
-                borderRadius: AppTheme.borderRadiusSmall,
+                borderRadius: AppTheme.radiusSmall,
                 border: Border.all(color: AppTheme.textGrey.withOpacity(0.25)),
               ),
               child: Row(children: [
@@ -439,7 +439,7 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
               padding: AppTheme.paddingAllMedium,
               decoration: BoxDecoration(
                 color: AppTheme.primaryGold.withOpacity(0.1),
-                borderRadius: AppTheme.borderRadiusMedium,
+                borderRadius: AppTheme.radiusMedium,
                 border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3)),
               ),
               child: SwitchListTile(
@@ -518,7 +518,7 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
         border: Border.all(
           color: enabled ? AppTheme.primaryGold.withOpacity(0.5) : AppTheme.textGrey.withOpacity(0.2),
         ),
@@ -529,7 +529,7 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
             _avlDaysEnabled[key] = !enabled;
             if (!enabled && slots.isEmpty) _avlSlots[key]!.add({'from': '', 'to': ''});
           }),
-          borderRadius: AppTheme.borderRadiusMedium,
+          borderRadius: AppTheme.radiusMedium,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             child: Row(children: [
@@ -613,7 +613,7 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
       padding: AppTheme.paddingAllMedium,
       decoration: BoxDecoration(
         color: info.$2.withOpacity(0.1),
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
         border: Border.all(color: info.$2.withOpacity(0.5)),
       ),
       child: Row(children: [
@@ -651,7 +651,7 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: selected ? AppTheme.primaryGold : AppTheme.surfaceBlack,
-          borderRadius: AppTheme.borderRadiusMedium,
+          borderRadius: AppTheme.radiusMedium,
           border: Border.all(color: selected ? AppTheme.primaryGold : AppTheme.textGrey),
         ),
         child: Center(child: Text(label,
@@ -683,7 +683,7 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
       return Container(
         height: 80,
         decoration: BoxDecoration(
-          color: AppTheme.surfaceBlack, borderRadius: AppTheme.borderRadiusMedium),
+          color: AppTheme.surfaceBlack, borderRadius: AppTheme.radiusMedium),
         child: const Center(child: Text('لا توجد صور',
             style: TextStyle(color: AppTheme.textGrey))),
       );
@@ -699,7 +699,7 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
   Widget _imageTile(Widget image, VoidCallback onRemove, String tag) {
     return Stack(children: [
       ClipRRect(
-        borderRadius: AppTheme.borderRadiusSmall,
+        borderRadius: AppTheme.radiusSmall,
         child: SizedBox(width: double.infinity, height: double.infinity, child: image),
       ),
       Positioned(top: 4, right: 4,

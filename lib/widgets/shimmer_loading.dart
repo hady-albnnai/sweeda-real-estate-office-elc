@@ -29,7 +29,7 @@ class ShimmerLoading {
         margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 5),
         decoration: BoxDecoration(
           color: AppTheme.surfaceBlack,
-          borderRadius: AppTheme.borderRadiusXL,
+          borderRadius: AppTheme.radiusXL,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -86,7 +86,7 @@ class ShimmerLoading {
         padding: AppTheme.paddingAllLarge,
         decoration: BoxDecoration(
           color: AppTheme.surfaceBlack,
-          borderRadius: AppTheme.borderRadiusLarge,
+          borderRadius: AppTheme.radiusLarge,
         ),
         child: Row(
           children: [
@@ -142,7 +142,7 @@ class ShimmerLoading {
           (_) => Container(
             decoration: BoxDecoration(
               color: AppTheme.surfaceBlack,
-              borderRadius: AppTheme.borderRadiusLarge,
+              borderRadius: AppTheme.radiusLarge,
             ),
           ),
         ),

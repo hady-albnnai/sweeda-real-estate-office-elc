@@ -151,7 +151,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: (statusColors[sts] ?? AppTheme.textGrey).withOpacity(0.2),
-                  borderRadius: AppTheme.borderRadiusSmall,
+                  borderRadius: AppTheme.radiusSmall,
                 ),
                 child: Text(
                   statusTexts[sts] ?? '—',
@@ -177,7 +177,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
                 padding: AppTheme.paddingAllMedium,
                 decoration: BoxDecoration(
                   color: AppTheme.warningOrange.withOpacity(0.1),
-                  borderRadius: AppTheme.borderRadiusSmall,
+                  borderRadius: AppTheme.radiusSmall,
                   border: Border.all(color: AppTheme.warningOrange.withOpacity(0.4)),
                 ),
                 child: Column(
@@ -357,7 +357,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
               padding: AppTheme.paddingAllMedium,
               decoration: BoxDecoration(
                 color: AppTheme.deepBlack,
-                borderRadius: AppTheme.borderRadiusMedium,
+                borderRadius: AppTheme.radiusMedium,
                 border: Border.all(
                     color: AppTheme.primaryGold.withOpacity(0.2)),
               ),
@@ -732,7 +732,7 @@ class _MyAppointmentsScreenState extends State<MyAppointmentsScreen>
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: color.withOpacity(0.15),
-        borderRadius: AppTheme.borderRadiusSmall,
+        borderRadius: AppTheme.radiusSmall,
         border: Border.all(color: color.withOpacity(0.5)),
       ),
       child: Text(texts[sts] ?? '—',

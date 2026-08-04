@@ -132,7 +132,7 @@ class _BrokerStatsScreenState extends State<BrokerStatsScreen> {
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.2)),
       ),
       child: Column(
@@ -171,7 +171,7 @@ class _BrokerStatsScreenState extends State<BrokerStatsScreen> {
           ),
           const SizedBox(height: 6),
           ClipRRect(
-            borderRadius: AppTheme.borderRadiusSmall,
+            borderRadius: AppTheme.radiusSmall,
             child: LinearProgressIndicator(
               value: pct,
               minHeight: 10,
@@ -190,7 +190,7 @@ class _BrokerStatsScreenState extends State<BrokerStatsScreen> {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(
             color: (gold ? AppTheme.primaryGold : Colors.white12)
                 .withOpacity(gold ? 0.5 : 1)),

@@ -248,7 +248,7 @@ class _SplashScreenState extends State<SplashScreen>
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                             decoration: BoxDecoration(
-                              borderRadius: AppTheme.borderRadiusXL,
+                              borderRadius: AppTheme.radiusXL,
                               border: Border.all(color: Colors.white10),
                               color: Colors.white.withOpacity(0.03),
                             ),
@@ -273,7 +273,7 @@ class _SplashScreenState extends State<SplashScreen>
                       child: Column(
                         children: [
                           ClipRRect(
-                            borderRadius: AppTheme.borderRadiusMedium,
+                            borderRadius: AppTheme.radiusMedium,
                             child: LinearProgressIndicator(
                               minHeight: 3,
                               backgroundColor: Colors.white.withOpacity(0.05),

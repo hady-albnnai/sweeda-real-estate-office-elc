@@ -163,7 +163,7 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
             height: 54,
             decoration: BoxDecoration(
               color: AppTheme.primaryGold.withOpacity(0.12),
-              borderRadius: AppTheme.borderRadiusLarge,
+              borderRadius: AppTheme.radiusLarge,
             ),
             child: const Icon(Icons.support_agent, color: AppTheme.primaryGold, size: 30),
           ),
@@ -212,7 +212,7 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: color.withOpacity(0.25)),
       ),
       child: ListTile(
@@ -225,7 +225,7 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
             color: color.withOpacity(0.15),
-            borderRadius: AppTheme.borderRadiusMedium,
+            borderRadius: AppTheme.radiusMedium,
           ),
           child: Text('$count', style: TextStyle(color: color, fontWeight: FontWeight.bold)),
         ),
@@ -237,12 +237,12 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
   Widget _shortcut(IconData icon, String title, String route) {
     return InkWell(
       onTap: () => context.push(route),
-      borderRadius: AppTheme.borderRadiusLarge,
+      borderRadius: AppTheme.radiusLarge,
       child: Container(
         padding: AppTheme.paddingAllLarge,
         decoration: BoxDecoration(
           color: AppTheme.surfaceBlack,
-          borderRadius: AppTheme.borderRadiusLarge,
+          borderRadius: AppTheme.radiusLarge,
           border: Border.all(color: AppTheme.primaryGold.withOpacity(0.18)),
         ),
         child: Column(
@@ -262,7 +262,7 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.16)),
       ),
       child: Column(

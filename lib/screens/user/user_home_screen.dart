@@ -206,7 +206,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                       filled: true,
                       fillColor: AppTheme.surfaceBlack,
                       border: OutlineInputBorder(
-                        borderRadius: AppTheme.borderRadiusMedium,
+                        borderRadius: AppTheme.radiusMedium,
                         borderSide: BorderSide.none,
                       ),
                     ),
@@ -419,7 +419,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: AppTheme.borderRadiusLarge,
+          borderRadius: AppTheme.radiusLarge,
           border: Border.all(color: AppTheme.primaryGold.withOpacity(0.35)),
         ),
         child: Row(

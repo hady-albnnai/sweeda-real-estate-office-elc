@@ -170,7 +170,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
                         margin: const EdgeInsets.only(bottom: 12),
                         decoration: BoxDecoration(
                           color: AppTheme.infoBlue.withOpacity(0.08),
-                          borderRadius: AppTheme.borderRadiusSmall,
+                          borderRadius: AppTheme.radiusSmall,
                           border: Border.all(color: AppTheme.infoBlue.withOpacity(0.3)),
                         ),
                         child: const Text(
@@ -226,7 +226,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
                         margin: const EdgeInsets.only(bottom: 12),
                         decoration: BoxDecoration(
                           color: AppTheme.successGreen.withOpacity(0.08),
-                          borderRadius: AppTheme.borderRadiusSmall,
+                          borderRadius: AppTheme.radiusSmall,
                           border: Border.all(color: AppTheme.successGreen.withOpacity(0.3)),
                         ),
                         child: const Text(
@@ -240,7 +240,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
                         margin: const EdgeInsets.only(bottom: 12),
                         decoration: BoxDecoration(
                           color: AppTheme.surfaceBlack,
-                          borderRadius: AppTheme.borderRadiusMedium,
+                          borderRadius: AppTheme.radiusMedium,
                           border: Border.all(color: AppTheme.infoBlue.withOpacity(0.35)),
                         ),
                         child: SwitchListTile(
@@ -420,7 +420,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
         padding: AppTheme.paddingAllMedium,
         decoration: BoxDecoration(
           color: AppTheme.warningOrange.withOpacity(0.12),
-          borderRadius: AppTheme.borderRadiusMedium,
+          borderRadius: AppTheme.radiusMedium,
           border: Border.all(color: AppTheme.warningOrange.withOpacity(0.5)),
         ),
         child: const Row(
@@ -474,7 +474,7 @@ class _ConfigEditorScreenState extends State<ConfigEditorScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3)),
       ),
       child: ListTile(

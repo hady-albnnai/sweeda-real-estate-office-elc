@@ -157,10 +157,10 @@ class OfferFiltersButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppTheme.primaryGold,
-      borderRadius: AppTheme.borderRadiusMedium,
+      borderRadius: AppTheme.radiusMedium,
       child: InkWell(
         onTap: onTap,
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           child: Row(
@@ -490,7 +490,7 @@ class _OfferFiltersBody extends StatelessWidget {
               backgroundColor: AppTheme.primaryGold,
               padding: const EdgeInsets.symmetric(vertical: 13),
               shape: RoundedRectangleBorder(
-                  borderRadius: AppTheme.borderRadiusMedium),
+                  borderRadius: AppTheme.radiusMedium),
             ),
           ),
         ],
@@ -506,15 +506,15 @@ InputDecoration _fDeco(String label) => InputDecoration(
       fillColor: AppTheme.scaffoldBackground,
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       border: OutlineInputBorder(
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
         borderSide: BorderSide(color: AppTheme.primaryGold.withOpacity(0.3)),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
         borderSide: BorderSide(color: AppTheme.primaryGold.withOpacity(0.3)),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
         borderSide: const BorderSide(color: AppTheme.primaryGold),
       ),
     );

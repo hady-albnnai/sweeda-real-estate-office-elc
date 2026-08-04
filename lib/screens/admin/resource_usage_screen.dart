@@ -113,7 +113,7 @@ class _ResourceUsageScreenState extends State<ResourceUsageScreen> {
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.primaryGold.withOpacity(0.09),
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3)),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -141,7 +141,7 @@ class _ResourceUsageScreenState extends State<ResourceUsageScreen> {
       padding: AppTheme.paddingAllMedium,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.16)),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -193,7 +193,7 @@ class _ResourceUsageScreenState extends State<ResourceUsageScreen> {
       padding: AppTheme.paddingAllMedium,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
         border: Border.all(color: color.withOpacity(0.16)),
       ),
       child: Row(children: [

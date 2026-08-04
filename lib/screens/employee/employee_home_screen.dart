@@ -137,7 +137,7 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppTheme.primaryGold,
                             foregroundColor: AppTheme.deepBlack,
-                            shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusLarge),
+                            shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
                           ),
                         ),
                       ),
@@ -185,7 +185,7 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
       child: Container(
         decoration: BoxDecoration(
           color: AppTheme.surfaceBlack,
-          borderRadius: AppTheme.borderRadiusLarge,
+          borderRadius: AppTheme.radiusLarge,
           border: Border.all(color: item.color.withOpacity(0.25)),
         ),
         padding: AppTheme.paddingAllLarge,
@@ -201,7 +201,7 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: AppTheme.errorRed,
-                    borderRadius: AppTheme.borderRadiusMedium,
+                    borderRadius: AppTheme.radiusMedium,
                   ),
                   child: Text('${item.badge}',
                       style: const TextStyle(color: Colors.white, fontSize: AppTheme.fontSizeCaption, fontWeight: FontWeight.bold)),

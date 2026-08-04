@@ -24,7 +24,7 @@ class VisualMilestoneTracker extends StatelessWidget {
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
       ),
       child: Column(
@@ -115,7 +115,7 @@ class VisualMilestoneTracker extends StatelessWidget {
             AppTheme.gapHeightSmall,
             Container(
               padding: AppTheme.paddingAllMedium,
-              decoration: BoxDecoration(color: AppTheme.successGreen.withOpacity(0.1), borderRadius: AppTheme.borderRadiusMedium),
+              decoration: BoxDecoration(color: AppTheme.successGreen.withOpacity(0.1), borderRadius: AppTheme.radiusMedium),
               child: Row(
                 children: [
                   const Icon(Icons.folder_shared, color: AppTheme.successGreen),

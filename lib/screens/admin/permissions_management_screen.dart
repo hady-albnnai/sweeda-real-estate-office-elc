@@ -136,7 +136,7 @@ class _PermissionsManagementScreenState extends State<PermissionsManagementScree
               ),
               filled: true,
               fillColor: AppTheme.surfaceBlack,
-              border: OutlineInputBorder(borderRadius: AppTheme.borderRadiusMedium, borderSide: BorderSide.none),
+              border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium, borderSide: BorderSide.none),
             ),
             onSubmitted: (_) => _load(),
           ),
@@ -152,7 +152,7 @@ class _PermissionsManagementScreenState extends State<PermissionsManagementScree
                 margin: const EdgeInsets.only(bottom: 10),
                 decoration: BoxDecoration(
                   color: selected ? AppTheme.primaryGold.withOpacity(0.10) : AppTheme.surfaceBlack,
-                  borderRadius: AppTheme.borderRadiusLarge,
+                  borderRadius: AppTheme.radiusLarge,
                   border: Border.all(color: selected ? AppTheme.primaryGold : AppTheme.primaryGold.withOpacity(0.14)),
                 ),
                 child: ListTile(
@@ -189,7 +189,7 @@ class _PermissionsManagementScreenState extends State<PermissionsManagementScree
           padding: AppTheme.paddingAllLarge,
           decoration: BoxDecoration(
             color: AppTheme.surfaceBlack,
-            borderRadius: AppTheme.borderRadiusLarge,
+            borderRadius: AppTheme.radiusLarge,
             border: Border.all(color: AppTheme.primaryGold.withOpacity(0.20)),
           ),
           child: Row(
@@ -271,7 +271,7 @@ class _PermissionsManagementScreenState extends State<PermissionsManagementScree
       padding: AppTheme.paddingAllMedium,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.14)),
       ),
       child: Column(

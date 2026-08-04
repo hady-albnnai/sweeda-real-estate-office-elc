@@ -165,7 +165,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.6), width: 1.2),
       ),
       child: Column(
@@ -229,7 +229,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
                 fillColor: AppTheme.scaffoldBackground,
                 hintText: 'اختر العرض المراد إعلانه ⭐',
                 hintStyle: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody),
-                border: OutlineInputBorder(borderRadius: AppTheme.borderRadiusMedium),
+                border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               ),
               items: _activeOffers.map((o) {
@@ -282,7 +282,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
         border: Border.all(color: borderColor),
       ),
       child: Row(children: [
@@ -356,7 +356,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
       padding: AppTheme.paddingAllMedium,
       decoration: BoxDecoration(
         color: AppTheme.infoBlue.withOpacity(0.1),
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
         border: Border.all(color: AppTheme.infoBlue.withOpacity(0.4)),
       ),
       child: Row(children: [
@@ -399,7 +399,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         gradient: LinearGradient(
             colors: gradient,
             begin: Alignment.topLeft,
@@ -416,7 +416,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
         padding: AppTheme.paddingAllXL,
         decoration: BoxDecoration(
           color: AppTheme.surfaceBlack,
-          borderRadius: AppTheme.borderRadiusLarge,
+          borderRadius: AppTheme.radiusLarge,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -527,7 +527,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
         decoration: BoxDecoration(
           color: color.withOpacity(0.2),
-          borderRadius: AppTheme.borderRadiusSmall,
+          borderRadius: AppTheme.radiusSmall,
         ),
         child: Text(label,
             style: TextStyle(
@@ -550,7 +550,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
         padding: AppTheme.paddingAllLarge,
         decoration: BoxDecoration(
           color: AppTheme.surfaceBlack,
-          borderRadius: AppTheme.borderRadiusMedium,
+          borderRadius: AppTheme.radiusMedium,
           border:
               Border.all(color: AppTheme.textGrey.withOpacity(0.3)),
         ),

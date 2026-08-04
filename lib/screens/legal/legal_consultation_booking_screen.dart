@@ -164,7 +164,7 @@ class _LegalConsultationBookingScreenState extends State<LegalConsultationBookin
       padding: AppTheme.paddingAllMedium,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
         border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Column(
@@ -186,7 +186,7 @@ class _LegalConsultationBookingScreenState extends State<LegalConsultationBookin
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.15),
-                  borderRadius: AppTheme.borderRadiusSmall,
+                  borderRadius: AppTheme.radiusSmall,
                 ),
                 child: Text(label,
                     style: TextStyle(color: color, fontSize: AppTheme.fontSizeXS, fontWeight: FontWeight.bold)),
@@ -245,7 +245,7 @@ class _LegalConsultationBookingScreenState extends State<LegalConsultationBookin
                   begin: Alignment.topRight,
                   end: Alignment.bottomLeft,
                 ),
-                borderRadius: AppTheme.borderRadiusLarge,
+                borderRadius: AppTheme.radiusLarge,
                 border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
               ),
               child: const Row(
@@ -274,7 +274,7 @@ class _LegalConsultationBookingScreenState extends State<LegalConsultationBookin
                   padding: AppTheme.paddingAllLarge,
                   decoration: BoxDecoration(
                     color: selected ? AppTheme.primaryGold.withOpacity(0.12) : AppTheme.surfaceBlack,
-                    borderRadius: AppTheme.borderRadiusLarge,
+                    borderRadius: AppTheme.radiusLarge,
                     border: Border.all(color: selected ? AppTheme.primaryGold : Colors.white12, width: selected ? 2 : 1),
                   ),
                   child: Column(
@@ -292,7 +292,7 @@ class _LegalConsultationBookingScreenState extends State<LegalConsultationBookin
                           ),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(color: AppTheme.primaryGold, borderRadius: AppTheme.borderRadiusXL),
+                            decoration: BoxDecoration(color: AppTheme.primaryGold, borderRadius: AppTheme.radiusXL),
                             child: Text(
                               AppUtils.formatPrice(s['price'] as num),
                               style: const TextStyle(color: AppTheme.deepBlack, fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeSmall),
@@ -319,7 +319,7 @@ class _LegalConsultationBookingScreenState extends State<LegalConsultationBookin
                 hintStyle: const TextStyle(color: AppTheme.textGrey),
                 filled: true,
                 fillColor: AppTheme.surfaceBlack,
-                border: OutlineInputBorder(borderRadius: AppTheme.borderRadiusMedium, borderSide: BorderSide.none),
+                border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium, borderSide: BorderSide.none),
               ),
             ),
             AppTheme.gapHeightXXL,
@@ -338,7 +338,7 @@ class _LegalConsultationBookingScreenState extends State<LegalConsultationBookin
               AppTheme.gapHeightXL,
               Container(
                 padding: AppTheme.paddingAllLarge,
-                decoration: BoxDecoration(color: AppTheme.successGreen.withOpacity(0.1), borderRadius: AppTheme.borderRadiusLarge, border: Border.all(color: AppTheme.successGreen.withOpacity(0.4))),
+                decoration: BoxDecoration(color: AppTheme.successGreen.withOpacity(0.1), borderRadius: AppTheme.radiusLarge, border: Border.all(color: AppTheme.successGreen.withOpacity(0.4))),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -378,7 +378,7 @@ class _LegalConsultationBookingScreenState extends State<LegalConsultationBookin
                 padding: AppTheme.paddingAllXL,
                 decoration: BoxDecoration(
                   color: AppTheme.surfaceBlack,
-                  borderRadius: AppTheme.borderRadiusMedium,
+                  borderRadius: AppTheme.radiusMedium,
                 ),
                 child: const Center(
                   child: Text('لا توجد استشارات سابقة',

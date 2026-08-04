@@ -81,7 +81,7 @@ class _DealsManagementScreenState extends State<DealsManagementScreen> {
                 begin: Alignment.topRight,
                 end: Alignment.bottomLeft,
               ),
-              borderRadius: AppTheme.borderRadiusLarge,
+              borderRadius: AppTheme.radiusLarge,
               border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
             ),
             child: Row(
@@ -166,7 +166,7 @@ class _DealsManagementScreenState extends State<DealsManagementScreen> {
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.15)),
       ),
       child: Column(
@@ -182,7 +182,7 @@ class _DealsManagementScreenState extends State<DealsManagementScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                 decoration: BoxDecoration(
                   color: (done ? AppTheme.successGreen : AppTheme.warningOrange).withOpacity(0.15),
-                  borderRadius: AppTheme.borderRadiusSmall,
+                  borderRadius: AppTheme.radiusSmall,
                   border: Border.all(
                       color: (done ? AppTheme.successGreen : AppTheme.warningOrange).withOpacity(0.5)),
                 ),

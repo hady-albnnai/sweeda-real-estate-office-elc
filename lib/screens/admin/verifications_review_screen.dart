@@ -285,7 +285,7 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
         border: Border.all(
             color: AppTheme.primaryGold.withOpacity(0.3), width: 1),
       ),
@@ -351,7 +351,7 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
                         height: 90,
                         decoration: BoxDecoration(
                           color: AppTheme.deepBlack,
-                          borderRadius: AppTheme.borderRadiusSmall,
+                          borderRadius: AppTheme.radiusSmall,
                           border: Border.all(color: AppTheme.primaryGold),
                         ),
                         child: Column(
@@ -386,7 +386,7 @@ class _VerificationsReviewScreenState extends State<VerificationsReviewScreen> {
                   const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
                 color: AppTheme.errorRed.withOpacity(0.1),
-                borderRadius: AppTheme.borderRadiusSmall,
+                borderRadius: AppTheme.radiusSmall,
                 border: Border.all(color: AppTheme.errorRed),
               ),
               child: const Row(children: [

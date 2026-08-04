@@ -355,7 +355,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                     height: 72,
                     decoration: BoxDecoration(
                       color: AppTheme.primaryGold.withOpacity(0.15),
-                      borderRadius: AppTheme.borderRadiusXL,
+                      borderRadius: AppTheme.radiusXL,
                     ),
                     child: const Icon(Icons.lock_person_outlined,
                         color: AppTheme.primaryGold, size: 36),
@@ -395,7 +395,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                   filled: true,
                   fillColor: AppTheme.surfaceBlack,
                   border: OutlineInputBorder(
-                      borderRadius: AppTheme.borderRadiusMedium),
+                      borderRadius: AppTheme.radiusMedium),
                 ),
               ),
               AppTheme.gapHeightLarge,
@@ -418,7 +418,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                   filled: true,
                   fillColor: AppTheme.surfaceBlack,
                   border: OutlineInputBorder(
-                      borderRadius: AppTheme.borderRadiusMedium),
+                      borderRadius: AppTheme.radiusMedium),
                 ),
               ),
               AppTheme.gapHeightLarge,
@@ -482,7 +482,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                   filled: true,
                   fillColor: AppTheme.surfaceBlack,
                   border: OutlineInputBorder(
-                      borderRadius: AppTheme.borderRadiusMedium),
+                      borderRadius: AppTheme.radiusMedium),
                 ),
                 onChanged: _onUsernameChanged,
               ),
@@ -518,7 +518,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                   filled: true,
                   fillColor: AppTheme.surfaceBlack,
                   border: OutlineInputBorder(
-                      borderRadius: AppTheme.borderRadiusMedium),
+                      borderRadius: AppTheme.radiusMedium),
                 ),
               ),
               AppTheme.gapHeightLarge,
@@ -543,7 +543,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                   filled: true,
                   fillColor: AppTheme.surfaceBlack,
                   border: OutlineInputBorder(
-                      borderRadius: AppTheme.borderRadiusMedium),
+                      borderRadius: AppTheme.radiusMedium),
                 ),
                 onSubmitted: (_) => _submit(),
               ),
@@ -554,7 +554,7 @@ class _SetupProfileScreenState extends State<SetupProfileScreen> {
                 padding: AppTheme.paddingAllMedium,
                 decoration: BoxDecoration(
                   color: AppTheme.primaryGold.withOpacity(0.08),
-                  borderRadius: AppTheme.borderRadiusMedium,
+                  borderRadius: AppTheme.radiusMedium,
                   border: Border.all(
                       color: AppTheme.primaryGold.withOpacity(0.3)),
                 ),

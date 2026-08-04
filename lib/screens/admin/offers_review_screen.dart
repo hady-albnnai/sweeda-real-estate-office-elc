@@ -388,7 +388,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                           color: autoEnabled
                               ? AppTheme.successGreen.withOpacity(0.08)
                               : AppTheme.warningOrange.withOpacity(0.08),
-                          borderRadius: AppTheme.borderRadiusMedium,
+                          borderRadius: AppTheme.radiusMedium,
                           border: Border.all(
                               color: autoEnabled
                                   ? AppTheme.successGreen.withOpacity(0.4)
@@ -457,7 +457,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: color.withOpacity(0.1),
-          borderRadius: AppTheme.borderRadiusMedium,
+          borderRadius: AppTheme.radiusMedium,
           border: Border.all(color: color.withOpacity(0.35)),
         ),
         child: Row(
@@ -486,7 +486,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(
           color: isDup ? AppTheme.warningOrange : AppTheme.primaryGold.withOpacity(0.3),
           width: isDup ? 1.5 : 1,
@@ -611,7 +611,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                     margin: const EdgeInsets.only(top: 4, bottom: 8),
                     decoration: BoxDecoration(
                       color: AppTheme.infoBlue.withOpacity(0.12),
-                      borderRadius: AppTheme.borderRadiusSmall,
+                      borderRadius: AppTheme.radiusSmall,
                       border: Border.all(color: AppTheme.infoBlue.withOpacity(0.4)),
                     ),
                     child: Row(
@@ -650,7 +650,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
                       color: Colors.amber.withOpacity(0.08),
-                      borderRadius: AppTheme.borderRadiusSmall,
+                      borderRadius: AppTheme.radiusSmall,
                       border: Border.all(color: Colors.amber.withOpacity(0.3)),
                     ),
                     child: Row(children: [
@@ -713,7 +713,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
                             horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
                           color: AppTheme.primaryGold.withOpacity(0.15),
-                          borderRadius: AppTheme.borderRadiusSmall,
+                          borderRadius: AppTheme.radiusSmall,
                         ),
                         child: Text(
                           '${owner.pt} نقطة',
@@ -857,7 +857,7 @@ class _OffersReviewScreenState extends State<OffersReviewScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: color.withOpacity(0.15),
-        borderRadius: AppTheme.borderRadiusSmall,
+        borderRadius: AppTheme.radiusSmall,
         border: Border.all(color: color.withOpacity(0.4)),
       ),
       child: Text(label,

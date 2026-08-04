@@ -72,7 +72,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                 filled: true,
                 fillColor: AppTheme.surfaceBlack,
                 border: OutlineInputBorder(
-                  borderRadius: AppTheme.borderRadiusMedium,
+                  borderRadius: AppTheme.radiusMedium,
                   borderSide: BorderSide.none,
                 ),
               ),
@@ -110,7 +110,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.15)),
       ),
       child: ListTile(

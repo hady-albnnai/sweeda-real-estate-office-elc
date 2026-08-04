@@ -82,7 +82,7 @@ class AccountInfoScreen extends StatelessWidget {
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(
             color: AppTheme.primaryGold.withOpacity(0.12)),
       ),
@@ -242,7 +242,7 @@ class AccountInfoScreen extends StatelessWidget {
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.18)),
       ),
       child: Column(
@@ -360,7 +360,7 @@ class AccountInfoScreen extends StatelessWidget {
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border:
             Border.all(color: AppTheme.primaryGold.withOpacity(0.12)),
       ),
@@ -383,7 +383,7 @@ class AccountInfoScreen extends StatelessWidget {
                   const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: statusColor.withOpacity(0.12),
-                borderRadius: AppTheme.borderRadiusSmall,
+                borderRadius: AppTheme.radiusSmall,
               ),
               child: Text(statusLabel,
                   style: TextStyle(
@@ -425,7 +425,7 @@ class AccountInfoScreen extends StatelessWidget {
                           color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
                   const SizedBox(height: 6),
                   ClipRRect(
-                    borderRadius: AppTheme.borderRadiusXS,
+                    borderRadius: AppTheme.radiusXS,
                     child: LinearProgressIndicator(
                       value: ratio,
                       minHeight: 6,
@@ -501,7 +501,7 @@ class AccountInfoScreen extends StatelessWidget {
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: color.withOpacity(0.25)),
       ),
       child: Column(
@@ -552,7 +552,7 @@ class AccountInfoScreen extends StatelessWidget {
                   backgroundColor: AppTheme.primaryGold,
                   padding: const EdgeInsets.symmetric(vertical: 11),
                   shape: RoundedRectangleBorder(
-                      borderRadius: AppTheme.borderRadiusMedium),
+                      borderRadius: AppTheme.radiusMedium),
                 ),
               ),
             ),
@@ -579,7 +579,7 @@ class AccountInfoScreen extends StatelessWidget {
         builder: (ctx) => AlertDialog(
           backgroundColor: AppTheme.surfaceBlack,
           shape: RoundedRectangleBorder(
-              borderRadius: AppTheme.borderRadiusLarge),
+              borderRadius: AppTheme.radiusLarge),
           title: const Text('بيانات ناقصة',
               style: TextStyle(color: AppTheme.textWhite)),
           content: Text(
@@ -612,7 +612,7 @@ class AccountInfoScreen extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
-        shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusLarge),
+        shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
         title: const Text('طلب التوثيق الرسمي',
             style: TextStyle(color: AppTheme.textWhite)),
         content: const Text(
@@ -688,7 +688,7 @@ class AccountInfoScreen extends StatelessWidget {
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: Colors.white.withOpacity(0.06)),
       ),
       child: Column(
@@ -737,7 +737,7 @@ class AccountInfoScreen extends StatelessWidget {
                     color: AppTheme.primaryGold.withOpacity(0.3)),
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 shape: RoundedRectangleBorder(
-                    borderRadius: AppTheme.borderRadiusMedium),
+                    borderRadius: AppTheme.radiusMedium),
               ),
             ),
           ),
@@ -755,7 +755,7 @@ class AccountInfoScreen extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceBlack,
-        shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusLarge),
+        shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
         title: Text(
           hasOld ? 'تغيير كلمة المرور' : 'تعيين كلمة مرور',
           style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeSubtitle),

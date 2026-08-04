@@ -129,7 +129,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Card(
       color: AppTheme.surfaceBlack,
       margin: const EdgeInsets.only(bottom: 8),
-      shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusMedium),
+      shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
       child: SwitchListTile(
         title: Text(title, style: const TextStyle(color: AppTheme.textWhite)),
         value: value,
@@ -144,7 +144,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Card(
       color: AppTheme.surfaceBlack,
       margin: const EdgeInsets.only(bottom: 8),
-      shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusMedium),
+      shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium),
       child: ListTile(
         leading: Icon(icon, color: AppTheme.primaryGold),
         title: Text(title, style: const TextStyle(color: AppTheme.textWhite)),
@@ -247,7 +247,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               // أيقونة لورانيم بسطر لحالها
               Center(
                 child: ClipRRect(
-                  borderRadius: AppTheme.borderRadiusMedium,
+                  borderRadius: AppTheme.radiusMedium,
                   child: Image.asset(
                     'assets/images/loraneem_tech_logo.png',
                     // الصورة أصلها عريضة (1200×520) — contain بلا قص
@@ -286,7 +286,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 padding: AppTheme.paddingAllMedium,
                 decoration: BoxDecoration(
                   color: AppTheme.deepBlack,
-                  borderRadius: AppTheme.borderRadiusSmall,
+                  borderRadius: AppTheme.radiusSmall,
                   border: Border.all(color: AppTheme.primaryGold.withOpacity(0.25)),
                 ),
                 child: Row(
@@ -308,7 +308,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   padding: AppTheme.paddingAllMedium,
                   decoration: BoxDecoration(
                     color: AppTheme.deepBlack,
-                    borderRadius: AppTheme.borderRadiusSmall,
+                    borderRadius: AppTheme.radiusSmall,
                     border: Border.all(
                         color: AppTheme.primaryGold.withOpacity(0.25)),
                   ),
@@ -357,12 +357,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       padding: const EdgeInsets.only(bottom: 8),
       child: InkWell(
         onTap: onTap,
-        borderRadius: AppTheme.borderRadiusSmall,
+        borderRadius: AppTheme.radiusSmall,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             color: AppTheme.deepBlack,
-            borderRadius: AppTheme.borderRadiusSmall,
+            borderRadius: AppTheme.radiusSmall,
             border: Border.all(color: AppTheme.primaryGold.withOpacity(0.25)),
           ),
           child: Row(

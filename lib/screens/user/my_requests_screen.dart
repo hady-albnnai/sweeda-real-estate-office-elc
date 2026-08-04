@@ -122,7 +122,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
             color: (statusColors[req.sts] ?? AppTheme.textGrey).withOpacity(0.2),
-            borderRadius: AppTheme.borderRadiusSmall,
+            borderRadius: AppTheme.radiusSmall,
           ),
           child: Text(
             statusTexts[req.sts] ?? 'غير معروف',

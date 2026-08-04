@@ -129,7 +129,7 @@ class _MyRatingsScreenState extends State<MyRatingsScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
       ),
       child: Row(
         children: [
@@ -205,7 +205,7 @@ class _MyRatingsScreenState extends State<MyRatingsScreen> {
       padding: AppTheme.paddingAllMedium,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
         border: Border.all(
             color: AppTheme.primaryGold.withOpacity(0.2), width: 1),
       ),

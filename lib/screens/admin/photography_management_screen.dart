@@ -138,7 +138,7 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.30)),
       ),
       child: Column(
@@ -198,7 +198,7 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: color.withOpacity(0.12),
-        borderRadius: AppTheme.borderRadiusSmall,
+        borderRadius: AppTheme.radiusSmall,
         border: Border.all(color: color.withOpacity(0.40)),
       ),
       child: Text('$label: $value',
@@ -271,7 +271,7 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: color.withOpacity(0.30)),
       ),
       child: Padding(
@@ -344,7 +344,7 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
                   itemBuilder: (_, index) => Padding(
                     padding: const EdgeInsets.only(left: 8),
                     child: ClipRRect(
-                      borderRadius: AppTheme.borderRadiusMedium,
+                      borderRadius: AppTheme.radiusMedium,
                       child: Image.network(task.media[index], width: 76, height: 76, fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => Container(width: 76, height: 76, color: AppTheme.deepBlack, child: const Icon(Icons.broken_image, color: AppTheme.textGrey))),
                     ),
@@ -677,7 +677,7 @@ class _PhotographyManagementScreenState extends State<PhotographyManagementScree
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: color.withOpacity(0.13),
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
         border: Border.all(color: color.withOpacity(0.30)),
       ),
       child: Text(text, style: TextStyle(color: color, fontSize: AppTheme.fontSizeXS, fontWeight: FontWeight.w600)),

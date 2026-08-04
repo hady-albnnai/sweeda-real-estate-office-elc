@@ -247,7 +247,7 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
                       horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
                     color: AppTheme.infoBlue.withOpacity(0.08),
-                    borderRadius: AppTheme.borderRadiusMedium,
+                    borderRadius: AppTheme.radiusMedium,
                     border:
                         Border.all(color: AppTheme.infoBlue.withOpacity(0.3)),
                   ),
@@ -323,12 +323,12 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
       padding: AppTheme.paddingAllMedium,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
       ),
       child: Row(
         children: [
           ClipRRect(
-            borderRadius: AppTheme.borderRadiusSmall,
+            borderRadius: AppTheme.radiusSmall,
             child: SizedBox(
               width: 60,
               height: 60,
@@ -376,7 +376,7 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
       ),
       child: Row(
         children: [
@@ -431,7 +431,7 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
         border: Border.all(
           color: active ? AppTheme.successGreen : color.withOpacity(0.3),
           width: active ? 2 : 1,
@@ -446,7 +446,7 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
                 padding: AppTheme.paddingAllSmall,
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.15),
-                  borderRadius: AppTheme.borderRadiusSmall,
+                  borderRadius: AppTheme.radiusSmall,
                 ),
                 child: Icon(icon, color: color, size: 22),
               ),
@@ -551,7 +551,7 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
         border: Border.all(
             color: AppTheme.primaryGold.withOpacity(active ? 0.6 : 0.25)),
       ),
@@ -574,7 +574,7 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
                     horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: AppTheme.successGreen.withOpacity(0.12),
-                  borderRadius: AppTheme.borderRadiusSmall,
+                  borderRadius: AppTheme.radiusSmall,
                 ),
                 child: const Text('فعّال',
                     style: TextStyle(
@@ -629,7 +629,7 @@ class _BoostOfferScreenState extends State<BoostOfferScreen> {
       padding: AppTheme.paddingAllMedium,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
       ),
       child: const Row(
         children: [

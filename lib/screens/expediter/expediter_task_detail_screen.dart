@@ -153,7 +153,7 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
                   padding: AppTheme.paddingAllMedium,
                   decoration: BoxDecoration(
                     color: AppTheme.primaryGold.withOpacity(0.08),
-                    borderRadius: AppTheme.borderRadiusMedium,
+                    borderRadius: AppTheme.radiusMedium,
                     border: Border.all(color: AppTheme.primaryGold.withOpacity(0.22)),
                   ),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -194,7 +194,7 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
                   padding: AppTheme.paddingAllMedium,
                   decoration: BoxDecoration(
                     color: AppTheme.scaffoldBackground,
-                    borderRadius: AppTheme.borderRadiusMedium,
+                    borderRadius: AppTheme.radiusMedium,
                     border: Border.all(color: AppTheme.primaryGold.withOpacity(0.22)),
                   ),
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -204,7 +204,7 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
                       Text('تم اختيار صورة: $attachmentName', style: const TextStyle(color: AppTheme.successGreen, fontSize: AppTheme.fontSizeSmall))
                     else if (existingImage.isNotEmpty)
                       ClipRRect(
-                        borderRadius: AppTheme.borderRadiusSmall,
+                        borderRadius: AppTheme.radiusSmall,
                         child: Image.network(existingImage, height: 130, width: double.infinity, fit: BoxFit.cover),
                       )
                     else
@@ -278,7 +278,7 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
             if (widget.task.itemType == 0)
               Container(
                 padding: AppTheme.paddingAllLarge,
-                decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: AppTheme.borderRadiusMedium, border: Border.all(color: AppTheme.primaryGold)),
+                decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: AppTheme.radiusMedium, border: Border.all(color: AppTheme.primaryGold)),
                 child: Row(
                   children: [
                     const Icon(Icons.home, color: AppTheme.primaryGold),
@@ -299,7 +299,7 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
                 padding: AppTheme.paddingAllLarge,
                 decoration: BoxDecoration(
                   color: isDone ? AppTheme.successGreen.withOpacity(0.1) : AppTheme.surfaceBlack,
-                  borderRadius: AppTheme.borderRadiusLarge,
+                  borderRadius: AppTheme.radiusLarge,
                   border: Border.all(color: isDone ? AppTheme.successGreen : Colors.white12),
                 ),
                 child: Column(
@@ -334,7 +334,7 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
                     if (item.attachmentSignedUrl.isNotEmpty || item.attachmentUrl.startsWith('http')) ...[
                       AppTheme.gapHeightSmall,
                       ClipRRect(
-                        borderRadius: AppTheme.borderRadiusMedium,
+                        borderRadius: AppTheme.radiusMedium,
                         child: Image.network(
                           item.attachmentSignedUrl.isNotEmpty ? item.attachmentSignedUrl : item.attachmentUrl,
                           height: 120,
@@ -381,7 +381,7 @@ class _ExpediterTaskDetailScreenState extends State<ExpediterTaskDetailScreen> {
               padding: AppTheme.paddingAllLarge,
               decoration: BoxDecoration(
                 color: _taskStatus >= 2 ? AppTheme.successGreen.withOpacity(0.1) : AppTheme.surfaceBlack,
-                borderRadius: AppTheme.borderRadiusLarge,
+                borderRadius: AppTheme.radiusLarge,
                 border: Border.all(color: _taskStatus >= 2 ? AppTheme.successGreen : AppTheme.primaryGold.withOpacity(0.35)),
               ),
               child: Column(

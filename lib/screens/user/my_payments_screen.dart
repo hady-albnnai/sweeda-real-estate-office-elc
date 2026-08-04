@@ -88,7 +88,7 @@ class _MyPaymentsScreenState extends State<MyPaymentsScreen> {
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: stsColor.withOpacity(0.3)),
       ),
       child: Column(
@@ -109,7 +109,7 @@ class _MyPaymentsScreenState extends State<MyPaymentsScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: stsColor.withOpacity(0.15),
-                  borderRadius: AppTheme.borderRadiusSmall,
+                  borderRadius: AppTheme.radiusSmall,
                   border: Border.all(color: stsColor.withOpacity(0.5)),
                 ),
                 child: Text(stsLabel,
@@ -135,7 +135,7 @@ class _MyPaymentsScreenState extends State<MyPaymentsScreen> {
             padding: AppTheme.paddingAllMedium,
             decoration: BoxDecoration(
               color: stsColor.withOpacity(0.07),
-              borderRadius: AppTheme.borderRadiusSmall,
+              borderRadius: AppTheme.radiusSmall,
             ),
             child: Row(children: [
               Icon(

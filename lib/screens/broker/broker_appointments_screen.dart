@@ -262,7 +262,7 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: status.$2.withOpacity(0.3)),
       ),
       child: Column(
@@ -304,7 +304,7 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
                 Row(
                   children: [
                     ClipRRect(
-                      borderRadius: AppTheme.borderRadiusSmall,
+                      borderRadius: AppTheme.radiusSmall,
                       child: SizedBox(
                         width: 60,
                         height: 60,
@@ -356,7 +356,7 @@ class _BrokerAppointmentsScreenState extends State<BrokerAppointmentsScreen>
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   decoration: BoxDecoration(
                     color: AppTheme.primaryGold.withOpacity(0.07),
-                    borderRadius: AppTheme.borderRadiusSmall,
+                    borderRadius: AppTheme.radiusSmall,
                     border: Border.all(
                         color: AppTheme.primaryGold.withOpacity(0.3)),
                   ),

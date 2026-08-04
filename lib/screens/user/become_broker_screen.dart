@@ -166,7 +166,7 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
       ),
       child: const Column(
         children: [
@@ -193,7 +193,7 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
       padding: AppTheme.paddingAllXL,
       decoration: BoxDecoration(
         color: AppTheme.successGreen.withOpacity(0.1),
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
         border: Border.all(color: AppTheme.successGreen),
       ),
       child: Column(
@@ -221,7 +221,7 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
       padding: AppTheme.paddingAllXL,
       decoration: BoxDecoration(
         color: AppTheme.warningOrange.withOpacity(0.1),
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
         border: Border.all(color: AppTheme.warningOrange),
       ),
       child: const Column(
@@ -252,7 +252,7 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
       padding: AppTheme.paddingAllXL,
       decoration: BoxDecoration(
         color: AppTheme.warningOrange.withOpacity(0.1),
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
         border: Border.all(color: AppTheme.warningOrange),
       ),
       child: Column(
@@ -329,7 +329,7 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
             color: AppTheme.surfaceBlack,
-            borderRadius: AppTheme.borderRadiusMedium,
+            borderRadius: AppTheme.radiusMedium,
           ),
           child: Column(
             children: _categories.entries
@@ -381,7 +381,7 @@ class _BecomeBrokerScreenState extends State<BecomeBrokerScreen> {
           padding: AppTheme.paddingAllMedium,
           decoration: BoxDecoration(
             color: AppTheme.surfaceBlack,
-            borderRadius: AppTheme.borderRadiusMedium,
+            borderRadius: AppTheme.radiusMedium,
           ),
           child: Column(
             children: [

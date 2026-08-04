@@ -468,7 +468,7 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
               icon: _savingProfile ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.save),
               label: Text(_savingProfile ? 'جاري...' : 'حفظ ومتابعة', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeSubtitle)),
               style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryGold,
-                shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusMedium)))),
+                shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium)))),
           ])),
       ])),
     );
@@ -515,7 +515,7 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Column(
@@ -535,7 +535,7 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
               decoration: BoxDecoration(
                 color: color.withOpacity(0.15),
-                borderRadius: AppTheme.borderRadiusSmall,
+                borderRadius: AppTheme.radiusSmall,
               ),
               child: Text(label,
                   style: TextStyle(
@@ -662,9 +662,9 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
     final sts = a['sts']?.toString() ?? '0';
     final c = sts == '0' ? AppTheme.warningOrange : sts == '1' ? AppTheme.successGreen : sts == '2' ? AppTheme.infoBlue : AppTheme.errorRed;
     return Container(margin: const EdgeInsets.only(bottom: 12), padding: AppTheme.paddingAllLarge,
-      decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: AppTheme.borderRadiusLarge, border: Border.all(color: c.withOpacity(0.3))),
+      decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: AppTheme.radiusLarge, border: Border.all(color: c.withOpacity(0.3))),
       child: Row(children: [
-        Container(width: 4, height: 60, decoration: BoxDecoration(color: c, borderRadius: AppTheme.borderRadiusXS)),
+        Container(width: 4, height: 60, decoration: BoxDecoration(color: c, borderRadius: AppTheme.radiusXS)),
         AppTheme.gapWidthMedium,
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(a['client_name']?.toString() ?? '', style: const TextStyle(color: AppTheme.textWhite, fontWeight: FontWeight.bold, fontSize: 15)),
@@ -672,7 +672,7 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
           Text(a['dt']?.toString().substring(0, 16) ?? '', style: const TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeSmall)),
         ])),
         Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(color: c.withOpacity(0.15), borderRadius: AppTheme.borderRadiusXL),
+          decoration: BoxDecoration(color: c.withOpacity(0.15), borderRadius: AppTheme.radiusXL),
           child: Text(sts == '0' ? 'انتظار' : sts == '1' ? 'مؤكد' : sts == '2' ? 'مكتمل' : 'ملغي',
             style: TextStyle(color: c, fontSize: AppTheme.fontSizeCaption, fontWeight: FontWeight.bold))),
       ]));
@@ -690,7 +690,7 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
         Expanded(child: _Chip(label: '🚗 سيارة', selected: _selectedItemType == 1, onTap: () => _changeItemType(1), e2eId: 'e2e_task_type_vehicle')),
       ]), AppTheme.gapHeightLarge, const Text('المعقب:', style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeMedium)),
       expediters.isEmpty
-          ? Container(padding: AppTheme.paddingAllLarge, decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: AppTheme.borderRadiusMedium,
+          ? Container(padding: AppTheme.paddingAllLarge, decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: AppTheme.radiusMedium,
               border: Border.all(color: AppTheme.warningOrange.withOpacity(0.3))),
               child: const Row(children: [Icon(Icons.info_outline, color: AppTheme.warningOrange, size: 18), AppTheme.gapWidthSmall,
                 Expanded(child: Text('لا يوجد معقبين. أضف معقباً من إدارة الموظفين.', style: TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeBody)))]))
@@ -723,7 +723,7 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
         onPressed: _creatingTask ? null : _createTask,
         icon: _creatingTask ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.send),
         label: Text(_creatingTask ? 'جاري...' : 'إرسال للمعقب', style: const TextStyle(fontWeight: FontWeight.bold)),
-        style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryGold, shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusMedium))))),
+        style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryGold, shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusMedium))))),
     ]));
   }
 
@@ -733,7 +733,7 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.25)),
       ),
       child: Column(
@@ -754,7 +754,7 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
               margin: const EdgeInsets.only(bottom: 8),
               decoration: BoxDecoration(
                 color: selected ? AppTheme.primaryGold.withOpacity(0.1) : AppTheme.scaffoldBackground,
-                borderRadius: AppTheme.borderRadiusMedium,
+                borderRadius: AppTheme.radiusMedium,
                 border: Border.all(color: selected ? AppTheme.primaryGold : AppTheme.textGrey.withOpacity(0.18)),
               ),
               child: Row(
@@ -848,7 +848,7 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
                 padding: AppTheme.paddingAllMedium,
                 decoration: BoxDecoration(
                   color: AppTheme.scaffoldBackground,
-                  borderRadius: AppTheme.borderRadiusMedium,
+                  borderRadius: AppTheme.radiusMedium,
                   border: Border.all(color: AppTheme.primaryGold.withOpacity(0.15)),
                 ),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -956,7 +956,7 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
                     padding: AppTheme.paddingAllMedium,
                     decoration: BoxDecoration(
                       color: AppTheme.scaffoldBackground,
-                      borderRadius: AppTheme.borderRadiusMedium,
+                      borderRadius: AppTheme.radiusMedium,
                       border: Border.all(color: item.status == 2 ? AppTheme.successGreen.withOpacity(0.45) : AppTheme.primaryGold.withOpacity(0.18)),
                     ),
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -974,7 +974,7 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
                       if (imageUrl.isNotEmpty) ...[
                         AppTheme.gapHeightSmall,
                         ClipRRect(
-                          borderRadius: AppTheme.borderRadiusMedium,
+                          borderRadius: AppTheme.radiusMedium,
                           child: Image.network(imageUrl, height: 170, width: double.infinity, fit: BoxFit.cover),
                         ),
                       ] else ...[
@@ -1044,7 +1044,7 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
         final t = tasks[i]; final done = t.checklist.where((c) => c.status >= 2).length;
         final total = t.checklist.length; final c = t.status == 0 ? AppTheme.warningOrange : t.status == 1 ? AppTheme.infoBlue : AppTheme.successGreen;
         return Container(margin: const EdgeInsets.only(bottom: 12), padding: AppTheme.paddingAllLarge,
-          decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: AppTheme.borderRadiusLarge, border: Border.all(color: c.withOpacity(0.3))),
+          decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: AppTheme.radiusLarge, border: Border.all(color: c.withOpacity(0.3))),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [Icon(Icons.assignment, color: c, size: 20), AppTheme.gapWidthSmall,
               Expanded(child: Text(
@@ -1059,12 +1059,12 @@ class _LawyerDashboardScreenState extends State<LawyerDashboardScreen>
               if (t.status == 2) ...[
                 AppTheme.gapWidthSmall,
                 Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(color: AppTheme.warningOrange.withOpacity(0.2), borderRadius: AppTheme.borderRadiusMedium),
+                  decoration: BoxDecoration(color: AppTheme.warningOrange.withOpacity(0.2), borderRadius: AppTheme.radiusMedium),
                   child: const Text('بانتظار اعتمادك', style: TextStyle(color: AppTheme.warningOrange, fontSize: AppTheme.fontSizeCaption, fontWeight: FontWeight.bold)))],
               if (t.status == 3) ...[
                 AppTheme.gapWidthSmall,
                 Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(color: AppTheme.successGreen.withOpacity(0.2), borderRadius: AppTheme.borderRadiusMedium),
+                  decoration: BoxDecoration(color: AppTheme.successGreen.withOpacity(0.2), borderRadius: AppTheme.radiusMedium),
                   child: const Text('معتمد', style: TextStyle(color: AppTheme.successGreen, fontSize: AppTheme.fontSizeCaption, fontWeight: FontWeight.bold)))],
             ]),
             AppTheme.gapHeightMedium,
@@ -1107,7 +1107,7 @@ class _Chip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(
         color: selected ? AppTheme.primaryGold.withOpacity(0.2) : AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
         border: Border.all(color: selected ? AppTheme.primaryGold : AppTheme.textGrey.withOpacity(0.3), width: selected ? 2 : 1)),
       child: Center(child: Text(label, style: TextStyle(color: selected ? AppTheme.primaryGold : AppTheme.textGrey,
         fontWeight: selected ? FontWeight.bold : FontWeight.normal, fontSize: 15)))));

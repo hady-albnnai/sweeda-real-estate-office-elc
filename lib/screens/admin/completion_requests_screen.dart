@@ -145,7 +145,7 @@ class _CompletionRequestsScreenState extends State<CompletionRequestsScreen> {
   Widget _requestCard(Map<String, dynamic> req) {
     return Card(
       color: AppTheme.surfaceBlack,
-      shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusLarge),
+      shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
         padding: AppTheme.paddingAllLarge,

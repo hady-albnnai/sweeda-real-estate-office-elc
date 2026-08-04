@@ -145,7 +145,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> with Code
                     keyboardType: TextInputType.text,
                     maxLength: 1,
                     style: const TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeLarge, fontWeight: FontWeight.bold),
-                    decoration: InputDecoration(counterText: '', filled: true, fillColor: AppTheme.surfaceBlack, enabledBorder: OutlineInputBorder(borderRadius: AppTheme.borderRadiusLarge, borderSide: const BorderSide(color: Colors.white10)), focusedBorder: OutlineInputBorder(borderRadius: AppTheme.borderRadiusLarge, borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2))),
+                    decoration: InputDecoration(counterText: '', filled: true, fillColor: AppTheme.surfaceBlack, enabledBorder: OutlineInputBorder(borderRadius: AppTheme.radiusLarge, borderSide: const BorderSide(color: Colors.white10)), focusedBorder: OutlineInputBorder(borderRadius: AppTheme.radiusLarge, borderSide: const BorderSide(color: AppTheme.primaryGold, width: 2))),
                     onChanged: (v) {
                       if (v.isNotEmpty && i < 5) {
                         _nodes[i + 1].requestFocus();
@@ -161,7 +161,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> with Code
               ),
             ),
             AppTheme.gapHeightXL,
-            SizedBox(width: double.infinity, height: 56, child: ElevatedButton(onPressed: _loading ? null : _verify, style: ElevatedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusLarge)), child: _loading ? const CircularProgressIndicator(color: Colors.black) : const Text('تحقق الآن', style: TextStyle(fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeTitle)))),
+            SizedBox(width: double.infinity, height: 56, child: ElevatedButton(onPressed: _loading ? null : _verify, style: ElevatedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge)), child: _loading ? const CircularProgressIndicator(color: Colors.black) : const Text('تحقق الآن', style: TextStyle(fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeTitle)))),
             AppTheme.gapHeightXL,
             TextButton(
               onPressed: _canResend ? () {

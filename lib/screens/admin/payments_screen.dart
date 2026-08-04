@@ -164,7 +164,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.15)),
       ),
       child: Column(
@@ -182,7 +182,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                 decoration: BoxDecoration(
                   color: _stsColor(p.sts).withOpacity(0.15),
-                  borderRadius: AppTheme.borderRadiusSmall,
+                  borderRadius: AppTheme.radiusSmall,
                   border: Border.all(color: _stsColor(p.sts).withOpacity(0.5)),
                 ),
                 child: Text(_stsNames[p.sts] ?? '—',

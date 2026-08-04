@@ -249,7 +249,7 @@ class _PaymentChannelsEditorScreenState
         padding: AppTheme.paddingAllMedium,
         decoration: BoxDecoration(
           color: AppTheme.infoBlue.withOpacity(0.1),
-          borderRadius: AppTheme.borderRadiusMedium,
+          borderRadius: AppTheme.radiusMedium,
           border: Border.all(color: AppTheme.infoBlue.withOpacity(0.4)),
         ),
         child: const Row(
@@ -278,7 +278,7 @@ class _PaymentChannelsEditorScreenState
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
         border: Border.all(
           color: enabled
               ? AppTheme.primaryGold.withOpacity(0.4)
@@ -338,7 +338,7 @@ class _PaymentChannelsEditorScreenState
                 child: Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: AppTheme.borderRadiusSmall,
+                    borderRadius: AppTheme.radiusSmall,
                     border: Border.all(
                         color: AppTheme.primaryGold.withOpacity(0.5)),
                   ),

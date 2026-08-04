@@ -179,7 +179,7 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
                   padding: AppTheme.paddingAllMedium,
                   decoration: BoxDecoration(
                     color: AppTheme.surfaceBlack,
-                    borderRadius: AppTheme.borderRadiusSmall,
+                    borderRadius: AppTheme.radiusSmall,
                     border: Border.all(color: AppTheme.textGrey.withOpacity(0.3)),
                   ),
                   child: Row(
@@ -250,7 +250,7 @@ class _AddEmployeeDialogState extends State<AddEmployeeDialog> {
                 padding: AppTheme.paddingAllMedium,
                 decoration: BoxDecoration(
                   color: AppTheme.primaryGold.withOpacity(0.08),
-                  borderRadius: AppTheme.borderRadiusSmall,
+                  borderRadius: AppTheme.radiusSmall,
                   border: Border.all(color: AppTheme.primaryGold.withOpacity(0.25)),
                 ),
                 child: const Text(

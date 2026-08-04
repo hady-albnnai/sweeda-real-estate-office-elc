@@ -424,7 +424,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         padding: AppTheme.paddingAllMedium,
         decoration: BoxDecoration(
           color: AppTheme.errorRed.withOpacity(0.08),
-          borderRadius: AppTheme.borderRadiusSmall,
+          borderRadius: AppTheme.radiusSmall,
           border: Border.all(color: AppTheme.errorRed.withOpacity(0.35)),
         ),
         child: Row(children: [
@@ -673,7 +673,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     content: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       ElevatedButton.icon(onPressed: _pickImages, icon: const Icon(Icons.add_a_photo), label: Text('إضافة صور العرض (${_pickedImages.length}/${StorageService.maxImages})')),
       AppTheme.gapHeightSmall,
-      if (_pickedImages.isNotEmpty) Wrap(spacing: 8, children: _pickedImages.asMap().entries.map((e) => Stack(children: [ClipRRect(borderRadius: AppTheme.borderRadiusSmall, child: _thumb(e.value)), Positioned(top: -5, left: -5, child: IconButton(icon: const Icon(Icons.cancel, color: AppTheme.errorRed), onPressed: () => setState(() => _pickedImages.removeAt(e.key))))])).toList()),
+      if (_pickedImages.isNotEmpty) Wrap(spacing: 8, children: _pickedImages.asMap().entries.map((e) => Stack(children: [ClipRRect(borderRadius: AppTheme.radiusSmall, child: _thumb(e.value)), Positioned(top: -5, left: -5, child: IconButton(icon: const Icon(Icons.cancel, color: AppTheme.errorRed), onPressed: () => setState(() => _pickedImages.removeAt(e.key))))])).toList()),
       AppTheme.gapHeightXL,
       const Text('🎬 فيديو العرض (اختياري)', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeBody)),
       CheckboxListTile(
@@ -690,7 +690,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           margin: const EdgeInsets.only(bottom: 8),
           decoration: BoxDecoration(
             color: AppTheme.primaryGold.withOpacity(0.08),
-            borderRadius: AppTheme.borderRadiusMedium,
+            borderRadius: AppTheme.radiusMedium,
             border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3)),
           ),
           child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -715,7 +715,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         padding: AppTheme.paddingAllMedium,
         decoration: BoxDecoration(
           color: AppTheme.primaryGold.withOpacity(0.08),
-          borderRadius: AppTheme.borderRadiusMedium,
+          borderRadius: AppTheme.radiusMedium,
           border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3)),
         ),
         child: const Row(children: [
@@ -741,7 +741,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           spacing: 8,
           children: _pickedImages.asMap().entries.map((e) => Stack(children: [
             ClipRRect(
-              borderRadius: AppTheme.borderRadiusSmall,
+              borderRadius: AppTheme.radiusSmall,
               child: _thumb(e.value),
             ),
             Positioned(
@@ -760,7 +760,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         padding: AppTheme.paddingAllLarge,
         decoration: BoxDecoration(
           color: AppTheme.surfaceBlack,
-          borderRadius: AppTheme.borderRadiusMedium,
+          borderRadius: AppTheme.radiusMedium,
           border: Border.all(color: AppTheme.primaryGold.withOpacity(0.5), width: 1.2),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -788,7 +788,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           padding: AppTheme.paddingAllMedium,
           decoration: BoxDecoration(
             color: Colors.amber.withOpacity(0.1),
-            borderRadius: AppTheme.borderRadiusSmall,
+            borderRadius: AppTheme.radiusSmall,
             border: Border.all(color: Colors.amber.withOpacity(0.4)),
           ),
           child: Row(children: [
@@ -837,7 +837,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
     content: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Container(
         padding: AppTheme.paddingAllMedium,
-        decoration: BoxDecoration(color: AppTheme.primaryGold.withOpacity(0.1), borderRadius: AppTheme.borderRadiusMedium, border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3))),
+        decoration: BoxDecoration(color: AppTheme.primaryGold.withOpacity(0.1), borderRadius: AppTheme.radiusMedium, border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3))),
         child: SwitchListTile(
           value: _anytimeReady,
           onChanged: (v) => setState(() => _anytimeReady = v),
@@ -855,7 +855,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           final key = day.$1; final label = day.$2; final enabled = _avlDaysEnabled[key] ?? false; final slots = _avlSlots[key] ?? [];
           return Container(
             margin: const EdgeInsets.only(bottom: 12),
-            decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: AppTheme.borderRadiusMedium, border: Border.all(color: enabled ? AppTheme.primaryGold.withOpacity(0.5) : AppTheme.textGrey.withOpacity(0.2))),
+            decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: AppTheme.radiusMedium, border: Border.all(color: enabled ? AppTheme.primaryGold.withOpacity(0.5) : AppTheme.textGrey.withOpacity(0.2))),
             child: Column(children: [
               ListTile(
                 leading: Icon(enabled ? Icons.check_box : Icons.check_box_outline_blank, color: enabled ? AppTheme.primaryGold : AppTheme.textGrey),
@@ -935,13 +935,13 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         const SizedBox(height: 15),
         const Text('صورة سند الملكية (اختياري)', style: TextStyle(color: AppTheme.primaryGold, fontSize: AppTheme.fontSizeBody, fontWeight: FontWeight.bold)),
         const SizedBox(height: 6),
-        GestureDetector(onTap: _pickDocImage, child: Container(height: 120, width: double.infinity, decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: AppTheme.borderRadiusMedium, border: Border.all(color: _docImage != null ? AppTheme.successGreen : AppTheme.primaryGold.withOpacity(0.5))), child: _docImage == null ? const Center(child: Icon(Icons.upload_file, size: 40, color: AppTheme.primaryGold)) : ClipRRect(borderRadius: AppTheme.borderRadiusMedium, child: kIsWeb ? Image.network(_docImage!.path, fit: BoxFit.cover) : Image.file(File(_docImage!.path), fit: BoxFit.cover, cacheWidth: 800)))),
+        GestureDetector(onTap: _pickDocImage, child: Container(height: 120, width: double.infinity, decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: AppTheme.radiusMedium, border: Border.all(color: _docImage != null ? AppTheme.successGreen : AppTheme.primaryGold.withOpacity(0.5))), child: _docImage == null ? const Center(child: Icon(Icons.upload_file, size: 40, color: AppTheme.primaryGold)) : ClipRRect(borderRadius: AppTheme.radiusMedium, child: kIsWeb ? Image.network(_docImage!.path, fit: BoxFit.cover) : Image.file(File(_docImage!.path), fit: BoxFit.cover, cacheWidth: 800)))),
         AppTheme.gapHeightXL,
         // ── تنبيه عمولة المكتب (يُخفى للوسيط — عروضه معفاة) ──
         if (!context.read<AuthProvider>().isBroker) ...[
         Container(
           padding: AppTheme.paddingAllLarge,
-          decoration: BoxDecoration(color: AppTheme.primaryGold.withOpacity(0.1), borderRadius: AppTheme.borderRadiusMedium, border: Border.all(color: AppTheme.primaryGold, width: 1.5)),
+          decoration: BoxDecoration(color: AppTheme.primaryGold.withOpacity(0.1), borderRadius: AppTheme.radiusMedium, border: Border.all(color: AppTheme.primaryGold, width: 1.5)),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             const Row(children: [Icon(Icons.monetization_on, color: AppTheme.primaryGold, size: 28), AppTheme.gapWidthSmall, Text('تنبيه بخصوص عمولة المكتب', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: 15))]),
             AppTheme.gapHeightSmall,
@@ -954,7 +954,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         Container(
           width: double.infinity,
           padding: AppTheme.paddingAllLarge,
-          decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: AppTheme.borderRadiusMedium, border: Border.all(color: AppTheme.primaryGold.withOpacity(0.5), width: 1.2)),
+          decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: AppTheme.radiusMedium, border: Border.all(color: AppTheme.primaryGold.withOpacity(0.5), width: 1.2)),
           child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [Icon(Icons.gavel, color: AppTheme.primaryGold, size: 22), AppTheme.gapWidthSmall, Expanded(child: Text('الضمان والتوثيق القانوني المعتمد ⚖️', style: TextStyle(color: AppTheme.primaryGold, fontWeight: FontWeight.bold, fontSize: AppTheme.fontSizeMedium)))]),
             AppTheme.gapHeightSmall,
@@ -966,7 +966,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
         const SizedBox(height: 15),
         // ── الإقرار والتعهد — مقروء قبل الموافقة (كان نصاً أبيض بلا حاوية فيختفي، والآن داخل بطاقة داكنة) ──
         Container(
-          decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: AppTheme.borderRadiusMedium, border: Border.all(color: AppTheme.primaryGold.withOpacity(0.5), width: 1.2)),
+          decoration: BoxDecoration(color: AppTheme.surfaceBlack, borderRadius: AppTheme.radiusMedium, border: Border.all(color: AppTheme.primaryGold.withOpacity(0.5), width: 1.2)),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Theme(
               data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
@@ -994,7 +994,7 @@ class _AddOfferScreenState extends State<AddOfferScreen> {
           decoration: BoxDecoration(
             // سطح فاتح مع حد ذهبي — بالثيم الجديد surfaceBlack = أبيض (النص الداكن textWhite)
             color: AppTheme.surfaceBlack,
-            borderRadius: AppTheme.borderRadiusMedium,
+            borderRadius: AppTheme.radiusMedium,
             border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
           ),
           child: CheckboxListTile(

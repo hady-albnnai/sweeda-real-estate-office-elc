@@ -217,11 +217,11 @@ class _LoginScreenState extends State<LoginScreen> {
     final open = _activeSection == id;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
-      decoration: BoxDecoration(color: isGold ? AppTheme.primaryGold : AppTheme.surfaceBlack, borderRadius: AppTheme.borderRadiusXXL, border: Border.all(color: AppTheme.primaryGold.withOpacity(0.5), width: 2)),
+      decoration: BoxDecoration(color: isGold ? AppTheme.primaryGold : AppTheme.surfaceBlack, borderRadius: AppTheme.radiusXXL, border: Border.all(color: AppTheme.primaryGold.withOpacity(0.5), width: 2)),
       child: Column(children: [
         InkWell(
           onTap: () => setState(() { _activeSection = open ? 0 : id; if (id == 1) _signupMethod = 0; }),
-          borderRadius: AppTheme.borderRadiusXXL,
+          borderRadius: AppTheme.radiusXXL,
           child: Padding(padding: AppTheme.paddingAllXL, child: Row(children: [
             Icon(icon, color: isGold ? Colors.black : AppTheme.primaryGold, size: 28),
             AppTheme.gapWidthLarge,
@@ -238,7 +238,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildOption({required int id, required String title, required IconData icon, required Widget child}) {
     final sel = _signupMethod == id;
     return Container(
-      decoration: BoxDecoration(color: Colors.black.withOpacity(0.1), borderRadius: AppTheme.borderRadiusLarge),
+      decoration: BoxDecoration(color: Colors.black.withOpacity(0.1), borderRadius: AppTheme.radiusLarge),
       child: Column(children: [
         ListTile(
           onTap: () => setState(() => _signupMethod = sel ? 0 : id),
@@ -267,7 +267,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _btn({required String label, required VoidCallback? onTap, bool dark = false, String? e2eId}) {
     final button = SizedBox(width: double.infinity, height: 56, child: ElevatedButton(
       onPressed: _loading ? null : onTap,
-      style: ElevatedButton.styleFrom(backgroundColor: dark ? Colors.black : Colors.white, foregroundColor: dark ? Colors.white : Colors.black, shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusLarge)),
+      style: ElevatedButton.styleFrom(backgroundColor: dark ? Colors.black : Colors.white, foregroundColor: dark ? Colors.white : Colors.black, shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge)),
       child: _loading ? const CircularProgressIndicator(color: AppTheme.textGrey) : Text(label, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17)),
     ));
     return e2eId == null ? button : E2E(id: e2eId, button: true, child: button);

@@ -139,7 +139,7 @@ class _MediaReviewScreenState extends State<MediaReviewScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
       decoration: BoxDecoration(
         color: color.withOpacity(0.10),
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
       ),
       child: Column(
         children: [
@@ -190,13 +190,13 @@ class _MediaReviewScreenState extends State<MediaReviewScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.14)),
       ),
       child: ListTile(
         contentPadding: AppTheme.paddingAllMedium,
         leading: ClipRRect(
-          borderRadius: AppTheme.borderRadiusMedium,
+          borderRadius: AppTheme.radiusMedium,
           child: SizedBox(
             width: 58,
             height: 58,
@@ -246,7 +246,7 @@ class _MediaReviewScreenState extends State<MediaReviewScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: color.withOpacity(0.13),
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
         border: Border.all(color: color.withOpacity(0.30)),
       ),
       child: Text(text, style: TextStyle(color: color, fontSize: AppTheme.fontSizeXS, fontWeight: FontWeight.w600)),

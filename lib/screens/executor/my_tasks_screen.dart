@@ -148,7 +148,7 @@ class _MyTasksScreenState extends State<MyTasksScreen>
           final color = _decisionColor(decision);
           return Card(
             color: AppTheme.surfaceBlack,
-            shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusLarge),
+            shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
             margin: const EdgeInsets.only(bottom: 10),
             child: ListTile(
               leading: CircleAvatar(
@@ -175,7 +175,7 @@ class _MyTasksScreenState extends State<MyTasksScreen>
   Widget _taskCard(ExecutorTaskModel task) {
     return Card(
       color: AppTheme.surfaceBlack,
-      shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusLarge),
+      shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
         padding: AppTheme.paddingAllLarge,
@@ -226,7 +226,7 @@ class _MyTasksScreenState extends State<MyTasksScreen>
     final color = task.isAccepted ? AppTheme.successGreen : (task.isRejected ? AppTheme.errorRed : AppTheme.warningOrange);
     return Card(
       color: AppTheme.surfaceBlack,
-      shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusLarge),
+      shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
       margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
         leading: CircleAvatar(

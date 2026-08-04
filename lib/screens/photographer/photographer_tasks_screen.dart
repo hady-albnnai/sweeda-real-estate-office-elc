@@ -125,7 +125,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
         builder: (ctx, setDlg) => AlertDialog(
           backgroundColor: AppTheme.surfaceBlack,
           shape: RoundedRectangleBorder(
-              borderRadius: AppTheme.borderRadiusLarge),
+              borderRadius: AppTheme.radiusLarge),
           title: const Row(
             children: [
               Icon(Icons.event_busy, color: AppTheme.errorRed, size: 22),
@@ -370,7 +370,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
                     color: isSelected ? AppTheme.primaryGold : AppTheme.deepBlack,
-                    borderRadius: AppTheme.borderRadiusMedium,
+                    borderRadius: AppTheme.radiusMedium,
                     border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
                   ),
                   child: Text(
@@ -427,7 +427,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
 
     return Card(
       color: AppTheme.surfaceBlack,
-      shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusLarge),
+      shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
         padding: AppTheme.paddingAllLarge,
@@ -448,7 +448,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: color.withOpacity(0.12),
-                borderRadius: AppTheme.borderRadiusXL,
+                borderRadius: AppTheme.radiusXL,
               ),
               child: Text('${task.media.length} وسائط',
                   style: TextStyle(color: color, fontSize: AppTheme.fontSizeCaption)),
@@ -463,7 +463,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
               padding: AppTheme.paddingAllSmall,
               decoration: BoxDecoration(
                 color: AppTheme.primaryGold.withOpacity(0.08),
-                borderRadius: AppTheme.borderRadiusSmall,
+                borderRadius: AppTheme.radiusSmall,
                 border: Border.all(color: AppTheme.primaryGold.withOpacity(0.2)),
               ),
               child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -547,7 +547,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
                 children: _tempMedia[taskHash]!.asMap().entries.map((e) {
                   return Stack(clipBehavior: Clip.none, children: [
                     ClipRRect(
-                      borderRadius: AppTheme.borderRadiusSmall,
+                      borderRadius: AppTheme.radiusSmall,
                       child: Image.file(
                         File(e.value.path),
                         width: 70, height: 70,
@@ -555,7 +555,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
                         errorBuilder: (_, __, ___) => Container(
                           width: 70, height: 70,
                           decoration: BoxDecoration(
-                            borderRadius: AppTheme.borderRadiusSmall,
+                            borderRadius: AppTheme.radiusSmall,
                             border: Border.all(color: AppTheme.primaryGold.withOpacity(0.3)),
                             color: AppTheme.deepBlack,
                           ),
@@ -640,7 +640,7 @@ class _PhotographerTasksScreenState extends State<PhotographerTasksScreen>
     final color = _statusColor(task.sts);
     return Card(
       color: AppTheme.surfaceBlack,
-      shape: RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusLarge),
+      shape: RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
       margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
         leading: CircleAvatar(

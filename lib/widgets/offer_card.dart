@@ -217,7 +217,7 @@ class _OfferCardState extends State<OfferCard> {
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: offer.trx == 0 ? AppTheme.successGreen : AppTheme.infoBlue,
-                      borderRadius: AppTheme.borderRadiusMedium,
+                      borderRadius: AppTheme.radiusMedium,
                       boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4)],
                     ),
                     child: Text(
@@ -340,7 +340,7 @@ class _OfferCardState extends State<OfferCard> {
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
                           color: AppTheme.primaryGold.withOpacity(0.08),
-                          borderRadius: AppTheme.borderRadiusMedium,
+                          borderRadius: AppTheme.radiusMedium,
                           border: Border.all(color: AppTheme.primaryGold.withOpacity(0.2)),
                         ),
                         child: Row(

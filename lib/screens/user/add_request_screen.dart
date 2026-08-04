@@ -460,7 +460,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
             padding: AppTheme.paddingAllSmall,
             decoration: BoxDecoration(
               color: AppTheme.primaryGold.withOpacity(0.06),
-              borderRadius: AppTheme.borderRadiusSmall,
+              borderRadius: AppTheme.radiusSmall,
               border: Border.all(
                   color: AppTheme.primaryGold.withOpacity(0.2)),
             ),
@@ -543,7 +543,7 @@ class _AddRequestScreenState extends State<AddRequestScreen> {
           labelText: label,
           filled: true,
           fillColor: AppTheme.surfaceBlack,
-          border: OutlineInputBorder(borderRadius: AppTheme.borderRadiusMedium),
+          border: OutlineInputBorder(borderRadius: AppTheme.radiusMedium),
         ),
       );
 }

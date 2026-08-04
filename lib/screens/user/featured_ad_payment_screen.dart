@@ -287,7 +287,7 @@ class _FeaturedAdPaymentScreenState extends State<FeaturedAdPaymentScreen> {
                     color: selected
                         ? AppTheme.primaryGold.withOpacity(0.12)
                         : AppTheme.surfaceBlack,
-                    borderRadius: AppTheme.borderRadiusMedium,
+                    borderRadius: AppTheme.radiusMedium,
                     border: Border.all(
                       color: selected
                           ? AppTheme.primaryGold
@@ -347,7 +347,7 @@ class _FeaturedAdPaymentScreenState extends State<FeaturedAdPaymentScreen> {
                     color: selected
                         ? AppTheme.primaryGold.withOpacity(0.12)
                         : AppTheme.surfaceBlack,
-                    borderRadius: AppTheme.borderRadiusMedium,
+                    borderRadius: AppTheme.radiusMedium,
                     border: Border.all(
                       color: selected
                           ? AppTheme.primaryGold
@@ -413,7 +413,7 @@ class _FeaturedAdPaymentScreenState extends State<FeaturedAdPaymentScreen> {
                 padding: AppTheme.paddingAllLarge,
                 decoration: BoxDecoration(
                   color: AppTheme.surfaceBlack,
-                  borderRadius: AppTheme.borderRadiusMedium,
+                  borderRadius: AppTheme.radiusMedium,
                   border: Border.all(color: Colors.white12),
                 ),
                 child: Row(children: [

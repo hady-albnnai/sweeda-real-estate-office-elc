@@ -163,12 +163,12 @@ class _TaskCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         onTap: onTap,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         child: Container(
           padding: AppTheme.paddingAllLarge,
           decoration: BoxDecoration(
             color: AppTheme.surfaceBlack,
-            borderRadius: AppTheme.borderRadiusLarge,
+            borderRadius: AppTheme.radiusLarge,
             border: Border.all(color: color.withOpacity(0.4)),
           ),
           child: Column(

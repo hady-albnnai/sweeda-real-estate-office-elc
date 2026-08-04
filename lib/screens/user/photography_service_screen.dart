@@ -158,7 +158,7 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                 padding: AppTheme.paddingAllMedium,
                 decoration: BoxDecoration(
                   color: AppTheme.primaryGold.withOpacity(0.08),
-                  borderRadius: AppTheme.borderRadiusSmall,
+                  borderRadius: AppTheme.radiusSmall,
                   border:
                       Border.all(color: AppTheme.primaryGold.withOpacity(0.3)),
                 ),
@@ -345,7 +345,7 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                   begin: Alignment.topRight,
                   end: Alignment.bottomLeft,
                 ),
-                borderRadius: AppTheme.borderRadiusLarge,
+                borderRadius: AppTheme.radiusLarge,
                 border:
                     Border.all(color: AppTheme.primaryGold.withOpacity(0.35)),
               ),
@@ -387,7 +387,7 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                           horizontal: 12, vertical: 10),
                       decoration: BoxDecoration(
                         color: AppTheme.primaryGold.withOpacity(0.12),
-                        borderRadius: AppTheme.borderRadiusMedium,
+                        borderRadius: AppTheme.radiusMedium,
                         border: Border.all(
                             color: AppTheme.primaryGold.withOpacity(0.45)),
                       ),
@@ -453,7 +453,7 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primaryGold,
                   shape: RoundedRectangleBorder(
-                      borderRadius: AppTheme.borderRadiusMedium),
+                      borderRadius: AppTheme.radiusMedium),
                 ),
               ),
             ),
@@ -485,7 +485,7 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                 padding: AppTheme.paddingAllXL,
                 decoration: BoxDecoration(
                   color: AppTheme.surfaceBlack,
-                  borderRadius: AppTheme.borderRadiusMedium,
+                  borderRadius: AppTheme.radiusMedium,
                 ),
                 child: Column(
                   children: [
@@ -505,7 +505,7 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                 padding: const EdgeInsets.all(26),
                 decoration: BoxDecoration(
                   color: AppTheme.surfaceBlack,
-                  borderRadius: AppTheme.borderRadiusMedium,
+                  borderRadius: AppTheme.radiusMedium,
                 ),
                 child: Column(
                   children: [
@@ -545,7 +545,7 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
         builder: (ctx, setDialogState) => AlertDialog(
           backgroundColor: AppTheme.surfaceBlack,
           shape:
-              RoundedRectangleBorder(borderRadius: AppTheme.borderRadiusLarge),
+              RoundedRectangleBorder(borderRadius: AppTheme.radiusLarge),
           title: const Row(
             children: [
               Icon(Icons.cancel_outlined, color: AppTheme.errorRed, size: 22),
@@ -663,7 +663,7 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Column(
@@ -689,7 +689,7 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.15),
-                  borderRadius: AppTheme.borderRadiusSmall,
+                  borderRadius: AppTheme.radiusSmall,
                   border: Border.all(color: color.withOpacity(0.5)),
                 ),
                 child: Text(label,
@@ -746,7 +746,7 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
                 itemBuilder: (_, i) => Padding(
                   padding: const EdgeInsets.only(left: 6),
                   child: ClipRRect(
-                    borderRadius: AppTheme.borderRadiusSmall,
+                    borderRadius: AppTheme.radiusSmall,
                     child: Image.network(
                       t.media[i],
                       width: 72,
@@ -774,7 +774,7 @@ class _PhotographyServiceScreenState extends State<PhotographyServiceScreen> {
               padding: AppTheme.paddingAllSmall,
               decoration: BoxDecoration(
                 color: (t.sts == 4 ? AppTheme.errorRed : AppTheme.textGrey).withOpacity(0.1),
-                borderRadius: AppTheme.borderRadiusSmall,
+                borderRadius: AppTheme.radiusSmall,
                 border: Border.all(
                     color: (t.sts == 4 ? AppTheme.errorRed : AppTheme.textGrey)
                         .withOpacity(0.3)),

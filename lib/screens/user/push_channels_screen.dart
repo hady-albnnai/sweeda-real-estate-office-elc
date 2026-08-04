@@ -123,7 +123,7 @@ class _PushChannelsScreenState extends State<PushChannelsScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: (en ? AppTheme.successGreen : Colors.white10).withOpacity(en ? 0.12 : 0.06),
-        borderRadius: AppTheme.borderRadiusMedium,
+        borderRadius: AppTheme.radiusMedium,
         border: Border.all(color: (en ? AppTheme.successGreen : Colors.white24).withOpacity(0.35)),
       ),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -189,7 +189,7 @@ class _PushChannelsScreenState extends State<PushChannelsScreen> {
                 padding: AppTheme.paddingAllMedium,
                 decoration: BoxDecoration(
                   color: AppTheme.surfaceBlack,
-                  borderRadius: AppTheme.borderRadiusMedium,
+                  borderRadius: AppTheme.radiusMedium,
                   border: Border.all(color: AppTheme.primaryGold.withOpacity(0.25)),
                 ),
                 child: const Text(

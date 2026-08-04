@@ -440,7 +440,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
               color: Colors.amber.withOpacity(0.1),
-              borderRadius: AppTheme.borderRadiusSmall,
+              borderRadius: AppTheme.radiusSmall,
               border: Border.all(color: Colors.amber.withOpacity(0.4)),
             ),
             child: const Row(children: [
@@ -769,7 +769,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
               children: _pickedImages.asMap().entries.map((e) {
                 return Stack(children: [
                   ClipRRect(
-                      borderRadius: AppTheme.borderRadiusSmall,
+                      borderRadius: AppTheme.radiusSmall,
                       child: _thumb(e.value)),
                   Positioned(
                     top: -8, left: -8,
@@ -814,7 +814,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
                 margin: const EdgeInsets.only(bottom: 10),
                 decoration: BoxDecoration(
                   color: AppTheme.surfaceBlack,
-                  borderRadius: AppTheme.borderRadiusMedium,
+                  borderRadius: AppTheme.radiusMedium,
                   border: Border.all(
                     color: enabled
                         ? AppTheme.primaryGold.withOpacity(0.5)
@@ -831,7 +831,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
                           _avlSlots[key]!.add({'from': '', 'to': ''});
                         }
                       }),
-                      borderRadius: AppTheme.borderRadiusMedium,
+                      borderRadius: AppTheme.radiusMedium,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 10),
@@ -978,7 +978,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
             height: 120,
             decoration: BoxDecoration(
               color: AppTheme.surfaceBlack,
-              borderRadius: AppTheme.borderRadiusMedium,
+              borderRadius: AppTheme.radiusMedium,
               border: Border.all(
                 color: _docImage != null
                     ? AppTheme.successGreen.withOpacity(0.4)
@@ -1015,7 +1015,7 @@ class _AdminAddOfferScreenState extends State<AdminAddOfferScreen> {
           padding: AppTheme.paddingAllMedium,
           decoration: BoxDecoration(
             color: Colors.amber.withOpacity(0.08),
-            borderRadius: AppTheme.borderRadiusSmall,
+            borderRadius: AppTheme.radiusSmall,
             border: Border.all(color: Colors.amber.withOpacity(0.3)),
           ),
           child: Row(children: [

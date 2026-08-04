@@ -112,7 +112,7 @@ class DeputyDashboardScreen extends StatelessWidget {
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.2)),
       ),
       child: Column(
@@ -131,12 +131,12 @@ class DeputyDashboardScreen extends StatelessWidget {
   Widget _navCard(BuildContext context, IconData icon, String title, String route) {
     return InkWell(
       onTap: () => context.push(route),
-      borderRadius: AppTheme.borderRadiusLarge,
+      borderRadius: AppTheme.radiusLarge,
       child: Container(
         padding: AppTheme.paddingAllLarge,
         decoration: BoxDecoration(
           color: AppTheme.surfaceBlack,
-          borderRadius: AppTheme.borderRadiusLarge,
+          borderRadius: AppTheme.radiusLarge,
           border: Border.all(color: AppTheme.primaryGold.withOpacity(0.15)),
         ),
         child: Column(

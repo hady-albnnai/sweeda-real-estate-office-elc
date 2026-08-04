@@ -424,7 +424,7 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
                     filled: true,
                     fillColor: AppTheme.surfaceBlack,
                     border: OutlineInputBorder(
-                      borderRadius: AppTheme.borderRadiusMedium,
+                      borderRadius: AppTheme.radiusMedium,
                       borderSide: BorderSide(color: AppTheme.primaryGold.withOpacity(0.3)),
                     ),
                   ),
@@ -585,7 +585,7 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
                 width: 50, height: 5,
                 decoration: BoxDecoration(
                   color: AppTheme.primaryGold,
-                  borderRadius: AppTheme.borderRadiusMedium,
+                  borderRadius: AppTheme.radiusMedium,
                 ),
               ),
             ),
@@ -601,7 +601,7 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
                 color: AppTheme.primaryGold.withOpacity(0.1),
-                borderRadius: AppTheme.borderRadiusSmall,
+                borderRadius: AppTheme.radiusSmall,
                 border: Border.all(color: AppTheme.primaryGold.withOpacity(0.4)),
               ),
               child: const Row(children: [
@@ -622,7 +622,7 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
                 color: AppTheme.successGreen.withOpacity(0.08),
-                borderRadius: AppTheme.borderRadiusSmall,
+                borderRadius: AppTheme.radiusSmall,
                 border: Border.all(color: AppTheme.successGreen.withOpacity(0.3)),
               ),
               child: const Row(children: [
@@ -682,14 +682,14 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
                         });
                         _loadBookedSlots();
                       },
-                      borderRadius: AppTheme.borderRadiusXL,
+                      borderRadius: AppTheme.radiusXL,
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                         decoration: BoxDecoration(
                           color: selected
                               ? AppTheme.primaryGold
                               : AppTheme.surfaceBlack,
-                          borderRadius: AppTheme.borderRadiusXL,
+                          borderRadius: AppTheme.radiusXL,
                           border: Border.all(color: AppTheme.primaryGold),
                         ),
                         child: Text(
@@ -727,7 +727,7 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
                           color: selected
                               ? AppTheme.primaryGold.withOpacity(0.2)
                               : AppTheme.surfaceBlack,
-                          borderRadius: AppTheme.borderRadiusXL,
+                          borderRadius: AppTheme.radiusXL,
                           border: Border.all(
                             color: selected
                                 ? AppTheme.primaryGold
@@ -775,14 +775,14 @@ class _BookAppointmentSheetState extends State<BookAppointmentSheet> {
                           onTap: isBooked
                             ? null
                             : () => setState(() => _selectedTime = time),
-                          borderRadius: AppTheme.borderRadiusMedium,
+                          borderRadius: AppTheme.radiusMedium,
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                             decoration: BoxDecoration(
                               color: isBooked
                                   ? AppTheme.textGrey.withOpacity(0.1)
                                   : (selected ? AppTheme.primaryGold : AppTheme.surfaceBlack),
-                              borderRadius: AppTheme.borderRadiusMedium,
+                              borderRadius: AppTheme.radiusMedium,
                               border: Border.all(
                                 color: isBooked
                                     ? AppTheme.textGrey.withOpacity(0.2)

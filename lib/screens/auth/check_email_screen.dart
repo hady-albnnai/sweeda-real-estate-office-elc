@@ -111,7 +111,7 @@ class _CheckEmailScreenState extends State<CheckEmailScreen> {
                   padding: AppTheme.paddingAllMedium,
                   decoration: BoxDecoration(
                     color: AppTheme.errorRed.withOpacity(0.10),
-                    borderRadius: AppTheme.borderRadiusMedium,
+                    borderRadius: AppTheme.radiusMedium,
                     border: Border.all(color: AppTheme.errorRed.withOpacity(0.35)),
                   ),
                   child: Text(
@@ -153,7 +153,7 @@ class _CheckEmailScreenState extends State<CheckEmailScreen> {
                 padding: AppTheme.paddingAllLarge,
                 decoration: BoxDecoration(
                   color: AppTheme.warningOrange.withOpacity(0.10),
-                  borderRadius: AppTheme.borderRadiusMedium,
+                  borderRadius: AppTheme.radiusMedium,
                   border: Border.all(color: AppTheme.warningOrange.withOpacity(0.45)),
                 ),
                 child: const Row(
