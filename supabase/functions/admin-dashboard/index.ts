@@ -168,7 +168,11 @@ serve(async (req) => {
     }
 
     // ✅ جلب قائمة المستخدمين العاديين والوسطاء (role 0,1) للإدارة
+    // 🔒 يتطلب دور 5 (نائب) أو 6 (مدير) فقط
     if (action === "admin_users") {
+      if (![5, 6].includes(Number(actor.role))) {
+        return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
+      }
       const search = (body.search ?? "").toString().trim();
       let query = supabaseAdmin
         .from("users")
@@ -186,7 +190,11 @@ serve(async (req) => {
     }
 
     // ✅ جلب تفاصيل مستخدم كاملة (بيانات + عروض + مواعيد + تبليغات + نشاط)
+    // 🔒 يتطلب دور 5 (نائب) أو 6 (مدير) فقط
     if (action === "admin_user_details") {
+      if (![5, 6].includes(Number(actor.role))) {
+        return json({ success: false, error: "NOT_AUTHORIZED" }, 403);
+      }
       const targetUid = (body.target_uid ?? body.targetUid)?.toString() ?? "";
       if (!targetUid) return json({ success: false, error: "TARGET_UID_REQUIRED" }, 400);
 
