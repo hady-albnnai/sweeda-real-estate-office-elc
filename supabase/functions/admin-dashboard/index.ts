@@ -143,7 +143,9 @@ serve(async (req) => {
     if (action === "admin_requests") {
       const { data, error } = await supabaseAdmin.rpc("get_admin_requests_internal", { p_admin_uid: adminUid });
       if (error) return json({ success: false, error: error.message }, 400);
-      return json({ success: true, requests: data ?? [] });
+      // Map req_id back to id for frontend compatibility
+      const requests = (data ?? []).map((r: any) => ({ ...r, id: r.req_id }));
+      return json({ success: true, requests });
     }
 
     if (action === "close_request") {
