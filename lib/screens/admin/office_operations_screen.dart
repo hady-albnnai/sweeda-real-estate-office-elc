@@ -108,39 +108,67 @@ class _OfficeOperationsScreenState extends State<OfficeOperationsScreen> {
                   ),
                   AppTheme.gapHeightXL,
                   _sectionTitle('اختصارات التشغيل'),
-                  GridView.count(
-                    crossAxisCount: 2,
+                  GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    children: [
-                      if (PermissionService.has(auth.userModel, PermissionKeys.manageAppointments))
-                        _shortcut(Icons.calendar_month_outlined, 'المواعيد', '/admin/appointments'),
-                      if (PermissionService.has(auth.userModel, PermissionKeys.manageDeals))
-                        _shortcut(Icons.handshake_outlined, 'الصفقات', '/admin/deals'),
-                      if (PermissionService.has(auth.userModel, PermissionKeys.manageUsers))
-                        _shortcut(Icons.people_outline, 'المستخدمون', '/admin/users'),
-                      if (PermissionService.has(auth.userModel, PermissionKeys.viewAnalytics))
-                        _shortcut(Icons.analytics_outlined, 'التحليلات', '/admin/analytics'),
-                      if (PermissionService.has(auth.userModel, PermissionKeys.resourceUsage))
-                        _shortcut(Icons.cloud_queue_outlined, 'استهلاك السيرفر', '/admin/resource-usage'),
-                    ],
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: AppTheme.getGridColumns(
+                        context,
+                        mobile: 2,
+                        tablet: 3,
+                        desktop: 4,
+                      ),
+                      crossAxisSpacing: AppTheme.spacingMedium,
+                      mainAxisSpacing: AppTheme.spacingMedium,
+                      childAspectRatio: AppTheme.responsiveValue(
+                        context,
+                        mobile: 1.6,
+                        tablet: 1.8,
+                        desktop: 2.0,
+                      ),
+                    ),
+                    itemCount: _getShortcutItems(auth.userModel).length,
+                    itemBuilder: (context, index) {
+                      final item = _getShortcutItems(auth.userModel)[index];
+                      return _shortcut(item['icon'], item['title'], item['route']);
+                    },
                   ),
                   AppTheme.gapHeightXL,
                   _sectionTitle('ملخص سريع'),
-                  GridView.count(
-                    crossAxisCount: 2,
+                  GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    children: [
-                      _stat('المستخدمون', _stats['totalUsers'] ?? 0, Icons.people_outline),
-                      _stat('العروض', _stats['totalOffers'] ?? 0, Icons.home_work_outlined),
-                      _stat('المواعيد', _stats['totalAppointments'] ?? 0, Icons.event_available_outlined),
-                      _stat('الصفقات', _stats['totalDeals'] ?? 0, Icons.handshake_outlined),
-                    ],
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: AppTheme.getGridColumns(
+                        context,
+                        mobile: 2,
+                        tablet: 2,
+                        desktop: 4,
+                      ),
+                      crossAxisSpacing: AppTheme.spacingMedium,
+                      mainAxisSpacing: AppTheme.spacingMedium,
+                      childAspectRatio: AppTheme.responsiveValue(
+                        context,
+                        mobile: 1.6,
+                        tablet: 1.8,
+                        desktop: 2.0,
+                      ),
+                    ),
+                    itemCount: 4,
+                    itemBuilder: (context, index) {
+                      switch (index) {
+                        case 0:
+                          return _stat('المستخدمون', _stats['totalUsers'] ?? 0, Icons.people_outline);
+                        case 1:
+                          return _stat('العروض', _stats['totalOffers'] ?? 0, Icons.home_work_outlined);
+                        case 2:
+                          return _stat('المواعيد', _stats['totalAppointments'] ?? 0, Icons.event_available_outlined);
+                        case 3:
+                          return _stat('الصفقات', _stats['totalDeals'] ?? 0, Icons.handshake_outlined);
+                        default:
+                          return const SizedBox.shrink();
+                      }
+                    },
                   ),
                 ],
               ),
