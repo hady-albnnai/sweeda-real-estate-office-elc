@@ -688,11 +688,21 @@ class _EditOfferScreenState extends State<EditOfferScreen> {
             style: TextStyle(color: AppTheme.textGrey))),
       );
     }
-    return GridView.count(
-      crossAxisCount: 3, shrinkWrap: true,
+    return GridView.builder(
+      shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 8, crossAxisSpacing: 8,
-      children: items,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: AppTheme.getGridColumns(
+          context,
+          mobile: 3,
+          tablet: 4,
+          desktop: 5,
+        ),
+        mainAxisSpacing: AppTheme.spacingSmall,
+        crossAxisSpacing: AppTheme.spacingSmall,
+      ),
+      itemCount: items.length,
+      itemBuilder: (context, index) => items[index],
     );
   }
 

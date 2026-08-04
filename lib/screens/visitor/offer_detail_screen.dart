@@ -1208,21 +1208,42 @@ class _OfferDetailScreenState extends State<OfferDetailScreen> {
                     AppTheme.gapHeightSmall,
                   ],
 
-                  GridView.count(
+                  GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 10,
-                    crossAxisSpacing: 10,
-                    childAspectRatio: 3,
-                    children: [
-                      _spec(Icons.category, 'النوع',
-                          offer.typ == 0 ? 'عقار' : 'سيارة'),
-                      _spec(Icons.swap_horiz, 'المعاملة',
-                          offer.trx == 0 ? 'بيع' : 'إيجار'),
-                      _spec(Icons.visibility, 'المشاهدات', '${offer.vws}'),
-                      _spec(Icons.favorite, 'الإعجابات', '${offer.fvs}'),
-                    ],
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: AppTheme.getGridColumns(
+                        context,
+                        mobile: 2,
+                        tablet: 2,
+                        desktop: 4,
+                      ),
+                      mainAxisSpacing: AppTheme.spacingSmall,
+                      crossAxisSpacing: AppTheme.spacingSmall,
+                      childAspectRatio: AppTheme.responsiveValue(
+                        context,
+                        mobile: 3.0,
+                        tablet: 3.5,
+                        desktop: 4.0,
+                      ),
+                    ),
+                    itemCount: 4,
+                    itemBuilder: (context, index) {
+                      switch (index) {
+                        case 0:
+                          return _spec(Icons.category, 'النوع',
+                              offer.typ == 0 ? 'عقار' : 'سيارة');
+                        case 1:
+                          return _spec(Icons.swap_horiz, 'المعاملة',
+                              offer.trx == 0 ? 'بيع' : 'إيجار');
+                        case 2:
+                          return _spec(Icons.visibility, 'المشاهدات', '${offer.vws}');
+                        case 3:
+                          return _spec(Icons.favorite, 'الإعجابات', '${offer.fvs}');
+                        default:
+                          return const SizedBox.shrink();
+                      }
+                    },
                   ),
                   const SizedBox(height: 25),
 

@@ -129,21 +129,21 @@ class ShimmerLoading {
   /// شبكة بطاقات إحصائيات وهمية (للوحات)
   static Widget statsGrid({int count = 4}) {
     return _wrap(
-      GridView.count(
-        crossAxisCount: 2,
+      GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 1.5,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: AppTheme.spacingMedium,
+          crossAxisSpacing: AppTheme.spacingMedium,
+          childAspectRatio: 1.5,
+        ),
         padding: AppTheme.paddingAllLarge,
-        children: List.generate(
-          count,
-          (_) => Container(
-            decoration: BoxDecoration(
-              color: AppTheme.surfaceBlack,
-              borderRadius: AppTheme.radiusLarge,
-            ),
+        itemCount: count,
+        itemBuilder: (context, index) => Container(
+          decoration: BoxDecoration(
+            color: AppTheme.surfaceBlack,
+            borderRadius: AppTheme.radiusLarge,
           ),
         ),
       ),
