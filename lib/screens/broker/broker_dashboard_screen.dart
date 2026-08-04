@@ -76,56 +76,97 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
         child: broker.isLoading && stats.isEmpty
             ? const Center(
                 child: CircularProgressIndicator(color: AppTheme.primaryGold))
-            : ListView(
-                padding: AppTheme.paddingAllLarge,
-                children: [
-                  // ── شبكة الإحصائيات ──
-                  GridView.count(
-                    crossAxisCount: 2,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 1.8,
-                    children: [
-                      _statCard('🏠', 'العروض',
-                          '${stats['totalOffers'] ?? 0}', 'منشور: ${stats['publishedOffers'] ?? 0}'),
-                      _statCard('📅', 'المواعيد',
-                          '${stats['totalAppointments'] ?? 0}', 'مكتمل: ${stats['completedAppointments'] ?? 0}'),
-                      _statCard('🤝', 'الصفقات',
-                          '${stats['totalDeals'] ?? 0}', 'مكتمل: ${stats['completedDeals'] ?? 0}'),
-                      _statCard('💰', 'العمولات',
-                          _fmt(stats['totalCommission']), 'إجمالي محقّق'),
-                    ],
-                  ),
-                  AppTheme.gapHeightXXL,
-                  const Text('الأقسام',
-                      style: TextStyle(
-                          color: AppTheme.primaryGold,
-                          fontSize: AppTheme.fontSizeSubtitle,
-                          fontWeight: FontWeight.bold)),
-                  AppTheme.gapHeightMedium,
+            : LayoutBuilder(
+                builder: (context, constraints) {
+                  final maxWidth = AppTheme.getMaxContentWidth(context);
+                  return Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: maxWidth),
+                      child: ListView(
+                        padding: AppTheme.responsivePadding(
+                          context,
+                          mobile: AppTheme.paddingAllMedium,
+                          tablet: AppTheme.paddingAllLarge,
+                          desktop: AppTheme.paddingAllXL,
+                        ),
+                        children: [
+                          // ── شبكة الإحصائيات ──
+                          GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: AppTheme.getGridColumns(
+                                context,
+                                mobile: 2,
+                                tablet: 2,
+                                desktop: 4,
+                              ),
+                              mainAxisSpacing: AppTheme.spacingMedium,
+                              crossAxisSpacing: AppTheme.spacingMedium,
+                              childAspectRatio: AppTheme.responsiveValue(
+                                context,
+                                mobile: 1.8,
+                                tablet: 2.0,
+                                desktop: 2.2,
+                              ),
+                            ),
+                            itemCount: 4,
+                            itemBuilder: (context, index) {
+                              switch (index) {
+                                case 0:
+                                  return _statCard('🏠', 'العروض',
+                                      '${stats['totalOffers'] ?? 0}', 'منشور: ${stats['publishedOffers'] ?? 0}');
+                                case 1:
+                                  return _statCard('📅', 'المواعيد',
+                                      '${stats['totalAppointments'] ?? 0}', 'مكتمل: ${stats['completedAppointments'] ?? 0}');
+                                case 2:
+                                  return _statCard('🤝', 'الصفقات',
+                                      '${stats['totalDeals'] ?? 0}', 'مكتمل: ${stats['completedDeals'] ?? 0}');
+                                case 3:
+                                  return _statCard('💰', 'العمولات',
+                                      _fmt(stats['totalCommission']), 'إجمالي محقّق');
+                                default:
+                                  return const SizedBox.shrink();
+                              }
+                            },
+                          ),
+                          AppTheme.gapHeightXXL,
+                          Text('الأقسام',
+                              style: TextStyle(
+                                  color: AppTheme.primaryGold,
+                                  fontSize: AppTheme.responsiveFontSize(
+                                    context,
+                                    mobile: AppTheme.fontSizeSubtitle,
+                                    tablet: AppTheme.fontSizeTitle,
+                                    desktop: AppTheme.fontSizeHeadline,
+                                  ),
+                                  fontWeight: FontWeight.bold)),
+                          AppTheme.gapHeightMedium,
 
-                  // ── بطاقات التنقل ──
-                  _navTile(
-                    icon: Icons.calendar_today_outlined,
-                    title: 'طلبات المعاينة',
-                    subtitle: 'قبول ورفض مواعيد المعاينة',
-                    onTap: () => context.push('/broker/appointments'),
-                  ),
-                  _navTile(
-                    icon: Icons.handshake_outlined,
-                    title: 'الصفقات',
-                    subtitle: 'الصفقات النشطة والمكتملة',
-                    onTap: () => context.push('/broker/deals'),
-                  ),
-                  _navTile(
-                    icon: Icons.bar_chart_outlined,
-                    title: 'الإحصائيات',
-                    subtitle: 'تقارير الأداء التفصيلية',
-                    onTap: () => context.push('/broker/stats'),
-                  ),
-                ],
+                          // ── بطاقات التنقل ──
+                          _navTile(
+                            icon: Icons.calendar_today_outlined,
+                            title: 'طلبات المعاينة',
+                            subtitle: 'قبول ورفض مواعيد المعاينة',
+                            onTap: () => context.push('/broker/appointments'),
+                          ),
+                          _navTile(
+                            icon: Icons.handshake_outlined,
+                            title: 'الصفقات',
+                            subtitle: 'الصفقات النشطة والمكتملة',
+                            onTap: () => context.push('/broker/deals'),
+                          ),
+                          _navTile(
+                            icon: Icons.bar_chart_outlined,
+                            title: 'الإحصائيات',
+                            subtitle: 'تقارير الأداء التفصيلية',
+                            onTap: () => context.push('/broker/stats'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
       ),
     );
@@ -140,10 +181,15 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
 
   Widget _statCard(String emoji, String label, String value, String sub) {
     return Container(
-      padding: AppTheme.paddingAllMedium,
+      padding: AppTheme.responsivePadding(
+        context,
+        mobile: AppTheme.paddingAllMedium,
+        tablet: AppTheme.paddingAllLarge,
+        desktop: AppTheme.paddingAllLarge,
+      ),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.25)),
       ),
       child: Column(
@@ -152,21 +198,44 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
         children: [
           Row(
             children: [
-              Text(emoji, style: const TextStyle(fontSize: AppTheme.fontSizeTitle)),
+              Text(emoji, style: TextStyle(
+                fontSize: AppTheme.responsiveFontSize(
+                  context,
+                  mobile: AppTheme.fontSizeTitle,
+                  tablet: AppTheme.fontSizeHeadline,
+                ),
+              )),
               const SizedBox(width: 6),
               Text(label,
-                  style: const TextStyle(
-                      color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
+                  style: TextStyle(
+                      color: AppTheme.textGrey,
+                      fontSize: AppTheme.responsiveFontSize(
+                        context,
+                        mobile: AppTheme.fontSizeSmall,
+                        tablet: AppTheme.fontSizeBody,
+                      ))),
             ],
           ),
           AppTheme.gapHeightXS,
           Text(value,
-              style: const TextStyle(
+              style: TextStyle(
                   color: AppTheme.primaryGold,
-                  fontSize: AppTheme.fontSizeHeadline,
+                  fontSize: AppTheme.responsiveFontSize(
+                    context,
+                    mobile: AppTheme.fontSizeHeadline,
+                    tablet: AppTheme.fontSizeLarge,
+                    desktop: AppTheme.fontSizeXL,
+                  ),
                   fontWeight: FontWeight.bold)),
           Text(sub,
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeXS)),
+              style: TextStyle(
+                color: AppTheme.textGrey,
+                fontSize: AppTheme.responsiveFontSize(
+                  context,
+                  mobile: AppTheme.fontSizeXS,
+                  tablet: AppTheme.fontSizeCaption,
+                ),
+              )),
         ],
       ),
     );
@@ -179,10 +248,10 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
     required VoidCallback onTap,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: EdgeInsets.only(bottom: AppTheme.spacingMedium),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.15)),
       ),
       child: ListTile(
@@ -191,12 +260,24 @@ class _BrokerDashboardScreenState extends State<BrokerDashboardScreen> {
           child: Icon(icon, color: AppTheme.primaryGold),
         ),
         title: Text(title,
-            style: const TextStyle(
-                color: AppTheme.textWhite, fontWeight: FontWeight.bold)),
+            style: TextStyle(
+                color: AppTheme.textWhite,
+                fontWeight: FontWeight.bold,
+                fontSize: AppTheme.responsiveFontSize(
+                  context,
+                  mobile: AppTheme.fontSizeBody,
+                  tablet: AppTheme.fontSizeMedium,
+                ))),
         subtitle: Text(subtitle,
-            style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeSmall)),
-        trailing:
-            const Icon(Icons.arrow_back_ios, color: AppTheme.primaryGold, size: 16),
+            style: TextStyle(
+              color: AppTheme.textGrey,
+              fontSize: AppTheme.responsiveFontSize(
+                context,
+                mobile: AppTheme.fontSizeSmall,
+                tablet: AppTheme.fontSizeBody,
+              ),
+            )),
+        trailing: const Icon(Icons.arrow_back_ios, color: AppTheme.primaryGold, size: 16),
         onTap: onTap,
       ),
     );

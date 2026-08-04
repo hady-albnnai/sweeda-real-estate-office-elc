@@ -56,17 +56,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         title: E2E(
           id: 'e2e_screen_admin_dashboard',
           child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('لوحة الإدارة',
-                style: TextStyle(
-                    color: AppTheme.textWhite,
-                    fontSize: AppTheme.fontSizeTitle,
-                    fontWeight: FontWeight.bold)),
-            Text('أهلاً، $name 🛡️',
-                style: TextStyle(
-                    color: AppTheme.primaryGold.withOpacity(0.8), fontSize: AppTheme.fontSizeSmall)),
-          ],
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('لوحة الإدارة',
+                  style: TextStyle(
+                      color: AppTheme.textWhite,
+                      fontSize: AppTheme.fontSizeTitle,
+                      fontWeight: FontWeight.bold)),
+              Text('أهلاً، $name 🛡️',
+                  style: TextStyle(
+                      color: AppTheme.primaryGold.withOpacity(0.8),
+                      fontSize: AppTheme.fontSizeSmall)),
+            ],
           ),
         ),
         actions: [
@@ -87,66 +88,107 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           : RefreshIndicator(
               color: AppTheme.primaryGold,
               onRefresh: _load,
-              child: ListView(
-                padding: AppTheme.paddingAllLarge,
-                children: [
-                  // ── تنبيهات الإجراءات المطلوبة ──
-                  if (_totalActions() > 0) _actionsBanner(),
-
-                  // ── إحصائيات عامة ──
-                  AppTheme.gapHeightXS,
-                  const Text('نظرة عامة',
-                      style: TextStyle(
-                          color: AppTheme.primaryGold,
-                          fontSize: AppTheme.fontSizeSubtitle,
-                          fontWeight: FontWeight.bold)),
-                  AppTheme.gapHeightMedium,
-                  Column(
-                    children: [
-                      Row(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final maxWidth = AppTheme.getMaxContentWidth(context);
+                  return Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: maxWidth),
+                      child: ListView(
+                        padding: AppTheme.responsivePadding(
+                          context,
+                          mobile: AppTheme.paddingAllMedium,
+                          tablet: AppTheme.paddingAllLarge,
+                          desktop: AppTheme.paddingAllXL,
+                        ),
                         children: [
-                          Expanded(child: _statCard('👥', 'المستخدمون', '${_stats['totalUsers'] ?? 0}', 'نشط: ${_stats['activeUsers'] ?? 0}')),
-                          AppTheme.gapWidthSmall,
-                          Expanded(child: _statCard('🏠', 'العروض', '${_stats['totalOffers'] ?? 0}', 'منشور: ${_stats['publishedOffers'] ?? 0}')),
+                          // ── تنبيهات الإجراءات المطلوبة ──
+                          if (_totalActions() > 0) _actionsBanner(),
+
+                          // ── إحصائيات عامة ──
+                          AppTheme.gapHeightXS,
+                          Text('نظرة عامة',
+                              style: TextStyle(
+                                  color: AppTheme.primaryGold,
+                                  fontSize: AppTheme.responsiveFontSize(
+                                    context,
+                                    mobile: AppTheme.fontSizeSubtitle,
+                                    tablet: AppTheme.fontSizeTitle,
+                                  ),
+                                  fontWeight: FontWeight.bold)),
+                          AppTheme.gapHeightMedium,
+
+                          // شبكة الإحصائيات المتجاوبة
+                          GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: AppTheme.getGridColumns(
+                                context,
+                                mobile: 2,
+                                tablet: 2,
+                                desktop: 4,
+                              ),
+                              mainAxisSpacing: AppTheme.spacingSmall,
+                              crossAxisSpacing: AppTheme.spacingSmall,
+                              childAspectRatio: AppTheme.responsiveValue(
+                                context,
+                                mobile: 2.2,
+                                tablet: 2.4,
+                                desktop: 2.6,
+                              ),
+                            ),
+                            itemCount: 4,
+                            itemBuilder: (context, index) {
+                              switch (index) {
+                                case 0:
+                                  return _statCard('👥', 'المستخدمون',
+                                      '${_stats['totalUsers'] ?? 0}',
+                                      'نشط: ${_stats['activeUsers'] ?? 0}');
+                                case 1:
+                                  return _statCard('🏠', 'العروض',
+                                      '${_stats['totalOffers'] ?? 0}',
+                                      'منشور: ${_stats['publishedOffers'] ?? 0}');
+                                case 2:
+                                  return _statCard('🤝', 'الصفقات',
+                                      '${_stats['totalDeals'] ?? 0}',
+                                      'مكتمل: ${_stats['completedDeals'] ?? 0}');
+                                case 3:
+                                  return _statCard('💰', 'العمولات',
+                                      _fmt(_stats['totalCommission']),
+                                      'إجمالي محقّق');
+                                default:
+                                  return const SizedBox.shrink();
+                              }
+                            },
+                          ),
+
+                          AppTheme.gapHeightXXL,
+                          Text('الإدارة',
+                              style: TextStyle(
+                                  color: AppTheme.primaryGold,
+                                  fontSize: AppTheme.responsiveFontSize(
+                                    context,
+                                    mobile: AppTheme.fontSizeSubtitle,
+                                    tablet: AppTheme.fontSizeTitle,
+                                  ),
+                                  fontWeight: FontWeight.bold)),
+                          AppTheme.gapHeightMedium,
+
+                          // ── مدخل الأقسام ──
+                          _actionCard(
+                            Icons.apps_outlined,
+                            'أقسام الإدارة',
+                            'المراجعات · العمليات · المالية · الإعدادات',
+                            () => context.push('/admin/sections'),
+                          ),
+                          AppTheme.gapHeightXL,
                         ],
                       ),
-                      AppTheme.gapHeightSmall,
-                      Row(
-                        children: [
-                          Expanded(child: _statCard('🤝', 'الصفقات', '${_stats['totalDeals'] ?? 0}', 'مكتمل: ${_stats['completedDeals'] ?? 0}')),
-                          AppTheme.gapWidthSmall,
-                          Expanded(child: _statCard('💰', 'العمولات', _fmt(_stats['totalCommission']), 'إجمالي محقّق')),
-                        ],
-                      ),
-                    ],
-                  ),
-
-                  AppTheme.gapHeightXXL,
-                  const Text('الإدارة',
-                      style: TextStyle(
-                          color: AppTheme.primaryGold,
-                          fontSize: AppTheme.fontSizeSubtitle,
-                          fontWeight: FontWeight.bold)),
-                  AppTheme.gapHeightMedium,
-
-                  // ── مدخل الأقسام ──
-                  GridView.count(
-                    crossAxisCount: 2,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    children: [
-                      _actionCard(
-                        Icons.apps_outlined,
-                        'أقسام الإدارة',
-                        'المراجعات · العمليات · المالية · الإعدادات',
-                        () => context.push('/admin/sections'),
-                      ),
-                    ],
-                  ),
-                  AppTheme.gapHeightXL,
-                ],
+                    ),
+                  );
+                },
               ),
             ),
     );
@@ -160,11 +202,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Widget _actionsBanner() {
     return Container(
-      margin: const EdgeInsets.only(bottom: 20),
+      margin: EdgeInsets.only(bottom: AppTheme.spacingXL),
       padding: AppTheme.paddingAllLarge,
       decoration: BoxDecoration(
         color: AppTheme.errorRed.withOpacity(0.12),
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: AppTheme.errorRed.withOpacity(0.5)),
       ),
       child: Row(
@@ -178,7 +220,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               '${_counts['pendingPayments'] ?? 0} دفعة · '
               '${_counts['openReports'] ?? 0} تبليغ · '
               '${_counts['pendingVerifications'] ?? 0} توثيق)',
-              style: const TextStyle(color: AppTheme.textWhite, fontSize: AppTheme.fontSizeBody),
+              style: const TextStyle(
+                  color: AppTheme.textWhite,
+                  fontSize: AppTheme.fontSizeBody),
             ),
           ),
         ],
@@ -195,16 +239,27 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Widget _statCard(String emoji, String label, String value, String sub) {
     return Container(
-      height: 78,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: AppTheme.responsivePadding(
+        context,
+        mobile: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        tablet: AppTheme.paddingAllMedium,
+        desktop: AppTheme.paddingAllLarge,
+      ),
       decoration: BoxDecoration(
         color: AppTheme.surfaceBlack,
-        borderRadius: AppTheme.borderRadiusLarge,
+        borderRadius: AppTheme.radiusLarge,
         border: Border.all(color: AppTheme.primaryGold.withOpacity(0.25)),
       ),
       child: Row(
         children: [
-          Text(emoji, style: const TextStyle(fontSize: AppTheme.fontSizeHeadline)),
+          Text(emoji,
+              style: TextStyle(
+                fontSize: AppTheme.responsiveFontSize(
+                  context,
+                  mobile: AppTheme.fontSizeHeadline,
+                  tablet: AppTheme.fontSizeLarge,
+                ),
+              )),
           AppTheme.gapWidthSmall,
           Expanded(
             child: Column(
@@ -214,20 +269,38 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 Text(label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeCaption)),
+                    style: TextStyle(
+                      color: AppTheme.textGrey,
+                      fontSize: AppTheme.responsiveFontSize(
+                        context,
+                        mobile: AppTheme.fontSizeCaption,
+                        tablet: AppTheme.fontSizeSmall,
+                      ),
+                    )),
                 AppTheme.gapHeightXXS,
                 Text(value,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                         color: AppTheme.primaryGold,
-                        fontSize: AppTheme.fontSizeTitle,
+                        fontSize: AppTheme.responsiveFontSize(
+                          context,
+                          mobile: AppTheme.fontSizeTitle,
+                          tablet: AppTheme.fontSizeHeadline,
+                        ),
                         fontWeight: FontWeight.bold)),
                 AppTheme.gapHeightXXS,
                 Text(sub,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: AppTheme.textGrey, fontSize: 9)),
+                    style: TextStyle(
+                      color: AppTheme.textGrey,
+                      fontSize: AppTheme.responsiveFontSize(
+                        context,
+                        mobile: 9,
+                        tablet: AppTheme.fontSizeCaption,
+                      ),
+                    )),
               ],
             ),
           ),
@@ -244,12 +317,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   ) {
     return InkWell(
       onTap: onTap,
-      borderRadius: AppTheme.borderRadiusLarge,
+      borderRadius: AppTheme.radiusLarge,
       child: Container(
         padding: AppTheme.paddingAllLarge,
         decoration: BoxDecoration(
           color: AppTheme.surfaceBlack,
-          borderRadius: AppTheme.borderRadiusLarge,
+          borderRadius: AppTheme.radiusLarge,
           border: Border.all(color: AppTheme.primaryGold.withOpacity(0.15)),
         ),
         child: Column(
@@ -260,9 +333,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppTheme.textWhite,
-                fontSize: AppTheme.fontSizeBody,
+                fontSize: AppTheme.responsiveFontSize(
+                  context,
+                  mobile: AppTheme.fontSizeBody,
+                  tablet: AppTheme.fontSizeMedium,
+                ),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -272,13 +349,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: AppTheme.textGrey, fontSize: AppTheme.fontSizeXS),
+              style: TextStyle(
+                color: AppTheme.textGrey,
+                fontSize: AppTheme.responsiveFontSize(
+                  context,
+                  mobile: AppTheme.fontSizeXS,
+                  tablet: AppTheme.fontSizeCaption,
+                ),
+              ),
             ),
           ],
         ),
       ),
     );
   }
-
-
 }
