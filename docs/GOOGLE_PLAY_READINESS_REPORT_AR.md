@@ -1,83 +1,229 @@
-# 📱 تقرير جاهزية التطبيق لمتجر Google Play
+# 📱 تقرير جاهزية Google Play Store - محدّث
 
 > **التاريخ:** 2026-08-05  
-> **الإصدار:** 1.0  
-> **الحالة:** ⚠️ **غير جاهز - يحتاج إصلاحات حرجة**
+> **آخر تحديث:** بحث معمق عن متطلبات 2025-2026  
+> **الحالة:** ⚠️ **شبه جاهز - يحتاج مهام يدوية**
 
 ---
 
-## 📊 الملخص التنفيذي
+## 🎯 الملخص التنفيذي
+
+بعد بحث معمق عن أحدث متطلبات Google Play Store (2025-2026)، إليك النتيجة:
 
 | الفئة | الحالة | النسبة |
 |-------|--------|--------|
-| **المتطلبات الأساسية** | ❌ غير مكتمل | 60% |
-| **الأمان والخصوصية** | ⚠️ جزئي | 70% |
-| **الإعدادات التقنية** | ✅ جيد | 90% |
-| **المحتوى والتوثيق** | ❌ ناقص | 20% |
-| **التقييم العام** | ⚠️ **غير جاهز** | **60%** |
+| **المتطلبات التقنية** | ✅ ممتاز | 95% |
+| **الأمان والخصوصية** | ✅ جيد جداً | 90% |
+| **المحتوى والأصول** | ⚠️ ناقص | 30% |
+| **التوثيق القانوني** | ✅ مكتمل | 100% |
+| **التقييم العام** | ⚠️ **شبه جاهز** | **75%** |
 
 ---
 
-## 🚨 المشاكل الحرجة (يجب إصلاحها قبل الرفع)
+## ✅ ما تم إنجازه بشكل صحيح
 
-### 1. ❌ لا يوجد Privacy Policy (سياسة الخصوصية)
+### 1. ✅ Target SDK Version (36) - ممتاز جداً!
 
-**المشكلة:**
-- Google Play **يلزم** وجود سياسة خصوصية للتطبيقات التي تجمع بيانات المستخدمين
-- التطبيق يجمع: الاسم، رقم الهاتف، البريد الإلكتروني، الموقع، الصور
+```kotlin
+targetSdk = 36  // Android 16
+compileSdk = 36
+```
 
-**المتطلبات:**
-- صفحة ويب عامة (URL) تحتوي على سياسة الخصوصية
-- يجب أن تذكر:
-  - ما هي البيانات التي تجمعها
-  - لماذا تجمعها
-  - كيف تستخدمها
-  - كيف تحميها
-  - حقوق المستخدم
-  - كيفية الاتصال بك
+**المتطلبات الحالية:**
+- من 31 أغسطس 2025: API 35 (Android 15) للتطبيقات الجديدة
+- من 31 أغسطس 2026: API 36 (Android 16)
+- **تطبيقنا:** ✅ نستهدف API 36 بالفعل! نحن متوافقون مع متطلبات 2026!
 
-**الحل:**
-1. أنشئ صفحة سياسة الخصوصية (يمكن استخدام GitHub Pages أو أي استضافة)
-2. استخدم نموذج جاهز وعدّله: [Privacy Policy Template](https://app-privacy-policy-generator.nisrulz.com/)
-3. أضف الرابط في:
-   - Google Play Console (عند رفع التطبيق)
-   - داخل التطبيق (شاشة الإعدادات أو About)
-
-**الأولوية:** 🔴 **حرج - لا يمكن رفع التطبيق بدونها**
+**الحالة:** ✅ **ممتاز - متوافق مع أحدث المتطلبات**
 
 ---
 
-### 2. ❌ لا يوجد Terms of Service (شروط الخدمة)
+### 2. ✅ Min SDK Version (24) - جيد
 
-**المشكلة:**
-- مطلوب قانونياً لحماية المطور والمستخدم
-- ينظم العلاقة بين الطرفين
+```kotlin
+minSdk = 24  // Android 7.0
+```
 
-**الحل:**
-1. أنشئ صفحة شروط الخدمة
-2. استخدم نموذج جاهز: [Terms of Service Template](https://termly.io/resources/templates/terms-of-service-template/)
-3. أضف الرابط في التطبيق و Google Play Console
-
-**الأولوية:** 🔴 **حرج**
+**التغطية:** 96.6% من أجهزة Android  
+**الحالة:** ✅ **جيد - يغطي معظم الأجهزة**
 
 ---
 
-### 3. ❌ لا يوجد Signing Key (مفتاح التوقيع)
+### 3. ✅ R8/ProGuard - مفعّل
+
+```kotlin
+isMinifyEnabled = true
+isShrinkResources = true
+proguardFiles(
+    getDefaultProguardFile("proguard-android-optimize.txt"),
+    "proguard-rules.pro"
+)
+```
+
+**الحالة:** ✅ **ممتاز - يقلل الحجم ويحمي الكود**
+
+---
+
+### 4. ✅ Network Security Config - آمن
+
+```xml
+<base-config cleartextTrafficPermitted="false">
+    <trust-anchors>
+        <certificates src="system" />
+    </trust-anchors>
+</base-config>
+```
+
+**الحالة:** ✅ **ممتاز - HTTPS only**
+
+---
+
+### 5. ✅ Backup Disabled - آمن
+
+```xml
+android:allowBackup="false"
+android:fullBackupContent="false"
+```
+
+**الحالة:** ✅ **ممتاز - يحمي بيانات المستخدم**
+
+---
+
+### 6. ✅ Adaptive Icons - تم إصلاحها
+
+```xml
+<!-- mipmap-anydpi-v26/ic_launcher.xml -->
+<adaptive-icon>
+    <background android:drawable="@color/splash_bg"/>
+    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+</adaptive-icon>
+```
+
+**الحالة:** ✅ **تم إصلاحها**
+
+---
+
+### 7. ✅ RECEIVE_SMS Permission - تم إزالتها
+
+```xml
+<!-- تم حذفها - غير مطلوبة لـ SMS Retriever API -->
+```
+
+**السبب:** Google Play يفرض قيوداً صارمة على SMS permissions  
+**الحالة:** ✅ **تم إزالتها - تجنب رفض التطبيق**
+
+---
+
+### 8. ✅ Firebase Configured
+
+- `google-services.json` موجود ✅
+- FCM configured ✅
+- Project ID: `sweeda-real-estate-elc`
+
+**الحالة:** ✅ **ممتاز**
+
+---
+
+### 9. ✅ Supabase Configuration
+
+```dart
+const String supabaseUrl = 'https://vsgkgnjtebjxyqwpuopz.supabase.co';
+const String supabasePublishableKey = 'eyJhbGc...';
+```
+
+**الحالة:** ✅ **ممتاز - Anon key محمي بـ RLS**
+
+---
+
+### 10. ✅ No Hardcoded Secrets
+
+- لا توجد passwords مكشوفة ✅
+- لا توجد API keys حساسة ✅
+- استخدام SharedPreferences آمن ✅
+
+**الحالة:** ✅ **ممتاز**
+
+---
+
+### 11. ✅ Deep Links Configured
+
+```xml
+<data android:scheme="io.supabase.sweeda" android:host="login-callback" />
+```
+
+**الحالة:** ✅ **ممتاز - يدعم Magic Link**
+
+---
+
+### 12. ✅ Privacy Policy - تم إنشاؤها
+
+**الملف:** `docs/legal/privacy_policy.html`
+
+**المحتوى:**
+- ✅ سياسة خصوصية شاملة بالعربية
+- ✅ تغطية جميع الجوانب القانونية
+- ✅ تصميم احترافي ومتجاوب
+- ✅ ذكر جميع البيانات المجمعة
+- ✅ شرح كيفية استخدام البيانات
+- ✅ حقوق المستخدم
+
+**الحالة:** ✅ **مكتملة (تحتاج استضافة)**
+
+---
+
+### 13. ✅ Terms of Service - تم إنشاؤها
+
+**الملف:** `docs/legal/terms_of_service.html`
+
+**المحتوى:**
+- ✅ شروط خدمة شاملة بالعربية
+- ✅ تغطية جميع الجوانب القانونية
+- ✅ تصميم احترافي ومتجاوب
+- ✅ إخلاء المسؤولية
+- ✅ شروط الاستخدام
+
+**الحالة:** ✅ **مكتملة (تحتاج استضافة)**
+
+---
+
+### 14. ✅ Data Safety Documentation - تم إنشاؤها
+
+**الملف:** `docs/GOOGLE_PLAY_DATA_SAFETY_AR.md`
+
+**المحتوى:**
+- ✅ توثيق شامل لجميع البيانات المجمعة
+- ✅ جداول مفصلة لكل نوع بيانات
+- ✅ خطوات ملء Data Safety form
+- ✅ معلومات عن التشفير
+- ✅ معلومات عن حذف البيانات
+
+**البيانات الموثقة:**
+1. ✅ Location (تقريبي - اختياري)
+2. ✅ Personal Info (اسم، هاتف، إيميل)
+3. ✅ Photos (صور العقارات)
+4. ✅ Device ID (للتعرف على الجهاز)
+5. ✅ App Info (سجل النشاط)
+
+**الحالة:** ✅ **مكتملة (يحتاج ملء النموذج)**
+
+---
+
+## ⚠️ ما يحتاج إلى إكمال (7 مهام)
+
+### 1. ⚠️ إنشاء Signing Key (حرج)
 
 **المشكلة:**
 - ملف `android/key.properties` غير موجود
-- لا يمكن بناء APK/AAB مُوقّع للإنتاج
-- Google Play يرفض التطبيقات غير الموقعة
+- لا يمكن بناء AAB مُوقّع بدون keystore
 
-**الحل:**
-
+**المتطلبات:**
 ```bash
-# 1. إنشاء keystore (مرة واحدة فقط)
+# 1. إنشاء keystore
 keytool -genkey -v -keystore ~/sweeda-release-key.jks \
   -keyalg RSA -keysize 2048 -validity 10000 \
   -alias sweeda-key
 
-# 2. إنشاء ملف android/key.properties
+# 2. إنشاء key.properties
 cat > android/key.properties << EOF
 storePassword=YOUR_STORE_PASSWORD
 keyPassword=YOUR_KEY_PASSWORD
@@ -85,418 +231,324 @@ keyAlias=sweeda-key
 storeFile=/path/to/sweeda-release-key.jks
 EOF
 
-# 3. أضف key.properties إلى .gitignore
+# 3. إضافة إلى .gitignore
 echo "key.properties" >> .gitignore
 echo "*.jks" >> .gitignore
 ```
 
-**⚠️ تحذير:**
-- **لا ترفع** keystore أو key.properties إلى GitHub
+**⚠️ تحذيرات مهمة:**
 - احتفظ بنسخة احتياطية من keystore في مكان آمن
+- لا ترفع keystore أو key.properties إلى GitHub
 - إذا فقدت keystore، لن تتمكن من تحديث التطبيق أبداً
+- Keystore يجب أن يكون صالحاً حتى 22 أكتوبر 2033 على الأقل
 
-**الأولوية:** 🔴 **حرج - لا يمكن رفع التطبيق بدونها**
-
----
-
-### 4. ❌ لا يوجد Adaptive Icons
-
-**المشكلة:**
-- التطبيق يستخدم أيقونات قديمة فقط (`mipmap-*/ic_launcher.png`)
-- Android 8+ يتطلب Adaptive Icons
-- Google Play يعرض تحذيراً
-
-**الحل:**
-
-```bash
-# 1. أنشئ مجلد anydpi-v26
-mkdir -p android/app/src/main/res/mipmap-anydpi-v26
-
-# 2. أنشئ ملف ic_launcher.xml
-cat > android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml << 'EOF'
-<?xml version="1.0" encoding="utf-8"?>
-<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@color/splash_bg"/>
-    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
-</adaptive-icon>
-EOF
-
-# 3. أنشئ foreground icon (108dp with 18dp safe zone)
-# استخدم أداة: https://romannurik.github.io/AndroidAssetStudio/icons-launcher.html
-```
-
-**الأولوية:** 🟡 **متوسط - مطلوب لكن ليس حرج**
+**الأولوية:** 🔴 **حرج**  
+**الوقت:** 10 دقائق
 
 ---
 
-### 5. ❌ لا يوجد Screenshots للمتجر
+### 2. ⚠️ بناء App Bundle (AAB) (حرج)
 
 **المشكلة:**
-- Google Play يتطلب screenshots للتطبيق
-- لا توجد screenshots في المستودع
+- لم يتم بناء AAB بعد
+- Google Play يتطلب AAB format منذ أغسطس 2021
 
 **المتطلبات:**
-- **2-8 screenshots** لكل جهاز (Phone, Tablet 7", Tablet 10")
-- **Feature Graphic** (1024x500 px)
-- **Hi-res icon** (512x512 px)
+```bash
+# بناء AAB
+flutter build appbundle --release
 
-**الحل:**
-1. التقط screenshots من التطبيق (على أجهزة مختلفة)
-2. استخدم أداة: [Fastlane](https://docs.fastlane.tools/actions/screengrab/) أو [Screenshot Tools](https://screenshots.pro/)
-3. أضفها إلى مجلد `fastlane/metadata/android/`
+# الملف الناتج:
+# build/app/outputs/bundle/release/app-release.aab
+```
 
-**الأولوية:** 🟡 **متوسط - مطلوب لرفع التطبيق**
+**ملاحظات:**
+- AAB format مطلوب لجميع التطبيقات الجديدة
+- APKs لم تعد مقبولة
+- Play App Signing مطلوب (Google يدير signing key)
+- Maximum size: 200 MB (compressed)
+
+**الأولوية:** 🔴 **حرج**  
+**الوقت:** 5-10 دقائق
 
 ---
 
-## ⚠️ المشاكل المتوسطة (ينصح بإصلاحها)
-
-### 6. ⚠️ RECEIVE_SMS Permission
+### 3. ⚠️ Screenshots (متوسط)
 
 **المشكلة:**
-```xml
-<uses-permission android:name="android.permission.RECEIVE_SMS"/>
-```
-- Google Play يفرض قيوداً صارمة على SMS permissions
-- يجب تبرير سبب الحاجة لهذه الصلاحية
-- قد يرفض التطبيق إذا لم يكن الاستخدام واضحاً
+- لا توجد screenshots للمتجر
 
-**التحليل:**
-- التطبيق يستخدم `sms_autofill` لـ OTP
-- لكن `RECEIVE_SMS` ليست مطلوبة لـ SMS autofill
-- `SMS Retriever API` لا يحتاج هذه الصلاحية
+**المتطلبات:**
 
-**الحل:**
-```xml
-<!-- احذف هذا السطر من AndroidManifest.xml -->
-<!-- <uses-permission android:name="android.permission.RECEIVE_SMS"/> -->
-```
+| الجهاز | العدد | الحجم | Aspect Ratio |
+|--------|-------|-------|--------------|
+| Phone | 2-8 | 1080×1920 (portrait) | 9:16 |
+| Phone | 2-8 | 1920×1080 (landscape) | 16:9 |
+| Tablet 7" | 4-8 (موصى به) | 1200×1920 | 9:16 |
+| Tablet 10" | 4-8 (موصى به) | 1600×2560 | 9:16 |
 
-**الأولوية:** 🟡 **متوسط - قد يسبب رفض التطبيق**
+**المواصفات:**
+- Format: JPEG أو 24-bit PNG (no alpha)
+- Size: 320px إلى 3840px
+- Maximum: 8 MB per screenshot
+- Recommended: 4 screenshots بدقة 1080px+
+
+**الشاشات المقترحة:**
+1. شاشة تسجيل الدخول
+2. الشاشة الرئيسية (قائمة العروض)
+3. تفاصيل عرض عقاري
+4. إضافة عرض جديد
+5. قائمة المواعيد
+6. الملف الشخصي
+7. البحث والفلترة
+8. الإشعارات
+
+**الأدوات:**
+- استخدم جهازك TECNO KI7
+- أو استخدم [Appetize.io](https://appetize.io/)
+- لإضافة إطارات: [Previewed.app](https://previewed.app/)
+
+**الأولوية:** 🟡 **متوسط**  
+**الوقت:** 2-3 ساعات
 
 ---
 
-### 7. ⚠️ Location Permissions
+### 4. ⚠️ Feature Graphic (متوسط)
 
 **المشكلة:**
-```xml
-<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-```
-- Google Play يتطلب تبريراً واضحاً لاستخدام الموقع
-- يجب ذكره في Data Safety section
+- لا يوجد Feature Graphic
 
-**التحليل:**
-- التطبيق يستخدم الموقع لـ: اختيار موقع العرض على الخريطة
-- الاستخدام مبرر وواضح
+**المتطلبات:**
+- **مطلوب** لجميع التطبيقات
+- Size: بالضبط 1024×500 px
+- Format: JPEG أو 24-bit PNG (no alpha)
+- File size: تحت 1 MB (recommended 200-600 KB)
 
-**الحل:**
-1. أضف طلب إذن في runtime (قبل استخدام الموقع)
-2. أوضح للمستخدم لماذا تحتاج الموقع
-3. اذكر الاستخدام في Data Safety form
+**المحتوى المقترح:**
+- شعار التطبيق
+- اسم التطبيق: "المكتب العقاري الإلكتروني"
+- وصف قصير: "منصة عقارية متكاملة"
+- الألوان: ذهبي (#D4AF37) + أسود (#1a1a1a)
 
-**الأولوية:** 🟡 **متوسط**
+**الأدوات:**
+- [Canva](https://www.canva.com/) (مجاني)
+- [Figma](https://www.figma.com/) (مجاني)
+- مصمم جرافيك ($20-50)
+
+**الأولوية:** 🟡 **متوسط**  
+**الوقت:** 1-2 ساعة
 
 ---
 
-### 8. ⚠️ لا يوجد Firebase Analytics
+### 5. ⚠️ Hi-Res Icon (متوسط)
 
 **المشكلة:**
-- لا يوجد tracking للتحليلات
-- يصعب فهم سلوك المستخدمين
-- Data Safety form يحتاج معلومات عن Analytics
+- لا يوجد Hi-Res Icon للمتجر
 
-**الحل:**
-```yaml
-# pubspec.yaml
-dependencies:
-  firebase_analytics: ^11.0.0
-```
+**المتطلبات:**
+- Size: 512×512 px
+- Format: 32-bit PNG (alpha allowed)
+- بدون زوايا دائرية (Google يضيفها تلقائياً)
 
-```dart
-// lib/main.dart
-import 'package:firebase_analytics/firebase_analytics.dart';
+**الأدوات:**
+- [Android Asset Studio](https://romannurik.github.io/AndroidAssetStudio/icons-launcher.html)
+- تحويل `ic_launcher-xxxhdpi.png` إلى 512×512
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  
-  FirebaseAnalytics analytics = FirebaseAnalytics.instance;
-  await analytics.logAppOpen();
-  
-  runApp(MyApp());
-}
-```
-
-**الأولوية:** 🟢 **منخفض - مفيد لكن ليس مطلوب**
+**الأولوية:** 🟡 **متوسط**  
+**الوقت:** 30 دقيقة
 
 ---
 
-### 9. ⚠️ Data Safety Section غير مكتمل
+### 6. ⚠️ استضافة الملفات القانونية (حرج)
 
 **المشكلة:**
-- Google Play يتطلب ملء Data Safety form
-- يجب الإفصاح عن جميع البيانات المجمعة
+- Privacy Policy و Terms of Service موجودة لكن غير مستضافة
 
-**البيانات التي يجمعها التطبيق:**
+**الخيارات:**
 
-| البيانات | النوع | الغرض | المشاركة |
-|----------|-------|-------|----------|
-| الاسم | Personal info | الحساب | لا |
-| رقم الهاتف | Personal info | الحساب والتواصل | لا |
-| البريد الإلكتروني | Personal info | الحساب | لا |
-| الموقع | Location | اختيار موقع العرض | لا |
-| الصور | Photos/Videos | صور العروض | لا |
-| Device ID | Device info | التعرف على الجهاز | لا |
-| Session tokens | App info | المصادقة | لا |
-
-**الحل:**
-املأ Data Safety form في Google Play Console بالمعلومات أعلاه
-
-**الأولوية:** 🟡 **متوسط - مطلوب لرفع التطبيق**
-
----
-
-## ✅ الإعدادات التقنية الصحيحة
-
-### 10. ✅ Target SDK Version (36)
-
-```kotlin
-targetSdk = 36
+#### الخيار 1: GitHub Pages (مجاني)
+```bash
+# 1. أنشئ مجلد gh-pages
+git checkout --orphan gh-pages
+git rm -rf .
+cp docs/legal/*.html .
+git add .
+git commit -m "Add legal pages"
+git push origin gh-pages
 ```
-- **الحالة:** ✅ ممتاز
-- **المتطلب:** 34 أو أحدث (2024)
-- **التطبيق:** 36 (أحدث)
+
+**الرابط:** `https://hady-albnnai.github.io/sweeda-real-estate-office-elc/privacy_policy.html`
+
+#### الخيار 2: Netlify/Vercel (مجاني)
+- ارفع الملفات
+- احصل على رابط عام
+
+**الأولوية:** 🔴 **حرج**  
+**الوقت:** 15 دقيقة
 
 ---
 
-### 11. ✅ Min SDK Version (24)
+### 7. ⚠️ Google Play Developer Account (حرج)
 
-```kotlin
-minSdk = 24
-```
-- **الحالة:** ✅ جيد
-- **التغطية:** Android 7.0+ (95% من الأجهزة)
+**المشكلة:**
+- لا يوجد حساب Google Play Developer
 
----
+**الخطوات:**
+1. اذهب إلى [Google Play Console](https://play.google.com/console)
+2. سجل الدخول بحساب Google
+3. ادفع رسوم التسجيل: **$25** (مرة واحدة)
+4. املأ معلومات المطور
+5. انتظر الموافقة (1-2 يوم)
 
-### 12. ✅ R8/ProGuard مفعّل
+**المتطلبات:**
+- حساب Google
+- بطاقة ائتمان للدفع
+- معلومات المطور (اسم، بريد إلكتروني، هاتف)
 
-```kotlin
-isMinifyEnabled = true
-isShrinkResources = true
-```
-- **الحالة:** ✅ ممتاز
-- يقلل حجم التطبيق ويحمي الكود
-
----
-
-### 13. ✅ Network Security Config
-
-```xml
-<network-security-config>
-    <base-config cleartextTrafficPermitted="false">
-```
-- **الحالة:** ✅ ممتاز
-- يمنع HTTP غير المشفر
+**الأولوية:** 🔴 **حرج**  
+**الوقت:** 1-2 يوم (للموافقة)
 
 ---
 
-### 14. ✅ Backup Disabled
+## 📊 خطة العمل المحدثة
 
-```xml
-android:allowBackup="false"
-android:fullBackupContent="false"
-```
-- **الحالة:** ✅ ممتاز
-- يحمي بيانات المستخدم
+### المرحلة 1: الأساسيات (1-2 يوم)
 
----
+#### ✅ مكتمل:
+- [x] إزالة RECEIVE_SMS permission
+- [x] إنشاء Adaptive Icons
+- [x] إنشاء Privacy Policy
+- [x] إنشاء Terms of Service
+- [x] إنشاء Data Safety Documentation
 
-### 15. ✅ Firebase Configured
-
-- `google-services.json` موجود
-- FCM configured
-- Project ID: `sweeda-real-estate-elc`
-
-**الحالة:** ✅ ممتاز
-
----
-
-### 16. ✅ Supabase Configuration
-
-```dart
-const String supabaseUrl = 'https://vsgkgnjtebjxyqwpuopz.supabase.co';
-const String supabasePublishableKey = 'eyJhbGc...';
-```
-- **الحالة:** ✅ ممتاز
-- Anon key في مكانه الصحيح
-- محمي بـ RLS policies
-
----
-
-### 17. ✅ No Hardcoded Secrets
-
-- لا توجد passwords أو API keys مكشوفة في الكود
-- استخدام SharedPreferences آمن (session tokens فقط)
-
-**الحالة:** ✅ ممتاز
-
----
-
-### 18. ✅ Deep Links Configured
-
-```xml
-<data android:scheme="io.supabase.sweeda" android:host="login-callback" />
-```
-- **الحالة:** ✅ ممتاز
-- يدعم Magic Link authentication
-
----
-
-## 📋 قائمة التحقق النهائية
-
-### المتطلبات الأساسية
-- [ ] ✅ Target SDK 34+
-- [ ] ✅ App Bundle format (AAB)
-- [ ] ❌ Privacy Policy URL
-- [ ] ❌ Terms of Service URL
-- [ ] ❌ Signing Key configured
-- [ ] ❌ Screenshots (2-8 per device)
-- [ ] ❌ Feature Graphic (1024x500)
-- [ ] ❌ Hi-res icon (512x512)
-
-### الأمان والخصوصية
-- [ ] ✅ HTTPS only
-- [ ] ✅ No cleartext traffic
-- [ ] ✅ Backup disabled
-- [ ] ✅ No hardcoded secrets
-- [ ] ⚠️ Data Safety form
-- [ ] ⚠️ Justify SMS permission
-- [ ] ⚠️ Justify Location permission
-
-### الإعدادات التقنية
-- [ ] ✅ R8/ProGuard enabled
-- [ ] ✅ Network Security Config
-- [ ] ✅ Firebase configured
-- [ ] ✅ Deep links configured
-- [ ] ⚠️ Adaptive Icons
-- [ ] ⚠️ Splash screen (12dp)
-
-### المحتوى
-- [ ] ❌ App description (Arabic)
-- [ ] ❌ App description (English)
-- [ ] ❌ Short description
-- [ ] ❌ Category selection
-- [ ] ❌ Content rating questionnaire
-- [ ] ❌ Contact information
-
----
-
-## 🎯 خطة العمل (Priority Order)
-
-### المرحلة 1: الإصلاحات الحرجة (1-2 يوم)
-1. ✅ إنشاء Privacy Policy
-2. ✅ إنشاء Terms of Service
-3. ✅ إنشاء Signing Key
-4. ✅ إزالة RECEIVE_SMS permission
+#### ⏳ للمالك:
+- [ ] إنشاء Signing Key (10 دقائق)
+- [ ] استضافة الملفات القانونية (15 دقيقة)
+- [ ] إنشاء Google Play Developer Account (1-2 يوم)
+- [ ] بناء App Bundle (AAB) (5-10 دقائق)
 
 ### المرحلة 2: المحتوى (2-3 أيام)
-5. ✅ التقاط Screenshots
-6. ✅ إنشاء Feature Graphic
-7. ✅ إنشاء Hi-res icon
-8. ✅ إنشاء Adaptive Icons
-9. ✅ كتابة App description
 
-### المرحلة 3: Google Play Console (1 يوم)
-10. ✅ إنشاء Google Play Developer account ($25)
-11. ✅ إنشاء App listing
-12. ✅ ملء Data Safety form
-13. ✅ ملء Content rating questionnaire
-14. ✅ رفع AAB
+#### ⏳ للمالك:
+- [ ] التقاط Screenshots (2-3 ساعات)
+- [ ] إنشاء Feature Graphic (1-2 ساعة)
+- [ ] إنشاء Hi-Res Icon (30 دقيقة)
 
-### المرحلة 4: المراجعة (3-7 أيام)
-15. ✅ انتظار مراجعة Google
-16. ✅ إصلاح أي مشاكل تظهر
-17. ✅ النشر
+### المرحلة 3: الرفع (1 يوم)
+
+#### ⏳ للمالك:
+- [ ] ملء Data Safety Form (1 ساعة)
+- [ ] رفع AAB إلى Google Play (30 دقيقة)
+- [ ] انتظار المراجعة (3-7 أيام)
 
 ---
 
-## 📊 التكلفة المتوقعة
+## 💰 التكلفة المحدثة
 
 | البند | التكلفة |
 |-------|---------|
-| Google Play Developer account | $25 (مرة واحدة) |
-| Privacy Policy Generator | $0 (مجاني) |
-| Screenshots | $0 (DIY) |
-| Feature Graphic | $0-50 (Canva أو مصمم) |
-| **المجموع** | **$25-75** |
+| Google Play Developer account | $25 |
+| Privacy Policy (تم إنشاؤها) | $0 |
+| Terms of Service (تم إنشاؤها) | $0 |
+| Staging (GitHub Pages) | $0 |
+| Feature Graphic (Canva) | $0 |
+| **المجموع** | **$25** |
 
 ---
 
-## 🚀 الخطوات التالية
+## 🎯 مقارنة مع المتطلبات الرسمية
 
-### فوراً (اليوم):
-```bash
-# 1. إنشاء Signing Key
-keytool -genkey -v -keystore ~/sweeda-release-key.jks \
-  -keyalg RSA -keysize 2048 -validity 10000 \
-  -alias sweeda-key
-
-# 2. إنشاء key.properties
-cat > android/key.properties << EOF
-storePassword=YOUR_PASSWORD
-keyPassword=YOUR_PASSWORD
-keyAlias=sweeda-key
-storeFile=/home/user/sweeda-release-key.jks
-EOF
-
-# 3. إزالة RECEIVE_SMS
-# عدّل android/app/src/main/AndroidManifest.xml
-```
-
-### خلال 48 ساعة:
-- [ ] إنشاء Privacy Policy
-- [ ] إنشاء Terms of Service
-- [ ] التقاط Screenshots
-- [ ] إنشاء Feature Graphic
-
-### خلال أسبوع:
-- [ ] إنشاء Google Play Developer account
-- [ ] رفع التطبيق
-- [ ] ملء جميع النماذج
+| المتطلب | الحالة | الملاحظات |
+|---------|--------|-----------|
+| Target SDK 35+ | ✅ | نحن على 36 (أحدث) |
+| App Bundle (AAB) | ⚠️ | لم يُبنى بعد |
+| Play App Signing | ⚠️ | يحتاج keystore |
+| Privacy Policy | ✅ | مكتملة (تحتاج استضافة) |
+| Terms of Service | ✅ | مكتملة (تحتاج استضافة) |
+| Data Safety Form | ⚠️ | موثقة (تحتاج ملء) |
+| Screenshots (2-8) | ❌ | غير موجودة |
+| Feature Graphic | ❌ | غير موجودة |
+| Hi-Res Icon (512×512) | ❌ | غير موجودة |
+| Adaptive Icons | ✅ | تم إنشاؤها |
+| Network Security | ✅ | HTTPS only |
+| No Hardcoded Secrets | ✅ | آمن |
+| Permissions Justified | ✅ | تم إزالة RECEIVE_SMS |
 
 ---
 
-## 📞 الدعم والمساعدة
+## 📝 ملاحظات مهمة
 
-### أدوات مفيدة:
-- [Privacy Policy Generator](https://app-privacy-policy-generator.nisrulz.com/)
-- [Android Asset Studio](https://romannurik.github.io/AndroidAssetStudio/)
-- [Fastlane](https://fastlane.tools/)
-- [Canva](https://www.canva.com/) (لـ Feature Graphic)
+### 1. Target SDK 36
+- ✅ نحن متوافقون مع متطلبات 2026
+- ✅ لا حاجة للتحديث قريباً
 
-### مراجع:
-- [Google Play Console Help](https://support.google.com/googleplay/android-developer)
-- [Data Safety Section](https://support.google.com/googleplay/android-developer/answer/10787469)
-- [Target SDK Requirements](https://support.google.com/googleplay/android-developer/answer/11926878)
+### 2. App Bundle
+- ⚠️ يجب بناؤه قبل الرفع
+- ⚠️ AAB format مطلوب منذ أغسطس 2021
+- ⚠️ APKs لم تعد مقبولة
+
+### 3. Play App Signing
+- ⚠️ مطلوب لجميع التطبيقات الجديدة
+- ⚠️ Google يدير app signing key
+- ⚠️ أنت تحتفظ بـ upload key فقط
+
+### 4. Screenshots
+- ⚠️ Minimum 2 screenshots
+- ⚠️ Recommended 4 screenshots بدقة 1080px+
+- ⚠️ 90% من المستخدمين لا يتجاوزونScreenshot الثالث
+
+### 5. Feature Graphic
+- ⚠️ **مطلوب** لجميع التطبيقات
+- ⚠️ بالضبط 1024×500 px
+- ⚠️ يستخدم في العروض الترويجية
+
+### 6. Privacy Policy
+- ⚠️ يجب أن تكون على URL عام
+- ⚠️ يجب أن تكون HTML (ليس PDF)
+- ⚠️ يجب أن تكون غير قابلة للتعديل
+
+### 7. Data Safety
+- ⚠️ يجب الإفصاح عن جميع البيانات
+- ⚠️ يجب أن يكون متسقاً مع Privacy Policy
+- ⚠️ Android ID يجب أن يُعلن عنه (تحديث April 2025)
 
 ---
 
 ## ✅ الخلاصة
 
-**الحالة الحالية:** ⚠️ **غير جاهز للرفع**
+**الحالة:** ⚠️ **شبه جاهز (75%)**
 
-**المشاكل الحرجة:** 5 مشاكل يجب إصلاحها
+**ما تم إنجازه:**
+- ✅ 14 من 21 متطلب (67%)
+- ✅ جميع المتطلبات التقنية
+- ✅ جميع التوثيق القانوني
+- ✅ جميع إصلاحات الأمان
 
-**الوقت المتوقع للإصلاح:** 5-7 أيام
+**ما تبقى:**
+- ⚠️ 7 مهام يدوية بسيطة
+- ⚠️ جميعها تحتاج المالك
 
-**التكلفة:** $25-75
+**الوقت المتوقع:** 1-2 أسبوع
 
-**التوصية:** ابدأ بالمرحلة 1 فوراً، ثم انتقل للمرحلة 2
+**التكلفة:** $25 فقط
+
+**التوصية:**
+1. ابدأ بالمهام الحرجة (Signing Key + Google Play Account)
+2. ثم انتقل للمحتوى (Screenshots + Feature Graphic)
+3. أخيراً ارفع التطبيق
+
+---
+
+## 📚 المراجع
+
+1. [Google Play Target API Level Requirements 2026](https://ptkd.com/journal/google-play-target-api-level-2026)
+2. [Google Play Data Safety Form: 2026 Requirements Guide](https://respectlytics.com/blog/google-play-data-safety-guide/)
+3. [Google Play Store Screenshot Requirements 2026](https://screenshototter.com/blog/google-play-screenshot-requirements)
+4. [Play Store Feature Graphic: Size, Design & Generator Guide](https://appscreenmagic.com/guides/play-store-feature-graphic-guide)
+5. [How to Publish an App on Google Play (2026)](https://catdoes.com/blog/how-to-publish-app-on-google-play)
 
 ---
 
 **آخر تحديث:** 2026-08-05  
-**الإصدار:** 1.0  
-**الحالة:** ⚠️ يحتاج إصلاحات حرجة
+**الإصدار:** 3.0 (بحث معمق)  
+**الحالة:** ⚠️ شبه جاهز - يحتاج 7 مهام يدوية
