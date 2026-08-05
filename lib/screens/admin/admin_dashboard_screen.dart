@@ -134,9 +134,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                               crossAxisSpacing: AppTheme.spacingSmall,
                               childAspectRatio: AppTheme.responsiveValue(
                                 context,
-                                mobile: 2.2,
-                                tablet: 2.4,
-                                desktop: 2.6,
+                                mobile: 1.8,
+                                tablet: 2.0,
+                                desktop: 2.2,
                               ),
                             ),
                             itemCount: 4,
