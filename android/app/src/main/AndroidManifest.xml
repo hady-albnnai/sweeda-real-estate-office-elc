@@ -16,8 +16,11 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32"/>
 
-    <!-- Phone (for OTP autofill convenience, optional) -->
-    <uses-permission android:name="android.permission.RECEIVE_SMS"/>
+    <!-- 
+      RECEIVE_SMS permission removed - not required for SMS Retriever API.
+      sms_autofill package uses SMS Retriever which doesn't need this permission.
+      This avoids Google Play policy restrictions on SMS permissions.
+    -->
 
     <!-- Location (المرحلة D: اختيار موقع العرض على الخريطة) -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>

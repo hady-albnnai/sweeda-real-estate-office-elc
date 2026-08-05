@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+  Foreground layer for adaptive icon.
+  Uses the splash logo centered with proper padding.
+  For production, consider creating a proper 108dp foreground with 18dp safe zone.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:drawable="@drawable/splash_logo"
+        android:gravity="center"
+        android:width="72dp"
+        android:height="72dp"/>
+</layer-list>
